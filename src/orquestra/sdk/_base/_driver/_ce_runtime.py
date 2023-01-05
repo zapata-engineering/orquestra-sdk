@@ -1,6 +1,7 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
+from datetime import timedelta
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
 
@@ -11,7 +12,12 @@ from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRun, WorkflowRunId
+from orquestra.sdk.schema.workflow_run import (
+    State,
+    TaskRunId,
+    WorkflowRun,
+    WorkflowRunId,
+)
 
 from . import _client, _exceptions, _models
 
@@ -250,6 +256,27 @@ class CERuntime(RuntimeInterface):
             self._client.terminate_workflow_run(workflow_run_id)
         except _exceptions.InvalidTokenError as e:
             raise exceptions.UnauthorizedError(f"{e}")
+
+    def list_workflow_runs(
+        self,
+        *,
+        limit: Optional[int] = None,
+        prefix: Optional[str] = None,
+        max_age: Optional[timedelta] = None,
+        state: Optional[State] = None,
+    ) -> List[WorkflowRun]:
+        """
+        List the workflow runs, with some filters
+
+        Args:
+            limit: Restrict the number of runs to return, prioritising the most recent.
+            prefix: Only return runs that start with the specified string.
+            max_age: Only return runs younger than the specified maximum age.
+            status: Only return runs of runs with the specified status.
+        Returns:
+                A list of the workflow runs
+        """
+        raise NotImplementedError()
 
     def get_full_logs(
         self, run_id: Optional[Union[WorkflowRunId, TaskRunId]] = None

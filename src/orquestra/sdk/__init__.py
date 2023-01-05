@@ -4,7 +4,13 @@
 """Orquestra SDK allows to define computational workflows using Python DSL."""
 
 from . import secrets
-from ._base._api import RuntimeConfig, TaskRun, WorkflowRun, migrate_config_file
+from ._base._api import (
+    RuntimeConfig,
+    TaskRun,
+    WorkflowRun,
+    list_workflow_runs,
+    migrate_config_file,
+)
 from ._base._dsl import (
     ArtifactFuture,
     DataAggregation,
@@ -38,6 +44,7 @@ __all__ = [
     "WorkflowDef",
     "WorkflowRun",
     "WorkflowTemplate",
+    "list_workflow_runs",
     "migrate_config_file",
     "secrets",
     "task",

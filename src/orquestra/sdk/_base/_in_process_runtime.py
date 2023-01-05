@@ -2,7 +2,7 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 import typing as t
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun, WorkflowRun
@@ -170,3 +170,52 @@ class InProcessRuntime:
             raise WorkflowRunNotFoundError(
                 f"Workflow with id {workflow_run_id} not found"
             )
+
+    def list_workflow_runs(
+        self,
+        *,
+        limit: t.Optional[int] = None,
+        prefix: t.Optional[str] = None,
+        max_age: t.Optional[timedelta] = None,
+        state: t.Optional[State] = None,
+    ) -> t.List[WorkflowRun]:
+        """
+        List the workflow runs, with some filters
+
+        Args:
+            limit: Restrict the number of runs to return, prioritising the most recent.
+            prefix: Only return runs that start with the specified string.
+            max_age: Only return runs younger than the specified maximum age.
+            status: Only return runs of runs with the specified status.
+        Returns:
+                A list of the workflow runs
+        """
+        now = datetime.now(timezone.utc)
+
+        wf_runs = []
+        # Each workflow run executed with the in-process runtime is stored within the
+        # runtime object.
+        # We can grab the workflow_run ID from one of the storage locations
+        for wf_run_id in self._workflow_def_store.keys():
+            # The in-process runtime doesn't store the "run status", so let's reuse the
+            # get_workflow_run_status method
+            wf_run = self.get_workflow_run_status(wf_run_id)
+
+            # Let's filter the workflows at this point, instead of iterating over a list
+            # multiple times
+            if state is not None and wf_run.status.state != state:
+                continue
+            if prefix is not None and wf_run_id.startswith(prefix):
+                continue
+            if max_age is not None and (
+                now - (wf_run.status.start_time or now) < max_age
+            ):
+                continue
+            wf_runs.append(wf_run)
+
+        # We have to wait until we have all the workflow runs before sorting
+        if limit is not None:
+            wf_runs = sorted(wf_runs, key=lambda run: run.status.start_time or now)[
+                -limit:
+            ]
+        return wf_runs

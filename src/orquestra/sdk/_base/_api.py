@@ -7,10 +7,12 @@ Redesigned, user-facing SDK API.
 
 import json
 import logging
+import re
 import time
 import typing as t
 import warnings
 from collections import namedtuple
+from datetime import timedelta
 from itertools import chain
 from pathlib import Path
 
@@ -22,6 +24,7 @@ from orquestra.sdk.schema.configs import (
     RuntimeConfiguration,
     RuntimeName,
 )
+from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import State, TaskRunId
 from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
@@ -227,7 +230,7 @@ class WorkflowRun:
     """
 
     @staticmethod
-    def _get_stored_run(_project_dir: Path, run_id: WorkflowRunId):
+    def _get_stored_run(_project_dir: Path, run_id: WorkflowRunId) -> StoredWorkflowRun:
         from orquestra.sdk._base._db import WorkflowDB
 
         # Get the run details from the database. Extracted from by_id method
@@ -306,7 +309,7 @@ class WorkflowRun:
 
     def __init__(
         self,
-        run_id: t.Optional[str],
+        run_id: t.Optional[WorkflowRunId],
         wf_def: ir.WorkflowDef,
         runtime: t.Union[RuntimeInterface, InProcessRuntime],
         config: t.Optional["RuntimeConfig"] = None,
@@ -661,6 +664,124 @@ class WorkflowRun:
             TaskRun(invocation_id, run_id, runtime=self._runtime, wf_def=self._wf_def)
             for invocation_id, task_invocation in self._wf_def.task_invocations.items()
         }
+
+
+def _parse_max_age(age: t.Optional[str]) -> t.Optional[timedelta]:
+    """Parse a string specifying an age into a timedelta object.
+    If the string cannot be parsed, an exception is raises.
+
+    Args:
+        age: the string to be parsed.
+
+    Raises:
+        ValueError if the age string cannot be parsed
+
+    Returns:
+        datetime.timedelta: the age specified by the 'age' string, as a timedelta.
+        None: if age is None
+    """
+    if age is None:
+        return None
+    time_params = {}
+
+    # time in format "{days}d{hours}h{minutes}m{seconds}s"
+
+    # match one or more digits "\d+?" followed by a single character from the 'units'
+    # list. Capture the digits in a group labelled 'name'
+    time_capture_group = r"(?P<{name}>\d+?)[{units}]"
+
+    re_string = ""
+    name_units = (
+        ("days", "dD"),
+        ("hours", "hH"),
+        ("minutes", "mM"),
+        ("seconds", "sS"),
+    )
+    for name, units in name_units:
+        # match each potential time unit capture group between 0 and 1 times.
+        re_string += rf"({time_capture_group.format(name=name, units=units)})?"
+
+    if parts := re.compile(re_string).fullmatch(age):
+        for name, param in parts.groupdict().items():
+            if param:
+                time_params[name] = int(param)
+        if len(time_params) > 0:
+            return timedelta(**time_params)
+
+    raise ValueError(
+        'Time strings must be in the format "{days}d{hours}h{minutes}m{seconds}s". '
+        "Accepted units are:\n"
+        "- d or D: days\n"
+        "- h or H: hours\n"
+        "- m or M: minutes\n"
+        "- s or S: seconds\n"
+        "For example:\n"
+        '- "9h32m" = 9 hours and 32 minutes,\n'
+        '- "8H6S" = 8 hours and 6 seconds,\n'
+        '- "10m" = 10 minutes,\n'
+        '- "3D6h8M13s" = 3 days, 6 hours, 8 minutes and 13 seconds.'
+    )
+
+
+def list_workflow_runs(
+    config_name: str,
+    *,
+    limit: t.Optional[int] = None,
+    prefix: t.Optional[str] = None,
+    max_age: t.Optional[str] = None,
+    state: t.Optional[State] = None,
+    project_dir: t.Optional[t.Union[Path, str]] = None,
+    config_save_file: t.Optional[t.Union[Path, str]] = None,
+) -> t.List[WorkflowRun]:
+    """Get the WorkflowRun corresponding to a previous workflow run.
+
+    Args:
+        config_name: The name of the configuration to use.
+        limit: Restrict the number of runs to return, prioritising the most recent.
+        prefix: Only return runs that start with the specified string.
+        max_age: Only return runs younger than the specified maximum age.
+        status: Only return runs of runs with the specified status.
+        project_dir: The location of the project directory. This directory must
+            contain the workflows database to which this run was saved. If omitted,
+            the current working directory is assumed to be the project directory.
+        config_save_file: The location to which the associated configuration was
+            saved. If omitted, the default config file path is used.
+
+    Raises:
+        ModuleNotFoundError: when the orquestra-runtime package is not installed.
+        ConfigNameNotFoundError: when the named config is not found in the file.
+
+    Returns:
+        a list of WorkflowRuns
+    """
+    _project_dir = Path(project_dir or Path.cwd())
+
+    # Load the associated config and runtime
+    config = RuntimeConfig.load(
+        config_name,
+        config_save_file=config_save_file,
+    )
+    runtime = config._get_runtime(_project_dir)
+
+    # Grab the "workflow runs" from the runtime.
+    # Note: WorkflowRun means something else in runtime land. To avoid overloading, this
+    #       import is aliased to WorkflowRunStatus in here.
+    run_statuses: t.List[WorkflowRunModel] = runtime.list_workflow_runs(
+        limit=limit, prefix=prefix, max_age=_parse_max_age(max_age), state=state
+    )
+
+    # We need to convert to the public API notion of a WorkflowRun
+    runs = []
+    for run_status in run_statuses:
+        assert run_status.workflow_def is not None
+        workflow_run = WorkflowRun(
+            run_id=run_status.id,
+            wf_def=run_status.workflow_def,
+            runtime=runtime,
+            config=config,
+        )
+        runs.append(workflow_run)
+    return runs
 
 
 def _build_runtime(
