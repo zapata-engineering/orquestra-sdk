@@ -3,13 +3,16 @@
 ################################################################################
 import sys
 import typing as t
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
 
 from orquestra import sdk
 from orquestra.sdk._base.cli._corq._format import per_command
+from orquestra.sdk._base.cli._dorq import _dumpers
 from orquestra.sdk._base.cli._dorq._ui import _errors, _presenters
+from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.responses import ServiceResponse
 
 
@@ -87,6 +90,49 @@ class TestWrappedCorqOutputPresenter:
             # Then
             captured = capsys.readouterr()
             assert f"Workflow run {wf_run_id} stopped" in captured.out
+
+        @staticmethod
+        def test_show_dumped_wf_result(capsys):
+            # Given
+            details = _dumpers.DumpDetails(
+                file_path=Path("tests/some-path/wf.1234_1.json"),
+                format=ArtifactFormat.JSON,
+            )
+            presenter = _presenters.WrappedCorqOutputPresenter()
+
+            # When
+            presenter.show_dumped_wf_result(details)
+
+            # Then
+            captured = capsys.readouterr()
+            assert captured.out == (
+                "Artifact saved at tests/some-path/wf.1234_1.json serialized "
+                "with JSON.\n"
+            )
+
+        @staticmethod
+        def test_show_artifact_values(capsys):
+            # Given
+            values = [set([21, 38]), {"hello": "there"}]
+            wf_run_id = "wf.1234"
+            presenter = _presenters.WrappedCorqOutputPresenter()
+
+            # When
+            presenter.show_workflow_outputs(values, wf_run_id)
+
+            # Then
+            captured = capsys.readouterr()
+            assert (
+                "Workflow run wf.1234 has 2 outputs.\n"
+                "\n"
+                "Output 0. Object type: <class 'set'>\n"
+                "Pretty printed value:\n"
+                "{21, 38}\n"
+                "\n"
+                "Output 1. Object type: <class 'dict'>\n"
+                "Pretty printed value:\n"
+                "{'hello': 'there'}\n"
+            ) == captured.out
 
     @staticmethod
     def test_handling_error(monkeypatch):
