@@ -51,10 +51,10 @@ class CERuntime(RuntimeInterface):
         try:
             base_uri = self._config.runtime_options["uri"]
             token = self._config.runtime_options["token"]
-        except KeyError:
+        except KeyError as e:
             raise exceptions.RuntimeConfigError(
                 "Invalid CE configuration. Did you login first?"
-            )
+            ) from e
 
         self._client = _client.DriverClient.from_token(base_uri=base_uri, token=token)
 
@@ -95,7 +95,7 @@ class CERuntime(RuntimeInterface):
         except _exceptions.InvalidWorkflowRunRequest as e:
             raise exceptions.WorkflowRunNotStarted(
                 f"Unable to start the workflow run: {e}"
-            )
+            ) from e
         except _exceptions.InvalidTokenError as e:
             raise exceptions.UnauthorizedError(f"{e}") from e
 
@@ -255,7 +255,7 @@ class CERuntime(RuntimeInterface):
         try:
             self._client.terminate_workflow_run(workflow_run_id)
         except _exceptions.InvalidTokenError as e:
-            raise exceptions.UnauthorizedError(f"{e}")
+            raise exceptions.UnauthorizedError(f"{e}") from e
 
     def list_workflow_runs(
         self,
@@ -276,7 +276,11 @@ class CERuntime(RuntimeInterface):
         Returns:
                 A list of the workflow runs
         """
-        raise NotImplementedError()
+        try:
+            runs = self._client.list_workflow_runs()
+        except _exceptions.InvalidTokenError as e:
+            raise exceptions.UnauthorizedError(f"{e}") from e
+        return runs.contents
 
     def get_full_logs(
         self, run_id: Optional[Union[WorkflowRunId, TaskRunId]] = None
