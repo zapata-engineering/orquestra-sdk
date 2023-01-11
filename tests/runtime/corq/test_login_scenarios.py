@@ -260,7 +260,7 @@ class TestWithConfigNameOnly:
         assert captured.err == ""
 
 
-class TestWithConfigAndServerUri:
+class TestWithServerUri:
     """
     Tests for 'orq login -c <config_name> -s <server_uri>' - the explicit
     form that first-time users and Studio rely on. All these cases should
@@ -271,7 +271,7 @@ class TestWithConfigAndServerUri:
     def mock_login_request(self, mocked_responses):
         mocked_responses.add(
             responses.GET,
-            "http://localhost/v1/login",
+            "https://prod-d.orquestra.io/v1/login",
             headers={"Location": "http://localhost/test"},
         )
 
@@ -281,8 +281,17 @@ class TestWithConfigAndServerUri:
         monkeypatch.setattr("sys.stdin", io.StringIO(token))
         return token
 
+    @pytest.mark.parametrize(
+        "config_name",
+        [None, "a-cluster-name"],
+    )
     def test_no_config_file(
-        self, capsys, patch_config_location, mock_login_request, mock_pasting_stdin
+        self,
+        capsys,
+        patch_config_location,
+        mock_login_request,
+        mock_pasting_stdin,
+        config_name,
     ):
         """
         No config file - probably that's the first time the user ever logs in.
@@ -291,9 +300,9 @@ class TestWithConfigAndServerUri:
         # config file.
         action.orq_login(
             argparse.Namespace(
-                server_uri="http://localhost",
+                server_uri="https://prod-d.orquestra.io/",
                 runtime=None,
-                config="a-cluster-name",
+                config=config_name,
                 default_config=False,
             )
         )
@@ -304,22 +313,24 @@ class TestWithConfigAndServerUri:
         assert captured.err == ""
 
         result_config = _read_config_file(patch_config_location)
-        assert result_config.configs["a-cluster-name"].config_name == "a-cluster-name"
-        assert (
-            result_config.configs["a-cluster-name"].runtime_name
-            == RuntimeName.QE_REMOTE
-        )
-        assert result_config.configs["a-cluster-name"].runtime_options == {
-            "uri": "http://localhost",
+        assert result_config.configs["prod-d"].config_name == "prod-d"
+        assert result_config.configs["prod-d"].runtime_name == RuntimeName.QE_REMOTE
+        assert result_config.configs["prod-d"].runtime_options == {
+            "uri": "https://prod-d.orquestra.io/",
             "token": mock_pasting_stdin,
         }
 
+    @pytest.mark.parametrize(
+        "config_name",
+        [None, "a-cluster-name"],
+    )
     def test_config_file_without_entry(
         self,
         capsys,
         patch_config_location,
         mock_login_request,
         mock_pasting_stdin,
+        config_name,
     ):
         """
         There is a config file, but it doesn't contain the config the user
@@ -329,9 +340,9 @@ class TestWithConfigAndServerUri:
 
         action.orq_login(
             argparse.Namespace(
-                server_uri="http://localhost",
+                server_uri="https://prod-d.orquestra.io/",
                 runtime=None,
-                config="a-cluster-name",
+                config=config_name,
                 default_config=False,
             )
         )
@@ -341,22 +352,24 @@ class TestWithConfigAndServerUri:
         assert captured.err == ""
 
         result_config = _read_config_file(patch_config_location)
-        assert result_config.configs["a-cluster-name"].config_name == "a-cluster-name"
-        assert (
-            result_config.configs["a-cluster-name"].runtime_name
-            == RuntimeName.QE_REMOTE
-        )
-        assert result_config.configs["a-cluster-name"].runtime_options == {
-            "uri": "http://localhost",
+        assert result_config.configs["prod-d"].config_name == "prod-d"
+        assert result_config.configs["prod-d"].runtime_name == RuntimeName.QE_REMOTE
+        assert result_config.configs["prod-d"].runtime_options == {
+            "uri": "https://prod-d.orquestra.io/",
             "token": mock_pasting_stdin,
         }
 
+    @pytest.mark.parametrize(
+        "config_name",
+        [None, "a-cluster-name"],
+    )
     def test_config_file_with_entry_malformed(
         self,
         capsys,
         patch_config_location,
         mock_login_request,
         mock_pasting_stdin,
+        config_name,
     ):
         """
         There is a config file, it contains the config the user asked for,
@@ -368,34 +381,45 @@ class TestWithConfigAndServerUri:
 
         action.orq_login(
             argparse.Namespace(
-                server_uri="http://localhost",
+                server_uri="https://prod-d.orquestra.io/",
                 runtime=None,
-                config="a-cluster-name",
+                config=config_name,
                 default_config=False,
             )
         )
+        # if config name exists and user uses it - we just update entry
+        sentinel_config_name = config_name if config_name else "prod-d"
 
         captured = capsys.readouterr()
         assert "Please follow this URL to proceed with login" in captured.out
         assert captured.err == ""
 
         result_config = _read_config_file(patch_config_location)
-        assert result_config.configs["a-cluster-name"].config_name == "a-cluster-name"
         assert (
-            result_config.configs["a-cluster-name"].runtime_name
+            result_config.configs[sentinel_config_name].config_name
+            == sentinel_config_name
+        )
+        assert (
+            result_config.configs[sentinel_config_name].runtime_name
             == RuntimeName.QE_REMOTE
         )
-        assert result_config.configs["a-cluster-name"].runtime_options == {
-            "uri": "http://localhost",
+        assert result_config.configs[sentinel_config_name].runtime_options == {
+            "uri": "https://prod-d.orquestra.io/",
             "token": mock_pasting_stdin,
         }
 
+    @pytest.mark.parametrize(
+        "config_name",
+        [None, "a-cluster-name"],
+    )
     def test_config_file_with_entry_ok(
         self,
         capsys,
         patch_config_location,
+        mock_login_request,
         mocked_responses,
         mock_pasting_stdin,
+        config_name,
     ):
         """
         There is a config file, it contains "a-cluster-name", and there's
@@ -403,33 +427,32 @@ class TestWithConfigAndServerUri:
         """
         _write_new_config(patch_config_location, _config_with_entry("a-cluster-name"))
 
-        mocked_responses.add(
-            responses.GET,
-            "http://other-url-than-in-config/v1/login",
-            headers={"Location": "http://localhost/test"},
-        )
-
         action.orq_login(
             argparse.Namespace(
-                server_uri="http://other-url-than-in-config",
+                server_uri="https://prod-d.orquestra.io/",
                 runtime=None,
-                config="a-cluster-name",
+                config=config_name,
                 default_config=False,
             )
         )
+        # if config name exists and user uses it - we just update entry
+        sentinel_config_name = config_name if config_name else "prod-d"
 
         captured = capsys.readouterr()
         assert "Please follow this URL to proceed with login" in captured.out
         assert captured.err == ""
 
         result_config = _read_config_file(patch_config_location)
-        assert result_config.configs["a-cluster-name"].config_name == "a-cluster-name"
         assert (
-            result_config.configs["a-cluster-name"].runtime_name
+            result_config.configs[sentinel_config_name].config_name
+            == sentinel_config_name
+        )
+        assert (
+            result_config.configs[sentinel_config_name].runtime_name
             == RuntimeName.QE_REMOTE
         )
-        assert result_config.configs["a-cluster-name"].runtime_options == {
-            "uri": "http://other-url-than-in-config",
+        assert result_config.configs[sentinel_config_name].runtime_options == {
+            "uri": "https://prod-d.orquestra.io/",
             "token": mock_pasting_stdin,
         }
 

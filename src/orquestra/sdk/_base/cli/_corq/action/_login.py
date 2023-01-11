@@ -211,13 +211,13 @@ def orq_login(args: argparse.Namespace):
             new_runtime_options=resolved_runtime_options,
         )
     else:
+        config_name = _config.generate_config_name(runtime_name, server_uri)
         # Generate a suitable name for the config
         stored_config, _ = _config.write_config(
-            _config_name,
+            config_name,
             runtime_name,
             resolved_runtime_options,
         )
-        config_name = stored_config.config_name
 
     _config.update_default_config_name(config_name)
 
