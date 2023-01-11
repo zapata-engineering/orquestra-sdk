@@ -1,0 +1,82 @@
+# workflow example inspired by https://docs.orquestra.io/quantum-engine/workflow-basics/
+apiVersion: io.orquestra.workflow/1.0.0
+
+dataAggregation:
+  resources:
+    cpu: '1'
+    disk: '1'
+    gpu: '1'
+    memory: '1'
+  run: true
+
+name: basics
+
+imports:
+
+- name: tut-0-wel
+  type: git
+  parameters:
+    commit: "master"
+    repository: "git@github.com:zapatacomputing/tutorial-0-welcome"
+- name: orq-wor-sdk
+  parameters:
+    commit: main
+    repository: git@github.com:zapatacomputing/orquestra-workflow-sdk.git
+  type: git
+
+steps:
+
+- name: step-0-welcome-welcome
+  passed: []
+  config:
+    runtime:
+      language: python3
+      imports: [orq-wor-sdk]
+      parameters:
+        file: orq-wor-sdk/src/orquestra/sdk/_base/dispatch.py
+        function: exec_task_fn
+  inputs:
+  - __sdk_fn_ref_dict:
+      function_name: capitalize_inline
+      type: INLINE_FUNCTION_REF
+      encoded_function: ["gANjZGlsbC5fZGlsbApfY3JlYXRlX2Z1bmN0aW9uCnEAKGNkaWxsLl9kaWxsCl9jcmVhdGVfY29k\n\
+ZQpxAShLAUsASwBLAUsCS0NDCHwAoAChAFMAcQJOhXEDWAoAAABjYXBpdGFsaXplcQSFcQVYBAAA\n\
+AHRleHRxBoVxB1hFAAAAL1VzZXJzL3NlYmFzdGlhbm1vcmF3aWVjL2dpdC9vcnF1ZXN0cmEtc2Rr\n\
+L3Rlc3RzL3YyL3Rlc3RfdHJhdmVyc2FsLnB5cQhYEQAAAGNhcGl0YWxpemVfaW5saW5lcQlLakMC\n\
+AARxCikpdHELUnEMfXENWAgAAABfX25hbWVfX3EOWBcAAAB0ZXN0cy52Mi50ZXN0X3RyYXZlcnNh\n\
+bHEPc2gJTk50cRBScRF9cRIoWBcAAABfVGFza0RlZl9fc2RrX3Rhc2tfYm9keXETaBFYBgAAAGZu\n\
+X3JlZnEUY2RpbGwuX2RpbGwKX2NyZWF0ZV9uYW1lZHR1cGxlCnEVWBEAAABJbmxpbmVGdW5jdGlv\n\
+blJlZnEWWA0AAABmdW5jdGlvbl9uYW1lcRdYAgAAAGZucRiGcRlYFQAAAG9ycXVlc3RyYS5zZGsu\n\
+djIuX2RzbHEah3EbUnEcaAloEYZxHYFxHlgNAAAAc291cmNlX2ltcG9ydHEfaBVYDAAAAElubGlu\n\
+ZUltcG9ydHEgKWgah3EhUnEiKYFxI1gPAAAAb3V0cHV0X21ldGFkYXRhcSRoFVgSAAAAVGFza091\n\
+dHB1dE1ldGFkYXRhcSVYEAAAAGlzX3N1YnNjcmlwdGFibGVxJlgJAAAAbl9vdXRwdXRzcSeGcSho\n\
+GodxKVJxKolLAYZxK4FxLFgKAAAAcGFyYW1ldGVyc3EtY2NvbGxlY3Rpb25zCk9yZGVyZWREaWN0\n\
+CnEuKVJxL2gGaBVYDQAAAFRhc2tQYXJhbWV0ZXJxMFgEAAAAbmFtZXExWAQAAABraW5kcTKGcTNo\n\
+GodxNFJxNWgGY29ycXVlc3RyYS5zZGsudjIuX2RzbApQYXJhbWV0ZXJLaW5kCnE2WBUAAABQT1NJ\n\
+VElPTkFMX09SX0tFWVdPUkRxN4VxOFJxOYZxOoFxO3NYEgAAAGRlcGVuZGVuY3lfaW1wb3J0c3E8\n\
+TlgJAAAAcmVzb3VyY2VzcT1OWAwAAABjdXN0b21faW1hZ2VxPlgoAAAAemFwYXRhY29tcHV0aW5n\n\
+L29ycXVlc3RyYS1kZWZhdWx0OnYwLjAuMHE/WAsAAABjdXN0b21fbmFtZXFATnV9cUFYDwAAAF9f\n\
+YW5ub3RhdGlvbnNfX3FCfXFDaAZjZGlsbC5fZGlsbApfbG9hZF90eXBlCnFEWAMAAABzdHJxRYVx\n\
+RlJxR3NzhnFIYi4=\n"]
+    type: sdk-metadata
+  - __sdk_output_node_dicts:
+    - id: 'artifact-0-welcome'
+      custom_name: 'welcome'
+      serialization_format: 'AUTO'
+      artifact_index: null
+    type: sdk-metadata
+    # This sys path addition is wrong, but it shouldn't hurt to add it here even
+    # if it doesn't correspond to any directory. Detecting and removing these is
+    # likely to make our exporter a lot more complicated, and QE is going away
+    # soon (tm).
+  - __sdk_additional_sys_paths: ["step/inline-import-0"]
+    type: sdk-metadata
+  - __sdk_positional_args_ids: []
+    type: sdk-metadata
+  outputs:
+  - name: welcome
+    type: workflow-result-dict
+
+types:
+- sdk-metadata
+- workflow-result-dict

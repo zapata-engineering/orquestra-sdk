@@ -1,0 +1,96 @@
+# Workflow inspired by https://docs.orquestra.io/tutorials/ml-basic-3/
+apiVersion: io.orquestra.workflow/1.0.0
+
+name: additional-metrics
+
+imports:
+- name: tut-orq-skl
+  type: git
+  parameters:
+    repository: "git@github.com:zapatacomputing/tutorial-orquestra-sklearn.git"
+    commit: "master"
+- name: orq-wor-sdk
+  parameters:
+    commit: main
+    repository: git@github.com:zapatacomputing/orquestra-workflow-sdk.git
+  type: git
+
+steps:
+
+- name: step-0-steps-ml-tutorial-3-exercise-steps-generate-data-step
+  passed: []
+  config:
+    runtime:
+      language: python3
+      imports: [orq-wor-sdk, tut-orq-skl]
+      parameters:
+        file: orq-wor-sdk/src/orquestra/sdk/_base/dispatch.py
+        function: exec_task_fn
+  inputs:
+  - __sdk_fn_ref_dict:
+      module: steps.ml_tutorial_3_exercise_steps
+      function_name: generate_data_step
+      file_path: steps/ml_tutorial_3_exercise_steps.py
+      line_number: 4
+      type: MODULE_FUNCTION_REF
+    type: sdk-metadata
+  - __sdk_output_node_dicts:
+    - id: 'artifact-0-generate-data-step'
+      custom_name: 'data'
+      serialization_format: 'AUTO'
+      artifact_index: null
+    type: sdk-metadata
+  - __sdk_additional_sys_paths: ["step/tut-orq-skl"]
+    type: sdk-metadata
+  - __sdk_positional_args_ids: []
+    type: sdk-metadata
+  - dataset_name:
+      value: '"simple_dataset"'
+      serialization_format: JSON
+    type: workflow-result-dict
+  outputs:
+  - name: data
+    type: workflow-result-dict
+
+- name: step-1-steps-ml-tutorial-3-exercise-steps-preprocess-data-step
+  passed: [step-0-steps-ml-tutorial-3-exercise-steps-generate-data-step]
+  config:
+    runtime:
+      language: python3
+      imports: [orq-wor-sdk, tut-orq-skl]
+      parameters:
+        file: orq-wor-sdk/src/orquestra/sdk/_base/dispatch.py
+        function: exec_task_fn
+  inputs:
+  - __sdk_fn_ref_dict:
+      module: steps.ml_tutorial_3_exercise_steps
+      function_name: preprocess_data_step
+      file_path: steps/ml_tutorial_3_exercise_steps.py
+      line_number: 10
+      type: MODULE_FUNCTION_REF
+    type: sdk-metadata
+  - __sdk_output_node_dicts:
+    - id: 'artifact-1-preprocess-data'
+      custom_name: 'features'
+      serialization_format: 'AUTO'
+      artifact_index: null
+    - id: 'artifact-2-preprocess-data'
+      custom_name: 'labels'
+      serialization_format: 'AUTO'
+      artifact_index: null
+    type: sdk-metadata
+  - __sdk_additional_sys_paths: ["step/tut-orq-skl"]
+    type: sdk-metadata
+  - __sdk_positional_args_ids: []
+    type: sdk-metadata
+  - data: ((step-0-steps-ml-tutorial-3-exercise-steps-generate-data-step.data))
+    type: workflow-result-dict
+  outputs:
+  - name: features
+    type: workflow-result-dict
+  - name: labels
+    type: workflow-result-dict
+
+types:
+- sdk-metadata
+- workflow-result-dict

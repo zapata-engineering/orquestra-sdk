@@ -1,0 +1,213 @@
+{
+    "meta": {
+        "success": true,
+        "code": 0,
+        "message": "Success"
+    },
+    "workflow_runs": [
+        {
+            "id": "orquestra-basic-demo-97us2-r000",
+            "workflow_def": {
+                "name": "orquestra_basic_demo",
+                "fn_ref": {
+                    "module": "workflow_defs",
+                    "function_name": "orquestra_basic_demo",
+                    "file_path": "workflow_defs.py",
+                    "line_number": 36,
+                    "type": "MODULE_FUNCTION_REF"
+                },
+                "imports": {
+                    "git-ec8dab15ed_github_com_zapatacomputing_evangelism_workflows": {
+                        "id": "git-ec8dab15ed_github_com_zapatacomputing_evangelism_workflows",
+                        "repo_url": "git@github.com:zapatacomputing/evangelism-workflows.git",
+                        "git_ref": "alexjuda/simplify-git-imports",
+                        "type": "GIT_IMPORT"
+                    },
+                    "git-aeab175ff6_github_com_zapatacomputing_orquestra_workflow": {
+                        "id": "git-aeab175ff6_github_com_zapatacomputing_orquestra_workflow",
+                        "repo_url": "git@github.com:zapatacomputing/orquestra-workflow.git",
+                        "git_ref": "main",
+                        "type": "GIT_IMPORT"
+                    },
+                    "git-cd5fc5b3b3_github_com_zapatacomputing_orquestra_sdk": {
+                        "id": "git-cd5fc5b3b3_github_com_zapatacomputing_orquestra_sdk",
+                        "repo_url": "git@github.com:zapatacomputing/orquestra-workflow-sdk.git",
+                        "git_ref": "main",
+                        "type": "GIT_IMPORT"
+                    },
+                    "git-e769a7517d_github_com_zapatacomputing_evangelism_workflows": {
+                        "id": "git-e769a7517d_github_com_zapatacomputing_evangelism_workflows",
+                        "repo_url": "git@github.com:zapatacomputing/evangelism-workflows.git",
+                        "git_ref": "alexjuda/simplify-git-imports",
+                        "type": "GIT_IMPORT"
+                    }
+                },
+                "tasks": {
+                    "task-generate-data-786a9eaf26": {
+                        "id": "task-generate-data-786a9eaf26",
+                        "fn_ref": {
+                            "module": "workflow_defs",
+                            "function_name": "generate_data",
+                            "file_path": "workflow_defs.py",
+                            "line_number": 13,
+                            "type": "MODULE_FUNCTION_REF"
+                        },
+                        "parameters": [
+                            {
+                                "name": "size",
+                                "kind": "POSITIONAL_OR_KEYWORD"
+                            },
+                            {
+                                "name": "a",
+                                "kind": "POSITIONAL_OR_KEYWORD"
+                            },
+                            {
+                                "name": "b",
+                                "kind": "POSITIONAL_OR_KEYWORD"
+                            }
+                        ],
+                        "source_import_id": "git-ec8dab15ed_github_com_zapatacomputing_evangelism_workflows",
+                        "dependency_import_ids": [
+                            "git-aeab175ff6_github_com_zapatacomputing_orquestra_workflow",
+                            "git-cd5fc5b3b3_github_com_zapatacomputing_orquestra_sdk"
+                        ],
+                        "resources": null,
+                        "custom_image": null
+                    },
+                    "task-train-model-6339962840": {
+                        "id": "task-train-model-6339962840",
+                        "fn_ref": {
+                            "module": "workflow_defs",
+                            "function_name": "train_model",
+                            "file_path": "workflow_defs.py",
+                            "line_number": 25,
+                            "type": "MODULE_FUNCTION_REF"
+                        },
+                        "parameters": [
+                            {
+                                "name": "x",
+                                "kind": "POSITIONAL_OR_KEYWORD"
+                            },
+                            {
+                                "name": "y",
+                                "kind": "POSITIONAL_OR_KEYWORD"
+                            }
+                        ],
+                        "source_import_id": "git-e769a7517d_github_com_zapatacomputing_evangelism_workflows",
+                        "dependency_import_ids": [
+                            "git-aeab175ff6_github_com_zapatacomputing_orquestra_workflow",
+                            "git-cd5fc5b3b3_github_com_zapatacomputing_orquestra_sdk"
+                        ],
+                        "resources": null,
+                        "custom_image": null
+                    }
+                },
+                "artifact_nodes": {
+                    "artifact-3-generate-data": {
+                        "id": "artifact-3-generate-data",
+                        "custom_name": null,
+                        "serialization_format": "AUTO",
+                        "artifact_index": 0
+                    },
+                    "artifact-4-generate-data": {
+                        "id": "artifact-4-generate-data",
+                        "custom_name": null,
+                        "serialization_format": "AUTO",
+                        "artifact_index": 1
+                    },
+                    "artifact-2-train-model": {
+                        "id": "artifact-2-train-model",
+                        "custom_name": null,
+                        "serialization_format": "AUTO",
+                        "artifact_index": null
+                    }
+                },
+                "constant_nodes": {
+                    "constant-9": {
+                        "id": "constant-9",
+                        "value": "20",
+                        "serialization_format": "JSON",
+                        "value_preview": "20"
+                    },
+                    "constant-10": {
+                        "id": "constant-10",
+                        "value": "1",
+                        "serialization_format": "JSON",
+                        "value_preview": "1"
+                    },
+                    "constant-11": {
+                        "id": "constant-11",
+                        "value": "4",
+                        "serialization_format": "JSON",
+                        "value_preview": "4"
+                    }
+                },
+                "task_invocations": {
+                    "invocation-0-task-generate-data-786a9eaf26": {
+                        "id": "invocation-0-task-generate-data-786a9eaf26",
+                        "task_id": "task-generate-data-786a9eaf26",
+                        "args_ids": [
+                            "constant-9",
+                            "constant-10",
+                            "constant-11"
+                        ],
+                        "kwargs_ids": {},
+                        "output_ids": [
+                            "artifact-3-generate-data",
+                            "artifact-4-generate-data"
+                        ],
+                        "resources": null,
+                        "custom_image": null
+                    },
+                    "invocation-1-task-train-model-6339962840": {
+                        "id": "invocation-1-task-train-model-6339962840",
+                        "task_id": "task-train-model-6339962840",
+                        "args_ids": [
+                            "artifact-3-generate-data",
+                            "artifact-4-generate-data"
+                        ],
+                        "kwargs_ids": {},
+                        "output_ids": [
+                            "artifact-2-train-model"
+                        ],
+                        "resources": null,
+                        "custom_image": null
+                    }
+                },
+                "output_ids": [
+                    "artifact-3-generate-data",
+                    "artifact-4-generate-data",
+                    "artifact-2-train-model"
+                ],
+                "data_aggregation": null
+            },
+            "task_runs": [
+                {
+                    "id": "orquestra-basic-demo-97us2-r000-1582172340",
+                    "invocation_id": "invocation-1-task-train-model-6339962840",
+                    "status": {
+                        "state": "WAITING",
+                        "start_time": "2022-06-24T16:13:30+00:00",
+                        "end_time": "2022-06-24T16:13:30+00:00"
+                    },
+                    "message": "omitted: depends condition not met"
+                },
+                {
+                    "id": "orquestra-basic-demo-97us2-r000-3313514878",
+                    "invocation_id": "invocation-0-task-generate-data-786a9eaf26",
+                    "status": {
+                        "state": "FAILED",
+                        "start_time": "2022-06-24T16:12:41+00:00",
+                        "end_time": "2022-06-24T16:13:28+00:00"
+                    },
+                    "message": "failed with exit code 1"
+                }
+            ],
+            "status": {
+                "state": "FAILED",
+                "start_time": "2022-06-24T16:12:41+00:00",
+                "end_time": "2022-06-24T16:13:35+00:00"
+            }
+        }
+    ]
+}

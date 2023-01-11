@@ -1,0 +1,29 @@
+# This workflow runs typing tests
+
+# We need a workflow name to be able to schedule it from Github UI
+name: Type Checking
+
+on:
+  # Triggers the workflow on push to main
+  push:
+    branches:
+      - main
+  # Triggers the workflow on any PR
+  pull_request:
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  # The job ID has to match repo settings for PR required checks
+  TypeChecking:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v3
+
+      - name: Run type checking test
+        shell: bash
+        run: |
+          make github_actions
+          make user-typing

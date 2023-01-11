@@ -1,0 +1,24 @@
+version: '3.7'
+services:
+  fluent-bit:
+    image: fluent/fluent-bit:latest-debug
+    # 'orq status' uses this name
+    container_name: orquestra_runtime_fluentbit
+
+    volumes:
+      # Mount the fluentbit config
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+      # Mount the output logs
+      - ${OUTPUT_LOGS}:${OUTPUT_LOGS}
+      # Mount the input logs
+      - ray_logs:${RAY_TEMP}
+    env_file:
+      - ./.env
+
+volumes:
+  ray_logs:
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: ${RAY_TEMP}

@@ -1,0 +1,49 @@
+apiVersion: io.orquestra.workflow/1.0.0
+imports:
+- name: orq-wor-sdk
+  parameters:
+    commit: main
+    repository: git@github.com:zapatacomputing/orquestra-workflow-sdk.git
+  type: git
+name: small
+steps:
+- config:
+    runtime:
+      imports:
+      - orq-wor-sdk
+      language: python3
+      parameters:
+        file: orq-wor-sdk/src/orquestra/sdk/_base/dispatch.py
+        function: exec_task_fn
+  inputs:
+  - __sdk_fn_ref_dict:
+      file_path: examples/hello_v2.py
+      function_name: capitalize
+      line_number: 6
+      module: examples.hello_v2
+      type: MODULE_FUNCTION_REF
+    type: sdk-metadata
+  - __sdk_output_node_dicts:
+    - artifact_index: null
+      custom_name: null
+      id: artifact-0-local-test
+      serialization_format: JSON
+    type: sdk-metadata
+  - __sdk_additional_sys_paths:
+    - step/orq-wor-sdk
+    type: sdk-metadata
+  - __sdk_positional_args_ids:
+    - constant-0
+    type: sdk-metadata
+  - constant-0:
+      serialization_format: JSON
+      value: '"hello"'
+    type: workflow-result-dict
+  name: invocation-0-task-0-local-test
+  outputs:
+  - name: artifact-0-local-test
+    type: workflow-result-dict
+  passed: []
+types:
+- sdk-metadata
+- workflow-result-dict

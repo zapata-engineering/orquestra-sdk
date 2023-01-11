@@ -1,0 +1,88 @@
+# workflow example inspired by https://docs.orquestra.io/quantum-engine/workflow-basics/
+apiVersion: io.orquestra.workflow/1.0.0
+
+name: multiple-task-outputs-as-inputs
+
+imports:
+
+- name: orq-wor-sdk
+  parameters:
+    commit: main
+    repository: git@github.com:zapatacomputing/orquestra-workflow-sdk.git
+  type: git
+
+steps:
+- name: invocation-0-task-multi-output
+  passed: []
+  config:
+    runtime:
+      language: python3
+      imports: [orq-wor-sdk]
+      parameters:
+        file: orq-wor-sdk/src/orquestra/sdk/_base/dispatch.py
+        function: exec_task_fn
+  inputs:
+  - __sdk_fn_ref_dict:
+      module: orquestra.sdk.examples.exportable_wf
+      function_name: multi_output_test
+      file_path: src/orquestra/sdk/examples/exportable_wf.py
+      line_number: 0
+      type: MODULE_FUNCTION_REF
+    type: sdk-metadata
+  - __sdk_output_node_dicts:
+    - id: 'artifact-0-multi-output'
+      custom_name: null
+      serialization_format: 'AUTO'
+      artifact_index: 0
+    - id: 'artifact-1-multi-output'
+      custom_name: null
+      serialization_format: 'AUTO'
+      artifact_index: 1
+    type: sdk-metadata
+  - __sdk_additional_sys_paths: ["step/orq-wor-sdk"]
+    type: sdk-metadata
+  - __sdk_positional_args_ids: []
+    type: sdk-metadata
+  outputs:
+  - name: artifact-0-multi-output
+    type: workflow-result-dict
+  - name: artifact-1-multi-output
+    type: workflow-result-dict
+- name: invocation-1-task-multi-output
+  passed: [invocation-0-task-multi-output]
+  config:
+    runtime:
+      language: python3
+      imports: [orq-wor-sdk]
+      parameters:
+        file: orq-wor-sdk/src/orquestra/sdk/_base/dispatch.py
+        function: exec_task_fn
+  inputs:
+  - __sdk_fn_ref_dict:
+      module: orquestra.sdk.examples.exportable_wf
+      function_name: multi_output_test
+      file_path: src/orquestra/sdk/examples/exportable_wf.py
+      line_number: 0
+      type: MODULE_FUNCTION_REF
+    type: sdk-metadata
+  - __sdk_output_node_dicts:
+    - id: 'artifact-2-multi-output'
+      custom_name: null
+      serialization_format: 'AUTO'
+      artifact_index: 1
+    type: sdk-metadata
+  - __sdk_additional_sys_paths: ["step/orq-wor-sdk"]
+    type: sdk-metadata
+  - __sdk_positional_args_ids: [artifact-0-multi-output, artifact-1-multi-output]
+    type: sdk-metadata
+  - artifact-0-multi-output: ((invocation-0-task-multi-output.artifact-0-multi-output))
+    type: workflow-result-dict
+  - artifact-1-multi-output: ((invocation-0-task-multi-output.artifact-1-multi-output))
+    type: workflow-result-dict
+  outputs:
+  - name: artifact-2-multi-output
+    type: workflow-result-dict
+
+types:
+- sdk-metadata
+- workflow-result-dict

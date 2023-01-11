@@ -1,0 +1,94 @@
+# workflow example inspired by https://docs.orquestra.io/quantum-engine/workflow-basics/
+apiVersion: io.orquestra.workflow/1.0.0
+
+name: positional-artifact
+
+imports:
+
+- name: orq-wor-sdk
+  parameters:
+    commit: main
+    repository: git@github.com:zapatacomputing/orquestra-workflow-sdk.git
+  type: git
+
+steps:
+
+- name: invocation-0-task-0-capitalize
+  passed: []
+  config:
+    runtime:
+      language: python3
+      imports: [orq-wor-sdk]
+      parameters:
+        file: orq-wor-sdk/src/orquestra/sdk/_base/dispatch.py
+        function: exec_task_fn
+    resources:
+      cpu: "1000m"
+      memory: "1Gi"
+      disk: "15Gi"
+  inputs:
+  - __sdk_fn_ref_dict:
+      module: examples.hello_v2
+      function_name: capitalize
+      file_path: examples/hello_v2.py
+      line_number: 11
+      type: MODULE_FUNCTION_REF
+    type: sdk-metadata
+  - __sdk_output_node_dicts:
+    - id: 'artifact-0-capitalize'
+      custom_name: null
+      serialization_format: 'AUTO'
+      artifact_index: null
+    type: sdk-metadata
+  - __sdk_additional_sys_paths: ["step/orq-wor-sdk"]
+    type: sdk-metadata
+  - __sdk_positional_args_ids: ["constant-0"]
+    type: sdk-metadata
+  - constant-0:
+      value: '"hello"'
+      serialization_format: JSON
+    type: workflow-result-dict
+  outputs:
+  - name: artifact-0-capitalize
+    type: workflow-result-dict
+
+- name: invocation-1-task-0-capitalize
+  passed: ["invocation-0-task-0-capitalize"]
+  config:
+    runtime:
+      language: python3
+      imports: [orq-wor-sdk]
+      parameters:
+        file: orq-wor-sdk/src/orquestra/sdk/_base/dispatch.py
+        function: exec_task_fn
+    resources:
+      cpu: "1000m"
+      memory: "1Gi"
+      disk: "15Gi"
+  inputs:
+  - __sdk_fn_ref_dict:
+      module: examples.hello_v2
+      function_name: capitalize
+      file_path: examples/hello_v2.py
+      line_number: 11
+      type: MODULE_FUNCTION_REF
+    type: sdk-metadata
+  - __sdk_output_node_dicts:
+    - id: 'artifact-1-capitalize'
+      custom_name: null
+      serialization_format: 'AUTO'
+      artifact_index: null
+    type: sdk-metadata
+  - __sdk_additional_sys_paths: ["step/orq-wor-sdk"]
+    type: sdk-metadata
+  - __sdk_positional_args_ids: ["artifact-0-capitalize"]
+    type: sdk-metadata
+  - artifact-0-capitalize: ((invocation-0-task-0-capitalize.artifact-0-capitalize))
+    type: workflow-result-dict
+  outputs:
+  - name: artifact-1-capitalize
+    type: workflow-result-dict
+
+types:
+- sdk-metadata
+- workflow-result-dict

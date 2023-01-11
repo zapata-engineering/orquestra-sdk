@@ -1,0 +1,63 @@
+apiVersion: io.orquestra.workflow/1.0.0
+imports:
+- name: eva-wor
+  parameters:
+    commit: morawiec/test
+    repository: git@github.com:zapatacomputing/evangelism-workflows.git
+  type: git
+- name: orq-wor-sdk
+  parameters:
+    commit: main
+    repository: git@github.com:zapatacomputing/orquestra-workflow-sdk.git
+  type: git
+- name: py
+  parameters:
+    requirements: 'numpy==1.21.5
+
+    pip'
+  type: python-requirements
+name: python-import
+steps:
+- config:
+    runtime:
+      customImage: zapatacomputing/orquestra-default:v0.0.0
+      imports:
+      - eva-wor
+      - orq-wor-sdk
+      - py
+      language: python3
+      parameters:
+        file: orq-wor-sdk/src/orquestra/sdk/_base/dispatch.py
+        function: exec_task_fn
+  inputs:
+  - __sdk_fn_ref_dict:
+      file_path: workflow_defs.py
+      function_name: my_task
+      line_number: 36
+      module: workflow_defs
+      type: MODULE_FUNCTION_REF
+    type: sdk-metadata
+  - __sdk_output_node_dicts:
+    - artifact_index: null
+      custom_name: null
+      id: artifact-0-my-task
+      serialization_format: AUTO
+    type: sdk-metadata
+  - __sdk_additional_sys_paths:
+    - step/eva-wor
+    type: sdk-metadata
+  - __sdk_positional_args_ids:
+    - constant-0
+    type: sdk-metadata
+  - constant-0:
+      serialization_format: JSON
+      value: 'null'
+    type: workflow-result-dict
+  name: invocation-0-task-my-task
+  outputs:
+  - name: artifact-0-my-task
+    type: workflow-result-dict
+  passed: []
+types:
+- sdk-metadata
+- workflow-result-dict

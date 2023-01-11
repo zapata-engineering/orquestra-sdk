@@ -1,0 +1,67 @@
+# workflow example inspired by https://docs.orquestra.io/quantum-engine/workflow-basics/
+apiVersion: io.orquestra.workflow/1.0.0
+
+dataAggregation:
+  resources:
+    cpu: '1'
+    disk: '1'
+    gpu: '1'
+    memory: '1'
+  run: true
+
+name: basics-with-data-aggregation
+
+imports:
+
+- name: tut-0-wel
+  type: git
+  parameters:
+    commit: "master"
+    repository: "git@github.com:zapatacomputing/tutorial-0-welcome"
+- name: orq-wor-sdk
+  parameters:
+    commit: main
+    repository: git@github.com:zapatacomputing/orquestra-workflow-sdk.git
+  type: git
+
+steps:
+
+- name: step-0-welcome-welcome
+  passed: []
+  config:
+    runtime:
+      language: python3
+      imports: [orq-wor-sdk, tut-0-wel]
+      parameters:
+        file: orq-wor-sdk/src/orquestra/sdk/_base/dispatch.py
+        function: exec_task_fn
+    resources:
+      cpu: "1000m"
+      memory: "1Gi"
+      disk: "15Gi"
+      gpu: "1"
+  inputs:
+  - __sdk_fn_ref_dict:
+      module: welcome
+      function_name: welcome
+      file_path: welcome.py
+      line_number: 7
+      type: MODULE_FUNCTION_REF
+    type: sdk-metadata
+  - __sdk_output_node_dicts:
+    - id: 'artifact-0-welcome'
+      custom_name: 'welcome'
+      serialization_format: 'AUTO'
+      artifact_index: null
+    type: sdk-metadata
+  - __sdk_additional_sys_paths: ["step/tut-0-wel"]
+    type: sdk-metadata
+  - __sdk_positional_args_ids: []
+    type: sdk-metadata
+  outputs:
+  - name: welcome
+    type: workflow-result-dict
+
+types:
+- sdk-metadata
+- workflow-result-dict

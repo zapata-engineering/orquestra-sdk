@@ -1,0 +1,91 @@
+# workflow example inspired by https://docs.orquestra.io/quantum-engine/workflow-basics/
+apiVersion: io.orquestra.workflow/1.0.0
+
+name: my-workflow
+
+imports:
+
+- name: orq-wor-sdk
+  type: git
+  parameters:
+    repository: "git@github.com:zapatacomputing/orquestra-workflow-sdk.git"
+    commit: main
+
+steps:
+- config:
+    runtime:
+      language: python3
+      customImage: "zapatacomputing/orquestra-default:v0.0.0"
+      imports: [orq-wor-sdk]
+      parameters:
+        file: orq-wor-sdk/src/orquestra/sdk/_base/dispatch.py
+        function: exec_task_fn
+  inputs:
+  - __sdk_fn_ref_dict:
+      module: orquestra.sdk.examples.exportable_wf
+      function_name: make_greeting
+      file_path: src/orquestra/sdk/examples/exportable_wf.py
+      line_number: 23
+      type: MODULE_FUNCTION_REF
+    type: sdk-metadata
+  - __sdk_output_node_dicts:
+    - id: 'artifact-0-make-greeting'
+      custom_name: null
+      serialization_format: 'AUTO'
+      artifact_index: null
+    type: sdk-metadata
+  - __sdk_additional_sys_paths: ["step/orq-wor-sdk"]
+    type: sdk-metadata
+  - __sdk_positional_args_ids: []
+    type: sdk-metadata
+  - first:
+      serialization_format: "JSON"
+      value: '"alex"'
+    type: workflow-result-dict
+  - last:
+      serialization_format: "JSON"
+      value: '"zapata"'
+    type: workflow-result-dict
+  - additional_message: ((invocation-1-task-multi-output-test.artifact-1-multi-output-test))
+    type: workflow-result-dict
+  name: invocation-0-task-make-greeting
+  outputs:
+  - name: artifact-0-make-greeting
+    type: workflow-result-dict
+  passed:
+  - invocation-1-task-multi-output-test
+- config:
+    runtime:
+      language: python3
+      customImage: "zapatacomputing/orquestra-default:v0.0.0"
+      imports: [orq-wor-sdk]
+      parameters:
+        file: orq-wor-sdk/src/orquestra/sdk/_base/dispatch.py
+        function: exec_task_fn
+  inputs:
+  - __sdk_fn_ref_dict:
+      module: orquestra.sdk.examples.exportable_wf
+      function_name: multi_output_test
+      file_path: src/orquestra/sdk/examples/exportable_wf.py
+      line_number: 33
+      type: MODULE_FUNCTION_REF
+    type: sdk-metadata
+  - __sdk_output_node_dicts:
+    - id: 'artifact-1-multi-output-test'
+      custom_name: null
+      serialization_format: 'AUTO'
+      artifact_index: 1
+    type: sdk-metadata
+  - __sdk_additional_sys_paths: ["step/orq-wor-sdk"]
+    type: sdk-metadata
+  - __sdk_positional_args_ids: []
+    type: sdk-metadata
+  name: invocation-1-task-multi-output-test
+  outputs:
+  - name: artifact-1-multi-output-test
+    type: workflow-result-dict
+  passed: []
+
+types:
+- sdk-metadata
+- workflow-result-dict

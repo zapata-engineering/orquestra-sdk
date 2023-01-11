@@ -1,0 +1,15 @@
+Workflow overview
+-----------------  -------------------------------
+workflow def name  orquestra_basic_demo
+run ID             orquestra-basic-demo-97us2-r000
+status             FAILED
+start time         2022-06-24T16:12:41+00:00
+end time           2022-06-24T16:13:35+00:00
+tasks succeeded    0/2
+-----------------  -------------------------------
+
+Task details
+function       task run ID                                 status    start_time                 end_time                   message
+-------------  ------------------------------------------  --------  -------------------------  -------------------------  ----------------------------------
+train_model    orquestra-basic-demo-97us2-r000-1582172340  WAITING   2022-06-24T16:13:30+00:00  2022-06-24T16:13:30+00:00  omitted: depends condition not met
+generate_data  orquestra-basic-demo-97us2-r000-3313514878  FAILED    2022-06-24T16:12:41+00:00  2022-06-24T16:13:28+00:00  failed with exit code 1
