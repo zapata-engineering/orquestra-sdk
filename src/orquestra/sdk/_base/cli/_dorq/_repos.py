@@ -10,12 +10,14 @@ import sys
 import typing as t
 import warnings
 from pathlib import Path
+import requests
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _config, _db, _factory, loader
-from orquestra.sdk.schema.configs import ConfigName
+from orquestra.sdk.schema.configs import ConfigName, RuntimeName
 from orquestra.sdk.schema.workflow_run import WorkflowRun, WorkflowRunId
+from orquestra.sdk._base._qe import _client
 
 
 class WorkflowRunRepo:
@@ -106,16 +108,41 @@ class ConfigRepo:
     """
     Wraps accessing ~/.orquestra/config.json
     """
+    @staticmethod
+    def list_config_names() -> t.Sequence[ConfigName]:
+        return sdk.RuntimeConfig.list_configs()
 
-    def list_config_names(self) -> t.Sequence[ConfigName]:
-        config_entries = sdk.RuntimeConfig.list_configs()
-        return [
-            # .list_configs() should probably already return "ray" and "in_process".
-            # TODO: fix that in https://zapatacomputing.atlassian.net/browse/ORQSDK-674
-            _config.RAY_CONFIG_NAME_ALIAS,
-            _config.IN_PROCESS_CONFIG_NAME,
-            *config_entries,
-        ]
+    @staticmethod
+    def store_token_in_config(uri, token):
+        runtime_name = RuntimeName.QE_REMOTE
+        config_name = _config.generate_config_name(runtime_name, uri)
+
+        config = sdk.RuntimeConfig(
+            runtime_name,
+            name=config_name,
+            bypass_factory_methods=True,
+        )
+        setattr(config, "uri", uri)
+        setattr(config, "token", token)
+        _config.save_or_update(config_name, runtime_name, config._get_runtime_options())
+
+        return config_name
+
+
+class QeClientRepo:
+    """
+    Wraps access to QE client
+    """
+    @staticmethod
+    def get_login_url(uri: str):
+        client = _client.QEClient(session=requests.Session(), base_uri=uri)
+        # Ask QE for the login url to log in to the platform
+        try:
+            target_url = client.get_login_url()
+        except (requests.ConnectionError, requests.exceptions.MissingSchema):
+            print(f"Unable to communicate with server: {uri}", file=sys.stderr)
+            raise exceptions.UnauthorizedError(f"Cannot connect to server \"{uri}\"")
+        return target_url
 
 
 def resolve_dotted_name(module_spec: str) -> str:

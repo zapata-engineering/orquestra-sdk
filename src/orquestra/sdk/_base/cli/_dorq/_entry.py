@@ -107,6 +107,7 @@ def stop(wf_run_id: t.Optional[str], config: t.Optional[str]):
     action.on_cmd_call(wf_run_id, config)
 
 
+<<<<<<< Updated upstream
 @cloup.command()
 @cloup.option_group(
     "Services",
@@ -169,6 +170,25 @@ dorq.section(
     down,
     status,
 )
+=======
+@dorq.command()
+@cloup.option(
+    "-s", "--server",
+    required=True,
+)
+@cloup.option(
+    "-t", "--token",
+    required=False,
+)
+def login(server: str, token: t.Optional[str]):
+    """
+    Login in to remote cluster
+    """
+    from ._login._login import Action
+
+    action = Action()
+    action.on_cmd_call(server, token)
+>>>>>>> Stashed changes
 
 
 def main():
