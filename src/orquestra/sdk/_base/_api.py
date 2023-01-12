@@ -734,7 +734,6 @@ def list_workflow_runs(
     config: t.Union[ConfigName, "RuntimeConfig"],
     *,
     limit: t.Optional[int] = None,
-    prefix: t.Optional[str] = None,
     max_age: t.Optional[str] = None,
     state: t.Optional[State] = None,
     project_dir: t.Optional[t.Union[Path, str]] = None,
@@ -772,7 +771,7 @@ def list_workflow_runs(
     # Note: WorkflowRun means something else in runtime land. To avoid overloading, this
     #       import is aliased to WorkflowRunStatus in here.
     run_statuses: t.List[WorkflowRunModel] = runtime.list_workflow_runs(
-        limit=limit, prefix=prefix, max_age=_parse_max_age(max_age), state=state
+        limit=limit, max_age=_parse_max_age(max_age), state=state
     )
 
     # We need to convert to the public API notion of a WorkflowRun

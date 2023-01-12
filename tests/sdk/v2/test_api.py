@@ -1533,16 +1533,7 @@ class TestListWorkflows:
         _ = _api.list_workflow_runs("mocked_config", max_age=max_age)
         # Then
         mock_config_runtime.list_workflow_runs.assert_called_with(
-            limit=None, prefix=None, max_age=delta, state=None
-        )
-
-    def test_with_prefix(self, mock_config_runtime):
-        # Given
-        # When
-        _ = _api.list_workflow_runs("mocked_config", prefix="hello")
-        # Then
-        mock_config_runtime.list_workflow_runs.assert_called_with(
-            limit=None, prefix="hello", max_age=None, state=None
+            limit=None, max_age=delta, state=None
         )
 
     def test_with_limit(self, mock_config_runtime):
@@ -1551,7 +1542,7 @@ class TestListWorkflows:
         _ = _api.list_workflow_runs("mocked_config", limit=10)
         # Then
         mock_config_runtime.list_workflow_runs.assert_called_with(
-            limit=10, prefix=None, max_age=None, state=None
+            limit=10, max_age=None, state=None
         )
 
     def test_with_state(self, mock_config_runtime):
@@ -1560,7 +1551,7 @@ class TestListWorkflows:
         _ = _api.list_workflow_runs("mocked_config", state=State.SUCCEEDED)
         # Then
         mock_config_runtime.list_workflow_runs.assert_called_with(
-            limit=None, prefix=None, max_age=None, state=State.SUCCEEDED
+            limit=None, max_age=None, state=State.SUCCEEDED
         )
 
 
