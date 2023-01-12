@@ -107,7 +107,6 @@ def stop(wf_run_id: t.Optional[str], config: t.Optional[str]):
     action.on_cmd_call(wf_run_id, config)
 
 
-<<<<<<< Updated upstream
 @cloup.command()
 @cloup.option_group(
     "Services",
@@ -170,7 +169,8 @@ dorq.section(
     down,
     status,
 )
-=======
+
+
 @dorq.command()
 @cloup.option(
     "-s", "--server",
@@ -188,7 +188,6 @@ def login(server: str, token: t.Optional[str]):
 
     action = Action()
     action.on_cmd_call(server, token)
->>>>>>> Stashed changes
 
 
 def main():
