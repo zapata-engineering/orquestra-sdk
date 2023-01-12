@@ -315,7 +315,7 @@ class TestConfigRepo:
             "uri, token, config_name",
             [
                 ("http://name.domain", "funny_token", "name"),
-                ("http://actual_name.domain", "new_token", "actual_name"),
+                ("https://actual_name.domain", "new_token", "actual_name"),
             ],
             ids=[
                 "Creating new config entry",
