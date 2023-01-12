@@ -12,10 +12,12 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
+import requests
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _config, _db, _factory
+from orquestra.sdk._base._qe._client import QEClient
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._base.cli._dorq import _repos
 from orquestra.sdk._ray import _dag
@@ -305,7 +307,83 @@ class TestConfigRepo:
                 "test_config_default",
                 "test_config_no_runtime_options",
                 "test_config_qe",
+                "actual_name",
             }
+
+        @staticmethod
+        @pytest.mark.parametrize(
+            "uri, token, config_name",
+            [
+                ("http://name.domain", "funny_token", "name"),
+                ("https://actual_name.domain", "new_token", "actual_name"),
+            ],
+            ids=[
+                "Creating new config entry",
+                "Updating existing config entry",
+            ],
+        )
+        def test_update_config(
+            tmp_path: Path, monkeypatch, config_content, uri, token, config_name
+        ):
+            """
+            Verifies that the output is a list that makes sense for the user to select
+            the config value from.
+            """
+            # Given
+            monkeypatch.setattr(Path, "home", Mock(return_value=tmp_path))
+
+            config_path = tmp_path / ".orquestra" / "config.json"
+            config_path.parent.mkdir(parents=True, exist_ok=True)
+            config_path.write_text(json.dumps(config_content))
+            repo = _repos.ConfigRepo()
+            # this assert stands to protect the json content. For this test to work
+            # it assumes that such config exist, and it matches parametrized values.
+            assert (
+                config_content["configs"]["actual_name"]["runtime_options"]["uri"]
+                == "http://actual_name.domain"
+            )
+
+            # When
+            repo.store_token_in_config(uri, token)
+
+            # Then
+            with open(config_path) as f:
+                content = json.load(f)
+                assert content["configs"][config_name]["runtime_options"]["uri"] == uri
+                assert (
+                    content["configs"][config_name]["runtime_options"]["token"] == token
+                )
+
+
+class TestQEClientRepo:
+    def test_return_valid_token(self, monkeypatch):
+        # Given
+        fake_login_url = "http://my_login.url"
+        monkeypatch.setattr(QEClient, "get_login_url", lambda x: fake_login_url)
+
+        repo = _repos.QEClientRepo()
+
+        # When
+        login_url = repo.get_login_url("uri")
+
+        # Then
+        assert login_url == fake_login_url
+
+    @pytest.mark.parametrize(
+        "exception", [requests.ConnectionError, requests.exceptions.MissingSchema]
+    )
+    def test_exceptions(self, monkeypatch, exception):
+        # Given
+        def _exception(_):
+            raise exception
+
+        monkeypatch.setattr(QEClient, "get_login_url", _exception)
+
+        repo = _repos.QEClientRepo()
+
+        # Then
+        with pytest.raises(exceptions.UnauthorizedError):
+            repo.get_login_url("uri")
 
 
 class TestResolveDottedName:

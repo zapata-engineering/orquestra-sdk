@@ -171,6 +171,27 @@ dorq.section(
 )
 
 
+@dorq.command()
+@cloup.option(
+    "-s", "--server", required=True, help="server URI that you want to log into"
+)
+@cloup.option(
+    "-t",
+    "--token",
+    required=False,
+    help="User Token to given server. To generate token, use this command without -t"
+    "option first",
+)
+def login(server: str, token: t.Optional[str]):
+    """
+    Login in to remote cluster
+    """
+    from ._login._login import Action
+
+    action = Action()
+    action.on_cmd_call(server, token)
+
+
 def main():
     dorq()
 

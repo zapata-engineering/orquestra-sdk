@@ -9,7 +9,7 @@
 
 
 👩‍🔬 *Experimental*
-
+* New CLI command: `python -m orquestra.sdk._base.cli._dorq._entry login`.
 
 🐛 *Bug Fixes*
 

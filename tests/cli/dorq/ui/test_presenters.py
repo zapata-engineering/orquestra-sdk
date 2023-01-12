@@ -146,3 +146,34 @@ class TestServicesPresneter:
             # Then
             captured = capsys.readouterr()
             assert "mocked  Not Running  something" in captured.out
+
+
+class TestLoginPresenter:
+    def test_prompt_for_login(self, capsys):
+        # Given
+        url = "cool_url"
+        login_url = "cool_login_url"
+        presenter = _presenters.LoginPresenter()
+
+        # When
+        presenter.prompt_for_login(login_url, url)
+
+        # Then
+        captured = capsys.readouterr()
+        assert "Please follow this URL to proceed with login" in captured.out
+        assert login_url in captured.out
+        assert "Then save the token using command:" in captured.out
+        assert f"orq login -s {url} -t <paste your token here>" in captured.out
+
+    def test_prompt_config_saved(self, capsys):
+        # Given
+        url = "cool_url"
+        config_name = "cool_config_name"
+        presenter = _presenters.LoginPresenter()
+
+        # When
+        presenter.prompt_config_saved(url, config_name)
+
+        # Then
+        captured = capsys.readouterr()
+        assert f"Configuration name for {url} is {config_name}" in captured.out
