@@ -4,20 +4,12 @@
 
 🚨 *Breaking Changes*
 
-* `sdk.WorkflowRun.by_id()` has a new positional parameter. `sdk.WorkflowRun.by_id("wf.1", "my/project/path", "my/config/path)` becomes `sdk.WorkflowRun.by_id("wf.1", project_dir="my/project/path", config_save_file="my/config/path)`
-* `in_process` runtime now executes workflows in topological order. This may be different to the order tasks were called in the workflow function.
-* Configs can no longer be named. For in-process, use "in_process" name, for local ray "ray" or "local". For QE remote - config name is auto generated based on URI (for https://prod-d.orquestra.io/ name becomes "prod-d" as an example).
-* Removed ray_linked runtime.
 
 🔥 *Features*
 
 
 👩‍🔬 *Experimental*
 
-* Optional `config` param in `sdk.WorkflowRun.by_id()`. Allows access to workflows submitted by other users or from another machine, if the selected runtime supports it. Per-runtime support will be added separately.
-* New CLI command: `python -m orquestra.sdk._base.cli._dorq._entry workflow stop`.
-* New CLI commands that require `config` and `workflow_run_id` will now prompt the user for selecting value interactively.
-* New CLI commands: `python -m orquestra.sdk._base.cli._dorq._entry up|down|status` for managing local services.
 
 🐛 *Bug Fixes*
 
@@ -26,6 +18,24 @@
 
 
 *Docs*
+
+
+## v0.41.0
+
+🚨 *Breaking Changes*
+
+* `sdk.WorkflowRun.by_id()` has a new positional parameter. `sdk.WorkflowRun.by_id("wf.1", "my/project/path", "my/config/path)` becomes `sdk.WorkflowRun.by_id("wf.1", project_dir="my/project/path", config_save_file="my/config/path)`
+* `in_process` runtime now executes workflows in topological order. This may be different to the order tasks were called in the workflow function.
+* Configs can no longer be named. For in-process, use "in_process" name, for local ray "ray" or "local". For QE remote - config name is auto generated based on URI (for https://prod-d.orquestra.io/ name becomes "prod-d" as an example).
+* Removed ray_linked runtime.
+
+
+👩‍🔬 *Experimental*
+
+* Optional `config` param in `sdk.WorkflowRun.by_id()`. Allows access to workflows submitted by other users or from another machine, if the selected runtime supports it. Per-runtime support will be added separately.
+* New CLI command: `python -m orquestra.sdk._base.cli._dorq._entry workflow stop`.
+* New CLI commands that require `config` and `workflow_run_id` will now prompt the user for selecting value interactively.
+* New CLI commands: `python -m orquestra.sdk._base.cli._dorq._entry up|down|status` for managing local services.
 
 
 ## v0.41.0
