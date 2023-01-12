@@ -140,7 +140,6 @@ class QEClientRepo:
         try:
             target_url = client.get_login_url()
         except (requests.ConnectionError, requests.exceptions.MissingSchema):
-            print(f"Unable to communicate with server: {uri}", file=sys.stderr)
             raise exceptions.UnauthorizedError(f'Cannot connect to server "{uri}"')
         return target_url
 
