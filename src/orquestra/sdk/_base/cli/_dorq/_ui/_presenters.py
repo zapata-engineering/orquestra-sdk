@@ -100,12 +100,15 @@ class ServicePresenter:
 
 
 class LoginPresenter:
-    def prompt_for_login(self, login_url, url):
+    def prompt_for_login(self, login_url, url, ce):
         click.echo("Please follow this URL to proceed with login:")
         click.echo(login_url)
         click.echo(
-            "Then save the token using command: \n"
-            f"orq login -s {url} -t <paste your token here>"
+            (
+                "Then save the token using command: \n"
+                f"orq login -s {url} -t <paste your token here>"
+            )
+            + (" --ce" if ce else "")
         )
 
     def prompt_config_saved(self, url, config_name):

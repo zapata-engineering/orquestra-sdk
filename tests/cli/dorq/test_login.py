@@ -14,7 +14,8 @@ class TestAction:
     """
 
     @staticmethod
-    def test_passed_server_no_token():
+    @pytest.mark.parametrize("ce", [True, False])
+    def test_passed_server_no_token(ce):
         """
         Verifies how we pass variables between subcomponents.
         """
@@ -27,30 +28,31 @@ class TestAction:
         # Mocks
         exception_presenter = MagicMock()
         login_presenter = MagicMock()
-        qe_repo = MagicMock()
+        runtime_repo = MagicMock()
         config_repo = MagicMock()
-        qe_repo.get_login_url.return_value = config_url
+        runtime_repo.get_login_url.return_value = config_url
 
         action = _login.Action(
             exception_presenter=exception_presenter,
             login_presenter=login_presenter,
-            qe_repo=qe_repo,
+            runtime_repo=runtime_repo,
             config_repo=config_repo,
         )
 
         # When
-        action.on_cmd_call(url=url, token=token)
+        action.on_cmd_call(url=url, token=token, ce=ce)
 
         # Then
         # We should get the login url from QE
-        assert qe_repo.mock_calls.count(call.get_login_url(url)) == 1
+        assert runtime_repo.mock_calls.count(call.get_login_url(url, ce)) == 1
         assert (
             login_presenter.mock_calls.count(call.prompt_for_login(config_url, url))
             == 1
         )
 
     @staticmethod
-    def test_passed_server_and_token():
+    @pytest.mark.parametrize("ce", [True, False])
+    def test_passed_server_and_token(ce):
         """
         Verifies how we pass variables between subcomponents.
         """
@@ -62,23 +64,26 @@ class TestAction:
         config_name = "cfg"
         exception_presenter = MagicMock()
         login_presenter = MagicMock()
-        qe_repo = MagicMock()
+        runtime_repo = MagicMock()
         config_repo = MagicMock()
         config_repo.store_token_in_config.return_value = config_name
 
         action = _login.Action(
             exception_presenter=exception_presenter,
             login_presenter=login_presenter,
-            qe_repo=qe_repo,
+            runtime_repo=runtime_repo,
             config_repo=config_repo,
         )
 
         # When
-        action.on_cmd_call(url=url, token=token)
+        action.on_cmd_call(url=url, token=token, ce=ce)
 
         # Then
         # We should get the login url from QE
-        assert config_repo.mock_calls.count(call.store_token_in_config(url, token)) == 1
+        assert (
+            config_repo.mock_calls.count(call.store_token_in_config(url, token, ce))
+            == 1
+        )
         assert (
             login_presenter.mock_calls.count(call.prompt_config_saved(url, config_name))
             == 1

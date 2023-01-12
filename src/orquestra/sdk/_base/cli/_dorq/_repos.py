@@ -16,6 +16,7 @@ import requests
 from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _config, _db, _factory, loader
+from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe import _client
 from orquestra.sdk.schema.configs import ConfigName, RuntimeName
 from orquestra.sdk.schema.workflow_run import WorkflowRun, WorkflowRunId
@@ -113,8 +114,8 @@ class ConfigRepo:
     def list_config_names(self) -> t.Sequence[ConfigName]:
         return sdk.RuntimeConfig.list_configs()
 
-    def store_token_in_config(self, uri, token):
-        runtime_name = RuntimeName.QE_REMOTE
+    def store_token_in_config(self, uri, token, ce):
+        runtime_name = RuntimeName.CE_REMOTE if ce else RuntimeName.QE_REMOTE
         config_name = _config.generate_config_name(runtime_name, uri)
 
         config = sdk.RuntimeConfig(
@@ -129,14 +130,17 @@ class ConfigRepo:
         return config_name
 
 
-class QEClientRepo:
+class RuntimeRepo:
     """
-    Wraps access to QE client
+    Wraps access to QE/CE clients
     """
 
-    def get_login_url(self, uri: str):
-        client = _client.QEClient(session=requests.Session(), base_uri=uri)
-        # Ask QE for the login url to log in to the platform
+    def get_login_url(self, uri: str, ce: bool):
+        if ce:
+            client = DriverClient(base_uri=uri, session=requests.Session())
+        else:
+            client = _client.QEClient(session=requests.Session(), base_uri=uri)
+            # Ask QE for the login url to log in to the platform
         try:
             target_url = client.get_login_url()
         except (requests.ConnectionError, requests.exceptions.MissingSchema):

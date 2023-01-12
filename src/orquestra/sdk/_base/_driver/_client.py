@@ -41,6 +41,8 @@ API_ACTIONS = {
     # Logs
     "get_workflow_run_logs": "/api/workflow-run-logs",
     "get_task_run_logs": "/api/task-run-logs",
+    # Login
+    "get_login_url": "v1/login",
 }
 
 
@@ -205,6 +207,19 @@ class DriverClient:
             prev_page_token=prev_token,
             next_page_token=next_token,
         )
+
+    def get_login_url(self) -> str:
+        """First step in the auth flow. Fetches the URL that the user has to visit.
+
+        Raises:
+            requests.ConnectionError: if the request fails.
+            KeyError: if the URL couldn't be found in the response.
+        """
+        resp = self._get(
+            API_ACTIONS["get_login_url"],
+            query_params={"state": "0"},
+        )
+        return resp.headers["Location"]
 
     def get_workflow_def(self, workflow_def_id: _models.WorkflowDefID) -> WorkflowDef:
         """

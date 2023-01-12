@@ -17,6 +17,7 @@ import requests
 from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _config, _db, _factory
+from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe._client import QEClient
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._base.cli._dorq import _repos
@@ -312,6 +313,9 @@ class TestConfigRepo:
 
         @staticmethod
         @pytest.mark.parametrize(
+            "ce, runtime_name", [(True, "CE_REMOTE"), (False, "QE_REMOTE")]
+        )
+        @pytest.mark.parametrize(
             "uri, token, config_name",
             [
                 ("http://name.domain", "funny_token", "name"),
@@ -323,7 +327,14 @@ class TestConfigRepo:
             ],
         )
         def test_update_config(
-            tmp_path: Path, monkeypatch, config_content, uri, token, config_name
+            tmp_path: Path,
+            monkeypatch,
+            config_content,
+            uri,
+            token,
+            config_name,
+            ce,
+            runtime_name,
         ):
             """
             Verifies that the output is a list that makes sense for the user to select
@@ -344,7 +355,7 @@ class TestConfigRepo:
             )
 
             # When
-            repo.store_token_in_config(uri, token)
+            repo.store_token_in_config(uri, token, ce)
 
             # Then
             with open(config_path) as f:
@@ -353,37 +364,45 @@ class TestConfigRepo:
                 assert (
                     content["configs"][config_name]["runtime_options"]["token"] == token
                 )
+                assert content["configs"][config_name]["runtime_name"] == runtime_name
 
 
 class TestQEClientRepo:
-    def test_return_valid_token(self, monkeypatch):
+    @pytest.mark.parametrize("ce", [True, False])
+    def test_return_valid_token(self, monkeypatch, ce):
         # Given
         fake_login_url = "http://my_login.url"
-        monkeypatch.setattr(QEClient, "get_login_url", lambda x: fake_login_url)
 
-        repo = _repos.QEClientRepo()
+        monkeypatch.setattr(
+            DriverClient if ce else QEClient, "get_login_url", lambda x: fake_login_url
+        )
+
+        repo = _repos.RuntimeRepo()
 
         # When
-        login_url = repo.get_login_url("uri")
+        login_url = repo.get_login_url("uri", ce)
 
         # Then
         assert login_url == fake_login_url
 
+    @pytest.mark.parametrize("ce", [True, False])
     @pytest.mark.parametrize(
         "exception", [requests.ConnectionError, requests.exceptions.MissingSchema]
     )
-    def test_exceptions(self, monkeypatch, exception):
+    def test_exceptions(self, monkeypatch, exception, ce):
         # Given
         def _exception(_):
             raise exception
 
-        monkeypatch.setattr(QEClient, "get_login_url", _exception)
+        monkeypatch.setattr(
+            DriverClient if ce else QEClient, "get_login_url", _exception
+        )
 
-        repo = _repos.QEClientRepo()
+        repo = _repos.RuntimeRepo()
 
         # Then
         with pytest.raises(exceptions.UnauthorizedError):
-            repo.get_login_url("uri")
+            repo.get_login_url("uri", ce)
 
 
 class TestResolveDottedName:
