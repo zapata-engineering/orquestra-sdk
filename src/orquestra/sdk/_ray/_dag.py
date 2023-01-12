@@ -857,24 +857,6 @@ class RayRuntime(RuntimeInterface):
     ) -> t.List[WorkflowRun]:
         now = datetime.now(timezone.utc)
 
-        # Grab the workflows we know about from the DB
-        if self._project_dir is not None:
-            config_name: str
-            if self._config is None:
-                config_name = "no config"
-            else:
-                config_name = self._config.config_name
-            with WorkflowDB.open_project_db(Path(self._project_dir)) as db:
-                stored_runs = db.get_workflow_runs_list(
-                    prefix=prefix, config_name=config_name
-                )
-        else:
-            stored_runs = []
-
-        # Short circuit if we don't have any workflow runs
-        if len(stored_runs) == 0:
-            return []
-
         if state is not None:
             if not isinstance(state, list):
                 state_list = [state]
@@ -883,8 +865,11 @@ class RayRuntime(RuntimeInterface):
         else:
             state_list = None
 
+        # Grab the workflows we know about from the DB
+        all_workflows = self._client.list_all()
+
         wf_runs = []
-        for wf_run_id in (r.workflow_run_id for r in stored_runs):
+        for wf_run_id, _ in all_workflows:
             try:
                 wf_run = self.get_workflow_run_status(wf_run_id)
             except exceptions.NotFoundError:
@@ -892,11 +877,11 @@ class RayRuntime(RuntimeInterface):
 
             # Let's filter the workflows at this point, instead of iterating over a list
             # multiple times
-            if state_list is not None and wf_run.status.state not in State:
+            if prefix is not None and not wf_run_id.startswith(prefix):
                 continue
-            if max_age is not None and (
-                now - (wf_run.status.start_time or now) < max_age
-            ):
+            if state_list is not None and wf_run.status.state not in state_list:
+                continue
+            if max_age is not None and (now - (wf_run.status.start_time or now) > max_age):
                 continue
             wf_runs.append(wf_run)
 
