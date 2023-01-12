@@ -21,6 +21,7 @@ from packaging.version import parse as parse_version
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import (
     CONFIG_FILE_CURRENT_VERSION,
+    ConfigName,
     RuntimeConfiguration,
     RuntimeName,
 )
@@ -47,6 +48,20 @@ from .abc import RuntimeInterface
 from .serde import deserialize_constant
 
 COMPLETED_STATES = [State.FAILED, State.TERMINATED, State.SUCCEEDED]
+
+def _resolve_config(config: t.Union[ConfigName, "RuntimeConfig"], config_save_file: t.Optional[t.Union[Path, str]]) -> "RuntimeConfig":
+    if isinstance(config, RuntimeConfig):
+        # EZ. Passed-in explicitly.
+        resolved_config = config
+    elif isinstance(config, str):
+        # Shorthand: just the config name.
+        resolved_config = RuntimeConfig.load(
+            config, config_save_file=config_save_file
+        )
+    else:
+        raise TypeError(f"'config' is of unsupported type {type(config)}.")
+
+    return resolved_config
 
 
 class TaskRun:
@@ -270,15 +285,7 @@ class WorkflowRun:
 
         # Resolve config
         resolved_config: RuntimeConfig
-        if isinstance(config, RuntimeConfig):
-            # EZ. Passed-in explicitly.
-            resolved_config = config
-        elif isinstance(config, str):
-            # Shorthand: just the config name.
-            resolved_config = RuntimeConfig.load(
-                config, config_save_file=config_save_file
-            )
-        elif config is None:
+        if config is None:
             # Shorthand: use the cached value.
             # We need to read the config name from the local DB and load the config
             # entry.
@@ -287,7 +294,7 @@ class WorkflowRun:
                 stored_run.config_name, config_save_file=config_save_file
             )
         else:
-            raise TypeError(f"'config' is of unsupported type {type(config)}.")
+            resolved_config = _resolve_config(config, config_save_file)
 
         # Retrieve workflow def from the runtime:
         # - Ray stores wf def for us under a metadata entry.
@@ -724,7 +731,7 @@ def _parse_max_age(age: t.Optional[str]) -> t.Optional[timedelta]:
 
 
 def list_workflow_runs(
-    config_name: str,
+    config: t.Union[ConfigName, "RuntimeConfig"],
     *,
     limit: t.Optional[int] = None,
     prefix: t.Optional[str] = None,
@@ -756,12 +763,10 @@ def list_workflow_runs(
     """
     _project_dir = Path(project_dir or Path.cwd())
 
-    # Load the associated config and runtime
-    config = RuntimeConfig.load(
-        config_name,
-        config_save_file=config_save_file,
-    )
-    runtime = config._get_runtime(_project_dir)
+    # Resolve config
+    resolved_config = _resolve_config(config, config_save_file)
+
+    runtime = resolved_config._get_runtime(_project_dir)
 
     # Grab the "workflow runs" from the runtime.
     # Note: WorkflowRun means something else in runtime land. To avoid overloading, this
@@ -778,7 +783,7 @@ def list_workflow_runs(
             run_id=run_status.id,
             wf_def=run_status.workflow_def,
             runtime=runtime,
-            config=config,
+            config=resolved_config,
         )
         runs.append(workflow_run)
     return runs
