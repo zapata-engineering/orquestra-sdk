@@ -576,7 +576,7 @@ def test_default_for_non_interactive_mode(monkeypatch):
         ),
         (
             sdk.PythonImports(file="tests/sdk/v2/data/requirements.txt"),
-            ["joblib==1.1.0", "numpy==1.21.5"],
+            ["joblib==1.2.0", "numpy==1.22.0"],
             do_not_raise(),
         ),
         (
@@ -602,7 +602,7 @@ def test_default_for_non_interactive_mode(monkeypatch):
             sdk.PythonImports(
                 "scipy==1.7.3", file="tests/sdk/v2/data/requirements.txt"
             ),
-            ["joblib==1.1.0", "numpy==1.21.5", "scipy==1.7.3"],
+            ["joblib==1.2.0", "numpy==1.22.0", "scipy==1.7.3"],
             do_not_raise(),
         ),
         (
