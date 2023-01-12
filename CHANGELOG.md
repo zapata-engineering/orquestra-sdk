@@ -20,7 +20,7 @@
 *Docs*
 
 
-## v0.41.0
+## v0.42.0
 
 🚨 *Breaking Changes*
 
