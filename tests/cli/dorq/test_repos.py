@@ -12,10 +12,12 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
+import requests
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _config, _db, _factory
+from orquestra.sdk._base._qe._client import QEClient
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._base.cli._dorq import _repos
 from orquestra.sdk._ray import _dag
@@ -351,6 +353,37 @@ class TestConfigRepo:
                 assert (
                     content["configs"][config_name]["runtime_options"]["token"] == token
                 )
+
+
+class TestQeClientRepo:
+    def test_return_valid_token(self, monkeypatch):
+        # Given
+        fake_login_url = "http://my_login.url"
+        monkeypatch.setattr(QEClient, "get_login_url", lambda x: fake_login_url)
+
+        repo = _repos.QeClientRepo
+
+        # When
+        login_url = repo.get_login_url("uri")
+
+        # Then
+        assert login_url == fake_login_url
+
+    @pytest.mark.parametrize(
+        "exception", [requests.ConnectionError, requests.exceptions.MissingSchema]
+    )
+    def test_exceptions(self, monkeypatch, exception):
+        # Given
+        def _exception(_):
+            raise exception
+
+        monkeypatch.setattr(QEClient, "get_login_url", _exception)
+
+        repo = _repos.QeClientRepo
+
+        # Then
+        with pytest.raises(exceptions.UnauthorizedError):
+            repo.get_login_url("uri")
 
 
 class TestResolveDottedName:
