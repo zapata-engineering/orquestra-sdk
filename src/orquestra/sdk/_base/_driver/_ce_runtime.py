@@ -263,7 +263,7 @@ class CERuntime(RuntimeInterface):
         limit: Optional[int] = None,
         prefix: Optional[str] = None,
         max_age: Optional[timedelta] = None,
-        state: Optional[State] = None,
+        state: Optional[Union[State, List[State]]] = None,
     ) -> List[WorkflowRun]:
         """
         List the workflow runs, with some filters

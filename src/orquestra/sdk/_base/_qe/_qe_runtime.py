@@ -24,7 +24,7 @@ from orquestra.sdk._base._conversions._yaml_exporter import (
 )
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base.abc import RuntimeInterface
-from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
+from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocation, TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import (
@@ -823,7 +823,7 @@ class QERuntime(RuntimeInterface):
         limit: Optional[int] = None,
         prefix: Optional[str] = None,
         max_age: Optional[timedelta] = None,
-        state: Optional[State] = None,
+        state: Optional[Union[State, List[State]]] = None,
     ) -> List[WorkflowRun]:
         now = datetime.now(timezone.utc)
 
@@ -837,6 +837,14 @@ class QERuntime(RuntimeInterface):
         if len(stored_runs) == 0:
             return []
 
+        if state is not None:
+            if not isinstance(state, list):
+                state_list = [state]
+            else:
+                state_list = state
+        else:
+            state_list = None
+
         wf_runs = []
         for wf_run_id in (r.workflow_run_id for r in stored_runs):
             try:
@@ -846,7 +854,7 @@ class QERuntime(RuntimeInterface):
 
             # Let's filter the workflows at this point, instead of iterating over a list
             # multiple times
-            if state is not None and wf_run.status.state != state:
+            if state_list is not None and wf_run.status.state not in state_list:
                 continue
             if max_age is not None and (
                 now - (wf_run.status.start_time or now) >= max_age

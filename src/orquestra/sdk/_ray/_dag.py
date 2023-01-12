@@ -7,7 +7,6 @@ RuntimeInterface implementation that uses Ray DAG/Ray Core API.
 
 from __future__ import annotations
 
-import builtins
 import dataclasses
 import json
 import re
@@ -854,7 +853,7 @@ class RayRuntime(RuntimeInterface):
         limit: t.Optional[int] = None,
         prefix: t.Optional[str] = None,
         max_age: t.Optional[timedelta] = None,
-        state: t.Optional[State] = None,
+        state: t.Optional[t.Union[State, t.List[State]]] = None,
     ) -> t.List[WorkflowRun]:
         now = datetime.now(timezone.utc)
 
@@ -876,6 +875,14 @@ class RayRuntime(RuntimeInterface):
         if len(stored_runs) == 0:
             return []
 
+        if state is not None:
+            if not isinstance(state, list):
+                state_list = [state]
+            else:
+                state_list = state
+        else:
+            state_list = None
+
         wf_runs = []
         for wf_run_id in (r.workflow_run_id for r in stored_runs):
             try:
@@ -885,7 +892,7 @@ class RayRuntime(RuntimeInterface):
 
             # Let's filter the workflows at this point, instead of iterating over a list
             # multiple times
-            if state is not None and wf_run.status.state != state:
+            if state_list is not None and wf_run.status.state not in State:
                 continue
             if max_age is not None and (
                 now - (wf_run.status.start_time or now) < max_age

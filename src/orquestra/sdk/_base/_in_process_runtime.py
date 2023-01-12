@@ -192,6 +192,15 @@ class InProcessRuntime:
         """
         now = datetime.now(timezone.utc)
 
+        if state is not None:
+            if not isinstance(state, list):
+                state_list = [state]
+            else:
+                state_list = state
+        else:
+            state_list = None
+
+
         wf_runs = []
         # Each workflow run executed with the in-process runtime is stored within the
         # runtime object.
@@ -203,7 +212,7 @@ class InProcessRuntime:
 
             # Let's filter the workflows at this point, instead of iterating over a list
             # multiple times
-            if state is not None and wf_run.status.state != state:
+            if state_list is not None and wf_run.status.state not in state_list:
                 continue
             if prefix is not None and wf_run_id.startswith(prefix):
                 continue

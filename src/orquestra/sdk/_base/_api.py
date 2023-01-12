@@ -735,7 +735,7 @@ def list_workflow_runs(
     *,
     limit: t.Optional[int] = None,
     max_age: t.Optional[str] = None,
-    state: t.Optional[State] = None,
+    state: t.Optional[t.Union[State, t.List[State]]] = None,
     project_dir: t.Optional[t.Union[Path, str]] = None,
     config_save_file: t.Optional[t.Union[Path, str]] = None,
 ) -> t.List[WorkflowRun]:

@@ -192,7 +192,7 @@ class RuntimeInterface(ABC):
         limit: t.Optional[int] = None,
         prefix: t.Optional[str] = None,
         max_age: t.Optional[timedelta] = None,
-        state: t.Optional[State] = None,
+        state: t.Optional[t.Union[State, t.List[State]]] = None,
     ) -> t.List[WorkflowRun]:
         """
         List the workflow runs, with some filters
