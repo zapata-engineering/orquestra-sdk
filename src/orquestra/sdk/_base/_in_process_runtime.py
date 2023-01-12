@@ -200,7 +200,6 @@ class InProcessRuntime:
         else:
             state_list = None
 
-
         wf_runs = []
         # Each workflow run executed with the in-process runtime is stored within the
         # runtime object.

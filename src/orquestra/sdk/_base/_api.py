@@ -49,15 +49,17 @@ from .serde import deserialize_constant
 
 COMPLETED_STATES = [State.FAILED, State.TERMINATED, State.SUCCEEDED]
 
-def _resolve_config(config: t.Union[ConfigName, "RuntimeConfig"], config_save_file: t.Optional[t.Union[Path, str]]) -> "RuntimeConfig":
+
+def _resolve_config(
+    config: t.Union[ConfigName, "RuntimeConfig"],
+    config_save_file: t.Optional[t.Union[Path, str]],
+) -> "RuntimeConfig":
     if isinstance(config, RuntimeConfig):
         # EZ. Passed-in explicitly.
         resolved_config = config
     elif isinstance(config, str):
         # Shorthand: just the config name.
-        resolved_config = RuntimeConfig.load(
-            config, config_save_file=config_save_file
-        )
+        resolved_config = RuntimeConfig.load(config, config_save_file=config_save_file)
     else:
         raise TypeError(f"'config' is of unsupported type {type(config)}.")
 
