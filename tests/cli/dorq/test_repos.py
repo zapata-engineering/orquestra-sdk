@@ -305,8 +305,45 @@ class TestConfigRepo:
                 "test_config_default",
                 "test_config_no_runtime_options",
                 "test_config_qe",
+                "actual_name",
             }
 
+        @staticmethod
+        @pytest.mark.parametrize(
+            "uri, token, config_name",
+            [
+                ("http://name.domain", "funny_token", "name"),
+                ("http://actual_name.domain", "new_token", "actual_name"),
+            ],
+            ids=[
+                "Creating new config entry",
+                "Updating existing config entry",
+            ]
+        )
+        def test_update_config(tmp_path: Path, monkeypatch, config_content, uri, token, config_name):
+            """
+            Verifies that the output is a list that makes sense for the user to select
+            the config value from.
+            """
+            # Given
+            monkeypatch.setattr(Path, "home", Mock(return_value=tmp_path))
+
+            config_path = tmp_path / ".orquestra" / "config.json"
+            config_path.parent.mkdir(parents=True, exist_ok=True)
+            config_path.write_text(json.dumps(config_content))
+            repo = _repos.ConfigRepo()
+            # this assert stands to protect the json content. For this test to work
+            # it assumes that such config exist, and it matches parametrized values.
+            assert config_content["configs"]["actual_name"]["runtime_options"]["uri"] == "http://actual_name.domain"
+
+            # When
+            repo.store_token_in_config(uri, token)
+
+            # Then
+            with open(config_path) as f:
+                content = json.load(f)
+                assert content["configs"][config_name]["runtime_options"]["uri"] == uri
+                assert content["configs"][config_name]["runtime_options"]["token"] == token
 
 class TestResolveDottedName:
     """

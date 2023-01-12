@@ -27,6 +27,14 @@ TEST_CONFIG_JSON = {
                 "token": "test_token",
             },
         },
+        "actual_name": {
+            "config_name": "actual_name",
+            "runtime_name": "QE_REMOTE",
+            "runtime_options": {
+                "uri": "http://actual_name.domain",
+                "token": "this_token_best_token",
+            },
+        },
     },
     "default_config_name": "test_config_default",
 }
