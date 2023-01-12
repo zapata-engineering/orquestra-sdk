@@ -754,7 +754,6 @@ def list_workflow_runs(
             saved. If omitted, the default config file path is used.
 
     Raises:
-        ModuleNotFoundError: when the orquestra-runtime package is not installed.
         ConfigNameNotFoundError: when the named config is not found in the file.
 
     Returns:
