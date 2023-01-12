@@ -14,10 +14,7 @@ from .._ui import _presenters
 
 class Action:
     """
-    Encapsulates app-related logic for handling ``orq workflow submit``.
-
-    The module is considered part of the name, so this class should be read as
-    ``_dorq._workflow._submit.Action``.
+    Encapsulates app-related logic for handling `orq login`.
     """
 
     def __init__(
