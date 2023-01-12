@@ -881,7 +881,9 @@ class RayRuntime(RuntimeInterface):
                 continue
             if state_list is not None and wf_run.status.state not in state_list:
                 continue
-            if max_age is not None and (now - (wf_run.status.start_time or now) > max_age):
+            if max_age is not None and (
+                now - (wf_run.status.start_time or now) > max_age
+            ):
                 continue
             wf_runs.append(wf_run)
 
