@@ -29,9 +29,7 @@ class TestAction:
         config_repo = MagicMock()
 
         action = _login.Action(
-            presenter=presenter,
-            qe_repo=qe_repo,
-            config_repo=config_repo
+            presenter=presenter, qe_repo=qe_repo, config_repo=config_repo
         )
 
         # When
@@ -60,9 +58,7 @@ class TestAction:
         config_repo = MagicMock()
 
         action = _login.Action(
-            presenter=presenter,
-            qe_repo=qe_repo,
-            config_repo=config_repo
+            presenter=presenter, qe_repo=qe_repo, config_repo=config_repo
         )
 
         # When
