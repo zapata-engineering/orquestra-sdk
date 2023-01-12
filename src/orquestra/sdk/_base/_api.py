@@ -507,8 +507,9 @@ class WorkflowRun:
             WorkflowRunNotStarted: when the workflow run has not started
             WorkflowRunNotFinished: when the workflow run has not finished and `wait` is
                                    False
-            WorkflowRunNotSucceeded: when the workflow is no longer executing, but it wasn't
-                succeded.
+            WorkflowRunNotSucceeded: when the workflow is no longer executing, but it did not
+                succeed.
+``
         """  # noqa 501
         try:
             run_id = self.run_id
