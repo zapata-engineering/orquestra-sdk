@@ -173,11 +173,13 @@ dorq.section(
 
 @dorq.command()
 @cloup.option(
-    "-s", "--server",
+    "-s",
+    "--server",
     required=True,
 )
 @cloup.option(
-    "-t", "--token",
+    "-t",
+    "--token",
     required=False,
 )
 def login(server: str, token: t.Optional[str]):

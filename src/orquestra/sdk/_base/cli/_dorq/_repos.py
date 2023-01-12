@@ -10,14 +10,15 @@ import sys
 import typing as t
 import warnings
 from pathlib import Path
+
 import requests
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _config, _db, _factory, loader
+from orquestra.sdk._base._qe import _client
 from orquestra.sdk.schema.configs import ConfigName, RuntimeName
 from orquestra.sdk.schema.workflow_run import WorkflowRun, WorkflowRunId
-from orquestra.sdk._base._qe import _client
 
 
 class WorkflowRunRepo:
@@ -108,6 +109,7 @@ class ConfigRepo:
     """
     Wraps accessing ~/.orquestra/config.json
     """
+
     @staticmethod
     def list_config_names() -> t.Sequence[ConfigName]:
         return sdk.RuntimeConfig.list_configs()
@@ -133,6 +135,7 @@ class QeClientRepo:
     """
     Wraps access to QE client
     """
+
     @staticmethod
     def get_login_url(uri: str):
         client = _client.QEClient(session=requests.Session(), base_uri=uri)
@@ -141,7 +144,7 @@ class QeClientRepo:
             target_url = client.get_login_url()
         except (requests.ConnectionError, requests.exceptions.MissingSchema):
             print(f"Unable to communicate with server: {uri}", file=sys.stderr)
-            raise exceptions.UnauthorizedError(f"Cannot connect to server \"{uri}\"")
+            raise exceptions.UnauthorizedError(f'Cannot connect to server "{uri}"')
         return target_url
 
 

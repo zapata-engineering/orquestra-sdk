@@ -32,9 +32,7 @@ class Action:
         self._config_repo = config_repo
         self._qe_repo = qe_repo
 
-    def on_cmd_call(
-        self, url: str, token: t.Optional[str]
-    ):
+    def on_cmd_call(self, url: str, token: t.Optional[str]):
         try:
             self._on_cmd_call_with_exceptions(url, token)
         except Exception as e:
@@ -57,10 +55,14 @@ class Action:
         login_url = self._qe_repo.get_login_url(url)
         print("Please follow this URL to proceed with login:")
         print(login_url)
-        print("Then save the token using command: \n"
-              f"orq login -s {url} -t <paste your token here>")
+        print(
+            "Then save the token using command: \n"
+            f"orq login -s {url} -t <paste your token here>"
+        )
 
     def _save_token(self, url, token):
         config_name = self._config_repo.store_token_in_config(url, token)
-        print(f"Token saved in config file. "
-              f"Configuration name for {url} is {config_name}")
+        print(
+            f"Token saved in config file. "
+            f"Configuration name for {url} is {config_name}"
+        )
