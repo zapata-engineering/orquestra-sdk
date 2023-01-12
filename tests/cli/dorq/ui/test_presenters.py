@@ -10,8 +10,8 @@ import pytest
 
 from orquestra import sdk
 from orquestra.sdk._base.cli._corq._format import per_command
-from orquestra.sdk._base.cli._dorq import _dumpers
 from orquestra.sdk._base.cli._dorq._ui import _errors, _presenters
+from orquestra.sdk._base import serde
 from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.responses import ServiceResponse
 
@@ -94,7 +94,7 @@ class TestWrappedCorqOutputPresenter:
         @staticmethod
         def test_show_dumped_wf_result(capsys):
             # Given
-            details = _dumpers.DumpDetails(
+            details = serde.DumpDetails(
                 file_path=Path("tests/some-path/wf.1234_1.json"),
                 format=ArtifactFormat.JSON,
             )

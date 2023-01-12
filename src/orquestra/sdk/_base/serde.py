@@ -2,7 +2,9 @@
 # © Copyright 2021-2022 Zapata Computing Inc.
 ################################################################################
 import codecs
+from dataclasses import dataclass
 import json
+from pathlib import Path
 import typing as t
 from functools import singledispatch
 
@@ -125,3 +127,40 @@ def stringify_package_spec(package: ir.PackageSpec) -> str:
         parts.append(f"; {package.environment_markers}")
 
     return "".join(parts)
+
+
+@dataclass(frozen=True)
+class DumpDetails:
+    file_path: Path
+    format: ir.ArtifactFormat
+
+
+def dump_to_file(value: t.Any, dir_path: Path, file_name_prefix: str) -> DumpDetails:
+    """
+    Writes ``value`` to a file. Serialization format is picked depending on the value.
+    The result file is created under ``<dir_path>/<file_name_prefix><extension>``,
+    where ``extension`` matches the inferred format.
+
+    Returns:
+        Metadata about the created file.
+    """
+    dir_path.mkdir(parents=True, exist_ok=True)
+
+    json_file_path = dir_path / f"{file_name_prefix}.json"
+
+    try:
+        with json_file_path.open("w") as f:
+            json.dump(value, f)
+
+        return DumpDetails(json_file_path, ir.ArtifactFormat.JSON)
+    except (TypeError, ValueError):
+        # The file is created even if we don't write anything to it.
+        json_file_path.unlink()
+
+    pickle_file_path = dir_path / f"{file_name_prefix}.pickle"
+    with pickle_file_path.open("wb") as f:
+        dill.dump(value, f, protocol=PICKLE_PROTOCOL, recurse=True)
+
+    return DumpDetails(
+        file_path=pickle_file_path, format=ir.ArtifactFormat.ENCODED_PICKLE
+    )

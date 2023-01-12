@@ -14,7 +14,7 @@ from typing import Iterable, Iterator, List
 import click
 from tabulate import tabulate
 
-import orquestra.sdk._base._services as _services
+from orquestra.sdk._base import serde, _services
 from orquestra.sdk.schema import responses
 from orquestra.sdk.schema.workflow_run import (
     WorkflowRun,
@@ -23,7 +23,6 @@ from orquestra.sdk.schema.workflow_run import (
 )
 
 from ..._corq._format import per_command
-from .._dumpers import DumpDetails
 from . import _errors
 
 
@@ -57,7 +56,7 @@ class WrappedCorqOutputPresenter:
     def show_stopped_wf_run(self, wf_run_id: WorkflowRunId):
         click.echo(f"Workflow run {wf_run_id} stopped.")
 
-    def show_dumped_wf_result(self, dump_details: DumpDetails):
+    def show_dumped_wf_result(self, dump_details: serde.DumpDetails):
         click.echo(
             f"Artifact saved at {dump_details.file_path} "
             f"serialized with {dump_details.format.name}."
