@@ -748,17 +748,19 @@ class TestListWorkflowRuns:
         runtime: _ce_runtime.CERuntime,
     ):
         # Given
-        kwargs = {
-            "prefix": "mocked",
-            "max_age": timedelta(hours=1),
-            "limit": None,
-            "state": State.SUCCEEDED,
-        }
+        prefix = "mocked"
+        max_age = timedelta(hours=1)
+        limit = None
+        state = State.SUCCEEDED
         # When
-        _ = runtime.list_workflow_runs(**kwargs)
+        _ = runtime.list_workflow_runs(
+            prefix=prefix, max_age=max_age, limit=limit, state=state
+        )
 
         # Then
-        mocked_client.list_workflow_runs.assert_called_once_with(**kwargs)
+        mocked_client.list_workflow_runs.assert_called_once_with(
+            prefix=prefix, max_age=max_age, limit=limit, state=state
+        )
 
     def test_unknown_http(
         self,
