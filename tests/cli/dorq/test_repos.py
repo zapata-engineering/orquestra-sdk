@@ -355,13 +355,13 @@ class TestConfigRepo:
                 )
 
 
-class TestQeClientRepo:
+class TestQEClientRepo:
     def test_return_valid_token(self, monkeypatch):
         # Given
         fake_login_url = "http://my_login.url"
         monkeypatch.setattr(QEClient, "get_login_url", lambda x: fake_login_url)
 
-        repo = _repos.QeClientRepo
+        repo = _repos.QEClientRepo()
 
         # When
         login_url = repo.get_login_url("uri")
@@ -379,7 +379,7 @@ class TestQeClientRepo:
 
         monkeypatch.setattr(QEClient, "get_login_url", _exception)
 
-        repo = _repos.QeClientRepo
+        repo = _repos.QEClientRepo()
 
         # Then
         with pytest.raises(exceptions.UnauthorizedError):

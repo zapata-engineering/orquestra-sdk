@@ -110,12 +110,10 @@ class ConfigRepo:
     Wraps accessing ~/.orquestra/config.json
     """
 
-    @staticmethod
-    def list_config_names() -> t.Sequence[ConfigName]:
+    def list_config_names(self) -> t.Sequence[ConfigName]:
         return sdk.RuntimeConfig.list_configs()
 
-    @staticmethod
-    def store_token_in_config(uri, token):
+    def store_token_in_config(self, uri, token):
         runtime_name = RuntimeName.QE_REMOTE
         config_name = _config.generate_config_name(runtime_name, uri)
 
@@ -131,13 +129,12 @@ class ConfigRepo:
         return config_name
 
 
-class QeClientRepo:
+class QEClientRepo:
     """
     Wraps access to QE client
     """
 
-    @staticmethod
-    def get_login_url(uri: str):
+    def get_login_url(self, uri: str):
         client = _client.QEClient(session=requests.Session(), base_uri=uri)
         # Ask QE for the login url to log in to the platform
         try:

@@ -97,3 +97,17 @@ class ServicePresenter:
                 tablefmt="plain",
             ),
         )
+
+
+class LoginPresenter:
+    def prompt_for_login(self, login_url, url):
+        click.echo("Please follow this URL to proceed with login:")
+        click.echo(login_url)
+        click.echo(
+            "Then save the token using command: \n"
+            f"orq login -s {url} -t <paste your token here>"
+        )
+
+    def prompt_config_saved(self, url, config_name):
+        click.echo("Token saved in config file.")
+        click.echo(f"Configuration name for {url} is {config_name}")

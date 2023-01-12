@@ -19,12 +19,13 @@ class Action:
 
     def __init__(
         self,
-        presenter=_presenters.WrappedCorqOutputPresenter(),
+        exception_presenter=_presenters.WrappedCorqOutputPresenter(),
+        login_presenter=_presenters.LoginPresenter(),
         config_repo=_repos.ConfigRepo(),
-        qe_repo=_repos.QeClientRepo(),
+        qe_repo=_repos.QEClientRepo(),
     ):
-        self._presenter = presenter
-
+        self._exception_presenter = exception_presenter
+        self._login_presenter = login_presenter
         # data sources
         self._config_repo = config_repo
         self._qe_repo = qe_repo
@@ -33,7 +34,7 @@ class Action:
         try:
             self._on_cmd_call_with_exceptions(url, token)
         except Exception as e:
-            self._presenter.show_error(e)
+            self._exception_presenter.show_error(e)
 
     def _on_cmd_call_with_exceptions(
         self,
@@ -50,16 +51,8 @@ class Action:
 
     def _prompt_for_login(self, url: str):
         login_url = self._qe_repo.get_login_url(url)
-        print("Please follow this URL to proceed with login:")
-        print(login_url)
-        print(
-            "Then save the token using command: \n"
-            f"orq login -s {url} -t <paste your token here>"
-        )
+        self._login_presenter.prompt_for_login(login_url, url)
 
     def _save_token(self, url, token):
         config_name = self._config_repo.store_token_in_config(url, token)
-        print(
-            f"Token saved in config file. "
-            f"Configuration name for {url} is {config_name}"
-        )
+        self._login_presenter.prompt_config_saved(url, config_name)
