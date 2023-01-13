@@ -14,6 +14,7 @@
 * New CLI Login commands allows to login to CE with --ce flag
 
 🐛 *Bug Fixes*
+* Fixed broken link on docs landing page.
 
 
 *Internal*
