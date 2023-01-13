@@ -35,7 +35,17 @@ class TestPrettyPrintException:
             ),
             (
                 exceptions.WorkflowRunNotSucceeded(message="Foo", state=State.FAILED),
-                "The selected workflow hasn't succeeded. State: FAILED.",
+                (
+                    "This action only works with succeeded workflows. However, the "
+                    "selected run is FAILED."
+                ),
+            ),
+            (
+                exceptions.WorkflowRunNotFinished(message="Foo", state=State.RUNNING),
+                (
+                    "This action only works with finished workflows. However, the "
+                    "selected run is RUNNING."
+                ),
             ),
             (ConnectionError(), "Unable to connect to Ray"),
         ],

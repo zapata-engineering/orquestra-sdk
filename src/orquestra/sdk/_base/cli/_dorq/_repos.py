@@ -127,8 +127,8 @@ class WorkflowRunRepo:
             raise
 
         try:
-            outputs = wf_run.get_results(wait=True)
-        except exceptions.WorkflowRunNotSucceeded:
+            outputs = wf_run.get_results(wait=False)
+        except (exceptions.WorkflowRunNotFinished, exceptions.WorkflowRunNotSucceeded):
             raise
 
         return outputs

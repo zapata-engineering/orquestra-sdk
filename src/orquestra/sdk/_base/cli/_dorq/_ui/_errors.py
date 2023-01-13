@@ -69,7 +69,20 @@ def _(e: exceptions.WorkflowSyntaxError) -> ResponseStatusCode:
 @pretty_print_exception.register
 def _(e: exceptions.WorkflowRunNotSucceeded) -> ResponseStatusCode:
     _print_traceback(e)
-    click.echo(f"The selected workflow hasn't succeeded. State: {e.state.name}.")
+    click.echo(
+        "This action only works with succeeded workflows. However, the selected run "
+        f"is {e.state.name}."
+    )
+    return ResponseStatusCode.INVALID_WORKFLOW_RUN
+
+
+@pretty_print_exception.register
+def _(e: exceptions.WorkflowRunNotFinished) -> ResponseStatusCode:
+    _print_traceback(e)
+    click.echo(
+        "This action only works with finished workflows. However, the selected run "
+        f"is {e.state.name}."
+    )
     return ResponseStatusCode.INVALID_WORKFLOW_RUN
 
 

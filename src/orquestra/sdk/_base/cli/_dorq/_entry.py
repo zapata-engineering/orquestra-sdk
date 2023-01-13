@@ -119,10 +119,15 @@ def results(
 ):
     """
     Shows preview of a workflow output values corresponding to the variables
-    returned from the ``@workflow`` function. This tries to print a human-friendly
-    values preview, but the output isn't guaranteed to be a valid parseable value. If
-    you need the artifact value for further processing, use the ``download_dir`` option
-    or use ``orquestra.sdk.WorkflowRun.get_results()`` directly from Python.
+    returned from the ``@workflow`` function.
+
+    Only works with succeeded workflows. If a workflow is still running this command
+    won't wait for the workflow's completion.
+
+    This command tries to print a human-friendly values preview, but the output isn't
+    guaranteed to be a valid parseable value. If you need the artifact value for
+    further processing, use the ``download_dir`` option or use
+    ``orquestra.sdk.WorkflowRun.get_results()`` directly from Python.
     """
 
     from ._workflow._results import Action
