@@ -752,9 +752,7 @@ class TestListWorkflowRuns:
         limit = None
         state = State.SUCCEEDED
         # When
-        _ = runtime.list_workflow_runs(
-            max_age=max_age, limit=limit, state=state
-        )
+        _ = runtime.list_workflow_runs(max_age=max_age, limit=limit, state=state)
 
         # Then
         mocked_client.list_workflow_runs.assert_called_once_with(
