@@ -4,7 +4,7 @@ Orquestra Workflow SDK
 
 Orquestra Workflow SDK allows you to write, execute, and manage computational workflows using Python.
 
-.. button-ref:: tutorials/installation
+.. button-ref:: tutorials/installing-macos-linux
    :color: primary
    :shadow:
 

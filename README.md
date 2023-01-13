@@ -28,4 +28,4 @@ If you'd like to report a bug/issue please create a [new issue using one of the 
 
 ## Contributing
 
-Please see our [CONTRIBUTING.md](CONTRIBUTING.md)] for more information on contributing to Orquestra Workflow SDK.
+Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for more information on contributing to Orquestra Workflow SDK.
