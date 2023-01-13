@@ -88,7 +88,7 @@ def _compose_path():
 
 
 # Timeout for inter-process commands (seconds).
-IPC_TIMEOUT = 10
+IPC_TIMEOUT = 20
 
 
 class DockerException(Exception):
