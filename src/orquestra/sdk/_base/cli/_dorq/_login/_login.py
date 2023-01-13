@@ -24,11 +24,15 @@ class Action:
         config_repo=_repos.ConfigRepo(),
         runtime_repo=_repos.RuntimeRepo(),
     ):
-        self._exception_presenter = exception_presenter
-        self._login_presenter = login_presenter
+        # presenters
+        self._exception_presenter: _presenters.WrappedCorqOutputPresenter = (
+            exception_presenter
+        )
+        self._login_presenter: _presenters.LoginPresenter = login_presenter
+
         # data sources
-        self._config_repo = config_repo
-        self._runtime_repo = runtime_repo
+        self._config_repo: _repos.ConfigRepo = config_repo
+        self._runtime_repo: _repos.RuntimeRepo = runtime_repo
 
     def on_cmd_call(self, url: str, token: t.Optional[str], ce: bool):
         try:

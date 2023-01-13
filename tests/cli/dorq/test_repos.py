@@ -367,7 +367,7 @@ class TestConfigRepo:
                 assert content["configs"][config_name]["runtime_name"] == runtime_name
 
 
-class TestQEClientRepo:
+class TestRuntimeRepo:
     @pytest.mark.parametrize("ce", [True, False])
     def test_return_valid_token(self, monkeypatch, ce):
         # Given

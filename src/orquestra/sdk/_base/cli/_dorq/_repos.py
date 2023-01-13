@@ -7,6 +7,7 @@ Repositories that encapsulate data access used by dorq commands.
 import importlib
 import os
 import sys
+import typing
 import typing as t
 import warnings
 from pathlib import Path
@@ -136,6 +137,7 @@ class RuntimeRepo:
     """
 
     def get_login_url(self, uri: str, ce: bool):
+        client: typing.Union[DriverClient, _client.QEClient]
         if ce:
             client = DriverClient(base_uri=uri, session=requests.Session())
         else:
