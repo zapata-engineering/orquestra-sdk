@@ -16,6 +16,7 @@ from tabulate import tabulate
 
 from orquestra.sdk._base import serde, _services
 from orquestra.sdk.schema import responses
+from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.workflow_run import (
     WorkflowRun,
     WorkflowRunId,
@@ -57,9 +58,21 @@ class WrappedCorqOutputPresenter:
         click.echo(f"Workflow run {wf_run_id} stopped.")
 
     def show_dumped_wf_result(self, dump_details: serde.DumpDetails):
+        format_name: str
+        if dump_details.format == ArtifactFormat.JSON:
+            format_name = "a text json file"
+        elif dump_details.format == ArtifactFormat.ENCODED_PICKLE:
+            # Our enum case name is ENCODED_PICKLE, but this isn't entirely consistent
+            # with the file contents. Here, we don't base64-encode the pickle bytes, we
+            # just dump them directly to the file. Custom caption should help users
+            # avoid the confusion.
+            format_name = "a binary pickle file"
+        else:
+            format_name = dump_details.format.name
+
         click.echo(
             f"Artifact saved at {dump_details.file_path} "
-            f"serialized with {dump_details.format.name}."
+            f"as {format_name}."
         )
 
     def show_workflow_outputs(

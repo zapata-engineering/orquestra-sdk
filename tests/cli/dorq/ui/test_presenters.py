@@ -91,24 +91,63 @@ class TestWrappedCorqOutputPresenter:
             captured = capsys.readouterr()
             assert f"Workflow run {wf_run_id} stopped" in captured.out
 
-        @staticmethod
-        def test_show_dumped_wf_result(capsys):
-            # Given
-            details = serde.DumpDetails(
-                file_path=Path("tests/some-path/wf.1234_1.json"),
-                format=ArtifactFormat.JSON,
-            )
-            presenter = _presenters.WrappedCorqOutputPresenter()
+        class TestDumpedWFResult:
+            @staticmethod
+            def test_json(capsys):
+                # Given
+                details = serde.DumpDetails(
+                    file_path=Path("tests/some-path/wf.1234_1.json"),
+                    format=ArtifactFormat.JSON,
+                )
+                presenter = _presenters.WrappedCorqOutputPresenter()
 
-            # When
-            presenter.show_dumped_wf_result(details)
+                # When
+                presenter.show_dumped_wf_result(details)
 
-            # Then
-            captured = capsys.readouterr()
-            assert captured.out == (
-                "Artifact saved at tests/some-path/wf.1234_1.json serialized "
-                "with JSON.\n"
-            )
+                # Then
+                captured = capsys.readouterr()
+                # We can't assert on the full path because separators are
+                # platform-dependent.
+                assert "Artifact saved at tests" in captured.out
+                assert "wf.1234_1.json as a text json file." in captured.out
+
+            @staticmethod
+            def test_pickle(capsys):
+                # Given
+                details = serde.DumpDetails(
+                    file_path=Path("tests/some-path/wf.1234_1.pickle"),
+                    format=ArtifactFormat.ENCODED_PICKLE,
+                )
+                presenter = _presenters.WrappedCorqOutputPresenter()
+
+                # When
+                presenter.show_dumped_wf_result(details)
+
+                # Then
+                captured = capsys.readouterr()
+                # We can't assert on the full path because separators are
+                # platform-dependent.
+                assert "Artifact saved at tests" in captured.out
+                assert "wf.1234_1.pickle as a binary pickle file." in captured.out
+
+            @staticmethod
+            def test_other(capsys):
+                # Given
+                details = serde.DumpDetails(
+                    file_path=Path("tests/some-path/wf.1234_1.npz"),
+                    format=ArtifactFormat.NUMPY_ARRAY,
+                )
+                presenter = _presenters.WrappedCorqOutputPresenter()
+
+                # When
+                presenter.show_dumped_wf_result(details)
+
+                # Then
+                captured = capsys.readouterr()
+                # We can't assert on the full path because separators are
+                # platform-dependent.
+                assert "Artifact saved at tests" in captured.out
+                assert "wf.1234_1.npz as NUMPY_ARRAY." in captured.out
 
         @staticmethod
         def test_show_artifact_values(capsys):
