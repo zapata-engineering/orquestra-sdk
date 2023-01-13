@@ -581,7 +581,7 @@ class TestCLIWithRay:
                 prefix=None,
                 max_age=None,
                 status=None,
-                config=None,
+                config=TEST_CONFIG_NAME,
                 additional_project_dirs=[],
                 all=True,
             )
@@ -614,7 +614,7 @@ class TestCLIWithRay:
                 prefix=None,
                 max_age=None,
                 status=None,
-                config=None,
+                config=TEST_CONFIG_NAME,
                 additional_project_dirs=[],
                 all=True,
             )
@@ -654,7 +654,7 @@ class TestCLIWithRay:
                 prefix=None,
                 max_age=None,
                 status=None,
-                config=None,
+                config=TEST_CONFIG_NAME,
                 additional_project_dirs=[],
                 all=False,
             )
@@ -693,7 +693,7 @@ class TestCLIWithRay:
                 prefix="hello",
                 max_age=None,
                 status=None,
-                config=None,
+                config=TEST_CONFIG_NAME,
                 additional_project_dirs=[],
                 all=False,
             )
@@ -840,7 +840,7 @@ class TestCLIWithRay:
                 prefix=None,
                 max_age=max_age,
                 status=None,
-                config=None,
+                config=TEST_CONFIG_NAME,
                 additional_project_dirs=[],
                 all=False,
             )
@@ -894,7 +894,7 @@ class TestCLIWithRay:
                 prefix=None,
                 max_age=None,
                 status=State.RUNNING,
-                config=None,
+                config=TEST_CONFIG_NAME,
                 additional_project_dirs=[],
                 all=False,
             )
