@@ -182,14 +182,15 @@ dorq.section(
     help="User Token to given server. To generate token, use this command without -t"
     "option first",
 )
-def login(server: str, token: t.Optional[str]):
+@cloup.option("--ce", is_flag=True, default=False, help="Start a Ray cluster")
+def login(server: str, token: t.Optional[str], ce: bool):
     """
     Login in to remote cluster
     """
     from ._login._login import Action
 
     action = Action()
-    action.on_cmd_call(server, token)
+    action.on_cmd_call(server, token, ce)
 
 
 def main():

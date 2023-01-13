@@ -5,6 +5,8 @@ import sys
 import typing as t
 from unittest.mock import Mock
 
+import pytest
+
 from orquestra import sdk
 from orquestra.sdk._base.cli._corq._format import per_command
 from orquestra.sdk._base.cli._dorq._ui import _errors, _presenters
@@ -149,21 +151,25 @@ class TestServicesPresneter:
 
 
 class TestLoginPresenter:
-    def test_prompt_for_login(self, capsys):
+    @pytest.mark.parametrize("ce", [True, False])
+    def test_prompt_for_login(self, capsys, ce):
         # Given
         url = "cool_url"
         login_url = "cool_login_url"
         presenter = _presenters.LoginPresenter()
 
         # When
-        presenter.prompt_for_login(login_url, url)
+        presenter.prompt_for_login(login_url, url, ce)
 
         # Then
         captured = capsys.readouterr()
         assert "Please follow this URL to proceed with login" in captured.out
         assert login_url in captured.out
         assert "Then save the token using command:" in captured.out
-        assert f"orq login -s {url} -t <paste your token here>" in captured.out
+        assert (
+            f"orq login -s {url} -t <paste your token here>" + (" --ce" if ce else "")
+            in captured.out
+        )
 
     def test_prompt_config_saved(self, capsys):
         # Given
