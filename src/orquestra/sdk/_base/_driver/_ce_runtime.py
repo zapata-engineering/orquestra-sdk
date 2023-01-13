@@ -261,7 +261,6 @@ class CERuntime(RuntimeInterface):
         self,
         *,
         limit: Optional[int] = None,
-        prefix: Optional[str] = None,
         max_age: Optional[timedelta] = None,
         state: Optional[Union[State, List[State]]] = None,
     ) -> List[WorkflowRun]:
@@ -270,7 +269,6 @@ class CERuntime(RuntimeInterface):
 
         Args:
             limit: Restrict the number of runs to return, prioritising the most recent.
-            prefix: Only return runs that start with the specified string.
             max_age: Only return runs younger than the specified maximum age.
             status: Only return runs of runs with the specified status.
         Returns:

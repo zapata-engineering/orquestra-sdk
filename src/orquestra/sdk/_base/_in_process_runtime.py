@@ -175,7 +175,6 @@ class InProcessRuntime:
         self,
         *,
         limit: t.Optional[int] = None,
-        prefix: t.Optional[str] = None,
         max_age: t.Optional[timedelta] = None,
         state: t.Optional[State] = None,
     ) -> t.List[WorkflowRun]:
@@ -184,9 +183,9 @@ class InProcessRuntime:
 
         Args:
             limit: Restrict the number of runs to return, prioritising the most recent.
-            prefix: Only return runs that start with the specified string.
             max_age: Only return runs younger than the specified maximum age.
             status: Only return runs of runs with the specified status.
+
         Returns:
                 A list of the workflow runs
         """

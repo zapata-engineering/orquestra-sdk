@@ -851,7 +851,6 @@ class RayRuntime(RuntimeInterface):
         self,
         *,
         limit: t.Optional[int] = None,
-        prefix: t.Optional[str] = None,
         max_age: t.Optional[timedelta] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
     ) -> t.List[WorkflowRun]:
@@ -877,8 +876,6 @@ class RayRuntime(RuntimeInterface):
 
             # Let's filter the workflows at this point, instead of iterating over a list
             # multiple times
-            if prefix is not None and not wf_run_id.startswith(prefix):
-                continue
             if state_list is not None and wf_run.status.state not in state_list:
                 continue
             if max_age is not None and (

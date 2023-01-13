@@ -1336,22 +1336,6 @@ class TestListWorkflowRuns:
         # Then
         assert len(runs) == 0
 
-    def test_with_prefix(
-        self,
-        runtime,
-        mock_workflow_db_location,
-        mock_local_db,
-        monkeypatch,
-    ):
-        # This method doesn't handle prefixes, this test just checks the prefix is
-        # passed to what does the prefix handling -> WorkflowDB.get_workflow_runs_list
-        # Given
-        monkeypatch.setattr(runtime, "get_workflow_run_status", MagicMock(WorkflowRun))
-        # When
-        _ = runtime.list_workflow_runs(prefix="hello")
-        # Then
-        mock_local_db.assert_called_once_with(prefix="hello", config_name="hello")
-
     def test_with_state(
         self, runtime, mock_workflow_db_location, mock_local_db, monkeypatch
     ):

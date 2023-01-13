@@ -319,23 +319,6 @@ class TestRayRuntime:
             # Then
             assert len(runs) == 0
 
-        def test_with_prefix(self, client, runtime_config, monkeypatch, tmp_path):
-            # Given
-            client.list_all.return_value = [("mocked", Mock()), ("dont-want!", Mock())]
-            runtime = _dag.RayRuntime(
-                client=client,
-                config=runtime_config,
-                project_dir=tmp_path,
-            )
-            # Given
-            mock_status = Mock()
-            monkeypatch.setattr(
-                runtime, "get_workflow_run_status", Mock(return_value=mock_status)
-            )
-            runs = runtime.list_workflow_runs(prefix="mocked")
-            # Then
-            assert len(runs) == 1
-
         def test_with_state(self, client, runtime_config, monkeypatch, tmp_path):
             # Given
             client.list_all.return_value = [("mocked", Mock())] * 4

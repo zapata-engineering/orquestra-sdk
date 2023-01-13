@@ -821,7 +821,6 @@ class QERuntime(RuntimeInterface):
         self,
         *,
         limit: Optional[int] = None,
-        prefix: Optional[str] = None,
         max_age: Optional[timedelta] = None,
         state: Optional[Union[State, List[State]]] = None,
     ) -> List[WorkflowRun]:
@@ -830,7 +829,7 @@ class QERuntime(RuntimeInterface):
         # Grab the workflows we know about from the DB
         with WorkflowDB.open_project_db(self._project_dir) as db:
             stored_runs = db.get_workflow_runs_list(
-                prefix=prefix, config_name=self._config.config_name
+                config_name=self._config.config_name
             )
 
         # Short circuit if we don't have any workflow runs
