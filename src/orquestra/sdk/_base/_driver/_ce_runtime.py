@@ -250,7 +250,7 @@ class CERuntime(RuntimeInterface):
         """Stops a workflow run.
 
         Raises:
-        WorkflowRunCanNotBeTerminated if workflow run is cannot be terminated.
+            WorkflowRunCanNotBeTerminated if workflow run is cannot be terminated.
         """
         try:
             self._client.terminate_workflow_run(workflow_run_id)
