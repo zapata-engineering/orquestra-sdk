@@ -8,11 +8,14 @@ functionality is covered inside tests/v2/test_api.py.
 We need this file because test_api.py might be too coarse for some scenarios.
 When adding new tests, please consider that suite first.
 """
+from datetime import datetime, timedelta, timezone
+
 import pytest
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
 from orquestra.sdk.schema import ir
+from orquestra.sdk.schema.workflow_run import State
 
 from .data.complex_serialization.workflow_defs import (
     wf_pass_callables_from_task,
@@ -77,3 +80,69 @@ class TestStop:
         with pytest.raises(exceptions.WorkflowRunNotFoundError):
             # When
             runtime.stop_workflow_run(run_id)
+
+
+class TestListWorkflowRuns:
+    @staticmethod
+    def test_happy_path(runtime, wf_def):
+        # Given
+        _ = runtime.create_workflow_run(wf_def)
+        _ = runtime.create_workflow_run(wf_def)
+
+        # When
+        wf_runs = runtime.list_workflow_runs()
+
+        # Then
+        assert len(wf_runs) == 2
+
+    @staticmethod
+    def test_limit(runtime, wf_def):
+        # Given
+        _ = runtime.create_workflow_run(wf_def)
+        _ = runtime.create_workflow_run(wf_def)
+
+        # When
+        wf_runs = runtime.list_workflow_runs(limit=1)
+
+        # Then
+        assert len(wf_runs) == 1
+
+    @staticmethod
+    def test_state_running(runtime, wf_def):
+        # Given
+        _ = runtime.create_workflow_run(wf_def)
+
+        # When
+        wf_runs = runtime.list_workflow_runs(state=State.RUNNING)
+
+        # Then
+        # It doesn't make sense to get a running workflow from this runtime
+        assert len(wf_runs) == 0
+
+    @staticmethod
+    def test_state_succeeded(runtime, wf_def):
+        # Given
+        _ = runtime.create_workflow_run(wf_def)
+
+        # When
+        wf_runs = runtime.list_workflow_runs(state=State.SUCCEEDED)
+
+        # Then
+        # It doesn't make sense to get a running workflow from this runtime
+        assert len(wf_runs) == 1
+
+    @staticmethod
+    def test_max_age(runtime, wf_def):
+        # Given
+        run_id = runtime.create_workflow_run(wf_def)
+        _ = runtime.create_workflow_run(wf_def)
+        runtime._start_time_store[run_id] = datetime.now(timezone.utc) - timedelta(
+            days=1
+        )
+
+        # When
+        wf_runs = runtime.list_workflow_runs(max_age=timedelta(minutes=1))
+
+        # Then
+        # It doesn't make sense to get a running workflow from this runtime
+        assert len(wf_runs) == 1
