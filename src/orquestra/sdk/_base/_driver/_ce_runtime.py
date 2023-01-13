@@ -279,6 +279,7 @@ class CERuntime(RuntimeInterface):
                 A list of the workflow runs
         """
         try:
+            # TODO(ORQSDK-684): driver client cannot do filtering via API yet
             runs = self._client.list_workflow_runs()
         except _exceptions.InvalidTokenError as e:
             raise exceptions.UnauthorizedError(f"{e}") from e
