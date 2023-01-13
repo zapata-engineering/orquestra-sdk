@@ -9,9 +9,9 @@ from unittest.mock import Mock
 import pytest
 
 from orquestra import sdk
+from orquestra.sdk._base import serde
 from orquestra.sdk._base.cli._corq._format import per_command
 from orquestra.sdk._base.cli._dorq._ui import _errors, _presenters
-from orquestra.sdk._base import serde
 from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.responses import ServiceResponse
 

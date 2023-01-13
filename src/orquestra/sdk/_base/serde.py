@@ -2,11 +2,11 @@
 # © Copyright 2021-2022 Zapata Computing Inc.
 ################################################################################
 import codecs
-from dataclasses import dataclass
 import json
-from pathlib import Path
 import typing as t
+from dataclasses import dataclass
 from functools import singledispatch
+from pathlib import Path
 
 import dill  # type: ignore
 import pydantic

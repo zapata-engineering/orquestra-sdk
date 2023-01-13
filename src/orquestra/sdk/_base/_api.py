@@ -509,7 +509,6 @@ class WorkflowRun:
                                    False
             WorkflowRunNotSucceeded: when the workflow is no longer executing, but it did not
                 succeed.
-``
         """  # noqa 501
         try:
             run_id = self.run_id

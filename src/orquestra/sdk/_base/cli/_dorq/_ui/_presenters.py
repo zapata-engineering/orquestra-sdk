@@ -14,7 +14,7 @@ from typing import Iterable, Iterator, List
 import click
 from tabulate import tabulate
 
-from orquestra.sdk._base import serde, _services
+from orquestra.sdk._base import _services, serde
 from orquestra.sdk.schema import responses
 from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.workflow_run import (
@@ -70,10 +70,7 @@ class WrappedCorqOutputPresenter:
         else:
             format_name = dump_details.format.name
 
-        click.echo(
-            f"Artifact saved at {dump_details.file_path} "
-            f"as {format_name}."
-        )
+        click.echo(f"Artifact saved at {dump_details.file_path} " f"as {format_name}.")
 
     def show_workflow_outputs(
         self, values: t.Sequence[t.Any], wf_run_id: WorkflowRunId
