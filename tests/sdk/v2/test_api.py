@@ -13,7 +13,9 @@ import time
 import typing as t
 import unittest
 import warnings
-from unittest.mock import DEFAULT, MagicMock, Mock, patch
+from datetime import timedelta
+from pathlib import Path
+from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, patch
 
 import pytest
 
@@ -1479,6 +1481,78 @@ class TestRuntimeConfiguration:
             assert dict["runtime_options"]["uri"] == config.uri
             assert dict["runtime_options"]["address"] == config.address
             assert dict["runtime_options"]["token"] == config.token
+
+
+class TestListWorkflows:
+    @staticmethod
+    @pytest.fixture
+    def mock_config_runtime(monkeypatch):
+        run = MagicMock()
+        type(run).id = PropertyMock(side_effect=["wf0", "wf1", "wf2"])
+        runtime = Mock(RuntimeInterface)
+        # For getting workflow ID
+        runtime.list_workflow_runs.return_value = [run, run, run]
+        mock_config = MagicMock(_api.RuntimeConfig)
+        mock_config._get_runtime.return_value = runtime
+        monkeypatch.setattr(
+            _api.RuntimeConfig, "load", MagicMock(return_value=mock_config)
+        )
+
+        return runtime
+
+    def test_get_all_wfs(self, mock_config_runtime):
+        # Given
+        # When
+        runs = _api.list_workflow_runs("mocked_config")
+        # Then
+        assert len(runs) == 3
+        assert runs[0].run_id == "wf0"
+        assert runs[1].run_id == "wf1"
+        assert runs[2].run_id == "wf2"
+
+    def test_invalid_max_age(self, mock_config_runtime):
+        # Given
+        # When
+        with pytest.raises(ValueError) as exc_info:
+            _ = _api.list_workflow_runs("mocked_config", max_age="hello")
+        assert exc_info.match("Time strings must")
+
+    @pytest.mark.parametrize(
+        "max_age, delta",
+        [
+            ("1d", timedelta(days=1)),
+            ("2h", timedelta(hours=2)),
+            ("3m", timedelta(minutes=3)),
+            ("4s", timedelta(seconds=4)),
+            ("1d2h3m4s", timedelta(days=1, seconds=7384)),
+        ],
+    )
+    def test_with_max_age(self, mock_config_runtime, max_age, delta):
+        # Given
+        # When
+        _ = _api.list_workflow_runs("mocked_config", max_age=max_age)
+        # Then
+        mock_config_runtime.list_workflow_runs.assert_called_with(
+            limit=None, max_age=delta, state=None
+        )
+
+    def test_with_limit(self, mock_config_runtime):
+        # Given
+        # When
+        _ = _api.list_workflow_runs("mocked_config", limit=10)
+        # Then
+        mock_config_runtime.list_workflow_runs.assert_called_with(
+            limit=10, max_age=None, state=None
+        )
+
+    def test_with_state(self, mock_config_runtime):
+        # Given
+        # When
+        _ = _api.list_workflow_runs("mocked_config", state=State.SUCCEEDED)
+        # Then
+        mock_config_runtime.list_workflow_runs.assert_called_with(
+            limit=None, max_age=None, state=State.SUCCEEDED
+        )
 
 
 def test_python_310_importlib_abc_bug():

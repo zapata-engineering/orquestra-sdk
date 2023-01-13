@@ -9,7 +9,7 @@ import json
 import tarfile
 import typing as t
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock, PropertyMock
 
 import pytest
 import responses
@@ -1264,6 +1264,146 @@ class TestStopWorkflowRun:
         response = runtime.stop_workflow_run("hello-there-abc123-r000")
 
         assert response is None
+
+
+class TestListWorkflowRuns:
+    @pytest.fixture
+    def mock_local_db(self, monkeypatch):
+        get_workflow_runs_list = Mock(
+            return_value=[
+                StoredWorkflowRun(
+                    workflow_run_id="hello-there-abc123-r000",
+                    config_name="hello",
+                    workflow_def=TEST_WORKFLOW,
+                ),
+                StoredWorkflowRun(
+                    workflow_run_id="hello-there-abc123-r000",
+                    config_name="hello",
+                    workflow_def=TEST_WORKFLOW,
+                ),
+                StoredWorkflowRun(
+                    workflow_run_id="hello-there-abc123-r000",
+                    config_name="hello",
+                    workflow_def=TEST_WORKFLOW,
+                ),
+                StoredWorkflowRun(
+                    workflow_run_id="hello-there-abc123-r000",
+                    config_name="hello",
+                    workflow_def=TEST_WORKFLOW,
+                ),
+            ]
+        )
+        monkeypatch.setattr(
+            _db.WorkflowDB, "get_workflow_runs_list", get_workflow_runs_list
+        )
+        return get_workflow_runs_list
+
+    def test_happy_path(
+        self, runtime, mock_workflow_db_location, mock_local_db, monkeypatch
+    ):
+        # Given
+        mock_status = MagicMock()
+        monkeypatch.setattr(
+            runtime, "get_workflow_run_status", MagicMock(return_value=mock_status)
+        )
+        # When
+        runs = runtime.list_workflow_runs()
+        # Then
+        assert len(runs) == 4
+
+    def test_missing_wf_in_db(self, runtime, mock_workflow_db_location, monkeypatch):
+        # Given
+        get_workflow_runs_list = Mock(return_value=[])
+        monkeypatch.setattr(
+            _db.WorkflowDB, "get_workflow_runs_list", get_workflow_runs_list
+        )
+        # When
+        runs = runtime.list_workflow_runs()
+        # Then
+        assert len(runs) == 0
+
+    def test_missing_wf_in_runtime(
+        self, runtime, mock_workflow_db_location, mock_local_db, monkeypatch
+    ):
+        # Given
+        monkeypatch.setattr(
+            runtime,
+            "get_workflow_run_status",
+            MagicMock(side_effect=exceptions.WorkflowRunNotFoundError),
+        )
+        # When
+        runs = runtime.list_workflow_runs()
+        # Then
+        assert len(runs) == 0
+
+    def test_with_state(
+        self, runtime, mock_workflow_db_location, mock_local_db, monkeypatch
+    ):
+        # Given
+        mock_status = MagicMock()
+        type(mock_status.status).state = PropertyMock(
+            side_effect=[
+                State.RUNNING,
+                State.SUCCEEDED,
+                State.SUCCEEDED,
+                State.RUNNING,
+            ]
+        )
+        monkeypatch.setattr(
+            runtime, "get_workflow_run_status", MagicMock(return_value=mock_status)
+        )
+        # When
+        runs = runtime.list_workflow_runs(state=State.RUNNING)
+        # Then
+        assert len(runs) == 2
+
+    def test_with_max_age(
+        self, runtime, mock_workflow_db_location, mock_local_db, monkeypatch
+    ):
+        # Given
+        mock_status = MagicMock()
+        type(mock_status.status).start_time = PropertyMock(
+            side_effect=[
+                None,
+                datetime.datetime.now(datetime.timezone.utc)
+                - datetime.timedelta(seconds=5),
+                datetime.datetime.now(datetime.timezone.utc)
+                - datetime.timedelta(seconds=5),
+                datetime.datetime.now(datetime.timezone.utc)
+                - datetime.timedelta(days=4),
+            ]
+        )
+        monkeypatch.setattr(
+            runtime, "get_workflow_run_status", MagicMock(return_value=mock_status)
+        )
+        # When
+        runs = runtime.list_workflow_runs(max_age=datetime.timedelta(minutes=2))
+        # Then
+        assert len(runs) == 3
+
+    def test_with_limit(
+        self, runtime, mock_workflow_db_location, mock_local_db, monkeypatch
+    ):
+        # Given
+        mock_status = MagicMock()
+        type(mock_status.status).start_time = PropertyMock(
+            side_effect=[
+                None,
+                datetime.datetime.now(datetime.timezone.utc)
+                - datetime.timedelta(seconds=5),
+                datetime.datetime.now(datetime.timezone.utc)
+                - datetime.timedelta(seconds=5),
+                datetime.datetime.now(datetime.timezone.utc)
+                - datetime.timedelta(days=4),
+            ]
+        )
+        monkeypatch.setattr(
+            runtime, "get_workflow_run_status", MagicMock(return_value=mock_status)
+        )
+        # When
+        runs = runtime.list_workflow_runs(limit=2)
+        # Then
+        assert len(runs) == 2
 
 
 @pytest.mark.parametrize(

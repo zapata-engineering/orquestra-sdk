@@ -5,15 +5,16 @@
 Unit tests for orquestra.sdk._ray._dag. If you need a test against a live
 Ray connection, see tests/ray/test_integration.py instead.
 """
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, PropertyMock
 
 import pytest
 
+from orquestra.sdk import exceptions
 from orquestra.sdk._base._config import RuntimeConfiguration, RuntimeName
 from orquestra.sdk._ray import _client, _dag
-from orquestra.sdk.schema.workflow_run import State
+from orquestra.sdk.schema.workflow_run import State, WorkflowRun
 
 TEST_TIME = datetime.now(timezone.utc)
 
@@ -181,6 +182,12 @@ class TestRayRuntime:
             runtime_name=RuntimeName.RAY_LOCAL,
         )
 
+    @staticmethod
+    @pytest.fixture
+    def client():
+        client = Mock()
+        return client
+
     class TestReadingLogs:
         """
         Verifies that RayRuntime gets whatever DirectRayReader or FluentbitReader
@@ -272,3 +279,144 @@ class TestRayRuntime:
             # Then
             assert result_batch == logs_batch
             reader_mock.iter_logs.assert_called_with(run_id)
+
+    class TestListWorkflowRuns:
+        def test_happy_path(self, client, runtime_config, monkeypatch, tmp_path):
+            # Given
+            client.list_all.return_value = [("mocked", Mock())]
+            runtime = _dag.RayRuntime(
+                client=client,
+                config=runtime_config,
+                project_dir=tmp_path,
+            )
+            mock_status = Mock()
+            monkeypatch.setattr(
+                runtime, "get_workflow_run_status", Mock(return_value=mock_status)
+            )
+            # When
+            runs = runtime.list_workflow_runs()
+            # Then
+            client.list_all.assert_called()
+            assert len(runs) == 1
+
+        def test_missing_wf_in_runtime(
+            self, client, runtime_config, monkeypatch, tmp_path
+        ):
+            # Given
+            client.list_all.return_value = [("mocked", Mock())]
+            runtime = _dag.RayRuntime(
+                client=client,
+                config=runtime_config,
+                project_dir=tmp_path,
+            )
+            monkeypatch.setattr(
+                runtime,
+                "get_workflow_run_status",
+                Mock(side_effect=exceptions.WorkflowRunNotFoundError),
+            )
+            # When
+            runs = runtime.list_workflow_runs()
+            # Then
+            assert len(runs) == 0
+
+        def test_with_state(self, client, runtime_config, monkeypatch, tmp_path):
+            # Given
+            client.list_all.return_value = [("mocked", Mock())] * 4
+            runtime = _dag.RayRuntime(
+                client=client,
+                config=runtime_config,
+                project_dir=tmp_path,
+            )
+            # Given
+            mock_status = Mock()
+            type(mock_status.status).state = PropertyMock(
+                side_effect=[
+                    State.RUNNING,
+                    State.SUCCEEDED,
+                    State.FAILED,
+                    State.RUNNING,
+                ]
+            )
+            monkeypatch.setattr(
+                runtime, "get_workflow_run_status", Mock(return_value=mock_status)
+            )
+            # When
+            runs = runtime.list_workflow_runs(state=State.RUNNING)
+            # Then
+            assert len(runs) == 2
+
+        def test_with_state_list(self, client, runtime_config, monkeypatch, tmp_path):
+            # Given
+            client.list_all.return_value = [("mocked", Mock())] * 4
+            runtime = _dag.RayRuntime(
+                client=client,
+                config=runtime_config,
+                project_dir=tmp_path,
+            )
+            # Given
+            mock_status = Mock()
+            type(mock_status.status).state = PropertyMock(
+                side_effect=[
+                    State.RUNNING,
+                    State.SUCCEEDED,
+                    State.FAILED,
+                    State.RUNNING,
+                ]
+            )
+            monkeypatch.setattr(
+                runtime, "get_workflow_run_status", Mock(return_value=mock_status)
+            )
+            # When
+            runs = runtime.list_workflow_runs(state=[State.SUCCEEDED, State.FAILED])
+            # Then
+            assert len(runs) == 2
+
+        def test_with_max_age(self, client, runtime_config, monkeypatch, tmp_path):
+            # Given
+            client.list_all.return_value = [("mocked", Mock())] * 4
+            runtime = _dag.RayRuntime(
+                client=client,
+                config=runtime_config,
+                project_dir=tmp_path,
+            )
+            mock_status = Mock()
+            type(mock_status.status).start_time = PropertyMock(
+                side_effect=[
+                    None,
+                    datetime.now(timezone.utc) - timedelta(seconds=5),
+                    datetime.now(timezone.utc) - timedelta(seconds=5),
+                    datetime.now(timezone.utc) - timedelta(days=4),
+                ]
+            )
+            monkeypatch.setattr(
+                runtime, "get_workflow_run_status", Mock(return_value=mock_status)
+            )
+            # When
+            runs = runtime.list_workflow_runs(max_age=timedelta(minutes=2))
+            # Then
+            assert len(runs) == 3
+
+        def test_with_limit(self, client, runtime_config, monkeypatch, tmp_path):
+            # Given
+            client.list_all.return_value = [("mocked", Mock())] * 4
+            runtime = _dag.RayRuntime(
+                client=client,
+                config=runtime_config,
+                project_dir=tmp_path,
+            )
+            mock_status = Mock()
+            type(mock_status.status).start_time = PropertyMock(
+                side_effect=[
+                    None,
+                    datetime.now(timezone.utc) - timedelta(seconds=5),
+                    datetime.now(timezone.utc) - timedelta(seconds=5),
+                    datetime.now(timezone.utc) - timedelta(days=4),
+                ]
+            )
+            monkeypatch.setattr(
+                runtime, "get_workflow_run_status", Mock(return_value=mock_status)
+            )
+            # When
+            runs = runtime.list_workflow_runs(limit=2)
+            # Then
+            assert len(runs) == 2

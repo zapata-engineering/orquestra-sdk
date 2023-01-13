@@ -6,6 +6,7 @@
 
 
 🔥 *Features*
+* `list_workflow_runs` added to the Public API. This lets you list the workflows for a given config, for example `sdk.list_workflow_runs("ray")` or `sdk.list_workflow_runs("prod-d")`.
 
 
 👩‍🔬 *Experimental*

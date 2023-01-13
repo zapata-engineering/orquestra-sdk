@@ -1,6 +1,7 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
+from datetime import timedelta
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
 
@@ -11,7 +12,12 @@ from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRun, WorkflowRunId
+from orquestra.sdk.schema.workflow_run import (
+    State,
+    TaskRunId,
+    WorkflowRun,
+    WorkflowRunId,
+)
 
 from . import _client, _exceptions, _models
 
@@ -45,10 +51,10 @@ class CERuntime(RuntimeInterface):
         try:
             base_uri = self._config.runtime_options["uri"]
             token = self._config.runtime_options["token"]
-        except KeyError:
+        except KeyError as e:
             raise exceptions.RuntimeConfigError(
                 "Invalid CE configuration. Did you login first?"
-            )
+            ) from e
 
         self._client = _client.DriverClient.from_token(base_uri=base_uri, token=token)
 
@@ -89,7 +95,7 @@ class CERuntime(RuntimeInterface):
         except _exceptions.InvalidWorkflowRunRequest as e:
             raise exceptions.WorkflowRunNotStarted(
                 f"Unable to start the workflow run: {e}"
-            )
+            ) from e
         except _exceptions.InvalidTokenError as e:
             raise exceptions.UnauthorizedError(f"{e}") from e
 
@@ -244,12 +250,40 @@ class CERuntime(RuntimeInterface):
         """Stops a workflow run.
 
         Raises:
-        WorkflowRunCanNotBeTerminated if workflow run is cannot be terminated.
+            WorkflowRunCanNotBeTerminated if workflow run is cannot be terminated.
         """
         try:
             self._client.terminate_workflow_run(workflow_run_id)
         except _exceptions.InvalidTokenError as e:
-            raise exceptions.UnauthorizedError(f"{e}")
+            raise exceptions.UnauthorizedError(f"{e}") from e
+
+    def list_workflow_runs(
+        self,
+        *,
+        limit: Optional[int] = None,
+        max_age: Optional[timedelta] = None,
+        state: Optional[Union[State, List[State]]] = None,
+    ) -> List[WorkflowRun]:
+        """
+        List the workflow runs, with some filters
+
+        Args:
+            limit: Restrict the number of runs to return, prioritising the most recent.
+            max_age: Only return runs younger than the specified maximum age.
+            status: Only return runs of runs with the specified status.
+
+        Raises:
+            UnauthorizedError: if the remote cluster rejects the token
+
+        Returns:
+                A list of the workflow runs
+        """
+        try:
+            # TODO(ORQSDK-684): driver client cannot do filtering via API yet
+            runs = self._client.list_workflow_runs()
+        except _exceptions.InvalidTokenError as e:
+            raise exceptions.UnauthorizedError(f"{e}") from e
+        return runs.contents
 
     def get_full_logs(
         self, run_id: Optional[Union[WorkflowRunId, TaskRunId]] = None

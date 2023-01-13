@@ -7,13 +7,12 @@ RuntimeInterface implementation that uses Ray DAG/Ray Core API.
 
 from __future__ import annotations
 
-import builtins
 import dataclasses
 import json
 import re
 import traceback
 import typing as t
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from orquestra.sdk import exceptions
@@ -847,3 +846,58 @@ class RayRuntime(RuntimeInterface):
             yield from self._fluentbit_reader.iter_logs(run_id)
         else:
             yield from self._ray_reader.iter_logs(run_id)
+
+    def list_workflow_runs(
+        self,
+        *,
+        limit: t.Optional[int] = None,
+        max_age: t.Optional[timedelta] = None,
+        state: t.Optional[t.Union[State, t.List[State]]] = None,
+    ) -> t.List[WorkflowRun]:
+        """
+        List the workflow runs, with some filters
+
+        Args:
+            limit: Restrict the number of runs to return, prioritising the most recent.
+            max_age: Only return runs younger than the specified maximum age.
+            status: Only return runs of runs with the specified status.
+
+        Returns:
+                A list of the workflow runs
+        """
+        now = datetime.now(timezone.utc)
+
+        if state is not None:
+            if not isinstance(state, list):
+                state_list = [state]
+            else:
+                state_list = state
+        else:
+            state_list = None
+
+        # Grab the workflows we know about from the DB
+        all_workflows = self._client.list_all()
+
+        wf_runs = []
+        for wf_run_id, _ in all_workflows:
+            try:
+                wf_run = self.get_workflow_run_status(wf_run_id)
+            except exceptions.NotFoundError:
+                continue
+
+            # Let's filter the workflows at this point, instead of iterating over a list
+            # multiple times
+            if state_list is not None and wf_run.status.state not in state_list:
+                continue
+            if max_age is not None and (
+                now - (wf_run.status.start_time or now) > max_age
+            ):
+                continue
+            wf_runs.append(wf_run)
+
+        # We have to wait until we have all the workflow runs before sorting
+        if limit is not None:
+            wf_runs = sorted(wf_runs, key=lambda run: run.status.start_time or now)[
+                -limit:
+            ]
+        return wf_runs

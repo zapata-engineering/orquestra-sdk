@@ -1,7 +1,8 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
+from datetime import timedelta
 from pathlib import Path
-from unittest.mock import DEFAULT, MagicMock, call
+from unittest.mock import DEFAULT, MagicMock, Mock, call
 
 import pytest
 
@@ -10,7 +11,7 @@ from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _mode
 from orquestra.sdk._base._testing._example_wfs import my_workflow
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.responses import JSONResult
-from orquestra.sdk.schema.workflow_run import WorkflowRunId
+from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
 
 
 @pytest.fixture
@@ -719,3 +720,68 @@ class TestStopWorkflowRun:
         # When
         with pytest.raises(exceptions.UnauthorizedError):
             runtime.stop_workflow_run(workflow_run_id)
+
+
+class TestListWorkflowRuns:
+    def test_happy_path(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+    ):
+        # Given
+        wf_runs = [Mock(), Mock()]
+        mocked_client.list_workflow_runs.return_value = _client.Paginated(
+            contents=wf_runs
+        )
+
+        # When
+        runs = runtime.list_workflow_runs()
+
+        # Then
+        mocked_client.list_workflow_runs.assert_called_once_with()
+        assert runs == wf_runs
+
+    @pytest.mark.xfail(reason="Filtering not available in CE runtime yet")
+    def test_filter_args_passed_to_client(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+    ):
+        # Given
+        max_age = timedelta(hours=1)
+        limit = None
+        state = State.SUCCEEDED
+        # When
+        _ = runtime.list_workflow_runs(max_age=max_age, limit=limit, state=state)
+
+        # Then
+        mocked_client.list_workflow_runs.assert_called_once_with(
+            max_age=max_age, limit=limit, state=state
+        )
+
+    def test_unknown_http(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        workflow_run_id: str,
+    ):
+        # Given
+        mocked_client.list_workflow_runs.side_effect = _exceptions.UnknownHTTPError(
+            MagicMock()
+        )
+
+        # When
+        with pytest.raises(_exceptions.UnknownHTTPError):
+            runtime.list_workflow_runs()
+
+    def test_token_failure(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        workflow_run_id: str,
+    ):
+        mocked_client.list_workflow_runs.side_effect = _exceptions.InvalidTokenError
+
+        # When
+        with pytest.raises(exceptions.UnauthorizedError):
+            runtime.list_workflow_runs()

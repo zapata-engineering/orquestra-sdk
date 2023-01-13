@@ -12,13 +12,19 @@ This module shouldn't contain any implementation, only interface definitions.
 
 import typing as t
 from abc import ABC, abstractmethod
+from datetime import timedelta
 from pathlib import Path
 from typing import List, Optional
 
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRun, WorkflowRunId
+from orquestra.sdk.schema.workflow_run import (
+    State,
+    TaskRunId,
+    WorkflowRun,
+    WorkflowRunId,
+)
 
 
 class LogReader(t.Protocol):
@@ -176,6 +182,26 @@ class RuntimeInterface(ABC):
     ) -> t.Iterator[t.Sequence[str]]:
         """
         See LogReader.iter_logs.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def list_workflow_runs(
+        self,
+        *,
+        limit: t.Optional[int] = None,
+        max_age: t.Optional[timedelta] = None,
+        state: t.Optional[t.Union[State, t.List[State]]] = None,
+    ) -> t.List[WorkflowRun]:
+        """
+        List the workflow runs, with some filters
+
+        Args:
+            limit: Restrict the number of runs to return, prioritising the most recent.
+            max_age: Only return runs younger than the specified maximum age.
+            status: Only return runs of runs with the specified status.
+        Returns:
+                A list of the workflow runs
         """
         raise NotImplementedError()
 

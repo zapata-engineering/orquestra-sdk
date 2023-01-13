@@ -10,7 +10,7 @@ import sqlite3
 import sys
 import tarfile
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
@@ -24,7 +24,7 @@ from orquestra.sdk._base._conversions._yaml_exporter import (
 )
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base.abc import RuntimeInterface
-from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
+from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocation, TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import (
@@ -816,3 +816,68 @@ class QERuntime(RuntimeInterface):
             raise exceptions.WorkflowRunCanNotBeTerminated(
                 f"{run_id} cannot be terminated."
             ) from e
+
+    def list_workflow_runs(
+        self,
+        *,
+        limit: Optional[int] = None,
+        max_age: Optional[timedelta] = None,
+        state: Optional[Union[State, List[State]]] = None,
+    ) -> List[WorkflowRun]:
+        """
+        List the workflow runs, with some filters
+
+        Args:
+            limit: Restrict the number of runs to return, prioritising the most recent.
+            max_age: Only return runs younger than the specified maximum age.
+            status: Only return runs of runs with the specified status.
+
+        Raises:
+            orquestra.sdk.exceptions.UnauthorizedError: if QE returns 401
+
+        Returns:
+            A list of the workflow runs
+        """
+        now = datetime.now(timezone.utc)
+
+        # Grab the workflows we know about from the DB
+        with WorkflowDB.open_project_db(self._project_dir) as db:
+            stored_runs = db.get_workflow_runs_list(
+                config_name=self._config.config_name
+            )
+
+        # Short circuit if we don't have any workflow runs
+        if len(stored_runs) == 0:
+            return []
+
+        if state is not None:
+            if not isinstance(state, list):
+                state_list = [state]
+            else:
+                state_list = state
+        else:
+            state_list = None
+
+        wf_runs = []
+        for wf_run_id in (r.workflow_run_id for r in stored_runs):
+            try:
+                wf_run = self.get_workflow_run_status(wf_run_id)
+            except exceptions.WorkflowRunNotFoundError:
+                continue
+
+            # Let's filter the workflows at this point, instead of iterating over a list
+            # multiple times
+            if state_list is not None and wf_run.status.state not in state_list:
+                continue
+            if max_age is not None and (
+                now - (wf_run.status.start_time or now) >= max_age
+            ):
+                continue
+            wf_runs.append(wf_run)
+
+        # We have to wait until we have all the workflow runs before sorting
+        if limit is not None:
+            wf_runs = sorted(wf_runs, key=lambda run: run.status.start_time or now)[
+                -limit:
+            ]
+        return wf_runs
