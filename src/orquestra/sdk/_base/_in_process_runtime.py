@@ -212,8 +212,6 @@ class InProcessRuntime:
             # multiple times
             if state_list is not None and wf_run.status.state not in state_list:
                 continue
-            if prefix is not None and wf_run_id.startswith(prefix):
-                continue
             if max_age is not None and (
                 now - (wf_run.status.start_time or now) < max_age
             ):
