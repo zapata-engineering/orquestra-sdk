@@ -824,6 +824,20 @@ class QERuntime(RuntimeInterface):
         max_age: Optional[timedelta] = None,
         state: Optional[Union[State, List[State]]] = None,
     ) -> List[WorkflowRun]:
+        """
+        List the workflow runs, with some filters
+
+        Args:
+            limit: Restrict the number of runs to return, prioritising the most recent.
+            max_age: Only return runs younger than the specified maximum age.
+            status: Only return runs of runs with the specified status.
+
+        Raises:
+            orquestra.sdk.exceptions.UnauthorizedError: if QE returns 401
+
+        Returns:
+            A list of the workflow runs
+        """
         now = datetime.now(timezone.utc)
 
         # Grab the workflows we know about from the DB

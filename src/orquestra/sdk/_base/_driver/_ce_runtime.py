@@ -271,6 +271,10 @@ class CERuntime(RuntimeInterface):
             limit: Restrict the number of runs to return, prioritising the most recent.
             max_age: Only return runs younger than the specified maximum age.
             status: Only return runs of runs with the specified status.
+
+        Raises:
+            UnauthorizedError: if the remote cluster rejects the token
+
         Returns:
                 A list of the workflow runs
         """

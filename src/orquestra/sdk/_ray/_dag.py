@@ -854,6 +854,17 @@ class RayRuntime(RuntimeInterface):
         max_age: t.Optional[timedelta] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
     ) -> t.List[WorkflowRun]:
+        """
+        List the workflow runs, with some filters
+
+        Args:
+            limit: Restrict the number of runs to return, prioritising the most recent.
+            max_age: Only return runs younger than the specified maximum age.
+            status: Only return runs of runs with the specified status.
+
+        Returns:
+                A list of the workflow runs
+        """
         now = datetime.now(timezone.utc)
 
         if state is not None:
