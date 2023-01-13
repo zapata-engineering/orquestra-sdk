@@ -52,7 +52,7 @@ class Action:
 
     def _prompt_for_login(self, url: str, ce: bool):
         login_url = self._runtime_repo.get_login_url(url, ce)
-        self._login_presenter.prompt_for_login(login_url, url)
+        self._login_presenter.prompt_for_login(login_url, url, ce)
 
     def _save_token(self, url, token, ce: bool):
         config_name = self._config_repo.store_token_in_config(url, token, ce)

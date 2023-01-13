@@ -121,10 +121,17 @@ class DriverClient:
 
     # --- helpers ---
 
-    def _get(self, endpoint: str, query_params: Optional[Mapping]) -> requests.Response:
+    def _get(
+        self,
+        endpoint: str,
+        query_params: Optional[Mapping],
+        allow_redirects: bool = True,
+    ) -> requests.Response:
         """Helper method for GET requests"""
         response = self._session.get(
-            urljoin(self._base_uri, endpoint), params=query_params
+            urljoin(self._base_uri, endpoint),
+            params=query_params,
+            allow_redirects=allow_redirects,
         )
 
         return response
@@ -218,6 +225,7 @@ class DriverClient:
         resp = self._get(
             API_ACTIONS["get_login_url"],
             query_params={"state": "0"},
+            allow_redirects=False,
         )
         return resp.headers["Location"]
 
