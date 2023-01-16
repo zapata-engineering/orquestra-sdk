@@ -109,11 +109,30 @@ def stop(wf_run_id: t.Optional[str], config: t.Optional[str]):
 
 @workflow.command()
 @cloup.option("-c", "--config", type=str, multiple=True)
-@cloup.option("-a", "--all", is_flag=True, flag_value=True)
-@cloup.option("-i", "--interactive", is_flag=True, flag_value=True)
-@cloup.option("-l", "--limit", type=int)
-@cloup.option("-t", "--max-age")
-@cloup.option("-s", "--state", multiple=True)
+@cloup.option(
+    "-a",
+    "--all",
+    is_flag=True,
+    flag_value=True,
+    help="Show all workflow runs that match the specified filters.",
+)
+@cloup.option(
+    "-i",
+    "--interactive",
+    is_flag=True,
+    flag_value=True,
+    help="Specify filters in an interactive terminal session.",
+)
+@cloup.option(
+    "-l", "--limit", type=int, help="Maximum number of runs to display for each config."
+)
+@cloup.option("-t", "--max-age", help="Maximum age of runs to display.")
+@cloup.option(
+    "-s",
+    "--state",
+    multiple=True,
+    help="State of workflow runs to display. Max be specified multiple times.",
+)
 @cloup.constraint(cloup.constraints.mutually_exclusive, ["all", "interactive"])
 def list(
     config: t.Optional[str],
