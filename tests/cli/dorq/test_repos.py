@@ -261,7 +261,7 @@ class TestWorkflowRunRepo:
 
 
 class TestConfigRepo:
-    class TestUnitConfigRepo:
+    class TestUnit:
         """
         Test boundary::
             [ConfigRepo]->sdk._config

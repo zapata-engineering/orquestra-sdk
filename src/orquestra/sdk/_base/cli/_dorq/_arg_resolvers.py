@@ -19,6 +19,29 @@ from ._ui import _prompts
 
 class ConfigResolver:
     """
+    Resolves value of `config` CLI arg, using only config name passed
+    """
+
+    def __init__(
+        self,
+        config_repo=_repos.ConfigRepo(),
+        prompter=_prompts.Prompter(),
+    ):
+        self._config_repo = config_repo
+        self._prompter = prompter
+
+    def resolve(self, config: t.Optional[ConfigName]) -> ConfigName:
+        if config is not None:
+            return config
+
+        # 1.2. Prompt the user.
+        config_names = self._config_repo.list_config_names()
+        selected_config = self._prompter.choice(config_names, message="Runtime config")
+        return selected_config
+
+
+class WFConfigResolver:
+    """
     Resolves value of `config` CLI arg, making use of `wf_run_id` if already passed.
     """
 
@@ -48,10 +71,8 @@ class ConfigResolver:
                 # need to ask the user for the config.
                 pass
 
-        # 1.2. Prompt the user.
-        config_names = self._config_repo.list_config_names()
-        selected_config = self._prompter.choice(config_names, message="Runtime config")
-        return selected_config
+        # 1.2. Prompt the user
+        return ConfigResolver(self._config_repo, self._prompter).resolve(config)
 
 
 class WFRunIDResolver:
