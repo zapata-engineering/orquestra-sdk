@@ -44,3 +44,40 @@ class Prompter:
 
     def confirm(self, message: str, default: bool) -> bool:
         return inquirer.confirm(message, default=default)
+
+    def checkbox(
+        self,
+        choices: t.Sequence[ChoiceID],
+        message: str,
+        default: t.Optional[t.Union[str, t.List[str]]] = None,
+    ) -> t.List[ChoiceID]:
+        question = inquirer.Checkbox(
+            SINGLE_INPUT,
+            message=message
+            + " (select: \u2192 | deselect: \u2190 | navigate: \u2191, \u2193)",
+            choices=choices,
+            default=default,
+            carousel=True,
+        )
+        answers = inquirer.prompt([question])
+
+        # Workaround bad typing inside inquirer.
+        assert answers is not None
+
+        return answers[SINGLE_INPUT]
+
+    def ask_for_int(self, message: str, default: t.Optional[int]):
+        def validate(_, current):
+            try:
+                int(current)
+            except ValueError as e:
+                raise inquirer.errors.ValidationError(
+                    "", reason="Value must be an integer."
+                ) from e
+            return True
+
+        question = inquirer.Text(
+            name=SINGLE_INPUT, message=message, default=default, validate=validate
+        )
+        answers = inquirer.prompt([question])
+        return int(answers[SINGLE_INPUT])
