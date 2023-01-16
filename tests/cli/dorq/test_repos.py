@@ -21,6 +21,7 @@ from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe._client import QEClient
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._base.cli._dorq import _repos
+from orquestra.sdk.schema.configs import RuntimeName
 from orquestra.sdk._ray import _dag
 
 from ... import reloaders
@@ -260,21 +261,72 @@ class TestWorkflowRunRepo:
 
 
 class TestConfigRepo:
+    class TestUnitConfigRepo:
+        """
+        Test boundary::
+            [ConfigRepo]->sdk._config
+
+        """
+        def test_list_config(self, monkeypatch):
+            """
+            Simple test that verifies that repo return all the configs returned by
+            _configs internals
+            """
+            configs = ["config1", "config2"]
+            monkeypatch.setattr(sdk.RuntimeConfig, "list_configs", lambda: configs)
+
+            repo = _repos.ConfigRepo()
+
+            # When
+            names = repo.list_config_names()
+
+            # Then
+            assert names == configs
+
+        @pytest.mark.parametrize("ce", [True, False])
+        def test_store_token(self, monkeypatch, ce):
+
+            repo = _repos.ConfigRepo()
+            uri = "funny_uri"
+            token = "even_funnier_token"
+            generated_name = "why_is_it_so_funny"
+
+            config_parameter = ""
+            runtime_parameter = ""
+            options_parameter = {}
+
+            # Check parameters passed to _Config
+            def validate_save_parameters(config, runtime, options):
+                nonlocal config_parameter, runtime_parameter, options_parameter
+                config_parameter = config
+                runtime_parameter = runtime
+                options_parameter = options
+
+            monkeypatch.setattr(sdk._base._config, "generate_config_name", lambda n, m: generated_name)
+
+            monkeypatch.setattr(sdk._base._config, "save_or_update", validate_save_parameters)
+
+            # When
+            config_name = repo.store_token_in_config(uri, token, ce)
+
+            # Then
+            assert config_parameter == generated_name
+            assert runtime_parameter == RuntimeName.CE_REMOTE if ce else RuntimeName.QE_REMOTE
+            assert options_parameter["uri"] == uri
+            assert options_parameter["token"] == token
+            assert config_name == generated_name
+
     class TestIntegration:
         """
-        We test ConfigRepo by integration because as I'm writing this there are a lot
-        of moving parts related to config rework.
+        We test ConfigRepo by integration because - config repo on its own is trivial
+        but configs are quite fragile. It's important to make sure our CI is working
+        with whatever changes are done at config level
 
         Test boundary::
             [ConfigRepo]->File system
 
         Mocks config file location.
         """
-
-        # TODO: switch this to unit tests with a boundary at
-        # `sdk.RuntimeConfig.list_configs()` after the config reword is done.
-        # See ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-674
-
         @staticmethod
         @pytest.fixture
         def config_content():
@@ -303,7 +355,6 @@ class TestConfigRepo:
                 # built-ins
                 "ray",
                 "in_process",
-                "local",
                 # config entries
                 "test_config_default",
                 "test_config_no_runtime_options",
