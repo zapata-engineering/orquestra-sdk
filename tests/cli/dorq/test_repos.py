@@ -21,8 +21,8 @@ from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe._client import QEClient
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._base.cli._dorq import _repos
-from orquestra.sdk.schema.configs import RuntimeName
 from orquestra.sdk._ray import _dag
+from orquestra.sdk.schema.configs import RuntimeName
 
 from ... import reloaders
 from ...sdk.v2.data.configs import TEST_CONFIG_JSON
@@ -267,6 +267,7 @@ class TestConfigRepo:
             [ConfigRepo]->sdk._config
 
         """
+
         def test_list_config(self, monkeypatch):
             """
             Simple test that verifies that repo return all the configs returned by
@@ -302,16 +303,24 @@ class TestConfigRepo:
                 runtime_parameter = runtime
                 options_parameter = options
 
-            monkeypatch.setattr(sdk._base._config, "generate_config_name", lambda n, m: generated_name)
+            monkeypatch.setattr(
+                sdk._base._config, "generate_config_name", lambda n, m: generated_name
+            )
 
-            monkeypatch.setattr(sdk._base._config, "save_or_update", validate_save_parameters)
+            monkeypatch.setattr(
+                sdk._base._config, "save_or_update", validate_save_parameters
+            )
 
             # When
             config_name = repo.store_token_in_config(uri, token, ce)
 
             # Then
             assert config_parameter == generated_name
-            assert runtime_parameter == RuntimeName.CE_REMOTE if ce else RuntimeName.QE_REMOTE
+            assert (
+                runtime_parameter == RuntimeName.CE_REMOTE
+                if ce
+                else RuntimeName.QE_REMOTE
+            )
             assert options_parameter["uri"] == uri
             assert options_parameter["token"] == token
             assert config_name == generated_name
@@ -327,6 +336,7 @@ class TestConfigRepo:
 
         Mocks config file location.
         """
+
         @staticmethod
         @pytest.fixture
         def config_content():
