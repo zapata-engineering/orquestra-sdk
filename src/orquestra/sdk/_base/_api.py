@@ -993,6 +993,7 @@ class RuntimeConfig:
             )
         config = RuntimeConfig("RAY_LOCAL", "local", True)
         setattr(config, "log_to_driver", False)
+        setattr(config, "configure_logging", False)
 
         # The paths for 'storage' and 'temp_dir' should have been passed when starting
         # the cluster, not here. Let's keep these attributes on our config object anyway
