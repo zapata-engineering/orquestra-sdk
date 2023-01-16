@@ -38,9 +38,6 @@ class ConfigResolver:
         if config is not None:
             return config
 
-        # TODO: make sure it works with `ray` and `in_process` runtimes.
-        # Jira ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-674
-
         if wf_run_id is not None:
             # 1.1. Attempt to get config from local cache.
             try:

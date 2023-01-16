@@ -8,7 +8,7 @@ import typing as t
 
 from orquestra.sdk import exceptions
 
-from .. import _repos
+from .. import _arg_resolvers, _repos
 from .._ui import _presenters, _prompts
 
 
@@ -26,6 +26,7 @@ class Action:
         presenter=_presenters.WrappedCorqOutputPresenter(),
         wf_def_repo=_repos.WorkflowDefRepo(),
         wf_run_repo=_repos.WorkflowRunRepo(),
+        config_resolver: t.Optional[_arg_resolvers.ConfigResolver] = None,
     ):
         # text IO
         self._prompter = prompter
@@ -34,6 +35,9 @@ class Action:
         # data sources
         self._wf_run_repo = wf_run_repo
         self._wf_def_repo = wf_def_repo
+        self._config_resolver = config_resolver or _arg_resolvers.ConfigResolver(
+            wf_run_repo=wf_run_repo, prompter=prompter
+        )
 
     def on_cmd_call(
         self, module: str, name: t.Optional[str], config: t.Optional[str], force: bool
@@ -54,13 +58,7 @@ class Action:
         Implementation of the command action. Doesn't catch exceptions.
         """
         # 1. Resolve config
-        # TODO: prompt user for selecting config.
-        # Jira ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-674
-        if config is None:
-            raise ValueError(
-                "Temporarily, 'config' needs to be passed explicitly. Sorry!"
-            )
-        resolved_config = config
+        resolved_config = self._config_resolver.resolve(None, config)
 
         # 2. Resolve module with workflow defs
         try:

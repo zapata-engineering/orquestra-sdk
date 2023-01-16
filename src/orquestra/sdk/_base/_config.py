@@ -54,6 +54,11 @@ SPECIAL_CONFIG_NAME_DICT = {
     BUILT_IN_CONFIG_NAME: LOCAL_RUNTIME_CONFIGURATION,
     RAY_CONFIG_NAME_ALIAS: LOCAL_RUNTIME_CONFIGURATION,
 }
+# Unique config list to prompt to the users. Separate from SPECIAL_CONFIG_NAME_DICT
+# as SPECIAL_CONFIG_NAME_DICT might have duplicate names which could be confusing for
+# the user
+UNIQUE_CONFIGS = {RAY_CONFIG_NAME_ALIAS, IN_PROCESS_CONFIG_NAME}
+
 
 # region: runtime options
 RAY_RUNTIME_OPTIONS: List[str] = [

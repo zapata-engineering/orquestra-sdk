@@ -1122,7 +1122,7 @@ class RuntimeConfig:
             list: list of configurations within the save file.
         """
         return _config.read_config_names(config_save_file) + list(
-            _config.SPECIAL_CONFIG_NAME_DICT.keys()
+            _config.UNIQUE_CONFIGS
         )
 
     @classmethod
@@ -1225,7 +1225,10 @@ class RuntimeConfig:
             _config.load()).
         """
         if config.runtime_name == RuntimeName.IN_PROCESS:
-            return RuntimeConfig.in_process(config.config_name)
+            return RuntimeConfig.in_process()
+        elif config.runtime_name == RuntimeName.RAY_LOCAL:
+            return RuntimeConfig.ray()
+
         interpreted_config = RuntimeConfig(
             config.runtime_name,
             config.config_name,
