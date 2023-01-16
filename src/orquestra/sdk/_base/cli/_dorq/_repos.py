@@ -20,7 +20,7 @@ from orquestra.sdk._base import _config, _db, _factory, loader
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe import _client
 from orquestra.sdk.schema.configs import ConfigName, RuntimeName
-from orquestra.sdk.schema.workflow_run import WorkflowRun, WorkflowRunId
+from orquestra.sdk.schema.workflow_run import State, WorkflowRun, WorkflowRunId
 
 
 class WorkflowRunRepo:
@@ -35,6 +35,15 @@ class WorkflowRunRepo:
             return stored_run.config_name
 
     def list_wf_run_ids(self, config: ConfigName) -> t.Sequence[WorkflowRunId]:
+        return [run.id for run in self.list_wf_runs(config)]
+
+    def list_wf_runs(
+        self,
+        config: ConfigName,
+        limit: t.Optional[int],
+        max_age: t.Optional[int],
+        state: t.Optional[t.Union[State, t.List[State]]],
+    ) -> t.Sequence[WorkflowRun]:
         """
         Asks the runtime for all workflow runs.
 
@@ -59,7 +68,7 @@ class WorkflowRunRepo:
         except (ConnectionError, exceptions.UnauthorizedError):
             raise
 
-        return [run.id for run in wf_runs]
+        return wf_runs
 
     def get_wf_by_run_id(
         self, wf_run_id: WorkflowRunId, config_name: t.Optional[ConfigName]
