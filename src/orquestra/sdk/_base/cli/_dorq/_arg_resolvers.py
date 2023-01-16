@@ -11,7 +11,7 @@ import typing as t
 import orquestra.sdk._base._services as _services
 from orquestra.sdk import exceptions
 from orquestra.sdk.schema.configs import ConfigName
-from orquestra.sdk.schema.workflow_run import WorkflowRunId
+from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
 
 from . import _repos
 from ._ui import _prompts
@@ -55,6 +55,26 @@ class ConfigResolver:
         config_names = self._config_repo.list_config_names()
         selected_config = self._prompter.choice(config_names, message="Runtime config")
         return selected_config
+
+    def resolve_multiple(
+        self, configs: t.Optional[t.Iterable[str]]
+    ) -> t.List[ConfigName]:
+        if configs is not None and len(configs) > 0:
+            return configs
+
+        config_names = self._config_repo.list_config_names()
+        while (
+            len(
+                selected_configs := self._prompter.checkbox(
+                    config_names,
+                    message="Runtime config(s)",
+                )
+            )
+            < 1
+        ):
+            print("Please select at least one configuration.")
+
+        return selected_configs
 
 
 class WFRunIDResolver:
@@ -113,3 +133,99 @@ class ServiceResolver:
             managed_services.append(fluent)
 
         return managed_services
+
+
+class WFRunFilterResolver:
+    """
+    Resolves the values of filters to be applied to lists of workflow runs.
+    """
+
+    def __init__(self, prompter=_prompts.Prompter()):
+        self._prompter = prompter
+
+    def resolve_limit(
+        self, limit: t.Optional[int] = None, interactive: t.Optional[bool] = False
+    ) -> t.Union[str, None]:
+        if limit is not None:
+            return limit
+
+        if interactive:
+            return self._prompter.ask_for_int(
+                message=(
+                    "Enter maximum number of results to display. "
+                    "If 'None', all results will be displayed."
+                ),
+                default=None,
+            )
+
+        return None
+
+    def resolve_max_age(
+        self, max_age: t.Optional[str] = None, interactive: t.Optional[bool] = False
+    ) -> t.Union[str, None]:
+        if max_age is not None:
+            return max_age
+
+        if interactive:
+            return self._prompter.ask_for_str(
+                message=(
+                    "Maximum age of run to display. "
+                    "If 'None', all results will be displayed."
+                ),
+                default=None,
+            )
+
+        return None
+
+    def resolve_state(
+        self,
+        states: t.Optional[t.List[str]] = [],
+        interactive: t.Optional[bool] = False,
+    ) -> t.Union[State, None]:
+        """
+        Resolve a string representing one or more workflow run states into a list of
+        State enums. Where a string is not provided, or is not a valid State,
+        """
+        _selected_states = []
+        _invalid_states = []
+
+        if len(states) > 0:
+            # The user has passed in one or more state arguments, iterate through them
+            # and check that they're valid states.
+            for state in states:
+                try:
+                    _selected_states.append(State(state))
+                except ValueError:
+                    _invalid_states.append(state)
+
+            # If there are no invalid states, return the converted states. Otherwise,
+            # tell the user which state arguments weren't valid.
+            if len(_invalid_states) == 0:
+                return _selected_states
+            else:
+                print(
+                    "The following arguments are not valid states:"
+                    f"\n{_invalid_states}"
+                    "\nPlease select from valid state(s)."
+                )
+                _selected_states = [state.value for state in _selected_states]
+
+        if interactive or len(_invalid_states) > 0:
+            # If the user provided some states, start with those ones selected. This
+            # way if they made a typo they only have to reselect the state they got
+            # wrong, rather than redoing the entire selection. Otherwise, start with
+            # everything selected to save time for people who don't want to filter by
+            # state, but used the interactive flag for other filters
+            _all_valid_states = [e.value for e in State]
+
+            if len(_selected_states) == 0:
+                _selected_states = _all_valid_states
+
+            resolved_states = self._prompter.checkbox(
+                choices=_all_valid_states,
+                default=_selected_states,
+                message="Workflow Run State(s)",
+            )
+            return [State(state) for state in resolved_states]
+
+        return None
