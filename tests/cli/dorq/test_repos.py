@@ -292,29 +292,27 @@ class TestConfigRepo:
             token = "even_funnier_token"
             generated_name = "why_is_it_so_funny"
 
-            config_parameter = ""
-            runtime_parameter = ""
-            options_parameter = {}
-
             # Check parameters passed to _Config
-            def validate_save_parameters(config, runtime, options):
-                nonlocal config_parameter, runtime_parameter, options_parameter
-                config_parameter = config
-                runtime_parameter = runtime
-                options_parameter = options
+            mock_save_or_update = Mock()
 
             monkeypatch.setattr(
                 sdk._base._config, "generate_config_name", lambda n, m: generated_name
             )
 
             monkeypatch.setattr(
-                sdk._base._config, "save_or_update", validate_save_parameters
+                sdk._base._config, "save_or_update", mock_save_or_update
             )
 
             # When
             config_name = repo.store_token_in_config(uri, token, ce)
 
             # Then
+            (
+                config_parameter,
+                runtime_parameter,
+                options_parameter,
+            ) = mock_save_or_update.call_args[0]
+
             assert config_parameter == generated_name
             assert (
                 runtime_parameter == RuntimeName.CE_REMOTE
