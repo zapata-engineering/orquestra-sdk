@@ -20,6 +20,7 @@
 
 🐛 *Bug Fixes*
 * Fixed broken link on docs landing page.
+* Internal logs from Ray are no longer displayed.
 
 
 *Internal*
