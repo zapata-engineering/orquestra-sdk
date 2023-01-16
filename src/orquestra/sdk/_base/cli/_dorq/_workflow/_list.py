@@ -46,12 +46,12 @@ class Action:
 
     def on_cmd_call(
         self,
-        config: t.Optional[t.Iterable[str]],
+        config: t.Optional[t.Sequence[str]],
         limit: t.Optional[int],
         max_age: t.Optional[str],
-        state: t.Optional[t.Iterable[str]],
-        show_all: bool = False,
-        interactive: bool = False,
+        state: t.Optional[t.List[str]],
+        show_all: t.Optional[bool] = False,
+        interactive: t.Optional[bool] = False,
     ):
         # This should be handled by the mutually exclusive constraint in the entry, but
         # we'll keep this here to be safe.
@@ -78,9 +78,9 @@ class Action:
             )
 
         # Resolve Arguments
-        resolved_configs: t.List[ConfigName] = self._config_resolver.resolve_multiple(
-            config
-        )
+        resolved_configs: t.Sequence[
+            ConfigName
+        ] = self._config_resolver.resolve_multiple(config)
         resolved_limit = self._wf_run_filter_resolver.resolve_limit(
             limit, interactive=interactive
         )

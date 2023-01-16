@@ -40,9 +40,9 @@ class WorkflowRunRepo:
         self,
         config: ConfigName,
         limit: t.Optional[int] = None,
-        max_age: t.Optional[int] = None,
+        max_age: t.Optional[str] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
-    ) -> t.Sequence[WorkflowRun]:
+    ) -> t.List[WorkflowRun]:
         """
         Asks the runtime for all workflow runs.
 

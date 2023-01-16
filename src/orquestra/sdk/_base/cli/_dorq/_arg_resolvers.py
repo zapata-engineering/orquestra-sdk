@@ -57,8 +57,8 @@ class ConfigResolver:
         return selected_config
 
     def resolve_multiple(
-        self, configs: t.Optional[t.Iterable[str]]
-    ) -> t.List[ConfigName]:
+        self, configs: t.Optional[t.Sequence[str]]
+    ) -> t.Sequence[ConfigName]:
         if configs is not None and len(configs) > 0:
             return configs
 
@@ -145,7 +145,7 @@ class WFRunFilterResolver:
 
     def resolve_limit(
         self, limit: t.Optional[int] = None, interactive: t.Optional[bool] = False
-    ) -> t.Union[str, None]:
+    ) -> t.Union[int, None]:
         if limit is not None:
             return limit
 
@@ -181,34 +181,35 @@ class WFRunFilterResolver:
         self,
         states: t.Optional[t.List[str]] = [],
         interactive: t.Optional[bool] = False,
-    ) -> t.Union[State, None]:
+    ) -> t.Union[t.List[State], None]:
         """
         Resolve a string representing one or more workflow run states into a list of
         State enums. Where a string is not provided, or is not a valid State,
         """
-        _selected_states = []
-        _invalid_states = []
+        _selected_states: t.List[str] = []
+        _invalid_states: t.List[str] = []
 
-        if len(states) > 0:
+        if states is not None and len(states) > 0:
             # The user has passed in one or more state arguments, iterate through them
             # and check that they're valid states.
             for state in states:
                 try:
-                    _selected_states.append(State(state))
+                    _ = State(state)
                 except ValueError:
                     _invalid_states.append(state)
+                else:
+                    _selected_states.append(state)
 
             # If there are no invalid states, return the converted states. Otherwise,
             # tell the user which state arguments weren't valid.
             if len(_invalid_states) == 0:
-                return _selected_states
+                return [State(state) for state in _selected_states]
             else:
                 print(
                     "The following arguments are not valid states:"
                     f"\n{_invalid_states}"
                     "\nPlease select from valid state(s)."
                 )
-                _selected_states = [state.value for state in _selected_states]
 
         if interactive or len(_invalid_states) > 0:
             # If the user provided some states, start with those ones selected. This

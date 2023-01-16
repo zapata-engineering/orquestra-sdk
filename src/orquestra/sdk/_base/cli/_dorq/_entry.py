@@ -136,11 +136,11 @@ def stop(wf_run_id: t.Optional[str], config: t.Optional[str]):
 @cloup.constraint(cloup.constraints.mutually_exclusive, ["all", "interactive"])
 def list(
     config: t.Optional[str],
-    all: t.Optional[bool],
-    interactive: t.Optional[bool],
-    limit: t.Optional[int],
-    max_age: t.Optional[str],
-    state: t.Optional[str],
+    all: t.Optional[bool] = False,
+    interactive: t.Optional[bool] = False,
+    limit: t.Optional[int] = None,
+    max_age: t.Optional[str] = None,
+    state: t.Optional[t.List[str]] = None,
 ):
     """
     Lists the available workflows
