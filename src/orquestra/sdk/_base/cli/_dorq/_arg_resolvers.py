@@ -189,6 +189,7 @@ class TaskRunIdResolver:
             return task_run_id
 
         resolved_wf_run_id = self._wf_run_id_resolver.resolve(wf_run_id, config)
+
         resolved_inv_id = self._task_inv_id_resolver.resolve(
             task_inv_id=task_inv_id,
             fn_name=fn_name,
@@ -199,6 +200,7 @@ class TaskRunIdResolver:
         resolved_task_run_id = self._wf_run_repo.get_task_run_id(
             wf_run_id=resolved_wf_run_id,
             task_inv_id=resolved_inv_id,
+            config_name=config,
         )
 
         return resolved_task_run_id

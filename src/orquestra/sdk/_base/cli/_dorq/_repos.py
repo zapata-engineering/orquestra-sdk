@@ -20,7 +20,12 @@ from orquestra.sdk._base import _config, _db, _factory, loader
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe import _client
 from orquestra.sdk.schema.configs import ConfigName, RuntimeName
-from orquestra.sdk.schema.workflow_run import WorkflowRun, WorkflowRunId
+from orquestra.sdk.schema.ir import TaskInvocationId
+from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRun, WorkflowRunId
+
+
+def _find_first(f: t.Callable[[t.Any], bool], it: t.Iterable):
+    return next(filter(f, it))
 
 
 class WorkflowRunRepo:
@@ -67,6 +72,22 @@ class WorkflowRunRepo:
         wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
 
         return wf_run.get_status_model()
+
+    def get_task_run_id(
+        self,
+        wf_run_id: WorkflowRunId,
+        task_inv_id: TaskInvocationId,
+        config_name: ConfigName,
+    ) -> TaskRunId:
+        wf_run_model = self.get_wf_by_run_id(
+            wf_run_id=wf_run_id, config_name=config_name
+        )
+        # TODO: figure out what happens when there's no matching task run.
+        task_run = _find_first(
+            lambda task_run: task_run.invocation_id == task_inv_id,
+            wf_run_model.task_runs,
+        )
+        return task_run.id
 
     def submit(
         self, wf_def: sdk.WorkflowDef, config: ConfigName, ignore_dirty_repo: bool
