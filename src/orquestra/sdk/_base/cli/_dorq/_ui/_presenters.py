@@ -7,7 +7,7 @@ mostly adapters over the corq's formatters.
 """
 import sys
 from contextlib import contextmanager
-from typing import Iterable, Iterator, List, Optional
+from typing import Iterable, Iterator, List
 
 import click
 from tabulate import tabulate
@@ -37,6 +37,17 @@ class WrappedCorqOutputPresenter:
                 message="Success",
             ),
             workflow_runs=[wf_run],
+        )
+        per_command.pretty_print_response(resp, project_dir=None)
+
+    def show_wf_runs_list(self, wf_runs: List[WorkflowRun]):
+        resp = responses.GetWorkflowRunResponse(
+            meta=responses.ResponseMetadata(
+                success=True,
+                code=responses.ResponseStatusCode.OK,
+                message="Success",
+            ),
+            workflow_runs=wf_runs,
         )
         per_command.pretty_print_response(resp, project_dir=None)
 
