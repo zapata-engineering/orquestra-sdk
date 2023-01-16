@@ -61,7 +61,15 @@ class WorkflowRunRepo:
         except (ConnectionError, exceptions.UnauthorizedError):
             raise
 
-        return wf_runs
+        return [
+            WorkflowRun(
+                id=run._run_id,
+                workflow_def=run._wf_def,
+                task_runs=run.get_tasks(),
+                status=run.get_status(),
+            )
+            for run in wf_runs
+        ]
 
     def get_wf_by_run_id(
         self, wf_run_id: WorkflowRunId, config_name: t.Optional[ConfigName]
