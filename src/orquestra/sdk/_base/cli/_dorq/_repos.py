@@ -10,7 +10,6 @@ import sys
 import typing
 import typing as t
 import warnings
-from pathlib import Path
 
 import requests
 
@@ -52,19 +51,13 @@ class WorkflowRunRepo:
             orquestra.sdk.exceptions.UnauthorizedError: when connection with runtime
                 failed because of an auth error.
         """
-        # TODO: replace the contents of this method with a single call to the public
-        # Python API for listing workflows.
-        # Jira ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-580
-
-        runtime_configuration = _config.read_config(config)
-        project_dir = Path.cwd()
-
-        runtime = _factory.build_runtime_from_config(
-            project_dir=project_dir, config=runtime_configuration
-        )
-
         try:
-            wf_runs = runtime.get_all_workflow_runs_status()
+            wf_runs = sdk.list_workflow_runs(
+                config,
+                limit=limit,
+                max_age=max_age,
+                state=state,
+            )
         except (ConnectionError, exceptions.UnauthorizedError):
             raise
 

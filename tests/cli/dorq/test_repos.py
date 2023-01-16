@@ -15,7 +15,7 @@ import pytest
 import requests
 
 from orquestra import sdk
-from orquestra.sdk import exceptions
+from orquestra.sdk import exceptions, list_workflow_runs
 from orquestra.sdk._base import _config, _db, _factory
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe._client import QEClient
@@ -109,14 +109,10 @@ class TestWorkflowRunRepo:
                 # Given
                 config = "<config sentinel>"
 
-                # Prevent FS access
-                monkeypatch.setattr(_config, "read_config", Mock())
+                def raise_exc(*args, **kwargs):
+                    raise exc
 
-                runtime = Mock()
-                runtime.get_all_workflow_runs_status.side_effect = exc
-                monkeypatch.setattr(
-                    _factory, "build_runtime_from_config", Mock(return_value=runtime)
-                )
+                monkeypatch.setattr(sdk, "list_workflow_runs", raise_exc)
 
                 repo = _repos.WorkflowRunRepo()
 
@@ -242,8 +238,8 @@ class TestWorkflowRunRepo:
                 mock_wf_runs.append(wf_run)
 
             monkeypatch.setattr(
-                _dag.RayRuntime,
-                "get_all_workflow_runs_status",
+                sdk,
+                "list_workflow_runs",
                 Mock(return_value=mock_wf_runs),
             )
 
