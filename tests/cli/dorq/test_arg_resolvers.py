@@ -6,7 +6,7 @@ from unittest.mock import Mock
 import pytest
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._base.cli._dorq import _arg_resolvers
+from orquestra.sdk._base.cli._dorq import _arg_resolvers, _repos
 
 
 class TestConfigResolver:
@@ -280,7 +280,7 @@ class TestTaskInvIDResolver:
                            ->[prompters]
 
 
-    ``config`` and ``wf_run_id`` areassumed to be resolved to a valid value at this
+    ``config`` and ``wf-run_id`` are assumed to be resolved to a valid value at this
     point.
     """
 
@@ -489,6 +489,107 @@ class TestTaskInvIDResolver:
         task_inv_prompter.choice.assert_called_with(
             inv_ids, message="Task invocation ID"
         )
+
+
+class TestTaskRunIDResolver:
+    """
+    Test boundaries::
+        [TaskRunIDResolver]->[repo]
+                           ->[nested resolvers]
+                           ->[prompters]
+
+
+    ``config`` is assumed to be resolved to a valid value at this point.
+    """
+
+    @staticmethod
+    @pytest.mark.parametrize("wf_run_id", [None, "wf.1"])
+    @pytest.mark.parametrize("fn_name", [None, "foo"])
+    @pytest.mark.parametrize("task_inv_id", [None, "inv1"])
+    def test_passing_task_run_id_directly(wf_run_id, fn_name, task_inv_id):
+        """
+        It should return the passed task_run_id regardless of wf_run_id, fn_name, and
+        task_inv_id.
+        """
+        # Given
+        config = "<config sentinel>"
+        task_run_id = "wf.1"
+
+        resolver = _arg_resolvers.TaskRunIDResolver(
+            wf_run_repo=Mock(),
+            wf_run_id_resolver=Mock(),
+            task_inv_id_resolver=Mock(),
+        )
+
+        # When
+        resolved = resolver.resolve(
+            task_run_id=task_run_id,
+            wf_run_id=wf_run_id,
+            fn_name=fn_name,
+            task_inv_id=task_inv_id,
+            config=config,
+        )
+
+        # Then
+        assert resolved == task_run_id
+
+    @staticmethod
+    def test_passing_data():
+        # Given
+        config = "<config sentinel>"
+        task_run_id = None
+        wf_run_id = "wf.1"
+        fn_name = "my_fn"
+        task_inv_id = "inv1"
+
+        # Mocks
+        wf_run_id_resolver = Mock(_arg_resolvers.WFRunIDResolver)
+        resolved_wf_run_id = "resolved wf run id"
+        wf_run_id_resolver.resolve.return_value = resolved_wf_run_id
+
+        task_inv_id_resolver = Mock(_arg_resolvers.TaskInvIDResolver)
+        resolved_inv_id = "resolved inv id"
+        task_inv_id_resolver.resolve.return_value = resolved_inv_id
+
+        wf_run_repo = Mock(_repos.WorkflowRunRepo)
+        resolved_task_run_id = "task run 1"
+        wf_run_repo.get_task_run_id.return_value = resolved_task_run_id
+
+        resolver = _arg_resolvers.TaskRunIDResolver(
+            wf_run_repo=wf_run_repo,
+            wf_run_id_resolver=wf_run_id_resolver,
+            task_inv_id_resolver=task_inv_id_resolver,
+        )
+
+        # When
+        resolved = resolver.resolve(
+            task_run_id=task_run_id,
+            wf_run_id=wf_run_id,
+            fn_name=fn_name,
+            task_inv_id=task_inv_id,
+            config=config,
+        )
+
+        # Then
+        # Should delegate wf_run_id resolution to the nested resolver.
+        wf_run_id_resolver.resolve.assert_called_with(wf_run_id, config)
+
+        # Should delegate task_inv_id resolution to the nested resolver.
+        task_inv_id_resolver.resolve.assert_called_with(
+            task_inv_id=task_inv_id,
+            fn_name=fn_name,
+            wf_run_id=resolved_wf_run_id,
+            config=config,
+        )
+
+        # Should pass resolved IDs to the repo
+        wf_run_repo.get_task_run_id.assert_called_with(
+            wf_run_id=resolved_wf_run_id,
+            task_inv_id=resolved_inv_id,
+            config_name=config,
+        )
+
+        assert resolved == resolved_task_run_id
 
 
 @pytest.mark.parametrize(

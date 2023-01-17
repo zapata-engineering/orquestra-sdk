@@ -157,7 +157,7 @@ class TaskInvIDResolver:
             return inv_ids[0]
 
 
-class TaskRunIdResolver:
+class TaskRunIDResolver:
     """
     Finds task run ID. Assumes ``config`` name was already resolved.
     """
