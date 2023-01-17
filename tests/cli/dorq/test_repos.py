@@ -22,6 +22,7 @@ from orquestra.sdk._base._qe._client import QEClient
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._base.cli._dorq import _repos
 from orquestra.sdk._ray import _dag
+from orquestra.sdk.schema.workflow_run import RunStatus, State, WorkflowRun
 
 from ... import reloaders
 from ...sdk.v2.data.configs import TEST_CONFIG_JSON
@@ -214,6 +215,39 @@ class TestWorkflowRunRepo:
 
     class TestIntegration:
         @staticmethod
+        def test_list_wf_runs(monkeypatch):
+            # Given
+            config = "ray"
+            stub_run_ids = ["wf.1", "wf.2"]
+            state = State("RUNNING")
+            mock_wf_runs = []
+
+            for stub_id in stub_run_ids:
+                wf_run = Mock()
+                wf_run.get_status_model.return_value = WorkflowRun(
+                    id=stub_id,
+                    workflow_def=None,
+                    task_runs=[],
+                    status=RunStatus(state=state, start_time=None, end_time=None),
+                )
+                mock_wf_runs.append(wf_run)
+
+            monkeypatch.setattr(
+                sdk, "list_workflow_runs", Mock(return_value=mock_wf_runs)
+            )
+
+            # Prevent RayRuntime from connecting to a real cluster.
+            monkeypatch.setattr(_dag.RayRuntime, "startup", Mock())
+
+            repo = _repos.WorkflowRunRepo()
+
+            # When
+            runs = repo.list_wf_runs(config)
+
+            # Then
+            assert [run.id for run in runs] == stub_run_ids
+
+        @staticmethod
         def test_list_wf_run_ids(monkeypatch):
             """
             Test boundary::
@@ -225,8 +259,8 @@ class TestWorkflowRunRepo:
 
             # Given
             config = "ray"
-
             stub_run_ids = ["wf.1", "wf.2"]
+            state = State("RUNNING")
 
             # Make RayRuntime return the IDs we want. We don't want to submit real
             # workflows and wait for their completion because it takes forever. It's
@@ -234,7 +268,12 @@ class TestWorkflowRunRepo:
             mock_wf_runs = []
             for stub_id in stub_run_ids:
                 wf_run = Mock()
-                wf_run.id = stub_id
+                wf_run.get_status_model.return_value = WorkflowRun(
+                    id=stub_id,
+                    workflow_def=None,
+                    task_runs=[],
+                    status=RunStatus(state=state, start_time=None, end_time=None),
+                )
                 mock_wf_runs.append(wf_run)
 
             monkeypatch.setattr(
