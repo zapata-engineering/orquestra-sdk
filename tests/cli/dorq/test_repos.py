@@ -217,6 +217,52 @@ class TestWorkflowRunRepo:
                 # Validate passing args
                 by_id.assert_called_with(run_id, config_name)
 
+        class TestGetWFOutputs:
+            @staticmethod
+            def test_passing_data(monkeypatch):
+                run_id = "wf.1"
+                config_name = "<config sentinel>"
+
+                wf_run = Mock()
+                fake_outputs = [
+                    "<output sentinel 0>",
+                    "<output sentinel 1>",
+                ]
+                wf_run.get_results.return_value = fake_outputs
+
+                by_id = Mock(return_value=wf_run)
+                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+                repo = _repos.WorkflowRunRepo()
+
+                # When
+                outputs = repo.get_wf_outputs(run_id, config_name)
+
+                # Then
+                assert outputs == fake_outputs
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "exc",
+                [
+                    exceptions.NotFoundError(),
+                    exceptions.ConfigNameNotFoundError(),
+                ],
+            )
+            def test_passing_errors(monkeypatch, exc):
+                run_id = "wf.1"
+                config_name = "<config sentinel>"
+
+                by_id = Mock(side_effect=exc)
+                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+                repo = _repos.WorkflowRunRepo()
+
+                # Then
+                with pytest.raises(type(exc)):
+                    # When
+                    _ = repo.get_wf_outputs(run_id, config_name)
+
     class TestIntegration:
         @staticmethod
         def test_list_wf_run_ids(monkeypatch):

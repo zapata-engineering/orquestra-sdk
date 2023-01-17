@@ -41,6 +41,7 @@ from ..exceptions import (
     WorkflowRunCanNotBeTerminated,
     WorkflowRunNotFinished,
     WorkflowRunNotStarted,
+    WorkflowRunNotSucceeded,
 )
 from . import _config
 from ._in_process_runtime import InProcessRuntime
@@ -506,6 +507,8 @@ class WorkflowRun:
             WorkflowRunNotStarted: when the workflow run has not started
             WorkflowRunNotFinished: when the workflow run has not finished and `wait` is
                                    False
+            WorkflowRunNotSucceeded: when the workflow is no longer executing, but it did not
+                succeed.
         """  # noqa 501
         try:
             run_id = self.run_id
@@ -526,7 +529,10 @@ class WorkflowRun:
                 f"Current state: {state}",
                 state,
             )
-        return self._runtime.get_workflow_run_outputs_non_blocking(run_id)
+        try:
+            return self._runtime.get_workflow_run_outputs_non_blocking(run_id)
+        except WorkflowRunNotSucceeded:
+            raise
 
     def get_artifacts(
         self,

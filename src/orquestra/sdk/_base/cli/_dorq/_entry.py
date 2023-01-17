@@ -7,7 +7,9 @@
 ``click`` uses function name as the group and command name.
 """
 import typing as t
+from pathlib import Path
 
+import click
 import cloup
 
 # Adds '-h' alias for '--help'
@@ -20,6 +22,9 @@ def dorq():
     # because it's the top-level group. User-facing name depends on the entrypoint spec
     # in setup.cfg.
     pass
+
+
+# ----------- 'orq workflow' commands ----------
 
 
 @dorq.group(aliases=["wf"])
@@ -91,6 +96,48 @@ def view(wf_run_id: t.Optional[str], config: t.Optional[str]):
 
     action = Action()
     action.on_cmd_call(wf_run_id, config)
+
+
+DOWNLOAD_DIR_OPTION = cloup.option(
+    "--download-dir",
+    help=(
+        "Directory path to store the artifact value. If passed, the command will "
+        "create a file under this location."
+    ),
+    type=click.Path(file_okay=False, dir_okay=True, writable=True, path_type=Path),
+)
+
+
+@workflow.command()
+@cloup.argument("wf_run_id", required=False)
+@cloup.option("-c", "--config")
+@DOWNLOAD_DIR_OPTION
+def results(
+    wf_run_id: t.Optional[str],
+    config: t.Optional[str],
+    download_dir: t.Optional[Path],
+):
+    """
+    Shows preview of a workflow output values corresponding to the variables
+    returned from the ``@workflow`` function.
+
+    Only works with succeeded workflows. If a workflow is still running this command
+    won't wait for the workflow's completion.
+
+    This command tries to print a human-friendly values preview, but the output isn't
+    guaranteed to be a valid parseable value. If you need the artifact value for
+    further processing, use the ``download_dir`` option or use
+    ``orquestra.sdk.WorkflowRun.get_results()`` directly from Python.
+    """
+
+    from ._workflow._results import Action
+
+    action = Action()
+    action.on_cmd_call(
+        wf_run_id=wf_run_id,
+        config=config,
+        download_dir=download_dir,
+    )
 
 
 @workflow.command()

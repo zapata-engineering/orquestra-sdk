@@ -10,9 +10,12 @@
 
 
 👩‍🔬 *Experimental*
+
 * New CLI command: `python -m orquestra.sdk._base.cli._dorq._entry login`.
 * New CLI Login commands allows to login to CE with --ce flag
 * Dorq wf submit now properly prompts users for config selection
+* New CLI command: `python -m orquestra.sdk._base.cli._dorq._entry workflow results`. It shows a preview of the workflow run output artifact and can download the result values to the provided directory.
+
 
 🐛 *Bug Fixes*
 * Fixed broken link on docs landing page.

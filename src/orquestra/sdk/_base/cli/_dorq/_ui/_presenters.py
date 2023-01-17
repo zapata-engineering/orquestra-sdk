@@ -5,15 +5,18 @@
 Utilities for presenting human-readable text output from dorq commands. These are
 mostly adapters over the corq's formatters.
 """
+import pprint
 import sys
+import typing as t
 from contextlib import contextmanager
-from typing import Iterable, Iterator, List, Optional
+from typing import Iterable, Iterator, List
 
 import click
 from tabulate import tabulate
 
-import orquestra.sdk._base._services as _services
+from orquestra.sdk._base import _services, serde
 from orquestra.sdk.schema import responses
+from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.workflow_run import (
     WorkflowRun,
     WorkflowRunId,
@@ -53,6 +56,38 @@ class WrappedCorqOutputPresenter:
 
     def show_stopped_wf_run(self, wf_run_id: WorkflowRunId):
         click.echo(f"Workflow run {wf_run_id} stopped.")
+
+    def show_dumped_wf_result(self, dump_details: serde.DumpDetails):
+        format_name: str
+        if dump_details.format == ArtifactFormat.JSON:
+            format_name = "a text json file"
+        elif dump_details.format == ArtifactFormat.ENCODED_PICKLE:
+            # Our enum case name is ENCODED_PICKLE, but this isn't entirely consistent
+            # with the file contents. Here, we don't base64-encode the pickle bytes, we
+            # just dump them directly to the file. Custom caption should help users
+            # avoid the confusion.
+            format_name = "a binary pickle file"
+        else:
+            format_name = dump_details.format.name
+
+        click.echo(f"Artifact saved at {dump_details.file_path} " f"as {format_name}.")
+
+    def show_workflow_outputs(
+        self, values: t.Sequence[t.Any], wf_run_id: WorkflowRunId
+    ):
+        """
+        Prints a preview of the output artifact values.
+
+        Args:
+            values: plain, deserialized artifact values.
+        """
+        click.echo(f"Workflow run {wf_run_id} has {len(values)} outputs.")
+
+        for value_i, value in enumerate(values):
+            click.echo()
+            click.echo(f"Output {value_i}. Object type: {type(value)}")
+            click.echo("Pretty printed value:")
+            click.echo(pprint.pformat(value))
 
     def show_error(self, exception: Exception):
         status_code = _errors.pretty_print_exception(exception)
