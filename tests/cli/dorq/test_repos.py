@@ -268,9 +268,6 @@ class TestWorkflowRunRepo:
         class TestGetTaskFNNames:
             @staticmethod
             def test_mixed_imports(monkeypatch):
-                """
-                Validates that we can handle all types of function refs.
-                """
                 # Given
                 wf_run_id = "wf.1"
                 config = "<config sentinel>"
@@ -312,55 +309,14 @@ class TestWorkflowRunRepo:
                 repo = _repos.WorkflowRunRepo()
 
                 # When
-                refs = repo.get_task_fn_refs(wf_run_id, config)
+                names = repo.get_task_fn_names(wf_run_id, config)
 
                 # Then
-                assert len(refs) == 3
-                assert isinstance(refs["task1"], ir.ModuleFunctionRef)
-                assert isinstance(refs["task2"], ir.FileFunctionRef)
-                assert isinstance(refs["task3"], ir.InlineFunctionRef)
-
-            @staticmethod
-            def test_same_fn_names(monkeypatch):
-                """
-                Validates that we can handle workflows where there are different tasks
-                with the same function name, eg. defined in different modules.
-                """
-                wf_run_id = "wf.1"
-                config = "<config sentinel>"
-
-                # Mocks
-                wf_run = Mock(sdk.WorkflowRun)
-                tasks = [
-                    ir.TaskDef(
-                        id="task1",
-                        fn_ref=ir.ModuleFunctionRef(
-                            module="tasks1", function_name="my_fn"
-                        ),
-                        parameters=[],
-                        source_import_id="imp1",
-                    ),
-                    ir.TaskDef(
-                        id="task2",
-                        fn_ref=ir.ModuleFunctionRef(
-                            module="tasks2", function_name="my_fn"
-                        ),
-                        parameters=[],
-                        source_import_id="imp1",
-                    ),
+                assert names == [
+                    "inlined_task",
+                    "task_in_another_file",
+                    "task_in_another_module",
                 ]
-                wf_run.get_status_model().workflow_def.tasks.values.return_value = tasks
-
-                by_id = Mock(return_value=wf_run)
-                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
-
-                repo = _repos.WorkflowRunRepo()
-
-                # When
-                refs = repo.get_task_fn_refs(wf_run_id, config)
-
-                # Then
-                assert len(refs) == 2
 
     class TestIntegration:
         @staticmethod
@@ -449,10 +405,10 @@ class TestWorkflowRunRepo:
                 repo = _repos.WorkflowRunRepo()
 
                 # When
-                refs = repo.get_task_fn_refs(wf_run_id, config)
+                names = repo.get_task_fn_names(wf_run_id, config)
 
                 # Then
-                assert len(refs) == 2
+                assert names == ["fn1", "fn2"]
 
 
 class TestConfigRepo:

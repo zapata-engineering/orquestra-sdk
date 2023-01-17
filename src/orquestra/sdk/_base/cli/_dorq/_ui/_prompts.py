@@ -9,10 +9,7 @@ import inquirer  # type: ignore
 SINGLE_INPUT = "single_input"
 
 
-# List item identifier. Allows handling duplicated list items.
 ChoiceID = str
-# The string that's presented to the user.
-ChoiceCaption = str
 
 
 class Prompter:
@@ -27,22 +24,10 @@ class Prompter:
 
     def choice(
         self,
-        choices: t.Union[
-            t.Sequence[ChoiceCaption],
-            t.Sequence[t.Tuple[ChoiceCaption, ChoiceID]],
-        ],
+        choices: t.Sequence[ChoiceID],
         message: str,
         default: t.Optional[str] = None,
-    ) -> t.Union[ChoiceCaption, ChoiceID]:
-        """
-        Shows a selection prompt to the user.
-
-        If ``choices`` is a sequence of caption strings, the returned value is one of
-        those captions.
-
-        If ``choices`` is a sequence of tuples, the returned value is the choice
-        identifier.
-        """
+    ) -> ChoiceID:
         question = inquirer.List(
             SINGLE_INPUT,
             message=message,
