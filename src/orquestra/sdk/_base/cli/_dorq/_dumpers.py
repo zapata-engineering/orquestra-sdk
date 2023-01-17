@@ -9,7 +9,7 @@ import typing as t
 from pathlib import Path
 
 from orquestra.sdk._base import serde
-from orquestra.sdk.schema.workflow_run import WorkflowRunId
+from orquestra.sdk.schema.workflow_run import TaskInvocationId, WorkflowRunId
 
 
 class ArtifactDumper:
@@ -41,3 +41,34 @@ class ArtifactDumper:
         )
 
         return dump_details
+
+
+class LogsDumper:
+    """
+    Writes logs to files.
+    """
+
+    def dump(
+        self,
+        logs: t.Dict[TaskInvocationId, t.List[str]],
+        wf_run_id: WorkflowRunId,
+        dir_path: Path,
+    ) -> Path:
+        """
+        Save logs from wf into a file
+
+        Creates missing directories. Generates filenames based on ``wf_run_id``
+        No standard errors are expected to be raised.
+        """
+        dir_path.mkdir(parents=True, exist_ok=True)
+
+        logs_file = dir_path / f"{wf_run_id}.logs"
+
+        with logs_file.open("w") as f:
+            for task_invocation in logs:
+                f.write(f"Logs for task invocation: {task_invocation}:\n\n")
+                for log in logs[task_invocation]:
+                    f.write(log + "\n")
+                f.write("\n\n")
+
+        return logs_file

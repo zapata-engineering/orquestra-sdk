@@ -25,7 +25,6 @@ from orquestra.sdk.schema.workflow_run import TaskInvocationId
 
 
 def _format_log_dict(logs: t.Dict[TaskInvocationId, t.List[str]]):
-    # TODO: figure out a better log presentation, e.g. sort task invocations
     # topologically using the graph from workflow def.
     return [
         line

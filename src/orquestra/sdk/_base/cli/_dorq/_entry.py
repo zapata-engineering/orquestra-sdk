@@ -55,7 +55,16 @@ Name of the workflow function to load from 'module'. If ommitted, 'orq' will ask
 selecting a function from the ones available in 'module'.
 """,
 )
-@cloup.option("-c", "--config")
+@cloup.option(
+    "-c",
+    "--config",
+    required=False,
+    help="""
+Name of the config used to submit workflow. Use 'in-process' for running workflow
+as local python process, 'ray' to run workflow in local ray cluster.
+To get confing name for remote runtime, use orq login -s <uri> first
+""",
+)
 @cloup.option(
     "--force",
     is_flag=True,
@@ -76,8 +85,6 @@ def submit(module: str, name: t.Optional[str], config: t.Optional[str], force: b
     If there's a task defined in a git repo with uncommitted changes you are asked for
     confirmation before submitting the workflow.
     """
-    # TODO: add help for config
-
     from ._workflow._submit import Action
 
     action = Action()
@@ -131,6 +138,29 @@ def results(
     """
 
     from ._workflow._results import Action
+
+    action = Action()
+    action.on_cmd_call(
+        wf_run_id=wf_run_id,
+        config=config,
+        download_dir=download_dir,
+    )
+
+
+@workflow.command()
+@cloup.argument("wf_run_id", required=False)
+@cloup.option("-c", "--config")
+@DOWNLOAD_DIR_OPTION
+def logs(
+    wf_run_id: t.Optional[str],
+    config: t.Optional[str],
+    download_dir: t.Optional[Path],
+):
+    """
+    Shows logs gathered during execution of a workflow.
+    """
+
+    from ._workflow._logs import Action
 
     action = Action()
     action.on_cmd_call(
