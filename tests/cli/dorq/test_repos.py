@@ -460,8 +460,8 @@ class TestWorkflowRunRepo:
             status model for tests.
             """
 
-            @pytest.fixture(scope="class")
             @staticmethod
+            @pytest.fixture(scope="class")
             def example_wf_run():
                 @sdk.task(source_import=sdk.InlineImport())
                 def fn1():
