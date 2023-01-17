@@ -270,9 +270,7 @@ class TestWorkflowRunRepo:
             @staticmethod
             def wf_run_with_task_defs(task_defs: t.List[ir.TaskDef]) -> sdk.WorkflowRun:
                 wf_run_model = Mock()
-                wf_run_model.workflow_def.tasks.values.return_value = (
-                    task_defs
-                )
+                wf_run_model.workflow_def.tasks.values.return_value = task_defs
 
                 wf_run = Mock(sdk.WorkflowRun)
                 wf_run.get_status_model.return_value = wf_run_model
@@ -413,7 +411,7 @@ class TestWorkflowRunRepo:
         class TestGetTaskFNNames:
             @pytest.fixture
             @staticmethod
-            def example_wf_run_model():
+            def example_wf_run():
                 @sdk.task(source_import=sdk.InlineImport())
                 def fn1():
                     return 1
@@ -431,31 +429,26 @@ class TestWorkflowRunRepo:
                     return art1, art2_1, art2_2
 
                 run = my_wf().run("in_process")
-                return run.get_status_model()
+
+                return run
 
             @staticmethod
-            def test_with_in_process(
-                monkeypatch, example_wf_run_model: WorkflowRunModel
-            ):
+            def test_with_in_process(monkeypatch, example_wf_run: sdk.WorkflowRun):
                 """
                 Uses sample workflow definition and in-process runtime to acquire a
                 status model for tests.
                 """
                 # Given
-                wf_run_id = "wf.1"
                 config = "<config sentinel>"
-
-                # Mocks
-                wf_run = Mock(sdk.WorkflowRun)
-                wf_run.get_status_model.return_value = example_wf_run_model
-
-                by_id = Mock(return_value=wf_run)
-                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
-
                 repo = _repos.WorkflowRunRepo()
 
+                # Mocks
+                monkeypatch.setattr(
+                    sdk.WorkflowRun, "by_id", Mock(return_value=example_wf_run)
+                )
+
                 # When
-                names = repo.get_task_fn_names(wf_run_id, config)
+                names = repo.get_task_fn_names(example_wf_run.run_id, config)
 
                 # Then
                 assert names == ["fn1", "fn2"]
