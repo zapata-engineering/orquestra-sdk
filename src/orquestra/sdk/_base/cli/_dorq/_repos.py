@@ -157,6 +157,13 @@ class WorkflowRunRepo:
     def get_task_fn_names(
         self, wf_run_id: WorkflowRunId, config_name: ConfigName
     ) -> t.Sequence[str]:
+        """
+        Extracts task function names used in this workflow run.
+
+        If two different task defs have the same function name this returns a single
+        name entry. This can happen when similar tasks are defined in two different
+        modules.
+        """
         try:
             wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
         except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
@@ -164,15 +171,14 @@ class WorkflowRunRepo:
 
         status_model = wf_run.get_status_model()
         wf_def = status_model.workflow_def
+
+        # TODO: check when this is optional and add a message
         assert wf_def is not None
 
-        # Note: this will collapse tasks with the same function names.
-        # TODO: take a set of fn refs instead.
-
         fn_names_set = set()
-        # It's easier to test when we iterate over wf_def's task_defs instead of
-        # iterating over task runs. Assumption: every task_def is being used in the
-        # workflow and corresponds to a task_run.
+        # What we're really interested in are task_runs, but it's easier to test when
+        # we iterate over wf_defs's task_defs. Assumption: every task_def is being used
+        # in the workflow and corresponds to a task_run.
         for task_def in wf_def.tasks.values():
             fn_ref = task_def.fn_ref
             fn_name = fn_ref.function_name

@@ -8,6 +8,7 @@ Tests for repos. Isolated unit tests unless explicitly named as integration.
 import json
 import sys
 import warnings
+import typing as t
 from pathlib import Path
 from unittest.mock import Mock
 from orquestra.sdk.schema import ir
@@ -267,42 +268,53 @@ class TestWorkflowRunRepo:
 
         class TestGetTaskFNNames:
             @staticmethod
-            def test_mixed_imports(monkeypatch):
+            def wf_run_with_task_defs(task_defs: t.List[ir.TaskDef]) -> sdk.WorkflowRun:
+                wf_run_model = Mock()
+                wf_run_model.workflow_def.tasks.values.return_value = (
+                    task_defs
+                )
+
+                wf_run = Mock(sdk.WorkflowRun)
+                wf_run.get_status_model.return_value = wf_run_model
+
+                return wf_run
+
+            def test_mixed_imports(self, monkeypatch):
                 # Given
                 wf_run_id = "wf.1"
                 config = "<config sentinel>"
 
                 # Mocks
-                wf_run = Mock(sdk.WorkflowRun)
-                tasks = [
-                    ir.TaskDef(
-                        id="task1",
-                        fn_ref=ir.ModuleFunctionRef(
-                            module="tasks", function_name="task_in_another_module"
+                wf_run = self.wf_run_with_task_defs(
+                    [
+                        ir.TaskDef(
+                            id="task1",
+                            fn_ref=ir.ModuleFunctionRef(
+                                module="tasks",
+                                function_name="task_in_another_module",
+                            ),
+                            parameters=[],
+                            source_import_id="imp1",
                         ),
-                        parameters=[],
-                        source_import_id="imp1",
-                    ),
-                    ir.TaskDef(
-                        id="task2",
-                        fn_ref=ir.FileFunctionRef(
-                            file_path="other_tasks.py",
-                            function_name="task_in_another_file",
+                        ir.TaskDef(
+                            id="task2",
+                            fn_ref=ir.FileFunctionRef(
+                                file_path="other_tasks.py",
+                                function_name="task_in_another_file",
+                            ),
+                            parameters=[],
+                            source_import_id="imp1",
                         ),
-                        parameters=[],
-                        source_import_id="imp1",
-                    ),
-                    ir.TaskDef(
-                        id="task3",
-                        fn_ref=ir.InlineFunctionRef(
-                            function_name="inlined_task", encoded_function=[]
+                        ir.TaskDef(
+                            id="task3",
+                            fn_ref=ir.InlineFunctionRef(
+                                function_name="inlined_task", encoded_function=[]
+                            ),
+                            parameters=[],
+                            source_import_id="imp1",
                         ),
-                        parameters=[],
-                        source_import_id="imp1",
-                    ),
-                ]
-                wf_run.get_status_model().workflow_def.tasks.values.return_value = tasks
-
+                    ]
+                )
                 by_id = Mock(return_value=wf_run)
                 monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
 
@@ -317,6 +329,44 @@ class TestWorkflowRunRepo:
                     "task_in_another_file",
                     "task_in_another_module",
                 ]
+
+            def test_shadowing_names(self, monkeypatch):
+                # Given
+                wf_run_id = "wf.1"
+                config = "<config sentinel>"
+
+                # Mocks
+                fn_name = "my_fn"
+                wf_run = self.wf_run_with_task_defs(
+                    [
+                        ir.TaskDef(
+                            id="task1",
+                            fn_ref=ir.ModuleFunctionRef(
+                                module="tasks1", function_name=fn_name
+                            ),
+                            parameters=[],
+                            source_import_id="imp1",
+                        ),
+                        ir.TaskDef(
+                            id="task2",
+                            fn_ref=ir.ModuleFunctionRef(
+                                module="tasks2", function_name=fn_name
+                            ),
+                            parameters=[],
+                            source_import_id="imp1",
+                        ),
+                    ]
+                )
+                by_id = Mock(return_value=wf_run)
+                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+                repo = _repos.WorkflowRunRepo()
+
+                # When
+                names = repo.get_task_fn_names(wf_run_id, config)
+
+                # Then
+                assert names == [fn_name]
 
     class TestIntegration:
         @staticmethod
