@@ -309,6 +309,144 @@ class TestTaskInvIDResolver:
         # Then
         assert resolved == task_inv_id
 
+    class TestResolvingFNName:
+        @staticmethod
+        def test_passing_fn_name_directly():
+            # Given
+            wf_run_id = "<wf run ID sentinel>"
+            config = "<config sentinel>"
+            fn_name = "my_fn"
+            task_inv_id = None
+
+            # Mocks
+            wf_run_repo = Mock()
+
+            # Needed to let the whole decision tree pass.
+            wf_run_repo.get_task_inv_ids.return_value = ["inv1"]
+
+            fn_name_prompter = Mock()
+
+            resolver = _arg_resolvers.TaskInvIDResolver(
+                wf_run_repo=wf_run_repo,
+                fn_name_prompter=fn_name_prompter,
+                task_inv_prompter=Mock(),
+            )
+
+            # When
+            _ = resolver.resolve(
+                task_inv_id=task_inv_id,
+                fn_name=fn_name,
+                wf_run_id=wf_run_id,
+                config=config,
+            )
+
+            # Then
+            # We should make use of the passed fn name
+            wf_run_repo.get_task_inv_ids.assert_called_with(
+                wf_run_id=wf_run_id,
+                config_name=config,
+                task_fn_name=fn_name,
+            )
+            # We shouldn't ask for the fn name
+            assert fn_name_prompter.call_count == 0
+
+        @staticmethod
+        def test_one_fn_name():
+            """
+            User didn't pass in fn name directly, and the workflow has just one
+            function name.
+            """
+            # Given
+            wf_run_id = "<wf run ID sentinel>"
+            config = "<config sentinel>"
+            fn_name = None
+            task_inv_id = None
+
+            # Mocks
+            wf_run_repo = Mock()
+            available_fn_name = "fn1"
+            # Just 1 fn name.
+            wf_run_repo.get_task_fn_names.return_value = [available_fn_name]
+
+            # Needed to let the whole decision tree pass.
+            wf_run_repo.get_task_inv_ids.return_value = ["inv1"]
+
+            fn_name_prompter = Mock()
+
+            resolver = _arg_resolvers.TaskInvIDResolver(
+                wf_run_repo=wf_run_repo,
+                fn_name_prompter=fn_name_prompter,
+                task_inv_prompter=Mock(),
+            )
+
+            # When
+            _ = resolver.resolve(
+                task_inv_id=task_inv_id,
+                fn_name=fn_name,
+                wf_run_id=wf_run_id,
+                config=config,
+            )
+
+            # Then
+            # We should make use of the single available fn name
+            wf_run_repo.get_task_inv_ids.assert_called_with(
+                wf_run_id=wf_run_id,
+                config_name=config,
+                task_fn_name=available_fn_name,
+            )
+            # We shouldn't ask for the fn name
+            assert fn_name_prompter.call_count == 0
+
+        @staticmethod
+        def test_many_fns():
+            """
+            This workflow has just a couple of function names.
+            """
+            # Given
+            wf_run_id = "<wf run ID sentinel>"
+            config = "<config sentinel>"
+            fn_name = None
+            task_inv_id = None
+
+            # Mocks
+            wf_run_repo = Mock()
+            available_fn_names = ["fn1", "fn2", "fn3"]
+            wf_run_repo.get_task_fn_names.return_value = available_fn_names
+
+            # Needed to let the whole decision tree pass.
+            wf_run_repo.get_task_inv_ids.return_value = ["inv1"]
+
+            fn_name_prompter = Mock()
+            selected_fn_name = available_fn_names[2]
+            fn_name_prompter.choice.return_value = selected_fn_name
+
+            resolver = _arg_resolvers.TaskInvIDResolver(
+                wf_run_repo=wf_run_repo,
+                fn_name_prompter=fn_name_prompter,
+                task_inv_prompter=Mock(),
+            )
+
+            # When
+            _ = resolver.resolve(
+                task_inv_id=task_inv_id,
+                fn_name=fn_name,
+                wf_run_id=wf_run_id,
+                config=config,
+            )
+
+            # Then
+            # We should ask for the fn name
+            fn_name_prompter.choice.assert_called_with(
+                available_fn_names, message="Task function name"
+            )
+
+            # We should make use of the selected fn name
+            wf_run_repo.get_task_inv_ids.assert_called_with(
+                wf_run_id=wf_run_id,
+                config_name=config,
+                task_fn_name=selected_fn_name,
+            )
+
     @staticmethod
     def test_selecting_inv_id():
         """
@@ -318,8 +456,8 @@ class TestTaskInvIDResolver:
         # Given
         wf_run_id = "<wf run ID sentinel>"
         config = "<config sentinel>"
-        task_inv_id = None
         fn_name = "foo"
+        task_inv_id = None
 
         # Mocks
         wf_run_repo = Mock()
