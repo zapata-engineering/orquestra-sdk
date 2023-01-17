@@ -28,6 +28,64 @@ class TestConfigResolver:
         config = "<config sentinel>"
 
         resolver = _arg_resolvers.ConfigResolver(
+            config_repo=Mock(),
+            prompter=Mock(),
+        )
+
+        # When
+        resolved_config = resolver.resolve(config=config)
+
+        # Then
+        assert resolved_config == config
+
+    @staticmethod
+    def test_no_config():
+        # Given
+        config = None
+
+        config_repo = Mock()
+        local_config_names = ["cfg1", "cfg2"]
+        config_repo.list_config_names.return_value = local_config_names
+
+        prompter = Mock()
+        selected_config = local_config_names[1]
+        prompter.choice.return_value = selected_config
+
+        resolver = _arg_resolvers.ConfigResolver(
+            config_repo=config_repo,
+            prompter=prompter,
+        )
+
+        # When
+        resolved_config = resolver.resolve(config=config)
+
+        # Then
+        # We expect prompt for selecting config.
+        prompter.choice.assert_called_with(local_config_names, message="Runtime config")
+
+        # Resolver should return the user's choice.
+        assert resolved_config == selected_config
+
+
+class TestWFConfigResolver:
+    """
+    Test boundaries::
+        [ConfigResolver]->[repos]
+                        ->[prompter]
+    """
+
+    @staticmethod
+    @pytest.mark.parametrize("wf_run_id", ["<wf run ID sentinel>", None])
+    def test_passing_config_directly(wf_run_id):
+        """
+        User passed `config` value directly as CLI arg.
+
+        We expect the same result regardless of ``wf_run_id``.
+        """
+        # Given
+        config = "<config sentinel>"
+
+        resolver = _arg_resolvers.WFConfigResolver(
             wf_run_repo=Mock(),
             config_repo=Mock(),
             prompter=Mock(),
@@ -56,7 +114,7 @@ class TestConfigResolver:
 
             prompter = Mock()
 
-            resolver = _arg_resolvers.ConfigResolver(
+            resolver = _arg_resolvers.WFConfigResolver(
                 wf_run_repo=wf_run_repo,
                 config_repo=Mock(),
                 prompter=prompter,
@@ -99,7 +157,7 @@ class TestConfigResolver:
             selected_config = local_config_names[1]
             prompter.choice.return_value = selected_config
 
-            resolver = _arg_resolvers.ConfigResolver(
+            resolver = _arg_resolvers.WFConfigResolver(
                 wf_run_repo=wf_run_repo,
                 config_repo=config_repo,
                 prompter=prompter,
@@ -130,7 +188,7 @@ class TestConfigResolver:
             selected_config = local_config_names[1]
             prompter.choice.return_value = selected_config
 
-            resolver = _arg_resolvers.ConfigResolver(
+            resolver = _arg_resolvers.WFConfigResolver(
                 wf_run_repo=Mock(),
                 config_repo=config_repo,
                 prompter=prompter,

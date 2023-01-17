@@ -1324,7 +1324,7 @@ class TestRuntimeConfiguration:
 
             assert config_names == [
                 name for name in TEST_CONFIG_JSON["configs"]
-            ] + list(_config.SPECIAL_CONFIG_NAME_DICT.keys())
+            ] + list(_config.UNIQUE_CONFIGS)
 
         @staticmethod
         def test_custom_file_location(tmp_config_json):
@@ -1333,7 +1333,7 @@ class TestRuntimeConfiguration:
 
             assert config_names == [
                 name for name in TEST_CONFIG_JSON["configs"]
-            ] + list(_config.SPECIAL_CONFIG_NAME_DICT.keys())
+            ] + list(_config.UNIQUE_CONFIGS)
 
         @staticmethod
         def test_empty_configs_key(patch_config_location):
@@ -1342,7 +1342,7 @@ class TestRuntimeConfiguration:
 
             config_names = _api.RuntimeConfig.list_configs()
 
-            assert config_names == list(_config.SPECIAL_CONFIG_NAME_DICT.keys())
+            assert config_names == list(_config.UNIQUE_CONFIGS)
 
         @staticmethod
         def test_no_configs_key(patch_config_location):
@@ -1351,7 +1351,7 @@ class TestRuntimeConfiguration:
 
             config_names = _api.RuntimeConfig.list_configs()
 
-            assert config_names == list(_config.SPECIAL_CONFIG_NAME_DICT.keys())
+            assert config_names == list(_config.UNIQUE_CONFIGS)
 
     class TestLoad:
         @pytest.mark.parametrize(
