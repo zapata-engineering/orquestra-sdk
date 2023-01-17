@@ -408,8 +408,13 @@ class TestWorkflowRunRepo:
             # Then
             assert run_ids == stub_run_ids
 
-        class TestGetTaskFNNames:
-            @pytest.fixture
+        class TestWithInProcess:
+            """
+            Uses sample workflow definition and in-process runtime to acquire a
+            status model for tests.
+            """
+
+            @pytest.fixture(scope="class")
             @staticmethod
             def example_wf_run():
                 @sdk.task(source_import=sdk.InlineImport())
@@ -433,11 +438,7 @@ class TestWorkflowRunRepo:
                 return run
 
             @staticmethod
-            def test_with_in_process(monkeypatch, example_wf_run: sdk.WorkflowRun):
-                """
-                Uses sample workflow definition and in-process runtime to acquire a
-                status model for tests.
-                """
+            def test_get_task_fn_names(monkeypatch, example_wf_run: sdk.WorkflowRun):
                 # Given
                 config = "<config sentinel>"
                 repo = _repos.WorkflowRunRepo()
@@ -452,6 +453,27 @@ class TestWorkflowRunRepo:
 
                 # Then
                 assert names == ["fn1", "fn2"]
+
+            @staticmethod
+            def test_get_task_inv_ids(monkeypatch, example_wf_run: sdk.WorkflowRun):
+                # Given
+                config = "<config sentinel>"
+                repo = _repos.WorkflowRunRepo()
+
+                # Mocks
+                monkeypatch.setattr(
+                    sdk.WorkflowRun, "by_id", Mock(return_value=example_wf_run)
+                )
+
+                # When
+                inv_ids = repo.get_task_inv_ids(
+                    wf_run_id=example_wf_run.run_id,
+                    config_name=config,
+                    task_fn_name="fn2",
+                )
+
+                # Then
+                assert len(inv_ids) == 2
 
 
 class TestConfigRepo:

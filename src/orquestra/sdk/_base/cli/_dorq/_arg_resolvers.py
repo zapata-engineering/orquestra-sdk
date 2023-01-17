@@ -144,8 +144,8 @@ class TaskInvIDResolver:
                 resolved_fn_name = fn_names[0]
 
         inv_ids = self._wf_run_repo.get_task_inv_ids(
-            config=config,
             wf_run_id=wf_run_id,
+            config_name=config,
             task_fn_name=resolved_fn_name,
         )
         if len(inv_ids) > 1:
