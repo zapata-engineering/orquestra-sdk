@@ -268,7 +268,7 @@ class WorkflowRun:
 
         Args:
             run_id: The id of the workflow run to be loaded.
-            config: Determines where to look for the workflow run record. If ommited,
+            config: Determines where to look for the workflow run record. If omitted,
                 we will retrieve the config name from a local cache of workflow runs
                 submitted from this machine.
             project_dir: The location of the project directory. This directory must

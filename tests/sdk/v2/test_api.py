@@ -14,7 +14,6 @@ import typing as t
 import unittest
 import warnings
 from datetime import timedelta
-from pathlib import Path
 from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, patch
 
 import pytest
