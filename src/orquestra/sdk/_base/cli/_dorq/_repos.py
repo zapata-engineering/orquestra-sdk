@@ -20,7 +20,7 @@ from orquestra.sdk._base import _config, _db, _factory, loader
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe import _client
 from orquestra.sdk.schema.configs import ConfigName, RuntimeName
-from orquestra.sdk.schema.ir import TaskInvocationId
+from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRun, WorkflowRunId
 
 
@@ -76,7 +76,7 @@ class WorkflowRunRepo:
     def get_task_run_id(
         self,
         wf_run_id: WorkflowRunId,
-        task_inv_id: TaskInvocationId,
+        task_inv_id: ir.TaskInvocationId,
         config_name: ConfigName,
     ) -> TaskRunId:
         wf_run_model = self.get_wf_by_run_id(
@@ -154,9 +154,9 @@ class WorkflowRunRepo:
 
         return outputs
 
-    def get_task_fn_names(
+    def get_task_fn_refs(
         self, wf_run_id: WorkflowRunId, config_name: ConfigName
-    ) -> t.Sequence[str]:
+    ) -> t.Mapping[ir.TaskDefId, ir.FunctionRef]:
         try:
             wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
         except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
@@ -166,20 +166,12 @@ class WorkflowRunRepo:
         wf_def = status_model.workflow_def
         assert wf_def is not None
 
-        # Note: this will collapse tasks with the same function names.
-        # TODO: take a set of fn refs instead.
-
-        fn_names_set = set()
         # It's easier to test when we iterate over wf_def's task_defs instead of
         # iterating over task runs. Assumption: every task_def is being used in the
         # workflow and corresponds to a task_run.
-        for task_def in wf_def.tasks.values():
-            fn_ref = task_def.fn_ref
-            fn_name = fn_ref.function_name
+        fn_refs = {task_def.id: task_def.fn_ref for task_def in wf_def.tasks.values()}
 
-            fn_names_set.add(fn_name)
-
-        return sorted(fn_names_set)
+        return fn_refs
 
 
 class ConfigRepo:

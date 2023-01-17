@@ -15,7 +15,7 @@ from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRunId
 
 from . import _repos
-from ._ui import _prompts
+from ._ui import _choice_formatters, _prompts
 
 
 class ConfigResolver:
@@ -115,9 +115,11 @@ class TaskInvIDResolver:
         wf_run_repo=_repos.WorkflowRunRepo(),
         fn_name_prompter=_prompts.Prompter(),
         task_inv_prompter=_prompts.Prompter(),
+        fn_ref_formatter=_choice_formatters.FNRefFormatter(),
     ):
         self._wf_run_repo = wf_run_repo
         self._fn_name_prompter = fn_name_prompter
+        self._fn_name_formatter = fn_ref_formatter
         self._task_inv_prompter = task_inv_prompter
 
     def resolve(
@@ -135,13 +137,19 @@ class TaskInvIDResolver:
             # User passed fn name directly.
             resolved_fn_name = fn_name
         else:
-            fn_names = self._wf_run_repo.get_task_fn_names(wf_run_id, config)
-            if len(fn_names) > 1:
-                resolved_fn_name = self._fn_name_prompter.choice(
-                    fn_names, message="Task function name"
+            fn_refs = self._wf_run_repo.get_task_fn_refs(wf_run_id, config)
+            if len(fn_refs) > 1:
+                choices = {
+                    (self._fn_name_formatter.format(fn_ref), task_def_id)
+                    for task_def_id, fn_ref in fn_refs.items()
+                }
+                task_def_id = self._fn_name_prompter.choice(
+                    choices, message="Task function"
                 )
+                resolved_fn_name = fn_refs[task_def_id].function_name
             else:
-                resolved_fn_name = fn_names[0]
+                (fn_ref,) = fn_refs.values()
+                resolved_fn_name = fn_ref.function_name
 
         inv_ids = self._wf_run_repo.get_task_inv_ids(
             config=config,
