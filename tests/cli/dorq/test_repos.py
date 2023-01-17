@@ -7,12 +7,10 @@ Tests for repos. Isolated unit tests unless explicitly named as integration.
 
 import json
 import sys
-import warnings
 import typing as t
+import warnings
 from pathlib import Path
 from unittest.mock import Mock
-from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
 
 import pytest
 import requests
@@ -25,7 +23,9 @@ from orquestra.sdk._base._qe._client import QEClient
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._base.cli._dorq import _repos
 from orquestra.sdk._ray import _dag
+from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeName
+from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
 
 from ... import reloaders
 from ...sdk.v2.data.configs import TEST_CONFIG_JSON
@@ -365,6 +365,52 @@ class TestWorkflowRunRepo:
 
                 # Then
                 assert names == [fn_name]
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "exc",
+                [
+                    exceptions.NotFoundError(),
+                    exceptions.ConfigNameNotFoundError(),
+                ],
+            )
+            def test_passing_errors(monkeypatch, exc):
+                wf_run_id = "wf.1"
+                config_name = "<config sentinel>"
+
+                by_id = Mock(side_effect=exc)
+                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+                repo = _repos.WorkflowRunRepo()
+
+                # Then
+                with pytest.raises(type(exc)):
+                    # When
+                    _ = repo.get_task_fn_names(wf_run_id, config_name)
+
+        class TestGetTaskInvIDs:
+            @staticmethod
+            @pytest.mark.parametrize(
+                "exc",
+                [
+                    exceptions.NotFoundError(),
+                    exceptions.ConfigNameNotFoundError(),
+                ],
+            )
+            def test_passing_errors(monkeypatch, exc):
+                wf_run_id = "wf.1"
+                config_name = "<config sentinel>"
+                task_fn_name = "my_fn"
+
+                by_id = Mock(side_effect=exc)
+                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+                repo = _repos.WorkflowRunRepo()
+
+                # Then
+                with pytest.raises(type(exc)):
+                    # When
+                    _ = repo.get_task_inv_ids(wf_run_id, config_name, task_fn_name)
 
     class TestIntegration:
         @staticmethod
