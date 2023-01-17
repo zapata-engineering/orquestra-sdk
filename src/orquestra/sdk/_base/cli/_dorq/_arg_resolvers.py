@@ -19,6 +19,50 @@ from ._ui import _prompts
 
 class ConfigResolver:
     """
+    Resolves value of `config` CLI arg, using only config name passed
+    """
+
+    def __init__(
+        self,
+        config_repo=_repos.ConfigRepo(),
+        prompter=_prompts.Prompter(),
+    ):
+        self._config_repo = config_repo
+        self._prompter = prompter
+
+    def resolve(self, config: t.Optional[ConfigName]) -> ConfigName:
+        if config is not None:
+            return config
+
+        # 1.2. Prompt the user.
+        config_names = self._config_repo.list_config_names()
+        selected_config = self._prompter.choice(config_names, message="Runtime config")
+        return selected_config
+
+    def resolve_multiple(
+        self, configs: t.Optional[t.Sequence[str]]
+    ) -> t.Sequence[ConfigName]:
+        if configs is not None and len(configs) > 0:
+            return configs
+
+        # 1.2 Prompt the user.
+        config_names = self._config_repo.list_config_names()
+        while (
+            len(
+                selected_configs := self._prompter.checkbox(
+                    config_names,
+                    message="Runtime config(s)",
+                )
+            )
+            < 1
+        ):
+            print("Please select at least one configuration.")
+
+        return selected_configs
+
+
+class WFConfigResolver:
+    """
     Resolves value of `config` CLI arg, making use of `wf_run_id` if already passed.
     """
 
@@ -38,9 +82,6 @@ class ConfigResolver:
         if config is not None:
             return config
 
-        # TODO: make sure it works with `ray` and `in_process` runtimes.
-        # Jira ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-674
-
         if wf_run_id is not None:
             # 1.1. Attempt to get config from local cache.
             try:
@@ -51,30 +92,8 @@ class ConfigResolver:
                 # need to ask the user for the config.
                 pass
 
-        # 1.2. Prompt the user.
-        config_names = self._config_repo.list_config_names()
-        selected_config = self._prompter.choice(config_names, message="Runtime config")
-        return selected_config
-
-    def resolve_multiple(
-        self, configs: t.Optional[t.Sequence[str]]
-    ) -> t.Sequence[ConfigName]:
-        if configs is not None and len(configs) > 0:
-            return configs
-
-        config_names = self._config_repo.list_config_names()
-        while (
-            len(
-                selected_configs := self._prompter.checkbox(
-                    config_names,
-                    message="Runtime config(s)",
-                )
-            )
-            < 1
-        ):
-            print("Please select at least one configuration.")
-
-        return selected_configs
+        # 1.2. Prompt the user
+        return ConfigResolver(self._config_repo, self._prompter).resolve(config)
 
 
 class WFRunIDResolver:

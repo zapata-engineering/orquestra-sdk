@@ -13,7 +13,7 @@ from orquestra.sdk._base.cli._dorq._workflow import _view
 class TestAction:
     """
     Test boundaries::
-        [_stop.Action]->[arg resolvers]
+        [_view.Action]->[arg resolvers]
                       ->[repos]
                       ->[presenter]
     """

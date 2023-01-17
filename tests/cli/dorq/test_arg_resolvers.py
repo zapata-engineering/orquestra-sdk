@@ -17,138 +17,52 @@ class TestConfigResolver:
                         ->[prompter]
     """
 
-    class TestResolve:
-        @staticmethod
-        @pytest.mark.parametrize("wf_run_id", ["<wf run ID sentinel>", None])
-        def test_passing_config_directly(wf_run_id):
-            """
-            User passed `config` value directly as CLI arg.
+    @staticmethod
+    def test_passing_config_directly():
+        """
+        User passed `config` value directly as CLI arg.
+        """
+        # Given
+        config = "<config sentinel>"
 
-            We expect the same result regardless of ``wf_run_id``.
-            """
-            # Given
-            config = "<config sentinel>"
+        resolver = _arg_resolvers.ConfigResolver(
+            config_repo=Mock(),
+            prompter=Mock(),
+        )
 
-            resolver = _arg_resolvers.ConfigResolver(
-                wf_run_repo=Mock(),
-                config_repo=Mock(),
-                prompter=Mock(),
-            )
+        # When
+        resolved_config = resolver.resolve(config=config)
 
-            # When
-            resolved_config = resolver.resolve(wf_run_id=wf_run_id, config=config)
+        # Then
+        assert resolved_config == config
 
-            # Then
-            assert resolved_config == config
+    @staticmethod
+    def test_no_config():
+        # Given
+        config = None
 
-        class TestNoConfig:
-            """
-            User didn't pass `config`.
-            """
+        config_repo = Mock()
+        local_config_names = ["cfg1", "cfg2"]
+        config_repo.list_config_names.return_value = local_config_names
 
-            @staticmethod
-            def test_valid_wf_run_id_passed():
-                # Given
-                wf_run_id = "<wf run ID sentinel>"
-                config = None
+        prompter = Mock()
+        selected_config = local_config_names[1]
+        prompter.choice.return_value = selected_config
 
-                wf_run_repo = Mock()
-                stored_config = "<read config sentinel>"
-                wf_run_repo.get_config_name_by_run_id.return_value = stored_config
+        resolver = _arg_resolvers.ConfigResolver(
+            config_repo=config_repo,
+            prompter=prompter,
+        )
 
-                prompter = Mock()
+        # When
+        resolved_config = resolver.resolve(config=config)
 
-                resolver = _arg_resolvers.ConfigResolver(
-                    wf_run_repo=wf_run_repo,
-                    config_repo=Mock(),
-                    prompter=prompter,
-                )
+        # Then
+        # We expect prompt for selecting config.
+        prompter.choice.assert_called_with(local_config_names, message="Runtime config")
 
-                # When
-                resolved_config = resolver.resolve(wf_run_id=wf_run_id, config=config)
-
-                # Then
-                assert resolved_config == stored_config
-
-                # We expect reading name from wf_run_repo.
-                wf_run_repo.get_config_name_by_run_id.assert_called_with(wf_run_id)
-
-                # We expect no prompts.
-                prompter.choice.assert_not_called()
-
-            @staticmethod
-            def test_foreign_wf_run_id_passed():
-                """
-                Example use case: ``orq wf stop other-colleagues-wf-run``. We don't have
-                this workflow in the local DB, but it doesn't mean the workflow doesn't
-                exist on the cluster. We should ask the user for the config and proceed
-                with the action.
-                """
-                # Given
-                wf_run_id = "<wf run ID sentinel>"
-                config = None
-
-                config_repo = Mock()
-                local_config_names = ["cfg1", "cfg2"]
-                config_repo.list_config_names.return_value = local_config_names
-
-                wf_run_repo = Mock()
-                wf_run_repo.get_config_name_by_run_id.side_effect = (
-                    exceptions.WorkflowRunNotFoundError()
-                )
-
-                prompter = Mock()
-                selected_config = local_config_names[1]
-                prompter.choice.return_value = selected_config
-
-                resolver = _arg_resolvers.ConfigResolver(
-                    wf_run_repo=wf_run_repo,
-                    config_repo=config_repo,
-                    prompter=prompter,
-                )
-
-                # When
-                resolved_config = resolver.resolve(wf_run_id=wf_run_id, config=config)
-
-                # Then
-                prompter.choice.assert_called_with(
-                    local_config_names, message="Runtime config"
-                )
-
-                # Resolver should return the user's choice.
-                assert resolved_config == selected_config
-
-            @staticmethod
-            def test_no_wf_run_id():
-                # Given
-                wf_run_id = None
-                config = None
-
-                config_repo = Mock()
-                local_config_names = ["cfg1", "cfg2"]
-                config_repo.list_config_names.return_value = local_config_names
-
-                prompter = Mock()
-                selected_config = local_config_names[1]
-                prompter.choice.return_value = selected_config
-
-                resolver = _arg_resolvers.ConfigResolver(
-                    wf_run_repo=Mock(),
-                    config_repo=config_repo,
-                    prompter=prompter,
-                )
-
-                # When
-                resolved_config = resolver.resolve(wf_run_id=wf_run_id, config=config)
-
-                # Then
-                # We expect prompt for selecting config.
-                prompter.choice.assert_called_with(
-                    local_config_names, message="Runtime config"
-                )
-
-                # Resolver should return the user's choice.
-                assert resolved_config == selected_config
+        # Resolver should return the user's choice.
+        assert resolved_config == selected_config
 
     class TestResolveMultiple:
         @staticmethod
@@ -160,7 +74,6 @@ class TestConfigResolver:
             config = ["<config sentinel>"]
             prompter = Mock()
             resolver = _arg_resolvers.ConfigResolver(
-                wf_run_repo=Mock(),
                 config_repo=Mock(),
                 prompter=prompter,
             )
@@ -180,8 +93,10 @@ class TestConfigResolver:
             # Given
             config = ["<config sentinel 1>", "<config sentinel 2>"]
             prompter = Mock()
+            selected_config = config[1]
+            prompter.choice.return_value = selected_config
+
             resolver = _arg_resolvers.ConfigResolver(
-                wf_run_repo=Mock(),
                 config_repo=Mock(),
                 prompter=prompter,
             )
@@ -211,7 +126,6 @@ class TestConfigResolver:
             prompter.checkbox.return_value = selected_config
 
             resolver = _arg_resolvers.ConfigResolver(
-                wf_run_repo=Mock(),
                 config_repo=config_repo,
                 prompter=prompter,
             )
@@ -223,6 +137,169 @@ class TestConfigResolver:
             # We expect prompt for selecting config.
             prompter.checkbox.assert_called_with(
                 local_config_names, message="Runtime config(s)"
+            )
+
+            # Resolver should return the user's choice.
+            assert resolved_config == selected_config
+
+
+class TestWFConfigResolver:
+    """
+    Test boundaries::
+        [ConfigResolver]->[repos]
+                        ->[prompter]
+    """
+
+    @staticmethod
+    @pytest.mark.parametrize("wf_run_id", ["<wf run ID sentinel>", None])
+    def test_passing_config_directly(wf_run_id):
+        """
+        User passed `config` value directly as CLI arg.
+
+        We expect the same result regardless of ``wf_run_id``.
+        """
+        # Given
+        config = "<config sentinel>"
+
+        resolver = _arg_resolvers.WFConfigResolver(
+            wf_run_repo=Mock(),
+            config_repo=Mock(),
+            prompter=Mock(),
+        )
+
+        # When
+        resolved_config = resolver.resolve(wf_run_id=wf_run_id, config=config)
+
+        # Then
+        assert resolved_config == config
+
+    class TestNoConfig:
+        """
+        User didn't pass `config`.
+        """
+
+        @staticmethod
+        @pytest.mark.parametrize("wf_run_id", ["<wf run ID sentinel>", None])
+        def test_passing_config_directly(wf_run_id):
+            """
+            User passed `config` value directly as CLI arg.
+
+            We expect the same result regardless of ``wf_run_id``.
+            """
+            # Given
+            config = "<config sentinel>"
+
+            resolver = _arg_resolvers.WFConfigResolver(
+                wf_run_repo=Mock(),
+                config_repo=Mock(),
+                prompter=Mock(),
+            )
+
+            # When
+            resolved_config = resolver.resolve(wf_run_id=wf_run_id, config=config)
+
+            # Then
+            assert resolved_config == config
+
+        @staticmethod
+        def test_valid_wf_run_id_passed():
+            # Given
+            wf_run_id = "<wf run ID sentinel>"
+            config = None
+
+            wf_run_repo = Mock()
+            stored_config = "<read config sentinel>"
+            wf_run_repo.get_config_name_by_run_id.return_value = stored_config
+
+            prompter = Mock()
+
+            resolver = _arg_resolvers.WFConfigResolver(
+                wf_run_repo=wf_run_repo,
+                config_repo=Mock(),
+                prompter=prompter,
+            )
+
+            # When
+            resolved_config = resolver.resolve(wf_run_id=wf_run_id, config=config)
+
+            # Then
+            assert resolved_config == stored_config
+
+            # We expect reading name from wf_run_repo.
+            wf_run_repo.get_config_name_by_run_id.assert_called_with(wf_run_id)
+
+            # We expect no prompts.
+            prompter.choice.assert_not_called()
+
+        @staticmethod
+        def test_foreign_wf_run_id_passed():
+            """
+            Example use case: ``orq wf stop other-colleagues-wf-run``. We don't have
+            this workflow in the local DB, but it doesn't mean the workflow doesn't
+            exist on the cluster. We should ask the user for the config and proceed
+            with the action.
+            """
+            # Given
+            wf_run_id = "<wf run ID sentinel>"
+            config = None
+
+            config_repo = Mock()
+            local_config_names = ["cfg1", "cfg2"]
+            config_repo.list_config_names.return_value = local_config_names
+
+            wf_run_repo = Mock()
+            wf_run_repo.get_config_name_by_run_id.side_effect = (
+                exceptions.WorkflowRunNotFoundError()
+            )
+
+            prompter = Mock()
+            selected_config = local_config_names[1]
+            prompter.choice.return_value = selected_config
+
+            resolver = _arg_resolvers.WFConfigResolver(
+                wf_run_repo=wf_run_repo,
+                config_repo=config_repo,
+                prompter=prompter,
+            )
+
+            # When
+            resolved_config = resolver.resolve(wf_run_id=wf_run_id, config=config)
+
+            # Then
+            prompter.choice.assert_called_with(
+                local_config_names, message="Runtime config"
+            )
+
+            # Resolver should return the user's choice.
+            assert resolved_config == selected_config
+
+        @staticmethod
+        def test_no_wf_run_id():
+            # Given
+            wf_run_id = None
+            config = None
+
+            config_repo = Mock()
+            local_config_names = ["cfg1", "cfg2"]
+            config_repo.list_config_names.return_value = local_config_names
+
+            prompter = Mock()
+            selected_config = local_config_names[1]
+            prompter.choice.return_value = selected_config
+
+            resolver = _arg_resolvers.WFConfigResolver(
+                wf_run_repo=Mock(),
+                config_repo=config_repo,
+                prompter=prompter,
+            )
+
+            # When
+            resolved_config = resolver.resolve(wf_run_id=wf_run_id, config=config)
+
+            # Then
+            # We expect prompt for selecting config.
+            prompter.choice.assert_called_with(
+                local_config_names, message="Runtime config"
             )
 
             # Resolver should return the user's choice.

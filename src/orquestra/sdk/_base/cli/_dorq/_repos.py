@@ -108,6 +108,33 @@ class WorkflowRunRepo:
             # Other exception types aren't expected to be raised here.
             raise
 
+    def get_wf_outputs(self, wf_run_id: WorkflowRunId, config_name: ConfigName):
+        """
+        Asks the runtime for workflow output values.
+
+        If the workflow is still executing this will block until the workflow
+        completion.
+
+        Raises:
+            orquestra.sdk.exceptions.NotFoundError: when the run_id doesn't match a
+                stored run ID.
+            orquestra.sdk.exceptions.ConfigNameNotFoundError: when the named config is
+                not found in the file.
+            orquestra.sdk.exceptions.WorkflowRunNotSucceeded: when the workflow is no
+                longer executing, but wasn't succeeded.
+        """
+        try:
+            wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
+        except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
+            raise
+
+        try:
+            outputs = wf_run.get_results(wait=False)
+        except (exceptions.WorkflowRunNotFinished, exceptions.WorkflowRunNotSucceeded):
+            raise
+
+        return outputs
+
 
 class ConfigRepo:
     """

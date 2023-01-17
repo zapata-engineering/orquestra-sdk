@@ -34,9 +34,7 @@ class Action:
         self._wf_run_repo = wf_run_repo
 
         # arg resolvers
-        self._config_resolver = config_resolver or _arg_resolvers.ConfigResolver(
-            wf_run_repo=wf_run_repo
-        )
+        self._config_resolver = config_resolver or _arg_resolvers.ConfigResolver()
         self._wf_run_filter_resolver = (
             wf_run_filter_resolver or _arg_resolvers.WFRunFilterResolver()
         )

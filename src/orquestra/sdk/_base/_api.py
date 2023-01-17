@@ -41,6 +41,7 @@ from ..exceptions import (
     WorkflowRunCanNotBeTerminated,
     WorkflowRunNotFinished,
     WorkflowRunNotStarted,
+    WorkflowRunNotSucceeded,
 )
 from . import _config
 from ._in_process_runtime import InProcessRuntime
@@ -506,6 +507,8 @@ class WorkflowRun:
             WorkflowRunNotStarted: when the workflow run has not started
             WorkflowRunNotFinished: when the workflow run has not finished and `wait` is
                                    False
+            WorkflowRunNotSucceeded: when the workflow is no longer executing, but it did not
+                succeed.
         """  # noqa 501
         try:
             run_id = self.run_id
@@ -526,7 +529,10 @@ class WorkflowRun:
                 f"Current state: {state}",
                 state,
             )
-        return self._runtime.get_workflow_run_outputs_non_blocking(run_id)
+        try:
+            return self._runtime.get_workflow_run_outputs_non_blocking(run_id)
+        except WorkflowRunNotSucceeded:
+            raise
 
     def get_artifacts(
         self,
@@ -1122,7 +1128,7 @@ class RuntimeConfig:
             list: list of configurations within the save file.
         """
         return _config.read_config_names(config_save_file) + list(
-            _config.SPECIAL_CONFIG_NAME_DICT.keys()
+            _config.UNIQUE_CONFIGS
         )
 
     @classmethod
@@ -1225,7 +1231,10 @@ class RuntimeConfig:
             _config.load()).
         """
         if config.runtime_name == RuntimeName.IN_PROCESS:
-            return RuntimeConfig.in_process(config.config_name)
+            return RuntimeConfig.in_process()
+        elif config.runtime_name == RuntimeName.RAY_LOCAL:
+            return RuntimeConfig.ray()
+
         interpreted_config = RuntimeConfig(
             config.runtime_name,
             config.config_name,

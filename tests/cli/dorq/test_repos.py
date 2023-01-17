@@ -22,6 +22,7 @@ from orquestra.sdk._base._qe._client import QEClient
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._base.cli._dorq import _repos
 from orquestra.sdk._ray import _dag
+from orquestra.sdk.schema.configs import RuntimeName
 from orquestra.sdk.schema.workflow_run import RunStatus, State, WorkflowRun
 
 from ... import reloaders
@@ -213,6 +214,52 @@ class TestWorkflowRunRepo:
                 # Validate passing args
                 by_id.assert_called_with(run_id, config_name)
 
+        class TestGetWFOutputs:
+            @staticmethod
+            def test_passing_data(monkeypatch):
+                run_id = "wf.1"
+                config_name = "<config sentinel>"
+
+                wf_run = Mock()
+                fake_outputs = [
+                    "<output sentinel 0>",
+                    "<output sentinel 1>",
+                ]
+                wf_run.get_results.return_value = fake_outputs
+
+                by_id = Mock(return_value=wf_run)
+                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+                repo = _repos.WorkflowRunRepo()
+
+                # When
+                outputs = repo.get_wf_outputs(run_id, config_name)
+
+                # Then
+                assert outputs == fake_outputs
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "exc",
+                [
+                    exceptions.NotFoundError(),
+                    exceptions.ConfigNameNotFoundError(),
+                ],
+            )
+            def test_passing_errors(monkeypatch, exc):
+                run_id = "wf.1"
+                config_name = "<config sentinel>"
+
+                by_id = Mock(side_effect=exc)
+                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+                repo = _repos.WorkflowRunRepo()
+
+                # Then
+                with pytest.raises(type(exc)):
+                    # When
+                    _ = repo.get_wf_outputs(run_id, config_name)
+
     class TestIntegration:
         @staticmethod
         def test_list_wf_runs(monkeypatch):
@@ -295,20 +342,79 @@ class TestWorkflowRunRepo:
 
 
 class TestConfigRepo:
+    class TestUnit:
+        """
+        Test boundary::
+            [ConfigRepo]->sdk._config
+
+        """
+
+        def test_list_config(self, monkeypatch):
+            """
+            Simple test that verifies that repo return all the configs returned by
+            _configs internals
+            """
+            configs = ["config1", "config2"]
+            monkeypatch.setattr(sdk.RuntimeConfig, "list_configs", lambda: configs)
+
+            repo = _repos.ConfigRepo()
+
+            # When
+            names = repo.list_config_names()
+
+            # Then
+            assert names == configs
+
+        @pytest.mark.parametrize("ce", [True, False])
+        def test_store_token(self, monkeypatch, ce):
+
+            repo = _repos.ConfigRepo()
+            uri = "funny_uri"
+            token = "even_funnier_token"
+            generated_name = "why_is_it_so_funny"
+
+            # Check parameters passed to _Config
+            mock_save_or_update = Mock()
+
+            monkeypatch.setattr(
+                sdk._base._config, "generate_config_name", lambda n, m: generated_name
+            )
+
+            monkeypatch.setattr(
+                sdk._base._config, "save_or_update", mock_save_or_update
+            )
+
+            # When
+            config_name = repo.store_token_in_config(uri, token, ce)
+
+            # Then
+            (
+                config_parameter,
+                runtime_parameter,
+                options_parameter,
+            ) = mock_save_or_update.call_args[0]
+
+            assert config_parameter == generated_name
+            assert (
+                runtime_parameter == RuntimeName.CE_REMOTE
+                if ce
+                else RuntimeName.QE_REMOTE
+            )
+            assert options_parameter["uri"] == uri
+            assert options_parameter["token"] == token
+            assert config_name == generated_name
+
     class TestIntegration:
         """
-        We test ConfigRepo by integration because as I'm writing this there are a lot
-        of moving parts related to config rework.
+        We test ConfigRepo by integration because - config repo on its own is trivial
+        but configs are quite fragile. It's important to make sure our CI is working
+        with whatever changes are done at config level
 
         Test boundary::
             [ConfigRepo]->File system
 
         Mocks config file location.
         """
-
-        # TODO: switch this to unit tests with a boundary at
-        # `sdk.RuntimeConfig.list_configs()` after the config reword is done.
-        # See ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-674
 
         @staticmethod
         @pytest.fixture
@@ -338,7 +444,6 @@ class TestConfigRepo:
                 # built-ins
                 "ray",
                 "in_process",
-                "local",
                 # config entries
                 "test_config_default",
                 "test_config_no_runtime_options",

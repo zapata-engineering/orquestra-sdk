@@ -5,6 +5,7 @@ import pytest
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base.cli._dorq._ui import _errors
+from orquestra.sdk.schema.workflow_run import State
 
 
 class TestPrettyPrintException:
@@ -30,6 +31,20 @@ class TestPrettyPrintException:
                 (
                     "Invalid workflow syntax. Workflow arguments must be known at"
                     " submission time."
+                ),
+            ),
+            (
+                exceptions.WorkflowRunNotSucceeded(message="Foo", state=State.FAILED),
+                (
+                    "This action only works with succeeded workflows. However, the "
+                    "selected run is FAILED."
+                ),
+            ),
+            (
+                exceptions.WorkflowRunNotFinished(message="Foo", state=State.RUNNING),
+                (
+                    "This action only works with finished workflows. However, the "
+                    "selected run is RUNNING."
                 ),
             ),
             (ConnectionError(), "Unable to connect to Ray"),

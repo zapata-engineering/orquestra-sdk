@@ -26,14 +26,14 @@ class Action:
         self,
         presenter=_presenters.WrappedCorqOutputPresenter(),
         wf_run_repo=_repos.WorkflowRunRepo(),
-        config_resolver: t.Optional[_arg_resolvers.ConfigResolver] = None,
+        config_resolver: t.Optional[_arg_resolvers.WFConfigResolver] = None,
         wf_run_id_resolver: t.Optional[_arg_resolvers.WFRunIDResolver] = None,
     ):
         # data sources
         self._wf_run_repo = wf_run_repo
 
         # arg resolvers
-        self._config_resolver = config_resolver or _arg_resolvers.ConfigResolver(
+        self._config_resolver = config_resolver or _arg_resolvers.WFConfigResolver(
             wf_run_repo=wf_run_repo
         )
         self._wf_run_id_resolver = wf_run_id_resolver or _arg_resolvers.WFRunIDResolver(

@@ -32,7 +32,7 @@ def pretty_print_exception(e: Exception) -> ResponseStatusCode:
 
 
 @pretty_print_exception.register
-def _print_no_wf_module_found(
+def _(
     e: exceptions.WorkflowDefinitionModuleNotFound,
 ) -> ResponseStatusCode:
     _print_traceback(e)
@@ -44,7 +44,7 @@ def _print_no_wf_module_found(
 
 
 @pretty_print_exception.register
-def _print_no_wf_defs_found(
+def _(
     e: exceptions.NoWorkflowDefinitionsFound,
 ) -> ResponseStatusCode:
     _print_traceback(e)
@@ -53,21 +53,41 @@ def _print_no_wf_defs_found(
 
 
 @pretty_print_exception.register
-def _print_unauthorized(e: exceptions.UnauthorizedError) -> ResponseStatusCode:
+def _(e: exceptions.UnauthorizedError) -> ResponseStatusCode:
     _print_traceback(e)
     click.echo("Error: Authorization failed. Please log in again.")
     return ResponseStatusCode.UNAUTHORIZED
 
 
 @pretty_print_exception.register
-def _print_syntax_error(e: exceptions.WorkflowSyntaxError) -> ResponseStatusCode:
+def _(e: exceptions.WorkflowSyntaxError) -> ResponseStatusCode:
     _print_traceback(e)
     click.echo(f"Invalid workflow syntax. {e.msg}")
     return ResponseStatusCode.INVALID_WORKFLOW_DEFS_SYNTAX
 
 
 @pretty_print_exception.register
-def _print_connection_error(e: ConnectionError) -> ResponseStatusCode:
+def _(e: exceptions.WorkflowRunNotSucceeded) -> ResponseStatusCode:
+    _print_traceback(e)
+    click.echo(
+        "This action only works with succeeded workflows. However, the selected run "
+        f"is {e.state.name}."
+    )
+    return ResponseStatusCode.INVALID_WORKFLOW_RUN
+
+
+@pretty_print_exception.register
+def _(e: exceptions.WorkflowRunNotFinished) -> ResponseStatusCode:
+    _print_traceback(e)
+    click.echo(
+        "This action only works with finished workflows. However, the selected run "
+        f"is {e.state.name}."
+    )
+    return ResponseStatusCode.INVALID_WORKFLOW_RUN
+
+
+@pretty_print_exception.register
+def _(e: ConnectionError) -> ResponseStatusCode:
     _print_traceback(e)
     click.echo("Unable to connect to Ray.")
     return ResponseStatusCode.CONNECTION_ERROR
