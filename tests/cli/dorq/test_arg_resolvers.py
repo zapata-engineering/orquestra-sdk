@@ -273,6 +273,86 @@ class TestWFRunIDResolver:
         assert resolved_id == selected_id
 
 
+class TestTaskInvIDResolver:
+    """
+    Test boundaries::
+        [TaskInvIDResolver]->[repo]
+                           ->[prompters]
+
+
+    ``config`` and ``wf_run_id`` areassumed to be resolved to a valid value at this
+    point.
+    """
+
+    @staticmethod
+    @pytest.mark.parametrize("fn_name", [None, "foo"])
+    def test_passing_inv_id_directly(fn_name):
+        # Given
+        wf_run_id = "<wf run ID sentinel>"
+        config = "<config sentinel>"
+        task_inv_id = "<wf run ID sentinel>"
+
+        resolver = _arg_resolvers.TaskInvIDResolver(
+            wf_run_repo=Mock(),
+            fn_name_prompter=Mock(),
+            task_inv_prompter=Mock(),
+        )
+
+        # When
+        resolved = resolver.resolve(
+            task_inv_id=task_inv_id,
+            fn_name=fn_name,
+            wf_run_id=wf_run_id,
+            config=config,
+        )
+
+        # Then
+        assert resolved == task_inv_id
+
+    @staticmethod
+    def test_selecting_inv_id():
+        """
+        We're assuming the ``fn_name`` was passed explicitly. Branches where we need to
+        prompt for it are tested separately.
+        """
+        # Given
+        wf_run_id = "<wf run ID sentinel>"
+        config = "<config sentinel>"
+        task_inv_id = None
+        fn_name = "foo"
+
+        # Mocks
+        wf_run_repo = Mock()
+        inv_ids = ["inv1", "inv2", "inv3"]
+        wf_run_repo.get_task_inv_ids.return_value = inv_ids
+
+        task_inv_prompter = Mock()
+        selected_inv_id = inv_ids[2]
+        task_inv_prompter.choice.return_value = selected_inv_id
+
+        resolver = _arg_resolvers.TaskInvIDResolver(
+            wf_run_repo=wf_run_repo,
+            fn_name_prompter=Mock(),
+            task_inv_prompter=task_inv_prompter,
+        )
+
+        # When
+        resolved = resolver.resolve(
+            task_inv_id=task_inv_id,
+            fn_name=fn_name,
+            wf_run_id=wf_run_id,
+            config=config,
+        )
+
+        # Then
+        assert resolved == selected_inv_id
+
+        # We should show a prompt with invocation IDs.
+        task_inv_prompter.choice.assert_called_with(
+            inv_ids, message="Task invocation ID"
+        )
+
+
 @pytest.mark.parametrize(
     "args,expected_services",
     [
