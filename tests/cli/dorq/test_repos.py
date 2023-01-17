@@ -10,6 +10,7 @@ import sys
 import warnings
 from pathlib import Path
 from unittest.mock import Mock
+from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
 
 import pytest
@@ -263,6 +264,59 @@ class TestWorkflowRunRepo:
                 with pytest.raises(type(exc)):
                     # When
                     _ = repo.get_wf_outputs(run_id, config_name)
+
+        class TestGetTaskFNNames:
+            @staticmethod
+            def test_mixed_imports(monkeypatch):
+                # Given
+                wf_run_id = "wf.1"
+                config = "<config sentinel>"
+
+                # Mocks
+                wf_run = Mock(sdk.WorkflowRun)
+                tasks = [
+                    ir.TaskDef(
+                        id="task1",
+                        fn_ref=ir.ModuleFunctionRef(
+                            module="tasks", function_name="task_in_another_module"
+                        ),
+                        parameters=[],
+                        source_import_id="imp1",
+                    ),
+                    ir.TaskDef(
+                        id="task2",
+                        fn_ref=ir.FileFunctionRef(
+                            file_path="other_tasks.py",
+                            function_name="task_in_another_file",
+                        ),
+                        parameters=[],
+                        source_import_id="imp1",
+                    ),
+                    ir.TaskDef(
+                        id="task3",
+                        fn_ref=ir.InlineFunctionRef(
+                            function_name="inlined_task", encoded_function=[]
+                        ),
+                        parameters=[],
+                        source_import_id="imp1",
+                    ),
+                ]
+                wf_run.get_status_model().workflow_def.tasks.values.return_value = tasks
+
+                by_id = Mock(return_value=wf_run)
+                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+                repo = _repos.WorkflowRunRepo()
+
+                # When
+                names = repo.get_task_fn_names(wf_run_id, config)
+
+                # Then
+                assert names == [
+                    "inlined_task",
+                    "task_in_another_file",
+                    "task_in_another_module",
+                ]
 
     class TestIntegration:
         @staticmethod

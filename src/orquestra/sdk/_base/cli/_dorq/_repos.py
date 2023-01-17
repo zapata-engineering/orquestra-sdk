@@ -168,10 +168,12 @@ class WorkflowRunRepo:
 
         # Note: this will collapse tasks with the same function names.
         # TODO: take a set of fn refs instead.
+
         fn_names_set = set()
-        for task_run in status_model.task_runs:
-            task_inv = wf_def.task_invocations[task_run.invocation_id]
-            task_def = wf_def.tasks[task_inv.task_id]
+        # It's easier to test when we iterate over wf_def's task_defs instead of
+        # iterating over task runs. Assumption: every task_def is being used in the
+        # workflow and corresponds to a task_run.
+        for task_def in wf_def.tasks.values():
             fn_ref = task_def.fn_ref
             fn_name = fn_ref.function_name
 
