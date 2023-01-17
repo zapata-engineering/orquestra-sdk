@@ -39,9 +39,8 @@ class TestConfigResolver:
         assert resolved_config == config
 
     @staticmethod
-    def test_no_wf_run_id():
+    def test_no_config():
         # Given
-        wf_run_id = None
         config = None
 
         config_repo = Mock()
