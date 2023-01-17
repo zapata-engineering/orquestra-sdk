@@ -154,6 +154,31 @@ class WorkflowRunRepo:
 
         return outputs
 
+    def get_task_fn_names(
+        self, wf_run_id: WorkflowRunId, config_name: ConfigName
+    ) -> t.Sequence[str]:
+        try:
+            wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
+        except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
+            raise
+
+        status_model = wf_run.get_status_model()
+        wf_def = status_model.workflow_def
+        assert wf_def is not None
+
+        # Note: this will collapse tasks with the same function names.
+        # TODO: take a set of fn refs instead.
+        fn_names_set = set()
+        for task_run in status_model.task_runs:
+            task_inv = wf_def.task_invocations[task_run.invocation_id]
+            task_def = wf_def.tasks[task_inv.task_id]
+            fn_ref = task_def.fn_ref
+            fn_name = fn_ref.function_name
+
+            fn_names_set.add(fn_name)
+
+        return sorted(fn_names_set)
+
 
 class ConfigRepo:
     """

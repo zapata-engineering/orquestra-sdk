@@ -10,6 +10,7 @@ import sys
 import warnings
 from pathlib import Path
 from unittest.mock import Mock
+from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
 
 import pytest
 import requests
@@ -304,6 +305,56 @@ class TestWorkflowRunRepo:
 
             # Then
             assert run_ids == stub_run_ids
+
+        class TestGetTaskFNNames:
+            @pytest.fixture
+            @staticmethod
+            def example_wf_run_model():
+                @sdk.task(source_import=sdk.InlineImport())
+                def fn1():
+                    return 1
+
+                @sdk.task(source_import=sdk.InlineImport())
+                def fn2():
+                    return 2
+
+                @sdk.workflow
+                def my_wf():
+                    art1 = fn1()
+                    art2_1 = fn2()
+                    art2_2 = fn2()
+
+                    return art1, art2_1, art2_2
+
+                run = my_wf().run("in_process")
+                return run.get_status_model()
+
+            @staticmethod
+            def test_with_in_process(
+                monkeypatch, example_wf_run_model: WorkflowRunModel
+            ):
+                """
+                Uses sample workflow definition and in-process runtime to acquire a
+                status model for tests.
+                """
+                # Given
+                wf_run_id = "wf.1"
+                config = "<config sentinel>"
+
+                # Mocks
+                wf_run = Mock(sdk.WorkflowRun)
+                wf_run.get_status_model.return_value = example_wf_run_model
+
+                by_id = Mock(return_value=wf_run)
+                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+                repo = _repos.WorkflowRunRepo()
+
+                # When
+                names = repo.get_task_fn_names(wf_run_id, config)
+
+                # Then
+                assert names == ["fn1", "fn2"]
 
 
 class TestConfigRepo:
