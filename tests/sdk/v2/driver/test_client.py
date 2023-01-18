@@ -5,6 +5,7 @@
 Tests for orquestra.sdk._base._driver._client.
 """
 from typing import Any, Dict
+from unittest.mock import create_autospec
 
 import numpy as np
 import pytest
@@ -65,23 +66,31 @@ class TestClient:
     def client(self, base_uri, token):
         return DriverClient.from_token(base_uri=base_uri, token=token)
 
+    @pytest.fixture
+    def workflow_def_id(self):
+        return "00000000-0000-0000-0000-000000000000"
+
+    @pytest.fixture
+    def workflow_run_id(self):
+        return "00000000-0000-0000-0000-000000000000"
+
+    @pytest.fixture
+    def task_run_id(self):
+        return "00000000-0000-0000-0000-000000000000"
+
+    @pytest.fixture
+    def workflow_def(self):
+        @sdk.task
+        def task():
+            return 1
+
+        @sdk.workflow
+        def workflow():
+            return task()
+
+        return workflow().model
+
     class TestWorkflowDefinitions:
-        @pytest.fixture
-        def workflow_def_id(self):
-            return "00000000-0000-0000-0000-000000000000"
-
-        @pytest.fixture
-        def workflow_def(self):
-            @sdk.task
-            def task():
-                return 1
-
-            @sdk.workflow
-            def workflow():
-                return task()
-
-            return workflow().model
-
         # ------ queries ------
 
         class TestGet:
@@ -514,18 +523,6 @@ class TestClient:
 
     class TestWorkflowRuns:
         @pytest.fixture
-        def workflow_def_id(self):
-            return "00000000-0000-0000-0000-000000000000"
-
-        @pytest.fixture
-        def workflow_run_id(self):
-            return "00000000-0000-0000-0000-000000000000"
-
-        @pytest.fixture
-        def task_run_id(self):
-            return "00000000-0000-0000-0000-000000000000"
-
-        @pytest.fixture
         def workflow_run_status(self):
             return RunStatus(state=State.WAITING, start_time=None, end_time=None)
 
@@ -559,6 +556,17 @@ class TestClient:
                 )
 
             @staticmethod
+            @pytest.fixture
+            def mock_get_workflow_def(
+                client: DriverClient,
+                workflow_def: WorkflowDef,
+                monkeypatch: pytest.MonkeyPatch,
+            ):
+                mock = create_autospec(client.get_workflow_def)
+                mock.return_value = workflow_def
+                monkeypatch.setattr(client, "get_workflow_def", mock)
+
+            @staticmethod
             def test_invalid_wf_run_id(
                 endpoint_mocker, client: DriverClient, workflow_run_id: str
             ):
@@ -587,13 +595,15 @@ class TestClient:
             @staticmethod
             def test_missing_task_run_status(
                 endpoint_mocker,
+                mock_get_workflow_def,
                 client: DriverClient,
                 workflow_run_id: str,
+                workflow_def_id: str,
                 workflow_run_status: RunStatus,
             ):
                 endpoint_mocker(
                     json=resp_mocks.make_get_wf_run_missing_task_run_status(
-                        workflow_run_id, workflow_run_status
+                        workflow_run_id, workflow_def_id, workflow_run_status
                     ),
                 )
 
@@ -607,15 +617,18 @@ class TestClient:
             @staticmethod
             def test_sets_auth(
                 endpoint_mocker,
+                mock_get_workflow_def,
                 client: DriverClient,
                 token,
                 workflow_run_id,
+                workflow_def_id,
                 workflow_run_status,
                 workflow_run_tasks,
             ):
                 endpoint_mocker(
                     json=resp_mocks.make_get_wf_run_response(
                         id_=workflow_run_id,
+                        workflow_def_id=workflow_def_id,
                         status=workflow_run_status,
                         task_runs=workflow_run_tasks,
                     ),
@@ -671,10 +684,23 @@ class TestClient:
                 )
 
             @staticmethod
+            @pytest.fixture
+            def mock_get_workflow_def(
+                client: DriverClient,
+                workflow_def: WorkflowDef,
+                monkeypatch: pytest.MonkeyPatch,
+            ):
+                mock = create_autospec(client.get_workflow_def)
+                mock.return_value = workflow_def
+                monkeypatch.setattr(client, "get_workflow_def", mock)
+
+            @staticmethod
             def test_list_workflow_runs(
                 endpoint_mocker,
+                mock_get_workflow_def,
                 client: DriverClient,
                 workflow_run_id: str,
+                workflow_def_id: str,
                 workflow_run_status: RunStatus,
             ):
                 endpoint_mocker(
@@ -682,6 +708,7 @@ class TestClient:
                     # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-runs.yaml#L14
                     json=resp_mocks.make_list_wf_run_response(
                         ids=[workflow_run_id] * 10,
+                        workflow_def_ids=[workflow_def_id] * 10,
                         statuses=[workflow_run_status] * 10,
                     )
                 )
@@ -698,8 +725,10 @@ class TestClient:
             @staticmethod
             def test_list_workflow_runs_with_pagination(
                 endpoint_mocker,
+                mock_get_workflow_def,
                 client: DriverClient,
                 workflow_run_id: str,
+                workflow_def_id: str,
                 workflow_run_status: RunStatus,
             ):
                 endpoint_mocker(
@@ -707,6 +736,7 @@ class TestClient:
                     # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-runs.yaml#L14
                     json=resp_mocks.make_list_wf_run_paginated_response(
                         ids=[workflow_run_id] * 10,
+                        workflow_def_ids=[workflow_def_id] * 10,
                         statuses=[workflow_run_status] * 10,
                     )
                 )
@@ -735,7 +765,11 @@ class TestClient:
                 ],
             )
             def test_params_encoding(
-                endpoint_mocker, client: DriverClient, kwargs: Dict, params: Dict
+                endpoint_mocker,
+                mock_get_workflow_def,
+                client: DriverClient,
+                kwargs: Dict,
+                params: Dict,
             ):
                 """
                 Verifies that params are correctly sent to the server.
@@ -755,14 +789,17 @@ class TestClient:
             @staticmethod
             def test_sets_auth(
                 endpoint_mocker,
+                mock_get_workflow_def,
                 client: DriverClient,
                 token,
                 workflow_run_id,
+                workflow_def_id,
                 workflow_run_status,
             ):
                 endpoint_mocker(
                     json=resp_mocks.make_list_wf_run_response(
                         ids=[workflow_run_id] * 10,
+                        workflow_def_ids=[workflow_def_id] * 10,
                         statuses=[workflow_run_status] * 10,
                     ),
                     match=[
@@ -940,10 +977,6 @@ class TestClient:
 
     class TestWorkflowRunArtifacts:
         @pytest.fixture
-        def workflow_run_id(self):
-            return "00000000-0000-0000-0000-000000000000"
-
-        @pytest.fixture
         def workflow_run_artifact_id(self):
             return "00000000-0000-0000-0000-000000000000"
 
@@ -1109,10 +1142,6 @@ class TestClient:
                     _ = client.get_workflow_run_artifact(workflow_run_artifact_id)
 
     class TestWorkflowRunResults:
-        @pytest.fixture
-        def workflow_run_id(self):
-            return "00000000-0000-0000-0000-000000000000"
-
         @pytest.fixture
         def workflow_run_result_id(self):
             return "00000000-0000-0000-0000-000000000000"
@@ -1305,14 +1334,6 @@ class TestClient:
                     _ = client.get_workflow_run_result(workflow_run_result_id)
 
     class TestWorkflowLogs:
-        @pytest.fixture
-        def workflow_run_id(self):
-            return "00000000-0000-0000-0000-000000000000"
-
-        @pytest.fixture
-        def task_run_id(self):
-            return "00000000-0000-0000-0000-000000000000"
-
         class TestWorkflowRunLogs:
             @staticmethod
             @pytest.fixture

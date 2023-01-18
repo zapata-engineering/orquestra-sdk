@@ -52,11 +52,13 @@ def _task_run_resp(
 
 def _wf_run_resp(
     id_: str,
+    workflow_def_id: str,
     status: RunStatus,
     task_runs: List[TaskRun],
 ):
     return {
         "id": id_,
+        "definitionId": workflow_def_id,
         "status": _status_resp(status),
         "owner": "evil/emiliano.zapata@zapatacomputing.com",
         "taskRuns": [
@@ -125,39 +127,53 @@ def make_submit_wf_run_response(id_: str):
     return {"data": {"id": id_}}
 
 
-def make_get_wf_run_response(id_: str, status: RunStatus, task_runs: List[TaskRun]):
+def make_get_wf_run_response(
+    id_: str, workflow_def_id: str, status: RunStatus, task_runs: List[TaskRun]
+):
     """
     Based on:
         https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/schemas/WorkflowRun.yaml
     """
-    return {"data": _wf_run_resp(id_, status, task_runs)}
+    return {"data": _wf_run_resp(id_, workflow_def_id, status, task_runs)}
 
 
-def make_get_wf_run_missing_task_run_status(id_: str, status: RunStatus):
-    wf_run = {"data": _wf_run_resp(id_, status, [])}
+def make_get_wf_run_missing_task_run_status(
+    id_: str, workflow_def_id: str, status: RunStatus
+):
+    wf_run = {"data": _wf_run_resp(id_, workflow_def_id, status, [])}
     wf_run["data"]["taskRuns"].append({"id": "xyz", "invocationId": "abc"})
     return wf_run
 
 
-def make_list_wf_run_response(ids: List[str], statuses: List[RunStatus]):
+def make_list_wf_run_response(
+    ids: List[str], workflow_def_ids: List[str], statuses: List[RunStatus]
+):
     """
     Based on:
         https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-runs.yaml#L1
     """
     # Assume empty task runs for now
     return {
-        "data": [_wf_run_resp(id_, status, []) for id_, status in zip(ids, statuses)]
+        "data": [
+            _wf_run_resp(id_, wf_def_id, status, [])
+            for id_, wf_def_id, status in zip(ids, workflow_def_ids, statuses)
+        ]
     }
 
 
-def make_list_wf_run_paginated_response(ids: List[str], statuses: List[RunStatus]):
+def make_list_wf_run_paginated_response(
+    ids: List[str], workflow_def_ids: List[str], statuses: List[RunStatus]
+):
     """
     Based on:
         https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-runs.yaml#L1
     """
     # Assume empty task runs for now
     return {
-        "data": [_wf_run_resp(id_, status, []) for id_, status in zip(ids, statuses)],
+        "data": [
+            _wf_run_resp(id_, wf_def_id, status, [])
+            for id_, wf_def_id, status in zip(ids, workflow_def_ids, statuses)
+        ],
         "meta": {
             "pagination": {
                 "total": len(ids),

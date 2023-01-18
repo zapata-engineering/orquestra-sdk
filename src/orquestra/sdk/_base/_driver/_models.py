@@ -168,7 +168,7 @@ class TaskRunResponse(pydantic.BaseModel):
         )
 
 
-class WorkflowRunResponse(pydantic.BaseModel):
+class MinimalWorkflowRunResponse(pydantic.BaseModel):
     """
     Implements:
         https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/schemas/WorkflowRun.yaml#L1
@@ -176,15 +176,32 @@ class WorkflowRunResponse(pydantic.BaseModel):
 
     id: WorkflowRunID
     status: RunStatusResponse
+    definitionId: WorkflowDefID
+
+    def to_ir(self, workflow_def: Optional[WorkflowDef] = None) -> WorkflowRun:
+        return WorkflowRun(
+            id=self.id,
+            status=self.status.to_ir(),
+            task_runs=[],
+            workflow_def=workflow_def,
+        )
+
+
+class WorkflowRunResponse(MinimalWorkflowRunResponse):
+    """
+    Implements:
+        https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/schemas/WorkflowRun.yaml#L1
+    """
+
     owner: str
     taskRuns: List[TaskRunResponse]
 
-    def to_ir(self) -> WorkflowRun:
+    def to_ir(self, workflow_def: Optional[WorkflowDef] = None) -> WorkflowRun:
         return WorkflowRun(
             id=self.id,
             status=self.status.to_ir(),
             task_runs=[t.to_ir() for t in self.taskRuns],
-            workflow_def=None,
+            workflow_def=workflow_def,
         )
 
 
@@ -227,7 +244,7 @@ class ListWorkflowRunsRequest(pydantic.BaseModel):
     pageToken: Optional[str]
 
 
-ListWorkflowRunsResponse = List[WorkflowRunResponse]
+ListWorkflowRunsResponse = List[MinimalWorkflowRunResponse]
 
 
 class GetWorkflowRunResponse(pydantic.BaseModel):
