@@ -264,6 +264,30 @@ class WorkflowRunRepo:
         ]
 
         return matching_inv_ids
+        
+    def get_wf_logs(self, wf_run_id: WorkflowRunId, config_name: ConfigName):
+        """
+        Asks the runtime for workflow logs
+
+        Raises:
+            ConnectionError: when connection with Ray failed.
+            orquestra.sdk.exceptions.UnauthorizedError: when connection with runtime
+                failed because of an auth error.
+        """
+        # TODO ORQSDK-574: Switch to single api call when its possible for whole WF
+        runtime_configuration = _config.read_config(config_name)
+        project_dir = Path.cwd()
+
+        runtime = _factory.build_runtime_from_config(
+            project_dir=project_dir, config=runtime_configuration
+        )
+
+        try:
+            logs = runtime.get_full_logs(wf_run_id)
+        except (ConnectionError, exceptions.UnauthorizedError):
+            raise
+
+        return logs
 
 
 class ConfigRepo:

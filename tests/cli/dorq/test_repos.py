@@ -499,6 +499,7 @@ class TestWorkflowRunRepo:
                     # When
                     _ = repo.get_task_fn_names(wf_run_id, config_name)
 
+
         class TestGetTaskInvIDs:
             @staticmethod
             @pytest.mark.parametrize(
@@ -515,13 +516,59 @@ class TestWorkflowRunRepo:
 
                 by_id = Mock(side_effect=exc)
                 monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
-
                 repo = _repos.WorkflowRunRepo()
 
                 # Then
                 with pytest.raises(type(exc)):
                     # When
                     _ = repo.get_task_inv_ids(wf_run_id, config_name, task_fn_name)
+
+        class TestGetWFLogs:
+            @staticmethod
+            def test_passing_values(monkeypatch):
+                # Given
+                config = "<config sentinel>"
+                wf_run_id = "<id sentinel>"
+                logs = {"task_id": ["my_log", "my_another_log"]}
+
+                # Prevent FS access
+                monkeypatch.setattr(_config, "read_config", Mock())
+
+                runtime = Mock()
+                runtime.get_full_logs.return_value = logs
+                monkeypatch.setattr(
+                    _factory, "build_runtime_from_config", Mock(return_value=runtime)
+                )
+
+                repo = _repos.WorkflowRunRepo()
+
+                # Then
+                assert repo.get_wf_logs(wf_run_id, config) == logs
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "exc", [ConnectionError(), exceptions.UnauthorizedError()]
+            )
+            def test_passing_errors(monkeypatch, exc):
+                # Given
+                config = "<config sentinel>"
+                wf_run_id = "<id sentinel>"
+
+                # Prevent FS access
+                monkeypatch.setattr(_config, "read_config", Mock())
+
+                runtime = Mock()
+                runtime.get_full_logs.side_effect = exc
+                monkeypatch.setattr(
+                    _factory, "build_runtime_from_config", Mock(return_value=runtime)
+                )
+
+                repo = _repos.WorkflowRunRepo()
+
+                # Then
+                with pytest.raises(type(exc)):
+                    # When
+                    _ = repo.get_wf_logs(wf_run_id, config)
 
     class TestIntegration:
         @staticmethod
