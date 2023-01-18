@@ -306,70 +306,130 @@ class TestWFConfigResolver:
             assert resolved_config == selected_config
 
 
-class TestWFRunIDResolver:
+class TestWFRunResolver:
     """
     Test boundaries::
-        [WFRunIDResolver]->[repo]
+        [WFRunResolver]->[repo]
                          ->[prompter]
 
 
     ``config`` is assumed to be resolved to a valid value at this point.
     """
+    class TestResolveID:
+        @staticmethod
+        def test_passing_id_directly():
+            """
+            User passed ``wf_run_id`` value directly as CLI arg.
+            """
+            # Given
+            wf_run_id = "<wf run ID sentinel>"
+            config = "<config sentinel>"
 
-    @staticmethod
-    def test_passing_id_directly():
-        """
-        User passed ``wf_run_id`` value directly as CLI arg.
-        """
-        # Given
-        wf_run_id = "<wf run ID sentinel>"
-        config = "<config sentinel>"
+            resolver = _arg_resolvers.WFRunResolver(
+                wf_run_repo=Mock(),
+                prompter=Mock(),
+            )
 
-        resolver = _arg_resolvers.WFRunIDResolver(
-            wf_run_repo=Mock(),
-            prompter=Mock(),
-        )
+            # When
+            resolved_id = resolver.resolve_id(wf_run_id=wf_run_id, config=config)
 
-        # When
-        resolved_id = resolver.resolve(wf_run_id=wf_run_id, config=config)
+            # Then
+            assert resolved_id == wf_run_id
 
-        # Then
-        assert resolved_id == wf_run_id
+        @staticmethod
+        def test_no_wf_run_id():
+            """
+            User didn't pass ``wf_run_id``.
+            """
+            # Given
+            wf_run_id = None
+            config = "<config sentinel>"
 
-    @staticmethod
-    def test_no_wf_run_id():
-        """
-        User didn't pass ``wf_run_id``.
-        """
-        # Given
-        wf_run_id = None
-        config = "<config sentinel>"
+            wf_run_repo = Mock()
+            listed_run_ids = ["wf1", "wf2"]
+            wf_run_repo.list_wf_run_ids.return_value = listed_run_ids
 
-        wf_run_repo = Mock()
-        listed_run_ids = ["wf1", "wf2"]
-        wf_run_repo.list_wf_run_ids.return_value = listed_run_ids
+            prompter = Mock()
+            selected_id = listed_run_ids[0]
+            prompter.choice.return_value = selected_id
 
-        prompter = Mock()
-        selected_id = listed_run_ids[0]
-        prompter.choice.return_value = selected_id
+            resolver = _arg_resolvers.WFRunResolver(
+                wf_run_repo=wf_run_repo,
+                prompter=prompter,
+            )
 
-        resolver = _arg_resolvers.WFRunIDResolver(
-            wf_run_repo=wf_run_repo,
-            prompter=prompter,
-        )
+            # When
+            resolved_id = resolver.resolve_id(wf_run_id=wf_run_id, config=config)
 
-        # When
-        resolved_id = resolver.resolve(wf_run_id=wf_run_id, config=config)
+            # Then
+            # We should pass config value to wf_run_repo.
+            wf_run_repo.list_wf_run_ids.assert_called_with(config)
 
-        # Then
-        # We should pass config value to wf_run_repo.
-        wf_run_repo.list_wf_run_ids.assert_called_with(config)
+            # We should prompt for selecting workflow ID from the ones returned by the repo.
+            prompter.choice.assert_called_with(listed_run_ids, message="Workflow run ID")
 
-        # We should prompt for selecting workflow ID from the ones returned by the repo.
-        prompter.choice.assert_called_with(listed_run_ids, message="Workflow run ID")
+            # Resolver should return the user's choice.
+            assert resolved_id == selected_id
 
-        # Resolver should return the user's choice.
-        assert resolved_id == selected_id
+    class TestResolveRun:
+        @staticmethod
+        def test_passing_id_directly():
+            """
+            User passed ``wf_run_id`` value directly as CLI arg.
+            """
+            # Given
+            wf_run_id = "<wf run ID sentinel>"
+            wf_run = "<wf run sentinel>"
+            config = "<config sentinel>"
+
+            repo = Mock()
+            repo.get_wf_by_run_id.return_value = wf_run
+
+            resolver = _arg_resolvers.WFRunResolver(
+                wf_run_repo=repo,
+                prompter=Mock(),
+            )
+
+            # When
+            resolved_run = resolver.resolve_run(wf_run_id=wf_run_id, config=config)
+
+            # Then
+            assert resolved_run == wf_run
+
+        @staticmethod
+        def test_no_wf_run_id():
+            """
+            User didn't pass ``wf_run_id``.
+            """
+            # Given
+            wf_run_id = None
+            config = "<config sentinel>"
+
+            wf_run_repo = Mock()
+            listed_runs = [Mock(), Mock()]
+            wf_run_repo.list_wf_runs.return_value = listed_runs
+
+            prompter = Mock()
+            selected_run = listed_runs[0]
+            prompter.choice.return_value = selected_run
+
+            resolver = _arg_resolvers.WFRunResolver(
+                wf_run_repo=wf_run_repo,
+                prompter=prompter,
+            )
+
+            # When
+            resolved_run = resolver.resolve_run(wf_run_id=wf_run_id, config=config)
+
+            # Then
+            # We should pass config value to wf_run_repo.
+            wf_run_repo.list_wf_runs.assert_called_with(config)
+
+            # We should prompt for selecting workflow ID from the ones returned by the repo.
+            prompter.choice.assert_called_with([(run.id, run) for run in listed_runs], message="Workflow run ID")
+
+            # Resolver should return the user's choice.
+            assert resolved_run == selected_run
 
 
 @pytest.mark.parametrize(

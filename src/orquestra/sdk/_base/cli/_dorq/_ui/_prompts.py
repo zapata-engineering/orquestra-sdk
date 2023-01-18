@@ -10,6 +10,7 @@ SINGLE_INPUT = "single_input"
 
 
 ChoiceID = str
+T = t.TypeVar("T")
 
 
 class Prompter:
@@ -22,12 +23,30 @@ class Prompter:
     isn't covered by tests.
     """
 
+    @t.overload
     def choice(
         self,
         choices: t.Sequence[ChoiceID],
         message: str,
         default: t.Optional[str] = None,
     ) -> ChoiceID:
+        ...
+
+    @t.overload
+    def choice(
+        self,
+        choices: t.Sequence[t.Tuple[ChoiceID, T]],
+        message: str,
+        default: t.Optional[str] = None,
+    ) -> T:
+        ...
+
+    def choice(
+        self,
+        choices: t.Sequence[t.Union[ChoiceID, t.Tuple[ChoiceID, T]]],
+        message: str,
+        default: t.Optional[str] = None,
+    ) -> t.Union[ChoiceID, T]:
         question = inquirer.List(
             SINGLE_INPUT,
             message=message,
