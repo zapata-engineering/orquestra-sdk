@@ -396,15 +396,16 @@ class WorkflowRun:
         run_id = self._runtime.create_workflow_run(self._wf_def)
         self._run_id = run_id
 
-    def wait_until_finished(self, frequency: float = 0.25) -> State:
+    def wait_until_finished(self, frequency: float = 0.25, print_status=True) -> State:
         """Block until the workflow run finishes.
 
         This method draws no distinctions between whether the workflow run completes
         successfully, fails, or is terminated for any other reason.
 
         Args:
-            frequency (float, optional): The frequence in Hz at which the status should
-                be checked. Defaults to 1.
+            frequency: The frequence in Hz at which the status should be checked.
+                Defaults to 1.
+            print_status: if True, prints current status in each poll cycle.
 
         Raises:
             WorkflowRunNotStarted: when the workflow run has not started
@@ -429,6 +430,8 @@ class WorkflowRun:
         while status == State.RUNNING or status == State.WAITING:
             time.sleep(1.0 / frequency)
             status = self.get_status()
+            if print_status:
+                print(f"{self.run_id}'s status: {status}")
 
         if status not in [State.SUCCEEDED, State.TERMINATED, State.FAILED]:
             raise NotImplementedError(
