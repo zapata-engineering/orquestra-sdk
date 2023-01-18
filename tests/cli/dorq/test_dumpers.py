@@ -83,7 +83,7 @@ class TestLogsDumper:
         task_invocation = "my_task_invocation"
         logs = {task_invocation: log_values}
         wf_run_id = "wf.1234"
-        wf_log_file = wf_run_id + ".logs"
+        wf_log_file = wf_run_id + ".log"
         dir_path = tmp_path / "new_dir"
         dumper = _dumpers.LogsDumper()
 

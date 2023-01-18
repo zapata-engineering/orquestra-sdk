@@ -31,7 +31,7 @@ CONFIG_OPTION = cloup.option(
     help="""
 Name of the config used to submit workflow. Use 'in-process' for running workflow
 as local python process, 'ray' to run workflow in local ray cluster.
-To get confing name for remote runtime, use orq login -s <uri> first
+To get config name for remote runtime, use orq login -s <uri> first
 """,
 )
 
@@ -158,7 +158,7 @@ def logs(
     download_dir: t.Optional[Path],
 ):
     """
-    Shows logs gathered during execution of a workflow.
+    Shows logs gathered during execution of a workflow produced by all tasks.
     """
 
     from ._workflow._logs import Action

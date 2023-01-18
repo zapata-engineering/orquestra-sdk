@@ -62,7 +62,7 @@ class LogsDumper:
         """
         dir_path.mkdir(parents=True, exist_ok=True)
 
-        logs_file = dir_path / f"{wf_run_id}.logs"
+        logs_file = dir_path / f"{wf_run_id}.log"
 
         with logs_file.open("w") as f:
             for task_invocation in logs:
