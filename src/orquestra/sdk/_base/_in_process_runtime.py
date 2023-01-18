@@ -6,7 +6,14 @@ from datetime import datetime, timedelta, timezone
 
 from orquestra.sdk._base import abc
 from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun, WorkflowRun
+from orquestra.sdk.schema.workflow_run import (
+    RunStatus,
+    State,
+    TaskRun,
+    WorkflowRun,
+    WorkflowRunId,
+    TaskRunId,
+)
 
 from ..exceptions import WorkflowRunNotFoundError
 from ._graphs import iter_invocations_topologically
@@ -131,7 +138,9 @@ class InProcessRuntime(abc.RuntimeInterface):
         output_task_ids = self._workflow_def_store[workflow_run_id].output_ids
         return dict(zip(output_task_ids, workflow_run_outputs))
 
-    def get_full_logs(self, _) -> t.Dict[str, t.List[str]]:
+    def get_full_logs(
+        self, run_id: t.Union[WorkflowRunId, TaskRunId, None] = None
+    ) -> t.Dict[str, t.List[str]]:
         return {}
 
     def get_workflow_run_status(self, workflow_run_id: WfRunId) -> WorkflowRun:
@@ -177,7 +186,7 @@ class InProcessRuntime(abc.RuntimeInterface):
         *,
         limit: t.Optional[int] = None,
         max_age: t.Optional[timedelta] = None,
-        state: t.Optional[State] = None,
+        state: t.Union[State, t.List[State], None] = None,
     ) -> t.List[WorkflowRun]:
         """
         List the workflow runs, with some filters
