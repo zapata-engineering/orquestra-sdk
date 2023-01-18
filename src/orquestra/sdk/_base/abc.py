@@ -145,7 +145,7 @@ class RuntimeInterface(ABC):
     @abstractmethod
     def get_available_outputs(
         self, workflow_run_id: WorkflowRunId
-    ) -> t.Mapping[TaskInvocationId, t.Union[t.Any, t.Tuple[t.Any, ...]]]:
+    ) -> t.Dict[TaskInvocationId, t.Union[t.Any, t.Tuple[t.Any, ...]]]:
         """Returns all available outputs for a workflow
 
         This method returns all available artifacts. When the workflow fails
