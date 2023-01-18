@@ -539,18 +539,18 @@ class WorkflowRun:
 
     def get_artifacts(
         self,
-        tasks: t.Union[str, t.List[str], None] = None,
+        tasks: t.Union[ir.TaskInvocationId, t.List[ir.TaskInvocationId], None] = None,
         *,
         only_available: bool = False,
-    ) -> t.Dict[str, t.Any]:
+    ) -> t.Dict[ir.TaskInvocationId, t.Any]:
         """
         Unstable: this API will change.
 
-        Returns the task run artifacts from a workflow.
+        Returns artifacts produced by this workflow's tasks.
 
         Args:
-            tasks: A task run ID or a list of task run IDs to return. An empty list
-                   implies returning all available task run artifacts.
+            tasks: if not None, filters the fetched artifact values. Can be a task
+                invocation ID or a list of task invocation IDs.
             only_available: If true, only available task artifacts are returned.
                             This does nothing if `tasks` is omitted or is empty.
 
@@ -560,11 +560,12 @@ class WorkflowRun:
                             cannot be found, either because it does not exist or has not
                             been completed yet.
         Returns:
-            A dictionary of the task run artifacts with the shape::
-                task_run_id: values returned from the task
+            A dictionary with an entry for each task run in the workflow. The key is the
+                task's invocation ID. The value is whatever the task returned. If the
+                task has 1 output, it's the dict entry's value. If the tasks has n
+                outputs, the dict entry's value is a n-tuple.
         """
-        if tasks is None:
-            tasks = []
+
         try:
             run_id = self.run_id
         except WorkflowRunNotStarted as e:
@@ -575,38 +576,46 @@ class WorkflowRun:
             )
             raise WorkflowRunNotStarted(message) from e
 
+        # NOTE: this is a possible place for improvement. If future runtime APIs support
+        # getting a subset of artifacts, we should use them here.
         workflow_artifacts = self._runtime.get_available_outputs(run_id)
-        task_list = [tasks] if isinstance(tasks, str) else tasks
 
-        # If task_list is empty, return everything we got from the runtime
-        if len(task_list) == 0:
+        resolved_inv_ids: t.Sequence[ir.TaskInvocationId]
+        if tasks is None:
+            # Return everything we can from the runtime.
             return workflow_artifacts
+        elif isinstance(tasks, str):
+            resolved_inv_ids = [tasks]
+        else:
+            resolved_inv_ids = tasks
 
         if only_available:
             # if only_available is True, we return only the task run artifacts the user
             # requested, but ignore any task runs the user requested that the runtime
             # didn't return.
-            workflow_artifacts = {
-                task_run_id: result
-                for task_run_id, result in workflow_artifacts.items()
-                if task_run_id in task_list
+            requested_artifacts = {
+                task_inv_id: workflow_artifacts[task_inv_id]
+                for task_inv_id in resolved_inv_ids
+                if task_inv_id in workflow_artifacts
             }
+
+            return requested_artifacts
         else:
             # if only_available is False, we try to get all requested tasks and raise
             # an exception if any of them are missing
             try:
-                workflow_artifacts = {
-                    task_run_id: workflow_artifacts[task_run_id]
-                    for task_run_id in task_list
+                requested_artifacts = {
+                    task_inv_id: workflow_artifacts[task_inv_id]
+                    for task_inv_id in resolved_inv_ids
                 }
+
             except KeyError as e:
                 missing_id = e.args[0]
                 raise TaskRunNotFound(
                     f"Task run with id `{missing_id}` not found. "
                     "It may not be completed or does not exist in this WorkflowRun."
                 ) from e
-
-        return workflow_artifacts
+            return requested_artifacts
 
     def get_logs(
         self,
