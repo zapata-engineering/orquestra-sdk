@@ -321,7 +321,7 @@ class WorkflowRun:
         self,
         run_id: t.Optional[WorkflowRunId],
         wf_def: ir.WorkflowDef,
-        runtime: t.Union[RuntimeInterface, InProcessRuntime],
+        runtime: RuntimeInterface,
         config: t.Optional["RuntimeConfig"] = None,
     ):
         """

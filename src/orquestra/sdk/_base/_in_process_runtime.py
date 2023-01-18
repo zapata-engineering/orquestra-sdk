@@ -4,6 +4,7 @@
 import typing as t
 from datetime import datetime, timedelta, timezone
 
+from orquestra.sdk._base import abc
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun, WorkflowRun
 
@@ -55,7 +56,7 @@ def _get_kwargs(
     return kwargs
 
 
-class InProcessRuntime:
+class InProcessRuntime(abc.RuntimeInterface):
     _output_store: t.Dict[WfRunId, t.Any]
     """
     Result of calling workflow function directly. Empty at first. Filled each
