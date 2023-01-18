@@ -21,8 +21,6 @@ from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe import _client
 from orquestra.sdk.schema.configs import ConfigName, RuntimeName
 from orquestra.sdk.schema.ir import (
-    FunctionRef,
-    TaskDefId,
     TaskInvocationId,
     WorkflowDef,
 )
@@ -76,8 +74,8 @@ class WorkflowRunRepo:
     ) -> WorkflowRun:
         """
         Raises:
-            orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match a
-                stored run ID.
+            orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match any
+                available run ID.
             orquestra.sdk.exceptions.ConfigNameNotFoundError: when the named config is
                 not found in the file.
         """
@@ -96,10 +94,12 @@ class WorkflowRunRepo:
     ) -> TaskRunId:
         """
         Raises:
-            orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match a
-                stored run ID.
+            orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match any
+                available run ID.
             orquestra.sdk.exceptions.ConfigNameNotFoundError: when the named config is
                 not found in the file.
+            orquestra.sdk.exceptions.TaskInvocationNotFoundError: when the task_inv_id
+                doesn't match any task invocation in this workflow.
         """
         try:
             wf_run_model = self.get_wf_by_run_id(
@@ -108,11 +108,16 @@ class WorkflowRunRepo:
         except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
             raise
 
-        # TODO: figure out what happens when there's no matching task run.
-        task_run = _find_first(
-            lambda task_run: task_run.invocation_id == task_inv_id,
-            wf_run_model.task_runs,
-        )
+        try:
+            task_run = _find_first(
+                lambda task_run: task_run.invocation_id == task_inv_id,
+                wf_run_model.task_runs,
+            )
+        except StopIteration as e:
+            raise exceptions.TaskInvocationNotFoundError(
+                invocation_id=task_inv_id
+            ) from e
+
         return task_run.id
 
     def submit(

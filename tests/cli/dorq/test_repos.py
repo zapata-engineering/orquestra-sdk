@@ -25,7 +25,12 @@ from orquestra.sdk._base.cli._dorq import _repos
 from orquestra.sdk._ray import _dag
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeName
-from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
+from orquestra.sdk.schema.workflow_run import (
+    RunStatus,
+    State,
+    TaskRun as TaskRunModel,
+    WorkflowRun as WorkflowRunModel,
+)
 
 from ... import reloaders
 from ...sdk.v2.data.configs import TEST_CONFIG_JSON
@@ -60,6 +65,25 @@ class TestWorkflowRunRepo:
             return db
 
         @staticmethod
+        @pytest.fixture
+        def mock_wf_run(monkeypatch):
+            """
+            Returns a mock of shape of sdk.WorkflowRun. Used by other fixtures.
+            """
+            return Mock(sdk.WorkflowRun)
+
+        @staticmethod
+        @pytest.fixture
+        def mock_by_id(monkeypatch, mock_wf_run):
+            """
+            Returns a mock of sdk.WorkflowRun.by_id.
+            """
+            by_id = Mock(return_value=mock_wf_run)
+            monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+            return by_id
+
+        @staticmethod
         def test_get_config_name_by_run_id(db_mock):
             # Given
             config = "test_cfg"
@@ -76,16 +100,12 @@ class TestWorkflowRunRepo:
             db_mock.get_workflow_run.assert_called_with(workflow_run_id=wf_run_id)
 
         @staticmethod
-        def test_get_wf_by_run_id(monkeypatch):
+        def test_get_wf_by_run_id(mock_by_id, mock_wf_run):
             # Given
             run_id = "wf.1"
             config_name = "<config sentinel>"
 
-            wf_run = Mock()
-            wf_run.get_status_model().id = run_id
-
-            by_id = Mock(return_value=wf_run)
-            monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+            mock_wf_run.get_status_model().id = run_id
 
             repo = _repos.WorkflowRunRepo()
 
@@ -94,7 +114,101 @@ class TestWorkflowRunRepo:
 
             # Then
             assert wf_run.id == run_id
-            by_id.assert_called_with(run_id, config_name)
+            mock_by_id.assert_called_with(run_id, config_name)
+
+        class TestGetTaskRunID:
+            @staticmethod
+            def test_happy_path(mock_by_id, mock_wf_run):
+                # Given
+                wf_run_id = "wf.1"
+                task_inv_id = "inv2"
+                config = "config3"
+                repo = _repos.WorkflowRunRepo()
+
+                # Mocks
+                status = RunStatus(state=State.SUCCEEDED)
+                mock_wf_run.get_status_model().task_runs = [
+                    TaskRunModel(
+                        id="1",
+                        invocation_id="inv1",
+                        status=status,
+                    ),
+                    TaskRunModel(
+                        id="2",
+                        invocation_id="inv2",
+                        status=status,
+                    ),
+                    TaskRunModel(
+                        id="3",
+                        invocation_id="inv3",
+                        status=status,
+                    ),
+                ]
+
+                # When
+                task_run_id = repo.get_task_run_id(
+                    wf_run_id=wf_run_id,
+                    task_inv_id=task_inv_id,
+                    config_name=config,
+                )
+
+                # Then
+                assert task_run_id == "2"
+
+            @staticmethod
+            def test_invalid_inv_id(mock_by_id, mock_wf_run):
+                # Given
+                wf_run_id = "wf.1"
+                task_inv_id = "inv2_doesnt_exist"
+                config = "config3"
+                repo = _repos.WorkflowRunRepo()
+
+                # Mocks
+                status = RunStatus(state=State.SUCCEEDED)
+                mock_wf_run.get_status_model().task_runs = [
+                    TaskRunModel(
+                        id="1",
+                        invocation_id="inv1",
+                        status=status,
+                    ),
+                ]
+
+                # Then
+                with pytest.raises(exceptions.TaskInvocationNotFoundError) as exc_info:
+                    # When
+                    _ = repo.get_task_run_id(
+                        wf_run_id=wf_run_id,
+                        task_inv_id=task_inv_id,
+                        config_name=config,
+                    )
+                assert exc_info.value.invocation_id == task_inv_id
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "exc",
+                [
+                    exceptions.NotFoundError(),
+                    exceptions.ConfigNameNotFoundError(),
+                ],
+            )
+            def test_passing_errors(mock_by_id, exc):
+                # Given
+                wf_run_id = "wf.1"
+                task_inv_id = "inv2_doesnt_exist"
+                config = "config3"
+                repo = _repos.WorkflowRunRepo()
+
+                # Mocks
+                mock_by_id.side_effect = exc
+
+                # Then
+                with pytest.raises(type(exc)):
+                    # When
+                    _ = repo.get_task_run_id(
+                        wf_run_id=wf_run_id,
+                        task_inv_id=task_inv_id,
+                        config_name=config,
+                    )
 
         class TestListWFRunIDs:
             """
