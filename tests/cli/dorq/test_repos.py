@@ -25,12 +25,9 @@ from orquestra.sdk._base.cli._dorq import _repos
 from orquestra.sdk._ray import _dag
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeName
-from orquestra.sdk.schema.workflow_run import (
-    RunStatus,
-    State,
-    TaskRun as TaskRunModel,
-    WorkflowRun as WorkflowRunModel,
-)
+from orquestra.sdk.schema.workflow_run import RunStatus, State
+from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
+from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
 
 from ... import reloaders
 from ...sdk.v2.data.configs import TEST_CONFIG_JSON
