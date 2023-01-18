@@ -199,19 +199,16 @@ class DriverClient:
         _handle_common_errors(resp)
 
         parsed_response = _models.Response[
-            _models.ListWorkflowDefsResponse, _models.MetaSuccessPaginated
+            _models.ListWorkflowDefsResponse, _models.Pagination
         ].parse_obj(resp.json())
         contents = [d.workflow for d in parsed_response.data]
         if parsed_response.meta is not None:
-            prev_token = parsed_response.meta.pagination.prevPageToken
-            next_token = parsed_response.meta.pagination.nextPageToken
+            next_token = parsed_response.meta.nextPageToken
         else:
-            prev_token = None
             next_token = None
 
         return Paginated(
             contents=contents,
-            prev_page_token=prev_token,
             next_page_token=next_token,
         )
 
@@ -340,14 +337,12 @@ class DriverClient:
         _handle_common_errors(resp)
 
         parsed_response = _models.Response[
-            _models.ListWorkflowRunsResponse, _models.MetaSuccessPaginated
+            _models.ListWorkflowRunsResponse, _models.Pagination
         ].parse_obj(resp.json())
 
         if parsed_response.meta is not None:
-            prev_token = parsed_response.meta.pagination.prevPageToken
-            next_token = parsed_response.meta.pagination.nextPageToken
+            next_token = parsed_response.meta.nextPageToken
         else:
-            prev_token = None
             next_token = None
 
         workflow_runs = []
@@ -357,7 +352,6 @@ class DriverClient:
 
         return Paginated(
             contents=workflow_runs,
-            prev_page_token=prev_token,
             next_page_token=next_token,
         )
 
