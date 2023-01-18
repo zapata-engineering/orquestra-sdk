@@ -143,7 +143,9 @@ class RuntimeInterface(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_available_outputs(self, workflow_run_id: WorkflowRunId):
+    def get_available_outputs(
+        self, workflow_run_id: WorkflowRunId
+    ) -> t.Mapping[TaskInvocationId, t.Union[t.Any, t.Tuple[t.Any, ...]]]:
         """Returns all available outputs for a workflow
 
         This method returns all available artifacts. When the workflow fails
@@ -154,8 +156,14 @@ class RuntimeInterface(ABC):
         Careful: This method does NOT return status of a workflow. Verify it beforehand
         to make sure if workflow failed/succeeded/is running. You might get incomplete
         results
+
+        Returns:
+            A mapping with an entry for each task run in the workflow. The key is the
+                task's invocation ID. The value is whatever the task returned. If the
+                task has 1 output, it's the dict entry's value. If the tasks has n
+                outputs, the dict entry's value is a n-tuple.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def stop_workflow_run(self, workflow_run_id: WorkflowRunId) -> None:
