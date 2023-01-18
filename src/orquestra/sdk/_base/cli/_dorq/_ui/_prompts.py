@@ -3,6 +3,7 @@
 ################################################################################
 
 import typing as t
+from typing import overload
 
 import inquirer  # type: ignore
 
@@ -23,7 +24,7 @@ class Prompter:
     isn't covered by tests.
     """
 
-    @t.overload
+    @overload
     def choice(
         self,
         choices: t.Sequence[ChoiceID],
@@ -32,7 +33,7 @@ class Prompter:
     ) -> ChoiceID:
         ...
 
-    @t.overload
+    @overload
     def choice(
         self,
         choices: t.Sequence[t.Tuple[ChoiceID, T]],
