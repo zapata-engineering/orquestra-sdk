@@ -43,7 +43,7 @@ class TaskRun(BaseModel):
 
 class WorkflowRun(BaseModel):
     id: WorkflowRunId
-    workflow_def: t.Optional[WorkflowDef]
+    workflow_def: WorkflowDef
     task_runs: t.List[TaskRun]
     status: RunStatus
 

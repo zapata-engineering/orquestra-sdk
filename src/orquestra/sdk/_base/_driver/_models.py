@@ -178,7 +178,7 @@ class MinimalWorkflowRunResponse(pydantic.BaseModel):
     status: RunStatusResponse
     definitionId: WorkflowDefID
 
-    def to_ir(self, workflow_def: Optional[WorkflowDef] = None) -> WorkflowRun:
+    def to_ir(self, workflow_def: WorkflowDef) -> WorkflowRun:
         return WorkflowRun(
             id=self.id,
             status=self.status.to_ir(),
@@ -196,7 +196,7 @@ class WorkflowRunResponse(MinimalWorkflowRunResponse):
     owner: str
     taskRuns: List[TaskRunResponse]
 
-    def to_ir(self, workflow_def: Optional[WorkflowDef] = None) -> WorkflowRun:
+    def to_ir(self, workflow_def: WorkflowDef) -> WorkflowRun:
         return WorkflowRun(
             id=self.id,
             status=self.status.to_ir(),
