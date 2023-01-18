@@ -74,7 +74,17 @@ class WorkflowRunRepo:
     def get_wf_by_run_id(
         self, wf_run_id: WorkflowRunId, config_name: t.Optional[ConfigName]
     ) -> WorkflowRun:
-        wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
+        """
+        Raises:
+            orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match a
+                stored run ID.
+            orquestra.sdk.exceptions.ConfigNameNotFoundError: when the named config is
+                not found in the file.
+        """
+        try:
+            wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
+        except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
+            raise
 
         return wf_run.get_status_model()
 
@@ -84,9 +94,20 @@ class WorkflowRunRepo:
         task_inv_id: TaskInvocationId,
         config_name: ConfigName,
     ) -> TaskRunId:
-        wf_run_model = self.get_wf_by_run_id(
-            wf_run_id=wf_run_id, config_name=config_name
-        )
+        """
+        Raises:
+            orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match a
+                stored run ID.
+            orquestra.sdk.exceptions.ConfigNameNotFoundError: when the named config is
+                not found in the file.
+        """
+        try:
+            wf_run_model = self.get_wf_by_run_id(
+                wf_run_id=wf_run_id, config_name=config_name
+            )
+        except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
+            raise
+
         # TODO: figure out what happens when there's no matching task run.
         task_run = _find_first(
             lambda task_run: task_run.invocation_id == task_inv_id,
