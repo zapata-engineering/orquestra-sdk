@@ -366,7 +366,8 @@ class TestWFRunResolver:
             # We should pass config value to wf_run_repo.
             wf_run_repo.list_wf_run_ids.assert_called_with(config)
 
-            # We should prompt for selecting workflow ID from the ones returned by the repo.
+            # We should prompt for selecting workflow ID from the ones returned
+            # by the repo.
             prompter.choice.assert_called_with(
                 listed_run_ids, message="Workflow run ID"
             )
@@ -428,7 +429,8 @@ class TestWFRunResolver:
             # We should pass config value to wf_run_repo.
             wf_run_repo.list_wf_runs.assert_called_with(config)
 
-            # We should prompt for selecting workflow ID from the ones returned by the repo.
+            # We should prompt for selecting workflow run from the IDs returned
+            # by the repo.
             prompter.choice.assert_called_with(
                 [(run.id, run) for run in listed_runs], message="Workflow run ID"
             )
