@@ -315,6 +315,7 @@ class TestWFRunResolver:
 
     ``config`` is assumed to be resolved to a valid value at this point.
     """
+
     class TestResolveID:
         @staticmethod
         def test_passing_id_directly():
@@ -366,7 +367,9 @@ class TestWFRunResolver:
             wf_run_repo.list_wf_run_ids.assert_called_with(config)
 
             # We should prompt for selecting workflow ID from the ones returned by the repo.
-            prompter.choice.assert_called_with(listed_run_ids, message="Workflow run ID")
+            prompter.choice.assert_called_with(
+                listed_run_ids, message="Workflow run ID"
+            )
 
             # Resolver should return the user's choice.
             assert resolved_id == selected_id
@@ -426,7 +429,9 @@ class TestWFRunResolver:
             wf_run_repo.list_wf_runs.assert_called_with(config)
 
             # We should prompt for selecting workflow ID from the ones returned by the repo.
-            prompter.choice.assert_called_with([(run.id, run) for run in listed_runs], message="Workflow run ID")
+            prompter.choice.assert_called_with(
+                [(run.id, run) for run in listed_runs], message="Workflow run ID"
+            )
 
             # Resolver should return the user's choice.
             assert resolved_run == selected_run
