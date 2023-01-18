@@ -264,7 +264,7 @@ class WorkflowRunRepo:
         ]
 
         return matching_inv_ids
-        
+
     def get_wf_logs(self, wf_run_id: WorkflowRunId, config_name: ConfigName):
         """
         Asks the runtime for workflow logs

@@ -499,7 +499,6 @@ class TestWorkflowRunRepo:
                     # When
                     _ = repo.get_task_fn_names(wf_run_id, config_name)
 
-
         class TestGetTaskInvIDs:
             @staticmethod
             @pytest.mark.parametrize(
