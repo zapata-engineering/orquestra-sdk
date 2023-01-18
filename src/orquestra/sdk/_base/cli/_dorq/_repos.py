@@ -200,9 +200,10 @@ class WorkflowRunRepo:
         status_model = wf_run.get_status_model()
         wf_def = status_model.workflow_def
 
-        # TODO: check when this is optional and add a message
-        assert wf_def is not None
-
+        assert wf_def is not None, (
+            "We don't have workflow definition associated with the workflow "
+            f"run {wf_run_id}. It shouldn't have happened."
+        )
         return wf_def
 
     def get_task_fn_names(
