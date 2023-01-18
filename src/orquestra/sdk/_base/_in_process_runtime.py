@@ -150,14 +150,18 @@ class InProcessRuntime(abc.RuntimeInterface):
 
         inv_outputs: t.Dict[ir.TaskInvocationId, TaskOutputs] = {}
         for inv in wf_def.task_invocations.values():
-            output_vals: t.Sequence[ArtifactValue] = [
-                self._artifact_store[workflow_run_id][art_id]
-                for art_id in inv.output_ids
-            ]
+            output_vals = tuple(
+                [
+                    self._artifact_store[workflow_run_id][art_id]
+                    for art_id in inv.output_ids
+                ]
+            )
 
             if len(inv.output_ids) == 1:
                 # This was a single-output task
                 output_vals = output_vals[0]
+
+            inv_outputs[inv.id] = output_vals
 
         return inv_outputs
 
