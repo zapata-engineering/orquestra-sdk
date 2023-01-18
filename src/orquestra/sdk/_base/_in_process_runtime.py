@@ -257,3 +257,13 @@ class InProcessRuntime(abc.RuntimeInterface):
                 -limit:
             ]
         return wf_runs
+
+    @classmethod
+    def from_runtime_configuration(cls, *args, **kwargs):
+        raise NotImplementedError()
+
+    def get_all_workflow_runs_status(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def iter_logs(self, *args, **kwargs):
+        raise NotImplementedError()
