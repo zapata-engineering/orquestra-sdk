@@ -73,7 +73,7 @@ class TestQueriesAfterRunning:
         @staticmethod
         def test_dict_value(runtime, run_id):
             assert runtime.get_available_outputs(run_id) == {
-                "invocation-0-task-sum-tuple-numbers": 3
+                "invocation-0-task-sum-tuple-numbers": (3,)
             }
 
 

@@ -148,13 +148,13 @@ class RuntimeInterface(ABC):
     @abstractmethod
     def get_available_outputs(
         self, workflow_run_id: WorkflowRunId
-    ) -> t.Dict[TaskInvocationId, t.Union[ArtifactValue, t.Tuple[ArtifactValue, ...]]]:
+    ) -> t.Dict[TaskInvocationId, t.Tuple[ArtifactValue, ...]]:
         """Returns all available outputs for a workflow
 
-        This method returns all available artifacts. When the workflow fails
-        it returns artifacts only for the steps that did success.
-        Might raise an exception if runtime doesn't support getting artifacts from
-        in-progress workflow
+        This method returns all available artifacts. When the workflow fails it returns
+        artifacts only for the steps that did success. Might raise an exception if
+        runtime doesn't support getting artifacts from in-progress workflow.
+
 
         Careful: This method does NOT return status of a workflow. Verify it beforehand
         to make sure if workflow failed/succeeded/is running. You might get incomplete
@@ -162,9 +162,8 @@ class RuntimeInterface(ABC):
 
         Returns:
             A mapping with an entry for each task run in the workflow. The key is the
-                task's invocation ID. The value is whatever the task returned. If the
-                task has 1 output, it's the dict entry's value. If the tasks has n
-                outputs, the dict entry's value is a n-tuple.
+                task's invocation ID. The value is a n-tuple, where n is the number of
+                task's outputs. If task has 1 output, this will be a 1-tuple.
         """
         raise NotImplementedError()
 

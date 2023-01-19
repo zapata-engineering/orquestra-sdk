@@ -245,12 +245,8 @@ class CERuntime(RuntimeInterface):
                     continue
                 outputs.append(output)
 
-            if len(outputs) == 0:
-                # We couldn't get this artifact value due to an exception.
-                pass
-            elif len(outputs) == 1:
-                artifact_vals[inv_id] = outputs[0]
-            else:
+            if len(outputs) > 0:
+                # We don't want to litter the dictionary with empty containers.
                 artifact_vals[inv_id] = tuple(outputs)
 
         return artifact_vals

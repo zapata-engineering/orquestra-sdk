@@ -440,7 +440,7 @@ class TestGetAvailableOutputs:
         )
         assert results == {
             "task-inv-1": (1, 1),
-            "task-inv-2": 1,
+            "task-inv-2": (1,),
         }
 
     class TestGetWorkflowRunArtifactsFailure:
@@ -596,10 +596,8 @@ class TestGetAvailableOutputs:
                 [call("wf-art-1"), call("wf-art-2"), call("wf-art-3")]
             )
             assert results == {
-                # TODO: change the interface and the contract to always return a tuple,
-                # even it there's just one output.
-                "task-inv-1": 1,
-                "task-inv-2": 1,
+                "task-inv-1": (1,),
+                "task-inv-2": (1,),
             }
 
         def test_unknown_http(

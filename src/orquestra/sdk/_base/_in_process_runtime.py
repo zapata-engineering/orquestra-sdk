@@ -22,7 +22,7 @@ from .serde import deserialize_constant
 
 WfRunId = str
 ArtifactValue = t.Any
-TaskOutputs = t.Union[ArtifactValue, t.Tuple[ArtifactValue, ...]]
+TaskOutputs = t.Tuple[ArtifactValue, ...]
 
 
 def _make_completed_task_run(workflow_run_id, start_time, end_time, task_inv):
@@ -156,10 +156,6 @@ class InProcessRuntime(abc.RuntimeInterface):
                     for art_id in inv.output_ids
                 ]
             )
-
-            if len(inv.output_ids) == 1:
-                # This was a single-output task
-                output_vals = output_vals[0]
 
             inv_outputs[inv.id] = output_vals
 
