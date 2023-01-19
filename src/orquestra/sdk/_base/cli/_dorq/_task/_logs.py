@@ -38,7 +38,9 @@ class Action:
         self._wf_run_id_resolver = wf_run_id_resolver or _arg_resolvers.WFRunIDResolver(
             wf_run_repo=wf_run_repo
         )
-        self._task_inv_id_resolver = task_inv_id_resolver or _arg_resolvers.TaskInvIDResolver(wf_run_repo)
+        self._task_inv_id_resolver = (
+            task_inv_id_resolver or _arg_resolvers.TaskInvIDResolver(wf_run_repo)
+        )
 
         # output
         self._presenter = presenter
@@ -77,10 +79,18 @@ class Action:
         resolved_wf_run_id = self._wf_run_id_resolver.resolve(
             wf_run_id, resolved_config
         )
-        resolver_task_inv_id = self._task_inv_id_resolver.resolve(task_inv_id=task_invocation_id, fn_name=fn_name, wf_run_id=resolved_wf_run_id, config=resolved_config)
+        resolver_task_inv_id = self._task_inv_id_resolver.resolve(
+            task_inv_id=task_invocation_id,
+            fn_name=fn_name,
+            wf_run_id=resolved_wf_run_id,
+            config=resolved_config,
+        )
 
         logs = self._wf_run_repo.get_task_logs(
-            wf_run_id=resolved_wf_run_id, task_inv_id=resolver_task_inv_id, config_name=resolved_config)
+            wf_run_id=resolved_wf_run_id,
+            task_inv_id=resolver_task_inv_id,
+            config_name=resolved_config,
+        )
 
         breakpoint()
 

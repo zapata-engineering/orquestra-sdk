@@ -256,6 +256,7 @@ def task():
     """
     pass
 
+
 @task.command()
 @cloup.argument("wf_run_id", required=False)
 @cloup.argument("task_inv_id", required=False)

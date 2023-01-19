@@ -26,7 +26,7 @@ from orquestra.sdk.schema.configs import (
     RuntimeName,
 )
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.workflow_run import State, TaskRunId, TaskInvocationId
+from orquestra.sdk.schema.workflow_run import State, TaskInvocationId, TaskRunId
 from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
@@ -646,7 +646,9 @@ class WorkflowRun:
         for task_inv_id in task_list:
             all_task_runs = self.get_status_model().task_runs
             # find taskRunID based on task invocation ID
-            task_run_id = next(task.id for task in all_task_runs if task.invocation_id == task_inv_id)
+            task_run_id = next(
+                task.id for task in all_task_runs if task.invocation_id == task_inv_id
+            )
             try:
                 # Get a single task run logs
                 # Unfortunately, we return TaskInvocationId: List[str] from
