@@ -8,7 +8,7 @@ import typing as t
 from pathlib import Path
 
 from orquestra.sdk.schema.configs import ConfigName
-from orquestra.sdk.schema.workflow_run import TaskInvocationId, WorkflowRunId
+from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
 from .. import _arg_resolvers, _dumpers, _repos
 from .._ui import _presenters

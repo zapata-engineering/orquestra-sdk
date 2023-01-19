@@ -263,13 +263,13 @@ def task():
 @cloup.argument("fn_name", required=False)
 @CONFIG_OPTION
 @DOWNLOAD_DIR_OPTION
-def logs(
+def logs(  # noqa: F811
     wf_run_id: t.Optional[str],
     task_inv_id,
     fn_name,
     config: t.Optional[str],
     download_dir: t.Optional[Path],
-):  # noqa: F811
+):
     """
     Shows logs gathered during execution of a workflow produced by all tasks.
     """
