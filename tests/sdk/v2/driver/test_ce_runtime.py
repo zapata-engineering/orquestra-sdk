@@ -423,8 +423,8 @@ class TestGetAvailableOutputs:
     ):
         # Given
         mocked_client.get_workflow_run_artifacts.return_value = {
-            "task-1": ["1", "2"],
-            "task-2": ["3"],
+            f"{workflow_run_id}@task-inv-1": ["wf-art-1", "wf-art-2"],
+            f"{workflow_run_id}@task-inv-2": ["wf-art-3"],
         }
         mocked_client.get_workflow_run_artifact.return_value = JSONResult(value="1")
 
@@ -436,38 +436,12 @@ class TestGetAvailableOutputs:
             workflow_run_id
         )
         mocked_client.get_workflow_run_artifact.assert_has_calls(
-            [call("1"), call("2"), call("3")]
+            [call("wf-art-1"), call("wf-art-2"), call("wf-art-3")]
         )
-        assert len(results) == 2
-        assert len(results["task-1"]) == 2
-        assert len(results["task-2"]) == 1
-
-    def test_map_remote_to_local_ids(
-        self,
-        mocked_client: MagicMock,
-        runtime: _ce_runtime.CERuntime,
-        workflow_run_id: str,
-    ):
-        # Given
-        mocked_client.get_workflow_run_artifacts.return_value = {
-            f"{workflow_run_id}@task-1": ["1", "2"],
-            f"{workflow_run_id}@task-2": ["3"],
+        assert results == {
+            "task-inv-1": (1, 1),
+            "task-inv-2": 1,
         }
-        mocked_client.get_workflow_run_artifact.return_value = JSONResult(value="1")
-
-        # When
-        results = runtime.get_available_outputs(workflow_run_id)
-
-        # Then
-        mocked_client.get_workflow_run_artifacts.assert_called_once_with(
-            workflow_run_id
-        )
-        mocked_client.get_workflow_run_artifact.assert_has_calls(
-            [call("1"), call("2"), call("3")]
-        )
-        assert len(results) == 2
-        assert len(results["task-1"]) == 2
-        assert len(results["task-2"]) == 1
 
     class TestGetWorkflowRunArtifactsFailure:
         def test_bad_workflow_run_id(
@@ -543,10 +517,10 @@ class TestGetAvailableOutputs:
 
     class TestGetWorkflowRunArtifactFailure:
         @pytest.fixture
-        def mocked_client(self, mocked_client: MagicMock):
+        def mocked_client(self, mocked_client: MagicMock, workflow_run_id):
             mocked_client.get_workflow_run_artifacts.return_value = {
-                "task-1": ["1", "2"],
-                "task-2": ["3"],
+                f"{workflow_run_id}@task-inv-1": ["wf-art-1", "wf-art-2"],
+                f"{workflow_run_id}@task-inv-2": ["wf-art-3"],
             }
             return mocked_client
 
@@ -567,11 +541,9 @@ class TestGetAvailableOutputs:
                 workflow_run_id
             )
             mocked_client.get_workflow_run_artifact.assert_has_calls(
-                [call("1"), call("2"), call("3")]
+                [call("wf-art-1"), call("wf-art-2"), call("wf-art-3")]
             )
-            assert len(results) == 2
-            assert len(results["task-1"]) == 0
-            assert len(results["task-2"]) == 0
+            assert results == {}
 
         def test_returns_successful_artifacts_after_failure(
             self,
@@ -595,11 +567,9 @@ class TestGetAvailableOutputs:
                 workflow_run_id
             )
             mocked_client.get_workflow_run_artifact.assert_has_calls(
-                [call("1"), call("2"), call("3")]
+                [call("wf-art-1"), call("wf-art-2"), call("wf-art-3")]
             )
-            assert len(results) == 2
-            assert len(results["task-1"]) == 2
-            assert len(results["task-2"]) == 0
+            assert results == {"task-inv-1": (1, 1)}
 
         def test_continues_after_failure(
             self,
@@ -623,11 +593,14 @@ class TestGetAvailableOutputs:
                 workflow_run_id
             )
             mocked_client.get_workflow_run_artifact.assert_has_calls(
-                [call("1"), call("2"), call("3")]
+                [call("wf-art-1"), call("wf-art-2"), call("wf-art-3")]
             )
-            assert len(results) == 2
-            assert len(results["task-1"]) == 1
-            assert len(results["task-2"]) == 1
+            assert results == {
+                # TODO: change the interface and the contract to always return a tuple,
+                # even it there's just one output.
+                "task-inv-1": 1,
+                "task-inv-2": 1,
+            }
 
         def test_unknown_http(
             self,
@@ -648,11 +621,9 @@ class TestGetAvailableOutputs:
                 workflow_run_id
             )
             mocked_client.get_workflow_run_artifact.assert_has_calls(
-                [call("1"), call("2"), call("3")]
+                [call("wf-art-1"), call("wf-art-2"), call("wf-art-3")]
             )
-            assert len(results) == 2
-            assert len(results["task-1"]) == 0
-            assert len(results["task-2"]) == 0
+            assert results == {}
 
         def test_token_failure(
             self,
@@ -673,11 +644,9 @@ class TestGetAvailableOutputs:
                 workflow_run_id
             )
             mocked_client.get_workflow_run_artifact.assert_has_calls(
-                [call("1"), call("2"), call("3")]
+                [call("wf-art-1"), call("wf-art-2"), call("wf-art-3")]
             )
-            assert len(results) == 2
-            assert len(results["task-1"]) == 0
-            assert len(results["task-2"]) == 0
+            assert results == {}
 
 
 class TestStopWorkflowRun:
