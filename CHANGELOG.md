@@ -4,6 +4,7 @@
 
 🚨 *Breaking Changes*
 
+* `sdk.WorkflowRun.get_artifacts()` doesn't accept any arguments anymore. Now, it returns all the artifacts produced by the tasks in the workflow.
 
 🔥 *Features*
 
