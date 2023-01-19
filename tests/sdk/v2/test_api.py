@@ -14,7 +14,6 @@ import typing as t
 import unittest
 import warnings
 from datetime import timedelta
-from pathlib import Path
 from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospec, patch
 
 import pytest
@@ -31,12 +30,8 @@ from orquestra.sdk.exceptions import (
     WorkflowRunNotFoundError,
     WorkflowRunNotStarted,
 )
-from orquestra.sdk.schema.configs import (
-    CONFIG_FILE_CURRENT_VERSION,
-    RuntimeConfigurationFile,
-    RuntimeName,
-)
 from orquestra.sdk.schema import ir
+from orquestra.sdk.schema.configs import CONFIG_FILE_CURRENT_VERSION, RuntimeName
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun
 
