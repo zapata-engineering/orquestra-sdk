@@ -289,6 +289,18 @@ class WorkflowRunRepo:
 
         return logs
 
+    def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId, config_name: ConfigName):
+        try:
+            wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
+        except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
+            raise
+
+        try:
+            logs = wf_run.get_logs(tasks=task_inv_id)
+        except (exceptions.WorkflowRunNotFinished, exceptions.WorkflowRunNotSucceeded):
+            raise
+
+        return logs
 
 class ConfigRepo:
     """
