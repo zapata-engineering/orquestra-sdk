@@ -537,28 +537,15 @@ class WorkflowRun:
         except WorkflowRunNotSucceeded:
             raise
 
-    def get_artifacts(
-        self,
-        tasks: t.Union[ir.TaskInvocationId, t.List[ir.TaskInvocationId], None] = None,
-        *,
-        only_available: bool = False,
-    ) -> t.Dict[ir.TaskInvocationId, t.Any]:
+    def get_artifacts(self) -> t.Dict[ir.TaskInvocationId, t.Any]:
         """
         Unstable: this API will change.
 
-        Returns artifacts produced by this workflow's tasks.
-
-        Args:
-            tasks: if not None, filters the fetched artifact values. Can be a task
-                invocation ID or a list of task invocation IDs.
-            only_available: If true, only available task artifacts are returned.
-                            This does nothing if `tasks` is omitted or is empty.
+        Returns all values returned by this workflow's tasks.
 
         Raises:
             WorkflowRunNotStarted: when the workflow has not started
-            TaskRunNotFound: when only_available is False and a requested task run
-                            cannot be found, either because it does not exist or has not
-                            been completed yet.
+
         Returns:
             A dictionary with an entry for each task run in the workflow. The key is the
                 task's invocation ID. The value is whatever the task returned. If the
@@ -592,42 +579,7 @@ class WorkflowRun:
 
             unwrapped_artifacts[inv_id] = unwrapped
 
-        resolved_inv_ids: t.Sequence[ir.TaskInvocationId]
-        if tasks is None:
-            # Return everything we can from the runtime.
-            return unwrapped_artifacts
-        elif isinstance(tasks, str):
-            resolved_inv_ids = [tasks]
-        else:
-            resolved_inv_ids = tasks
-
-        if only_available:
-            # if only_available is True, we return only the task run artifacts the user
-            # requested, but ignore any task runs the user requested that the runtime
-            # didn't return.
-            requested_artifacts = {
-                task_inv_id: unwrapped_artifacts[task_inv_id]
-                for task_inv_id in resolved_inv_ids
-                if task_inv_id in workflow_artifacts
-            }
-
-            return requested_artifacts
-        else:
-            # if only_available is False, we try to get all requested tasks and raise
-            # an exception if any of them are missing
-            try:
-                requested_artifacts = {
-                    task_inv_id: unwrapped_artifacts[task_inv_id]
-                    for task_inv_id in resolved_inv_ids
-                }
-                return unwrapped_artifacts
-
-            except KeyError as e:
-                missing_id = e.args[0]
-                raise TaskRunNotFound(
-                    f"Task run with id `{missing_id}` not found. "
-                    "It may not be completed or does not exist in this WorkflowRun."
-                ) from e
+        return unwrapped_artifacts
 
     def get_logs(
         self,
