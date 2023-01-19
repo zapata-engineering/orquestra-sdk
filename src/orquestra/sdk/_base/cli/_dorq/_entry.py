@@ -269,7 +269,7 @@ def logs(
     fn_name,
     config: t.Optional[str],
     download_dir: t.Optional[Path],
-):
+):  # noqa: F811
     """
     Shows logs gathered during execution of a workflow produced by all tasks.
     """

@@ -37,6 +37,7 @@ class TestCommandTreeAssembly:
             ["down"],
             ["status"],
             ["login"],
+            ["task", "logs"],
         ],
     )
     @pytest.mark.parametrize(

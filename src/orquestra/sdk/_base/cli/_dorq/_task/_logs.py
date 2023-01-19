@@ -92,8 +92,6 @@ class Action:
             config_name=resolved_config,
         )
 
-        breakpoint()
-
         if download_dir is not None:
             dump_path = self._dumper.dump(
                 logs=logs,

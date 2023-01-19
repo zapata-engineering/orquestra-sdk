@@ -631,7 +631,7 @@ class WorkflowRun:
                 task_invocation_id: List[log lines]
         """
         try:
-            run_id = self.run_id
+            _ = self.run_id
         except WorkflowRunNotStarted as e:
             message = (
                 "Cannot get the logs of a workflow run that hasn't started yet. "
