@@ -1,36 +1,49 @@
-import pytest
+import subprocess
+import sys
+from pathlib import Path
 
-from orquestra.sdk._ray import _dag
+import pytest
 
 
 @pytest.mark.slow
 class TestRayLogger:
-    def test_ray_logs_silenced(self, capsys: pytest.CaptureFixture):
+    def test_ray_logs_silenced(self, tmp_path: Path):
         # Given
-        params = _dag.RayParams(configure_logging=False)
-        # Ensure Ray is down
-        _dag.RayRuntime.shutdown()
-
+        test_case = """
+from orquestra.sdk._ray import _dag
+params = _dag.RayParams(configure_logging=False)
+_ = _dag.RayRuntime.startup(params)
+        """
+        logger = tmp_path / "logger.py"
+        logger.write_text(test_case)
         # When
-        _ = _dag.RayRuntime.startup(params)
+        result = subprocess.run([sys.executable, logger], capture_output=True)
         # Then
-        capture = capsys.readouterr()
+        result.check_returncode()
+        stderr = result.stderr.decode()
         # Seen when connecting to an existing cluster
-        assert "Connecting to existing Ray cluster at address" not in capture.err
+        assert "Started a local Ray instance" not in stderr
         # Seen when the Ray workflows is starting for the first time
-        assert "Initializing workflow manager" not in capture.err
+        assert "Initializing workflow manager" not in stderr
 
-    def test_ray_logs_not_silenced(self, capsys: pytest.CaptureFixture):
+    def test_ray_logs_not_silenced(self, tmp_path: Path):
         # Given
-        params = _dag.RayParams(configure_logging=True)
-        # Ensure Ray is down
-        _dag.RayRuntime.shutdown()
-
+        test_case = """
+from orquestra.sdk._ray import _dag
+params = _dag.RayParams(configure_logging=True)
+_ = _dag.RayRuntime.startup(params)
+        """
+        logger = tmp_path / "logger.py"
+        logger.write_text(test_case)
         # When
-        _ = _dag.RayRuntime.startup(params)
+        result = subprocess.run([sys.executable, logger], capture_output=True)
+
         # Then
-        capture = capsys.readouterr()
-        # Seen when connecting to an existing cluster
-        assert "Started a local Ray instance" in capture.err
+        result.check_returncode()
+        stdout = result.stderr.decode()
+        stderr = result.stderr.decode()
+        print(stderr)
+        print(stdout)
+        assert "Started a local Ray instance" in stderr
         # Seen when the Ray workflows is starting for the first time
-        assert "Initializing workflow manager" in capture.err
+        assert "Initializing workflow manager" in stderr
