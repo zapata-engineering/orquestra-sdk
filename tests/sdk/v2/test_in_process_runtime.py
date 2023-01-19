@@ -15,7 +15,7 @@ import pytest
 from orquestra.sdk import exceptions
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
 from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.workflow_run import State
+from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
 
 from .data.complex_serialization.workflow_defs import (
     wf_pass_callables_from_task,
@@ -33,30 +33,41 @@ def wf_def() -> ir.WorkflowDef:
     return wf_pass_tuple().model
 
 
-def test_single_run(runtime, wf_def):
-    run_id = runtime.create_workflow_run(wf_def)
-    assert runtime.get_workflow_run_outputs(run_id) == 3
+class TestQueriesAfterRunning:
+    """
+    Submits a well-known workflow and tests the "query" methods.
+    """
 
+    @staticmethod
+    @pytest.fixture
+    def run_id(runtime: InProcessRuntime, wf_def) -> WorkflowRunId:
+        run_id = runtime.create_workflow_run(wf_def)
+        return run_id
 
-def test_same_outputs(runtime, wf_def):
-    run_id = runtime.create_workflow_run(wf_def)
-    assert runtime.get_workflow_run_outputs(
-        run_id
-    ) == runtime.get_workflow_run_outputs_non_blocking(run_id)
+    class TestGetWorkflowRunOutputs:
+        @staticmethod
+        def test_number_of_outputs(runtime, run_id):
+            assert runtime.get_workflow_run_outputs(run_id) == 3
 
+        @staticmethod
+        def test_matches_non_blocking(runtime, run_id):
+            outputs = runtime.get_workflow_run_outputs(run_id)
 
-def test_multiple_runs(runtime):
-    wf_def1 = wf_pass_tuple().model
-    wf_def2 = wf_pass_callables_from_task().model
+            assert outputs == runtime.get_workflow_run_outputs_non_blocking(run_id)
 
-    run_id1 = runtime.create_workflow_run(wf_def1)
-    run_id2 = runtime.create_workflow_run(wf_def2)
+        @staticmethod
+        def test_multiple_runs(runtime):
+            wf_def1 = wf_pass_tuple().model
+            wf_def2 = wf_pass_callables_from_task().model
 
-    outputs1 = runtime.get_workflow_run_outputs(run_id1)
-    outputs2 = runtime.get_workflow_run_outputs(run_id2)
+            run_id1 = runtime.create_workflow_run(wf_def1)
+            run_id2 = runtime.create_workflow_run(wf_def2)
 
-    assert run_id1 != run_id2
-    assert outputs1 != outputs2
+            outputs1 = runtime.get_workflow_run_outputs(run_id1)
+            outputs2 = runtime.get_workflow_run_outputs(run_id2)
+
+            assert run_id1 != run_id2
+            assert outputs1 != outputs2
 
 
 class TestStop:
