@@ -215,3 +215,19 @@ class TestListWorkflowRuns:
         # Then
         # It doesn't make sense to get a running workflow from this runtime
         assert len(wf_runs) == 1
+
+
+class TestUnsupportedMethods:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "method",
+        [
+            InProcessRuntime.from_runtime_configuration,
+            InProcessRuntime.get_all_workflow_runs_status,
+            InProcessRuntime.get_full_logs,
+            InProcessRuntime.iter_logs,
+        ],
+    )
+    def test_raises(runtime, method):
+        with pytest.raises(NotImplementedError):
+            method(runtime)

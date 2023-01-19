@@ -161,11 +161,6 @@ class InProcessRuntime(abc.RuntimeInterface):
 
         return inv_outputs
 
-    def get_full_logs(
-        self, run_id: t.Union[WorkflowRunId, TaskRunId, None] = None
-    ) -> t.Dict[str, t.List[str]]:
-        return {}
-
     def get_workflow_run_status(self, workflow_run_id: WfRunId) -> WorkflowRun:
         if workflow_run_id not in self._output_store:
             raise WorkflowRunNotFoundError(
@@ -260,10 +255,21 @@ class InProcessRuntime(abc.RuntimeInterface):
 
     @classmethod
     def from_runtime_configuration(cls, *args, **kwargs):
-        raise NotImplementedError()
+        raise NotImplementedError(
+            "This functionality isn't available for 'in_process' runtime"
+        )
 
     def get_all_workflow_runs_status(self, *args, **kwargs):
-        raise NotImplementedError()
+        raise NotImplementedError(
+            "This functionality isn't available for 'in_process' runtime"
+        )
+
+    def get_full_logs(self, *args, **kwargs) -> t.Dict[str, t.List[str]]:
+        raise NotImplementedError(
+            "This functionality isn't available for 'in_process' runtime"
+        )
 
     def iter_logs(self, *args, **kwargs):
-        raise NotImplementedError()
+        raise NotImplementedError(
+            "This functionality isn't available for 'in_process' runtime"
+        )
