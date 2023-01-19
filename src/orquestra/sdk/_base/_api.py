@@ -45,7 +45,7 @@ from ..exceptions import (
 )
 from . import _config
 from ._in_process_runtime import InProcessRuntime
-from .abc import RuntimeInterface
+from .abc import ArtifactValue, RuntimeInterface
 from .serde import deserialize_constant
 
 COMPLETED_STATES = [State.FAILED, State.TERMINATED, State.SUCCEEDED]
@@ -580,10 +580,22 @@ class WorkflowRun:
         # getting a subset of artifacts, we should use them here.
         workflow_artifacts = self._runtime.get_available_outputs(run_id)
 
+        # The runtime always returns tuples, even of the task has n_outputs = 1. We
+        # need to unwrap it for user's convenience.
+        unwrapped_artifacts: t.Dict[ir.TaskInvocationId, t.Any] = {}
+        for inv_id, outputs in workflow_artifacts.items():
+            inv = self._wf_def.task_invocations[inv_id]
+            if len(inv.output_ids) == 1:
+                unwrapped = outputs[0]
+            else:
+                unwrapped = outputs
+
+            unwrapped_artifacts[inv_id] = unwrapped
+
         resolved_inv_ids: t.Sequence[ir.TaskInvocationId]
         if tasks is None:
             # Return everything we can from the runtime.
-            return workflow_artifacts
+            return unwrapped_artifacts
         elif isinstance(tasks, str):
             resolved_inv_ids = [tasks]
         else:
@@ -594,7 +606,7 @@ class WorkflowRun:
             # requested, but ignore any task runs the user requested that the runtime
             # didn't return.
             requested_artifacts = {
-                task_inv_id: workflow_artifacts[task_inv_id]
+                task_inv_id: unwrapped_artifacts[task_inv_id]
                 for task_inv_id in resolved_inv_ids
                 if task_inv_id in workflow_artifacts
             }
@@ -605,9 +617,10 @@ class WorkflowRun:
             # an exception if any of them are missing
             try:
                 requested_artifacts = {
-                    task_inv_id: workflow_artifacts[task_inv_id]
+                    task_inv_id: unwrapped_artifacts[task_inv_id]
                     for task_inv_id in resolved_inv_ids
                 }
+                return unwrapped_artifacts
 
             except KeyError as e:
                 missing_id = e.args[0]
@@ -615,7 +628,6 @@ class WorkflowRun:
                     f"Task run with id `{missing_id}` not found. "
                     "It may not be completed or does not exist in this WorkflowRun."
                 ) from e
-            return requested_artifacts
 
     def get_logs(
         self,

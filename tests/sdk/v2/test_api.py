@@ -15,7 +15,7 @@ import unittest
 import warnings
 from datetime import timedelta
 from pathlib import Path
-from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, patch
+from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospec, patch
 
 import pytest
 
@@ -36,6 +36,7 @@ from orquestra.sdk.schema.configs import (
     RuntimeConfigurationFile,
     RuntimeName,
 )
+from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun
 
@@ -537,6 +538,55 @@ class TestWorkflowRun:
             mock_runtime.get_available_outputs.assert_called()
             assert len(artifacts) == 1
             assert "task_run1" in artifacts
+
+        @staticmethod
+        def test_handling_n_outputs():
+            """
+            Some tasks return 1 value, some return multiple. The values in the
+            dict returned from `sdk.WorkflowRun.get_artifacts()` is supposed
+            to correspond to whatever we would get if we ran the task function
+            directly.
+
+            Test boundary::
+                [sdk.WorkflowRun]->[RuntimeInterface]
+                                 ->[ir.WorkflowDef]
+            """
+            # Given
+            runtime = create_autospec(RuntimeInterface)
+
+            # The RuntimeInterface's contract for get_available_outputs is
+            # to always return tuple as the dict value.
+            runtime.get_available_outputs.return_value = {
+                "inv1": (42,),
+                "inv2": (21, 38),
+            }
+
+            mock_inv1 = create_autospec(ir.TaskInvocation)
+            mock_inv1.output_ids = ["art1"]
+
+            mock_inv2 = create_autospec(ir.TaskInvocation)
+            mock_inv2.output_ids = ["art2", "art3"]
+
+            wf_def = create_autospec(ir.WorkflowDef)
+            wf_def.task_invocations = {
+                "inv1": mock_inv1,
+                "inv2": mock_inv2,
+            }
+
+            wf_run = _api.WorkflowRun(
+                run_id="wf.1",
+                wf_def=wf_def,
+                runtime=runtime,
+            )
+
+            # When
+            artifacts_dict = wf_run.get_artifacts()
+
+            # Then
+            assert artifacts_dict == {
+                "inv1": 42,
+                "inv2": (21, 38),
+            }
 
     class TestGetTasks:
         @staticmethod
