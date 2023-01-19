@@ -47,6 +47,14 @@ class Action:
     def on_cmd_call(
         self, wf_run_id: t.Optional[WorkflowRunId], config: t.Optional[ConfigName]
     ):
+        try:
+            self._on_cmd_call_with_exceptions(wf_run_id=wf_run_id, config=config)
+        except Exception as e:
+            self._presenter.show_error(e)
+
+    def _on_cmd_call_with_exceptions(
+        self, wf_run_id: t.Optional[WorkflowRunId], config: t.Optional[ConfigName]
+    ):
         # The order of resolving config and run ID is important. It dictactes the flow
         # user sees, and possible choices in the prompts.
         resolved_config = self._config_resolver.resolve(wf_run_id, config)
