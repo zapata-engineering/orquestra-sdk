@@ -14,7 +14,6 @@ import typing as t
 from abc import ABC, abstractmethod
 from datetime import timedelta
 from pathlib import Path
-from typing import List, Optional
 
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
@@ -78,6 +77,10 @@ class LogReader(t.Protocol):
         ...
 
 
+# A typealias that hints where we expect raw artifact values.
+ArtifactValue = t.Any
+
+
 class RuntimeInterface(ABC):
     """
     The main abstraction for managing Orquestra workflows. Allows swapping the
@@ -113,7 +116,7 @@ class RuntimeInterface(ABC):
     @abstractmethod
     def get_workflow_run_outputs(
         self, workflow_run_id: WorkflowRunId
-    ) -> t.Sequence[t.Any]:
+    ) -> t.Sequence[ArtifactValue]:
         """Returns the output artifacts of a workflow run
 
         For example, for this workflow:
@@ -132,7 +135,7 @@ class RuntimeInterface(ABC):
     @abstractmethod
     def get_workflow_run_outputs_non_blocking(
         self, workflow_run_id: WorkflowRunId
-    ) -> t.Sequence[t.Any]:
+    ) -> t.Sequence[ArtifactValue]:
         """Non-blocking version of get_workflow_run_outputs.
 
         This method raises exceptions if the workflow output artifacts are not available
@@ -145,7 +148,7 @@ class RuntimeInterface(ABC):
     @abstractmethod
     def get_available_outputs(
         self, workflow_run_id: WorkflowRunId
-    ) -> t.Dict[TaskInvocationId, t.Union[t.Any, t.Tuple[t.Any, ...]]]:
+    ) -> t.Dict[TaskInvocationId, t.Union[ArtifactValue, t.Tuple[ArtifactValue, ...]]]:
         """Returns all available outputs for a workflow
 
         This method returns all available artifacts. When the workflow fails
@@ -252,8 +255,8 @@ class WorkflowRepo(ABC):
 
     @abstractmethod
     def get_workflow_runs_list(
-        self, prefix: Optional[str], config_name: Optional[str]
-    ) -> List[StoredWorkflowRun]:
+        self, prefix: t.Optional[str], config_name: t.Optional[str]
+    ) -> t.List[StoredWorkflowRun]:
         """
         Retrieve all workflow runs matching one or more conditions. If no conditions
         are set, returns all workflow runs.
