@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import logging
 import re
 import traceback
 import typing as t
@@ -562,6 +563,7 @@ class RayParams:
     log_to_driver: bool = True
     storage: t.Optional[t.Union[str, _client.Storage]] = None
     _temp_dir: t.Optional[str] = None
+    configure_logging: bool = True
 
 
 # Defensive timeout for Ray operations that are expected to be instant.
@@ -599,6 +601,7 @@ class RayRuntime(RuntimeInterface):
             log_to_driver=config.runtime_options["log_to_driver"],
             storage=config.runtime_options["storage"],
             _temp_dir=config.runtime_options["temp_dir"],
+            configure_logging=config.runtime_options["configure_logging"],
         )
         cls.startup(ray_params)
         return RayRuntime(client=client, config=config, project_dir=project_dir)
@@ -622,6 +625,11 @@ class RayRuntime(RuntimeInterface):
             exceptions.RayActorNameClashError: when multiple Ray actors exist with the
                 same name.
         """
+
+        # Turn off internal Ray logs, unless there is an error
+        # If Ray is set to configure logging, this will be overriden
+        logger = logging.getLogger("ray")
+        logger.setLevel(logging.ERROR)
 
         client = RayClient()
         client.init(**dataclasses.asdict(ray_params))
