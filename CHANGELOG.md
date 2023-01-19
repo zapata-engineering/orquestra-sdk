@@ -3,7 +3,7 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
-
+*  `get_logs` - public API function accepts TaskInvocationID instead of TaskRunID - attempt to remove TaskRunID from all API calls
 
 🔥 *Features*
 * `list_workflow_runs` added to the Public API. This lets you list the workflows for a given config, for example `sdk.list_workflow_runs("ray")` or `sdk.list_workflow_runs("prod-d")`.
@@ -16,7 +16,7 @@
 * Dorq wf submit now properly prompts users for config selection
 * New CLI command: `python -m orquestra.sdk._base.cli._dorq._entry workflow results`. It shows a preview of the workflow run output artifact and can download the result values to the provided directory.
 * New CLI command: `python -m orquestra.sdk._base.cli._dorq._entry workflow logs`.
-
+* New CLI command: `python -m orquestra.sdk._base.cli._dorq._entry task logs`.
 
 🐛 *Bug Fixes*
 * Fixed broken link on docs landing page.
