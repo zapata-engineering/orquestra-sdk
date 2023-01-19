@@ -12,6 +12,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
 from orquestra.sdk.schema import ir
@@ -31,6 +32,33 @@ def runtime():
 @pytest.fixture
 def wf_def() -> ir.WorkflowDef:
     return wf_pass_tuple().model
+
+
+@sdk.task(n_outputs=2)
+def two_outputs(a, b):
+    return a + b, a - b
+
+
+@sdk.workflow
+def wf_with_unused_outputs():
+    out1, _ = two_outputs(5, 1)
+    return out1
+
+
+@sdk.workflow
+def wf_all_used():
+    out1, out2 = two_outputs(5, 1)
+    return out1, out2
+
+
+@pytest.fixture
+def wf_def_unused_outputs() -> ir.WorkflowDef:
+    return wf_with_unused_outputs().model
+
+
+@pytest.fixture
+def wf_def_all_used() -> ir.WorkflowDef:
+    return wf_all_used().model
 
 
 class TestQueriesAfterRunning:
@@ -71,10 +99,33 @@ class TestQueriesAfterRunning:
 
     class TestGetAvailableOutputs:
         @staticmethod
-        def test_dict_value(runtime, run_id):
+        def test_single_task_output(runtime, run_id):
+            """
+            The 'run_id' fixture is a result of submitting a workflow def with a
+            single-output task.
+            """
             assert runtime.get_available_outputs(run_id) == {
                 "invocation-0-task-sum-tuple-numbers": (3,)
             }
+
+        class TestMultipleTaskOutputs:
+            @staticmethod
+            # See ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-695
+            @pytest.mark.xfail(reason="Some artifact IDs are missing for TaskInvoation")
+            def test_some_unused(runtime, wf_def_unused_outputs):
+                run_id = runtime.create_workflow_run(wf_def_unused_outputs)
+
+                assert runtime.get_available_outputs(run_id) == {
+                    "invocation-0-task-two-outputs": (6, 4)
+                }
+
+            @staticmethod
+            def test_all_used(runtime, wf_def_all_used):
+                run_id = runtime.create_workflow_run(wf_def_all_used)
+
+                assert runtime.get_available_outputs(run_id) == {
+                    "invocation-0-task-two-outputs": (6, 4)
+                }
 
 
 class TestStop:
