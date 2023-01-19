@@ -51,6 +51,27 @@ class Action:
         show_all: t.Optional[bool] = False,
         interactive: t.Optional[bool] = False,
     ):
+        try:
+            self._on_cmd_call_with_exceptions(
+                config=config,
+                limit=limit,
+                max_age=max_age,
+                state=state,
+                show_all=show_all,
+                interactive=interactive,
+            )
+        except Exception as e:
+            self._presenter.show_error(e)
+
+    def _on_cmd_call_with_exceptions(
+        self,
+        config: t.Optional[t.Sequence[str]],
+        limit: t.Optional[int],
+        max_age: t.Optional[str],
+        state: t.Optional[t.List[str]],
+        show_all: t.Optional[bool] = False,
+        interactive: t.Optional[bool] = False,
+    ):
         # This should be handled by the mutually exclusive constraint in the entry, but
         # we'll keep this here to be safe.
         assert not (show_all and interactive)

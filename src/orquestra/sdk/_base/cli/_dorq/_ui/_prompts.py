@@ -3,13 +3,17 @@
 ################################################################################
 
 import typing as t
+from typing import overload
 
 import inquirer  # type: ignore
+
+from orquestra.sdk import exceptions
 
 SINGLE_INPUT = "single_input"
 
 
 ChoiceID = str
+T = t.TypeVar("T")
 
 
 class Prompter:
@@ -22,12 +26,49 @@ class Prompter:
     isn't covered by tests.
     """
 
+    @overload
     def choice(
         self,
         choices: t.Sequence[ChoiceID],
         message: str,
         default: t.Optional[str] = None,
     ) -> ChoiceID:
+        ...
+
+    @overload
+    def choice(
+        self,
+        choices: t.Sequence[t.Tuple[ChoiceID, T]],
+        message: str,
+        default: t.Optional[str] = None,
+    ) -> T:
+        ...
+
+    def choice(
+        self,
+        choices: t.Sequence[t.Union[ChoiceID, t.Tuple[ChoiceID, T]]],
+        message: str,
+        default: t.Optional[str] = None,
+    ) -> t.Union[ChoiceID, T]:
+        """
+        Presents the user a choice and returns what they selected
+
+        Args:
+            choices: The list of choices to present to the user. If this is of the shape
+                ``(label, value)`` then the ``label`` is shown to the user, but
+                ``value`` is what is returned.
+            message: The message to prompt the user.
+            default: The value to return as the default, if the user doesn't choose
+                anything.
+
+        Returns:
+            The item the user chose, either a ChoiceID or an object if ``choices`` was
+            a tuple.
+
+        Raises:
+            UserCancelledPrompt if the user cancels the prompt
+        """
+
         question = inquirer.List(
             SINGLE_INPUT,
             message=message,
@@ -37,20 +78,80 @@ class Prompter:
         )
         answers = inquirer.prompt([question])
 
-        # Workaround bad typing inside inquirer.
-        assert answers is not None
+        # If the user cancels the prompt, via ctrl-c, answers will be `None`.
+        if answers is None:
+            raise exceptions.UserCancelledPrompt(f"User cancelled {message} prompt")
 
         return answers[SINGLE_INPUT]
 
     def confirm(self, message: str, default: bool) -> bool:
-        return inquirer.confirm(message, default=default)
+        """
+        Ask the user for confirmation
 
+        Args:
+            message: The message to prompt the user.
+            default: The value to return as the default.
+
+        Returns:
+            The result from the prompt
+
+        Raises:
+            UserCancelledPrompt if the user cancels the prompt
+        """
+        answer = inquirer.confirm(message, default=default)
+
+        # If the user cancels the prompt, via ctrl-c, answers will be `None`.
+        if answer is None:
+            raise exceptions.UserCancelledPrompt(f"User cancelled {message} prompt")
+
+        # Fixing typing issues from inquirer
+        assert isinstance(answer, bool)
+
+        return answer
+
+    @overload
     def checkbox(
         self,
         choices: t.Sequence[ChoiceID],
         message: str,
         default: t.Optional[t.Union[str, t.List[str]]] = None,
     ) -> t.List[ChoiceID]:
+        ...
+
+    @overload
+    def checkbox(
+        self,
+        choices: t.Sequence[t.Tuple[ChoiceID, T]],
+        message: str,
+        default: t.Optional[t.Union[str, t.List[str]]] = None,
+    ) -> t.List[T]:
+        ...
+
+    def checkbox(
+        self,
+        choices: t.Sequence[t.Union[ChoiceID, t.Tuple[ChoiceID, T]]],
+        message: str,
+        default: t.Optional[t.Union[str, t.List[str]]] = None,
+    ) -> t.Union[t.List[ChoiceID], t.List[T]]:
+        """
+        Presents the user a multiple choice and returns what they selected
+
+        Args:
+            choices: The list of choices to present to the user. If this is of the shape
+                ``(label, value)`` then the ``label`` is shown to the user, but
+                ``value`` is what is returned.
+            message: The message to prompt the user.
+            default: The value to return as the default, if the user doesn't choose
+                anything.
+
+        Returns:
+            The list of items the user chose, either ChoiceIDs or objects if
+            ``choices`` was a tuple.
+
+        Raises:
+            UserCancelledPrompt if the user cancels the prompt
+        """
+
         question = inquirer.Checkbox(
             SINGLE_INPUT,
             message=message
@@ -61,12 +162,30 @@ class Prompter:
         )
         answers = inquirer.prompt([question])
 
-        # Workaround bad typing inside inquirer.
-        assert answers is not None
+        # If the user cancels the prompt, via ctrl-c, answers will be `None`.
+        if answers is None:
+            raise exceptions.UserCancelledPrompt(f"User cancelled {message} prompt")
 
         return answers[SINGLE_INPUT]
 
     def ask_for_int(self, message: str, default: t.Optional[int]):
+        """
+        Asks the user to enter an integer
+
+        If the user's input is not an integer, the prompt will ask again
+
+        Args:
+            message: The message to prompt the user.
+            default: The value to return as the default, if the user doesn't choose
+                anything.
+
+        Returns:
+            an integer parsed from the user's input
+
+        Raises:
+            UserCancelledPrompt if the user cancels the prompt
+        """
+
         def validate(_, current):
             try:
                 int(current)
@@ -79,5 +198,11 @@ class Prompter:
         question = inquirer.Text(
             name=SINGLE_INPUT, message=message, default=default, validate=validate
         )
+
         answers = inquirer.prompt([question])
+
+        # If the user cancels the prompt, via ctrl-c, answers will be `None`.
+        if answers is None:
+            raise exceptions.UserCancelledPrompt(f"User cancelled {message} prompt")
+
         return int(answers[SINGLE_INPUT])

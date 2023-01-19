@@ -91,3 +91,8 @@ def _(e: ConnectionError) -> ResponseStatusCode:
     _print_traceback(e)
     click.echo("Unable to connect to Ray.")
     return ResponseStatusCode.CONNECTION_ERROR
+
+
+@pretty_print_exception.register
+def _(e: exceptions.UserCancelledPrompt) -> ResponseStatusCode:
+    return ResponseStatusCode.USER_CANCELLED

@@ -11,7 +11,7 @@ import typing as t
 import orquestra.sdk._base._services as _services
 from orquestra.sdk import exceptions
 from orquestra.sdk.schema.configs import ConfigName
-from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
+from orquestra.sdk.schema.workflow_run import State, WorkflowRun, WorkflowRunId
 
 from . import _repos
 from ._ui import _prompts
@@ -96,7 +96,7 @@ class WFConfigResolver:
         return ConfigResolver(self._config_repo, self._prompter).resolve(config)
 
 
-class WFRunIDResolver:
+class WFRunResolver:
     """
     Resolves value of `wf_run_id` based on `config`.
     """
@@ -109,7 +109,7 @@ class WFRunIDResolver:
         self._wf_run_repo = wf_run_repo
         self._prompter = prompter
 
-    def resolve(
+    def resolve_id(
         self, wf_run_id: t.Optional[WorkflowRunId], config: ConfigName
     ) -> WorkflowRunId:
         if wf_run_id is not None:
@@ -122,6 +122,22 @@ class WFRunIDResolver:
         ids = self._wf_run_repo.list_wf_run_ids(config)
         selected_id = self._prompter.choice(ids, message="Workflow run ID")
         return selected_id
+
+    def resolve_run(
+        self, wf_run_id: t.Optional[WorkflowRunId], config: ConfigName
+    ) -> WorkflowRun:
+        if wf_run_id is not None:
+            return self._wf_run_repo.get_wf_by_run_id(wf_run_id, config)
+
+        # Query the runtime for suitable workflow run IDs.
+        # TODO: figure out sensible filters when listing workflow runs is implemented
+        # in the public API.
+        # Related ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-671
+        runs = self._wf_run_repo.list_wf_runs(config)
+        selected_run = self._prompter.choice(
+            [(run.id, run) for run in runs], message="Workflow run ID"
+        )
+        return selected_run
 
 
 class ServiceResolver:
