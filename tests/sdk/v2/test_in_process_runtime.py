@@ -46,7 +46,7 @@ class TestQueriesAfterRunning:
 
     class TestGetWorkflowRunOutputs:
         @staticmethod
-        def test_number_of_outputs(runtime, run_id):
+        def test_output_values(runtime, run_id):
             assert runtime.get_workflow_run_outputs(run_id) == 3
 
         @staticmethod
@@ -68,6 +68,13 @@ class TestQueriesAfterRunning:
 
             assert run_id1 != run_id2
             assert outputs1 != outputs2
+
+    class TestGetAvailableOutputs:
+        @staticmethod
+        def test_dict_value(runtime, run_id):
+            assert runtime.get_available_outputs(run_id) == {
+                "invocation-0-task-sum-tuple-numbers": 3
+            }
 
 
 class TestStop:
