@@ -6,6 +6,7 @@
 
 
 🔥 *Features*
+
 * `list_workflow_runs` added to the Public API. This lets you list the workflows for a given config, for example `sdk.list_workflow_runs("ray")` or `sdk.list_workflow_runs("prod-d")`.
 
 
@@ -19,8 +20,10 @@
 
 
 🐛 *Bug Fixes*
+
 * Fixed broken link on docs landing page.
 * Internal logs from Ray are no longer displayed.
+* Fixed the docstrings for `sdk.WorkflowRun.get_artifacts()`. It returns a dictionary with `TaskInvocationID` as keys and whatever the task returns as values.
 
 
 *Internal*
