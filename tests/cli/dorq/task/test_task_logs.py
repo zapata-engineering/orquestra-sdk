@@ -9,14 +9,14 @@ from pathlib import Path
 from unittest.mock import create_autospec
 
 from orquestra.sdk._base.cli._dorq._arg_resolvers import (
+    TaskInvIDResolver,
     WFConfigResolver,
     WFRunIDResolver,
-    TaskInvIDResolver,
 )
 from orquestra.sdk._base.cli._dorq._dumpers import LogsDumper
 from orquestra.sdk._base.cli._dorq._repos import WorkflowRunRepo
-from orquestra.sdk._base.cli._dorq._ui._presenters import WrappedCorqOutputPresenter
 from orquestra.sdk._base.cli._dorq._task import _logs
+from orquestra.sdk._base.cli._dorq._ui._presenters import WrappedCorqOutputPresenter
 
 
 class TestAction:
@@ -76,7 +76,11 @@ class TestAction:
 
             # When
             action.on_cmd_call(
-                wf_run_id=wf_run_id, config=config, download_dir=download_dir, fn_name=fn_name, task_invocation_id=task_inv_id
+                wf_run_id=wf_run_id,
+                config=config,
+                download_dir=download_dir,
+                fn_name=fn_name,
+                task_invocation_id=task_inv_id,
             )
 
             # Then
@@ -88,11 +92,15 @@ class TestAction:
             # We should pass resolved_config to run ID resolver.
             wf_run_id_resolver.resolve.assert_called_with(wf_run_id, resolved_config)
 
-            task_inv_id_resolver.resolve.assert_called_with(task_inv_id, fn_name, resolved_id, resolved_config)
+            task_inv_id_resolver.resolve.assert_called_with(
+                task_inv_id, fn_name, resolved_id, resolved_config
+            )
 
             # We should pass resolved values to run repo.
             wf_run_repo.get_task_logs.assert_called_with(
-                wf_run_id=resolved_id, config_name=resolved_config, task_inv_id=resolved_invocation_id,
+                wf_run_id=resolved_id,
+                config_name=resolved_config,
+                task_inv_id=resolved_invocation_id,
             )
 
             # We expect printing the workflow run returned from the repo.
@@ -148,7 +156,11 @@ class TestAction:
 
             # When
             action.on_cmd_call(
-                wf_run_id=wf_run_id, config=config, download_dir=download_dir, fn_name=fn_name, task_invocation_id=task_inv_id
+                wf_run_id=wf_run_id,
+                config=config,
+                download_dir=download_dir,
+                fn_name=fn_name,
+                task_invocation_id=task_inv_id,
             )
 
             # Then
@@ -159,11 +171,14 @@ class TestAction:
             # We should pass resolved_config to run ID resolver.
             wf_run_id_resolver.resolve.assert_called_with(wf_run_id, resolved_config)
 
-            task_inv_id_resolver.resolve.assert_called_with(task_inv_id, fn_name, resolved_id, resolved_config)
+            task_inv_id_resolver.resolve.assert_called_with(
+                task_inv_id, fn_name, resolved_id, resolved_config
+            )
 
             # We should pass resolved values to run repo.
             wf_run_repo.get_task_logs.assert_called_with(
-                wf_run_id=resolved_id, config_name=resolved_config,
+                wf_run_id=resolved_id,
+                config_name=resolved_config,
                 task_inv_id=resolved_invocation_id,
             )
 
