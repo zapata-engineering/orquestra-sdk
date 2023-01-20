@@ -45,7 +45,7 @@ class ConfigResolver:
         if configs is not None and len(configs) > 0:
             return configs
 
-        # 1.2 Prompt the user.
+        # Prompt the user.
         config_names = self._config_repo.list_config_names()
         while (
             len(
