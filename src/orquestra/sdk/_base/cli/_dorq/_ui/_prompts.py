@@ -168,7 +168,12 @@ class Prompter:
 
         return answers[SINGLE_INPUT]
 
-    def ask_for_int(self, message: str, default: t.Optional[int]):
+    def ask_for_int(
+        self,
+        message: str,
+        default: t.Optional[int],
+        allow_none: t.Optional[bool] = False,
+    ) -> t.Union[int, None]:
         """
         Asks the user to enter an integer
 
@@ -178,6 +183,7 @@ class Prompter:
             message: The message to prompt the user.
             default: The value to return as the default, if the user doesn't choose
                 anything.
+            allow_none: allow 'None' as a valid response.
 
         Returns:
             an integer parsed from the user's input
@@ -186,13 +192,21 @@ class Prompter:
             UserCancelledPrompt if the user cancels the prompt
         """
 
+        nonestrings: t.List[str] = []
+        if allow_none:
+            nonestrings = ["", "None"]
+
         def validate(_, current):
+            if current in nonestrings:
+                return True
+
             try:
                 int(current)
             except ValueError as e:
                 raise inquirer.errors.ValidationError(
                     "", reason="Value must be an integer."
                 ) from e
+
             return True
 
         question = inquirer.Text(
@@ -204,5 +218,9 @@ class Prompter:
         # If the user cancels the prompt, via ctrl-c, answers will be `None`.
         if answers is None:
             raise exceptions.UserCancelledPrompt(f"User cancelled {message} prompt")
+
+        # If the user enters one of the strings representing `None`, return None.
+        if answers[SINGLE_INPUT] in nonestrings:
+            return None
 
         return int(answers[SINGLE_INPUT])

@@ -190,7 +190,8 @@ class WFRunFilterResolver:
                     "Enter maximum number of results to display. "
                     "If 'None', all results will be displayed."
                 ),
-                default=None,
+                default="None",
+                allow_none=True,
             )
 
         return None
