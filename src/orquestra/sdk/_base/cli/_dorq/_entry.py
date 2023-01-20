@@ -161,7 +161,7 @@ def stop(wf_run_id: t.Optional[str], config: t.Optional[str]):
     "--all",
     is_flag=True,
     flag_value=True,
-    help="Show all workflow runs that match the specified filters.",
+    help="Assume that any unset filters are not required.",
 )
 @cloup.option(
     "-i",
