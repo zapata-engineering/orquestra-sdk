@@ -404,7 +404,6 @@ class WorkflowRun:
 
         Args:
             frequency: The frequence in Hz at which the status should be checked.
-                Defaults to 1.
 
         Raises:
             WorkflowRunNotStarted: when the workflow run has not started
