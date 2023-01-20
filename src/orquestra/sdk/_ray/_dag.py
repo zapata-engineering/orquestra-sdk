@@ -19,7 +19,7 @@ from pathlib import Path
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _exec_ctx, _graphs, dispatch, serde
 from orquestra.sdk._base._db import WorkflowDB
-from orquestra.sdk._base.abc import LogReader, RuntimeInterface
+from orquestra.sdk._base.abc import ArtifactValue, LogReader, RuntimeInterface
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
@@ -783,7 +783,7 @@ class RayRuntime(RuntimeInterface):
 
     def get_available_outputs(
         self, workflow_run_id: WorkflowRunId
-    ) -> t.Mapping[ir.TaskInvocationId, t.Any]:
+    ) -> t.Dict[ir.TaskInvocationId, t.Tuple[ArtifactValue, ...]]:
         """
         Raises:
             orquestra.sdk.exceptions.WorkflowRunNotFoundError: if no run

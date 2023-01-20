@@ -3,12 +3,12 @@
 ################################################################################
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple, Union
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import serde
 from orquestra.sdk._base._db import WorkflowDB
-from orquestra.sdk._base.abc import RuntimeInterface
+from orquestra.sdk._base.abc import ArtifactValue, RuntimeInterface
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
@@ -194,7 +194,9 @@ class CERuntime(RuntimeInterface):
         except _exceptions.InvalidTokenError as e:
             raise exceptions.UnauthorizedError(f"{e}") from e
 
-    def get_available_outputs(self, workflow_run_id: WorkflowRunId):
+    def get_available_outputs(
+        self, workflow_run_id: WorkflowRunId
+    ) -> Dict[TaskInvocationId, Union[ArtifactValue, Tuple[ArtifactValue, ...]]]:
         """Returns all available outputs for a workflow
 
         This method returns all available artifacts. When the workflow fails
@@ -214,8 +216,8 @@ class CERuntime(RuntimeInterface):
             UnauthorizedError: if the remote cluster rejects the token
 
         Returns:
-            a mapping between workflow task run ID and the available artifacts from that
-            task run.
+            a mapping between task invocation ID and the available artifacts from the
+                matching task run.
         """
         try:
             artifact_map = self._client.get_workflow_run_artifacts(workflow_run_id)
@@ -226,25 +228,36 @@ class CERuntime(RuntimeInterface):
         except _exceptions.InvalidTokenError as e:
             raise exceptions.UnauthorizedError(f"{e}") from e
 
-        artifacts: Dict[TaskRunId, List[Any]] = {}
+        artifact_vals: Dict[
+            TaskInvocationId, Union[ArtifactValue, Tuple[ArtifactValue]]
+        ] = {}
 
         for task_run_id, artifact_ids in artifact_map.items():
-            # We need to map between what the remote runtime and client expect for task
-            # run IDs.
-            client_task_run_id = task_run_id.split("@")[-1]
-            artifacts[client_task_run_id] = []
+            inv_id = self._invocation_id_by_task_run_id(workflow_run_id, task_run_id)
+            outputs = []
             for artifact_id in artifact_ids:
                 try:
-                    artifacts[client_task_run_id].append(
-                        serde.deserialize(
-                            self._client.get_workflow_run_artifact(artifact_id)
-                        )
+                    output = serde.deserialize(
+                        self._client.get_workflow_run_artifact(artifact_id)
                     )
                 except Exception:
                     # If we fail for any reason, this artifact wasn't available yet
                     continue
+                outputs.append(output)
 
-        return artifacts
+            if len(outputs) > 0:
+                # We don't want to litter the dictionary with empty containers.
+                artifact_vals[inv_id] = tuple(outputs)
+
+        return artifact_vals
+
+    def _invocation_id_by_task_run_id(
+        self, wf_run_id: WorkflowRunId, task_run_id: TaskRunId
+    ) -> TaskInvocationId:
+        # We shouldn't expect any particular format of the task run ID.
+        # TODO: use workflow run -> task runs -> invocation ID.
+        # https://zapatacomputing.atlassian.net/browse/ORQSDK-694
+        return task_run_id.split("@")[-1]
 
     def stop_workflow_run(self, workflow_run_id: WorkflowRunId) -> None:
         """Stops a workflow run.
