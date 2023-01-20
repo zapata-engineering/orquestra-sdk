@@ -224,3 +224,42 @@ class Prompter:
             return None
 
         return int(answers[SINGLE_INPUT])
+
+    def ask_for_str(
+        self,
+        message: str,
+        default: t.Optional[str],
+        allow_none: t.Optional[bool] = True,
+    ) -> str:
+        """
+        Asks the user to enter a string.
+
+        Args:
+            message: The message to prompt the user.
+            default: The value to return as the default, if the user doesn't choose
+                anything.
+
+        Returns:
+            an integer parsed from the user's input
+
+        Raises:
+            UserCancelledPrompt if the user cancels the prompt
+        """
+
+        nonestrings: t.List[str] = []
+        if allow_none:
+            nonestrings = ["", "None"]
+
+        question = inquirer.Text(name=SINGLE_INPUT, message=message, default=default)
+
+        answers = inquirer.prompt([question])
+
+        # If the user cancels the prompt, via ctrl-c, answers will be `None`.
+        if answers is None:
+            raise exceptions.UserCancelledPrompt(f"User cancelled {message} prompt")
+
+        # If the user enters one of the strings representing `None`, return None.
+        if answers[SINGLE_INPUT] in nonestrings:
+            return None
+
+        return answers[SINGLE_INPUT]
