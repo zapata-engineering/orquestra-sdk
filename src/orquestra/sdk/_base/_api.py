@@ -610,7 +610,7 @@ class WorkflowRun:
         tasks: t.Union[TaskInvocationId, t.List[TaskInvocationId]],
         *,
         only_available: bool = False,
-    ) -> t.Dict[TaskRunId, t.List[str]]:
+    ) -> t.Dict[TaskInvocationId, t.List[str]]:
         """
         Unstable: this API will change.
 

@@ -154,9 +154,9 @@ class TestWorkflowRun:
         }
         # Get logs, the runtime interface returns invocation IDs
         runtime.get_full_logs.return_value = {
-            "task_run1": ["woohoo!\n"],
-            "task_run2": ["another\n", "line\n"],
-            "task_run3": ["hello\n", "a log\n"],
+            "task_invocation1": ["woohoo!\n"],
+            "task_invocation2": ["another\n", "line\n"],
+            "task_invocation3": ["hello\n", "a log\n"],
         }
         _running.task_runs = [
             TaskRun(

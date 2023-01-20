@@ -302,7 +302,7 @@ class WorkflowRunRepo:
 
         try:
             logs = wf_run.get_logs(tasks=task_inv_id)
-        except (exceptions.WorkflowRunNotFinished, exceptions.WorkflowRunNotSucceeded):
+        except (exceptions.WorkflowRunNotStarted, exceptions.TaskRunNotFound):
             raise
 
         return logs

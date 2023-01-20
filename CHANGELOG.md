@@ -3,7 +3,7 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
-*  `get_logs` - public API function accepts TaskInvocationID instead of TaskRunID - attempt to remove TaskRunID from all API calls
+*  `sdk.WorkflowRun.get_logs()` now accepts TaskInvocationID instead of TaskRunID
 
 🔥 *Features*
 * `list_workflow_runs` added to the Public API. This lets you list the workflows for a given config, for example `sdk.list_workflow_runs("ray")` or `sdk.list_workflow_runs("prod-d")`.
