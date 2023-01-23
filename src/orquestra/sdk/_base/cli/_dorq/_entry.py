@@ -116,11 +116,11 @@ def view(wf_run_id: t.Optional[str], config: t.Optional[str]):
     action.on_cmd_call(wf_run_id, config)
 
 
-@workflow.command()
+@workflow.command(name="results")
 @cloup.argument("wf_run_id", required=False)
 @CONFIG_OPTION
 @DOWNLOAD_DIR_OPTION
-def results(
+def wf_results(
     wf_run_id: t.Optional[str],
     config: t.Optional[str],
     download_dir: t.Optional[Path],
@@ -221,6 +221,73 @@ def list(
     action.on_cmd_call(config, limit, max_age, state, interactive)
 
 
+# ----------- 'orq task' commands ----------
+
+
+@dorq.group()
+def task():
+    """
+    Commands related to task runs.
+    """
+    pass
+
+
+@task.command(name="results")
+@cloup.option("--wf-run-id")
+@cloup.option("--fn-name")
+@cloup.option("--task-inv-id")
+@CONFIG_OPTION
+@DOWNLOAD_DIR_OPTION
+def task_results(*args, **kwargs):
+    """
+    Shows preview of a single task's output values corresponding to the variables
+    returned from the ``@task`` function.
+
+    This command tries to print a human-friendly values preview, but the output isn't
+    guaranteed to be a valid parseable value. If you need the artifact value for
+    further processing, use the ``download_dir`` option or use
+    ``orquestra.sdk.WorkflowRun.get_tasks()`` and ``task.get_results()`` directly from
+    Python.
+    """
+
+    from ._task._results import Action
+
+    action = Action()
+    action.on_cmd_call(*args, **kwargs)
+
+
+@task.command(name="logs")
+@cloup.argument("wf-run-id", required=False)
+@cloup.argument("task-inv-id", required=False)
+@cloup.argument("fn-name", required=False)
+@CONFIG_OPTION
+@DOWNLOAD_DIR_OPTION
+def task_logs(
+    wf_run_id: t.Optional[str],
+    task_inv_id,
+    fn_name,
+    config: t.Optional[str],
+    download_dir: t.Optional[Path],
+):
+    """
+    Shows logs gathered during execution of a single task run.
+    """
+
+    from ._task._logs import Action
+
+    action = Action()
+    action.on_cmd_call(
+        wf_run_id=wf_run_id,
+        task_inv_id=task_inv_id,
+        fn_name=fn_name,
+        config=config,
+        download_dir=download_dir,
+    )
+
+
+# ----------- top-level 'orq' commands ----------
+
+
 @cloup.command()
 @cloup.option_group(
     "Services",
@@ -283,43 +350,6 @@ dorq.section(
     down,
     status,
 )
-
-
-@dorq.group()
-def task():
-    """
-    Commands related to workflow runs.
-    """
-    pass
-
-
-@task.command()  # type: ignore[no-redef]
-@cloup.argument("wf_run_id", required=False)
-@cloup.argument("task_inv_id", required=False)
-@cloup.argument("fn_name", required=False)
-@CONFIG_OPTION
-@DOWNLOAD_DIR_OPTION
-def logs(  # noqa: F811
-    wf_run_id: t.Optional[str],
-    task_inv_id,
-    fn_name,
-    config: t.Optional[str],
-    download_dir: t.Optional[Path],
-):
-    """
-    Shows logs gathered during execution of a workflow produced by all tasks.
-    """
-
-    from ._task._logs import Action
-
-    action = Action()
-    action.on_cmd_call(
-        wf_run_id=wf_run_id,
-        task_invocation_id=task_inv_id,
-        fn_name=fn_name,
-        config=config,
-        download_dir=download_dir,
-    )
 
 
 @dorq.command()

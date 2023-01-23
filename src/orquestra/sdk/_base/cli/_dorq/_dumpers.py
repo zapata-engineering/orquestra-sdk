@@ -12,9 +12,10 @@ from orquestra.sdk._base import serde
 from orquestra.sdk.schema.workflow_run import TaskInvocationId, WorkflowRunId
 
 
+# TODO: rename to WFOutputDumper
 class ArtifactDumper:
     """
-    Writes artifacts to files.
+    Writes workflow run's output artifact to a file.
     """
 
     def dump(
@@ -34,10 +35,44 @@ class ArtifactDumper:
         No standard errors are expected to be raised.
         """
 
+        dump_dir = dir_path / wf_run_id / "wf_results"
+
+        dump_details = serde.dump_to_file(
+            value=value, dir_path=dump_dir, file_name_prefix=str(output_index)
+        )
+
+        return dump_details
+
+
+class TaskOutputDumper:
+    """
+    Writes task run's output artifact to a file.
+    """
+
+    def dump(
+        self,
+        value: t.Any,
+        wf_run_id: WorkflowRunId,
+        task_inv_id: TaskInvocationId,
+        output_index: int,
+        dir_path: Path,
+    ) -> serde.DumpDetails:
+        """
+        Serialize artifact value and save it as a new file.
+
+        Creates missing directories. Generates filenames based on ``wf_run_id`` and
+        ``output_index``. Figures out the serialization format based on the object. The
+        generated file extension matches the inferred format.
+
+        No standard errors are expected to be raised.
+        """
+
+        dump_dir = dir_path / wf_run_id / "task_results" / task_inv_id
+
         dump_details = serde.dump_to_file(
             value=value,
-            dir_path=dir_path,
-            file_name_prefix=f"{wf_run_id}_{output_index}",
+            dir_path=dump_dir,
+            file_name_prefix=str(output_index),
         )
 
         return dump_details

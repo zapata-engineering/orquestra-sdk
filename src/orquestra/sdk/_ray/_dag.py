@@ -559,6 +559,24 @@ def _workflow_status_from_ray_meta(
     )
 
 
+def _wrap_single_outputs(
+    values: t.Sequence[t.Union[ArtifactValue, t.Tuple[ArtifactValue, ...]]],
+    invocations: t.Sequence[ir.TaskInvocation],
+) -> t.Sequence[t.Tuple[ArtifactValue, ...]]:
+    """
+    Ensures all values are tuples. This data shape is required by
+    ``RuntimeInterface.get_available_outputs()``.
+    """
+    wrapped: t.MutableSequence = []
+    for task_output, inv in zip(values, invocations):
+        if len(inv.output_ids) == 1:
+            wrapped.append((task_output,))
+        else:
+            wrapped.append(task_output)
+
+    return wrapped
+
+
 @dataclasses.dataclass(frozen=True)
 class RayParams:
     """Parameters we pass to Ray. See Ray documentation for reference of what values are
@@ -798,7 +816,9 @@ class RayRuntime(RuntimeInterface):
             # Explicitly re-raise.
             raise e
 
-        succeeded_invocations: t.Sequence[ir.TaskInvocationId] = [
+        # Note: matching task invocations with other objects down below relies on the
+        # sequence order.
+        succeeded_inv_ids: t.Sequence[ir.TaskInvocationId] = [
             run.invocation_id
             for run in wf_run.task_runs
             if run.status.state == State.SUCCEEDED
@@ -811,7 +831,7 @@ class RayRuntime(RuntimeInterface):
                 # ID as the Ray task name.
                 task_id=inv_id,
             )
-            for inv_id in succeeded_invocations
+            for inv_id in succeeded_inv_ids
         ]
 
         # The values are supposed to be ready to get, but we're using a timeout
@@ -820,8 +840,21 @@ class RayRuntime(RuntimeInterface):
             succeeded_obj_refs, timeout=JUST_IN_CASE_TIMEOUT
         )
 
-        # Matching values task invocation relies on the order in the sequences above.
-        return dict(zip(succeeded_invocations, succeeded_values))
+        # TODO: remove this as soon as #21 is merged.
+        assert wf_run.workflow_def is not None
+
+        # Ray returns a plain value instead of 1-element tuple for 1-output tasks.
+        # We need to wrap such outputs in tuples to maintain the same data shape across
+        # RuntimeInterface implementations.
+        wrapped_values = _wrap_single_outputs(
+            values=succeeded_values,
+            invocations=[
+                wf_run.workflow_def.task_invocations[inv_id]
+                for inv_id in succeeded_inv_ids
+            ],
+        )
+
+        return dict(zip(succeeded_inv_ids, wrapped_values))
 
     def stop_workflow_run(self, workflow_run_id: WorkflowRunId) -> None:
         # cancel doesn't throw exceptions on non-existing runs... using this as

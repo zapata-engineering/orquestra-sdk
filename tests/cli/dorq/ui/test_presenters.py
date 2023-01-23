@@ -111,88 +111,6 @@ class TestWrappedCorqOutputPresenter:
             captured = capsys.readouterr()
             assert f"Workflow run {wf_run_id} stopped" in captured.out
 
-        class TestDumpedWFResult:
-            @staticmethod
-            def test_json(capsys):
-                # Given
-                details = serde.DumpDetails(
-                    file_path=Path("tests/some-path/wf.1234_1.json"),
-                    format=ArtifactFormat.JSON,
-                )
-                presenter = _presenters.WrappedCorqOutputPresenter()
-
-                # When
-                presenter.show_dumped_wf_result(details)
-
-                # Then
-                captured = capsys.readouterr()
-                # We can't assert on the full path because separators are
-                # platform-dependent.
-                assert "Artifact saved at tests" in captured.out
-                assert "wf.1234_1.json as a text json file." in captured.out
-
-            @staticmethod
-            def test_pickle(capsys):
-                # Given
-                details = serde.DumpDetails(
-                    file_path=Path("tests/some-path/wf.1234_1.pickle"),
-                    format=ArtifactFormat.ENCODED_PICKLE,
-                )
-                presenter = _presenters.WrappedCorqOutputPresenter()
-
-                # When
-                presenter.show_dumped_wf_result(details)
-
-                # Then
-                captured = capsys.readouterr()
-                # We can't assert on the full path because separators are
-                # platform-dependent.
-                assert "Artifact saved at tests" in captured.out
-                assert "wf.1234_1.pickle as a binary pickle file." in captured.out
-
-            @staticmethod
-            def test_other(capsys):
-                # Given
-                details = serde.DumpDetails(
-                    file_path=Path("tests/some-path/wf.1234_1.npz"),
-                    format=ArtifactFormat.NUMPY_ARRAY,
-                )
-                presenter = _presenters.WrappedCorqOutputPresenter()
-
-                # When
-                presenter.show_dumped_wf_result(details)
-
-                # Then
-                captured = capsys.readouterr()
-                # We can't assert on the full path because separators are
-                # platform-dependent.
-                assert "Artifact saved at tests" in captured.out
-                assert "wf.1234_1.npz as NUMPY_ARRAY." in captured.out
-
-        @staticmethod
-        def test_show_artifact_values(capsys):
-            # Given
-            values = [set([21, 38]), {"hello": "there"}]
-            wf_run_id = "wf.1234"
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_workflow_outputs(values, wf_run_id)
-
-            # Then
-            captured = capsys.readouterr()
-            assert (
-                "Workflow run wf.1234 has 2 outputs.\n"
-                "\n"
-                "Output 0. Object type: <class 'set'>\n"
-                "Pretty printed value:\n"
-                "{21, 38}\n"
-                "\n"
-                "Output 1. Object type: <class 'dict'>\n"
-                "Pretty printed value:\n"
-                "{'hello': 'there'}\n"
-            ) == captured.out
-
         @staticmethod
         def test_show_dumped_wf_logs(capsys):
             # Given
@@ -231,6 +149,115 @@ class TestWrappedCorqOutputPresenter:
 
         # We expect status code was passed to sys.exit()
         exit_mock.assert_called_with(status_int)
+
+
+class TestArtifactPresenter:
+    class TestDumpedWFResult:
+        @staticmethod
+        def test_json(capsys):
+            # Given
+            details = serde.DumpDetails(
+                file_path=Path("tests/some-path/wf.1234_1.json"),
+                format=ArtifactFormat.JSON,
+            )
+            presenter = _presenters.ArtifactPresenter()
+
+            # When
+            presenter.show_dumped_wf_result(details)
+
+            # Then
+            captured = capsys.readouterr()
+            # We can't assert on the full path because separators are
+            # platform-dependent.
+            assert "Artifact saved at tests" in captured.out
+            assert "wf.1234_1.json as a text json file." in captured.out
+
+        @staticmethod
+        def test_pickle(capsys):
+            # Given
+            details = serde.DumpDetails(
+                file_path=Path("tests/some-path/wf.1234_1.pickle"),
+                format=ArtifactFormat.ENCODED_PICKLE,
+            )
+            presenter = _presenters.ArtifactPresenter()
+
+            # When
+            presenter.show_dumped_wf_result(details)
+
+            # Then
+            captured = capsys.readouterr()
+            # We can't assert on the full path because separators are
+            # platform-dependent.
+            assert "Artifact saved at tests" in captured.out
+            assert "wf.1234_1.pickle as a binary pickle file." in captured.out
+
+        @staticmethod
+        def test_other_format(capsys):
+            # Given
+            details = serde.DumpDetails(
+                file_path=Path("tests/some-path/wf.1234_1.npz"),
+                format=ArtifactFormat.NUMPY_ARRAY,
+            )
+            presenter = _presenters.ArtifactPresenter()
+
+            # When
+            presenter.show_dumped_wf_result(details)
+
+            # Then
+            captured = capsys.readouterr()
+            # We can't assert on the full path because separators are
+            # platform-dependent.
+            assert "Artifact saved at tests" in captured.out
+            assert "wf.1234_1.npz as NUMPY_ARRAY." in captured.out
+
+    @staticmethod
+    def test_show_workflow_outputs(capsys):
+        # Given
+        values = [set([21, 38]), {"hello": "there"}]
+        wf_run_id = "wf.1234"
+        presenter = _presenters.ArtifactPresenter()
+
+        # When
+        presenter.show_workflow_outputs(values, wf_run_id)
+
+        # Then
+        captured = capsys.readouterr()
+        assert (
+            "Workflow run wf.1234 has 2 outputs.\n"
+            "\n"
+            "Output 0. Object type: <class 'set'>\n"
+            "Pretty printed value:\n"
+            "{21, 38}\n"
+            "\n"
+            "Output 1. Object type: <class 'dict'>\n"
+            "Pretty printed value:\n"
+            "{'hello': 'there'}\n"
+        ) == captured.out
+
+    @staticmethod
+    def test_show_task_outputs(capsys):
+        # Given
+        values = [set([21, 38]), {"hello": "there"}]
+        wf_run_id = "wf.1234"
+        task_inv_id = "inv6"
+        presenter = _presenters.ArtifactPresenter()
+
+        # When
+        presenter.show_task_outputs(values, wf_run_id, task_inv_id)
+
+        # Then
+        captured = capsys.readouterr()
+        assert (
+            "In workflow wf.1234, task invocation inv6 produced 2 outputs.\n"
+            "\n"
+            "Output 0. Object type: <class 'set'>\n"
+            "Pretty printed value:\n"
+            "{21, 38}\n"
+            "\n"
+            "Output 1. Object type: <class 'dict'>\n"
+            "Pretty printed value:\n"
+            "{'hello': 'there'}\n"
+        ) == captured.out
 
 
 class TestServicesPresneter:
