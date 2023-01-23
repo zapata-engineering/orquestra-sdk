@@ -45,7 +45,7 @@ from ..exceptions import (
 )
 from . import _config
 from ._in_process_runtime import InProcessRuntime
-from .abc import RuntimeInterface
+from .abc import ArtifactValue, RuntimeInterface
 from .serde import deserialize_constant
 
 COMPLETED_STATES = [State.FAILED, State.TERMINATED, State.SUCCEEDED]
@@ -321,7 +321,7 @@ class WorkflowRun:
         self,
         run_id: t.Optional[WorkflowRunId],
         wf_def: ir.WorkflowDef,
-        runtime: t.Union[RuntimeInterface, InProcessRuntime],
+        runtime: RuntimeInterface,
         config: t.Optional["RuntimeConfig"] = None,
     ):
         """
@@ -403,8 +403,7 @@ class WorkflowRun:
         successfully, fails, or is terminated for any other reason.
 
         Args:
-            frequency (float, optional): The frequence in Hz at which the status should
-                be checked. Defaults to 1.
+            frequency: The frequence in Hz at which the status should be checked.
 
         Raises:
             WorkflowRunNotStarted: when the workflow run has not started
@@ -534,34 +533,22 @@ class WorkflowRun:
         except WorkflowRunNotSucceeded:
             raise
 
-    def get_artifacts(
-        self,
-        tasks: t.Union[str, t.List[str], None] = None,
-        *,
-        only_available: bool = False,
-    ) -> t.Dict[str, t.Any]:
+    def get_artifacts(self) -> t.Dict[ir.TaskInvocationId, t.Any]:
         """
         Unstable: this API will change.
 
-        Returns the task run artifacts from a workflow.
-
-        Args:
-            tasks: A task run ID or a list of task run IDs to return. An empty list
-                   implies returning all available task run artifacts.
-            only_available: If true, only available task artifacts are returned.
-                            This does nothing if `tasks` is omitted or is empty.
+        Returns all values returned by this workflow's tasks.
 
         Raises:
             WorkflowRunNotStarted: when the workflow has not started
-            TaskRunNotFound: when only_available is False and a requested task run
-                            cannot be found, either because it does not exist or has not
-                            been completed yet.
+
         Returns:
-            A dictionary of the task run artifacts with the shape::
-                task_run_id: values returned from the task
+            A dictionary with an entry for each task run in the workflow. The key is the
+                task's invocation ID. The value is whatever the task returned. If the
+                task has 1 output, it's the dict entry's value. If the tasks has n
+                outputs, the dict entry's value is a n-tuple.
         """
-        if tasks is None:
-            tasks = []
+
         try:
             run_id = self.run_id
         except WorkflowRunNotStarted as e:
@@ -572,38 +559,23 @@ class WorkflowRun:
             )
             raise WorkflowRunNotStarted(message) from e
 
+        # NOTE: this is a possible place for improvement. If future runtime APIs support
+        # getting a subset of artifacts, we should use them here.
         workflow_artifacts = self._runtime.get_available_outputs(run_id)
-        task_list = [tasks] if isinstance(tasks, str) else tasks
 
-        # If task_list is empty, return everything we got from the runtime
-        if len(task_list) == 0:
-            return workflow_artifacts
+        # The runtime always returns tuples, even of the task has n_outputs = 1. We
+        # need to unwrap it for user's convenience.
+        unwrapped_artifacts: t.Dict[ir.TaskInvocationId, t.Any] = {}
+        for inv_id, outputs in workflow_artifacts.items():
+            inv = self._wf_def.task_invocations[inv_id]
+            if len(inv.output_ids) == 1:
+                unwrapped = outputs[0]
+            else:
+                unwrapped = outputs
 
-        if only_available:
-            # if only_available is True, we return only the task run artifacts the user
-            # requested, but ignore any task runs the user requested that the runtime
-            # didn't return.
-            workflow_artifacts = {
-                task_run_id: result
-                for task_run_id, result in workflow_artifacts.items()
-                if task_run_id in task_list
-            }
-        else:
-            # if only_available is False, we try to get all requested tasks and raise
-            # an exception if any of them are missing
-            try:
-                workflow_artifacts = {
-                    task_run_id: workflow_artifacts[task_run_id]
-                    for task_run_id in task_list
-                }
-            except KeyError as e:
-                missing_id = e.args[0]
-                raise TaskRunNotFound(
-                    f"Task run with id `{missing_id}` not found. "
-                    "It may not be completed or does not exist in this WorkflowRun."
-                ) from e
+            unwrapped_artifacts[inv_id] = unwrapped
 
-        return workflow_artifacts
+        return unwrapped_artifacts
 
     def get_logs(
         self,
@@ -993,6 +965,7 @@ class RuntimeConfig:
             )
         config = RuntimeConfig("RAY_LOCAL", "local", True)
         setattr(config, "log_to_driver", False)
+        setattr(config, "configure_logging", False)
 
         # The paths for 'storage' and 'temp_dir' should have been passed when starting
         # the cluster, not here. Let's keep these attributes on our config object anyway

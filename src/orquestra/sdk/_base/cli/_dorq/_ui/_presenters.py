@@ -9,6 +9,7 @@ import pprint
 import sys
 import typing as t
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Iterable, Iterator, List
 
 import click
@@ -18,6 +19,7 @@ from orquestra.sdk._base import _services, serde
 from orquestra.sdk.schema import responses
 from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.workflow_run import (
+    TaskInvocationId,
     WorkflowRun,
     WorkflowRunId,
     WorkflowRunMinimal,
@@ -83,6 +85,9 @@ class WrappedCorqOutputPresenter:
 
         click.echo(f"Artifact saved at {dump_details.file_path} " f"as {format_name}.")
 
+    def show_dumped_wf_logs(self, path: Path):
+        click.echo(f"Workflow logs saved at {path}")
+
     def show_workflow_outputs(
         self, values: t.Sequence[t.Any], wf_run_id: WorkflowRunId
     ):
@@ -99,6 +104,25 @@ class WrappedCorqOutputPresenter:
             click.echo(f"Output {value_i}. Object type: {type(value)}")
             click.echo("Pretty printed value:")
             click.echo(pprint.pformat(value))
+
+    @staticmethod
+    def _format_log_dict(logs: t.Dict[TaskInvocationId, t.List[str]]):
+        return [
+            line
+            for invocation_id, invocation_lines in logs.items()
+            for line in (f"task-invocation-id: {invocation_id}", *invocation_lines)
+        ]
+
+    def show_logs(self, logs: t.Dict[TaskInvocationId, t.List[str]]):
+        resp = responses.GetLogsResponse(
+            meta=responses.ResponseMetadata(
+                success=True,
+                code=responses.ResponseStatusCode.OK,
+                message="Successfully got workflow run logs.",
+            ),
+            logs=self._format_log_dict(logs),
+        )
+        per_command.pretty_print_response(resp, project_dir=None)
 
     def show_error(self, exception: Exception):
         status_code = _errors.pretty_print_exception(exception)

@@ -29,6 +29,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          # Fetch depth 0 required to compare against `main`
+          fetch-depth: 0
 
       # Load a specific version of Python
       - name: Setup python
@@ -48,6 +51,6 @@ jobs:
       - name: Comment with code coverage
         uses: zapatacomputing/command-pr-comment@baca4fb9246eaaee3e47f35f296764acc394fae7
         with:
-          command: make show-coverage-text-report
-          template: "🚀 Code Coverage\n```\n%command%```"
+          command: make github-actions-coverage-report
+          template: "🚀 Code Coverage\n```%command%```"
           update-text: "🚀 Code Coverage"

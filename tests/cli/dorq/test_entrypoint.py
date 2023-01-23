@@ -49,6 +49,7 @@ class TestCommandTreeAssembly:
             ["workflow", "view"],
             ["workflow", "submit"],
             ["workflow", "stop"],
+            ["workflow", "logs"],
             ["up"],
             ["down"],
             ["status"],

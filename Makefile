@@ -47,6 +47,11 @@ coverage:
 show-coverage-text-report:
 	$(PYTHON) -m coverage report --show-missing
 
+BASE_BRANCH := $(if $(GITHUB_BASE_REF),$(GITHUB_BASE_REF),main)
+github-actions-coverage-report:
+	@$(PYTHON) -m coverage report --show-missing
+	@$(PYTHON) -m diff_cover.diff_cover_tool coverage.xml --compare-branch=origin/$(BASE_BRANCH)
+
 # We need to set PATH here because performance test calls the `orq` CLI in a subprocess.
 performance:
 	PATH="${VENV_NAME}/bin:${PATH}" $(PYTHON) -m pytest --durations=0 tests/runtime/performance

@@ -15,6 +15,26 @@ import cloup
 # Adds '-h' alias for '--help'
 CLICK_CTX_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
+DOWNLOAD_DIR_OPTION = cloup.option(
+    "--download-dir",
+    help=(
+        "Directory path to store the artifact value. If passed, the command will "
+        "create a file under this location."
+    ),
+    type=click.Path(file_okay=False, dir_okay=True, writable=True, path_type=Path),
+)
+
+CONFIG_OPTION = cloup.option(
+    "-c",
+    "--config",
+    required=False,
+    help="""
+Name of the config used to submit workflow. Use 'in-process' for running workflow
+as local python process, 'ray' to run workflow in local ray cluster.
+To get config name for remote runtime, use orq login -s <uri> first
+""",
+)
+
 
 @cloup.group(context_settings=CLICK_CTX_SETTINGS)
 def dorq():
@@ -55,7 +75,7 @@ Name of the workflow function to load from 'module'. If omitted, 'orq' will ask 
 selecting a function from the ones available in 'module'.
 """,
 )
-@cloup.option("-c", "--config")
+@CONFIG_OPTION
 @cloup.option(
     "--force",
     is_flag=True,
@@ -76,8 +96,6 @@ def submit(module: str, name: t.Optional[str], config: t.Optional[str], force: b
     If there's a task defined in a git repo with uncommitted changes you are asked for
     confirmation before submitting the workflow.
     """
-    # TODO: add help for config
-
     from ._workflow._submit import Action
 
     action = Action()
@@ -86,7 +104,7 @@ def submit(module: str, name: t.Optional[str], config: t.Optional[str], force: b
 
 @workflow.command()
 @cloup.argument("wf_run_id", required=False)
-@cloup.option("-c", "--config")
+@CONFIG_OPTION
 def view(wf_run_id: t.Optional[str], config: t.Optional[str]):
     """
     Prints details of a single workflow run that was already submitted.
@@ -98,19 +116,9 @@ def view(wf_run_id: t.Optional[str], config: t.Optional[str]):
     action.on_cmd_call(wf_run_id, config)
 
 
-DOWNLOAD_DIR_OPTION = cloup.option(
-    "--download-dir",
-    help=(
-        "Directory path to store the artifact value. If passed, the command will "
-        "create a file under this location."
-    ),
-    type=click.Path(file_okay=False, dir_okay=True, writable=True, path_type=Path),
-)
-
-
 @workflow.command()
 @cloup.argument("wf_run_id", required=False)
-@cloup.option("-c", "--config")
+@CONFIG_OPTION
 @DOWNLOAD_DIR_OPTION
 def results(
     wf_run_id: t.Optional[str],
@@ -142,7 +150,30 @@ def results(
 
 @workflow.command()
 @cloup.argument("wf_run_id", required=False)
-@cloup.option("-c", "--config")
+@CONFIG_OPTION
+@DOWNLOAD_DIR_OPTION
+def logs(
+    wf_run_id: t.Optional[str],
+    config: t.Optional[str],
+    download_dir: t.Optional[Path],
+):
+    """
+    Shows logs gathered during execution of a workflow produced by all tasks.
+    """
+
+    from ._workflow._logs import Action
+
+    action = Action()
+    action.on_cmd_call(
+        wf_run_id=wf_run_id,
+        config=config,
+        download_dir=download_dir,
+    )
+
+
+@workflow.command()
+@cloup.argument("wf_run_id", required=False)
+@CONFIG_OPTION
 def stop(wf_run_id: t.Optional[str], config: t.Optional[str]):
     """
     Stops a running workflow.

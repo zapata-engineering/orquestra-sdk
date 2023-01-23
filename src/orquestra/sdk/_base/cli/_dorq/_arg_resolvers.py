@@ -11,7 +11,9 @@ import typing as t
 import orquestra.sdk._base._services as _services
 from orquestra.sdk import exceptions
 from orquestra.sdk.schema.configs import ConfigName
-from orquestra.sdk.schema.workflow_run import State, WorkflowRun, WorkflowRunId
+from orquestra.sdk.schema.ir import TaskInvocationId
+from orquestra.sdk.schema.workflow_run import State, TaskRunId, WorkflowRun, WorkflowRunId
+
 
 from . import _repos
 from ._ui import _prompts
@@ -138,6 +140,108 @@ class WFRunResolver:
             [(run.id, run) for run in runs], message="Workflow run ID"
         )
         return selected_run
+
+
+class TaskInvIDResolver:
+    """
+    Finds task invocation ID. Assumes workflow run ID and config were already
+    resolved.
+    """
+
+    def __init__(
+        self,
+        wf_run_repo=_repos.WorkflowRunRepo(),
+        fn_name_prompter=_prompts.Prompter(),
+        task_inv_prompter=_prompts.Prompter(),
+    ):
+        self._wf_run_repo = wf_run_repo
+        self._fn_name_prompter = fn_name_prompter
+        self._task_inv_prompter = task_inv_prompter
+
+    def resolve(
+        self,
+        task_inv_id: t.Optional[TaskInvocationId],
+        fn_name: t.Optional[str],
+        wf_run_id: WorkflowRunId,
+        config: ConfigName,
+    ) -> TaskInvocationId:
+        if task_inv_id is not None:
+            # User passed task inv ID directly.
+            return task_inv_id
+
+        if fn_name is not None:
+            # User passed fn name directly.
+            resolved_fn_name = fn_name
+        else:
+            fn_names = self._wf_run_repo.get_task_fn_names(wf_run_id, config)
+            if len(fn_names) > 1:
+                resolved_fn_name = self._fn_name_prompter.choice(
+                    fn_names, message="Task function name"
+                )
+            else:
+                resolved_fn_name = fn_names[0]
+
+        inv_ids = self._wf_run_repo.get_task_inv_ids(
+            wf_run_id=wf_run_id,
+            config_name=config,
+            task_fn_name=resolved_fn_name,
+        )
+        if len(inv_ids) > 1:
+            resolved_inv_id = self._task_inv_prompter.choice(
+                inv_ids, message="Task invocation ID"
+            )
+            return resolved_inv_id
+        else:
+            return inv_ids[0]
+
+
+class TaskRunIDResolver:
+    """
+    Finds task run ID. Assumes ``config`` name was already resolved.
+    """
+
+    def __init__(
+        self,
+        wf_run_repo=_repos.WorkflowRunRepo(),
+        wf_run_id_resolver: t.Optional[WFRunIDResolver] = None,
+        task_inv_id_resolver: t.Optional[TaskInvIDResolver] = None,
+    ):
+        self._wf_run_repo = wf_run_repo
+        self._wf_run_id_resolver = wf_run_id_resolver or WFRunIDResolver(
+            wf_run_repo=wf_run_repo
+        )
+        self._task_inv_id_resolver = task_inv_id_resolver or TaskInvIDResolver(
+            wf_run_repo=wf_run_repo
+        )
+
+    def resolve(
+        self,
+        task_run_id: t.Optional[TaskRunId],
+        wf_run_id: t.Optional[WorkflowRunId],
+        fn_name: t.Optional[str],
+        task_inv_id: t.Optional[TaskInvocationId],
+        config: ConfigName,
+    ) -> TaskRunId:
+        if task_run_id is not None:
+            # User passed task run ID directly.
+            return task_run_id
+
+        resolved_wf_run_id = self._wf_run_id_resolver.resolve(wf_run_id, config)
+
+        resolved_inv_id = self._task_inv_id_resolver.resolve(
+            task_inv_id=task_inv_id,
+            fn_name=fn_name,
+            wf_run_id=resolved_wf_run_id,
+            config=config,
+        )
+
+        resolved_task_run_id = self._wf_run_repo.get_task_run_id(
+            wf_run_id=resolved_wf_run_id,
+            task_inv_id=resolved_inv_id,
+            config_name=config,
+        )
+
+        return resolved_task_run_id
 
 
 class ServiceResolver:

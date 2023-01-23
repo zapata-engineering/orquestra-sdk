@@ -19,7 +19,13 @@ from orquestra.sdk._base import _config, _db, _factory, loader
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe import _client
 from orquestra.sdk.schema.configs import ConfigName, RuntimeName
-from orquestra.sdk.schema.workflow_run import State, WorkflowRun, WorkflowRunId
+
+from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
+from orquestra.sdk.schema.workflow_run import State, TaskRunId, WorkflowRun, WorkflowRunId
+
+
+def _find_first(f: t.Callable[[t.Any], bool], it: t.Iterable):
+    return next(filter(f, it))
 
 
 class WorkflowRunRepo:
@@ -66,9 +72,53 @@ class WorkflowRunRepo:
     def get_wf_by_run_id(
         self, wf_run_id: WorkflowRunId, config_name: t.Optional[ConfigName]
     ) -> WorkflowRun:
-        wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
+        """
+        Raises:
+            orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match any
+                available run ID.
+            orquestra.sdk.exceptions.ConfigNameNotFoundError: when the named config is
+                not found in the file.
+        """
+        try:
+            wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
+        except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
+            raise
 
         return wf_run.get_status_model()
+
+    def get_task_run_id(
+        self,
+        wf_run_id: WorkflowRunId,
+        task_inv_id: TaskInvocationId,
+        config_name: ConfigName,
+    ) -> TaskRunId:
+        """
+        Raises:
+            orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match any
+                available run ID.
+            orquestra.sdk.exceptions.ConfigNameNotFoundError: when the named config is
+                not found in the file.
+            orquestra.sdk.exceptions.TaskInvocationNotFoundError: when the task_inv_id
+                doesn't match any task invocation in this workflow.
+        """
+        try:
+            wf_run_model = self.get_wf_by_run_id(
+                wf_run_id=wf_run_id, config_name=config_name
+            )
+        except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
+            raise
+
+        try:
+            task_run = _find_first(
+                lambda task_run: task_run.invocation_id == task_inv_id,
+                wf_run_model.task_runs,
+            )
+        except StopIteration as e:
+            raise exceptions.TaskInvocationNotFoundError(
+                invocation_id=task_inv_id
+            ) from e
+
+        return task_run.id
 
     def submit(
         self, wf_def: sdk.WorkflowDef, config: ConfigName, ignore_dirty_repo: bool
@@ -134,6 +184,113 @@ class WorkflowRunRepo:
             raise
 
         return outputs
+
+    def _get_wf_def_model(
+        self, wf_run_id: WorkflowRunId, config_name: ConfigName
+    ) -> WorkflowDef:
+        """
+        Raises:
+            orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match a
+                stored run ID.
+            orquestra.sdk.exceptions.ConfigNameNotFoundError: when the named config is
+                not found in the file.
+        """
+        try:
+            wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
+        except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
+            raise
+
+        status_model = wf_run.get_status_model()
+        wf_def = status_model.workflow_def
+
+        assert wf_def is not None, (
+            "We don't have workflow definition associated with the workflow "
+            f"run {wf_run_id}. It shouldn't have happened."
+        )
+        return wf_def
+
+    def get_task_fn_names(
+        self, wf_run_id: WorkflowRunId, config_name: ConfigName
+    ) -> t.Sequence[str]:
+        """
+        Extracts task function names used in this workflow run.
+
+        If two different task defs have the same function name this returns a single
+        name entry. This can happen when similar tasks are defined in two different
+        modules.
+
+        Raises:
+            orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match a
+                stored run ID.
+            orquestra.sdk.exceptions.ConfigNameNotFoundError: when the named config is
+                not found in the file.
+        """
+
+        try:
+            wf_def = self._get_wf_def_model(wf_run_id, config_name)
+        except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
+            raise
+
+        # What we're really interested in are task_runs, but it's easier to test when
+        # we iterate over wf_defs's task_defs. Assumption: every task_def is being used
+        # in the workflow and corresponds to a task_run.
+        names_set = {
+            task_def.fn_ref.function_name for task_def in wf_def.tasks.values()
+        }
+
+        return sorted(names_set)
+
+    def get_task_inv_ids(
+        self,
+        wf_run_id: WorkflowRunId,
+        config_name: ConfigName,
+        task_fn_name: str,
+    ) -> t.Sequence[TaskInvocationId]:
+        """
+        Selects task invocation IDs that refer to functions named ``task_fn_name``.
+
+        Raises:
+            orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match a
+                stored run ID.
+            orquestra.sdk.exceptions.ConfigNameNotFoundError: when the named config is
+                not found in the file.
+        """
+        try:
+            wf_def = self._get_wf_def_model(wf_run_id, config_name)
+        except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
+            raise
+
+        matching_inv_ids = [
+            inv.id
+            for inv in wf_def.task_invocations.values()
+            if wf_def.tasks[inv.task_id].fn_ref.function_name == task_fn_name
+        ]
+
+        return matching_inv_ids
+
+    def get_wf_logs(self, wf_run_id: WorkflowRunId, config_name: ConfigName):
+        """
+        Asks the runtime for workflow logs
+
+        Raises:
+            ConnectionError: when connection with Ray failed.
+            orquestra.sdk.exceptions.UnauthorizedError: when connection with runtime
+                failed because of an auth error.
+        """
+        # TODO ORQSDK-574: Switch to single api call when its possible for whole WF
+        runtime_configuration = _config.read_config(config_name)
+        project_dir = Path.cwd()
+
+        runtime = _factory.build_runtime_from_config(
+            project_dir=project_dir, config=runtime_configuration
+        )
+
+        try:
+            logs = runtime.get_full_logs(wf_run_id)
+        except (ConnectionError, exceptions.UnauthorizedError):
+            raise
+
+        return logs
 
 
 class ConfigRepo:
