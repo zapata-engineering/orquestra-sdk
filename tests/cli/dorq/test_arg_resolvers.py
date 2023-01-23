@@ -6,7 +6,6 @@ from unittest.mock import Mock
 import pytest
 
 from orquestra.sdk import exceptions
-
 from orquestra.sdk._base.cli._dorq import _arg_resolvers, _repos
 from orquestra.sdk.schema.workflow_run import State
 
@@ -684,7 +683,7 @@ class TestTaskRunIDResolver:
 
         resolver = _arg_resolvers.TaskRunIDResolver(
             wf_run_repo=Mock(),
-            wf_run_id_resolver=Mock(),
+            wf_run_resolver=Mock(),
             task_inv_id_resolver=Mock(),
         )
 
@@ -710,9 +709,9 @@ class TestTaskRunIDResolver:
         task_inv_id = "inv1"
 
         # Mocks
-        wf_run_id_resolver = Mock(_arg_resolvers.WFRunIDResolver)
+        wf_run_resolver = Mock(_arg_resolvers.WFRunResolver)
         resolved_wf_run_id = "resolved wf run id"
-        wf_run_id_resolver.resolve.return_value = resolved_wf_run_id
+        wf_run_resolver.resolve_id.return_value = resolved_wf_run_id
 
         task_inv_id_resolver = Mock(_arg_resolvers.TaskInvIDResolver)
         resolved_inv_id = "resolved inv id"
@@ -724,7 +723,7 @@ class TestTaskRunIDResolver:
 
         resolver = _arg_resolvers.TaskRunIDResolver(
             wf_run_repo=wf_run_repo,
-            wf_run_id_resolver=wf_run_id_resolver,
+            wf_run_resolver=wf_run_resolver,
             task_inv_id_resolver=task_inv_id_resolver,
         )
 
@@ -739,7 +738,7 @@ class TestTaskRunIDResolver:
 
         # Then
         # Should delegate wf_run_id resolution to the nested resolver.
-        wf_run_id_resolver.resolve.assert_called_with(wf_run_id, config)
+        wf_run_resolver.resolve_id.assert_called_with(wf_run_id, config)
 
         # Should delegate task_inv_id resolution to the nested resolver.
         task_inv_id_resolver.resolve.assert_called_with(

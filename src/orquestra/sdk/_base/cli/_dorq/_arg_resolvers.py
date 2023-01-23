@@ -207,11 +207,11 @@ class TaskRunIDResolver:
     def __init__(
         self,
         wf_run_repo=_repos.WorkflowRunRepo(),
-        wf_run_id_resolver: t.Optional[WFRunIDResolver] = None,
+        wf_run_resolver: t.Optional[WFRunResolver] = None,
         task_inv_id_resolver: t.Optional[TaskInvIDResolver] = None,
     ):
         self._wf_run_repo = wf_run_repo
-        self._wf_run_id_resolver = wf_run_id_resolver or WFRunIDResolver(
+        self._wf_run_resolver = wf_run_resolver or WFRunResolver(
             wf_run_repo=wf_run_repo
         )
         self._task_inv_id_resolver = task_inv_id_resolver or TaskInvIDResolver(
@@ -230,7 +230,7 @@ class TaskRunIDResolver:
             # User passed task run ID directly.
             return task_run_id
 
-        resolved_wf_run_id = self._wf_run_id_resolver.resolve(wf_run_id, config)
+        resolved_wf_run_id = self._wf_run_resolver.resolve_id(wf_run_id, config)
 
         resolved_inv_id = self._task_inv_id_resolver.resolve(
             task_inv_id=task_inv_id,
