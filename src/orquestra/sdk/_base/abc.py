@@ -14,7 +14,6 @@ import typing as t
 from abc import ABC, abstractmethod
 from datetime import timedelta
 from pathlib import Path
-from typing import List, Optional
 
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
@@ -78,6 +77,10 @@ class LogReader(t.Protocol):
         ...
 
 
+# A typealias that hints where we expect raw artifact values.
+ArtifactValue = t.Any
+
+
 class RuntimeInterface(ABC):
     """
     The main abstraction for managing Orquestra workflows. Allows swapping the
@@ -113,7 +116,7 @@ class RuntimeInterface(ABC):
     @abstractmethod
     def get_workflow_run_outputs(
         self, workflow_run_id: WorkflowRunId
-    ) -> t.Sequence[t.Any]:
+    ) -> t.Sequence[ArtifactValue]:
         """Returns the output artifacts of a workflow run
 
         For example, for this workflow:
@@ -132,7 +135,7 @@ class RuntimeInterface(ABC):
     @abstractmethod
     def get_workflow_run_outputs_non_blocking(
         self, workflow_run_id: WorkflowRunId
-    ) -> t.Sequence[t.Any]:
+    ) -> t.Sequence[ArtifactValue]:
         """Non-blocking version of get_workflow_run_outputs.
 
         This method raises exceptions if the workflow output artifacts are not available
@@ -143,19 +146,26 @@ class RuntimeInterface(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_available_outputs(self, workflow_run_id: WorkflowRunId):
+    def get_available_outputs(
+        self, workflow_run_id: WorkflowRunId
+    ) -> t.Dict[TaskInvocationId, t.Tuple[ArtifactValue, ...]]:
         """Returns all available outputs for a workflow
 
-        This method returns all available artifacts. When the workflow fails
-        it returns artifacts only for the steps that did success.
-        Might raise an exception if runtime doesn't support getting artifacts from
-        in-progress workflow
+        This method returns all available artifacts. When the workflow fails it returns
+        artifacts only for the steps that did success. Might raise an exception if
+        runtime doesn't support getting artifacts from in-progress workflow.
+
 
         Careful: This method does NOT return status of a workflow. Verify it beforehand
         to make sure if workflow failed/succeeded/is running. You might get incomplete
         results
+
+        Returns:
+            A mapping with an entry for each task run in the workflow. The key is the
+                task's invocation ID. The value is a n-tuple, where n is the number of
+                task's outputs. If task has 1 output, this will be a 1-tuple.
         """
-        raise NotImplementedError
+        raise NotImplementedError()
 
     @abstractmethod
     def stop_workflow_run(self, workflow_run_id: WorkflowRunId) -> None:
@@ -244,8 +254,8 @@ class WorkflowRepo(ABC):
 
     @abstractmethod
     def get_workflow_runs_list(
-        self, prefix: Optional[str], config_name: Optional[str]
-    ) -> List[StoredWorkflowRun]:
+        self, prefix: t.Optional[str], config_name: t.Optional[str]
+    ) -> t.List[StoredWorkflowRun]:
         """
         Retrieve all workflow runs matching one or more conditions. If no conditions
         are set, returns all workflow runs.

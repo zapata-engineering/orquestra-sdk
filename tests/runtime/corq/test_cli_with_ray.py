@@ -760,6 +760,7 @@ class TestCLIWithRay:
                     runtime_options={
                         "address": "auto",
                         "log_to_driver": False,
+                        "configure_logging": False,
                         "storage": None,
                         "temp_dir": None,
                     },
@@ -945,6 +946,7 @@ class TestCLIAgainstRuntimeMock:
                         runtime_options={
                             "address": "shouldnt-matter",
                             "log_to_driver": True,
+                            "configure_logging": False,
                             "storage": "shouldnt-matter",
                             "_temp_dir": "shouldnt-matter",
                         },
@@ -1064,6 +1066,7 @@ class TestCLIWithRayFailures:
                 runtime_options={
                     "address": LOCAL_RAY_ADDRESS,
                     "log_to_driver": False,
+                    "configure_logging": False,
                     "storage": None,
                     "temp_dir": None,
                 },

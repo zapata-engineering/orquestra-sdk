@@ -61,6 +61,7 @@ else:
             log_to_driver: bool,
             storage: t.Union[None, str, Storage],
             _temp_dir: t.Optional[str],
+            configure_logging: bool,
         ):
             ray.init(
                 address=address,
@@ -68,6 +69,7 @@ else:
                 storage=storage,
                 _temp_dir=_temp_dir,
                 ignore_reinit_error=True,
+                configure_logging=configure_logging,
             )
 
         def shutdown(self):

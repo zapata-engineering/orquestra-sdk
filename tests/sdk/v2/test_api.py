@@ -15,8 +15,7 @@ import typing as t
 import unittest
 import warnings
 from datetime import timedelta
-from pathlib import Path
-from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, patch
+from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospec, patch
 
 import pytest
 
@@ -32,11 +31,8 @@ from orquestra.sdk.exceptions import (
     WorkflowRunNotFoundError,
     WorkflowRunNotStarted,
 )
-from orquestra.sdk.schema.configs import (
-    CONFIG_FILE_CURRENT_VERSION,
-    RuntimeConfigurationFile,
-    RuntimeName,
-)
+from orquestra.sdk.schema import ir
+from orquestra.sdk.schema.configs import CONFIG_FILE_CURRENT_VERSION, RuntimeName
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun
 
@@ -460,104 +456,53 @@ class TestWorkflowRun:
             ) in str(exc_info)
 
         @staticmethod
-        def test_get_all_artifacts(run, mock_runtime):
-            # Given
-            run.start()
-            # When
-            artifacts = run.get_artifacts()
-            # Then
-            mock_runtime.get_available_outputs.assert_called()
-            assert len(artifacts) == 3
-            assert "task_run1" in artifacts
-            assert "task_run2" in artifacts
-            assert "task_run3" in artifacts
+        def test_handling_n_outputs():
+            """
+            Some tasks return 1 value, some return multiple. The values in the
+            dict returned from `sdk.WorkflowRun.get_artifacts()` is supposed
+            to correspond to whatever we would get if we ran the task function
+            directly.
 
-        @staticmethod
-        def test_get_with_list(run, mock_runtime):
+            Test boundary::
+                [sdk.WorkflowRun]->[RuntimeInterface]
+                                 ->[ir.WorkflowDef]
+            """
             # Given
-            run.start()
-            # When
-            artifacts = run.get_artifacts(
-                ["task_run1", "task_run3"], only_available=True
-            )
-            # Then
-            mock_runtime.get_available_outputs.assert_called()
-            assert len(artifacts) == 2
-            assert "task_run1" in artifacts
-            assert "task_run3" in artifacts
+            runtime = create_autospec(RuntimeInterface)
 
-        @staticmethod
-        def test_get_with_str(run, mock_runtime):
-            # Given
-            run.start()
-            # When
-            artifacts = run.get_artifacts("task_run1")
-            # Then
-            mock_runtime.get_available_outputs.assert_called()
-            assert len(artifacts) == 1
-            assert "task_run1" in artifacts
+            # The RuntimeInterface's contract for get_available_outputs is
+            # to always return tuple as the dict value.
+            runtime.get_available_outputs.return_value = {
+                "inv1": (42,),
+                "inv2": (21, 38),
+            }
 
-        @staticmethod
-        def test_get_with_unknown_str(run, mock_runtime):
-            # Given
-            run.start()
-            # When
-            with pytest.raises(TaskRunNotFound) as exc_info:
-                _ = run.get_artifacts("doesn't exist")
-            # Then
-            mock_runtime.get_available_outputs.assert_called()
-            assert exc_info.match(
-                r"Task run with id `.*` not found. "
-                "It may not be completed or does not exist in this WorkflowRun."
+            mock_inv1 = create_autospec(ir.TaskInvocation)
+            mock_inv1.output_ids = ["art1"]
+
+            mock_inv2 = create_autospec(ir.TaskInvocation)
+            mock_inv2.output_ids = ["art2", "art3"]
+
+            wf_def = create_autospec(ir.WorkflowDef)
+            wf_def.task_invocations = {
+                "inv1": mock_inv1,
+                "inv2": mock_inv2,
+            }
+
+            wf_run = _api.WorkflowRun(
+                run_id="wf.1",
+                wf_def=wf_def,
+                runtime=runtime,
             )
 
-        @staticmethod
-        def test_get_only_available_with_list(run, mock_runtime):
-            # Given
-            run.start()
             # When
-            artifacts = run.get_artifacts(
-                ["task_run1", "task_run3"], only_available=True
-            )
-            # Then
-            mock_runtime.get_available_outputs.assert_called()
-            assert len(artifacts) == 2
-            assert "task_run1" in artifacts
-            assert "task_run3" in artifacts
+            artifacts_dict = wf_run.get_artifacts()
 
-        @staticmethod
-        def test_get_only_available_with_str(run, mock_runtime):
-            # Given
-            run.start()
-            # When
-            artifacts = run.get_artifacts("task_run1", only_available=True)
             # Then
-            mock_runtime.get_available_outputs.assert_called()
-            assert len(artifacts) == 1
-            assert "task_run1" in artifacts
-
-        @staticmethod
-        def test_get_only_available_unknown_str(run, mock_runtime):
-            # Given
-            run.start()
-            # When
-            artifacts = run.get_artifacts("doesn't exist", only_available=True)
-            # Then
-            mock_runtime.get_available_outputs.assert_called()
-            assert len(artifacts) == 0
-
-        @staticmethod
-        def test_get_only_available_both_unknown_and_known(run, mock_runtime):
-            # Given
-            run.start()
-            # When
-            artifacts = run.get_artifacts(
-                ["doesn't exist", "task_run1"], only_available=True
-            )
-            # Then
-            mock_runtime.get_available_outputs.assert_called()
-            assert len(artifacts) == 1
-            assert "task_run1" in artifacts
+            assert artifacts_dict == {
+                "inv1": 42,
+                "inv2": (21, 38),
+            }
 
     class TestGetTasks:
         @staticmethod

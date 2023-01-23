@@ -41,6 +41,7 @@ LOCAL_RUNTIME_CONFIGURATION = RuntimeConfiguration(
         "log_to_driver": False,
         "storage": None,
         "temp_dir": None,
+        "configure_logging": False,
     },
 )
 IN_PROCESS_RUNTIME_CONFIGURATION = RuntimeConfiguration(
@@ -66,6 +67,7 @@ RAY_RUNTIME_OPTIONS: List[str] = [
     "log_to_driver",
     "storage",
     "temp_dir",
+    "configure_logging",
 ]
 QE_RUNTIME_OPTIONS: List[str] = [
     "uri",
@@ -84,7 +86,7 @@ RUNTIME_OPTION_NAMES: List[str] = list(
         + CE_RUNTIME_OPTIONS
     )
 )
-BOOLEAN_RUNTIME_OPTIONS: List[str] = ["log_to_driver"]
+BOOLEAN_RUNTIME_OPTIONS: List[str] = ["log_to_driver", "configure_logging"]
 # endregion
 
 

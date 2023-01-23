@@ -4,8 +4,16 @@
 import typing as t
 from datetime import datetime, timedelta, timezone
 
+from orquestra.sdk._base import abc
 from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun, WorkflowRun
+from orquestra.sdk.schema.workflow_run import (
+    RunStatus,
+    State,
+    TaskRun,
+    TaskRunId,
+    WorkflowRun,
+    WorkflowRunId,
+)
 
 from ..exceptions import WorkflowRunNotFoundError
 from ._graphs import iter_invocations_topologically
@@ -13,6 +21,8 @@ from .dispatch import locate_fn_ref
 from .serde import deserialize_constant
 
 WfRunId = str
+ArtifactValue = t.Any
+TaskOutputs = t.Tuple[ArtifactValue, ...]
 
 
 def _make_completed_task_run(workflow_run_id, start_time, end_time, task_inv):
@@ -29,7 +39,7 @@ def _make_completed_task_run(workflow_run_id, start_time, end_time, task_inv):
 
 def _get_args(
     consts: t.Dict[ir.ConstantNodeId, t.Any],
-    artifact_store: t.Dict[ir.ArtifactNodeId, t.Any],
+    artifact_store: t.Dict[ir.ArtifactNodeId, ArtifactValue],
     args_ids: t.List[ir.ArgumentId],
 ) -> t.List[t.Any]:
     args = []
@@ -43,9 +53,9 @@ def _get_args(
 
 def _get_kwargs(
     consts: t.Dict[ir.ConstantNodeId, t.Any],
-    artifact_store: t.Dict[ir.ArtifactNodeId, t.Any],
+    artifact_store: t.Dict[ir.ArtifactNodeId, ArtifactValue],
     kwargs_ids: t.Dict[ir.ParameterName, ir.ArgumentId],
-) -> t.Dict[ir.ParameterName, t.Any]:
+) -> t.Dict[ir.ParameterName, ArtifactValue]:
     kwargs = {}
     for name, arg_id in kwargs_ids.items():
         try:
@@ -55,8 +65,7 @@ def _get_kwargs(
     return kwargs
 
 
-class InProcessRuntime:
-    _output_store: t.Dict[WfRunId, t.Any]
+class InProcessRuntime(abc.RuntimeInterface):
     """
     Result of calling workflow function directly. Empty at first. Filled each
     time `create_workflow_run` is called.
@@ -65,7 +74,10 @@ class InProcessRuntime:
     """
 
     def __init__(self):
-        self._output_store = {}
+        self._output_store: t.Dict[WfRunId, TaskOutputs] = {}
+        self._artifact_store: t.Dict[
+            WfRunId, t.Dict[ir.ArtifactNodeId, ArtifactValue]
+        ] = {}
         self._workflow_def_store: t.Dict[WfRunId, ir.WorkflowDef] = {}
         self._start_time_store: t.Dict[WfRunId, datetime] = {}
         self._end_time_store: t.Dict[WfRunId, datetime] = {}
@@ -83,16 +95,18 @@ class InProcessRuntime:
             id: deserialize_constant(node)
             for id, node in workflow_def.constant_nodes.items()
         }
-        # We have the workflow run's artifacts stored here
-        artifact_store: t.Dict[ir.ArtifactNodeId, t.Any] = {}
+        # We'll store artifacts for this run here.
+        self._artifact_store[run_id] = {}
 
         # We are going to iterate over the workflow graph and execute each task
         # invocation sequentially, after topologically sorting the graph
         for task_inv in iter_invocations_topologically(workflow_def):
             # We can get the task function, args and kwargs from the task invocation
             task_fn: t.Any = locate_fn_ref(workflow_def.tasks[task_inv.task_id].fn_ref)
-            args = _get_args(consts, artifact_store, task_inv.args_ids)
-            kwargs = _get_kwargs(consts, artifact_store, task_inv.kwargs_ids)
+            args = _get_args(consts, self._artifact_store[run_id], task_inv.args_ids)
+            kwargs = _get_kwargs(
+                consts, self._artifact_store[run_id], task_inv.kwargs_ids
+            )
 
             # Next, the task is executed with the args/kwargs
             try:
@@ -105,12 +119,16 @@ class InProcessRuntime:
             for artifact_id in task_inv.output_ids:
                 artifact = workflow_def.artifact_nodes[artifact_id]
                 if artifact.artifact_index is None:
-                    artifact_store[artifact_id] = fn_output
+                    self._artifact_store[run_id][artifact_id] = fn_output
                 else:
-                    artifact_store[artifact_id] = fn_output[artifact.artifact_index]
+                    self._artifact_store[run_id][artifact_id] = fn_output[
+                        artifact.artifact_index
+                    ]
 
         # Ordinary functions return `obj` or `tuple(obj, obj)`
-        outputs = tuple(_get_args(consts, artifact_store, workflow_def.output_ids))
+        outputs = tuple(
+            _get_args(consts, self._artifact_store[run_id], workflow_def.output_ids)
+        )
         self._output_store[run_id] = outputs[0] if len(outputs) == 1 else outputs
 
         self._end_time_store[run_id] = datetime.now(timezone.utc)
@@ -125,13 +143,23 @@ class InProcessRuntime:
     ) -> t.Sequence[t.Any]:
         return self.get_workflow_run_outputs(workflow_run_id)
 
-    def get_available_outputs(self, workflow_run_id: WfRunId) -> t.Dict[str, t.Any]:
-        workflow_run_outputs = self.get_workflow_run_outputs(workflow_run_id)
-        output_task_ids = self._workflow_def_store[workflow_run_id].output_ids
-        return dict(zip(output_task_ids, workflow_run_outputs))
+    def get_available_outputs(
+        self, workflow_run_id: WfRunId
+    ) -> t.Dict[ir.TaskInvocationId, TaskOutputs]:
+        wf_def = self._workflow_def_store[workflow_run_id]
 
-    def get_full_logs(self, _) -> t.Dict[str, t.List[str]]:
-        return {}
+        inv_outputs: t.Dict[ir.TaskInvocationId, TaskOutputs] = {}
+        for inv in wf_def.task_invocations.values():
+            output_vals = tuple(
+                [
+                    self._artifact_store[workflow_run_id][art_id]
+                    for art_id in inv.output_ids
+                ]
+            )
+
+            inv_outputs[inv.id] = output_vals
+
+        return inv_outputs
 
     def get_workflow_run_status(self, workflow_run_id: WfRunId) -> WorkflowRun:
         if workflow_run_id not in self._output_store:
@@ -176,7 +204,7 @@ class InProcessRuntime:
         *,
         limit: t.Optional[int] = None,
         max_age: t.Optional[timedelta] = None,
-        state: t.Optional[State] = None,
+        state: t.Union[State, t.List[State], None] = None,
     ) -> t.List[WorkflowRun]:
         """
         List the workflow runs, with some filters
@@ -224,3 +252,24 @@ class InProcessRuntime:
                 -limit:
             ]
         return wf_runs
+
+    @classmethod
+    def from_runtime_configuration(cls, *args, **kwargs):
+        raise NotImplementedError(
+            "This functionality isn't available for 'in_process' runtime"
+        )
+
+    def get_all_workflow_runs_status(self, *args, **kwargs):
+        raise NotImplementedError(
+            "This functionality isn't available for 'in_process' runtime"
+        )
+
+    def get_full_logs(self, *args, **kwargs) -> t.Dict[str, t.List[str]]:
+        raise NotImplementedError(
+            "This functionality isn't available for 'in_process' runtime"
+        )
+
+    def iter_logs(self, *args, **kwargs):
+        raise NotImplementedError(
+            "This functionality isn't available for 'in_process' runtime"
+        )

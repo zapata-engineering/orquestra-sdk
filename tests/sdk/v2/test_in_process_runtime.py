@@ -12,10 +12,11 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
 from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.workflow_run import State
+from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
 
 from .data.complex_serialization.workflow_defs import (
     wf_pass_callables_from_task,
@@ -33,30 +34,98 @@ def wf_def() -> ir.WorkflowDef:
     return wf_pass_tuple().model
 
 
-def test_single_run(runtime, wf_def):
-    run_id = runtime.create_workflow_run(wf_def)
-    assert runtime.get_workflow_run_outputs(run_id) == 3
+@sdk.task(n_outputs=2)
+def two_outputs(a, b):
+    return a + b, a - b
 
 
-def test_same_outputs(runtime, wf_def):
-    run_id = runtime.create_workflow_run(wf_def)
-    assert runtime.get_workflow_run_outputs(
-        run_id
-    ) == runtime.get_workflow_run_outputs_non_blocking(run_id)
+@sdk.workflow
+def wf_with_unused_outputs():
+    out1, _ = two_outputs(5, 1)
+    return out1
 
 
-def test_multiple_runs(runtime):
-    wf_def1 = wf_pass_tuple().model
-    wf_def2 = wf_pass_callables_from_task().model
+@sdk.workflow
+def wf_all_used():
+    out1, out2 = two_outputs(5, 1)
+    return out1, out2
 
-    run_id1 = runtime.create_workflow_run(wf_def1)
-    run_id2 = runtime.create_workflow_run(wf_def2)
 
-    outputs1 = runtime.get_workflow_run_outputs(run_id1)
-    outputs2 = runtime.get_workflow_run_outputs(run_id2)
+@pytest.fixture
+def wf_def_unused_outputs() -> ir.WorkflowDef:
+    return wf_with_unused_outputs().model
 
-    assert run_id1 != run_id2
-    assert outputs1 != outputs2
+
+@pytest.fixture
+def wf_def_all_used() -> ir.WorkflowDef:
+    return wf_all_used().model
+
+
+class TestQueriesAfterRunning:
+    """
+    Submits a well-known workflow and tests the "query" methods.
+    """
+
+    @staticmethod
+    @pytest.fixture
+    def run_id(runtime: InProcessRuntime, wf_def) -> WorkflowRunId:
+        run_id = runtime.create_workflow_run(wf_def)
+        return run_id
+
+    class TestGetWorkflowRunOutputs:
+        @staticmethod
+        def test_output_values(runtime, run_id):
+            assert runtime.get_workflow_run_outputs(run_id) == 3
+
+        @staticmethod
+        def test_matches_non_blocking(runtime, run_id):
+            outputs = runtime.get_workflow_run_outputs(run_id)
+
+            assert outputs == runtime.get_workflow_run_outputs_non_blocking(run_id)
+
+        @staticmethod
+        def test_multiple_runs(runtime):
+            wf_def1 = wf_pass_tuple().model
+            wf_def2 = wf_pass_callables_from_task().model
+
+            run_id1 = runtime.create_workflow_run(wf_def1)
+            run_id2 = runtime.create_workflow_run(wf_def2)
+
+            outputs1 = runtime.get_workflow_run_outputs(run_id1)
+            outputs2 = runtime.get_workflow_run_outputs(run_id2)
+
+            assert run_id1 != run_id2
+            assert outputs1 != outputs2
+
+    class TestGetAvailableOutputs:
+        @staticmethod
+        def test_single_task_output(runtime, run_id):
+            """
+            The 'run_id' fixture is a result of submitting a workflow def with a
+            single-output task.
+            """
+            assert runtime.get_available_outputs(run_id) == {
+                "invocation-0-task-sum-tuple-numbers": (3,)
+            }
+
+        class TestMultipleTaskOutputs:
+            @staticmethod
+            # See ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-695
+            @pytest.mark.xfail(reason="Some artifact IDs are missing for TaskInvoation")
+            def test_some_unused(runtime, wf_def_unused_outputs):
+                run_id = runtime.create_workflow_run(wf_def_unused_outputs)
+
+                assert runtime.get_available_outputs(run_id) == {
+                    "invocation-0-task-two-outputs": (6, 4)
+                }
+
+            @staticmethod
+            def test_all_used(runtime, wf_def_all_used):
+                run_id = runtime.create_workflow_run(wf_def_all_used)
+
+                assert runtime.get_available_outputs(run_id) == {
+                    "invocation-0-task-two-outputs": (6, 4)
+                }
 
 
 class TestStop:
@@ -146,3 +215,19 @@ class TestListWorkflowRuns:
         # Then
         # It doesn't make sense to get a running workflow from this runtime
         assert len(wf_runs) == 1
+
+
+class TestUnsupportedMethods:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "method",
+        [
+            InProcessRuntime.from_runtime_configuration,
+            InProcessRuntime.get_all_workflow_runs_status,
+            InProcessRuntime.get_full_logs,
+            InProcessRuntime.iter_logs,
+        ],
+    )
+    def test_raises(runtime, method):
+        with pytest.raises(NotImplementedError):
+            method(runtime)
