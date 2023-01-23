@@ -168,47 +168,6 @@ class TestList:
                     expected_max_age,
                     expected_state,
                     False,
-                    False,
-                ]
-            )
-            mock_exit.assert_called_with(0)
-
-        @staticmethod
-        @pytest.mark.parametrize(
-            "all, expected_all",
-            [
-                (["-a"], True),
-                (["--all"], True),
-                ([], False),
-            ],
-        )
-        def test_show_all_flag(
-            entrypoint, monkeypatch, config, all, expected_config, expected_all
-        ):
-            # Given
-            entrypoint(["workflow", "list"] + config + all)
-
-            mock_exit = Mock()
-            monkeypatch.setattr(sys, "exit", mock_exit)
-            mock_action = Mock()
-            monkeypatch.setattr(
-                _list.Action,
-                "on_cmd_call",
-                mock_action,
-            )
-
-            # When
-            _entry.main()
-
-            # Then
-            mock_action.assert_called_once_with(
-                *[
-                    expected_config,
-                    None,  # limit
-                    None,  # max_age
-                    (),  # state
-                    expected_all,
-                    False,
                 ]
             )
             mock_exit.assert_called_with(0)
@@ -252,44 +211,7 @@ class TestList:
                     None,  # limit
                     None,  # max_age
                     (),  # state
-                    False,
                     expected_interactive,
                 ]
             )
             mock_exit.assert_called_with(0)
-
-        @staticmethod
-        def test_mutual_exclusivity(
-            capsys, entrypoint, monkeypatch, config, expected_config
-        ):
-            """
-            The `all` flag is incompatible with the `interactive` flag. This test
-            confirms that trying to use both causes an error and does not trigger the
-            action.
-            """
-
-            # Given
-            entrypoint(["workflow", "list", "-a", "-i"])
-
-            mock_exit = Mock()
-            monkeypatch.setattr(sys, "exit", mock_exit)
-            mock_action = Mock()
-            monkeypatch.setattr(
-                _list.Action,
-                "on_cmd_call",
-                mock_action,
-            )
-
-            # When
-            _entry.main()
-
-            # Then
-            captured = capsys.readouterr()
-            assert captured.out == ""
-            assert (
-                "Error: the following parameters are mutually exclusive:"
-                "\n  --all (-a)"
-                "\n  --interactive (-i)" in captured.err
-            )
-            mock_action.assert_not_called()
-            mock_exit.assert_called_with(2)
