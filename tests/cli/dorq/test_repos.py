@@ -571,7 +571,7 @@ class TestWorkflowRunRepo:
 
         class TestGetTaskLogs:
             @staticmethod
-            def test_passing_values(monkeypatch, mock_by_id, mock_wf_run):
+            def test_passing_values(mock_by_id, mock_wf_run):
                 # Given
                 config = "<config sentinel>"
                 wf_run_id = "<id sentinel>"
@@ -591,7 +591,7 @@ class TestWorkflowRunRepo:
                 "exc",
                 [exceptions.WorkflowRunNotStarted(), exceptions.TaskRunNotFound()],
             )
-            def test_passing_errors(monkeypatch, mock_by_id, mock_wf_run, exc):
+            def test_passing_errors(mock_by_id, mock_wf_run, exc):
                 # Given
                 config = "<config sentinel>"
                 wf_run_id = "<id sentinel>"
@@ -612,7 +612,7 @@ class TestWorkflowRunRepo:
                 "exc",
                 [exceptions.NotFoundError(), exceptions.ConfigNameNotFoundError()],
             )
-            def test_wf_not_found(monkeypatch, mock_by_id, exc):
+            def test_wf_not_found(mock_by_id, exc):
                 # Given
                 config = "<config sentinel>"
                 wf_run_id = "<id sentinel>"
