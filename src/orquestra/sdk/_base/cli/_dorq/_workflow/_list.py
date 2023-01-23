@@ -48,7 +48,6 @@ class Action:
         limit: t.Optional[int],
         max_age: t.Optional[str],
         state: t.Optional[t.List[str]],
-        show_all: t.Optional[bool] = False,
         interactive: t.Optional[bool] = False,
     ):
         try:
@@ -57,7 +56,6 @@ class Action:
                 limit=limit,
                 max_age=max_age,
                 state=state,
-                show_all=show_all,
                 interactive=interactive,
             )
         except Exception as e:
@@ -69,32 +67,8 @@ class Action:
         limit: t.Optional[int],
         max_age: t.Optional[str],
         state: t.Optional[t.List[str]],
-        show_all: t.Optional[bool] = False,
         interactive: t.Optional[bool] = False,
     ):
-        # This should be handled by the mutually exclusive constraint in the entry, but
-        # we'll keep this here to be safe.
-        assert not (show_all and interactive)
-
-        if (not (show_all or interactive)) and (
-            None in (limit, max_age, state, show_all)
-        ):
-            # neither the interactive nor all flags are set, and one or more filters
-            # are not set. Warn the user that the unset filters will not be applied.
-            filter_dict = {"limit": limit, "max_age": max_age, "state": state}
-
-            unset_filters = [key for key in filter_dict if filter_dict[key] is None]
-            print(
-                "The following filters have not been set and will not be applied: "
-                f"{unset_filters}."
-                "\nTo set filters interactively use the '--interactive (-i)' flag, "
-                "or '--all (-a)' to silence this warning."
-                "\nAvailable filters are:"
-                "\n  '--limit'  : maximum number of results to display for each config."
-                "\n  '--max_age': upper limit for age of results to display."
-                "\n  '--state'  : only show results with the specified state "
-                "(can be used multiple times)."
-            )
 
         # Resolve Arguments
         resolved_configs: t.Sequence[

@@ -157,13 +157,6 @@ def stop(wf_run_id: t.Optional[str], config: t.Optional[str]):
 @workflow.command()
 @cloup.option("-c", "--config", type=str, multiple=True)
 @cloup.option(
-    "-a",
-    "--all",
-    is_flag=True,
-    flag_value=True,
-    help="Assume that any unset filters are not required.",
-)
-@cloup.option(
     "-i",
     "--interactive",
     is_flag=True,
@@ -180,10 +173,8 @@ def stop(wf_run_id: t.Optional[str], config: t.Optional[str]):
     multiple=True,
     help="State of workflow runs to display. Max be specified multiple times.",
 )
-@cloup.constraint(cloup.constraints.mutually_exclusive, ["all", "interactive"])
 def list(
     config: t.Optional[str],
-    all: t.Optional[bool] = False,
     interactive: t.Optional[bool] = False,
     limit: t.Optional[int] = None,
     max_age: t.Optional[str] = None,
@@ -196,7 +187,7 @@ def list(
     from ._workflow._list import Action
 
     action = Action()
-    action.on_cmd_call(config, limit, max_age, state, all, interactive)
+    action.on_cmd_call(config, limit, max_age, state, interactive)
 
 
 @cloup.command()
