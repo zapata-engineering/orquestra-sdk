@@ -12,8 +12,12 @@ import orquestra.sdk._base._services as _services
 from orquestra.sdk import exceptions
 from orquestra.sdk.schema.configs import ConfigName
 from orquestra.sdk.schema.ir import TaskInvocationId
-from orquestra.sdk.schema.workflow_run import State, TaskRunId, WorkflowRun, WorkflowRunId
-
+from orquestra.sdk.schema.workflow_run import (
+    State,
+    TaskRunId,
+    WorkflowRun,
+    WorkflowRunId,
+)
 
 from . import _repos
 from ._ui import _prompts
