@@ -26,7 +26,7 @@ from orquestra.sdk.schema.configs import (
     RuntimeName,
 )
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.workflow_run import State, TaskRunId
+from orquestra.sdk.schema.workflow_run import State, TaskInvocationId, TaskRunId
 from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
@@ -138,7 +138,7 @@ class TaskRun:
             (run for run in runs if run.invocation_id == self.task_run_id)
         ).status.state
 
-    def get_logs(self) -> t.Dict[TaskRunId, t.List[str]]:
+    def get_logs(self) -> t.Dict[TaskInvocationId, t.List[str]]:
         return self._runtime.get_full_logs(self.task_run_id)
 
     def get_outputs(self) -> t.Any:
@@ -579,16 +579,16 @@ class WorkflowRun:
 
     def get_logs(
         self,
-        tasks: t.Union[TaskRunId, t.List[TaskRunId]],
+        tasks: t.Union[TaskInvocationId, t.List[TaskInvocationId]],
         *,
         only_available: bool = False,
-    ) -> t.Dict[TaskRunId, t.List[str]]:
+    ) -> t.Dict[TaskInvocationId, t.List[str]]:
         """
         Unstable: this API will change.
 
         Returns the task run logs from a workflow.
         Args:
-            tasks: A task run ID or a list of task run IDs to return.
+            tasks: A task invocation ID or a list of task invocation IDs to return.
                    An empty list implies no task logs.
             only_available: If true, logs for tasks that haven't been started yet won't
                             be returned. If false, and `tasks` contain IDs of task runs
@@ -600,7 +600,7 @@ class WorkflowRun:
                             been completed yet.
         Returns:
             A dictionary of the task run logs with the shape::
-                task_run_id: List[log lines]
+                task_invocation_id: List[log lines]
         """
         try:
             _ = self.run_id
@@ -613,18 +613,25 @@ class WorkflowRun:
             raise WorkflowRunNotStarted(message) from e
 
         task_list = [tasks] if isinstance(tasks, str) else tasks
-        task_logs: t.Dict[TaskRunId, t.List[str]] = {}
+        task_logs: t.Dict[TaskInvocationId, t.List[str]] = {}
 
-        for task_run_id in task_list:
+        for task_inv_id in task_list:
+            all_task_runs = self.get_status_model().task_runs
+            # find taskRunID based on task invocation ID
             try:
                 # Get a single task run logs
                 # Unfortunately, we return TaskInvocationId: List[str] from
                 # get_full_logs. so we do this hack to get the first value from the dict
                 # which (in this case) the task logs for the task_run_id.
-                task_logs[task_run_id] = next(
+                task_run_id = next(
+                    task.id
+                    for task in all_task_runs
+                    if task.invocation_id == task_inv_id
+                )
+                task_logs[task_inv_id] = next(
                     iter(self._runtime.get_full_logs(task_run_id).values())
                 )
-            except NotFoundError as e:
+            except (NotFoundError, StopIteration) as e:
                 if only_available:
                     continue
                 else:

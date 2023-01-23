@@ -6,6 +6,7 @@ Tests for orquestra.sdk._base._api.
 """
 
 import builtins
+import itertools
 import json
 import subprocess
 import sys
@@ -125,20 +126,22 @@ class TestWorkflowRun:
         runtime.get_workflow_run_outputs_non_blocking.return_value = "woohoo!"
         # for simulating a workflow running
         _succeeded = MagicMock()
+
         # Default value is "SUCCEEDED"
         _succeeded.status.state = State.SUCCEEDED
         runtime.get_workflow_run_status.return_value = _succeeded
         # Use side effects to simulate a running workflow
-        # Note: if you call get_workflow_run_status too many times, you may see a
-        #       StopIteration exception
+
         _running = MagicMock()
         _running.status.state = State.RUNNING
-        runtime.get_workflow_run_status.side_effect = [
-            _running,
-            _running,
-            DEFAULT,
-            DEFAULT,
-        ]
+        runtime.get_workflow_run_status.side_effect = itertools.chain(
+            (
+                _running,
+                _running,
+            ),
+            itertools.repeat(DEFAULT),
+        )
+
         # got getting task run artifacts
         runtime.get_available_outputs.return_value = {
             "task_run1": "woohoo!",
@@ -151,6 +154,24 @@ class TestWorkflowRun:
             "task_invocation2": ["another\n", "line\n"],
             "task_invocation3": ["hello\n", "a log\n"],
         }
+        _running.task_runs = [
+            TaskRun(
+                id="task_run1",
+                invocation_id="task_invocation1",
+                status=RunStatus(state=State.SUCCEEDED),
+            ),
+            TaskRun(
+                id="task_run2",
+                invocation_id="task_invocation2",
+                status=RunStatus(state=State.FAILED),
+            ),
+            TaskRun(
+                id="task_run3",
+                invocation_id="task_invocation3",
+                status=RunStatus(state=State.FAILED),
+            ),
+        ]
+
         return runtime
 
     @staticmethod
@@ -525,22 +546,22 @@ class TestWorkflowRun:
             # Given
             run.start()
             # When
-            logs = run.get_logs(tasks=["task_run1"])
+            logs = run.get_logs(tasks=["task_invocation1"])
             # Then
             assert len(logs) == 1
-            assert "task_run1" in logs
-            assert len(logs["task_run1"]) == 1
-            assert logs["task_run1"][0] == "woohoo!\n"
+            assert "task_invocation1" in logs
+            assert len(logs["task_invocation1"]) == 1
+            assert logs["task_invocation1"][0] == "woohoo!\n"
 
         @staticmethod
         def test_get_logs_str(run):
             # Given
             run.start()
             # When
-            logs = run.get_logs(tasks="task_run1")
+            logs = run.get_logs(tasks="task_invocation1")
             # Then
             assert len(logs) == 1
-            assert "task_run1" in logs
+            assert "task_invocation1" in logs
 
         @staticmethod
         def test_get_logs_missing_only_available_false(run, mock_runtime):
@@ -549,7 +570,7 @@ class TestWorkflowRun:
             run.start()
             # When
             with pytest.raises(TaskRunNotFound) as exc_info:
-                _ = run.get_logs(tasks=["task_run1", "doesn't exist"])
+                _ = run.get_logs(tasks=["task_invocation1", "doesn't exist"])
             # Then
             assert exc_info.match("Task run with id `.*` not found")
 
@@ -560,11 +581,11 @@ class TestWorkflowRun:
             run.start()
             # When
             logs = run.get_logs(
-                tasks=["task_run1", "doesn't exist"], only_available=True
+                tasks=["task_invocation1", "doesn't exist"], only_available=True
             )
             # Then
             assert len(logs) == 1
-            assert "task_run1" in logs
+            assert "task_invocation1" in logs
             assert "doesn't exist" not in logs
 
     class TestGetConfig:
