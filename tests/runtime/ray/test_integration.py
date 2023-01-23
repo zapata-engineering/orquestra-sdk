@@ -21,13 +21,9 @@ from orquestra.sdk.schema.workflow_run import State
 
 
 @pytest.fixture(scope="module")
-def shared_ray_conn():
-    with make_ray_conn() as ray_params:
-        yield ray_params
-
-
-@pytest.fixture(scope="module")
-def runtime(shared_ray_conn, tmp_path_factory: pytest.TempPathFactory):
+def runtime(
+    shared_ray_conn, tmp_path_factory: pytest.TempPathFactory, change_db_location
+):
     project_dir = tmp_path_factory.mktemp("ray-integration")
     config = configs.RuntimeConfiguration(
         config_name="test-config",
