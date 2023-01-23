@@ -8,10 +8,7 @@ Unit tests for 'orq wf results' glue code.
 from pathlib import Path
 from unittest.mock import Mock, create_autospec
 
-from orquestra.sdk._base.cli._dorq._arg_resolvers import (
-    WFConfigResolver,
-    WFRunIDResolver,
-)
+from orquestra.sdk._base.cli._dorq._arg_resolvers import WFConfigResolver, WFRunResolver
 from orquestra.sdk._base.cli._dorq._dumpers import LogsDumper
 from orquestra.sdk._base.cli._dorq._repos import WorkflowRunRepo
 from orquestra.sdk._base.cli._dorq._ui._presenters import WrappedCorqOutputPresenter
@@ -55,15 +52,15 @@ class TestAction:
             config_resolver = create_autospec(WFConfigResolver)
             config_resolver.resolve.return_value = resolved_config
 
-            wf_run_id_resolver = create_autospec(WFRunIDResolver)
-            wf_run_id_resolver.resolve.return_value = resolved_id
+            wf_run_resolver = create_autospec(WFRunResolver)
+            wf_run_resolver.resolve_id.return_value = resolved_id
 
             action = _logs.Action(
                 presenter=presenter,
                 dumper=dumper,
                 wf_run_repo=wf_run_repo,
                 config_resolver=config_resolver,
-                wf_run_id_resolver=wf_run_id_resolver,
+                wf_run_resolver=wf_run_resolver,
             )
 
             # When
@@ -77,7 +74,7 @@ class TestAction:
             config_resolver.resolve.assert_called_with(wf_run_id, config)
 
             # We should pass resolved_config to run ID resolver.
-            wf_run_id_resolver.resolve.assert_called_with(wf_run_id, resolved_config)
+            wf_run_resolver.resolve_id.assert_called_with(wf_run_id, resolved_config)
 
             # We should pass resolved values to run repo.
             wf_run_repo.get_wf_logs.assert_called_with(
@@ -117,15 +114,15 @@ class TestAction:
             config_resolver = create_autospec(WFConfigResolver)
             config_resolver.resolve.return_value = resolved_config
 
-            wf_run_id_resolver = create_autospec(WFRunIDResolver)
-            wf_run_id_resolver.resolve.return_value = resolved_id
+            wf_run_resolver = create_autospec(WFRunResolver)
+            wf_run_resolver.resolve_id.return_value = resolved_id
 
             action = _logs.Action(
                 presenter=presenter,
                 dumper=dumper,
                 wf_run_repo=wf_run_repo,
                 config_resolver=config_resolver,
-                wf_run_id_resolver=wf_run_id_resolver,
+                wf_run_resolver=wf_run_resolver,
             )
 
             # When
@@ -139,7 +136,7 @@ class TestAction:
             config_resolver.resolve.assert_called_with(wf_run_id, config)
 
             # We should pass resolved_config to run ID resolver.
-            wf_run_id_resolver.resolve.assert_called_with(wf_run_id, resolved_config)
+            wf_run_resolver.resolve_id.assert_called_with(wf_run_id, resolved_config)
 
             # We should pass resolved values to run repo.
             wf_run_repo.get_wf_logs.assert_called_with(

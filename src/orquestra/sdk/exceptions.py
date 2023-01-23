@@ -168,3 +168,8 @@ class RayActorNameClashError(BaseRuntimeError):
 class ParseError(RuntimeError):
     def __init__(self, message):
         super(ParseError, self).__init__(message)
+
+
+# CLI Exceptions
+class UserCancelledPrompt(BaseRuntimeError):
+    pass

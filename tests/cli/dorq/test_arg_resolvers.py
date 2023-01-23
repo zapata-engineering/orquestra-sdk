@@ -7,6 +7,7 @@ import pytest
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base.cli._dorq import _arg_resolvers, _repos
+from orquestra.sdk.schema.workflow_run import State
 
 
 class TestConfigResolver:
@@ -17,12 +18,9 @@ class TestConfigResolver:
     """
 
     @staticmethod
-    @pytest.mark.parametrize("wf_run_id", ["<wf run ID sentinel>", None])
-    def test_passing_config_directly(wf_run_id):
+    def test_passing_config_directly():
         """
         User passed `config` value directly as CLI arg.
-
-        We expect the same result regardless of ``wf_run_id``.
         """
         # Given
         config = "<config sentinel>"
@@ -66,6 +64,84 @@ class TestConfigResolver:
         # Resolver should return the user's choice.
         assert resolved_config == selected_config
 
+    class TestResolveMultiple:
+        @staticmethod
+        def test_passing_single_config_directly():
+            """
+            User passed one `config` value directly as CLI arg.
+            """
+            # Given
+            config = ["<config sentinel>"]
+            prompter = Mock()
+            resolver = _arg_resolvers.ConfigResolver(
+                config_repo=Mock(),
+                prompter=prompter,
+            )
+
+            # When
+            resolved_config = resolver.resolve_multiple(configs=config)
+
+            # Then
+            assert resolved_config == config
+            prompter.assert_not_called()
+
+        @staticmethod
+        def test_passing_multiple_configs_directly():
+            """
+            User passed multiple `config` values directly as CLI arg.
+            """
+            # Given
+            config = ["<config sentinel 1>", "<config sentinel 2>"]
+            prompter = Mock()
+            selected_config = config[1]
+            prompter.choice.return_value = selected_config
+
+            resolver = _arg_resolvers.ConfigResolver(
+                config_repo=Mock(),
+                prompter=prompter,
+            )
+
+            # When
+            resolved_config = resolver.resolve_multiple(configs=config)
+
+            # Then
+            assert resolved_config == config
+            prompter.assert_not_called()
+
+        @staticmethod
+        def test_launches_prompter():
+            """
+            User passed no config values. We should use the prompter to get them to
+            choose from available configs.
+            """
+            # Given
+            config = []
+
+            config_repo = Mock()
+            local_config_names = ["cfg1", "cfg2"]
+            config_repo.list_config_names.return_value = local_config_names
+
+            prompter = Mock()
+            selected_config = [local_config_names[1]]
+            prompter.checkbox.return_value = selected_config
+
+            resolver = _arg_resolvers.ConfigResolver(
+                config_repo=config_repo,
+                prompter=prompter,
+            )
+
+            # When
+            resolved_config = resolver.resolve_multiple(configs=config)
+
+            # # Then
+            # We expect prompt for selecting config.
+            prompter.checkbox.assert_called_with(
+                local_config_names, message="Runtime config(s)"
+            )
+
+            # Resolver should return the user's choice.
+            assert resolved_config == selected_config
+
 
 class TestWFConfigResolver:
     """
@@ -101,6 +177,29 @@ class TestWFConfigResolver:
         """
         User didn't pass `config`.
         """
+
+        @staticmethod
+        @pytest.mark.parametrize("wf_run_id", ["<wf run ID sentinel>", None])
+        def test_passing_config_directly(wf_run_id):
+            """
+            User passed `config` value directly as CLI arg.
+
+            We expect the same result regardless of ``wf_run_id``.
+            """
+            # Given
+            config = "<config sentinel>"
+
+            resolver = _arg_resolvers.WFConfigResolver(
+                wf_run_repo=Mock(),
+                config_repo=Mock(),
+                prompter=Mock(),
+            )
+
+            # When
+            resolved_config = resolver.resolve(wf_run_id=wf_run_id, config=config)
+
+            # Then
+            assert resolved_config == config
 
         @staticmethod
         def test_valid_wf_run_id_passed():
@@ -207,70 +306,137 @@ class TestWFConfigResolver:
             assert resolved_config == selected_config
 
 
-class TestWFRunIDResolver:
+class TestWFRunResolver:
     """
     Test boundaries::
-        [WFRunIDResolver]->[repo]
+        [WFRunResolver]->[repo]
                          ->[prompter]
 
 
     ``config`` is assumed to be resolved to a valid value at this point.
     """
 
-    @staticmethod
-    def test_passing_id_directly():
-        """
-        User passed ``wf_run_id`` value directly as CLI arg.
-        """
-        # Given
-        wf_run_id = "<wf run ID sentinel>"
-        config = "<config sentinel>"
+    class TestResolveID:
+        @staticmethod
+        def test_passing_id_directly():
+            """
+            User passed ``wf_run_id`` value directly as CLI arg.
+            """
+            # Given
+            wf_run_id = "<wf run ID sentinel>"
+            config = "<config sentinel>"
 
-        resolver = _arg_resolvers.WFRunIDResolver(
-            wf_run_repo=Mock(),
-            prompter=Mock(),
-        )
+            resolver = _arg_resolvers.WFRunResolver(
+                wf_run_repo=Mock(),
+                prompter=Mock(),
+            )
 
-        # When
-        resolved_id = resolver.resolve(wf_run_id=wf_run_id, config=config)
+            # When
+            resolved_id = resolver.resolve_id(wf_run_id=wf_run_id, config=config)
 
-        # Then
-        assert resolved_id == wf_run_id
+            # Then
+            assert resolved_id == wf_run_id
 
-    @staticmethod
-    def test_no_wf_run_id():
-        """
-        User didn't pass ``wf_run_id``.
-        """
-        # Given
-        wf_run_id = None
-        config = "<config sentinel>"
+        @staticmethod
+        def test_no_wf_run_id():
+            """
+            User didn't pass ``wf_run_id``.
+            """
+            # Given
+            wf_run_id = None
+            config = "<config sentinel>"
 
-        wf_run_repo = Mock()
-        listed_run_ids = ["wf1", "wf2"]
-        wf_run_repo.list_wf_run_ids.return_value = listed_run_ids
+            wf_run_repo = Mock()
+            listed_run_ids = ["wf1", "wf2"]
+            wf_run_repo.list_wf_run_ids.return_value = listed_run_ids
 
-        prompter = Mock()
-        selected_id = listed_run_ids[0]
-        prompter.choice.return_value = selected_id
+            prompter = Mock()
+            selected_id = listed_run_ids[0]
+            prompter.choice.return_value = selected_id
 
-        resolver = _arg_resolvers.WFRunIDResolver(
-            wf_run_repo=wf_run_repo,
-            prompter=prompter,
-        )
+            resolver = _arg_resolvers.WFRunResolver(
+                wf_run_repo=wf_run_repo,
+                prompter=prompter,
+            )
 
-        # When
-        resolved_id = resolver.resolve(wf_run_id=wf_run_id, config=config)
+            # When
+            resolved_id = resolver.resolve_id(wf_run_id=wf_run_id, config=config)
 
-        # Then
-        # We should pass config value to wf_run_repo.
-        wf_run_repo.list_wf_run_ids.assert_called_with(config)
+            # Then
+            # We should pass config value to wf_run_repo.
+            wf_run_repo.list_wf_run_ids.assert_called_with(config)
 
-        # We should prompt for selecting workflow ID from the ones returned by the repo.
-        prompter.choice.assert_called_with(listed_run_ids, message="Workflow run ID")
+            # We should prompt for selecting workflow ID from the ones returned
+            # by the repo.
+            prompter.choice.assert_called_with(
+                listed_run_ids, message="Workflow run ID"
+            )
 
-        # Resolver should return the user's choice.
-        assert resolved_id == selected_id
+            # Resolver should return the user's choice.
+            assert resolved_id == selected_id
+
+    class TestResolveRun:
+        @staticmethod
+        def test_passing_id_directly():
+            """
+            User passed ``wf_run_id`` value directly as CLI arg.
+            """
+            # Given
+            wf_run_id = "<wf run ID sentinel>"
+            wf_run = "<wf run sentinel>"
+            config = "<config sentinel>"
+
+            repo = Mock()
+            repo.get_wf_by_run_id.return_value = wf_run
+
+            resolver = _arg_resolvers.WFRunResolver(
+                wf_run_repo=repo,
+                prompter=Mock(),
+            )
+
+            # When
+            resolved_run = resolver.resolve_run(wf_run_id=wf_run_id, config=config)
+
+            # Then
+            assert resolved_run == wf_run
+
+        @staticmethod
+        def test_no_wf_run_id():
+            """
+            User didn't pass ``wf_run_id``.
+            """
+            # Given
+            wf_run_id = None
+            config = "<config sentinel>"
+
+            wf_run_repo = Mock()
+            listed_runs = [Mock(), Mock()]
+            wf_run_repo.list_wf_runs.return_value = listed_runs
+
+            prompter = Mock()
+            selected_run = listed_runs[0]
+            prompter.choice.return_value = selected_run
+
+            resolver = _arg_resolvers.WFRunResolver(
+                wf_run_repo=wf_run_repo,
+                prompter=prompter,
+            )
+
+            # When
+            resolved_run = resolver.resolve_run(wf_run_id=wf_run_id, config=config)
+
+            # Then
+            # We should pass config value to wf_run_repo.
+            wf_run_repo.list_wf_runs.assert_called_with(config)
+
+            # We should prompt for selecting workflow run from the IDs returned
+            # by the repo.
+            prompter.choice.assert_called_with(
+                [(run.id, run) for run in listed_runs], message="Workflow run ID"
+            )
+
+            # Resolver should return the user's choice.
+            assert resolved_run == selected_run
 
 
 class TestTaskInvIDResolver:
@@ -517,7 +683,7 @@ class TestTaskRunIDResolver:
 
         resolver = _arg_resolvers.TaskRunIDResolver(
             wf_run_repo=Mock(),
-            wf_run_id_resolver=Mock(),
+            wf_run_resolver=Mock(),
             task_inv_id_resolver=Mock(),
         )
 
@@ -543,9 +709,9 @@ class TestTaskRunIDResolver:
         task_inv_id = "inv1"
 
         # Mocks
-        wf_run_id_resolver = Mock(_arg_resolvers.WFRunIDResolver)
+        wf_run_resolver = Mock(_arg_resolvers.WFRunResolver)
         resolved_wf_run_id = "resolved wf run id"
-        wf_run_id_resolver.resolve.return_value = resolved_wf_run_id
+        wf_run_resolver.resolve_id.return_value = resolved_wf_run_id
 
         task_inv_id_resolver = Mock(_arg_resolvers.TaskInvIDResolver)
         resolved_inv_id = "resolved inv id"
@@ -557,7 +723,7 @@ class TestTaskRunIDResolver:
 
         resolver = _arg_resolvers.TaskRunIDResolver(
             wf_run_repo=wf_run_repo,
-            wf_run_id_resolver=wf_run_id_resolver,
+            wf_run_resolver=wf_run_resolver,
             task_inv_id_resolver=task_inv_id_resolver,
         )
 
@@ -572,7 +738,7 @@ class TestTaskRunIDResolver:
 
         # Then
         # Should delegate wf_run_id resolution to the nested resolver.
-        wf_run_id_resolver.resolve.assert_called_with(wf_run_id, config)
+        wf_run_resolver.resolve_id.assert_called_with(wf_run_id, config)
 
         # Should delegate task_inv_id resolution to the nested resolver.
         task_inv_id_resolver.resolve.assert_called_with(
@@ -615,3 +781,219 @@ def test_service_resolver(args, expected_services):
     # Then
     names = [svc.name for svc in services]
     assert all(svc_name in names for svc_name in expected_services)
+
+
+class TestWFRunFilterResolver:
+    """
+    Test boundaries::
+        [WFRunFilterResolver]->[repos]
+                             ->[prompter]
+    """
+
+    class TestResolveLimit:
+        @staticmethod
+        def test_passing_limit_directly():
+            # Given
+            limit = 1701
+            prompter = Mock()
+
+            resolver = _arg_resolvers.WFRunFilterResolver(prompter=prompter)
+
+            # When
+            resolved_limit = resolver.resolve_limit(limit=limit)
+
+            # Then
+            assert resolved_limit == limit
+            prompter.assert_not_called()
+
+        @staticmethod
+        def test_no_limit_default():
+            # Given
+            prompter = Mock()
+            resolver = _arg_resolvers.WFRunFilterResolver(prompter=prompter)
+
+            # When
+            resolved_limit = resolver.resolve_limit()
+
+            # Then
+            assert resolved_limit is None
+            prompter.assert_not_called()
+
+        @staticmethod
+        def test_no_limit_interactive():
+            # Given
+            prompter = Mock()
+            resolver = _arg_resolvers.WFRunFilterResolver(prompter=prompter)
+            selected_limit = 1649
+            prompter.ask_for_int.return_value = selected_limit
+
+            # When
+            resolved_limit = resolver.resolve_limit(interactive=True)
+
+            # Then
+            assert resolved_limit == selected_limit
+            prompter.ask_for_int.assert_called_with(
+                message=(
+                    "Enter maximum number of results to display. "
+                    "If 'None', all results will be displayed."
+                ),
+                default="None",
+                allow_none=True,
+            )
+
+    class TestResolveMaxAge:
+        @staticmethod
+        def test_passing_max_age_directly():
+            # Given
+            max_age = "<max_age sentinel>"
+            prompter = Mock()
+            resolver = _arg_resolvers.WFRunFilterResolver(prompter=prompter)
+
+            # When
+            resolved_max_age = resolver.resolve_max_age(max_age=max_age)
+
+            # Then
+            assert resolved_max_age == max_age
+            prompter.assert_not_called()
+
+        @staticmethod
+        def test_no_age_argument_default():
+            # Given
+            prompter = Mock()
+            resolver = _arg_resolvers.WFRunFilterResolver(prompter=prompter)
+
+            # When
+            resolved_max_age = resolver.resolve_max_age()
+
+            # Then
+            assert resolved_max_age is None
+            prompter.assert_not_called()
+
+        @staticmethod
+        def test_no_age_argument_interactive():
+            # Given
+            prompter = Mock()
+            resolver = _arg_resolvers.WFRunFilterResolver(prompter=prompter)
+            selected_max_age = "<max_age_sentinel>"
+            prompter.ask_for_str.return_value = selected_max_age
+
+            # When
+            resolved_max_age = resolver.resolve_max_age(interactive=True)
+
+            # Then
+            assert resolved_max_age == selected_max_age
+            prompter.ask_for_str.assert_called_once_with(
+                message=(
+                    "Maximum age of run to display. "
+                    "If 'None', all results will be displayed."
+                ),
+                default="None",
+                allow_none=True,
+            )
+
+    class TestResolveState:
+        @staticmethod
+        @pytest.mark.parametrize(
+            "state, expected_state", [([e.value], [e]) for e in State]
+        )
+        def test_passing_single_valid_state(state, expected_state):
+            # Given
+            prompter = Mock()
+            resolver = _arg_resolvers.WFRunFilterResolver(prompter=prompter)
+
+            # When
+            resolved_states = resolver.resolve_state(states=state)
+
+            # Then
+            assert resolved_states == expected_state
+            prompter.assert_not_called()
+
+        @staticmethod
+        def test_passing_multiple_valid_states():
+            # Given
+            states = ["WAITING", "SUCCEEDED"]
+            prompter = Mock()
+            resolver = _arg_resolvers.WFRunFilterResolver(prompter=prompter)
+
+            # When
+            resolved_states = resolver.resolve_state(states=states)
+
+            # Then
+            assert resolved_states == [State("WAITING"), State("SUCCEEDED")]
+            prompter.assert_not_called()
+
+        @staticmethod
+        def test_passing_single_invalid_state():
+            # Given
+            states = ["JUGGLING"]
+            return_states = ["WAITING"]
+            prompter = Mock()
+            resolver = _arg_resolvers.WFRunFilterResolver(prompter=prompter)
+            prompter.checkbox.return_value = return_states
+
+            # When
+            resolved_states = resolver.resolve_state(states=states)
+
+            # Then
+            assert resolved_states == [State(s) for s in return_states]
+            prompter.checkbox.assert_called_with(
+                choices=[e.value for e in State],
+                default=[e.value for e in State],
+                message="Workflow Run State(s)",
+            )
+
+        @staticmethod
+        def test_passing_mixed_valid_and_invalid_states():
+            # Given
+            states = ["JUGGLING", "WAITING"]
+            return_states = ["RUNNING", "WAITING"]
+            prompter = Mock()
+            resolver = _arg_resolvers.WFRunFilterResolver(prompter=prompter)
+            prompter.checkbox.return_value = return_states
+
+            # When
+            resolved_states = resolver.resolve_state(states=states)
+
+            # Then
+            assert resolved_states == [State(s) for s in return_states]
+            prompter.checkbox.assert_called_with(
+                choices=[e.value for e in State],
+                default=["WAITING"],
+                message="Workflow Run State(s)",
+            )
+
+        @staticmethod
+        def test_passing_no_state_default():
+            # Given
+            states = []
+            return_states = ["WAITING"]
+            prompter = Mock()
+            resolver = _arg_resolvers.WFRunFilterResolver(prompter=prompter)
+            prompter.checkbox.return_value = return_states
+
+            # When
+            resolved_states = resolver.resolve_state(states=states)
+
+            # Then
+            assert resolved_states is None
+            prompter.assert_not_called()
+
+        @staticmethod
+        def test_passing_no_state_interactive():
+            # Given
+            states = []
+            return_states = ["WAITING"]
+            prompter = Mock()
+            resolver = _arg_resolvers.WFRunFilterResolver(prompter=prompter)
+            prompter.checkbox.return_value = return_states
+
+            # When
+            resolved_states = resolver.resolve_state(states=states, interactive=True)
+
+            # Then
+            assert resolved_states == [State(s) for s in return_states]
+            prompter.checkbox.assert_called_with(
+                choices=[e.value for e in State],
+                default=[e.value for e in State],
+                message="Workflow Run State(s)",
+            )

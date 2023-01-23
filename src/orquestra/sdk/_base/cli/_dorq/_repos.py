@@ -21,7 +21,12 @@ from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe import _client
 from orquestra.sdk.schema.configs import ConfigName, RuntimeName
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
-from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRun, WorkflowRunId
+from orquestra.sdk.schema.workflow_run import (
+    State,
+    TaskRunId,
+    WorkflowRun,
+    WorkflowRunId,
+)
 
 
 def _find_first(f: t.Callable[[t.Any], bool], it: t.Iterable):
@@ -40,6 +45,15 @@ class WorkflowRunRepo:
             return stored_run.config_name
 
     def list_wf_run_ids(self, config: ConfigName) -> t.Sequence[WorkflowRunId]:
+        return [run.id for run in self.list_wf_runs(config)]
+
+    def list_wf_runs(
+        self,
+        config: ConfigName,
+        limit: t.Optional[int] = None,
+        max_age: t.Optional[str] = None,
+        state: t.Optional[t.Union[State, t.List[State]]] = None,
+    ) -> t.List[WorkflowRun]:
         """
         Asks the runtime for all workflow runs.
 
@@ -48,23 +62,17 @@ class WorkflowRunRepo:
             orquestra.sdk.exceptions.UnauthorizedError: when connection with runtime
                 failed because of an auth error.
         """
-        # TODO: replace the contents of this method with a single call to the public
-        # Python API for listing workflows.
-        # Jira ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-580
-
-        runtime_configuration = _config.read_config(config)
-        project_dir = Path.cwd()
-
-        runtime = _factory.build_runtime_from_config(
-            project_dir=project_dir, config=runtime_configuration
-        )
-
         try:
-            wf_runs = runtime.get_all_workflow_runs_status()
+            wf_runs = sdk.list_workflow_runs(
+                config,
+                limit=limit,
+                max_age=max_age,
+                state=state,
+            )
         except (ConnectionError, exceptions.UnauthorizedError):
             raise
 
-        return [run.id for run in wf_runs]
+        return [run.get_status_model() for run in wf_runs]
 
     def get_wf_by_run_id(
         self, wf_run_id: WorkflowRunId, config_name: t.Optional[ConfigName]
@@ -168,7 +176,7 @@ class WorkflowRunRepo:
             orquestra.sdk.exceptions.ConfigNameNotFoundError: when the named config is
                 not found in the file.
             orquestra.sdk.exceptions.WorkflowRunNotSucceeded: when the workflow is no
-                longer executing, but wasn't succeded.
+                longer executing, but wasn't succeeded.
         """
         try:
             wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)

@@ -48,15 +48,15 @@ class TestAction:
             config_resolver = Mock()
             config_resolver.resolve.return_value = resolved_config
 
-            wf_run_id_resolver = Mock()
-            wf_run_id_resolver.resolve.return_value = resolved_id
+            wf_run_resolver = Mock()
+            wf_run_resolver.resolve_id.return_value = resolved_id
 
             action = _results.Action(
                 presenter=presenter,
                 dumper=dumper,
                 wf_run_repo=wf_run_repo,
                 config_resolver=config_resolver,
-                wf_run_id_resolver=wf_run_id_resolver,
+                wf_run_resolver=wf_run_resolver,
             )
 
             # When
@@ -69,7 +69,7 @@ class TestAction:
             config_resolver.resolve.assert_called_with(wf_run_id, config)
 
             # We should pass resolved_config to run ID resolver.
-            wf_run_id_resolver.resolve.assert_called_with(wf_run_id, resolved_config)
+            wf_run_resolver.resolve_id.assert_called_with(wf_run_id, resolved_config)
 
             # We should pass resolved values to run repo.
             wf_run_repo.get_wf_outputs.assert_called_with(
@@ -107,15 +107,15 @@ class TestAction:
             config_resolver = Mock()
             config_resolver.resolve.return_value = resolved_config
 
-            wf_run_id_resolver = Mock()
-            wf_run_id_resolver.resolve.return_value = resolved_id
+            wf_run_resolver = Mock()
+            wf_run_resolver.resolve_id.return_value = resolved_id
 
             action = _results.Action(
                 presenter=presenter,
                 dumper=dumper,
                 wf_run_repo=wf_run_repo,
                 config_resolver=config_resolver,
-                wf_run_id_resolver=wf_run_id_resolver,
+                wf_run_resolver=wf_run_resolver,
             )
 
             # When
@@ -128,7 +128,7 @@ class TestAction:
             config_resolver.resolve.assert_called_with(wf_run_id, config)
 
             # We should pass resolved_config to run ID resolver.
-            wf_run_id_resolver.resolve.assert_called_with(wf_run_id, resolved_config)
+            wf_run_resolver.resolve_id.assert_called_with(wf_run_id, resolved_config)
 
             # We should pass resolved values to run repo.
             wf_run_repo.get_wf_outputs.assert_called_with(

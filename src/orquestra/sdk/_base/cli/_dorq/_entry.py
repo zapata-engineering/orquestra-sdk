@@ -71,7 +71,7 @@ https://setuptools.pypa.io/en/latest/userguide/package_discovery.html#automatic-
     "name",
     required=False,
     help="""
-Name of the workflow function to load from 'module'. If ommitted, 'orq' will ask for
+Name of the workflow function to load from 'module'. If omitted, 'orq' will ask for
 selecting a function from the ones available in 'module'.
 """,
 )
@@ -183,6 +183,42 @@ def stop(wf_run_id: t.Optional[str], config: t.Optional[str]):
 
     action = Action()
     action.on_cmd_call(wf_run_id, config)
+
+
+@workflow.command()
+@cloup.option("-c", "--config", type=str, multiple=True)
+@cloup.option(
+    "-i",
+    "--interactive",
+    is_flag=True,
+    flag_value=True,
+    help="Specify filters in an interactive terminal session.",
+)
+@cloup.option(
+    "-l", "--limit", type=int, help="Maximum number of runs to display for each config."
+)
+@cloup.option("-t", "--max-age", help="Maximum age of runs to display.")
+@cloup.option(
+    "-s",
+    "--state",
+    multiple=True,
+    help="State of workflow runs to display. Max be specified multiple times.",
+)
+def list(
+    config: t.Optional[str],
+    interactive: t.Optional[bool] = False,
+    limit: t.Optional[int] = None,
+    max_age: t.Optional[str] = None,
+    state: t.Optional[t.List[str]] = None,
+):
+    """
+    Lists the available workflows
+    """
+
+    from ._workflow._list import Action
+
+    action = Action()
+    action.on_cmd_call(config, limit, max_age, state, interactive)
 
 
 @cloup.command()

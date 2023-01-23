@@ -45,6 +45,17 @@ class WrappedCorqOutputPresenter:
         )
         per_command.pretty_print_response(resp, project_dir=None)
 
+    def show_wf_runs_list(self, wf_runs: List[WorkflowRun]):
+        resp = responses.GetWorkflowRunResponse(
+            meta=responses.ResponseMetadata(
+                success=True,
+                code=responses.ResponseStatusCode.OK,
+                message="Success",
+            ),
+            workflow_runs=wf_runs,
+        )
+        per_command.pretty_print_response(resp, project_dir=None)
+
     def show_submitted_wf_run(self, wf_run_id: WorkflowRunId):
         resp = responses.SubmitWorkflowDefResponse(
             meta=responses.ResponseMetadata(
