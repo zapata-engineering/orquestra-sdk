@@ -257,7 +257,7 @@ def task():
     pass
 
 
-@task.command()
+@task.command()  # type: ignore[no-redef]
 @cloup.argument("wf_run_id", required=False)
 @cloup.argument("task_inv_id", required=False)
 @cloup.argument("fn_name", required=False)
