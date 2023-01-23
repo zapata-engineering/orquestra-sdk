@@ -230,7 +230,7 @@ class Prompter:
         message: str,
         default: t.Optional[str],
         allow_none: t.Optional[bool] = True,
-    ) -> str:
+    ) -> t.Union[str, None]:
         """
         Asks the user to enter a string.
 
