@@ -17,6 +17,16 @@ test:
 		docs/examples/tests \
 		tests
 
+test_bm:
+	PYTHONPATH="." $(PYTHON) -m pytest \
+		-m "not needs_separate_project" \
+		--ignore=tests/runtime/performance \
+		--ignore=tests/sdk/v2/typing \
+		--durations=10 \
+		tests/cli/dorq/test_entrypoint.py \
+		tests/cli/dorq/workflow/test_list.py \
+		-x
+
 # Option explanation:
 # - '--cov=src' - turn on measuring code coverage. It outputs the results in a
 #    '.coverage' binary file. We're not using it, but it can be input to other

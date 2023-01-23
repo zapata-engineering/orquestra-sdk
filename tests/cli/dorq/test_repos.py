@@ -111,10 +111,7 @@ class TestWorkflowRunRepo:
                 # Given
                 config = "<config sentinel>"
 
-                def raise_exc(*args, **kwargs):
-                    raise exc
-
-                monkeypatch.setattr(sdk, "list_workflow_runs", raise_exc)
+                monkeypatch.setattr(sdk, "list_workflow_runs", Mock(side_effect=exc))
 
                 repo = _repos.WorkflowRunRepo()
 
