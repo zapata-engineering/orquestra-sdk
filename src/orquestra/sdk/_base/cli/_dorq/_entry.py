@@ -249,6 +249,43 @@ dorq.section(
 )
 
 
+@dorq.group()
+def task():
+    """
+    Commands related to workflow runs.
+    """
+    pass
+
+
+@task.command()  # type: ignore[no-redef]
+@cloup.argument("wf_run_id", required=False)
+@cloup.argument("task_inv_id", required=False)
+@cloup.argument("fn_name", required=False)
+@CONFIG_OPTION
+@DOWNLOAD_DIR_OPTION
+def logs(  # noqa: F811
+    wf_run_id: t.Optional[str],
+    task_inv_id,
+    fn_name,
+    config: t.Optional[str],
+    download_dir: t.Optional[Path],
+):
+    """
+    Shows logs gathered during execution of a workflow produced by all tasks.
+    """
+
+    from ._task._logs import Action
+
+    action = Action()
+    action.on_cmd_call(
+        wf_run_id=wf_run_id,
+        task_invocation_id=task_inv_id,
+        fn_name=fn_name,
+        config=config,
+        download_dir=download_dir,
+    )
+
+
 @dorq.command()
 @cloup.option(
     "-s", "--server", required=True, help="server URI that you want to log into"

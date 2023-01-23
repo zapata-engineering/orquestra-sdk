@@ -34,6 +34,25 @@ from ...sdk.v2.data.configs import TEST_CONFIG_JSON
 
 
 class TestWorkflowRunRepo:
+    @staticmethod
+    @pytest.fixture
+    def mock_wf_run(monkeypatch):
+        """
+        Returns a mock of shape of sdk.WorkflowRun. Used by other fixtures.
+        """
+        return Mock(sdk.WorkflowRun)
+
+    @staticmethod
+    @pytest.fixture
+    def mock_by_id(monkeypatch, mock_wf_run):
+        """
+        Returns a mock of sdk.WorkflowRun.by_id.
+        """
+        by_id = Mock(return_value=mock_wf_run)
+        monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+        return by_id
+
     class TestIsolation:
         """
         Isolated unit tests for WorkflowRunRepo.
@@ -60,25 +79,6 @@ class TestWorkflowRunRepo:
             monkeypatch.setattr(_db.WorkflowDB, "open_db", ctx_manager)
 
             return db
-
-        @staticmethod
-        @pytest.fixture
-        def mock_wf_run(monkeypatch):
-            """
-            Returns a mock of shape of sdk.WorkflowRun. Used by other fixtures.
-            """
-            return Mock(sdk.WorkflowRun)
-
-        @staticmethod
-        @pytest.fixture
-        def mock_by_id(monkeypatch, mock_wf_run):
-            """
-            Returns a mock of sdk.WorkflowRun.by_id.
-            """
-            by_id = Mock(return_value=mock_wf_run)
-            monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
-
-            return by_id
 
         @staticmethod
         def test_get_config_name_by_run_id(db_mock):
@@ -568,6 +568,65 @@ class TestWorkflowRunRepo:
                 with pytest.raises(type(exc)):
                     # When
                     _ = repo.get_wf_logs(wf_run_id, config)
+
+        class TestGetTaskLogs:
+            @staticmethod
+            def test_passing_values(mock_by_id, mock_wf_run):
+                # Given
+                config = "<config sentinel>"
+                wf_run_id = "<id sentinel>"
+                task_run_id = "<task id sentinel>"
+                logs = {"task_id": ["my_log", "my_another_log"]}
+
+                mock_wf_run.get_logs.return_value = logs
+
+                # When
+                repo = _repos.WorkflowRunRepo()
+
+                # Then
+                assert repo.get_task_logs(wf_run_id, task_run_id, config) == logs
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "exc",
+                [exceptions.WorkflowRunNotStarted(), exceptions.TaskRunNotFound()],
+            )
+            def test_passing_errors(mock_by_id, mock_wf_run, exc):
+                # Given
+                config = "<config sentinel>"
+                wf_run_id = "<id sentinel>"
+                task_run_id = "<task id sentinel>"
+
+                mock_wf_run.get_logs.side_effect = exc
+
+                # When
+                repo = _repos.WorkflowRunRepo()
+
+                # Then
+                with pytest.raises(type(exc)):
+                    # When
+                    _ = repo.get_task_logs(wf_run_id, task_run_id, config)
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "exc",
+                [exceptions.NotFoundError(), exceptions.ConfigNameNotFoundError()],
+            )
+            def test_wf_not_found(mock_by_id, exc):
+                # Given
+                config = "<config sentinel>"
+                wf_run_id = "<id sentinel>"
+                task_run_id = "<task id sentinel>"
+
+                mock_by_id.side_effect = exc
+
+                # When
+                repo = _repos.WorkflowRunRepo()
+
+                # Then
+                with pytest.raises(type(exc)):
+                    # When
+                    _ = repo.get_task_logs(wf_run_id, task_run_id, config)
 
     class TestIntegration:
         @staticmethod

@@ -6,8 +6,6 @@ Code for 'orq login'.
 """
 import typing as t
 
-from orquestra.sdk import exceptions
-
 from .. import _repos
 from .._ui import _presenters
 
