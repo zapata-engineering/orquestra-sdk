@@ -7,6 +7,7 @@ Tests for repos. Isolated unit tests unless explicitly named as integration.
 
 import json
 import sys
+import typing as t
 import warnings
 from pathlib import Path
 from unittest.mock import Mock
@@ -15,20 +16,43 @@ import pytest
 import requests
 
 from orquestra import sdk
-from orquestra.sdk import exceptions
+from orquestra.sdk import exceptions, list_workflow_runs
 from orquestra.sdk._base import _config, _db, _factory
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe._client import QEClient
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._base.cli._dorq import _repos
 from orquestra.sdk._ray import _dag
+from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeName
+from orquestra.sdk.schema.workflow_run import RunStatus, State
+from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
+from orquestra.sdk.schema.workflow_run import WorkflowRun
 
 from ... import reloaders
 from ...sdk.v2.data.configs import TEST_CONFIG_JSON
 
 
 class TestWorkflowRunRepo:
+    @staticmethod
+    @pytest.fixture
+    def mock_wf_run(monkeypatch):
+        """
+        Returns a mock of shape of sdk.WorkflowRun. Used by other fixtures.
+        """
+        return Mock(sdk.WorkflowRun)
+
+    @staticmethod
+    @pytest.fixture
+    def mock_by_id(monkeypatch, mock_wf_run):
+        """
+        Returns a mock of sdk.WorkflowRun.by_id.
+        """
+        by_id = Mock(return_value=mock_wf_run)
+        monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+        return by_id
+
     class TestIsolation:
         """
         Isolated unit tests for WorkflowRunRepo.
@@ -73,16 +97,12 @@ class TestWorkflowRunRepo:
             db_mock.get_workflow_run.assert_called_with(workflow_run_id=wf_run_id)
 
         @staticmethod
-        def test_get_wf_by_run_id(monkeypatch):
+        def test_get_wf_by_run_id(mock_by_id, mock_wf_run):
             # Given
             run_id = "wf.1"
             config_name = "<config sentinel>"
 
-            wf_run = Mock()
-            wf_run.get_status_model().id = run_id
-
-            by_id = Mock(return_value=wf_run)
-            monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+            mock_wf_run.get_status_model().id = run_id
 
             repo = _repos.WorkflowRunRepo()
 
@@ -91,7 +111,101 @@ class TestWorkflowRunRepo:
 
             # Then
             assert wf_run.id == run_id
-            by_id.assert_called_with(run_id, config_name)
+            mock_by_id.assert_called_with(run_id, config_name)
+
+        class TestGetTaskRunID:
+            @staticmethod
+            def test_happy_path(mock_by_id, mock_wf_run):
+                # Given
+                wf_run_id = "wf.1"
+                task_inv_id = "inv2"
+                config = "config3"
+                repo = _repos.WorkflowRunRepo()
+
+                # Mocks
+                status = RunStatus(state=State.SUCCEEDED)
+                mock_wf_run.get_status_model().task_runs = [
+                    TaskRunModel(
+                        id="1",
+                        invocation_id="inv1",
+                        status=status,
+                    ),
+                    TaskRunModel(
+                        id="2",
+                        invocation_id="inv2",
+                        status=status,
+                    ),
+                    TaskRunModel(
+                        id="3",
+                        invocation_id="inv3",
+                        status=status,
+                    ),
+                ]
+
+                # When
+                task_run_id = repo.get_task_run_id(
+                    wf_run_id=wf_run_id,
+                    task_inv_id=task_inv_id,
+                    config_name=config,
+                )
+
+                # Then
+                assert task_run_id == "2"
+
+            @staticmethod
+            def test_invalid_inv_id(mock_by_id, mock_wf_run):
+                # Given
+                wf_run_id = "wf.1"
+                task_inv_id = "inv2_doesnt_exist"
+                config = "config3"
+                repo = _repos.WorkflowRunRepo()
+
+                # Mocks
+                status = RunStatus(state=State.SUCCEEDED)
+                mock_wf_run.get_status_model().task_runs = [
+                    TaskRunModel(
+                        id="1",
+                        invocation_id="inv1",
+                        status=status,
+                    ),
+                ]
+
+                # Then
+                with pytest.raises(exceptions.TaskInvocationNotFoundError) as exc_info:
+                    # When
+                    _ = repo.get_task_run_id(
+                        wf_run_id=wf_run_id,
+                        task_inv_id=task_inv_id,
+                        config_name=config,
+                    )
+                assert exc_info.value.invocation_id == task_inv_id
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "exc",
+                [
+                    exceptions.NotFoundError(),
+                    exceptions.ConfigNameNotFoundError(),
+                ],
+            )
+            def test_passing_errors(mock_by_id, exc):
+                # Given
+                wf_run_id = "wf.1"
+                task_inv_id = "inv2_doesnt_exist"
+                config = "config3"
+                repo = _repos.WorkflowRunRepo()
+
+                # Mocks
+                mock_by_id.side_effect = exc
+
+                # Then
+                with pytest.raises(type(exc)):
+                    # When
+                    _ = repo.get_task_run_id(
+                        wf_run_id=wf_run_id,
+                        task_inv_id=task_inv_id,
+                        config_name=config,
+                    )
 
         class TestListWFRunIDs:
             """
@@ -110,14 +224,7 @@ class TestWorkflowRunRepo:
                 # Given
                 config = "<config sentinel>"
 
-                # Prevent FS access
-                monkeypatch.setattr(_config, "read_config", Mock())
-
-                runtime = Mock()
-                runtime.get_all_workflow_runs_status.side_effect = exc
-                monkeypatch.setattr(
-                    _factory, "build_runtime_from_config", Mock(return_value=runtime)
-                )
+                monkeypatch.setattr(sdk, "list_workflow_runs", Mock(side_effect=exc))
 
                 repo = _repos.WorkflowRunRepo()
 
@@ -263,7 +370,291 @@ class TestWorkflowRunRepo:
                     # When
                     _ = repo.get_wf_outputs(run_id, config_name)
 
+        class TestGetTaskFNNames:
+            @staticmethod
+            def wf_run_with_task_defs(task_defs: t.List[ir.TaskDef]) -> sdk.WorkflowRun:
+                wf_run_model = Mock()
+                wf_run_model.workflow_def.tasks.values.return_value = task_defs
+
+                wf_run = Mock(sdk.WorkflowRun)
+                wf_run.get_status_model.return_value = wf_run_model
+
+                return wf_run
+
+            def test_mixed_imports(self, monkeypatch):
+                # Given
+                wf_run_id = "wf.1"
+                config = "<config sentinel>"
+
+                # Mocks
+                wf_run = self.wf_run_with_task_defs(
+                    [
+                        ir.TaskDef(
+                            id="task1",
+                            fn_ref=ir.ModuleFunctionRef(
+                                module="tasks",
+                                function_name="task_in_another_module",
+                            ),
+                            parameters=[],
+                            source_import_id="imp1",
+                        ),
+                        ir.TaskDef(
+                            id="task2",
+                            fn_ref=ir.FileFunctionRef(
+                                file_path="other_tasks.py",
+                                function_name="task_in_another_file",
+                            ),
+                            parameters=[],
+                            source_import_id="imp1",
+                        ),
+                        ir.TaskDef(
+                            id="task3",
+                            fn_ref=ir.InlineFunctionRef(
+                                function_name="inlined_task", encoded_function=[]
+                            ),
+                            parameters=[],
+                            source_import_id="imp1",
+                        ),
+                    ]
+                )
+                by_id = Mock(return_value=wf_run)
+                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+                repo = _repos.WorkflowRunRepo()
+
+                # When
+                names = repo.get_task_fn_names(wf_run_id, config)
+
+                # Then
+                assert names == [
+                    "inlined_task",
+                    "task_in_another_file",
+                    "task_in_another_module",
+                ]
+
+            def test_shadowing_names(self, monkeypatch):
+                # Given
+                wf_run_id = "wf.1"
+                config = "<config sentinel>"
+
+                # Mocks
+                fn_name = "my_fn"
+                wf_run = self.wf_run_with_task_defs(
+                    [
+                        ir.TaskDef(
+                            id="task1",
+                            fn_ref=ir.ModuleFunctionRef(
+                                module="tasks1", function_name=fn_name
+                            ),
+                            parameters=[],
+                            source_import_id="imp1",
+                        ),
+                        ir.TaskDef(
+                            id="task2",
+                            fn_ref=ir.ModuleFunctionRef(
+                                module="tasks2", function_name=fn_name
+                            ),
+                            parameters=[],
+                            source_import_id="imp1",
+                        ),
+                    ]
+                )
+                by_id = Mock(return_value=wf_run)
+                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+                repo = _repos.WorkflowRunRepo()
+
+                # When
+                names = repo.get_task_fn_names(wf_run_id, config)
+
+                # Then
+                assert names == [fn_name]
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "exc",
+                [
+                    exceptions.NotFoundError(),
+                    exceptions.ConfigNameNotFoundError(),
+                ],
+            )
+            def test_passing_errors(monkeypatch, exc):
+                wf_run_id = "wf.1"
+                config_name = "<config sentinel>"
+
+                by_id = Mock(side_effect=exc)
+                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+                repo = _repos.WorkflowRunRepo()
+
+                # Then
+                with pytest.raises(type(exc)):
+                    # When
+                    _ = repo.get_task_fn_names(wf_run_id, config_name)
+
+        class TestGetTaskInvIDs:
+            @staticmethod
+            @pytest.mark.parametrize(
+                "exc",
+                [
+                    exceptions.NotFoundError(),
+                    exceptions.ConfigNameNotFoundError(),
+                ],
+            )
+            def test_passing_errors(monkeypatch, exc):
+                wf_run_id = "wf.1"
+                config_name = "<config sentinel>"
+                task_fn_name = "my_fn"
+
+                by_id = Mock(side_effect=exc)
+                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+                repo = _repos.WorkflowRunRepo()
+
+                # Then
+                with pytest.raises(type(exc)):
+                    # When
+                    _ = repo.get_task_inv_ids(wf_run_id, config_name, task_fn_name)
+
+        class TestGetWFLogs:
+            @staticmethod
+            def test_passing_values(monkeypatch):
+                # Given
+                config = "<config sentinel>"
+                wf_run_id = "<id sentinel>"
+                logs = {"task_id": ["my_log", "my_another_log"]}
+
+                # Prevent FS access
+                monkeypatch.setattr(_config, "read_config", Mock())
+
+                runtime = Mock()
+                runtime.get_full_logs.return_value = logs
+                monkeypatch.setattr(
+                    _factory, "build_runtime_from_config", Mock(return_value=runtime)
+                )
+
+                repo = _repos.WorkflowRunRepo()
+
+                # Then
+                assert repo.get_wf_logs(wf_run_id, config) == logs
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "exc", [ConnectionError(), exceptions.UnauthorizedError()]
+            )
+            def test_passing_errors(monkeypatch, exc):
+                # Given
+                config = "<config sentinel>"
+                wf_run_id = "<id sentinel>"
+
+                # Prevent FS access
+                monkeypatch.setattr(_config, "read_config", Mock())
+
+                runtime = Mock()
+                runtime.get_full_logs.side_effect = exc
+                monkeypatch.setattr(
+                    _factory, "build_runtime_from_config", Mock(return_value=runtime)
+                )
+
+                repo = _repos.WorkflowRunRepo()
+
+                # Then
+                with pytest.raises(type(exc)):
+                    # When
+                    _ = repo.get_wf_logs(wf_run_id, config)
+
+        class TestGetTaskLogs:
+            @staticmethod
+            def test_passing_values(mock_by_id, mock_wf_run):
+                # Given
+                config = "<config sentinel>"
+                wf_run_id = "<id sentinel>"
+                task_run_id = "<task id sentinel>"
+                logs = {"task_id": ["my_log", "my_another_log"]}
+
+                mock_wf_run.get_logs.return_value = logs
+
+                # When
+                repo = _repos.WorkflowRunRepo()
+
+                # Then
+                assert repo.get_task_logs(wf_run_id, task_run_id, config) == logs
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "exc",
+                [exceptions.WorkflowRunNotStarted(), exceptions.TaskRunNotFound()],
+            )
+            def test_passing_errors(mock_by_id, mock_wf_run, exc):
+                # Given
+                config = "<config sentinel>"
+                wf_run_id = "<id sentinel>"
+                task_run_id = "<task id sentinel>"
+
+                mock_wf_run.get_logs.side_effect = exc
+
+                # When
+                repo = _repos.WorkflowRunRepo()
+
+                # Then
+                with pytest.raises(type(exc)):
+                    # When
+                    _ = repo.get_task_logs(wf_run_id, task_run_id, config)
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "exc",
+                [exceptions.NotFoundError(), exceptions.ConfigNameNotFoundError()],
+            )
+            def test_wf_not_found(mock_by_id, exc):
+                # Given
+                config = "<config sentinel>"
+                wf_run_id = "<id sentinel>"
+                task_run_id = "<task id sentinel>"
+
+                mock_by_id.side_effect = exc
+
+                # When
+                repo = _repos.WorkflowRunRepo()
+
+                # Then
+                with pytest.raises(type(exc)):
+                    # When
+                    _ = repo.get_task_logs(wf_run_id, task_run_id, config)
+
     class TestIntegration:
+        @staticmethod
+        def test_list_wf_runs(monkeypatch):
+            # Given
+            config = "ray"
+            stub_run_ids = ["wf.1", "wf.2"]
+            state = State("RUNNING")
+            mock_wf_runs = []
+
+            for stub_id in stub_run_ids:
+                wf_run = Mock()
+                wf_run.get_status_model.return_value = WorkflowRun(
+                    id=stub_id,
+                    workflow_def=None,
+                    task_runs=[],
+                    status=RunStatus(state=state, start_time=None, end_time=None),
+                )
+                mock_wf_runs.append(wf_run)
+
+            monkeypatch.setattr(
+                sdk, "list_workflow_runs", Mock(return_value=mock_wf_runs)
+            )
+
+            # Prevent RayRuntime from connecting to a real cluster.
+            monkeypatch.setattr(_dag.RayRuntime, "startup", Mock())
+
+            repo = _repos.WorkflowRunRepo()
+
+            # When
+            runs = repo.list_wf_runs(config)
+
+            # Then
+            assert [run.id for run in runs] == stub_run_ids
+
         @staticmethod
         def test_list_wf_run_ids(monkeypatch):
             """
@@ -276,8 +667,8 @@ class TestWorkflowRunRepo:
 
             # Given
             config = "ray"
-
             stub_run_ids = ["wf.1", "wf.2"]
+            state = State("RUNNING")
 
             # Make RayRuntime return the IDs we want. We don't want to submit real
             # workflows and wait for their completion because it takes forever. It's
@@ -285,12 +676,17 @@ class TestWorkflowRunRepo:
             mock_wf_runs = []
             for stub_id in stub_run_ids:
                 wf_run = Mock()
-                wf_run.id = stub_id
+                wf_run.get_status_model.return_value = WorkflowRun(
+                    id=stub_id,
+                    workflow_def=None,
+                    task_runs=[],
+                    status=RunStatus(state=state, start_time=None, end_time=None),
+                )
                 mock_wf_runs.append(wf_run)
 
             monkeypatch.setattr(
-                _dag.RayRuntime,
-                "get_all_workflow_runs_status",
+                sdk,
+                "list_workflow_runs",
                 Mock(return_value=mock_wf_runs),
             )
 
@@ -304,6 +700,73 @@ class TestWorkflowRunRepo:
 
             # Then
             assert run_ids == stub_run_ids
+
+        class TestWithInProcess:
+            """
+            Uses sample workflow definition and in-process runtime to acquire a
+            status model for tests.
+            """
+
+            @staticmethod
+            @pytest.fixture(scope="class")
+            def example_wf_run():
+                @sdk.task(source_import=sdk.InlineImport())
+                def fn1():
+                    return 1
+
+                @sdk.task(source_import=sdk.InlineImport())
+                def fn2():
+                    return 2
+
+                @sdk.workflow
+                def my_wf():
+                    art1 = fn1()
+                    art2_1 = fn2()
+                    art2_2 = fn2()
+
+                    return art1, art2_1, art2_2
+
+                run = my_wf().run("in_process")
+
+                return run
+
+            @staticmethod
+            def test_get_task_fn_names(monkeypatch, example_wf_run: sdk.WorkflowRun):
+                # Given
+                config = "<config sentinel>"
+                repo = _repos.WorkflowRunRepo()
+
+                # Mocks
+                monkeypatch.setattr(
+                    sdk.WorkflowRun, "by_id", Mock(return_value=example_wf_run)
+                )
+
+                # When
+                names = repo.get_task_fn_names(example_wf_run.run_id, config)
+
+                # Then
+                assert names == ["fn1", "fn2"]
+
+            @staticmethod
+            def test_get_task_inv_ids(monkeypatch, example_wf_run: sdk.WorkflowRun):
+                # Given
+                config = "<config sentinel>"
+                repo = _repos.WorkflowRunRepo()
+
+                # Mocks
+                monkeypatch.setattr(
+                    sdk.WorkflowRun, "by_id", Mock(return_value=example_wf_run)
+                )
+
+                # When
+                inv_ids = repo.get_task_inv_ids(
+                    wf_run_id=example_wf_run.run_id,
+                    config_name=config,
+                    task_fn_name="fn2",
+                )
+
+                # Then
+                assert len(inv_ids) == 2
 
 
 class TestConfigRepo:

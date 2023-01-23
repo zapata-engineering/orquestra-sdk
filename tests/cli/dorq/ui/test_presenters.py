@@ -73,6 +73,26 @@ class TestWrappedCorqOutputPresenter:
             response_model = called_args[0]
             assert response_model.workflow_runs[0].id == wf_run_id
 
+        @staticmethod
+        def test_show_logs(monkeypatch):
+            # Given
+            pretty_print_mock = Mock()
+            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
+            task_invocation = "my_task_invocation"
+            task_logs = ["my_log"]
+            logs = {task_invocation: task_logs}
+
+            presenter = _presenters.WrappedCorqOutputPresenter()
+
+            # When
+            presenter.show_logs(logs)
+
+            # Then
+            called_args = pretty_print_mock.call_args.args
+            response_model = called_args[0]
+            assert task_logs[0] in response_model.logs
+            assert task_invocation in response_model.logs[0]
+
     class TestPrinting:
         """
         Tests WrappedCorqOutputPresenter's methods that print outputs directly.
@@ -172,6 +192,19 @@ class TestWrappedCorqOutputPresenter:
                 "Pretty printed value:\n"
                 "{'hello': 'there'}\n"
             ) == captured.out
+
+        @staticmethod
+        def test_show_dumped_wf_logs(capsys):
+            # Given
+            dummy_path: Path = Path("/my/cool/path")
+            presenter = _presenters.WrappedCorqOutputPresenter()
+
+            # When
+            presenter.show_dumped_wf_logs(dummy_path)
+
+            # Then
+            captured = capsys.readouterr()
+            assert f"Workflow logs saved at {dummy_path}" in captured.out
 
     @staticmethod
     def test_handling_error(monkeypatch):

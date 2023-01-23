@@ -2,7 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 """
-Code for 'orq workflow output'.
+Code for 'orq workflow logs'.
 """
 import typing as t
 from pathlib import Path
@@ -16,13 +16,13 @@ from .._ui import _presenters
 
 class Action:
     """
-    Encapsulates app-related logic for handling ``orq workflow results``.
+    Encapsulates app-related logic for handling ``orq workflow logs``.
     """
 
     def __init__(
         self,
         presenter=_presenters.WrappedCorqOutputPresenter(),
-        dumper=_dumpers.ArtifactDumper(),
+        dumper=_dumpers.LogsDumper(),
         wf_run_repo=_repos.WorkflowRunRepo(),
         config_resolver: t.Optional[_arg_resolvers.WFConfigResolver] = None,
         wf_run_resolver: t.Optional[_arg_resolvers.WFRunResolver] = None,
@@ -63,24 +63,22 @@ class Action:
         config: t.Optional[ConfigName],
         download_dir: t.Optional[Path],
     ):
-        # The order of resolving config and run ID is important. It dictactes the flow
+        # The order of resolving config and run ID is important. It dictates the flow
         # user sees, and possible choices in the prompts.
         resolved_config = self._config_resolver.resolve(wf_run_id, config)
         resolved_wf_run_id = self._wf_run_resolver.resolve_id(
             wf_run_id, resolved_config
         )
-        output_values = self._wf_run_repo.get_wf_outputs(
+        logs = self._wf_run_repo.get_wf_logs(
             wf_run_id=resolved_wf_run_id, config_name=resolved_config
         )
 
         if download_dir is not None:
-            for output_i, output_value in enumerate(output_values):
-                dump_details = self._dumper.dump(
-                    value=output_value,
-                    wf_run_id=resolved_wf_run_id,
-                    output_index=output_i,
-                    dir_path=download_dir,
-                )
-                self._presenter.show_dumped_wf_result(dump_details)
+            dump_path = self._dumper.dump(
+                logs=logs,
+                wf_run_id=resolved_wf_run_id,
+                dir_path=download_dir,
+            )
+            self._presenter.show_dumped_wf_logs(dump_path)
         else:
-            self._presenter.show_workflow_outputs(output_values, resolved_wf_run_id)
+            self._presenter.show_logs(logs)

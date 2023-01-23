@@ -3,6 +3,7 @@
 ################################################################################
 import typing as t
 
+from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import State
 
 
@@ -131,6 +132,16 @@ class TaskRunNotFound(NotFoundError):
     pass
 
 
+class TaskInvocationNotFoundError(NotFoundError):
+    """
+    Raised when we can't find a Task Invocation that matches the provided ID.
+    """
+
+    def __init__(self, invocation_id: TaskInvocationId):
+        super().__init__()
+        self.invocation_id = invocation_id
+
+
 # Project Errors
 class MalformedProjectError(BaseRuntimeError):
     pass
@@ -157,3 +168,8 @@ class RayActorNameClashError(BaseRuntimeError):
 class ParseError(RuntimeError):
     def __init__(self, message):
         super(ParseError, self).__init__(message)
+
+
+# CLI Exceptions
+class UserCancelledPrompt(BaseRuntimeError):
+    pass

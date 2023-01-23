@@ -29,26 +29,24 @@ class TestAction:
         config = "<config sentinel>"
 
         # Resolved values
-        resolved_id = "<resolved ID>"
         resolved_config = "<resolved config>"
 
         # Mocks
         presenter = Mock()
         wf_run_repo = Mock()
         wf_run = "<wf run sentinel>"
-        wf_run_repo.get_wf_by_run_id.return_value = wf_run
 
         config_resolver = Mock()
         config_resolver.resolve.return_value = resolved_config
 
-        wf_run_id_resolver = Mock()
-        wf_run_id_resolver.resolve.return_value = resolved_id
+        wf_run_resolver = Mock()
+        wf_run_resolver.resolve_run.return_value = wf_run
 
         action = _view.Action(
             presenter=presenter,
             wf_run_repo=wf_run_repo,
             config_resolver=config_resolver,
-            wf_run_id_resolver=wf_run_id_resolver,
+            wf_run_resolver=wf_run_resolver,
         )
 
         # When
@@ -59,12 +57,7 @@ class TestAction:
         config_resolver.resolve.assert_called_with(wf_run_id, config)
 
         # We should pass resolved_config to run ID resolver.
-        wf_run_id_resolver.resolve.assert_called_with(wf_run_id, resolved_config)
-
-        # We should pass resolved values to run repo.
-        wf_run_repo.get_wf_by_run_id.assert_called_with(
-            wf_run_id=resolved_id, config_name=resolved_config
-        )
+        wf_run_resolver.resolve_run.assert_called_with(wf_run_id, resolved_config)
 
         # We expect printing the workflow run returned from the repo.
         presenter.show_wf_run.assert_called_with(wf_run)

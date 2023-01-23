@@ -15,6 +15,26 @@ import cloup
 # Adds '-h' alias for '--help'
 CLICK_CTX_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
+DOWNLOAD_DIR_OPTION = cloup.option(
+    "--download-dir",
+    help=(
+        "Directory path to store the artifact value. If passed, the command will "
+        "create a file under this location."
+    ),
+    type=click.Path(file_okay=False, dir_okay=True, writable=True, path_type=Path),
+)
+
+CONFIG_OPTION = cloup.option(
+    "-c",
+    "--config",
+    required=False,
+    help="""
+Name of the config used to submit workflow. Use 'in-process' for running workflow
+as local python process, 'ray' to run workflow in local ray cluster.
+To get config name for remote runtime, use orq login -s <uri> first
+""",
+)
+
 
 @cloup.group(context_settings=CLICK_CTX_SETTINGS)
 def dorq():
@@ -51,11 +71,11 @@ https://setuptools.pypa.io/en/latest/userguide/package_discovery.html#automatic-
     "name",
     required=False,
     help="""
-Name of the workflow function to load from 'module'. If ommitted, 'orq' will ask for
+Name of the workflow function to load from 'module'. If omitted, 'orq' will ask for
 selecting a function from the ones available in 'module'.
 """,
 )
-@cloup.option("-c", "--config")
+@CONFIG_OPTION
 @cloup.option(
     "--force",
     is_flag=True,
@@ -76,8 +96,6 @@ def submit(module: str, name: t.Optional[str], config: t.Optional[str], force: b
     If there's a task defined in a git repo with uncommitted changes you are asked for
     confirmation before submitting the workflow.
     """
-    # TODO: add help for config
-
     from ._workflow._submit import Action
 
     action = Action()
@@ -86,7 +104,7 @@ def submit(module: str, name: t.Optional[str], config: t.Optional[str], force: b
 
 @workflow.command()
 @cloup.argument("wf_run_id", required=False)
-@cloup.option("-c", "--config")
+@CONFIG_OPTION
 def view(wf_run_id: t.Optional[str], config: t.Optional[str]):
     """
     Prints details of a single workflow run that was already submitted.
@@ -98,19 +116,9 @@ def view(wf_run_id: t.Optional[str], config: t.Optional[str]):
     action.on_cmd_call(wf_run_id, config)
 
 
-DOWNLOAD_DIR_OPTION = cloup.option(
-    "--download-dir",
-    help=(
-        "Directory path to store the artifact value. If passed, the command will "
-        "create a file under this location."
-    ),
-    type=click.Path(file_okay=False, dir_okay=True, writable=True, path_type=Path),
-)
-
-
 @workflow.command()
 @cloup.argument("wf_run_id", required=False)
-@cloup.option("-c", "--config")
+@CONFIG_OPTION
 @DOWNLOAD_DIR_OPTION
 def results(
     wf_run_id: t.Optional[str],
@@ -142,7 +150,30 @@ def results(
 
 @workflow.command()
 @cloup.argument("wf_run_id", required=False)
-@cloup.option("-c", "--config")
+@CONFIG_OPTION
+@DOWNLOAD_DIR_OPTION
+def logs(
+    wf_run_id: t.Optional[str],
+    config: t.Optional[str],
+    download_dir: t.Optional[Path],
+):
+    """
+    Shows logs gathered during execution of a workflow produced by all tasks.
+    """
+
+    from ._workflow._logs import Action
+
+    action = Action()
+    action.on_cmd_call(
+        wf_run_id=wf_run_id,
+        config=config,
+        download_dir=download_dir,
+    )
+
+
+@workflow.command()
+@cloup.argument("wf_run_id", required=False)
+@CONFIG_OPTION
 def stop(wf_run_id: t.Optional[str], config: t.Optional[str]):
     """
     Stops a running workflow.
@@ -152,6 +183,42 @@ def stop(wf_run_id: t.Optional[str], config: t.Optional[str]):
 
     action = Action()
     action.on_cmd_call(wf_run_id, config)
+
+
+@workflow.command()
+@cloup.option("-c", "--config", type=str, multiple=True)
+@cloup.option(
+    "-i",
+    "--interactive",
+    is_flag=True,
+    flag_value=True,
+    help="Specify filters in an interactive terminal session.",
+)
+@cloup.option(
+    "-l", "--limit", type=int, help="Maximum number of runs to display for each config."
+)
+@cloup.option("-t", "--max-age", help="Maximum age of runs to display.")
+@cloup.option(
+    "-s",
+    "--state",
+    multiple=True,
+    help="State of workflow runs to display. Max be specified multiple times.",
+)
+def list(
+    config: t.Optional[str],
+    interactive: t.Optional[bool] = False,
+    limit: t.Optional[int] = None,
+    max_age: t.Optional[str] = None,
+    state: t.Optional[t.List[str]] = None,
+):
+    """
+    Lists the available workflows
+    """
+
+    from ._workflow._list import Action
+
+    action = Action()
+    action.on_cmd_call(config, limit, max_age, state, interactive)
 
 
 @cloup.command()
@@ -216,6 +283,43 @@ dorq.section(
     down,
     status,
 )
+
+
+@dorq.group()
+def task():
+    """
+    Commands related to workflow runs.
+    """
+    pass
+
+
+@task.command()  # type: ignore[no-redef]
+@cloup.argument("wf_run_id", required=False)
+@cloup.argument("task_inv_id", required=False)
+@cloup.argument("fn_name", required=False)
+@CONFIG_OPTION
+@DOWNLOAD_DIR_OPTION
+def logs(  # noqa: F811
+    wf_run_id: t.Optional[str],
+    task_inv_id,
+    fn_name,
+    config: t.Optional[str],
+    download_dir: t.Optional[Path],
+):
+    """
+    Shows logs gathered during execution of a workflow produced by all tasks.
+    """
+
+    from ._task._logs import Action
+
+    action = Action()
+    action.on_cmd_call(
+        wf_run_id=wf_run_id,
+        task_invocation_id=task_inv_id,
+        fn_name=fn_name,
+        config=config,
+        download_dir=download_dir,
+    )
 
 
 @dorq.command()

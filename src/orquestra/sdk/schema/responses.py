@@ -49,6 +49,7 @@ class ResponseStatusCode(enum.Enum):
     UNAUTHORIZED = 12
     SERVICES_ERROR = 13
     INVALID_CLI_COMMAND_ERROR = 14
+    USER_CANCELLED = 15
 
 
 class ResponseMetadata(BaseModel):
