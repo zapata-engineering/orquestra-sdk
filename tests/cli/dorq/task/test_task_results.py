@@ -219,8 +219,7 @@ class TestAction:
             )
 
             # Print two dump details, one for each task output.
-            artifact_presenter.show_dumped_wf_result.assert_called_with(dump_details)
-            # TODO: use better name             v
-            assert artifact_presenter.show_dumped_wf_result.call_count == len(
+            artifact_presenter.show_dumped_artifact.assert_called_with(dump_details)
+            assert artifact_presenter.show_dumped_artifact.call_count == len(
                 fake_outputs
             )
