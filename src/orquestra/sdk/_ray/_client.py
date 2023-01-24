@@ -81,7 +81,7 @@ else:
             return ray.get(obj_refs, timeout=timeout)
 
         def remote(self, fn):
-            return ray.remote(fn)
+            return ray.remote(max_calls=1)(fn)
 
         def add_options(
             self,
