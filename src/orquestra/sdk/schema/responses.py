@@ -23,7 +23,7 @@ from .ir import (
     TaskInvocationId,
     WorkflowDef,
 )
-from .workflow_run import WorkflowRun, WorkflowRunMinimal
+from .workflow_run import WorkflowRun, WorkflowRunOnlyID
 
 
 class ResponseFormat(enum.Enum):
@@ -75,7 +75,7 @@ class GetTaskDefResponse(BaseModel):
 
 class SubmitWorkflowDefResponse(BaseModel):
     meta: ResponseMetadata
-    workflow_runs: t.List[WorkflowRunMinimal]
+    workflow_runs: t.List[WorkflowRunOnlyID]
 
 
 class GetWorkflowRunResponse(BaseModel):

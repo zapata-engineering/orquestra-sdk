@@ -18,7 +18,7 @@ from orquestra.sdk.schema.responses import (
     ResponseStatusCode,
     StopWorkflowRunResponse,
 )
-from orquestra.sdk.schema.workflow_run import WorkflowRunMinimal
+from orquestra.sdk.schema.workflow_run import WorkflowRunOnlyID
 
 
 def orq_stop_workflow_run(
@@ -47,5 +47,5 @@ def orq_stop_workflow_run(
             code=ResponseStatusCode.OK,
             message="Successfully terminated workflow.",
         ),
-        workflow_runs=[WorkflowRunMinimal(id=run_id)],
+        workflow_runs=[WorkflowRunOnlyID(id=run_id)],
     )

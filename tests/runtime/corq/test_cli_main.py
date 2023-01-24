@@ -21,7 +21,7 @@ from orquestra.sdk.schema.responses import (
     ResponseStatusCode,
     SubmitWorkflowDefResponse,
 )
-from orquestra.sdk.schema.workflow_run import State, WorkflowRunMinimal
+from orquestra.sdk.schema.workflow_run import State, WorkflowRunOnlyID
 
 # v2 actions
 V2_ACTIONS_ATTRS = [
@@ -202,7 +202,7 @@ class TestOrqSubmit:
                     code=ResponseStatusCode.OK,
                     message="Successfully submitted workflow.",
                 ),
-                workflow_runs=[WorkflowRunMinimal(id=workflow_run_id)],
+                workflow_runs=[WorkflowRunOnlyID(id=workflow_run_id)],
             )
 
         monkeypatch.setattr(

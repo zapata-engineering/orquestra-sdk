@@ -10,7 +10,7 @@ import sys
 import typing as t
 import warnings
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, create_autospec
 
 import pytest
 import requests
@@ -634,7 +634,7 @@ class TestWorkflowRunRepo:
                 wf_run = Mock()
                 wf_run.get_status_model.return_value = WorkflowRun(
                     id=stub_id,
-                    workflow_def=None,
+                    workflow_def=create_autospec(ir.WorkflowDef),
                     task_runs=[],
                     status=RunStatus(state=state, start_time=None, end_time=None),
                 )
@@ -678,7 +678,7 @@ class TestWorkflowRunRepo:
                 wf_run = Mock()
                 wf_run.get_status_model.return_value = WorkflowRun(
                     id=stub_id,
-                    workflow_def=None,
+                    workflow_def=create_autospec(ir.WorkflowDef),
                     task_runs=[],
                     status=RunStatus(state=state, start_time=None, end_time=None),
                 )

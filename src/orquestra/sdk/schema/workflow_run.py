@@ -41,12 +41,26 @@ class TaskRun(BaseModel):
     message: t.Optional[str] = None
 
 
-class WorkflowRun(BaseModel):
+class WorkflowRunOnlyID(BaseModel):
+    """
+    A WorkflowRun that only contains the ID
+    """
+
     id: WorkflowRunId
-    workflow_def: t.Optional[WorkflowDef]
+
+
+class WorkflowRunMinimal(WorkflowRunOnlyID):
+    """
+    The minimal amount of information to create a WorkflowRun in the public API
+    """
+
+    workflow_def: WorkflowDef
+
+
+class WorkflowRun(WorkflowRunMinimal):
+    """
+    A full workflow run with TaskRuns and WorkflowRun status
+    """
+
     task_runs: t.List[TaskRun]
     status: RunStatus
-
-
-class WorkflowRunMinimal(BaseModel):
-    id: WorkflowRunId
