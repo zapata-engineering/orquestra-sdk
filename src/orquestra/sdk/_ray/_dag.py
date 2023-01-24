@@ -158,6 +158,7 @@ def _make_ray_dag_node(
     ray_kwargs: t.Mapping[str, t.Any],
     pos_unpack_specs: t.Sequence[PosArgUnpackSpec],
     kw_unpack_specs: t.Sequence[KwArgUnpackSpec],
+    project_dir,
     user_fn_ref: t.Optional[ir.FunctionRef] = None,
 ) -> _client.FunctionNode:
     """
@@ -179,6 +180,9 @@ def _make_ray_dag_node(
 
     @client.remote
     def _ray_remote(*inner_args, **inner_kwargs):
+        if project_dir is not None:
+            dispatch.ensure_sys_paths([str(project_dir)])
+
         user_fn = _locate_user_fn(user_fn_ref) if user_fn_ref else _aggregate_outputs
         wrapped = TupleUnwrapper(
             fn=user_fn,
@@ -310,7 +314,7 @@ def _gather_kwargs(
     return ray_kwargs, kw_unpack_specs
 
 
-def _make_ray_dag(client: RayClient, wf: ir.WorkflowDef, wf_run_id: str):
+def _make_ray_dag(client: RayClient, wf: ir.WorkflowDef, wf_run_id: str, project_dir):
     ray_consts: t.Mapping[ir.ConstantNodeId, t.Any] = {
         id: serde.deserialize_constant(node) for id, node in wf.constant_nodes.items()
     }
@@ -368,6 +372,7 @@ def _make_ray_dag(client: RayClient, wf: ir.WorkflowDef, wf_run_id: str):
             ray_kwargs=ray_kwargs,
             pos_unpack_specs=pos_unpack_specs,
             kw_unpack_specs=kw_unpack_specs,
+            project_dir=project_dir,
         )
 
         for output_id in ir_invocation.output_ids:
@@ -395,6 +400,7 @@ def _make_ray_dag(client: RayClient, wf: ir.WorkflowDef, wf_run_id: str):
         ray_kwargs={},
         pos_unpack_specs=aggr_task_specs,
         kw_unpack_specs=[],
+        project_dir=None,
     )
 
     # Data aggregation step is run with catch_exceptions=True - so it returns tuple of
@@ -674,7 +680,10 @@ class RayRuntime(RuntimeInterface):
         def create_ray_workflow():
             # adding path to the sys_path, so we can de-ref functions in workflow_defs
             dispatch.ensure_sys_paths([str(self._project_dir)])
-            dag = _make_ray_dag(self._client, workflow_def, wf_run_id)
+
+            dag = _make_ray_dag(
+                self._client, workflow_def, wf_run_id, self._project_dir
+            )
             wf_user_metadata: WfUserMetadata = {
                 "workflow_def": _pydatic_to_json_dict(workflow_def),
             }

@@ -82,6 +82,7 @@ def orq_workflow_run(ray_cluster, orq_project_dir):
     res = json.loads(output.stdout)
     workflow_id = res["workflow_runs"][0]["id"]
     # Get the results to ensure the job has finished
+
     _run_orq_command(
         [
             "get",
