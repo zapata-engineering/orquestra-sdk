@@ -163,7 +163,7 @@ class TestArtifactPresenter:
             presenter = _presenters.ArtifactPresenter()
 
             # When
-            presenter.show_dumped_wf_result(details)
+            presenter.show_dumped_artifact(details)
 
             # Then
             captured = capsys.readouterr()
@@ -182,7 +182,7 @@ class TestArtifactPresenter:
             presenter = _presenters.ArtifactPresenter()
 
             # When
-            presenter.show_dumped_wf_result(details)
+            presenter.show_dumped_artifact(details)
 
             # Then
             captured = capsys.readouterr()
@@ -201,7 +201,7 @@ class TestArtifactPresenter:
             presenter = _presenters.ArtifactPresenter()
 
             # When
-            presenter.show_dumped_wf_result(details)
+            presenter.show_dumped_artifact(details)
 
             # Then
             captured = capsys.readouterr()

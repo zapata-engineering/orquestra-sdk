@@ -139,8 +139,11 @@ class ArtifactPresenter:
             click.echo("Pretty printed value:")
             click.echo(pprint.pformat(value))
 
-    # TODO: rename to show_dumped_artifact
-    def show_dumped_wf_result(self, dump_details: serde.DumpDetails):
+    def show_dumped_artifact(self, dump_details: serde.DumpDetails):
+        """
+        Prints summary after an artifact was stored on disk. Suitable for both workflow
+        outputs and task outputs.
+        """
         format_name: str
         if dump_details.format == ArtifactFormat.JSON:
             format_name = "a text json file"

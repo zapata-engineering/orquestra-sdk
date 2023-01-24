@@ -93,7 +93,7 @@ class Action:
                     output_index=output_i,
                     dir_path=download_dir,
                 )
-                self._artifact_presenter.show_dumped_wf_result(dump_details)
+                self._artifact_presenter.show_dumped_artifact(dump_details)
         else:
             self._artifact_presenter.show_task_outputs(
                 values=output_values,
