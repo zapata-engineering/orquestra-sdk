@@ -515,6 +515,81 @@ class TestWorkflowRunRepo:
                     # When
                     _ = repo.get_task_inv_ids(wf_run_id, config_name, task_fn_name)
 
+        class TestGetTaskOutputs:
+            @staticmethod
+            def test_passing_data(monkeypatch):
+                run_id = "wf.1"
+                inv_id = "inv1"
+                config_name = "<config sentinel>"
+
+                wf_run = Mock()
+                fake_outputs = ("<output sentinel 0>", "<output sentinel 1>")
+                wf_run.get_artifacts.return_value = {
+                    inv_id: fake_outputs,
+                }
+
+                by_id = Mock(return_value=wf_run)
+                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+                repo = _repos.WorkflowRunRepo()
+
+                # When
+                outputs = repo.get_task_outputs(
+                    wf_run_id=run_id, task_inv_id=inv_id, config_name=config_name
+                )
+
+                # Then
+                assert outputs == fake_outputs
+
+            @staticmethod
+            def test_invalid_inv_id(monkeypatch):
+                run_id = "wf.1"
+                inv_id = "inv1"
+                config_name = "<config sentinel>"
+
+                wf_run = Mock()
+                fake_outputs = ("<output sentinel 0>", "<output sentinel 1>")
+                wf_run.get_artifacts.return_value = {
+                    "non-existing-inv-id": fake_outputs,
+                }
+
+                by_id = Mock(return_value=wf_run)
+                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+                repo = _repos.WorkflowRunRepo()
+
+                # Then
+                with pytest.raises(exceptions.TaskInvocationNotFoundError):
+                    # When
+                    _ = repo.get_task_outputs(
+                        wf_run_id=run_id, task_inv_id=inv_id, config_name=config_name
+                    )
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "exc",
+                [
+                    exceptions.NotFoundError(),
+                    exceptions.ConfigNameNotFoundError(),
+                ],
+            )
+            def test_passing_errors(monkeypatch, exc):
+                run_id = "wf.1"
+                inv_id = "inv1"
+                config_name = "<config sentinel>"
+
+                by_id = Mock(side_effect=exc)
+                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+                repo = _repos.WorkflowRunRepo()
+
+                # Then
+                with pytest.raises(type(exc)):
+                    # When
+                    _ = repo.get_task_outputs(
+                        wf_run_id=run_id, task_inv_id=inv_id, config_name=config_name
+                    )
+
         class TestGetWFLogs:
             @staticmethod
             def test_passing_values(monkeypatch):
