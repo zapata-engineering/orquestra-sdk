@@ -701,7 +701,6 @@ class TestClient:
                 client: DriverClient,
                 workflow_run_id: str,
                 workflow_def_id: str,
-                workflow_run_status: RunStatus,
             ):
                 endpoint_mocker(
                     # Specified in:
@@ -709,7 +708,6 @@ class TestClient:
                     json=resp_mocks.make_list_wf_run_response(
                         ids=[workflow_run_id] * 10,
                         workflow_def_ids=[workflow_def_id] * 10,
-                        statuses=[workflow_run_status] * 10,
                     )
                 )
 
@@ -718,7 +716,6 @@ class TestClient:
                 assert isinstance(defs, Paginated)
                 assert len(defs.contents) == 10
                 assert defs.contents[0].id == workflow_run_id
-                assert defs.contents[0].status == workflow_run_status
                 assert defs.next_page_token is None
                 assert defs.prev_page_token is None
 
@@ -729,7 +726,6 @@ class TestClient:
                 client: DriverClient,
                 workflow_run_id: str,
                 workflow_def_id: str,
-                workflow_run_status: RunStatus,
             ):
                 endpoint_mocker(
                     # Specified in:
@@ -737,7 +733,6 @@ class TestClient:
                     json=resp_mocks.make_list_wf_run_paginated_response(
                         ids=[workflow_run_id] * 10,
                         workflow_def_ids=[workflow_def_id] * 10,
-                        statuses=[workflow_run_status] * 10,
                     )
                 )
 
@@ -746,7 +741,6 @@ class TestClient:
                 assert isinstance(defs, Paginated)
                 assert len(defs.contents) == 10
                 assert defs.contents[0].id == workflow_run_id
-                assert defs.contents[0].status == workflow_run_status
                 assert defs.next_page_token == "nikkei-est-273_35438"
                 assert defs.prev_page_token == "nikkei-est-273_35438"
 
@@ -794,13 +788,11 @@ class TestClient:
                 token,
                 workflow_run_id,
                 workflow_def_id,
-                workflow_run_status,
             ):
                 endpoint_mocker(
                     json=resp_mocks.make_list_wf_run_response(
                         ids=[workflow_run_id] * 10,
                         workflow_def_ids=[workflow_def_id] * 10,
-                        statuses=[workflow_run_status] * 10,
                     ),
                     match=[
                         responses.matchers.header_matcher(

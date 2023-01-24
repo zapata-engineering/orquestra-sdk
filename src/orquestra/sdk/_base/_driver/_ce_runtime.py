@@ -17,6 +17,7 @@ from orquestra.sdk.schema.workflow_run import (
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
+    WorkflowRunMinimal,
 )
 
 from . import _client, _exceptions, _models
@@ -276,7 +277,7 @@ class CERuntime(RuntimeInterface):
         limit: Optional[int] = None,
         max_age: Optional[timedelta] = None,
         state: Optional[Union[State, List[State]]] = None,
-    ) -> List[WorkflowRun]:
+    ) -> List[WorkflowRunMinimal]:
         """
         List the workflow runs, with some filters
 

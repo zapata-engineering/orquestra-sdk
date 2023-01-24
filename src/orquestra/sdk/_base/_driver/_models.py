@@ -12,7 +12,13 @@ import pydantic
 from pydantic.generics import GenericModel
 
 from orquestra.sdk.schema.ir import WorkflowDef
-from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun, WorkflowRun
+from orquestra.sdk.schema.workflow_run import (
+    RunStatus,
+    State,
+    TaskRun,
+    WorkflowRun,
+    WorkflowRunMinimal,
+)
 
 WorkflowDefID = str
 WorkflowRunID = str
@@ -175,14 +181,11 @@ class MinimalWorkflowRunResponse(pydantic.BaseModel):
     """
 
     id: WorkflowRunID
-    status: RunStatusResponse
     definitionId: WorkflowDefID
 
-    def to_ir(self, workflow_def: WorkflowDef) -> WorkflowRun:
-        return WorkflowRun(
+    def to_ir(self, workflow_def: WorkflowDef) -> WorkflowRunMinimal:
+        return WorkflowRunMinimal(
             id=self.id,
-            status=self.status.to_ir(),
-            task_runs=[],
             workflow_def=workflow_def,
         )
 
@@ -194,6 +197,7 @@ class WorkflowRunResponse(MinimalWorkflowRunResponse):
     """
 
     owner: str
+    status: RunStatusResponse
     taskRuns: List[TaskRunResponse]
 
     def to_ir(self, workflow_def: WorkflowDef) -> WorkflowRun:

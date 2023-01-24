@@ -72,6 +72,16 @@ def _wf_run_resp(
     }
 
 
+def _list_wf_run_resp(
+    id_: WorkflowRunID,
+    workflow_def_id: WorkflowDefID,
+):
+    return {
+        "id": id_,
+        "definitionId": workflow_def_id,
+    }
+
+
 # --- Workflow Definitions ---
 
 
@@ -161,7 +171,6 @@ def make_get_wf_run_missing_task_run_status(
 def make_list_wf_run_response(
     ids: List[WorkflowRunID],
     workflow_def_ids: List[WorkflowDefID],
-    statuses: List[RunStatus],
 ):
     """
     Based on:
@@ -170,8 +179,8 @@ def make_list_wf_run_response(
     # Assume empty task runs for now
     return {
         "data": [
-            _wf_run_resp(id_, wf_def_id, status, [])
-            for id_, wf_def_id, status in zip(ids, workflow_def_ids, statuses)
+            _list_wf_run_resp(id_, wf_def_id)
+            for id_, wf_def_id, in zip(ids, workflow_def_ids)
         ]
     }
 
@@ -179,7 +188,6 @@ def make_list_wf_run_response(
 def make_list_wf_run_paginated_response(
     ids: List[WorkflowRunID],
     workflow_def_ids: List[WorkflowDefID],
-    statuses: List[RunStatus],
 ):
     """
     Based on:
@@ -188,8 +196,8 @@ def make_list_wf_run_paginated_response(
     # Assume empty task runs for now
     return {
         "data": [
-            _wf_run_resp(id_, wf_def_id, status, [])
-            for id_, wf_def_id, status in zip(ids, workflow_def_ids, statuses)
+            _list_wf_run_resp(id_, wf_def_id)
+            for id_, wf_def_id in zip(ids, workflow_def_ids)
         ],
         "meta": {
             "pagination": {

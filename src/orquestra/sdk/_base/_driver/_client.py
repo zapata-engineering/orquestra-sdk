@@ -17,7 +17,7 @@ from requests import codes
 
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import WorkflowResult
-from orquestra.sdk.schema.workflow_run import WorkflowRun
+from orquestra.sdk.schema.workflow_run import WorkflowRun, WorkflowRunMinimal
 
 from . import _exceptions, _models
 
@@ -320,7 +320,7 @@ class DriverClient:
         workflow_def_id: Optional[_models.WorkflowDefID] = None,
         page_size: Optional[int] = None,
         page_token: Optional[str] = None,
-    ) -> Paginated[WorkflowRun]:
+    ) -> Paginated[WorkflowRunMinimal]:
         """
         List workflow runs with a specified workflow def ID from the workflow driver
 
