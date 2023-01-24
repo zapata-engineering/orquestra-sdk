@@ -53,11 +53,11 @@ class TestCommandTreeAssembly:
             ["workflow", "results"],
             ["task"],
             ["task", "results"],
+            ["task", "logs"],
             ["up"],
             ["down"],
             ["status"],
             ["login"],
-            ["task", "logs"],
         ],
     )
     @pytest.mark.parametrize(

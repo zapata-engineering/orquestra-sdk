@@ -116,7 +116,7 @@ def view(wf_run_id: t.Optional[str], config: t.Optional[str]):
     action.on_cmd_call(wf_run_id, config)
 
 
-@workflow.command(name="results")
+@workflow.command(name="results", aliases=["outputs"])
 @cloup.argument("wf_run_id", required=False)
 @CONFIG_OPTION
 @DOWNLOAD_DIR_OPTION
@@ -148,11 +148,11 @@ def wf_results(
     )
 
 
-@workflow.command()
+@workflow.command(name="logs")
 @cloup.argument("wf_run_id", required=False)
 @CONFIG_OPTION
 @DOWNLOAD_DIR_OPTION
-def logs(
+def wf_logs(
     wf_run_id: t.Optional[str],
     config: t.Optional[str],
     download_dir: t.Optional[Path],
@@ -232,7 +232,7 @@ def task():
     pass
 
 
-@task.command(name="results")
+@task.command(name="results", aliases=["outputs"])
 @cloup.option("--wf-run-id")
 @cloup.option("--fn-name")
 @cloup.option("--task-inv-id")
