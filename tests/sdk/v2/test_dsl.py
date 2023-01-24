@@ -455,7 +455,9 @@ def test_deferred_git_import_resolved_detached_head(my_fake_repo_setup):
     # Detach HEAD
     my_fake_repo.head.reference = my_fake_repo.commit("HEAD~0")
 
-    resolved = _dsl.DeferredGitImport(my_fake_repo.working_dir).resolved()
+    with pytest.warns(UserWarning):
+        resolved = _dsl.DeferredGitImport(my_fake_repo.working_dir).resolved()
+
     assert resolved.git_ref == my_fake_repo.head.object.hexsha
 
 

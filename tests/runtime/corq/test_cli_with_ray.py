@@ -99,6 +99,9 @@ class TestCLIWithRay:
     https://docs.ray.io/en/releases-1.9.2/starting-ray.html#starting-ray-on-a-single-machine
     """
 
+    # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
+    # unraisable exceptions. Last tested with Ray 2.0.1.
+    @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     def test_submit_v2_workflow(self, setup_ray, mock_workflow_db_location):
         args = argparse.Namespace(
             workflow_def_name="hello_workflow",
@@ -235,13 +238,14 @@ class TestCLIWithRay:
                 run_ids.append(submit_resp.workflow_runs[0].id)
 
             # 2. Get status for all runs
-            response = action.orq_get_workflow_run(
-                argparse.Namespace(
-                    directory=project_dir,
-                    workflow_run_id=None,
-                    config=TEST_CONFIG_NAME,
+            with pytest.warns(FutureWarning):
+                response = action.orq_get_workflow_run(
+                    argparse.Namespace(
+                        directory=project_dir,
+                        workflow_run_id=None,
+                        config=TEST_CONFIG_NAME,
+                    )
                 )
-            )
             assert response.meta.success
             assert response.meta.code == ResponseStatusCode.OK
 
@@ -1073,6 +1077,9 @@ class TestCLIWithRayFailures:
             ),
         )
 
+    # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
+    # unraisable exceptions. Last tested with Ray 2.0.1.
+    @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     def test_ray_connection_failure(self, tmp_path, monkeypatch, capsys, patch_config):
         tell_tale = "Testing Ray Failure"
 

@@ -219,7 +219,9 @@ class TestDirtyGitRepo:
             force=True,
         )
 
-        result = action.orq_submit_workflow_def(args)
+        with pytest.warns(exceptions.DirtyGitRepo):
+            result = action.orq_submit_workflow_def(args)
+
         assert isinstance(result, SubmitWorkflowDefResponse)
         assert "mocked ID" in [run.id for run in result.workflow_runs]
 

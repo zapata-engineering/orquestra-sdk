@@ -52,7 +52,7 @@ def invoke_callables(fns: t.List[t.Callable]) -> t.List[t.Any]:
     return [fn() for fn in fns]
 
 
-@sdk.task
+@sdk.task(n_outputs=1)
 def generate_simple_callable(num: int = 1) -> t.Callable:
     def _inner():
         return 42 + num
@@ -60,7 +60,7 @@ def generate_simple_callable(num: int = 1) -> t.Callable:
     return _inner
 
 
-@sdk.task
+@sdk.task(n_outputs=2)
 def generate_simple_callables(num: int = 1) -> t.List[t.Callable]:
     def _inner_1():
         return 42 + num
