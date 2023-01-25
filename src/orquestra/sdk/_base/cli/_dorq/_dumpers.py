@@ -12,8 +12,7 @@ from orquestra.sdk._base import serde
 from orquestra.sdk.schema.workflow_run import TaskInvocationId, WorkflowRunId
 
 
-# TODO: rename to WFOutputDumper
-class ArtifactDumper:
+class WFOutputDumper:
     """
     Writes workflow run's output artifact to a file.
     """

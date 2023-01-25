@@ -10,7 +10,7 @@ from orquestra.sdk._base.cli._dorq import _dumpers
 from orquestra.sdk.schema.ir import ArtifactFormat
 
 
-class TestArtifactDumper:
+class TestWFOutputDumper:
     @staticmethod
     @pytest.mark.parametrize(
         "value",
@@ -23,7 +23,7 @@ class TestArtifactDumper:
         # Given
         wf_run_id = "wf.1234"
         output_index = 1
-        dumper = _dumpers.ArtifactDumper()
+        dumper = _dumpers.WFOutputDumper()
 
         # When
         details = dumper.dump(
@@ -62,7 +62,7 @@ class TestArtifactDumper:
         wf_run_id = "wf.1234"
         output_index = 2
         dir_path = tmp_path / "new_dir"
-        dumper = _dumpers.ArtifactDumper()
+        dumper = _dumpers.WFOutputDumper()
 
         # When
         details = dumper.dump(

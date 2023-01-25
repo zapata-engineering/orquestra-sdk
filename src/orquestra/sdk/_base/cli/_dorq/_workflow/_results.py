@@ -22,7 +22,7 @@ class Action:
     def __init__(
         self,
         presenter=_presenters.WrappedCorqOutputPresenter(),
-        dumper=_dumpers.ArtifactDumper(),
+        dumper=_dumpers.WFOutputDumper(),
         wf_run_repo=_repos.WorkflowRunRepo(),
         config_resolver: t.Optional[_arg_resolvers.WFConfigResolver] = None,
         wf_run_resolver: t.Optional[_arg_resolvers.WFRunResolver] = None,
