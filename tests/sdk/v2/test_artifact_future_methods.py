@@ -7,6 +7,7 @@ import pytest
 
 import orquestra.sdk as sdk
 from orquestra.sdk import exceptions
+from orquestra.sdk._base import _workflow
 from orquestra.sdk._base._dsl import DEFAULT_IMAGE
 
 resources_no_default = {
@@ -175,8 +176,12 @@ class TestArifactFutureMethodsCalls:
         """Check the proper formatting of the workflow syntax error
         associated to calling a task that is a method of an object
         """
+        with pytest.warns(_workflow.NotATaskWarning):
+            wf_def = wf_with_method_task()
+
         with pytest.raises(exceptions.WorkflowSyntaxError) as excinfo:
-            wf_with_method_task().model
+            wf_def.model
+
         print(str(excinfo.value))
 
         error_message = [
@@ -191,8 +196,12 @@ class TestArifactFutureMethodsCalls:
         """Check the proper formatting of the workflow syntax error
         associated to calling a task that is a method of an object
         """
+        with pytest.warns(_workflow.NotATaskWarning):
+            wf_def = wf_with_mixed_calls()
+
         with pytest.raises(exceptions.WorkflowSyntaxError) as excinfo:
-            wf_with_mixed_calls().model
+            wf_def.model
+
         error_message = [
             "The task get_id seems to be a method, if so modify it to not be a method.",
             "Error message: missing a required argument: 'self'",

@@ -72,6 +72,9 @@ class TestRayRuntimeMethods:
         Tests that validate .create_workflow_run().
         """
 
+        # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
+        # unraisable exceptions. Last tested with Ray 2.2.0.
+        @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_running_same_workflow_def_twice(self, runtime: _dag.RayRuntime):
             wf_def = _example_wfs.multioutput_wf.model
             run_id1 = runtime.create_workflow_run(wf_def)
@@ -659,6 +662,9 @@ class TestDirectRayReader:
 
 
 @pytest.mark.slow
+# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
+# unraisable exceptions. Last tested with Ray 2.2.0.
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 def test_task_code_unavailable_at_building_dag(runtime: _dag.RayRuntime):
     """
     Verifies that the task code is required only at the task-execution time, and it is

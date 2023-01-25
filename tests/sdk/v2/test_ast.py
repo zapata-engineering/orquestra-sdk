@@ -8,7 +8,7 @@ from types import FunctionType
 import numpy as np
 import pytest
 
-from orquestra.sdk._base import _ast
+from orquestra.sdk._base import _ast, _workflow
 
 from .test_artifact_future_methods import (
     ObjWithTask,
@@ -171,8 +171,12 @@ class TestCallVisitor:
     @staticmethod
     def test_identify_calls_from_workflow_function():
         """Test the identification of calls using the AST of the workflow function"""
-        assert isinstance(wf_with_mixed_calls()._fn, FunctionType)
-        source = inspect.getsource(wf_with_mixed_calls()._fn)
+        with pytest.warns(_workflow.NotATaskWarning):
+            fn = wf_with_mixed_calls()._fn
+
+        assert isinstance(fn, FunctionType)
+        source = inspect.getsource(fn)
+
         fn_body = ast.parse(_ast.normalize_indents(source))
         visitor = _ast.CallVisitor()
         visitor.visit(fn_body)

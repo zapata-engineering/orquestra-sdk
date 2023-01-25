@@ -8,8 +8,8 @@ import json
 import re
 import time
 import typing as t
-import unittest.mock
 from contextlib import nullcontext as does_not_raise
+from unittest.mock import Mock
 
 import git
 import pytest
@@ -1000,14 +1000,23 @@ def test_custom_task_names(task_name, argument, expected):
 class TestNumberOfFetchesOnInferRepos:
     @pytest.fixture()
     def setup_fetch(self, monkeypatch):
-        fake_fetch = unittest.mock.Mock()
+        fake_fetch = Mock()
         monkeypatch.setattr(git.remote.Remote, "fetch", fake_fetch)
 
-        # dont raise errors in Unit Tests
-        monkeypatch.setattr(git.Repo, "is_dirty", lambda _: False)
         yield fake_fetch
 
-    def test_one_task_multiple_invocations(self, setup_fetch):
+    @pytest.fixture()
+    def mock_repo(self, monkeypatch):
+        # Avoid "DirtyRepo" errors in tests
+        monkeypatch.setattr(git.Repo, "is_dirty", Mock(return_value=False))
+
+        # Avoid "detached head" warnings in tests
+        fake_head = Mock()
+        fake_head.is_detached = False
+        fake_head.ref.name = "my_branch"
+        monkeypatch.setattr(git.Repo, "head", fake_head)
+
+    def test_one_task_multiple_invocations(self, setup_fetch, mock_repo):
         @_dsl.task(source_import=_dsl.GitImport.infer())
         def infer_task_1(prev: t.Optional[int]):
             return (prev or 0) + 1
@@ -1022,7 +1031,7 @@ class TestNumberOfFetchesOnInferRepos:
         _ = wf_1.model
         assert setup_fetch.call_count == 1
 
-    def test_multi_task_multiple_invocations(self, setup_fetch):
+    def test_multi_task_multiple_invocations(self, setup_fetch, mock_repo):
         @_dsl.task(source_import=_dsl.GitImport.infer())
         def infer_task_1(prev: t.Optional[int]):
             return (prev or 0) + 1
@@ -1042,7 +1051,7 @@ class TestNumberOfFetchesOnInferRepos:
         _ = wf_1.model
         assert setup_fetch.call_count == 1
 
-    def test_one_task_multiple_wfs(self, setup_fetch):
+    def test_one_task_multiple_wfs(self, setup_fetch, mock_repo):
         @_dsl.task(source_import=_dsl.GitImport.infer())
         def infer_task_1(prev: t.Optional[int]):
             return (prev or 0) + 1
@@ -1065,7 +1074,7 @@ class TestNumberOfFetchesOnInferRepos:
         _ = wf_2.model
         assert setup_fetch.call_count == 2
 
-    def test_different_infer_parameters(self, setup_fetch):
+    def test_different_infer_parameters(self, setup_fetch, mock_repo):
         @_dsl.task(
             source_import=_dsl.DeferredGitImport(
                 local_repo_path=".", git_ref="origin/main"

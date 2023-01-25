@@ -65,6 +65,9 @@ class TestSnippets:
 
     @staticmethod
     @pytest.mark.dependency()
+    # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
+    # unraisable exceptions. Last tested with Ray 2.2.0.
+    @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     def test_execute_workflow(change_test_dir, shared_ray_conn, change_db_location):
         # Given
 
@@ -87,6 +90,9 @@ class TestSnippets:
 
     @staticmethod
     @pytest.mark.dependency(depends=["TestSnippets::test_execute_workflow"])
+    # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
+    # unraisable exceptions. Last tested with Ray 2.2.0.
+    @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     def test_get_results(change_test_dir, shared_ray_conn, change_db_location):
         # Given
 
