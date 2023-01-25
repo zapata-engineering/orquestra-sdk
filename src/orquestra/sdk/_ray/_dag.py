@@ -840,9 +840,6 @@ class RayRuntime(RuntimeInterface):
             succeeded_obj_refs, timeout=JUST_IN_CASE_TIMEOUT
         )
 
-        # TODO: remove this as soon as #21 is merged.
-        assert wf_run.workflow_def is not None
-
         # Ray returns a plain value instead of 1-element tuple for 1-output tasks.
         # We need to wrap such outputs in tuples to maintain the same data shape across
         # RuntimeInterface implementations.
