@@ -14,7 +14,7 @@ from orquestra.sdk.schema.workflow_run import TaskInvocationId, WorkflowRunId
 
 class WFOutputDumper:
     """
-    Writes workflow run's output artifact to a file.
+    Writes a workflow run's output artifacts to a file.
     """
 
     def dump(
@@ -25,7 +25,7 @@ class WFOutputDumper:
         dir_path: Path,
     ) -> serde.DumpDetails:
         """
-        Serialize artifact value and save it as a new file.
+        Serialize a single artifact value and save it as a new file.
 
         Creates missing directories. Generates filenames based on ``wf_run_id`` and
         ``output_index``. Figures out the serialization format based on the object. The
