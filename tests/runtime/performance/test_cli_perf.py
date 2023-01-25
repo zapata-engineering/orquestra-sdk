@@ -14,6 +14,7 @@ import json
 import shutil
 import subprocess
 import tempfile
+import time
 import typing as t
 from pathlib import Path
 
@@ -78,21 +79,32 @@ def orq_workflow_run(ray_cluster, orq_project_dir):
     output = _run_orq_command(
         ["submit", "workflow-def", "-d", orq_project_dir, "-o", "json", "-c", "local"]
     )
+
     # Parse the stdout to get the workflow ID
     res = json.loads(output.stdout)
     workflow_id = res["workflow_runs"][0]["id"]
-    # Get the results to ensure the job has finished
-    _run_orq_command(
-        [
-            "get",
-            "workflow-run-results",
-            workflow_id,
-            "-d",
-            orq_project_dir,
-            "-c",
-            "local",
-        ]
-    )
+
+    # Ray seems to not be in-sync with workflow submission. Lets lazily wait for it
+    # to have to workflow submitted. workflow-run-results will wait for it to complete
+    timeout = 10
+    for i in range(timeout):
+        try:
+            _run_orq_command(
+                [
+                    "get",
+                    "workflow-run-results",
+                    workflow_id,
+                    "-d",
+                    orq_project_dir,
+                    "-c",
+                    "local",
+                ]
+            )
+            break
+        except subprocess.CalledProcessError:
+            if i >= timeout:
+                raise
+
     yield workflow_id
 
 

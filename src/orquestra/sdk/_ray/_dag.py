@@ -158,6 +158,7 @@ def _make_ray_dag_node(
     ray_kwargs: t.Mapping[str, t.Any],
     pos_unpack_specs: t.Sequence[PosArgUnpackSpec],
     kw_unpack_specs: t.Sequence[KwArgUnpackSpec],
+    project_dir: t.Optional[Path],
     user_fn_ref: t.Optional[ir.FunctionRef] = None,
 ) -> _client.FunctionNode:
     """
@@ -179,6 +180,9 @@ def _make_ray_dag_node(
 
     @client.remote
     def _ray_remote(*inner_args, **inner_kwargs):
+        if project_dir is not None:
+            dispatch.ensure_sys_paths([str(project_dir)])
+
         user_fn = _locate_user_fn(user_fn_ref) if user_fn_ref else _aggregate_outputs
         wrapped = TupleUnwrapper(
             fn=user_fn,
@@ -310,7 +314,9 @@ def _gather_kwargs(
     return ray_kwargs, kw_unpack_specs
 
 
-def _make_ray_dag(client: RayClient, wf: ir.WorkflowDef, wf_run_id: str):
+def _make_ray_dag(
+    client: RayClient, wf: ir.WorkflowDef, wf_run_id: str, project_dir: Path
+):
     ray_consts: t.Mapping[ir.ConstantNodeId, t.Any] = {
         id: serde.deserialize_constant(node) for id, node in wf.constant_nodes.items()
     }
@@ -368,6 +374,7 @@ def _make_ray_dag(client: RayClient, wf: ir.WorkflowDef, wf_run_id: str):
             ray_kwargs=ray_kwargs,
             pos_unpack_specs=pos_unpack_specs,
             kw_unpack_specs=kw_unpack_specs,
+            project_dir=project_dir,
         )
 
         for output_id in ir_invocation.output_ids:
@@ -395,6 +402,7 @@ def _make_ray_dag(client: RayClient, wf: ir.WorkflowDef, wf_run_id: str):
         ray_kwargs={},
         pos_unpack_specs=aggr_task_specs,
         kw_unpack_specs=[],
+        project_dir=None,
     )
 
     # Data aggregation step is run with catch_exceptions=True - so it returns tuple of
@@ -666,31 +674,18 @@ class RayRuntime(RuntimeInterface):
     def create_workflow_run(self, workflow_def: ir.WorkflowDef) -> WorkflowRunId:
         wf_run_id = _generate_wf_run_id(workflow_def)
 
-        # This is huge workaround for the issue:
-        # https://github.com/ray-project/ray/issues/29253
-        # where workflow fails if interpreter calling it exits before all the tasks
-        # are scheduled. It works properly when WF is created from ray.remote worker
-        @self._client.remote
-        def create_ray_workflow():
-            # adding path to the sys_path, so we can de-ref functions in workflow_defs
-            dispatch.ensure_sys_paths([str(self._project_dir)])
-            dag = _make_ray_dag(self._client, workflow_def, wf_run_id)
-            wf_user_metadata: WfUserMetadata = {
-                "workflow_def": _pydatic_to_json_dict(workflow_def),
-            }
+        dag = _make_ray_dag(self._client, workflow_def, wf_run_id, self._project_dir)
+        wf_user_metadata: WfUserMetadata = {
+            "workflow_def": _pydatic_to_json_dict(workflow_def),
+        }
 
-            # Unfortunately, Ray doesn't validate uniqueness of workflow IDs. Let's
-            # hope we won't get a collision.
-            _ = self._client.run_dag_async(
-                dag,
-                workflow_id=wf_run_id,
-                metadata=wf_user_metadata,
-            )
-
-        # .get blocks for the function to be completed. This is required because:
-        # 1. We need to make sure WF is fully created and submitted into ray
-        # 2. This catch exceptions that happen at submission time (like unknown module)
-        self._client.get(create_ray_workflow.remote())
+        # Unfortunately, Ray doesn't validate uniqueness of workflow IDs. Let's
+        # hope we won't get a collision.
+        _ = self._client.run_dag_async(
+            dag,
+            workflow_id=wf_run_id,
+            metadata=wf_user_metadata,
+        )
 
         config_name: str
         config_name = self._config.config_name
