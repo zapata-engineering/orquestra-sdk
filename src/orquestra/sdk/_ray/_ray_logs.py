@@ -5,6 +5,7 @@
 Class to get logs from Ray for particular Workflow, both historical and live.
 """
 import glob
+import json
 import os
 import time
 import typing as t
@@ -64,6 +65,18 @@ class _RayLogs:
         elif (
             self.workflow_or_task_run_id is None
         ) or self.workflow_or_task_run_id in line:
+            try:
+                data = json.loads(line)
+                _line = "{timestamp} {level} {filename} -- {message}	[{run_id}]".format(
+                    timestamp=data["timestamp"],
+                    level=data["level"],
+                    filename=data["filename"],
+                    message=data["message"]["logs"],
+                    run_id=data["message"]["run_id"],
+                )
+                line = _line
+            except json.decoder.JSONDecodeError:
+                return line
             return line
 
     def _read_log_files(self):
