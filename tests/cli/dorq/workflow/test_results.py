@@ -41,7 +41,6 @@ class TestAction:
             presenter = Mock()
             dumper = Mock()
             wf_run_repo = Mock()
-            # wf_run = "<wf run sentinel>"
             fake_outputs = [object(), "hello", None]
             wf_run_repo.get_wf_outputs.return_value = fake_outputs
 
@@ -100,7 +99,6 @@ class TestAction:
             presenter = Mock()
             dumper = Mock()
             wf_run_repo = Mock()
-            # wf_run = "<wf run sentinel>"
             fake_outputs = [object(), "hello", None]
             wf_run_repo.get_wf_outputs.return_value = fake_outputs
 

@@ -50,11 +50,14 @@ class TestCommandTreeAssembly:
             ["workflow", "submit"],
             ["workflow", "stop"],
             ["workflow", "logs"],
+            ["workflow", "results"],
+            ["task"],
+            ["task", "results"],
+            ["task", "logs"],
             ["up"],
             ["down"],
             ["status"],
             ["login"],
-            ["task", "logs"],
         ],
     )
     @pytest.mark.parametrize(

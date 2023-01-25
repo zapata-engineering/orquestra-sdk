@@ -19,6 +19,7 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base import _config, _db, _factory, loader
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe import _client
+from orquestra.sdk._base.abc import ArtifactValue
 from orquestra.sdk.schema.configs import ConfigName, RuntimeName
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.workflow_run import (
@@ -189,6 +190,38 @@ class WorkflowRunRepo:
             raise
 
         return outputs
+
+    def get_task_outputs(
+        self,
+        wf_run_id: WorkflowRunId,
+        task_inv_id: TaskInvocationId,
+        config_name: ConfigName,
+    ) -> t.Tuple[ArtifactValue]:
+        """
+        Asks the runtime for task output values. This includes
+
+        Raises:
+            orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match a
+                known run ID.
+            orquestra.sdk.exceptions.TaskInvocationNotFoundError: when task_inv_id
+                doesn't match the workflow definition.
+            orquestra.sdk.exceptions.ConfigNameNotFoundError: when the named config is
+                not found in the file.
+        """
+        try:
+            wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
+        except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
+            raise
+
+        artifacts = wf_run.get_artifacts()
+        try:
+            task_outputs = artifacts[task_inv_id]
+        except KeyError as e:
+            raise exceptions.TaskInvocationNotFoundError(
+                invocation_id=task_inv_id
+            ) from e
+
+        return task_outputs
 
     def _get_wf_def_model(
         self, wf_run_id: WorkflowRunId, config_name: ConfigName

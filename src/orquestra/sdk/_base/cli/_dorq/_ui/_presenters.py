@@ -70,40 +70,8 @@ class WrappedCorqOutputPresenter:
     def show_stopped_wf_run(self, wf_run_id: WorkflowRunId):
         click.echo(f"Workflow run {wf_run_id} stopped.")
 
-    def show_dumped_wf_result(self, dump_details: serde.DumpDetails):
-        format_name: str
-        if dump_details.format == ArtifactFormat.JSON:
-            format_name = "a text json file"
-        elif dump_details.format == ArtifactFormat.ENCODED_PICKLE:
-            # Our enum case name is ENCODED_PICKLE, but this isn't entirely consistent
-            # with the file contents. Here, we don't base64-encode the pickle bytes, we
-            # just dump them directly to the file. Custom caption should help users
-            # avoid the confusion.
-            format_name = "a binary pickle file"
-        else:
-            format_name = dump_details.format.name
-
-        click.echo(f"Artifact saved at {dump_details.file_path} " f"as {format_name}.")
-
     def show_dumped_wf_logs(self, path: Path):
         click.echo(f"Workflow logs saved at {path}")
-
-    def show_workflow_outputs(
-        self, values: t.Sequence[t.Any], wf_run_id: WorkflowRunId
-    ):
-        """
-        Prints a preview of the output artifact values.
-
-        Args:
-            values: plain, deserialized artifact values.
-        """
-        click.echo(f"Workflow run {wf_run_id} has {len(values)} outputs.")
-
-        for value_i, value in enumerate(values):
-            click.echo()
-            click.echo(f"Output {value_i}. Object type: {type(value)}")
-            click.echo("Pretty printed value:")
-            click.echo(pprint.pformat(value))
 
     @staticmethod
     def _format_log_dict(logs: t.Dict[TaskInvocationId, t.List[str]]):
@@ -128,6 +96,67 @@ class WrappedCorqOutputPresenter:
         status_code = _errors.pretty_print_exception(exception)
 
         sys.exit(status_code.value)
+
+
+class ArtifactPresenter:
+    def show_task_outputs(
+        self,
+        values: t.Sequence[t.Any],
+        wf_run_id: WorkflowRunId,
+        task_inv_id: TaskInvocationId,
+    ):
+        """
+        Prints a preview of the values produced by a task run.
+
+        Args:
+            values: plain, deserialized artifact values.
+        """
+        click.echo(
+            f"In workflow {wf_run_id}, task invocation {task_inv_id} produced "
+            f"{len(values)} outputs."
+        )
+
+        for value_i, value in enumerate(values):
+            click.echo()
+            click.echo(f"Output {value_i}. Object type: {type(value)}")
+            click.echo("Pretty printed value:")
+            click.echo(pprint.pformat(value))
+
+    def show_workflow_outputs(
+        self, values: t.Sequence[t.Any], wf_run_id: WorkflowRunId
+    ):
+        """
+        Prints a preview of the output values produced by a workflow.
+
+        Args:
+            values: plain, deserialized artifact values.
+        """
+        click.echo(f"Workflow run {wf_run_id} has {len(values)} outputs.")
+
+        for value_i, value in enumerate(values):
+            click.echo()
+            click.echo(f"Output {value_i}. Object type: {type(value)}")
+            click.echo("Pretty printed value:")
+            click.echo(pprint.pformat(value))
+
+    def show_dumped_artifact(self, dump_details: serde.DumpDetails):
+        """
+        Prints summary after an artifact was stored on disk. Suitable for both workflow
+        outputs and task outputs.
+        """
+        format_name: str
+        if dump_details.format == ArtifactFormat.JSON:
+            format_name = "a text json file"
+        elif dump_details.format == ArtifactFormat.ENCODED_PICKLE:
+            # Our enum case name is ENCODED_PICKLE, but this isn't entirely consistent
+            # with the file contents. Here, we don't base64-encode the pickle bytes, we
+            # just dump them directly to the file. Custom caption should help users
+            # avoid the confusion.
+            format_name = "a binary pickle file"
+        else:
+            format_name = dump_details.format.name
+
+        click.echo(f"Artifact saved at {dump_details.file_path} " f"as {format_name}.")
 
 
 class ServicePresenter:

@@ -339,7 +339,7 @@ class TestRayRuntimeMethods:
         Tests that validate .get_available_outputs().
         """
 
-        def test_after_a_failed_task(self, runtime: _dag.RayRuntime, tmp_path):
+        def test_after_a_failed_task(self, runtime: _dag.RayRuntime):
             """
             The workflow graph:
 
@@ -367,9 +367,13 @@ class TestRayRuntimeMethods:
                     f"Wf run: {wf_run}"
                 )
 
-            # expect only one finished task
+            # Expect only one finished task.
             assert len(outputs) == 1
-            assert 58 in set(outputs.values())
+
+            # The outputs dict has an entry for each task invocation. Each entry's value
+            # should be a tuple.
+            inv_output = list(outputs.values())[0]
+            assert inv_output == (58,)
 
         def test_before_any_task_finishes(self, runtime: _dag.RayRuntime, tmp_path):
             """
@@ -459,30 +463,88 @@ class TestRayRuntimeMethods:
 
 @pytest.mark.slow
 @pytest.mark.parametrize(
-    "wf,expected_outputs",
+    "wf,expected_outputs,expected_intermediate",
     [
-        (_example_wfs.greet_wf, ("yooooo emiliano from zapata computing",)),
+        (
+            _example_wfs.greet_wf,
+            ("yooooo emiliano from zapata computing",),
+            {
+                "invocation-0-task-make-greeting": (
+                    "yooooo emiliano from zapata computing",
+                )
+            },
+        ),
         (
             _example_wfs.complicated_wf,
             ("yooooo emiliano Zapata from Zapata computing",),
+            {
+                "invocation-0-task-make-greeting": (
+                    ("yooooo emiliano Zapata from Zapata computing",)
+                ),
+                "invocation-1-task-capitalize": ("Zapata computing",),
+                "invocation-2-task-concat": ("emiliano Zapata",),
+                "invocation-3-task-capitalize": ("Zapata",),
+            },
         ),
-        (_example_wfs.multioutput_wf, ("Emiliano Zapata", "Zapata computing")),
+        (
+            _example_wfs.multioutput_wf,
+            ("Emiliano Zapata", "Zapata computing"),
+            {
+                "invocation-0-task-concat": ("Emiliano Zapata",),
+                "invocation-1-task-capitalize": ("Zapata",),
+                "invocation-2-task-capitalize": ("Zapata computing",),
+                "invocation-3-task-make-company-name": ("zapata computing",),
+            },
+        ),
         (
             _example_wfs.multioutput_task_wf,
             ("Zapata", "Computing", "Computing", ("Zapata", "Computing")),
+            {
+                "invocation-0-task-multioutput-task": ("Zapata", "Computing"),
+                # The outputs for invocation 1 and 2 should be just a single tuple, not
+                # tuple-in-tuple. TODO: change it when working on
+                # https://zapatacomputing.atlassian.net/browse/ORQSDK-695.
+                "invocation-1-task-multioutput-task": (("Zapata", "Computing"),),
+                "invocation-2-task-multioutput-task": (("Zapata", "Computing"),),
+            },
         ),
-        (_example_wfs.greet_wf_kw, ("yooooo emiliano from zapata computing",)),
+        (
+            _example_wfs.greet_wf_kw,
+            ("yooooo emiliano from zapata computing",),
+            {
+                "invocation-0-task-make-greeting": (
+                    "yooooo emiliano from zapata computing",
+                )
+            },
+        ),
         (
             _example_wfs.wf_using_inline_imports,
             ("Emiliano Zapata", "Zapata computing"),
+            {
+                "invocation-0-task-concat": ("Emiliano Zapata",),
+                "invocation-1-task-capitalize-inline": ("Zapata",),
+                "invocation-2-task-capitalize-inline": ("Zapata computing",),
+                "invocation-3-task-make-company-name": ("zapata computing",),
+            },
         ),
     ],
 )
-def test_run_and_get_output(runtime: _dag.RayRuntime, wf, expected_outputs):
+def test_run_and_get_output(
+    runtime: _dag.RayRuntime, wf, expected_outputs, expected_intermediate
+):
+    """
+    Verifies methods for getting outputs, both the "final" and "intermediate".
+    """
+    # Given
     run_id = runtime.create_workflow_run(wf.model)
-    wf_result = runtime.get_workflow_run_outputs(run_id)
 
-    assert wf_result == expected_outputs
+    # When
+    wf_results = runtime.get_workflow_run_outputs(run_id)
+    intermediate_outputs = runtime.get_available_outputs(run_id)
+
+    # Then
+    assert wf_results == expected_outputs
+    assert intermediate_outputs == expected_intermediate
 
 
 # This test is slow to run locally because:

@@ -46,29 +46,16 @@ class Action:
         self._presenter = presenter
         self._dumper = dumper
 
-    def on_cmd_call(
-        self,
-        wf_run_id: t.Optional[WorkflowRunId],
-        task_invocation_id: t.Optional[TaskInvocationId],
-        fn_name: t.Optional[str],
-        config: t.Optional[ConfigName],
-        download_dir: t.Optional[Path],
-    ):
+    def on_cmd_call(self, *args, **kwargs):
         try:
-            self._on_cmd_call_with_exceptions(
-                wf_run_id=wf_run_id,
-                task_invocation_id=task_invocation_id,
-                fn_name=fn_name,
-                download_dir=download_dir,
-                config=config,
-            )
+            self._on_cmd_call_with_exceptions(*args, **kwargs)
         except Exception as e:
             self._presenter.show_error(e)
 
     def _on_cmd_call_with_exceptions(
         self,
         wf_run_id: t.Optional[WorkflowRunId],
-        task_invocation_id: t.Optional[TaskInvocationId],
+        task_inv_id: t.Optional[TaskInvocationId],
         fn_name: t.Optional[str],
         config: t.Optional[ConfigName],
         download_dir: t.Optional[Path],
@@ -80,7 +67,7 @@ class Action:
             wf_run_id, resolved_config
         )
         resolver_task_inv_id = self._task_inv_id_resolver.resolve(
-            task_inv_id=task_invocation_id,
+            task_inv_id=task_inv_id,
             fn_name=fn_name,
             wf_run_id=resolved_wf_run_id,
             config=resolved_config,
