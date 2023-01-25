@@ -43,7 +43,7 @@ class TestRunningLocalInBackground:
     class TestTwoStepForm:
         @staticmethod
         # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
-        # unraisable exceptions. Last tested with Ray 2.0.1.
+        # unraisable exceptions. Last tested with Ray 2.2.0.
         @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_single_run(
             patch_config_location, ray, monkeypatch, tmp_path, mock_workflow_db_location
@@ -91,7 +91,7 @@ class TestRunningLocalInBackground:
     class TestReconnectToPreviousRun:
         @staticmethod
         # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
-        # unraisable exceptions. Last tested with Ray 2.0.1.
+        # unraisable exceptions. Last tested with Ray 2.2.0.
         @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_custom_save_locations(
             patch_config_location,
