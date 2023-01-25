@@ -27,9 +27,9 @@ class WFOutputDumper:
         """
         Serialize a single artifact value and save it as a new file.
 
-        Creates missing directories. Generates filenames based on ``wf_run_id`` and
-        ``output_index``. Figures out the serialization format based on the object. The
-        generated file extension matches the inferred format.
+        Missing directories will be created. Filenames will be generate based on
+        ``wf_run_id`` and ``output_index``. The serialization format and file
+        extensions are inferred based on the object.
 
         No standard errors are expected to be raised.
         """
