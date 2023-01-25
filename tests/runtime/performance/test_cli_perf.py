@@ -101,7 +101,7 @@ def orq_workflow_run(ray_cluster, orq_project_dir):
                 ]
             )
             break
-        except Exception:
+        except subprocess.CalledProcessError:
             if i >= timeout:
                 raise
 
