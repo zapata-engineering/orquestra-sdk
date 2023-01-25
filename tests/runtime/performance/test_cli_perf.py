@@ -14,9 +14,9 @@ import json
 import shutil
 import subprocess
 import tempfile
+import time
 import typing as t
 from pathlib import Path
-import time
 
 import pytest
 

@@ -672,9 +672,7 @@ class RayRuntime(RuntimeInterface):
     def create_workflow_run(self, workflow_def: ir.WorkflowDef) -> WorkflowRunId:
         wf_run_id = _generate_wf_run_id(workflow_def)
 
-        dag = _make_ray_dag(
-            self._client, workflow_def, wf_run_id, self._project_dir
-        )
+        dag = _make_ray_dag(self._client, workflow_def, wf_run_id, self._project_dir)
         wf_user_metadata: WfUserMetadata = {
             "workflow_def": _pydatic_to_json_dict(workflow_def),
         }
