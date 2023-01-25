@@ -262,13 +262,7 @@ def task_results(*args, **kwargs):
 @cloup.argument("fn-name", required=False)
 @CONFIG_OPTION
 @DOWNLOAD_DIR_OPTION
-def task_logs(
-    wf_run_id: t.Optional[str],
-    task_inv_id,
-    fn_name,
-    config: t.Optional[str],
-    download_dir: t.Optional[Path],
-):
+def task_logs(*args, **kwargs):
     """
     Shows logs gathered during execution of a single task run.
     """
@@ -276,13 +270,7 @@ def task_logs(
     from ._task._logs import Action
 
     action = Action()
-    action.on_cmd_call(
-        wf_run_id=wf_run_id,
-        task_inv_id=task_inv_id,
-        fn_name=fn_name,
-        config=config,
-        download_dir=download_dir,
-    )
+    action.on_cmd_call(*args, **kwargs)
 
 
 # ----------- top-level 'orq' commands ----------
