@@ -63,11 +63,8 @@ class TestSnippets:
         # Then
         proc.check_returncode()
         std_out = str(proc.stderr, "utf-8")
+        assert '"message": "We\'re doing some quantum work here!"' in std_out
         assert (
-            '{"run_id": "wf.local_run.0000000@tsk.task_local-0.00000", '
-            '"logs": "We\'re doing some quantum work here!"}' in std_out
-        )
-        assert (
-            '{"run_id": "wf.local_run.0000000@tsk.task_local-0.00000", '
-            '"logs": "Another good way to use raw prints from a workflow!"}' in std_out
+            '"message": "Another good way to use raw prints from a workflow!"'
+            in std_out
         )

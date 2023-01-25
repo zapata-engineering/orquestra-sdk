@@ -51,6 +51,8 @@ for task in wf_run.get_tasks():
 * Fixed bug where some log line from Ray may be duplicated when viewing logs
 * Tasks with duplicate imports will no longer fail when running on QE
 * AST parser will no longer print a lot of "Info" messages
+* `sdk.WorkflowRun.get_logs()` now only returns logs produced by the user. Previously, it included internal debug messages produced by Ray.
+* Logs from workflows submitted to Ray are now always returned as JSONL lines
 
 
 *Internal*

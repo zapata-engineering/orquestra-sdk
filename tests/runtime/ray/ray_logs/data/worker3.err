@@ -1,0 +1,46 @@
+:task_name:create_ray_workflow
+2023-02-01 16:04:57,309	INFO api.py:203 -- Workflow job created. [id="wf.orquestra_basic_demo.e82cbfa"].
+:task_name:_workflow_task_executor_remote
+2023-02-01 16:04:57,685	INFO task_executor.py:78 -- Task status [RUNNING]	[wf.orquestra_basic_demo.e82cbfa@invocation-0-task-generate-data]
+{"timestamp": "2023-02-01T16:04:59+0100", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": "wf.orquestra_basic_demo.e82cbfa", "task_run_id": "invocation-0-task-generate-data"}
+{"timestamp": "2023-02-01T16:04:59+0100", "level": "ERROR", "filename": "_dag.py:194", "message": "Traceback (most recent call last):\n  File \"/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py\", line 191, in _ray_remote\n    return wrapped(*inner_args, **inner_kwargs)\n  File \"/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py\", line 146, in __call__\n    return self._fn(*unpacked_args, **unpacked_kwargs)\n  File \"/Users/alex/Code/zapata/evangelism-workflows/demos/basic/tasks.py\", line 39, in generate_data\n    foo = 1 / 0\nZeroDivisionError: division by zero\n", "wf_run_id": "wf.orquestra_basic_demo.e82cbfa", "task_run_id": "invocation-0-task-generate-data"}
+Traceback (most recent call last):
+  File "/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py", line 191, in _ray_remote
+    return wrapped(*inner_args, **inner_kwargs)
+  File "/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py", line 146, in __call__
+    return self._fn(*unpacked_args, **unpacked_kwargs)
+  File "/Users/alex/Code/zapata/evangelism-workflows/demos/basic/tasks.py", line 39, in generate_data
+    foo = 1 / 0
+ZeroDivisionError: division by zero
+2023-02-01 16:04:59,460	ERROR worker.py:399 -- Unhandled error (suppress with 'RAY_IGNORE_UNHANDLED_ERRORS=1'): [36mray::WorkflowManagementActor.execute_workflow()[39m (pid=74572, ip=127.0.0.1, repr=<ray.workflow.workflow_access.WorkflowManagementActor object at 0x113cf5660>)
+ray.exceptions.RayTaskError(ZeroDivisionError): [36mray::_workflow_task_executor_remote()[39m (pid=74588, ip=127.0.0.1)
+  File "/Users/alex/Code/zapata/evangelism-workflows/venv/lib/python3.10/site-packages/ray/workflow/task_executor.py", line 115, in _workflow_task_executor_remote
+    return _workflow_task_executor(
+  File "/Users/alex/Code/zapata/evangelism-workflows/venv/lib/python3.10/site-packages/ray/workflow/task_executor.py", line 84, in _workflow_task_executor
+    raise e
+  File "/Users/alex/Code/zapata/evangelism-workflows/venv/lib/python3.10/site-packages/ray/workflow/task_executor.py", line 79, in _workflow_task_executor
+    output = func(*args, **kwargs)
+  File "/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py", line 198, in _ray_remote
+    raise e
+  File "/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py", line 191, in _ray_remote
+    return wrapped(*inner_args, **inner_kwargs)
+  File "/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py", line 146, in __call__
+    return self._fn(*unpacked_args, **unpacked_kwargs)
+  File "/Users/alex/Code/zapata/evangelism-workflows/demos/basic/tasks.py", line 39, in generate_data
+    foo = 1 / 0
+ZeroDivisionError: division by zero
+
+The above exception was the direct cause of the following exception:
+
+[36mray::WorkflowManagementActor.execute_workflow()[39m (pid=74572, ip=127.0.0.1, repr=<ray.workflow.workflow_access.WorkflowManagementActor object at 0x113cf5660>)
+  File "/Users/alex/.pyenv/versions/3.10.2/lib/python3.10/concurrent/futures/_base.py", line 439, in result
+    return self.__get_result()
+  File "/Users/alex/.pyenv/versions/3.10.2/lib/python3.10/concurrent/futures/_base.py", line 391, in __get_result
+    raise self._exception
+  File "/Users/alex/Code/zapata/evangelism-workflows/venv/lib/python3.10/site-packages/ray/workflow/workflow_access.py", line 209, in execute_workflow
+    await executor.run_until_complete(job_id, context, wf_store)
+  File "/Users/alex/Code/zapata/evangelism-workflows/venv/lib/python3.10/site-packages/ray/workflow/workflow_executor.py", line 109, in run_until_complete
+    await asyncio.gather(
+  File "/Users/alex/Code/zapata/evangelism-workflows/venv/lib/python3.10/site-packages/ray/workflow/workflow_executor.py", line 356, in _handle_ready_task
+    raise err
+ray.workflow.exceptions.WorkflowExecutionError: Workflow[id=wf.orquestra_basic_demo.e82cbfa] failed during execution.

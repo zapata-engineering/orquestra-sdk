@@ -8,7 +8,6 @@ RuntimeInterface implementation that uses Ray DAG/Ray Core API.
 from __future__ import annotations
 
 import dataclasses
-import itertools
 import json
 import logging
 import re
@@ -370,6 +369,8 @@ def _make_ray_dag(client: RayClient, wf: ir.WorkflowDef, wf_run_id: str):
         pip = _import_pip_env(ir_invocation, wf)
 
         ray_options = {
+            # The task name should probably be the task run ID, not invocation ID. See:
+            # https://zapatacomputing.atlassian.net/browse/ORQSDK-746
             "name": ir_invocation.id,
             "metadata": inv_metadata,
             # If there are any python packages to install for step - set runtime env
