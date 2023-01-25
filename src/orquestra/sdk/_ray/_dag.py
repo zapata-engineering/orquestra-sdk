@@ -672,34 +672,20 @@ class RayRuntime(RuntimeInterface):
     def create_workflow_run(self, workflow_def: ir.WorkflowDef) -> WorkflowRunId:
         wf_run_id = _generate_wf_run_id(workflow_def)
 
-        # This is huge workaround for the issue:
-        # https://github.com/ray-project/ray/issues/29253
-        # where workflow fails if interpreter calling it exits before all the tasks
-        # are scheduled. It works properly when WF is created from ray.remote worker
-        @self._client.remote
-        def create_ray_workflow():
-            # adding path to the sys_path, so we can de-ref functions in workflow_defs
-            dispatch.ensure_sys_paths([str(self._project_dir)])
+        dag = _make_ray_dag(
+            self._client, workflow_def, wf_run_id, self._project_dir
+        )
+        wf_user_metadata: WfUserMetadata = {
+            "workflow_def": _pydatic_to_json_dict(workflow_def),
+        }
 
-            dag = _make_ray_dag(
-                self._client, workflow_def, wf_run_id, self._project_dir
-            )
-            wf_user_metadata: WfUserMetadata = {
-                "workflow_def": _pydatic_to_json_dict(workflow_def),
-            }
-
-            # Unfortunately, Ray doesn't validate uniqueness of workflow IDs. Let's
-            # hope we won't get a collision.
-            _ = self._client.run_dag_async(
-                dag,
-                workflow_id=wf_run_id,
-                metadata=wf_user_metadata,
-            )
-
-        # .get blocks for the function to be completed. This is required because:
-        # 1. We need to make sure WF is fully created and submitted into ray
-        # 2. This catch exceptions that happen at submission time (like unknown module)
-        self._client.get(create_ray_workflow.remote())
+        # Unfortunately, Ray doesn't validate uniqueness of workflow IDs. Let's
+        # hope we won't get a collision.
+        _ = self._client.run_dag_async(
+            dag,
+            workflow_id=wf_run_id,
+            metadata=wf_user_metadata,
+        )
 
         config_name: str
         config_name = self._config.config_name
