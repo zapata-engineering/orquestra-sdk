@@ -12,7 +12,13 @@ import pydantic
 from pydantic.generics import GenericModel
 
 from orquestra.sdk.schema.ir import WorkflowDef
-from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun, WorkflowRun
+from orquestra.sdk.schema.workflow_run import (
+    RunStatus,
+    State,
+    TaskRun,
+    WorkflowRun,
+    WorkflowRunMinimal,
+)
 
 WorkflowDefID = str
 WorkflowRunID = str
@@ -168,23 +174,38 @@ class TaskRunResponse(pydantic.BaseModel):
         )
 
 
-class WorkflowRunResponse(pydantic.BaseModel):
+class MinimalWorkflowRunResponse(pydantic.BaseModel):
     """
     Implements:
         https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/schemas/WorkflowRun.yaml#L1
     """
 
     id: WorkflowRunID
-    status: RunStatusResponse
+    definitionId: WorkflowDefID
+
+    def to_ir(self, workflow_def: WorkflowDef) -> WorkflowRunMinimal:
+        return WorkflowRunMinimal(
+            id=self.id,
+            workflow_def=workflow_def,
+        )
+
+
+class WorkflowRunResponse(MinimalWorkflowRunResponse):
+    """
+    Implements:
+        https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/schemas/WorkflowRun.yaml#L1
+    """
+
     owner: str
+    status: RunStatusResponse
     taskRuns: List[TaskRunResponse]
 
-    def to_ir(self) -> WorkflowRun:
+    def to_ir(self, workflow_def: WorkflowDef) -> WorkflowRun:
         return WorkflowRun(
             id=self.id,
             status=self.status.to_ir(),
             task_runs=[t.to_ir() for t in self.taskRuns],
-            workflow_def=None,
+            workflow_def=workflow_def,
         )
 
 
@@ -227,7 +248,7 @@ class ListWorkflowRunsRequest(pydantic.BaseModel):
     pageToken: Optional[str]
 
 
-ListWorkflowRunsResponse = List[WorkflowRunResponse]
+ListWorkflowRunsResponse = List[MinimalWorkflowRunResponse]
 
 
 class GetWorkflowRunResponse(pydantic.BaseModel):

@@ -23,6 +23,7 @@ from orquestra.sdk.schema.workflow_run import (
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
+    WorkflowRunMinimal,
 )
 
 
@@ -202,7 +203,7 @@ class RuntimeInterface(ABC):
         limit: t.Optional[int] = None,
         max_age: t.Optional[timedelta] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
-    ) -> t.List[WorkflowRun]:
+    ) -> t.Sequence[WorkflowRunMinimal]:
         """
         List the workflow runs, with some filters
 

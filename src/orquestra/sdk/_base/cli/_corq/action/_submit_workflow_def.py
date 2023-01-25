@@ -23,7 +23,7 @@ from orquestra.sdk.schema.responses import (
     ResponseStatusCode,
     SubmitWorkflowDefResponse,
 )
-from orquestra.sdk.schema.workflow_run import WorkflowRunMinimal
+from orquestra.sdk.schema.workflow_run import WorkflowRunOnlyID
 
 
 def submit(
@@ -95,7 +95,7 @@ def submit(
             code=ResponseStatusCode.OK,
             message="Successfully submitted workflow.",
         ),
-        workflow_runs=[WorkflowRunMinimal(id=workflow_run_id)],
+        workflow_runs=[WorkflowRunOnlyID(id=workflow_run_id)],
     )
 
 

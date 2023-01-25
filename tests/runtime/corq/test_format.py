@@ -87,7 +87,7 @@ class TestPrettyPrintResponse:
                     responses.SubmitWorkflowDefResponse(
                         meta=OK_META,
                         workflow_runs=[
-                            workflow_run.WorkflowRunMinimal(id="a_run_id"),
+                            workflow_run.WorkflowRunOnlyID(id="a_run_id"),
                         ],
                     ),
                     ["a_run_id"],

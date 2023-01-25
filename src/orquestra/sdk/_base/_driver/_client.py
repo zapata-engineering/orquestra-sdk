@@ -17,7 +17,7 @@ from requests import codes
 
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import WorkflowResult
-from orquestra.sdk.schema.workflow_run import WorkflowRun
+from orquestra.sdk.schema.workflow_run import WorkflowRun, WorkflowRunMinimal
 
 from . import _exceptions, _models
 
@@ -320,7 +320,7 @@ class DriverClient:
         workflow_def_id: Optional[_models.WorkflowDefID] = None,
         page_size: Optional[int] = None,
         page_token: Optional[str] = None,
-    ) -> Paginated[WorkflowRun]:
+    ) -> Paginated[WorkflowRunMinimal]:
         """
         List workflow runs with a specified workflow def ID from the workflow driver
 
@@ -350,8 +350,13 @@ class DriverClient:
             prev_token = None
             next_token = None
 
+        workflow_runs = []
+        for r in parsed_response.data:
+            workflow_def = self.get_workflow_def(r.definitionId)
+            workflow_runs.append(r.to_ir(workflow_def))
+
         return Paginated(
-            contents=[r.to_ir() for r in parsed_response.data],
+            contents=workflow_runs,
             prev_page_token=prev_token,
             next_page_token=next_token,
         )
@@ -383,7 +388,9 @@ class DriverClient:
             _models.WorkflowRunResponse, _models.MetaEmpty
         ].parse_obj(resp.json())
 
-        return parsed_response.data.to_ir()
+        workflow_def = self.get_workflow_def(parsed_response.data.definitionId)
+
+        return parsed_response.data.to_ir(workflow_def)
 
     def terminate_workflow_run(self, wf_run_id: _models.WorkflowRunID):
         """

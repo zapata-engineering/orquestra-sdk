@@ -22,7 +22,7 @@ from orquestra.sdk.schema.workflow_run import (
     TaskInvocationId,
     WorkflowRun,
     WorkflowRunId,
-    WorkflowRunMinimal,
+    WorkflowRunOnlyID,
 )
 
 from ..._corq._format import per_command
@@ -63,7 +63,7 @@ class WrappedCorqOutputPresenter:
                 code=responses.ResponseStatusCode.OK,
                 message="Success",
             ),
-            workflow_runs=[WorkflowRunMinimal(id=wf_run_id)],
+            workflow_runs=[WorkflowRunOnlyID(id=wf_run_id)],
         )
         per_command.pretty_print_response(resp, project_dir=None)
 
