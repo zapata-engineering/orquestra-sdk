@@ -293,18 +293,36 @@ class TestGetWorkflowRunResultsNonBlocking:
         workflow_run_id: str,
     ):
         # Given
-        mocked_client.get_workflow_run_results.return_value = ["1", "2"]
-        mocked_client.get_workflow_run_result.return_value = JSONResult(value="1")
+        mocked_client.get_workflow_run_results.return_value = ["result_id"]
+        mocked_client.get_workflow_run_result.return_value = JSONResult(value="[1]")
 
         # When
         results = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
 
         # Then
         mocked_client.get_workflow_run_results.assert_called_once_with(workflow_run_id)
-        mocked_client.get_workflow_run_result.assert_has_calls([call("1"), call("2")])
-        assert len(results) == 2
-        assert results[0] == 1
-        assert results[1] == 1
+        mocked_client.get_workflow_run_result.assert_has_calls([call("result_id")])
+        assert results == (1,)
+
+    def test_happy_path_tuple(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        workflow_run_id: str,
+    ):
+        # Given
+        mocked_client.get_workflow_run_results.return_value = ["result_id"]
+        # Currently, the result is JSON serialised, which means the tuple information
+        # is discarded
+        mocked_client.get_workflow_run_result.return_value = JSONResult(value="[1, 2]")
+
+        # When
+        results = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
+
+        # Then
+        mocked_client.get_workflow_run_results.assert_called_once_with(workflow_run_id)
+        mocked_client.get_workflow_run_result.assert_has_calls([call("result_id")])
+        assert results == (1,2)
 
     class TestGetWorkflowRunResultsFailure:
         def test_bad_workflow_run_id(
@@ -380,7 +398,7 @@ class TestGetWorkflowRunResultsNonBlocking:
     class TestGetworkflowRunResultFailure:
         @pytest.fixture
         def mocked_client(self, mocked_client: MagicMock):
-            mocked_client.get_workflow_run_results.return_value = ["1", "2"]
+            mocked_client.get_workflow_run_results.return_value = ["result_id"]
             return mocked_client
 
         def test_unknown_http(

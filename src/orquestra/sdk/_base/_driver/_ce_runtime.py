@@ -187,11 +187,10 @@ class CERuntime(RuntimeInterface):
                 wf_run.status.state,
             )
 
+        assert len(result_ids) == 1, "We're currently expecting a single result."
+
         try:
-            return [
-                serde.deserialize(self._client.get_workflow_run_result(result_id))
-                for result_id in result_ids
-            ]
+            return tuple(serde.deserialize(self._client.get_workflow_run_result(result_ids[0])))
         except _exceptions.InvalidTokenError as e:
             raise exceptions.UnauthorizedError(f"{e}") from e
 
