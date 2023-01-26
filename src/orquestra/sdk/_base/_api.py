@@ -26,7 +26,9 @@ from orquestra.sdk.schema.configs import (
     RuntimeName,
 )
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.workflow_run import State, TaskInvocationId, TaskRunId
+from orquestra.sdk.schema.workflow_run import State, TaskInvocationId
+from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
+from orquestra.sdk.schema.workflow_run import TaskRunId
 from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
@@ -44,7 +46,6 @@ from ..exceptions import (
     WorkflowRunNotSucceeded,
 )
 from . import _config
-from ._in_process_runtime import InProcessRuntime
 from .abc import ArtifactValue, RuntimeInterface
 from .serde import deserialize_constant
 
@@ -85,22 +86,28 @@ class TaskRun:
 
     def __init__(
         self,
-        task_invocation_id: TaskRunId,
+        task_run_id: TaskRunId,
+        task_invocation_id: TaskInvocationId,
         workflow_run_id: WorkflowRunId,
-        runtime,
+        runtime: RuntimeInterface,
         wf_def: ir.WorkflowDef,
     ):
-        self._task_run_id = task_invocation_id
+        """
+        This object isn't intended to be directly initialized. Instead, please use
+        `WorkflowRun.get_tasks()`.
+        """
+        self._task_run_id = task_run_id
+        self._task_invocation_id = task_invocation_id
         self._runtime = runtime
         self._wf_def = wf_def
         self._workflow_run_id = workflow_run_id
+
         # get the fn_ref from wf_def
-        invocation = wf_def.task_invocations[self.task_run_id]
-        fn_ref = wf_def.tasks[invocation.task_id].fn_ref
-        assert hasattr(fn_ref, "function_name"), (
-            f"{type(fn_ref)} doesn't have" f"function_name attribute"
-        )
+        invocation = wf_def.task_invocations[self.task_invocation_id]
+        task_def = wf_def.tasks[invocation.task_id]
+        fn_ref = task_def.fn_ref
         self._fn_name = fn_ref.function_name
+
         # inline function ref doesn't have module
         self._module: t.Optional[str]
         if isinstance(fn_ref, ir.ModuleFunctionRef):
@@ -111,6 +118,10 @@ class TaskRun:
     @property
     def task_run_id(self) -> TaskRunId:
         return self._task_run_id
+
+    @property
+    def task_invocation_id(self) -> TaskInvocationId:
+        return self._task_invocation_id
 
     @property
     def fn_name(self) -> str:
@@ -125,21 +136,26 @@ class TaskRun:
         return self._module
 
     def __str__(self):
-        return f"TaskRun id={self.task_run_id}, mod={self.module}, fn={self.fn_name}"
+        return (
+            f"TaskRun {self.task_run_id}, mod={self.module}, fn={self.fn_name}, "
+            f"wf_run_id={self.workflow_run_id}, task_inv_id={self.task_invocation_id}"
+        )
 
     def get_status(self) -> State:
         """
         Fetch current status from the runtime
-
-        Returns: orquestra.sdk.schema.workflow_run.State
         """
-        runs = self._runtime.get_workflow_run_status(self.workflow_run_id).task_runs
-        return next(
-            (run for run in runs if run.invocation_id == self.task_run_id)
-        ).status.state
+        wf_run_model = self._runtime.get_workflow_run_status(self.workflow_run_id)
+        task_run_model = next(
+            run
+            for run in wf_run_model.task_runs
+            if run.invocation_id == self.task_invocation_id
+        )
+        return task_run_model.status.state
 
-    def get_logs(self) -> t.Dict[TaskInvocationId, t.List[str]]:
-        return self._runtime.get_full_logs(self.task_run_id)
+    def get_logs(self) -> t.List[str]:
+        logs_dict = self._runtime.get_full_logs(self.task_run_id)
+        return logs_dict[self.task_invocation_id]
 
     def get_outputs(self) -> t.Any:
         """
@@ -148,17 +164,29 @@ class TaskRun:
         Raises:
             TaskRunNotFound: if the task wasn't completed yet, or the ID is invalid.
         """
+        # NOTE: this is a possible place for improvement. If future runtime APIs support
+        # getting a subset of artifacts, we should use them here.
+        workflow_artifacts = self._runtime.get_available_outputs(self.workflow_run_id)
+
         try:
-            return self._runtime.get_available_outputs(self.workflow_run_id)[
-                self.task_run_id
-            ]
+            filtered_artifacts = {
+                self.task_invocation_id: workflow_artifacts[self.task_invocation_id]
+            }
         except KeyError as e:
             raise TaskRunNotFound(
-                f"Task output with id `{self.task_run_id}` not found. "
+                f"Output for task `{self.task_invocation_id}` in "
+                f"`{self.workflow_run_id}` wasn't found. "
                 "It may have failed or not be completed yet."
             ) from e
 
-    def _find_invocation_by_output(self, output: ir.ArgumentId) -> ir.TaskInvocation:
+        # The runtime always returns tuples, even of the task has n_outputs = 1. We
+        # need to unwrap it for user's convenience.
+        return _unwrap(
+            artifacts=filtered_artifacts,
+            task_invocations=self._wf_def.task_invocations,
+        )[self.task_invocation_id]
+
+    def _find_invocation_by_output_id(self, output: ir.ArgumentId) -> ir.TaskInvocation:
         """
         Helper method that locates the invocation object responsible for returning
         output with given ID
@@ -172,31 +200,40 @@ class TaskRun:
             if output in inv.output_ids
         )
 
-    def _get_value_from_arg_id(self, arg_id):
+    def _find_value_by_id(
+        self,
+        arg_id: ir.ArgumentId,
+        available_outputs: t.Mapping[TaskInvocationId, t.Tuple[ArtifactValue, ...]],
+    ) -> ArtifactValue:
         """
-        return value of an input argument
-        If arg_id is constant - returns deserialized value
-        If its artifact_feature, try to fetch the results of it from runtime
+        Helper method that finds and deserializes input artifact value based on the
+        artifact/argument ID. Uses values from available_outputs, or deserializes the
+        constant embedded in the workflow def.
         """
-        # it is either constant node, or return value from one of its parents
         if arg_id in self._wf_def.constant_nodes:
-            return deserialize_constant(self._wf_def.constant_nodes[arg_id])
-        else:
-            inv = self._find_invocation_by_output(arg_id)
-            parent = next(
-                parent for parent in self.get_parents() if parent.task_run_id == inv.id
-            )
-            try:
-                outputs = parent.get_outputs()
-            except TaskRunNotFound:
-                return self.INPUT_UNAVAILABLE
-            # if there is only 1 output of a task, just return that output
-            artefact_index = self._wf_def.artifact_nodes[arg_id].artifact_index
-            if artefact_index is None:
-                return outputs
-            # else we have to find the proper output out of all outputs from tasks
-            else:
-                return outputs[artefact_index]
+            value = deserialize_constant(self._wf_def.constant_nodes[arg_id])
+            return value
+
+        producer_inv = self._find_invocation_by_output_id(arg_id)
+        output_index = producer_inv.output_ids.index(arg_id)
+        try:
+            parent_output_vals = available_outputs[producer_inv.id]
+        except KeyError:
+            # Parent invocation ID not in available outputs => parent invocation
+            # wasn't completed yet.
+            return self.INPUT_UNAVAILABLE
+
+        # A task function can return multiple values. We're only interested in one
+        # of them.
+        #
+        # Assumption 1: RuntimeInterface.get_available_outputs() returns tuples even
+        # for tasks with single output.
+        #
+        # Assumption 2: either a task wasn't completed yet and we don't have any
+        # outputs (handled above) or we have access to all outputs of this task.
+        # There shouldn't be a situation where we have access to a subset of a given
+        # task's outputs.
+        return parent_output_vals[output_index]
 
     def get_inputs(self) -> Inputs:
         """
@@ -204,14 +241,17 @@ class TaskRun:
 
         Returns:  Input namedTuple with Input.args and .kwargs parameters.
         """
-        task_invocation = self._wf_def.task_invocations[self.task_run_id]
 
+        all_inv_outputs = self._runtime.get_available_outputs(self.workflow_run_id)
+
+        task_invocation = self._wf_def.task_invocations[self.task_invocation_id]
         args = [
-            self._get_value_from_arg_id(arg_id) for arg_id in task_invocation.args_ids
+            self._find_value_by_id(arg_id, all_inv_outputs)
+            for arg_id in task_invocation.args_ids
         ]
         kwargs = {
-            param_name: self._get_value_from_arg_id(arg_id)
-            for param_name, arg_id in task_invocation.kwargs_ids.items()
+            param_name: self._find_value_by_id(kwarg_id, all_inv_outputs)
+            for param_name, kwarg_id in task_invocation.kwargs_ids.items()
         }
 
         return self.Inputs(args, kwargs)
@@ -220,8 +260,19 @@ class TaskRun:
         """
         Get parent tasks - tasks whose return values are taken as input parameters
         """
-        return_set = set()
-        task_invocation = self._wf_def.task_invocations[self.task_run_id]
+        # Note: theoretically there might be a mismatch between task invocations and
+        # task runs. Task invocations come from the static workflow definition. Task
+        # runs only exist if a given task invocation was scheduled for execution. If a
+        # given invocation is waiting to be run, there might be no corresponding task
+        # run.
+        #
+        # However, this method is about getting parents. We can assume that if a task
+        # run A exists, its always parents exist as well; otherwise invocation A
+        # wouldn't be scheduled and task run A wouldn't exist in the first place.
+
+        # 1. Get parent invocation IDs
+        task_invocation = self._wf_def.task_invocations[self.task_invocation_id]
+        parent_inv_ids = set()
         # for every arg in the function
         for arg_id in chain(
             task_invocation.args_ids, task_invocation.kwargs_ids.values()
@@ -230,16 +281,44 @@ class TaskRun:
             if arg_id in self._wf_def.constant_nodes:
                 continue
             # find invocation that produces it
-            parent = self._find_invocation_by_output(arg_id)
-            task_run = TaskRun(
-                task_invocation_id=parent.id,
-                wf_def=self._wf_def,
-                runtime=self._runtime,
-                workflow_run_id=self.workflow_run_id,
-            )
-            return_set.add(task_run)
+            parent_inv = self._find_invocation_by_output_id(arg_id)
+            parent_inv_ids.add(parent_inv.id)
 
-        return return_set
+        # 2. Get parent task run models
+        wf_run_model = self._runtime.get_workflow_run_status(self.workflow_run_id)
+        parent_run_models: t.Sequence[TaskRunModel] = [
+            run for run in wf_run_model.task_runs if run.invocation_id in parent_inv_ids
+        ]
+
+        # 3. Wrap in convenience objects
+        parents = [
+            TaskRun(
+                task_run_id=model.id,
+                task_invocation_id=model.invocation_id,
+                workflow_run_id=self.workflow_run_id,
+                runtime=self._runtime,
+                wf_def=self._wf_def,
+            )
+            for model in parent_run_models
+        ]
+
+        return set(parents)
+
+
+def _unwrap(
+    artifacts: t.Mapping[ir.TaskInvocationId, ArtifactValue],
+    task_invocations: t.Mapping[TaskInvocationId, ir.TaskInvocation],
+) -> t.Mapping[ir.TaskInvocationId, t.Union[ArtifactValue, t.Tuple[ArtifactValue]]]:
+    unwrapped_dict = {}
+    for inv_id, outputs in artifacts.items():
+        inv = task_invocations[inv_id]
+        if len(inv.output_ids) == 1:
+            unwrapped = outputs[0]
+        else:
+            unwrapped = outputs
+
+        unwrapped_dict[inv_id] = unwrapped
+    return unwrapped_dict
 
 
 class WorkflowRun:
@@ -645,7 +724,7 @@ class WorkflowRun:
     # TODO: ORQSDK-617 add filtering ability for the users
     def get_tasks(self) -> t.Set[TaskRun]:
         try:
-            run_id = self.run_id
+            wf_run_id = self.run_id
         except WorkflowRunNotStarted as e:
             message = (
                 "Cannot get tasks of a workflow run that hasn't started yet. "
@@ -654,9 +733,17 @@ class WorkflowRun:
             )
             raise WorkflowRunNotStarted(message) from e
 
+        wf_run_model = self.get_status_model()
+
         return {
-            TaskRun(invocation_id, run_id, runtime=self._runtime, wf_def=self._wf_def)
-            for invocation_id, task_invocation in self._wf_def.task_invocations.items()
+            TaskRun(
+                task_run_id=task_run_model.id,
+                task_invocation_id=task_run_model.invocation_id,
+                workflow_run_id=wf_run_id,
+                runtime=self._runtime,
+                wf_def=self._wf_def,
+            )
+            for task_run_model in wf_run_model.task_runs
         }
 
 

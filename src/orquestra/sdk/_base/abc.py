@@ -156,6 +156,9 @@ class RuntimeInterface(ABC):
         artifacts only for the steps that did success. Might raise an exception if
         runtime doesn't support getting artifacts from in-progress workflow.
 
+        Either we have access to all outputs of a given task, or none. In other words,
+        the number of values in the tuple should always match the number of output IDs
+        in the corresponding task invocation.
 
         Careful: This method does NOT return status of a workflow. Verify it beforehand
         to make sure if workflow failed/succeeded/is running. You might get incomplete

@@ -5,6 +5,7 @@
 🚨 *Breaking Changes*
 * `sdk.WorkflowRun.get_logs()` now accepts TaskInvocationID instead of TaskRunID
 * `sdk.WorkflowRun.get_artifacts()` doesn't accept any arguments anymore. Now, it returns all the artifacts produced by the tasks in the workflow.
+* `sdk.TaskRun.get_logs()` returns a list of log lines produced by this task. Previously, it returned a dictionary with one entry.
 
 
 🔥 *Features*
