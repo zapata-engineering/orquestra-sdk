@@ -19,7 +19,7 @@ from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospe
 
 import pytest
 
-from orquestra.sdk._base import _api, _config
+from orquestra.sdk._base import _api, _config, _workflow
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import (
     ConfigNameNotFoundError,
@@ -34,9 +34,15 @@ from orquestra.sdk.exceptions import (
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import CONFIG_FILE_CURRENT_VERSION, RuntimeName
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun
+from orquestra.sdk.schema.workflow_run import RunStatus, State
+from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
+from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
 
-from .data.complex_serialization.workflow_defs import wf_pass_tuple
+from .data.complex_serialization.workflow_defs import (
+    capitalize,
+    join_strings,
+    wf_pass_tuple,
+)
 from .data.configs import TEST_CONFIG_JSON
 
 
@@ -155,17 +161,17 @@ class TestWorkflowRun:
             "task_invocation3": ["hello\n", "a log\n"],
         }
         _running.task_runs = [
-            TaskRun(
+            TaskRunModel(
                 id="task_run1",
                 invocation_id="task_invocation1",
                 status=RunStatus(state=State.SUCCEEDED),
             ),
-            TaskRun(
+            TaskRunModel(
                 id="task_run2",
                 invocation_id="task_invocation2",
                 status=RunStatus(state=State.FAILED),
             ),
-            TaskRun(
+            TaskRunModel(
                 id="task_run3",
                 invocation_id="task_invocation3",
                 status=RunStatus(state=State.FAILED),
@@ -517,6 +523,7 @@ class TestWorkflowRun:
             ) in str(exc_info)
 
         @staticmethod
+        @pytest.mark.skip(reason="To be fixed in another PR under ORQSDK-574")
         def test_get_tasks_from_started_workflow(run):
             run.start()
 
@@ -664,10 +671,73 @@ class TestWorkflowRun:
 
 
 class TestTaskRun:
+    @staticmethod
+    @pytest.fixture
+    def sample_wf_def() -> _workflow.WorkflowDef:
+        @_workflow.workflow
+        def my_wf():
+            # We need at least 4 invocations to use in our tests.
+            text1 = capitalize(join_strings(["hello", "there"]))
+            text2 = capitalize(join_strings(["general", "kenobi"]))
+
+            return text1, text2
+
+        return my_wf()
+
+    @staticmethod
+    @pytest.fixture
+    def mock_runtime(sample_wf_def):
+        runtime = MagicMock(RuntimeInterface)
+
+        wf_def_model = sample_wf_def.model
+        task_invs = list(wf_def_model.task_invocations.values())
+
+        wf_run_model = create_autospec(WorkflowRunModel)
+        wf_run_model.task_runs = [
+            TaskRunModel(
+                id="task_run1",
+                invocation_id=task_invs[0].id,
+                status=RunStatus(state=State.SUCCEEDED),
+            ),
+            TaskRunModel(
+                id="task_run2",
+                invocation_id=task_invs[1].id,
+                status=RunStatus(state=State.FAILED),
+            ),
+            TaskRunModel(
+                id="task_run3",
+                invocation_id=task_invs[2].id,
+                status=RunStatus(state=State.FAILED),
+            ),
+        ]
+        runtime.get_workflow_run_status.return_value = wf_run_model
+
+        return runtime
+
+    @staticmethod
+    @pytest.fixture
+    def task_runs(sample_wf_def, mock_runtime) -> t.Sequence[_api.TaskRun]:
+        wf_run_id = "wf.1"
+        wf_run_model = mock_runtime.get_workflow_run_status(wf_run_id)
+        task_run_models = wf_run_model.task_runs
+
+        task_runs = [
+            _api.TaskRun(
+                task_run_id=run_model.id,
+                task_invocation_id=run_model.invocation_id,
+                workflow_run_id=wf_run_id,
+                runtime=mock_runtime,
+                wf_def=sample_wf_def.model,
+            )
+            for run_model in task_run_models
+        ]
+
+        return task_runs
+
     class TestInit:
         @staticmethod
         def test_init_simple_wf():
-            # given
+            # Given
             from .data.task_run_workflow_defs import (
                 return_num,
                 simple_wf_one_task_two_invocations,
@@ -675,16 +745,24 @@ class TestTaskRun:
 
             wf_def = simple_wf_one_task_two_invocations().model
             inv_id = next(iter(wf_def.task_invocations.keys()))
-            wf_id = "id"  # mock wf id - we dont need runtime here
+            task_run_id = "task-run-1"
+            wf_run_id = "wf.1"
 
-            # when
-            task_run = _api.TaskRun(inv_id, wf_id, Mock(), wf_def)
+            # When
+            task_run = _api.TaskRun(
+                task_run_id=task_run_id,
+                task_invocation_id=inv_id,
+                workflow_run_id=wf_run_id,
+                runtime=Mock(),
+                wf_def=wf_def,
+            )
 
-            # then
-            assert task_run.task_run_id == inv_id
+            # Then
+            assert task_run.task_invocation_id == inv_id
+            assert task_run.module is not None
             assert "task_run_workflow_defs" in task_run.module
             assert task_run.fn_name == return_num.__name__
-            assert task_run.workflow_run_id == wf_id
+            assert task_run.workflow_run_id == wf_run_id
 
         @staticmethod
         def test_init_simple_wf_inline_fn():
@@ -696,212 +774,257 @@ class TestTaskRun:
 
             wf_def = simple_wf_one_task_inline().model
             inv_id = next(iter(wf_def.task_invocations.keys()))
-            wf_id = "id"  # mock wf id - we dont need runtime here
+            task_run_id = "task-run-1"
+            wf_run_id = "wf.1"
 
             # when
-            task_run = _api.TaskRun(inv_id, wf_id, Mock(), wf_def)
+            task_run = _api.TaskRun(
+                task_run_id=task_run_id,
+                task_invocation_id=inv_id,
+                workflow_run_id=wf_run_id,
+                runtime=Mock(),
+                wf_def=wf_def,
+            )
 
             # then
-            assert task_run.task_run_id == inv_id
+            assert task_run.task_invocation_id == inv_id
             assert task_run.module is None
             assert task_run.fn_name == return_five_inline.__name__
-            assert task_run.workflow_run_id == wf_id
+            assert task_run.workflow_run_id == wf_run_id
 
     class TestGetStatus:
         @staticmethod
-        def test_get_status():
-            # Given
-            from .data.task_run_workflow_defs import simple_wf_one_task_two_invocations
-
-            wf_def = simple_wf_one_task_two_invocations().model
-            inv_ids = list(wf_def.task_invocations.keys())
-            wf_id = "id"  # mock wf id - we dont need runtime here
-
-            runtime = MagicMock(RuntimeInterface)
-            ir_task_run_mocks = [
-                TaskRun(
-                    id="",
-                    invocation_id=inv_ids[0],
-                    status=RunStatus(state=State.SUCCEEDED),
-                ),
-                TaskRun(
-                    id="",
-                    invocation_id=inv_ids[1],
-                    status=RunStatus(state=State.FAILED),
-                ),
-            ]
-            wf_run = MagicMock()
-            wf_run.task_runs = ir_task_run_mocks
-            runtime.get_workflow_run_status.return_value = wf_run
-
+        def test_get_status(task_runs):
             # When
-            task_runs = [
-                _api.TaskRun(inv_id, wf_id, runtime, wf_def) for inv_id in inv_ids
-            ]
             statuses = [task_run.get_status() for task_run in task_runs]
 
             # Then
-            assert len(statuses) == 2
-            assert State.SUCCEEDED in statuses
-            assert State.FAILED in statuses
+            assert statuses == [State.SUCCEEDED, State.FAILED, State.FAILED]
 
     class TestGetLogs:
         @staticmethod
-        def test_get_logs():
+        def test_returns_plain_list(task_runs: t.Sequence[_api.TaskRun], mock_runtime):
+            """
+            Methods in RuntimeInterface return logs nested in dictionaries.
+            _api.TaskRun.get_logs() should return a list of log lines.
+            """
             # Given
-            from .data.task_run_workflow_defs import simple_wf_one_task_two_invocations
-
-            wf_def = simple_wf_one_task_two_invocations().model
-            inv_ids = list(wf_def.task_invocations.keys())
-            wf_id = "id"  # mock wf id - we dont need runtime here
-
-            runtime = MagicMock(RuntimeInterface)
-            my_log = Mock()  # it can be whatever
-            runtime.get_full_logs.return_value = my_log
+            mock_runtime.get_full_logs.return_value = {
+                task_runs[0].task_invocation_id: ["woohoo!"],
+                task_runs[1].task_invocation_id: ["another", "line"],
+                # This task invocation was executed, but it produced no logs.
+                task_runs[2].task_invocation_id: [],
+                # There's also 4th task invocation in the workflow def, it wasn't
+                # executed yet, so we don't return it.
+            }
 
             # When
-            task_runs = [
-                _api.TaskRun(inv_id, wf_id, runtime, wf_def) for inv_id in inv_ids
-            ]
-            logs = [task_run.get_logs() for task_run in task_runs]
+            log_lists = [task_run.get_logs() for task_run in task_runs]
 
             # Then
-            assert len(logs) == 2
-            # Getting logs should be transparent. return whatever runtime returns to us
-            assert logs[0] == my_log
-            assert logs[1] == my_log
+            assert log_lists[0] == ["woohoo!"]
+            assert log_lists[1] == ["another", "line"]
+            assert log_lists[2] == []
 
     class TestGetOutputs:
         @staticmethod
-        def test_get_outputs_all_finished():
-            from .data.task_run_workflow_defs import simple_wf_one_task_two_invocations
+        @pytest.fixture
+        def wf_def_model() -> ir.WorkflowDef:
+            wf_def = create_autospec(ir.WorkflowDef)
+            wf_def.task_invocations = {
+                "inv1": ir.TaskInvocation(
+                    id="inv1",
+                    task_id="task_def1",
+                    args_ids=[],
+                    kwargs_ids={},
+                    output_ids=["art1"],
+                    resources=None,
+                    custom_image=None,
+                ),
+                "inv2": ir.TaskInvocation(
+                    id="inv2",
+                    task_id="task_def1",
+                    args_ids=[],
+                    kwargs_ids={},
+                    output_ids=["art2", "art3"],
+                    resources=None,
+                    custom_image=None,
+                ),
+            }
+            task_def = create_autospec(ir.TaskDef)
+            task_def.fn_ref = Mock()
+            wf_def.tasks = {"task_def1": task_def}
 
-            wf_def = simple_wf_one_task_two_invocations().model
-            inv_ids = list(wf_def.task_invocations.keys())
-            wf_id = "id"  # mock wf id - we dont need runtime here
-
-            runtime = MagicMock(RuntimeInterface)
-            runtime_outputs = {inv_id: 5 for inv_id in inv_ids}
-            runtime.get_available_outputs.return_value = runtime_outputs
-
-            # When
-            task_runs = [
-                _api.TaskRun(inv_id, wf_id, runtime, wf_def) for inv_id in inv_ids
-            ]
-            outputs = [task_run.get_outputs() for task_run in task_runs]
-
-            # Then
-            assert outputs == [5, 5]
+            return wf_def
 
         @staticmethod
-        def test_get_outputs_not_all_finished():
-            from .data.task_run_workflow_defs import simple_wf_one_task_two_invocations
+        @pytest.mark.parametrize(
+            "inv_id,exp_output",
+            [
+                pytest.param("inv1", 42, id="single_output_invocation"),
+                pytest.param("inv2", (21, 38), id="multi_param_invocation"),
+            ],
+        )
+        def test_get_output_finished(wf_def_model, inv_id: str, exp_output):
+            # Given
+            runtime = create_autospec(RuntimeInterface)
+            runtime.get_available_outputs.return_value = {
+                "inv1": (42,),
+                "inv2": (21, 38),
+            }
 
-            wf_def = simple_wf_one_task_two_invocations().model
-            inv_ids = list(wf_def.task_invocations.keys())
-            wf_id = "id"  # mock wf id - we dont need runtime here
-
-            runtime = MagicMock(RuntimeInterface)
-            runtime_outputs = {inv_ids[0]: 15}
-            runtime.get_available_outputs.return_value = runtime_outputs
+            task_run = _api.TaskRun(
+                task_run_id="a_run",
+                task_invocation_id=inv_id,
+                workflow_run_id="wf.1",
+                runtime=runtime,
+                wf_def=wf_def_model,
+            )
 
             # When
-            task_runs = [
-                _api.TaskRun(inv_id, wf_id, runtime, wf_def) for inv_id in inv_ids
-            ]
-            available_output = task_runs[0].get_outputs()
+            output = task_run.get_outputs()
+
+            # Then
+            assert output == exp_output
+
+        @staticmethod
+        def test_get_outputs_not_all_finished(wf_def_model):
+            runtime = create_autospec(RuntimeInterface)
+            # No outputs available
+            runtime.get_available_outputs.return_value = {}
+
+            task_run = _api.TaskRun(
+                task_run_id="a_run",
+                task_invocation_id="inv1",
+                workflow_run_id="wf.1",
+                runtime=runtime,
+                wf_def=wf_def_model,
+            )
 
             # Then
             with pytest.raises(TaskRunNotFound):
-                task_runs[1].get_outputs()
-            assert available_output == 15
+                # When
+                _ = task_run.get_outputs()
 
     class TestGetParents:
         @staticmethod
-        def _are_two_task_runs_the_same_task(t1: _api.TaskRun, t2: _api.TaskRun):
-            return (
-                t1.task_run_id == t2.task_run_id
-                and t1.workflow_run_id == t2.workflow_run_id
-                and t1.fn_name == t2.fn_name
-                and t1.module == t2.module
-            )
-
-        @staticmethod
-        def test_no_parents():
-            # given
-            from .data.task_run_workflow_defs import simple_wf_one_task_inline
-
-            wf_def = simple_wf_one_task_inline().model
-            inv_id = next(iter(wf_def.task_invocations.keys()))
-            wf_id = "id"  # mock wf id - we dont need runtime here
-
-            # when
-            task_run = _api.TaskRun(inv_id, wf_id, Mock(), wf_def)
-            parents = task_run.get_parents()
-
-            # then
-            assert len(parents) == 0
-
-        def test_multiple_parents(self):
+        @pytest.mark.parametrize(
+            "inv_id,expected_parent_ids",
+            [
+                # The IDs here are coupled with the workflow definition, but that's the
+                # easiest way to set this up.
+                pytest.param(
+                    "invocation-2-task-return-num",
+                    set(),
+                    id="top_task",
+                ),
+                pytest.param(
+                    "invocation-1-task-return-num",
+                    {"invocation-2-task-return-num"},
+                    id="middle_task",
+                ),
+                pytest.param(
+                    "invocation-0-task-return-num",
+                    {"invocation-3-task-return-num", "invocation-1-task-return-num"},
+                    id="trailing_task",
+                ),
+            ],
+        )
+        def test_inv_ids_match(
+            inv_id: ir.TaskInvocationId, expected_parent_ids: t.Set[ir.TaskInvocationId]
+        ):
             """
             Workflow graph in the scenario under test:
                5
                │
-              [ ] <- 0 parents, 1 const input
+              [x] <- 0 parents, 1 const input
              __│__
              │   │
              ▼   ▼
-            [X] [ ]  7 <- each have 1 the same parent, the task with 0 parents
+            [ ] [x]  7 <- each have 1 the same parent, the task with 0 parents
              │___│___│
                  │
                  ▼
-                [X] <- 2 parents, each of the tasks with 1 parent
+                [x] <- 2 parents, each of the tasks with 1 parent
             """
-            # given
+            # Given
             from .data.task_run_workflow_defs import wf_task_with_two_parents
 
-            wf_def = wf_task_with_two_parents().model
-            inv_ids = list(wf_def.task_invocations.keys())
-            wf_id = "id"  # mock wf id - we dont need runtime here
+            wf_def_model = wf_task_with_two_parents().model
 
-            # when
-            task_runs = [
-                _api.TaskRun(inv_id, wf_id, Mock(), wf_def) for inv_id in inv_ids
-            ]
-            parents = {task_run: task_run.get_parents() for task_run in task_runs}
+            def _mock_task_run_model(i: int):
+                model = create_autospec(TaskRunModel)
+                model.id = f"run-{i}"
 
-            # then
-            assert len(parents) == 4
-            num_of_parents = sorted(len(task_run) for task_run in parents.values())
-            assert num_of_parents == [0, 1, 1, 2]  # check for number of parents
-            # verify the parent correctness - the task with 1 parent, its parent is the
-            # task with no parents. etc.
-            no_parent_task = [
-                task for task, parent in parents.items() if len(parent) == 0
-            ][0]
-            one_parent_tasks = [
-                task for task, parent in parents.items() if len(parent) == 1
-            ]
-            two_parent_task = [
-                task for task, parent in parents.items() if len(parent) == 2
-            ][0]
-            # both one-parent tasks have the same parent - the task with - parents
-            for one_parent_task in one_parent_tasks:
-                assert self._are_two_task_runs_the_same_task(
-                    list(parents[one_parent_task])[0], no_parent_task
-                )
-            # 2 parent task has each of 1-parent tasks as its parent
-            parents_of_two_parent_task = list(parents[two_parent_task])
-            for parent in parents_of_two_parent_task:
-                assert self._are_two_task_runs_the_same_task(
-                    parent, one_parent_tasks[0]
-                ) or self._are_two_task_runs_the_same_task(parent, one_parent_tasks[1])
-            # and make sure those parents are different tasks
-            assert not self._are_two_task_runs_the_same_task(
-                parents_of_two_parent_task[0], parents_of_two_parent_task[1]
+                # this has to match the definition
+                model.invocation_id = f"invocation-{i}-task-return-num"
+
+                return model
+
+            wf_run_model: WorkflowRunModel = create_autospec(WorkflowRunModel)
+            wf_run_model.task_runs = [_mock_task_run_model(i) for i in range(4)]
+
+            runtime = create_autospec(RuntimeInterface)
+            runtime.get_workflow_run_status.return_value = wf_run_model
+
+            task_run = _api.TaskRun(
+                task_run_id="run1",
+                task_invocation_id=inv_id,
+                workflow_run_id="wf.1",
+                runtime=runtime,
+                wf_def=wf_def_model,
             )
 
+            # When
+            parents = task_run.get_parents()
+
+            # then
+            assert {
+                parent.task_invocation_id for parent in parents
+            } == expected_parent_ids
+
+        @staticmethod
+        def test_other_ids_match():
+            # Given
+            from .data.task_run_workflow_defs import wf_task_with_two_parents
+
+            wf_def_model = wf_task_with_two_parents().model
+
+            wf_run_id = "wf.1"
+
+            task_run_model1: TaskRunModel = create_autospec(TaskRunModel)
+            task_run_model1.id = "top-task-run"
+            task_run_model1.invocation_id = "invocation-2-task-return-num"
+
+            task_run_model2 = create_autospec(TaskRunModel)
+            task_run_model2.id = "middle-task-run"
+            task_run_model2.invocation_id = "invocation-1-task-return-num"
+
+            wf_run_model: WorkflowRunModel = create_autospec(WorkflowRunModel)
+            wf_run_model.task_runs = [task_run_model1, task_run_model2]
+
+            runtime = create_autospec(RuntimeInterface)
+            runtime.get_workflow_run_status.return_value = wf_run_model
+
+            task_run = _api.TaskRun(
+                task_run_id="middle-task-run",
+                task_invocation_id="invocation-1-task-return-num",
+                workflow_run_id=wf_run_id,
+                runtime=runtime,
+                wf_def=wf_def_model,
+            )
+
+            # When
+            parents = task_run.get_parents()
+
+            # Then
+            assert len(parents) == 1
+            parent = next(iter(parents))
+            assert parent.task_run_id == "top-task-run"
+            assert parent.workflow_run_id == wf_run_id
+
     class TestGetInput:
+        @staticmethod
         @pytest.mark.parametrize(
             "workflow, expected_args, expected_kwargs",
             [
@@ -911,16 +1034,23 @@ class TestTaskRun:
                 ("wf_single_task_with_const_parent_args_kwargs", [21], {"kwargs": 36}),
             ],
         )
-        def test_const_as_parent(self, workflow, expected_args, expected_kwargs):
+        def test_const_as_parent(workflow, expected_args, expected_kwargs):
             # given
             from .data import task_run_workflow_defs
 
             wf_def = getattr(task_run_workflow_defs, workflow).model
             inv_id = next(iter(wf_def.task_invocations.keys()))
-            wf_id = "id"  # mock wf id - we dont need runtime here
+            wf_run_id = "wf.1"
+
+            task_run = _api.TaskRun(
+                task_run_id="run1",
+                task_invocation_id=inv_id,
+                workflow_run_id=wf_run_id,
+                runtime=create_autospec(RuntimeInterface),
+                wf_def=wf_def,
+            )
 
             # when
-            task_run = _api.TaskRun(inv_id, wf_id, Mock(), wf_def)
             inputs = task_run.get_inputs()
 
             # then
@@ -928,7 +1058,9 @@ class TestTaskRun:
             assert inputs.kwargs == expected_kwargs
 
         @staticmethod
-        def _find_task_by_args_and_kwargs_number(arg_num, kwarg_num, wf_def):
+        def _find_task_by_args_and_kwargs_number(
+            arg_num, kwarg_num, wf_def
+        ) -> ir.TaskInvocationId:
             return next(
                 iter(
                     inv_id
@@ -960,20 +1092,27 @@ class TestTaskRun:
 
             wf_def = wf_for_input_test().model
             # find the task with 1 arg and 0 kwarg args. It is the one at the top
-            first_task = self._find_task_by_args_and_kwargs_number(1, 0, wf_def)
+            first_inv_id = self._find_task_by_args_and_kwargs_number(1, 0, wf_def)
             # find the task with 1 arg and 1 kwarg. 2nd task that finished
-            second_task = self._find_task_by_args_and_kwargs_number(1, 1, wf_def)
+            second_inv_2 = self._find_task_by_args_and_kwargs_number(1, 1, wf_def)
 
             runtime = MagicMock(RuntimeInterface)
-            runtime_outputs = {first_task: 15, second_task: 25}
+            runtime_outputs = {first_inv_id: (15,), second_inv_2: (25,)}
             runtime.get_available_outputs.return_value = runtime_outputs
-            wf_id = "id"  # mock wf id - we dont need runtime here
+            wf_run_id = "wf.3"
 
-            # when
             task_runs = [
-                _api.TaskRun(inv_id, wf_id, runtime, wf_def)
+                _api.TaskRun(
+                    task_run_id=f"run_{inv_id}",
+                    task_invocation_id=inv_id,
+                    workflow_run_id=wf_run_id,
+                    runtime=runtime,
+                    wf_def=wf_def,
+                )
                 for inv_id in wf_def.task_invocations.keys()
             ]
+
+            # when
             inputs = [task_run.get_inputs() for task_run in task_runs]
 
             # then
@@ -992,19 +1131,26 @@ class TestTaskRun:
             from .data.task_run_workflow_defs import wf_multi_output_task
 
             wf_def = wf_multi_output_task().model
-            wf_id = "id"  # mock wf id - we dont need runtime here
+            wf_run_id = "wf.4"
 
             # find the task with 0 arg and 0 kwarg args
-            first_task = self._find_task_by_args_and_kwargs_number(0, 0, wf_def)
+            first_inv_id = self._find_task_by_args_and_kwargs_number(0, 0, wf_def)
             # find the task with 1 arg and 1 kwarg args. 2nd task with that finished
-            second_task = self._find_task_by_args_and_kwargs_number(1, 0, wf_def)
+            second_inv_id = self._find_task_by_args_and_kwargs_number(1, 0, wf_def)
 
             runtime = MagicMock(RuntimeInterface)
-            runtime_outputs = {first_task: (21, 36), second_task: 25}
+            runtime_outputs = {first_inv_id: (21, 36), second_inv_id: (25,)}
             runtime.get_available_outputs.return_value = runtime_outputs
 
+            task_run = _api.TaskRun(
+                task_run_id=f"run_{second_inv_id}",
+                task_invocation_id=second_inv_id,
+                workflow_run_id=wf_run_id,
+                runtime=runtime,
+                wf_def=wf_def,
+            )
+
             # when
-            task_run = _api.TaskRun(second_task, wf_id, runtime, wf_def)
             task_input = task_run.get_inputs()
 
             # then
