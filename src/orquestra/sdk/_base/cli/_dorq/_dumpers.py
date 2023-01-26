@@ -84,7 +84,7 @@ class LogsDumper:
 
     def dump(
         self,
-        logs: t.Dict[TaskInvocationId, t.List[str]],
+        logs: t.Mapping[TaskInvocationId, t.Sequence[str]],
         wf_run_id: WorkflowRunId,
         dir_path: Path,
     ) -> Path:
