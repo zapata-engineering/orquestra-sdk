@@ -191,7 +191,8 @@ class CERuntime(RuntimeInterface):
 
         try:
             return tuple(
-                serde.deserialize(self._client.get_workflow_run_result(result_ids[0]))
+                wf_result = self._client.get_workflow_run_result(result_ids[0])
+                serde.deserialize(wf_result)
             )
         except _exceptions.InvalidTokenError as e:
             raise exceptions.UnauthorizedError(f"{e}") from e
