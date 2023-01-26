@@ -322,7 +322,7 @@ class TestGetWorkflowRunResultsNonBlocking:
         # Then
         mocked_client.get_workflow_run_results.assert_called_once_with(workflow_run_id)
         mocked_client.get_workflow_run_result.assert_has_calls([call("result_id")])
-        assert results == (1,2)
+        assert results == (1, 2)
 
     class TestGetWorkflowRunResultsFailure:
         def test_bad_workflow_run_id(
