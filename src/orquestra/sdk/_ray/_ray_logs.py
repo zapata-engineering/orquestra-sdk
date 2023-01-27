@@ -111,7 +111,7 @@ class _RayLogs:
                 log = self._load_structured_log_record(line)
             else:
                 log = self._load_unstructured_log_record(line)
-            return LINE_FORMAT.format(log=log)
+            return LINE_FORMAT.format(log=log).replace("[]", "").strip()
 
     def _read_log_files(self):
         lines = []
