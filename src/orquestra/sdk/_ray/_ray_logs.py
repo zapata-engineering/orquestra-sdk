@@ -14,12 +14,28 @@ from pathlib import Path
 
 from . import _client
 
+LINE_FORMAT: str = "{log.timestamp}\t{log.level} {log.filename} -- {log.message.logs}\t[{log.message.id}]"  # noqa E501
+
 
 @dataclass
 class _LogFileInfo:
     filename: str
     size_when_last_opened: int
     file_position: int
+
+
+@dataclass
+class LogMessage:
+    id: str
+    logs: str
+
+
+@dataclass
+class StructuredLog:
+    timestamp: str
+    level: str
+    filename: str
+    message: LogMessage
 
 
 class _RayLogs:
@@ -56,6 +72,32 @@ class _RayLogs:
                     )
                 )
 
+    def _load_structured_log_record(self, record: str):
+        data = json.loads(record)
+        return StructuredLog(
+            timestamp=data["timestamp"],
+            level=data["level"],
+            filename=data["filename"],
+            message=LogMessage(data["message"]["run_id"], data["message"]["logs"]),
+        )
+
+    def _load_unstructured_log_record(self, record: str):
+        ts_level_filename, logs = record.split(" -- ")
+        timestamp, level_filename = ts_level_filename.split("\t")
+        level, filename = level_filename.split(" ", 1)
+        try:
+            log_message, id = logs.split("\t")
+        except ValueError:
+            log_message = logs
+            id = ""
+
+        return StructuredLog(
+            timestamp=timestamp,
+            level=level,
+            filename=filename,
+            message=LogMessage(id=id.strip(" []"), logs=log_message),
+        )
+
     def _refine_log_line(self, line):
         line = line.decode("utf-8", "replace").rstrip("\r\n")
         if line.startswith(_client.LogPrefixActorName) or line.startswith(
@@ -65,19 +107,11 @@ class _RayLogs:
         elif (
             self.workflow_or_task_run_id is None
         ) or self.workflow_or_task_run_id in line:
-            try:
-                data = json.loads(line)
-                _line = "{timestamp} {level} {filename} -- {message}	[{run_id}]".format(
-                    timestamp=data["timestamp"],
-                    level=data["level"],
-                    filename=data["filename"],
-                    message=data["message"]["logs"],
-                    run_id=data["message"]["run_id"],
-                )
-                line = _line
-            except json.decoder.JSONDecodeError:
-                return line
-            return line
+            if line.startswith("{"):
+                log = self._load_structured_log_record(line)
+            else:
+                log = self._load_unstructured_log_record(line)
+            return LINE_FORMAT.format(log=log)
 
     def _read_log_files(self):
         lines = []
