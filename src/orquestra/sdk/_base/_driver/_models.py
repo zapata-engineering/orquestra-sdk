@@ -40,9 +40,7 @@ class Pagination(pydantic.BaseModel):
         https://github.com/zapatacomputing/workflow-driver/blob/259481b9240547bccf4fa40df4e92bf6c617a25f/openapi/src/schemas/MetaSuccessPaginated.yaml
     """
 
-    total: int
     nextPageToken: str
-    prevPageToken: Optional[str]
 
 
 class Response(GenericModel, Generic[DataT, MetaT]):
@@ -52,15 +50,6 @@ class Response(GenericModel, Generic[DataT, MetaT]):
 
     data: DataT
     meta: Optional[MetaT]
-
-
-class MetaSuccessPaginated(pydantic.BaseModel):
-    """
-    Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/259481b9240547bccf4fa40df4e92bf6c617a25f/openapi/src/schemas/MetaSuccessPaginated.yaml
-    """
-
-    pagination: Pagination
 
 
 class MetaEmpty(pydantic.BaseModel):

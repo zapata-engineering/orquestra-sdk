@@ -5,12 +5,13 @@
 🚨 *Breaking Changes*
 * `sdk.WorkflowRun.get_logs()` now accepts TaskInvocationID instead of TaskRunID
 * `sdk.WorkflowRun.get_artifacts()` doesn't accept any arguments anymore. Now, it returns all the artifacts produced by the tasks in the workflow.
+* `sdk.TaskRun.get_logs()` returns a list of log lines produced by this task. Previously, it returned a dictionary with one entry.
 
 
 🔥 *Features*
 
 * `list_workflow_runs` added to the Public API. This lets you list the workflows for a given config, for example `sdk.list_workflow_runs("ray")` or `sdk.list_workflow_runs("prod-d")`.
-* Upgrade Ray version to 2.2
+
 
 👩‍🔬 *Experimental*
 

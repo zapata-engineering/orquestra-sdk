@@ -107,11 +107,8 @@ def make_list_wf_def_paginated_response(
     return {
         "data": [_wf_def_resp(id_, wf_def) for id_, wf_def in zip(ids, wf_defs)],
         "meta": {
-            "pagination": {
-                "total": len(ids),
-                "nextPageToken": "nikkei-est-273_35438",
-                "prevPageToken": "nikkei-est-273_35438",
-            },
+            "nextPageToken": "1989-12-13T00:00:00.000000Z,"
+            "00000000-0000-0000-0000-0000000000000",
         },
     }
 
@@ -200,11 +197,8 @@ def make_list_wf_run_paginated_response(
             for id_, wf_def_id in zip(ids, workflow_def_ids)
         ],
         "meta": {
-            "pagination": {
-                "total": len(ids),
-                "nextPageToken": "nikkei-est-273_35438",
-                "prevPageToken": "nikkei-est-273_35438",
-            },
+            "nextPageToken": "1989-12-13T00:00:00.000000Z,"
+            "00000000-0000-0000-0000-0000000000000",
         },
     }
 

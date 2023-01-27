@@ -263,8 +263,10 @@ class TestClient:
                 assert isinstance(defs, Paginated)
                 assert len(defs.contents) == 10
                 assert defs.contents[0] == workflow_def
-                assert defs.next_page_token == "nikkei-est-273_35438"
-                assert defs.prev_page_token == "nikkei-est-273_35438"
+                assert (
+                    defs.next_page_token == "1989-12-13T00:00:00.000000Z,"
+                    "00000000-0000-0000-0000-0000000000000"
+                )
 
             @staticmethod
             @pytest.mark.parametrize(
@@ -741,8 +743,10 @@ class TestClient:
                 assert isinstance(defs, Paginated)
                 assert len(defs.contents) == 10
                 assert defs.contents[0].id == workflow_run_id
-                assert defs.next_page_token == "nikkei-est-273_35438"
-                assert defs.prev_page_token == "nikkei-est-273_35438"
+                assert (
+                    defs.next_page_token == "1989-12-13T00:00:00.000000Z,"
+                    "00000000-0000-0000-0000-0000000000000"
+                )
 
             @staticmethod
             @pytest.mark.parametrize(
