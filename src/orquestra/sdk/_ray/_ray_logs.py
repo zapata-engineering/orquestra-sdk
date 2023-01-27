@@ -88,6 +88,10 @@ class _RayLogs:
                 "}",
                 record,
             )
+
+            if m is None:
+                return
+
             data = {
                 "timestamp": m.group("timestamp"),
                 "level": m.group("level"),
@@ -105,7 +109,7 @@ class _RayLogs:
             message=LogMessage(data["message"]["run_id"], data["message"]["logs"]),
         )
 
-    def _load_unstructured_log_record(self, record: str) -> StructuredLog:
+    def _load_unstructured_log_record(self, record: str):
         """
         Read in a plain-text log record and convert to a StructuredLog object.
 
