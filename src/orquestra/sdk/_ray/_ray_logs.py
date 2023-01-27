@@ -4,9 +4,10 @@
 """
 Class to get logs from Ray for particular Workflow, both historical and live.
 """
+import ast
 import glob
-import json
 import os
+import re
 import time
 import typing as t
 from dataclasses import dataclass
@@ -73,7 +74,30 @@ class _RayLogs:
                 )
 
     def _load_structured_log_record(self, record: str):
-        data = json.loads(record)
+        try:
+            data = ast.literal_eval(record)
+        except SyntaxError:
+            # Fallback option for cases where something in the record causes it not to
+            # parse correctly.
+            m = re.match(
+                "{"
+                '"timestamp": (?P<timestamp>.+), '
+                '"level": (?P<level>.+), '
+                '"filename": (?P<filename>.+), '
+                '"message": (?P<message>.+)'
+                "}",
+                record,
+            )
+            data = {
+                "timestamp": m.group("timestamp"),
+                "level": m.group("level"),
+                "filename": m.group("filename"),
+                "message": {
+                    "logs": m.group("message"),
+                    "run_id": "",
+                },
+            }
+
         return StructuredLog(
             timestamp=data["timestamp"],
             level=data["level"],
@@ -81,15 +105,30 @@ class _RayLogs:
             message=LogMessage(data["message"]["run_id"], data["message"]["logs"]),
         )
 
-    def _load_unstructured_log_record(self, record: str):
-        ts_level_filename, logs = record.split(" -- ")
-        timestamp, level_filename = ts_level_filename.split("\t")
-        level, filename = level_filename.split(" ", 1)
+    def _load_unstructured_log_record(self, record: str) -> StructuredLog:
+        """
+        Read in a plain-text log record and convert to a StructuredLog object.
+
+        This assumes that records are of the format
+        ```
+        <timestamp>\t<level> <filename> -- <message>
+        ```
+        or
+        ```
+        <timestamp>\t<level> <filename> -- <message>\t[<id>]
+        ```
+        """
         try:
-            log_message, id = logs.split("\t")
+            ts_level_filename, logs = record.split(" -- ")
+            timestamp, level_filename = ts_level_filename.split("\t")
+            level, filename = level_filename.split(" ", 1)
+            try:
+                log_message, id = logs.split("\t")
+            except ValueError:
+                log_message = logs
+                id = ""
         except ValueError:
-            log_message = logs
-            id = ""
+            return
 
         return StructuredLog(
             timestamp=timestamp,
@@ -111,6 +150,10 @@ class _RayLogs:
                 log = self._load_structured_log_record(line)
             else:
                 log = self._load_unstructured_log_record(line)
+
+            if log is None:
+                return
+
             return LINE_FORMAT.format(log=log).replace("[]", "").strip()
 
     def _read_log_files(self):
