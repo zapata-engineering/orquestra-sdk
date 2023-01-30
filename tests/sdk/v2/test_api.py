@@ -23,7 +23,6 @@ from orquestra.sdk._base import _api, _config, _workflow
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import (
     ConfigNameNotFoundError,
-    NotFoundError,
     TaskRunNotFound,
     UnauthorizedError,
     WorkflowRunCanNotBeTerminated,
@@ -124,26 +123,38 @@ class TestRunningInProcess:
 class TestWorkflowRun:
     @staticmethod
     @pytest.fixture
-    def mock_runtime():
-        runtime = MagicMock(RuntimeInterface)
+    def sample_wf_def() -> _workflow.WorkflowDef:
+        @_workflow.workflow
+        def my_wf():
+            # We need at least 4 invocations to use in our tests.
+            text1 = capitalize(join_strings(["hello", "there"]))
+            text2 = capitalize(join_strings(["general", "kenobi"]))
+            return text1, text2
+
+        return my_wf()
+
+    @staticmethod
+    @pytest.fixture
+    def mock_runtime(sample_wf_def):
+        runtime = create_autospec(RuntimeInterface, name="runtime")
         # For getting workflow ID
         runtime.create_workflow_run.return_value = "wf_pass_tuple-1"
         # For getting workflow outputs
         runtime.get_workflow_run_outputs_non_blocking.return_value = "woohoo!"
         # for simulating a workflow running
-        _succeeded = MagicMock()
+        succeeded_run_model = Mock(name="succeeded wf run model")
 
         # Default value is "SUCCEEDED"
-        _succeeded.status.state = State.SUCCEEDED
-        runtime.get_workflow_run_status.return_value = _succeeded
+        succeeded_run_model.status.state = State.SUCCEEDED
+        runtime.get_workflow_run_status.return_value = succeeded_run_model
         # Use side effects to simulate a running workflow
 
-        _running = MagicMock()
-        _running.status.state = State.RUNNING
+        running_wf_run_model = Mock(name="running wf run model")
+        running_wf_run_model.status.state = State.RUNNING
         runtime.get_workflow_run_status.side_effect = itertools.chain(
             (
-                _running,
-                _running,
+                running_wf_run_model,
+                running_wf_run_model,
             ),
             itertools.repeat(DEFAULT),
         )
@@ -154,26 +165,32 @@ class TestWorkflowRun:
             "task_run2": "another",
             "task_run3": 123,
         }
+
+        wf_def_model = sample_wf_def.model
+        task_invs = list(wf_def_model.task_invocations.values())
         # Get logs, the runtime interface returns invocation IDs
         runtime.get_full_logs.return_value = {
-            "task_invocation1": ["woohoo!\n"],
-            "task_invocation2": ["another\n", "line\n"],
-            "task_invocation3": ["hello\n", "a log\n"],
+            task_invs[0].id: ["woohoo!\n"],
+            task_invs[1].id: ["another\n", "line\n"],
+            # This task invocation was executed, but it produced no logs.
+            task_invs[2].id: [],
+            # There's also 4th task invocation in the workflow def, it wasn't executed
+            # yet, so we don't return it.
         }
-        _running.task_runs = [
+        running_wf_run_model.task_runs = [
             TaskRunModel(
                 id="task_run1",
-                invocation_id="task_invocation1",
+                invocation_id=task_invs[0].id,
                 status=RunStatus(state=State.SUCCEEDED),
             ),
             TaskRunModel(
                 id="task_run2",
-                invocation_id="task_invocation2",
+                invocation_id=task_invs[1].id,
                 status=RunStatus(state=State.FAILED),
             ),
             TaskRunModel(
                 id="task_run3",
-                invocation_id="task_invocation3",
+                invocation_id=task_invs[2].id,
                 status=RunStatus(state=State.FAILED),
             ),
         ]
@@ -182,8 +199,10 @@ class TestWorkflowRun:
 
     @staticmethod
     @pytest.fixture
-    def run(mock_runtime) -> _api.WorkflowRun:
-        return _api.WorkflowRun(None, wf_pass_tuple().model, mock_runtime)
+    def run(sample_wf_def, mock_runtime) -> _api.WorkflowRun:
+        return _api.WorkflowRun(
+            run_id=None, wf_def=sample_wf_def.model, runtime=mock_runtime, config=None
+        )
 
     class TestByID:
         class TestResolvingConfig:
@@ -523,25 +542,30 @@ class TestWorkflowRun:
             ) in str(exc_info)
 
         @staticmethod
-        @pytest.mark.skip(reason="To be fixed in another PR under ORQSDK-574")
         def test_get_tasks_from_started_workflow(run):
+            # Given
             run.start()
 
+            # When
             tasks = run.get_tasks()
 
-            assert len(tasks) == 1
-            task = tasks.pop()
-            assert task.workflow_run_id == run.run_id
-            assert task._runtime == run._runtime
-            assert task._wf_def == run._wf_def
-            assert task.task_run_id == next(iter(run._wf_def.task_invocations.keys()))
+            # Then
+            assert len(tasks) == 3
+
+            wf_def_model = run._wf_def
+            for task in tasks:
+                assert task.workflow_run_id == run.run_id
+                assert task._runtime == run._runtime
+                assert task._wf_def == run._wf_def
+                assert task.task_invocation_id in wf_def_model.task_invocations
 
     class TestGetLogs:
         @staticmethod
         def test_raises_exception_if_workflow_not_started(run):
             # When
             with pytest.raises(WorkflowRunNotStarted) as exc_info:
-                run.get_logs(tasks=[])
+                run.get_logs()
+
             # Then
             assert (
                 "You will need to call the `.start()` method prior to calling this "
@@ -549,51 +573,19 @@ class TestWorkflowRun:
             ) in str(exc_info)
 
         @staticmethod
-        def test_get_logs(run):
+        def test_happy_path(run):
             # Given
             run.start()
-            # When
-            logs = run.get_logs(tasks=["task_invocation1"])
-            # Then
-            assert len(logs) == 1
-            assert "task_invocation1" in logs
-            assert len(logs["task_invocation1"]) == 1
-            assert logs["task_invocation1"][0] == "woohoo!\n"
 
-        @staticmethod
-        def test_get_logs_str(run):
-            # Given
-            run.start()
             # When
-            logs = run.get_logs(tasks="task_invocation1")
-            # Then
-            assert len(logs) == 1
-            assert "task_invocation1" in logs
+            logs = run.get_logs()
 
-        @staticmethod
-        def test_get_logs_missing_only_available_false(run, mock_runtime):
-            # Given
-            mock_runtime.get_full_logs.side_effect = [DEFAULT, NotFoundError()]
-            run.start()
-            # When
-            with pytest.raises(TaskRunNotFound) as exc_info:
-                _ = run.get_logs(tasks=["task_invocation1", "doesn't exist"])
             # Then
-            assert exc_info.match("Task run with id `.*` not found")
-
-        @staticmethod
-        def test_get_logs_missing_only_available_true(run, mock_runtime):
-            # Given
-            mock_runtime.get_full_logs.side_effect = [DEFAULT, NotFoundError()]
-            run.start()
-            # When
-            logs = run.get_logs(
-                tasks=["task_invocation1", "doesn't exist"], only_available=True
-            )
-            # Then
-            assert len(logs) == 1
-            assert "task_invocation1" in logs
-            assert "doesn't exist" not in logs
+            assert len(logs) == 3
+            expected_inv = "invocation-0-task-capitalize"
+            assert expected_inv in logs
+            assert len(logs[expected_inv]) == 1
+            assert logs[expected_inv][0] == "woohoo!\n"
 
     class TestGetConfig:
         @staticmethod

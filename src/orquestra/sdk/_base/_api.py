@@ -35,13 +35,13 @@ from orquestra.sdk.schema.workflow_run import WorkflowRunId
 from ..exceptions import (
     ConfigFileNotFoundError,
     ConfigNameNotFoundError,
-    NotFoundError,
     RuntimeConfigError,
     TaskRunNotFound,
     UnauthorizedError,
     UnsavedConfigChangesError,
     WorkflowRunCanNotBeTerminated,
     WorkflowRunNotFinished,
+    WorkflowRunNotFoundError,
     WorkflowRunNotStarted,
     WorkflowRunNotSucceeded,
 )
@@ -155,7 +155,16 @@ class TaskRun:
 
     def get_logs(self) -> t.List[str]:
         logs_dict = self._runtime.get_full_logs(self.task_run_id)
-        return logs_dict[self.task_invocation_id]
+        # NOTE: the line below will fail for Ray-produced logs until
+        # https://zapatacomputing.atlassian.net/browse/ORQSDK-676 is fixed.
+        # However, this is a bug, so we don't describe this exception in this method's
+        # signature, nor the functions that wrap it.
+        try:
+            return logs_dict[self.task_invocation_id]
+        except KeyError as e:
+            raise NotImplementedError(
+                "Reading single task logs isn't supported yet for this runtime."
+            ) from e
 
     def get_outputs(self) -> t.Any:
         """
@@ -328,6 +337,11 @@ class WorkflowRun:
 
     @staticmethod
     def _get_stored_run(_project_dir: Path, run_id: WorkflowRunId) -> StoredWorkflowRun:
+        """
+        Raises:
+            orquestra.sdk.exceptions.WorkflowNotFoundError: raised when no matching
+            workflow exists in the database.
+        """
         from orquestra.sdk._base._db import WorkflowDB
 
         # Get the run details from the database. Extracted from by_id method
@@ -357,11 +371,14 @@ class WorkflowRun:
                 saved. If omitted, the default config file path is used.
 
         Raises:
-            NotFoundError: when the run_id doesn't match a stored run ID.
-            ConfigNameNotFoundError: when the named config is not found in the file.
-
-        Returns:
-            WorkflowRun
+            orquestra.sdk.exceptions.WorkflowRunNotFoundError: when the run_id doesn't
+                match a stored run ID.
+            orquestra.sdk.exceptions.UnauthorizedError: when authorization with the
+                remote runtime failed.
+            orquestra.sdk.exceptions.ConfigFileNotFoundError: when the config file
+                couldn't be read
+            orquestra.sdk.exceptions.ConfigNameNotFoundError: when there's no
+                corresponding config entry in the config file.
         """
         _project_dir = Path(project_dir or Path.cwd())
 
@@ -371,10 +388,17 @@ class WorkflowRun:
             # Shorthand: use the cached value.
             # We need to read the config name from the local DB and load the config
             # entry.
-            stored_run = cls._get_stored_run(_project_dir, run_id)
-            resolved_config = RuntimeConfig.load(
-                stored_run.config_name, config_save_file=config_save_file
-            )
+            try:
+                stored_run = cls._get_stored_run(_project_dir, run_id)
+            except WorkflowRunNotFoundError:
+                raise
+
+            try:
+                resolved_config = RuntimeConfig.load(
+                    stored_run.config_name, config_save_file=config_save_file
+                )
+            except (ConfigFileNotFoundError, ConfigNameNotFoundError):
+                raise
         else:
             resolved_config = _resolve_config(config, config_save_file)
 
@@ -385,13 +409,16 @@ class WorkflowRun:
         # - QE probably won't have endpoints for this, but the single-user limitation
         #   will be an implementation detail of `QERuntime`.
         runtime = resolved_config._get_runtime(_project_dir)
-        wf_def = runtime.get_workflow_run_status(run_id).workflow_def
+        try:
+            wf_run_model = runtime.get_workflow_run_status(run_id)
+        except (UnauthorizedError, WorkflowRunNotFoundError):
+            raise
 
         workflow_run = WorkflowRun(
-            run_id,
-            wf_def,
-            runtime,
-            resolved_config,
+            run_id=run_id,
+            wf_def=wf_run_model.workflow_def,
+            runtime=runtime,
+            config=resolved_config,
         )
 
         return workflow_run
@@ -612,7 +639,7 @@ class WorkflowRun:
         except WorkflowRunNotSucceeded:
             raise
 
-    def get_artifacts(self) -> t.Dict[ir.TaskInvocationId, t.Any]:
+    def get_artifacts(self) -> t.Mapping[ir.TaskInvocationId, t.Any]:
         """
         Unstable: this API will change.
 
@@ -644,45 +671,29 @@ class WorkflowRun:
 
         # The runtime always returns tuples, even of the task has n_outputs = 1. We
         # need to unwrap it for user's convenience.
-        unwrapped_artifacts: t.Dict[ir.TaskInvocationId, t.Any] = {}
-        for inv_id, outputs in workflow_artifacts.items():
-            inv = self._wf_def.task_invocations[inv_id]
-            if len(inv.output_ids) == 1:
-                unwrapped = outputs[0]
-            else:
-                unwrapped = outputs
+        return _unwrap(
+            artifacts=workflow_artifacts, task_invocations=self._wf_def.task_invocations
+        )
 
-            unwrapped_artifacts[inv_id] = unwrapped
-
-        return unwrapped_artifacts
-
-    def get_logs(
-        self,
-        tasks: t.Union[TaskInvocationId, t.List[TaskInvocationId]],
-        *,
-        only_available: bool = False,
-    ) -> t.Dict[TaskInvocationId, t.List[str]]:
+    def get_logs(self) -> t.Mapping[TaskInvocationId, t.List[str]]:
         """
         Unstable: this API will change.
 
-        Returns the task run logs from a workflow.
-        Args:
-            tasks: A task invocation ID or a list of task invocation IDs to return.
-                   An empty list implies no task logs.
-            only_available: If true, logs for tasks that haven't been started yet won't
-                            be returned. If false, and `tasks` contain IDs of task runs
-                            that haven't been started yet, this will raise an error.
+        Returns logs produced by all task runs in this workflow. If you're interested in
+        only subset of tasks, consider using ``WorkflowRun.get_tasks()`` and
+        ``TaskRun.get_logs()``.
+
         Raises:
             WorkflowRunNotStarted: when the workflow has not started
-            TaskRunNotFound: when only_available is False and a requested task run
-                            cannot be found, either because it does not exist or has not
-                            been completed yet.
+
         Returns:
-            A dictionary of the task run logs with the shape::
-                task_invocation_id: List[log lines]
+            A dictionary where each key-value entry correponds to a single task run.
+            The key identifies a task invocation, a single node in the workflow graph.
+            The value is a list of log lines produced by the corresponding task
+            invocation while running this workflow.
         """
         try:
-            _ = self.run_id
+            wf_run_id = self.run_id
         except WorkflowRunNotStarted as e:
             message = (
                 "Cannot get the logs of a workflow run that hasn't started yet. "
@@ -691,33 +702,7 @@ class WorkflowRun:
             )
             raise WorkflowRunNotStarted(message) from e
 
-        task_list = [tasks] if isinstance(tasks, str) else tasks
-        task_logs: t.Dict[TaskInvocationId, t.List[str]] = {}
-
-        for task_inv_id in task_list:
-            all_task_runs = self.get_status_model().task_runs
-            # find taskRunID based on task invocation ID
-            try:
-                # Get a single task run logs
-                # Unfortunately, we return TaskInvocationId: List[str] from
-                # get_full_logs. so we do this hack to get the first value from the dict
-                # which (in this case) the task logs for the task_run_id.
-                task_run_id = next(
-                    task.id
-                    for task in all_task_runs
-                    if task.invocation_id == task_inv_id
-                )
-                task_logs[task_inv_id] = next(
-                    iter(self._runtime.get_full_logs(task_run_id).values())
-                )
-            except (NotFoundError, StopIteration) as e:
-                if only_available:
-                    continue
-                else:
-                    raise TaskRunNotFound(
-                        f"Task run with id `{task_run_id}` not found. "
-                        "It may not be completed or does not exist in this WorkflowRun."
-                    ) from e
+        task_logs = self._runtime.get_full_logs(wf_run_id)
 
         return task_logs
 
@@ -1210,6 +1195,10 @@ class RuntimeConfig:
             config_name: The name of the configuration to be loaded.
             config_save_file (optional): The path to the file in which configurations
                 are stored. If omitted, the default file location is used.
+
+        Raises:
+            orquestra.sdk.exceptions.ConfigFileNotFoundError
+            orquestra.sdk.exceptions.ConfigNameNotFoundError
 
         Returns:
             RuntimeConfig: The configuration as loaded from the file.

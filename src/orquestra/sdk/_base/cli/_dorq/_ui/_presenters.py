@@ -74,14 +74,14 @@ class WrappedCorqOutputPresenter:
         click.echo(f"Workflow logs saved at {path}")
 
     @staticmethod
-    def _format_log_dict(logs: t.Dict[TaskInvocationId, t.List[str]]):
+    def _format_log_dict(logs: t.Mapping[TaskInvocationId, t.Sequence[str]]):
         return [
             line
             for invocation_id, invocation_lines in logs.items()
             for line in (f"task-invocation-id: {invocation_id}", *invocation_lines)
         ]
 
-    def show_logs(self, logs: t.Dict[TaskInvocationId, t.List[str]]):
+    def show_logs(self, logs: t.Mapping[TaskInvocationId, t.Sequence[str]]):
         resp = responses.GetLogsResponse(
             meta=responses.ResponseMetadata(
                 success=True,

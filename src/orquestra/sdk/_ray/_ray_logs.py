@@ -93,7 +93,7 @@ class _RayLogs:
 
     def get_full_logs(self):
         # This is bad. The key should be a task invocation ID. To be fixed in the Jira
-        # ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-570
+        # ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-676
         return {"logs": self._read_log_files()}
 
 

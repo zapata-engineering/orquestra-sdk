@@ -733,11 +733,15 @@ class RayRuntime(RuntimeInterface):
         return wf_runs
 
     def get_workflow_run_status(self, workflow_run_id: WorkflowRunId) -> WorkflowRun:
+        """
+        Raises:
+            orquestra.sdk.exceptions.WorkflowRunNotFoundError
+        """
         try:
             wf_status = self._client.get_workflow_status(workflow_id=workflow_run_id)
             wf_meta = self._client.get_workflow_metadata(workflow_id=workflow_run_id)
         except (_client.workflow_exceptions.WorkflowNotFoundError, ValueError) as e:
-            raise exceptions.NotFoundError(
+            raise exceptions.WorkflowRunNotFoundError(
                 f"Workflow run {workflow_run_id} wasn't found"
             ) from e
 

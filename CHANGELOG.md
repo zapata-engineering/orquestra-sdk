@@ -3,7 +3,25 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
-* `sdk.WorkflowRun.get_logs()` now accepts TaskInvocationID instead of TaskRunID
+* `sdk.WorkflowRun.get_logs()` doesn't accept any arguments anymore. Now, it returns all the logs produced by the tasks in the workflow. If you're interested in only a subset of your workflow's logs, please consider using one of the following filtering options:
+```
+from orquestra import sdk
+from orquestra.sdk.schema.workflow_run import State
+
+wf_run = sdk.WorkflowRun.by_id("foo")
+
+logs = wf_run.get_logs()
+# Option 1
+single_task_logs = logs["my_inv_id"]
+
+# Option 2
+logs_subset = {id: lines for id, lines in logs.items() if id in ["foo", "bar", "baz"]}
+
+# Option 3
+for task in wf_run.get_tasks():
+    if task.get_status() == State.FAILED:
+        print(task.get_logs())
+```
 * `sdk.WorkflowRun.get_artifacts()` doesn't accept any arguments anymore. Now, it returns all the artifacts produced by the tasks in the workflow.
 * `sdk.TaskRun.get_logs()` returns a list of log lines produced by this task. Previously, it returned a dictionary with one entry.
 

@@ -10,13 +10,12 @@ import sys
 import typing
 import typing as t
 import warnings
-from pathlib import Path
 
 import requests
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import _config, _db, _factory, loader
+from orquestra.sdk._base import _config, _db, loader
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe import _client
 from orquestra.sdk._base.abc import ArtifactValue
@@ -306,47 +305,64 @@ class WorkflowRunRepo:
 
         return matching_inv_ids
 
-    def get_wf_logs(self, wf_run_id: WorkflowRunId, config_name: ConfigName):
+    def get_wf_logs(
+        self, wf_run_id: WorkflowRunId, config_name: ConfigName
+    ) -> t.Mapping[TaskInvocationId, t.Sequence[str]]:
         """
-        Asks the runtime for workflow logs
-
         Raises:
             ConnectionError: when connection with Ray failed.
             orquestra.sdk.exceptions.UnauthorizedError: when connection with runtime
                 failed because of an auth error.
         """
-        # TODO ORQSDK-574: Switch to single api call when its possible for whole WF
-        runtime_configuration = _config.read_config(config_name)
-        project_dir = Path.cwd()
-
-        runtime = _factory.build_runtime_from_config(
-            project_dir=project_dir, config=runtime_configuration
-        )
-
-        try:
-            logs = runtime.get_full_logs(wf_run_id)
-        except (ConnectionError, exceptions.UnauthorizedError):
-            raise
-
-        return logs
-
-    def get_task_logs(
-        self,
-        wf_run_id: WorkflowRunId,
-        task_inv_id: TaskInvocationId,
-        config_name: ConfigName,
-    ):
         try:
             wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
         except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
             raise
 
         try:
-            logs = wf_run.get_logs(tasks=task_inv_id)
-        except (exceptions.WorkflowRunNotStarted, exceptions.TaskRunNotFound):
+            # While this method can also raise WorkflowRunNotStarted error we don't ever
+            # expect it to happen, because we're getting workflow run by ID. Workflows
+            # get their IDs at the start time.
+            return wf_run.get_logs()
+        except (ConnectionError, exceptions.UnauthorizedError):
             raise
 
-        return logs
+    def get_task_logs(
+        self,
+        wf_run_id: WorkflowRunId,
+        task_inv_id: TaskInvocationId,
+        config_name: ConfigName,
+    ) -> t.Mapping[TaskInvocationId, t.Sequence[str]]:
+        """
+        Raises:
+            orquestra.sdk.exceptions.WorkflowRunNotFoundError
+            orquestra.sdk.exceptions.ConfigmeNotFoundError
+            orquestra.sdk.exceptions.ConfigNameNotFoundError
+        """
+        try:
+            wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
+        except (
+            exceptions.NotFoundError,
+            exceptions.ConfigFileNotFoundError,
+            exceptions.ConfigNameNotFoundError,
+        ):
+            raise
+
+        task_runs = wf_run.get_tasks()
+        try:
+            task_run: sdk.TaskRun = _find_first(
+                lambda task: task.task_invocation_id == task_inv_id, task_runs
+            )
+        except StopIteration as e:
+            raise exceptions.TaskInvocationNotFoundError(task_inv_id) from e
+
+        log_lines = task_run.get_logs()
+
+        # Single k-v dict might seem weird but Using the same data shape for single
+        # task logs and full workflow logs allows easier code sharing.
+        logs_dict = {task_inv_id: log_lines}
+
+        return logs_dict
 
 
 class ConfigRepo:
