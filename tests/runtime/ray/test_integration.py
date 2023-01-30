@@ -660,12 +660,14 @@ class TestDirectRayReader:
 
         assert tell_tale in log_lines_joined
 
+
 @pytest.mark.slow
 # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
 # unraisable exceptions. Last tested with Ray 2.2.0.
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 def test_ray_direct_reader_no_duplicate_lines(
-    shared_ray_conn, runtime,
+    shared_ray_conn,
+    runtime,
 ):
     """
     This ensures that `session_latest` and `session_<current date>` are not searched
@@ -687,11 +689,14 @@ def test_ray_direct_reader_no_duplicate_lines(
 
     # Then
     # First check for the tell_tale in all log lines
-    matches = [tell_tale in log_line for task_log_lines in logs_dict.values() for log_line in task_log_lines]
+    matches = [
+        tell_tale in log_line
+        for task_log_lines in logs_dict.values()
+        for log_line in task_log_lines
+    ]
 
     # Assert the tell_tale was only found once
     assert matches.count(True) == 1
-
 
 
 @pytest.mark.slow
