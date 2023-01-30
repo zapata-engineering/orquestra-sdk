@@ -45,11 +45,12 @@ class _RayLogs:
         path_glob = self.ray_temp / "session**" / "logs" / "worker*[.out|.err]"
         log_file_paths = glob.glob(str(path_glob))
         for file_path in log_file_paths:
-            if os.path.isfile(file_path) and file_path not in self.log_filenames:
-                self.log_filenames.add(file_path)
+            real_path = os.path.realpath(file_path)
+            if os.path.isfile(file_path) and real_path not in self.log_filenames:
+                self.log_filenames.add(real_path)
                 self.log_file_infos.append(
                     _LogFileInfo(
-                        filename=file_path,
+                        filename=real_path,
                         size_when_last_opened=0,
                         file_position=0,
                     )

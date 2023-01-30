@@ -660,6 +660,39 @@ class TestDirectRayReader:
 
         assert tell_tale in log_lines_joined
 
+@pytest.mark.slow
+# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
+# unraisable exceptions. Last tested with Ray 2.2.0.
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+def test_ray_direct_reader_no_duplicate_lines(
+    shared_ray_conn, runtime,
+):
+    """
+    This ensures that `session_latest` and `session_<current date>` are not searched
+    twice.
+    This is separate to the `TestDirectRayReader` tests because searching without the
+    run id may show duplicate logs if different workflows print the same thing.
+    """
+    # Given
+    wf = _example_wfs.wf_with_log("Unique log line").model
+    tell_tale = "Unique log line"
+    ray_params = shared_ray_conn
+    reader = _ray_logs.DirectRayReader(Path(ray_params._temp_dir))
+
+    run_id = runtime.create_workflow_run(wf)
+    _wait_to_finish_wf(run_id, runtime)
+
+    # When
+    logs_dict = reader.get_full_logs(run_id=run_id)
+
+    # Then
+    # First check for the tell_tale in all log lines
+    matches = [tell_tale in log_line for task_log_lines in logs_dict.values() for log_line in task_log_lines]
+
+    # Assert the tell_tale was only found once
+    assert matches.count(True) == 1
+
+
 
 @pytest.mark.slow
 # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
