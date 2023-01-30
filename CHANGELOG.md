@@ -47,6 +47,7 @@ for task in wf_run.get_tasks():
 * Fixed broken link on docs landing page.
 * Internal logs from Ray are no longer displayed.
 * Fixed the docstrings for `sdk.WorkflowRun.get_artifacts()`. It returns a dictionary with `TaskInvocationID` as keys and whatever the task returns as values.
+* Fixed bug where some log line from Ray may be duplicated when viewing logs
 
 
 *Internal*
