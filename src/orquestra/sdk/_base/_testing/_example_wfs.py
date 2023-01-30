@@ -57,6 +57,14 @@ def task_with_import():
     return 2
 
 
+@sdk.task(dependency_imports=[sdk.GithubImport("alexjuda/piccup")])
+def task_with_git_import():
+    import piccup  # type: ignore # noqa
+
+    # return whatever - make sure it just doesnt assert on import
+    return 2
+
+
 @sdk.workflow
 def complicated_wf():
     first_name = "emiliano"
@@ -156,6 +164,11 @@ def wf_using_inline_imports():
 
 @sdk.workflow
 def wf_using_python_imports():
+    return [task_with_import()]
+
+
+@sdk.workflow
+def wf_using_git_imports():
     return [task_with_import()]
 
 
