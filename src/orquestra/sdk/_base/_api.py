@@ -41,6 +41,7 @@ from ..exceptions import (
     UnsavedConfigChangesError,
     WorkflowRunCanNotBeTerminated,
     WorkflowRunNotFinished,
+    WorkflowRunNotFoundError,
     WorkflowRunNotStarted,
     WorkflowRunNotSucceeded,
 )
@@ -154,7 +155,16 @@ class TaskRun:
 
     def get_logs(self) -> t.List[str]:
         logs_dict = self._runtime.get_full_logs(self.task_run_id)
-        return logs_dict[self.task_invocation_id]
+        # NOTE: the line below will fail for Ray-produced logs until
+        # https://zapatacomputing.atlassian.net/browse/ORQSDK-676 is fixed.
+        # However, this is a bug, so we don't describe this exception in this method's
+        # signature, nor the functions that wrap it.
+        try:
+            return logs_dict[self.task_invocation_id]
+        except KeyError as e:
+            raise NotImplementedError(
+                "Reading single task logs isn't supported yet for this runtime."
+            ) from e
 
     def get_outputs(self) -> t.Any:
         """
@@ -327,6 +337,11 @@ class WorkflowRun:
 
     @staticmethod
     def _get_stored_run(_project_dir: Path, run_id: WorkflowRunId) -> StoredWorkflowRun:
+        """
+        Raises:
+            orquestra.sdk.exceptions.WorkflowNotFoundError: raised when no matching
+            workflow exists in the database.
+        """
         from orquestra.sdk._base._db import WorkflowDB
 
         # Get the run details from the database. Extracted from by_id method
@@ -356,11 +371,14 @@ class WorkflowRun:
                 saved. If omitted, the default config file path is used.
 
         Raises:
-            NotFoundError: when the run_id doesn't match a stored run ID.
-            ConfigNameNotFoundError: when the named config is not found in the file.
-
-        Returns:
-            WorkflowRun
+            orquestra.sdk.exceptions.WorkflowRunNotFoundError: when the run_id doesn't
+                match a stored run ID.
+            orquestra.sdk.exceptions.UnauthorizedError: when authorization with the
+                remote runtime failed.
+            orquestra.sdk.exceptions.ConfigFileNotFoundError: when the config file
+                couldn't be read
+            orquestra.sdk.exceptions.ConfigNameNotFoundError: when there's no
+                corresponding config entry in the config file.
         """
         _project_dir = Path(project_dir or Path.cwd())
 
@@ -370,10 +388,17 @@ class WorkflowRun:
             # Shorthand: use the cached value.
             # We need to read the config name from the local DB and load the config
             # entry.
-            stored_run = cls._get_stored_run(_project_dir, run_id)
-            resolved_config = RuntimeConfig.load(
-                stored_run.config_name, config_save_file=config_save_file
-            )
+            try:
+                stored_run = cls._get_stored_run(_project_dir, run_id)
+            except WorkflowRunNotFoundError:
+                raise
+
+            try:
+                resolved_config = RuntimeConfig.load(
+                    stored_run.config_name, config_save_file=config_save_file
+                )
+            except (ConfigFileNotFoundError, ConfigNameNotFoundError):
+                raise
         else:
             resolved_config = _resolve_config(config, config_save_file)
 
@@ -384,13 +409,16 @@ class WorkflowRun:
         # - QE probably won't have endpoints for this, but the single-user limitation
         #   will be an implementation detail of `QERuntime`.
         runtime = resolved_config._get_runtime(_project_dir)
-        wf_def = runtime.get_workflow_run_status(run_id).workflow_def
+        try:
+            wf_run_model = runtime.get_workflow_run_status(run_id)
+        except (UnauthorizedError, WorkflowRunNotFoundError):
+            raise
 
         workflow_run = WorkflowRun(
-            run_id,
-            wf_def,
-            runtime,
-            resolved_config,
+            run_id=run_id,
+            wf_def=wf_run_model.workflow_def,
+            runtime=runtime,
+            config=resolved_config,
         )
 
         return workflow_run
@@ -1167,6 +1195,10 @@ class RuntimeConfig:
             config_name: The name of the configuration to be loaded.
             config_save_file (optional): The path to the file in which configurations
                 are stored. If omitted, the default file location is used.
+
+        Raises:
+            orquestra.sdk.exceptions.ConfigFileNotFoundError
+            orquestra.sdk.exceptions.ConfigNameNotFoundError
 
         Returns:
             RuntimeConfig: The configuration as loaded from the file.

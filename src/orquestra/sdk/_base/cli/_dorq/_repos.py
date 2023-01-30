@@ -335,15 +335,15 @@ class WorkflowRunRepo:
     ) -> t.Mapping[TaskInvocationId, t.Sequence[str]]:
         """
         Raises:
-            orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match a
-                stored run ID.
-            orquestra.sdk.exceptions.ConfigNameNotFoundError: when the named config is
-                not found in the file.
+            orquestra.sdk.exceptions.WorkflowRunNotFoundError
+            orquestra.sdk.exceptions.ConfigmeNotFoundError
+            orquestra.sdk.exceptions.ConfigNameNotFoundError
         """
         try:
             wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
         except (
             exceptions.NotFoundError,
+            exceptions.ConfigFileNotFoundError,
             exceptions.ConfigNameNotFoundError,
         ):
             raise
@@ -356,7 +356,6 @@ class WorkflowRunRepo:
         except StopIteration as e:
             raise exceptions.TaskInvocationNotFoundError(task_inv_id) from e
 
-        # TODO: handle and document exceptions
         log_lines = task_run.get_logs()
 
         # Single k-v dict might seem weird but Using the same data shape for single
