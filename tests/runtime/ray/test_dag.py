@@ -514,6 +514,7 @@ class TestPipString:
             assert pip == []
 
         def test_with_package(self, monkeypatch: pytest.MonkeyPatch):
+            # We're not testing the serde package, so we're mocking it
             monkeypatch.setattr(
                 _dag.serde, "stringify_package_spec", Mock(return_value="mocked")
             )
@@ -533,6 +534,7 @@ class TestPipString:
             assert pip == ["mocked"]
 
         def test_with_two_packages(self, monkeypatch: pytest.MonkeyPatch):
+            # We're not testing the serde package, so we're mocking it
             monkeypatch.setattr(
                 _dag.serde, "stringify_package_spec", Mock(return_value="mocked")
             )
