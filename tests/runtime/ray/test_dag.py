@@ -504,3 +504,90 @@ class TestWrapSingleOutputs:
         wrapped = _dag._wrap_single_outputs(values, invocations)
         # Then
         assert wrapped == expected_wrapped
+
+
+class TestPipString:
+    class TestPythonImports:
+        def test_empty(self):
+            imp = ir.PythonImports(id="mock-import", packages=[], pip_options=[])
+            pip = _dag._pip_string(imp)
+            assert pip == []
+
+        def test_with_package(self, monkeypatch: pytest.MonkeyPatch):
+            # We're not testing the serde package, so we're mocking it
+            monkeypatch.setattr(
+                _dag.serde, "stringify_package_spec", Mock(return_value="mocked")
+            )
+            imp = ir.PythonImports(
+                id="mock-import",
+                packages=[
+                    ir.PackageSpec(
+                        name="one",
+                        extras=[],
+                        version_constraints=[],
+                        environment_markers="",
+                    )
+                ],
+                pip_options=[],
+            )
+            pip = _dag._pip_string(imp)
+            assert pip == ["mocked"]
+
+        def test_with_two_packages(self, monkeypatch: pytest.MonkeyPatch):
+            # We're not testing the serde package, so we're mocking it
+            monkeypatch.setattr(
+                _dag.serde, "stringify_package_spec", Mock(return_value="mocked")
+            )
+            imp = ir.PythonImports(
+                id="mock-import",
+                packages=[
+                    ir.PackageSpec(
+                        name="one",
+                        extras=[],
+                        version_constraints=[],
+                        environment_markers="",
+                    ),
+                    ir.PackageSpec(
+                        name="one",
+                        extras=["extra"],
+                        version_constraints=["version"],
+                        environment_markers="env marker",
+                    ),
+                ],
+                pip_options=[],
+            )
+            pip = _dag._pip_string(imp)
+            assert pip == ["mocked", "mocked"]
+
+    class TestGitImports:
+        def test_http(self):
+            imp = ir.GitImport(
+                id="mock-import", repo_url="https://mock/mock/mock", git_ref="mock"
+            )
+            pip = _dag._pip_string(imp)
+            assert pip == ["git+https://mock/mock/mock@mock"]
+
+        def test_pip_ssh_format(self):
+            imp = ir.GitImport(
+                id="mock-import", repo_url="ssh://git@mock/mock/mock", git_ref="mock"
+            )
+            pip = _dag._pip_string(imp)
+            assert pip == ["git+ssh://git@mock/mock/mock@mock"]
+
+        def test_usual_ssh_format(self):
+            imp = ir.GitImport(
+                id="mock-import", repo_url="git@mock:mock/mock", git_ref="mock"
+            )
+            pip = _dag._pip_string(imp)
+            assert pip == ["git+ssh://git@mock/mock/mock@mock"]
+
+    class TestOtherImports:
+        def test_local_import(self):
+            imp = ir.LocalImport(id="mock-import")
+            pip = _dag._pip_string(imp)
+            assert pip == []
+
+        def test_inline_import(self):
+            imp = ir.InlineImport(id="mock-import")
+            pip = _dag._pip_string(imp)
+            assert pip == []

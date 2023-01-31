@@ -8,12 +8,14 @@ RuntimeInterface implementation that uses Ray DAG/Ray Core API.
 from __future__ import annotations
 
 import dataclasses
+import itertools
 import json
 import logging
 import re
 import traceback
 import typing as t
 from datetime import datetime, timedelta, timezone
+from functools import singledispatch
 from pathlib import Path
 
 from orquestra.sdk import exceptions
@@ -238,16 +240,38 @@ class WfUserMetadata(t.TypedDict):
     workflow_def: t.Mapping[str, t.Any]
 
 
-def _get_python_packages(invocation: ir.TaskInvocation, wf: ir.WorkflowDef):
-    if not (deps_ids := wf.tasks[invocation.task_id].dependency_import_ids):
-        return []
+@singledispatch
+def _pip_string(_: ir.Import) -> t.List[str]:
+    return []
 
-    python_imports = [
-        imp
-        for imp_id in deps_ids
-        if isinstance((imp := wf.imports[imp_id]), ir.PythonImports)
+
+@_pip_string.register
+def _(imp: ir.PythonImports):
+    return [serde.stringify_package_spec(package) for package in imp.packages]
+
+
+@_pip_string.register
+def _(imp: ir.GitImport):
+    m = re.match(
+        r"(?P<user>.+)@(?P<domain>[^/]+?):(?P<repo>.+)", imp.repo_url, re.IGNORECASE
+    )
+    if m is not None:
+        url = f"ssh://{m.group('user')}@{m.group('domain')}/{m.group('repo')}"
+    else:
+        url = imp.repo_url
+    return [f"git+{url}@{imp.git_ref}"]
+
+
+def _import_pip_env(ir_invocation: ir.TaskInvocation, wf: ir.WorkflowDef):
+    task_def = wf.tasks[ir_invocation.task_id]
+    imports = [
+        wf.imports[id_]
+        for id_ in (
+            task_def.source_import_id,
+            *(task_def.dependency_import_ids or []),
+        )
     ]
-    return [package for imp in python_imports for package in imp.packages]
+    return [chunk for imp in imports for chunk in _pip_string(imp)]
 
 
 def _gather_args(
@@ -343,20 +367,13 @@ def _make_ray_dag(client: RayClient, wf: ir.WorkflowDef, wf_run_id: str):
             "task_invocation_id": ir_invocation.id,
         }
 
+        pip = _import_pip_env(ir_invocation, wf)
+
         ray_options = {
             "name": ir_invocation.id,
             "metadata": inv_metadata,
             # If there are any python packages to install for step - set runtime env
-            "runtime_env": (
-                _client.RuntimeEnv(
-                    pip=[
-                        serde.stringify_package_spec(package)
-                        for package in python_packages
-                    ]
-                )
-                if (python_packages := _get_python_packages(ir_invocation, wf))
-                else None
-            ),
+            "runtime_env": (_client.RuntimeEnv(pip=pip) if len(pip) > 0 else None),
             "catch_exceptions": False,
         }
 
