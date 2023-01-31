@@ -244,9 +244,11 @@ class WfUserMetadata(t.TypedDict):
 def _pip_string(_: ir.Import) -> t.List[str]:
     return []
 
+
 @_pip_string.register
 def _(imp: ir.PythonImports):
     return [serde.stringify_package_spec(package) for package in imp.packages]
+
 
 @_pip_string.register
 def _(imp: ir.GitImport):
@@ -258,6 +260,7 @@ def _(imp: ir.GitImport):
     else:
         url = imp.repo_url
     return [f"git+{url}@{imp.git_ref}"]
+
 
 def _import_pip_env(ir_invocation: ir.TaskInvocation, wf: ir.WorkflowDef):
     task_def = wf.tasks[ir_invocation.task_id]
