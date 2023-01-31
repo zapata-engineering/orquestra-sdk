@@ -271,7 +271,7 @@ def _import_pip_env(ir_invocation: ir.TaskInvocation, wf: ir.WorkflowDef):
             *(task_def.dependency_import_ids or []),
         )
     ]
-    return list(itertools.chain(*(_pip_string(imp) for imp in imports)))
+    return [chunk for imp in imports for chunk in _pip_string(imp)]
 
 
 def _gather_args(
