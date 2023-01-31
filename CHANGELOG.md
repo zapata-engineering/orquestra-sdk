@@ -3,7 +3,7 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
-* `sdk.WorkflowRun.get_logs()` doesn't accept any arguments anymore. Now, it returns all the logs produced by the tasks in the workflow. If you're interested in only a subset of your workflow's logs, please consider using one of the following filtering options:
+* `sdk.WorkflowRun.get_logs()` doesn't accept any arguments any more. Now, it returns all the logs produced by the tasks in the workflow. If you're interested in only a subset of your workflow's logs, please consider using one of the following filtering options:
 ```
 from orquestra import sdk
 from orquestra.sdk.schema.workflow_run import State
@@ -22,8 +22,9 @@ for task in wf_run.get_tasks():
     if task.get_status() == State.FAILED:
         print(task.get_logs())
 ```
-* `sdk.WorkflowRun.get_artifacts()` doesn't accept any arguments anymore. Now, it returns all the artifacts produced by the tasks in the workflow.
+* `sdk.WorkflowRun.get_artifacts()` doesn't accept any arguments any more. Now, it returns all the artifacts produced by the tasks in the workflow.
 * `sdk.TaskRun.get_logs()` returns a list of log lines produced by this task. Previously, it returned a dictionary with one entry.
+* Executing a workflow on Ray with Git imports will now install them. A known limition is that this will only work for Git repositories that are Python packages and will fail for Git repositories that are not Python packages.
 
 
 🔥 *Features*
