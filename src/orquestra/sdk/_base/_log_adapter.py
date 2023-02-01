@@ -15,7 +15,6 @@ from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRunId
 RAY_LOGS_FORMAT = '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "filename": "%(filename)s:%(lineno)s", "message": %(message)s}'  # noqa
 logging.basicConfig(
     format=RAY_LOGS_FORMAT,
-    level=logging.INFO,
 )
 
 

@@ -49,6 +49,7 @@ for task in wf_run.get_tasks():
 * Internal logs from Ray are no longer displayed.
 * Fixed the docstrings for `sdk.WorkflowRun.get_artifacts()`. It returns a dictionary with `TaskInvocationID` as keys and whatever the task returns as values.
 * Fixed bug where some log line from Ray may be duplicated when viewing logs
+* AST parser will no longer print a lot of "Info" messages
 
 
 *Internal*
