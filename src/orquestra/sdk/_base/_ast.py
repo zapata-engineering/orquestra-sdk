@@ -61,7 +61,7 @@ class _ReturnExprVisitor(ast.NodeVisitor):
         node: ast.AST,
         message: str,
     ):
-        LOG.info(message)
+        LOG.debug(message)
         self.outputs.add(_AstReturnMetadata(is_subscriptable=False, n_outputs=1))
 
     def visit_Constant(self, node):
