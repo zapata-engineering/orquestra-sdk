@@ -140,6 +140,14 @@ def multi_output():
     pass
 
 
+dupe_import = _dsl.GithubImport("zapatacomputing/test")
+
+
+@_dsl.task(source_import=dupe_import, dependency_imports=[dupe_import])
+def duplicate_deps():
+    pass
+
+
 # - End Tasks used in tests - #
 
 
@@ -342,6 +350,11 @@ def wf_with_inline():
     return [capitalize_inline("hello")]
 
 
+@_workflow.workflow
+def dupe_import_wf():
+    return duplicate_deps()
+
+
 def _id_from_wf(param):
     if isinstance(param, (_workflow.WorkflowDef, model.WorkflowDef)):
         return param.name
@@ -468,7 +481,16 @@ class TestFlattenGraph:
 
         assert len(wf.tasks) == 1
         (task_def,) = wf.tasks.values()
-        task_def.source_import_id == imp.id
+        assert task_def.source_import_id == imp.id
+
+    def test_duplicate_deps(self):
+        wf = dupe_import_wf.model
+
+        tasks = list(wf.tasks.values())
+        assert len(wf.imports) == 1
+        assert len(tasks) == 1
+        assert tasks[0].dependency_import_ids is not None
+        assert tasks[0].source_import_id not in tasks[0].dependency_import_ids
 
 
 class ContextManager(t.Protocol):
