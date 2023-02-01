@@ -151,7 +151,7 @@ class TestNOutputsByNodeType:
 
         assert _a_task.output_metadata.n_outputs == 1
         assert not _a_task.output_metadata.is_subscriptable
-        assert "Assuming a single output for node" in caplog.text
+        assert "Assuming a single output for node" not in caplog.text
 
     def test_fstring(self):
         @sdk.task
