@@ -277,15 +277,23 @@ def _make_task_model(
 ) -> model.TaskDef:
     fn_ref_model = _make_fn_ref(task.fn_ref)
 
+    source_import = imports_dict[task.source_import]
+
     dependency_import_ids: t.Optional[t.List[model.ImportId]]
-    if task.dependency_imports:
-        dependency_import_ids = [
-            imports_dict[imp].id for imp in task.dependency_imports
-        ]
+    if task.dependency_imports is not None:
+        # We need to keep track of the seen dependencies so we don't include duplicates.
+        # Why don't we use a set? We currently treat the source_import separately and
+        # we need to preserve the ordering of the dependency IDs.
+        seen_ids = set([source_import.id])
+        dependency_import_ids = []
+        for imp in task.dependency_imports:
+            dep_id = imports_dict[imp].id
+            if dep_id not in seen_ids:
+                seen_ids.add(dep_id)
+                dependency_import_ids.append(dep_id)
     else:
         dependency_import_ids = None
 
-    source_import = imports_dict[task.source_import]
     resources = _make_resources_model(task.resources)
     parameters = _make_parameters(task.parameters)
 
