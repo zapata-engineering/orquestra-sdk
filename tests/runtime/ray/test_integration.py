@@ -14,7 +14,6 @@ import pytest
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base._testing import _example_wfs
-from orquestra.sdk._base._testing._connections import make_ray_conn
 from orquestra.sdk._ray import _client, _dag, _ray_logs
 from orquestra.sdk.schema import configs
 from orquestra.sdk.schema.workflow_run import State
@@ -614,6 +613,9 @@ class TestRayRuntimeErrors:
 
 
 @pytest.mark.slow
+# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
+# unraisable exceptions. Last tested with Ray 2.2.0.
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.parametrize("with_run_id", [True, False])
 @pytest.mark.parametrize(
     "wf,tell_tale",
