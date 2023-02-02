@@ -25,17 +25,19 @@ class TaggedWorkflowTaskLogger(logging.LoggerAdapter):
     """
 
     def process(
-        self, msg: str, kwargs: t.Mapping[str, t.Any]
+        self, msg, kwargs: t.Mapping[str, t.Any]
     ) -> t.Tuple[str, t.MutableMapping[str, t.Any]]:
         """
         Args:
-            msg: message passed to the standard logger method calls.
+            msg: message passed to the standard logger method calls. The type of this
+                object depends on internals of ``logging``, but we're assuming it's a
+                string, or something close to it.
             kwargs: custom kwargs passed to the standard logger method calls.
         """
 
         # Ensure the message can be stored as a JSON. This will escape any
         # JSON-forbidden chars.
-        new_msg = json.dumps(msg)
+        new_msg = json.dumps(str(msg))
 
         # Workaround cases where run IDs are nulls.
         old_extra = self.extra or {}
