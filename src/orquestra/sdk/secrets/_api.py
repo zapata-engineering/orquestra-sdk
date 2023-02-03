@@ -28,7 +28,6 @@ def get(
     name: str,
     *,
     config_name: t.Optional[str] = None,
-    config_file_path: t.Optional[Path] = None,
 ) -> str:
     """
     Retrieves secret value from the remote vault.
@@ -50,7 +49,6 @@ def get(
     provider = _infer_secrets_provider()
     client = provider.make_client(
         config_name=config_name,
-        config_save_path=config_file_path,
     )
     try:
         return client.get_secret(name).value
@@ -64,7 +62,6 @@ def get(
 def list(
     *,
     config_name: t.Optional[str] = None,
-    config_file_path: t.Optional[Path] = None,
 ) -> t.Sequence[str]:
     """
     Lists all secret names.
@@ -85,7 +82,6 @@ def list(
     provider = _infer_secrets_provider()
     client = provider.make_client(
         config_name=config_name,
-        config_save_path=config_file_path,
     )
     try:
         return [obj.name for obj in client.list_secrets()]
@@ -99,7 +95,6 @@ def set(
     value: str,
     *,
     config_name: t.Optional[str] = None,
-    config_file_path: t.Optional[Path] = None,
 ):
     """
     Sets secret value at the remote vault. Overwrites already existing secrets.
@@ -120,7 +115,6 @@ def set(
     provider = _infer_secrets_provider()
     client = provider.make_client(
         config_name=config_name,
-        config_save_path=config_file_path,
     )
     try:
         try:
@@ -136,7 +130,6 @@ def delete(
     name: str,
     *,
     config_name: t.Optional[str] = None,
-    config_file_path: t.Optional[Path] = None,
 ):
     """
     Deletes secret from the remote vault.
@@ -159,7 +152,6 @@ def delete(
     provider = _infer_secrets_provider()
     client = provider.make_client(
         config_name=config_name,
-        config_save_path=config_file_path,
     )
     try:
         client.delete_secret(name)

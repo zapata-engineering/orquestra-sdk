@@ -24,7 +24,8 @@ for task in wf_run.get_tasks():
 ```
 * `sdk.WorkflowRun.get_artifacts()` doesn't accept any arguments any more. Now, it returns all the artifacts produced by the tasks in the workflow.
 * `sdk.TaskRun.get_logs()` returns a list of log lines produced by this task. Previously, it returned a dictionary with one entry.
-* Executing a workflow on Ray with Git imports will now install them. A known limition is that this will only work for Git repositories that are Python packages and will fail for Git repositories that are not Python packages.
+* Executing a workflow on Ray with Git imports will now install them. A known limitation is that this will only work for Git repositories that are Python packages and will fail for Git repositories that are not Python packages.
+* The API will no longer accept `config_save_file` as optional parameters, from now on if you want to use a different config file use the `ORQ_CONFIG_PATH` environment variable.
 
 
 🔥 *Features*

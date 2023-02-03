@@ -7,6 +7,7 @@ Redesigned, user-facing SDK API.
 
 import json
 import logging
+import os
 import re
 import time
 import typing as t
@@ -54,14 +55,13 @@ COMPLETED_STATES = [State.FAILED, State.TERMINATED, State.SUCCEEDED]
 
 def _resolve_config(
     config: t.Union[ConfigName, "RuntimeConfig"],
-    config_save_file: t.Optional[t.Union[Path, str]],
 ) -> "RuntimeConfig":
     if isinstance(config, RuntimeConfig):
         # EZ. Passed-in explicitly.
         resolved_config = config
     elif isinstance(config, str):
         # Shorthand: just the config name.
-        resolved_config = RuntimeConfig.load(config, config_save_file=config_save_file)
+        resolved_config = RuntimeConfig.load(config)
     else:
         raise TypeError(f"'config' is of unsupported type {type(config)}.")
 
@@ -355,7 +355,6 @@ class WorkflowRun:
         run_id: str,
         config: t.Optional[t.Union["RuntimeConfig", str]] = None,
         project_dir: t.Optional[t.Union[Path, str]] = None,
-        config_save_file: t.Optional[t.Union[Path, str]] = None,
     ) -> "WorkflowRun":
         """Get the WorkflowRun corresponding to a previous workflow run.
 
@@ -394,13 +393,11 @@ class WorkflowRun:
                 raise
 
             try:
-                resolved_config = RuntimeConfig.load(
-                    stored_run.config_name, config_save_file=config_save_file
-                )
+                resolved_config = RuntimeConfig.load(stored_run.config_name)
             except (ConfigFileNotFoundError, ConfigNameNotFoundError):
                 raise
         else:
-            resolved_config = _resolve_config(config, config_save_file)
+            resolved_config = _resolve_config(config)
 
         # Retrieve workflow def from the runtime:
         # - Ray stores wf def for us under a metadata entry.
@@ -796,7 +793,6 @@ def list_workflow_runs(
     max_age: t.Optional[str] = None,
     state: t.Optional[t.Union[State, t.List[State]]] = None,
     project_dir: t.Optional[t.Union[Path, str]] = None,
-    config_save_file: t.Optional[t.Union[Path, str]] = None,
 ) -> t.List[WorkflowRun]:
     """Get the WorkflowRun corresponding to a previous workflow run.
 
@@ -821,7 +817,7 @@ def list_workflow_runs(
     _project_dir = Path(project_dir or Path.cwd())
 
     # Resolve config
-    resolved_config = _resolve_config(config, config_save_file)
+    resolved_config = _resolve_config(config)
 
     runtime = resolved_config._get_runtime(_project_dir)
 
@@ -903,7 +899,6 @@ class RuntimeConfig:
         runtime_name: str,
         name: t.Optional[str] = None,
         bypass_factory_methods=False,
-        config_save_file: t.Optional[t.Union[str, Path]] = None,
     ):
         if not bypass_factory_methods:
             raise ValueError(
@@ -923,7 +918,7 @@ class RuntimeConfig:
                 f'"{runtime_name}" is not a valid runtime name. Valid names are:\n'
                 + "\n".join(f'"{x.value}"' for x in RuntimeName)
             ) from e
-        self._config_save_file = config_save_file
+        self._config_save_file = _config._get_config_file_path()
 
     def __str__(self) -> str:
         outstr = (
@@ -982,7 +977,7 @@ class RuntimeConfig:
             return False
 
         try:
-            saved_config = self.load(str(self.name), self._config_save_file)
+            saved_config = self.load(str(self.name))
         except (ConfigNameNotFoundError, FileNotFoundError):
             return False
 
@@ -1127,10 +1122,6 @@ class RuntimeConfig:
         return config
 
     # endregion factories
-    @staticmethod
-    def _import_orquestra_runtime():
-        import orquestra.sdk._base
-
     def _get_runtime(self, project_dir: t.Optional[t.Union[str, Path]] = None):
         """Build the run
 
@@ -1143,8 +1134,6 @@ class RuntimeConfig:
         Returns:
             Runtime: The runtime specified by the configuration.
         """
-
-        self._import_orquestra_runtime()
 
         _project_dir: Path = Path(project_dir or Path.cwd())
 
@@ -1168,7 +1157,6 @@ class RuntimeConfig:
     @classmethod
     def list_configs(
         cls,
-        config_save_file: t.Optional[t.Union[str, Path]] = None,
     ) -> list:
         """List previously saved configurations.
 
@@ -1179,22 +1167,17 @@ class RuntimeConfig:
         Returns:
             list: list of configurations within the save file.
         """
-        return _config.read_config_names(config_save_file) + list(
-            _config.UNIQUE_CONFIGS
-        )
+        return _config.read_config_names() + list(_config.UNIQUE_CONFIGS)
 
     @classmethod
     def load(
         cls,
         config_name: str,
-        config_save_file: t.Optional[t.Union[str, Path]] = None,
     ):
         """Load an existing configuration from a file.
 
         Args:
             config_name: The name of the configuration to be loaded.
-            config_save_file (optional): The path to the file in which configurations
-                are stored. If omitted, the default file location is used.
 
         Raises:
             orquestra.sdk.exceptions.ConfigFileNotFoundError
@@ -1213,7 +1196,7 @@ class RuntimeConfig:
             )
 
         # Get the data from the save file
-        _config_save_file = _config._get_config_file_path(config_save_file)
+        _config_save_file = _config._get_config_file_path()
         with open(_config_save_file, "r") as f:
             data = json.load(f)
 
@@ -1227,7 +1210,7 @@ class RuntimeConfig:
                 f"(file has version {data['version']}, "
                 f"the current version is {CONFIG_FILE_CURRENT_VERSION})."
             )
-            migrate_config_file(_config_save_file)
+            migrate_config_file()
             with open(_config_save_file, "r") as f:
                 data = json.load(f)
         elif file_version > current_version:
@@ -1241,14 +1224,12 @@ class RuntimeConfig:
 
         # Read in the config from the file.
         try:
-            config_data: RuntimeConfiguration = _config.read_config(
-                config_name, _config_save_file
-            )
+            config_data: RuntimeConfiguration = _config.read_config(config_name)
         except ConfigNameNotFoundError as e:
             raise ConfigNameNotFoundError(
                 f"No config with name '{config_name}' "
                 f"found in file {_config_save_file}. "
-                f"Available names are: {cls.list_configs(_config_save_file)}"
+                f"Available names are: {cls.list_configs()}"
             ) from e
 
         config = cls._config_from_runtimeconfiguration(config_data)
@@ -1259,7 +1240,6 @@ class RuntimeConfig:
     @classmethod
     def load_default(
         cls,
-        config_save_file: t.Optional[t.Union[str, Path]] = None,
     ) -> "RuntimeConfig":
         """Load the default configuration from a file.
 
@@ -1271,7 +1251,7 @@ class RuntimeConfig:
             RuntimeConfig: The configuration as loaded from the file.
         """
 
-        config_data: RuntimeConfiguration = _config.read_config(None, config_save_file)
+        config_data: RuntimeConfiguration = _config.read_config(None)
         return cls._config_from_runtimeconfiguration(config_data)
 
     @classmethod
@@ -1304,7 +1284,6 @@ class RuntimeConfig:
 
     def save(
         self,
-        config_save_file: t.Optional[t.Union[str, Path]] = None,
         overwrite: bool = False,
     ):
         warnings.warn(
@@ -1346,7 +1325,7 @@ class RuntimeConfig:
         ), "We have a save location but not a name for this configuration. "
 
         old_config = self._config_from_runtimeconfiguration(
-            _config.read_config(self._name, config_file_path=self._config_save_file)
+            _config.read_config(self._name)
         )
         if self._runtime_name != old_config._runtime_name:
             raise ConfigNameNotFoundError(
@@ -1459,69 +1438,54 @@ class RuntimeConfig:
         return dict
 
 
-def migrate_config_file(config_file_paths: t.Optional[t.Union[str, Path, list]] = None):
-    """Update the stored configs.
-
-    Args:
-        config_file_paths: Path(s) to the config file(s) to be updated. Defaults to
-            ["~/.orquestra/config.json"]
-    """
+def migrate_config_file():
+    """Update the stored configs."""
     # resolve list of files to migrate
-    _config_file_paths: list
-    if config_file_paths is None:
-        _config_file_paths = [_config._get_config_file_path()]
-    elif isinstance(config_file_paths, list):
-        _config_file_paths = [
-            _config._get_config_file_path(path) for path in config_file_paths
-        ]
-    else:  # str or Path
-        _config_file_paths = [_config._get_config_file_path(config_file_paths)]
+    _config_file_path = _config._get_config_file_path().resolve()
+    # Load existing file contents
+    with open(_config_file_path, "r") as f:
+        data = json.load(f)
 
-    for file_path in [Path(path).resolve() for path in _config_file_paths]:
-        # Load existing file contents
-        with open(file_path, "r") as f:
-            data = json.load(f)
-
-        # Check version
-        file_version = parse_version(data["version"])
-        current_version = parse_version(CONFIG_FILE_CURRENT_VERSION)
-        version_changed: bool = False
-        if file_version > current_version:
-            print(
-                f"The file at {file_path} cannot be migrated as its version is already "
-                "greater than target version "
-                f"(file is version {data['version']}, "
-                f"current migration target is version {CONFIG_FILE_CURRENT_VERSION})."
-            )
-            continue
-        elif file_version < current_version:
-            data["version"] = CONFIG_FILE_CURRENT_VERSION
-            version_changed = True
-
-        # Update configs
-        changed: list = []
-        for config_name in data["configs"]:
-            if (
-                data["configs"][config_name]["runtime_name"] == RuntimeName.RAY_LOCAL
-                and "temp_dir" not in data["configs"][config_name]["runtime_options"]
-            ):
-                data["configs"][config_name]["runtime_options"]["temp_dir"] = None
-                changed.append(config_name)
-
-        # Write back to file if necessary)
-        if len(changed) == 0 and not version_changed:
-            print(f"No changes required for file '{file_path}'")
-            continue
-        else:
-            with open(file_path, "w") as f:
-                f.write(json.dumps(data, indent=2))
-
-        # Report changes to user
+    # Check version
+    file_version = parse_version(data["version"])
+    current_version = parse_version(CONFIG_FILE_CURRENT_VERSION)
+    version_changed: bool = False
+    if file_version > current_version:
         print(
-            f"Successfully migrated file {file_path} to version "
-            f"{CONFIG_FILE_CURRENT_VERSION}. "
-            f"Updated {len(changed)} entr{'y' if len(changed)==1 else 'ies'}"
-            f"{'.' if len(changed)==0 else ':'}"
+            f"The file at {_config_file_path} cannot be migrated as its version is "
+            "already greater than target version "
+            f"(file is version {data['version']}, "
+            f"current migration target is version {CONFIG_FILE_CURRENT_VERSION})."
         )
-        for config_name in changed:
-            print(f" - {config_name}")
+        return
+    elif file_version < current_version:
+        data["version"] = CONFIG_FILE_CURRENT_VERSION
+        version_changed = True
+
+    # Update configs
+    changed: list = []
+    for config_name in data["configs"]:
+        if (
+            data["configs"][config_name]["runtime_name"] == RuntimeName.RAY_LOCAL
+            and "temp_dir" not in data["configs"][config_name]["runtime_options"]
+        ):
+            data["configs"][config_name]["runtime_options"]["temp_dir"] = None
+            changed.append(config_name)
+
+    # Write back to file if necessary)
+    if len(changed) == 0 and not version_changed:
+        print(f"No changes required for file '{_config_file_path}'")
+        return
+    else:
+        with open(_config_file_path, "w") as f:
+            f.write(json.dumps(data, indent=2))
+
+    # Report changes to user
+    print(
+        f"Successfully migrated file {_config_file_path} to version "
+        f"{CONFIG_FILE_CURRENT_VERSION}. "
+        f"Updated {len(changed)} entr{'y' if len(changed)==1 else 'ies'}"
+        f"{'.' if len(changed)==0 else ':'}"
+    )
+    for config_name in changed:
+        print(f" - {config_name}")

@@ -102,6 +102,7 @@ class TestRunningLocalInBackground:
         ):
             # GIVEN
             monkeypatch.setattr(Path, "cwd", Mock(return_value=tmp_path))
+            monkeypatch.setenv("ORQ_CONFIG_PATH", str(tmp_path / "config.json"))
 
             run = wf_pass_tuple().run(sdk.RuntimeConfig.ray())
             run.wait_until_finished()
@@ -112,7 +113,6 @@ class TestRunningLocalInBackground:
             # WHEN
             run_reconnect = sdk.WorkflowRun.by_id(
                 id,
-                config_save_file=tmp_path / "config.json",
             )
             results = run_reconnect.get_results()
 

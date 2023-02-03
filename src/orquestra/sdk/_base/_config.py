@@ -5,6 +5,7 @@
 This is the internal module for saving and loading runtime configurations.
 See docs/runtime_configurations.rst for more information.
 """
+import os
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Tuple, Union
 from urllib.parse import urlparse
@@ -29,6 +30,7 @@ from orquestra.sdk.schema.configs import (
 #    https://github.com/samuelcolvin/pydantic/issues/136
 CONFIG_FILE_NAME = "config.json"
 LOCK_FILE_NAME = "config.json.lock"
+CONFIG_ENV_VARIABLE = "ORQ_CONFIG_PATH"
 BUILT_IN_CONFIG_NAME = "local"
 RAY_CONFIG_NAME_ALIAS = "ray"
 IN_PROCESS_CONFIG_NAME = "in_process"
@@ -90,18 +92,15 @@ BOOLEAN_RUNTIME_OPTIONS: List[str] = ["log_to_driver", "configure_logging"]
 # endregion
 
 
-def _get_config_file_path(config_file_path: Optional[Union[str, Path]] = None) -> Path:
+def _get_config_file_path() -> Path:
     """
     Get the absolute path to the config file.
 
-    Args:
-        config_file_path: the path to the config file. May be absolute or relative, and
-        can be expressed as a string or Path object. If omitted, returns the default
-        config file location.
-
     Returns:
-        Path: Path to the configuration file.
+        Path: Path to the configuration file. The default is `~/.orquestra/config.json`
+            but can be configured using the `ORQ_CONFIG_PATH` environment variable.
     """
+    config_file_path = os.getenv(CONFIG_ENV_VARIABLE)
     if config_file_path is not None:
         _config_file_path = Path(config_file_path).resolve()
     else:
@@ -110,18 +109,14 @@ def _get_config_file_path(config_file_path: Optional[Union[str, Path]] = None) -
     return _config_file_path
 
 
-def _get_config_directory(config_file_path: Optional[Union[str, Path]] = None) -> Path:
+def _get_config_directory() -> Path:
     """
     Get the path to the directory that contains the configuration file.
-
-    Args:
-        config_file_path: Path to the desired configuration save file location. If
-        omitted, the default location is used.
 
     Returns:
         Path: path to the parent directory.
     """
-    abs_file_path = _get_config_file_path(config_file_path)
+    abs_file_path = _get_config_file_path()
     return abs_file_path.parent
 
 
@@ -129,10 +124,8 @@ def _ensure_directory(path: Path):
     path.mkdir(parents=True, exist_ok=True)
 
 
-def _open_config_file(
-    config_file_path: Optional[Union[str, Path]] = None
-) -> RuntimeConfigurationFile:
-    config_file = _get_config_file_path(config_file_path)
+def _open_config_file() -> RuntimeConfigurationFile:
+    config_file = _get_config_file_path()
     if not config_file.exists():
         raise exceptions.ConfigFileNotFoundError(
             f"Config file {config_file} not found."
@@ -142,9 +135,8 @@ def _open_config_file(
 
 def _save_config_file(
     config_file_contents: RuntimeConfigurationFile,
-    config_file_path: Optional[Union[str, Path]] = None,
 ) -> Path:
-    config_file: Path = _get_config_file_path(config_file_path)
+    config_file: Path = _get_config_file_path()
     config_file.write_text(data=config_file_contents.json(indent=2))
     return config_file
 
@@ -155,14 +147,12 @@ EMPTY_CONFIG_FILE = RuntimeConfigurationFile(
 )
 
 
-def _resolve_config_file_for_writing(
-    config_file_path: Optional[Union[str, Path]] = None
-) -> Optional[RuntimeConfigurationFile]:
+def _resolve_config_file_for_writing() -> Optional[RuntimeConfigurationFile]:
     try:
         # The full config.json. It contains multiple config entries. For
         # more info, see the models in
         # orquestra.sdk.schema.configs.
-        return _open_config_file(config_file_path)
+        return _open_config_file()
     except exceptions.ConfigFileNotFoundError:
         return None
 
@@ -333,7 +323,6 @@ def write_config(
     config_name: Optional[str],
     runtime_name: Union[RuntimeName, str],
     runtime_options: dict,
-    config_file_path: Optional[Union[str, Path]] = None,
 ) -> Tuple[RuntimeConfiguration, Path]:
     """
     Write a new configuration to the file.
@@ -343,8 +332,6 @@ def write_config(
             unique name will be generated for the config.
         runtime_name: The runtime to which this configuration relates.
         runtime_options: The runtime options contained within this configuration.
-        config_file_path: The path to the file to which this configuration should be
-            saved. If omitted the default location will be used.
 
     Returns:
         RuntimeConfiguration: the configuration as saved.
@@ -361,17 +348,14 @@ def write_config(
         resolved_runtime_name, runtime_options
     )
 
-    # Resolve the config file path
-    _config_file_path: Path = _get_config_file_path(config_file_path)
-
-    with filelock.FileLock(_get_config_directory(_config_file_path) / LOCK_FILE_NAME):
+    with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME):
         # Get the config name to save under - either the user-defined one, or an auto
         # generated one if the config_name parameter is None. Either way we need to
         # pass it through _resolve_config_name_for_writing() as this handles the
         # protected names like 'local'.
         resolved_config_name: ConfigName = _resolve_config_name_for_writing(config_name)
 
-        resolved_prev_config_file = _resolve_config_file_for_writing(_config_file_path)
+        resolved_prev_config_file = _resolve_config_file_for_writing()
 
         new_config_file = _resolve_new_config_file(
             resolved_config_name,
@@ -388,7 +372,7 @@ def write_config(
 
         return (
             saved_config,
-            _save_config_file(new_config_file, config_file_path=_config_file_path),
+            _save_config_file(new_config_file),
         )
 
 
@@ -396,7 +380,6 @@ def update_config(
     config_name: Optional[ConfigName] = None,
     runtime_name: Optional[RuntimeName] = None,
     new_runtime_options: Optional[Mapping[str, Any]] = None,
-    config_file_path: Optional[Union[str, Path]] = None,
 ) -> Tuple[RuntimeConfiguration, Path]:
     """
     Ensures that whatever non-None argument is passed here will end up saved to
@@ -427,11 +410,11 @@ def update_config(
             - if one or more runtime options are not valid for this runtime.
     """
 
-    with filelock.FileLock(_get_config_directory(config_file_path) / LOCK_FILE_NAME):
+    with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME):
         # We need to retain a lock because we save the config file at the end
         # of this function.
 
-        resolved_prev_config_file = _resolve_config_file_for_writing(config_file_path)
+        resolved_prev_config_file = _resolve_config_file_for_writing()
 
         resolved_config_name = _resolve_config_name_for_writing(
             config_name, resolved_prev_config_file
@@ -465,17 +448,13 @@ def update_config(
             config_name=resolved_config_name,
             runtime_name=resolved_runtime_name,
             runtime_options=resolved_runtime_options,
-        ), _save_config_file(new_config_file, config_file_path=config_file_path)
+        ), _save_config_file(new_config_file)
 
 
-def _resolve_config_file_for_reading(
-    config_file_path: Optional[Union[str, Path]] = None
-) -> Optional[RuntimeConfigurationFile]:
+def _resolve_config_file_for_reading() -> Optional[RuntimeConfigurationFile]:
     try:
-        with filelock.FileLock(
-            _get_config_directory(config_file_path) / LOCK_FILE_NAME
-        ):
-            return _open_config_file(config_file_path)
+        with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME):
+            return _open_config_file()
     except exceptions.ConfigFileNotFoundError:
         return None
 
@@ -577,7 +556,6 @@ def _generate_cluster_uri_name(uri: str) -> str:
 
 def read_config(
     config_name: Optional[str],
-    config_file_path: Optional[Union[str, Path]] = None,
 ) -> RuntimeConfiguration:
     """
     Reads a runtime configuration from the configuration file
@@ -588,8 +566,6 @@ def read_config(
             - if it's None: this function returns the configuration set as the
               default one. The default configuration can be user-specified
               (read from the file) or a hardcoded, "local" one.
-        config_file_path: the path to the file where the configurations are saved. If
-            omitted, the default file location is used.
 
     Returns:
         a runtime configuration
@@ -598,7 +574,7 @@ def read_config(
         orquestra.sdk.exceptions.ConfigNameNotFoundError: when no runtime
             config matching `config_name` exists.
     """
-    resolved_config_file = _resolve_config_file_for_reading(config_file_path)
+    resolved_config_file = _resolve_config_file_for_reading()
     resolved_config_name = _resolve_config_name_for_reading(
         config_name, resolved_config_file
     )
@@ -624,7 +600,7 @@ def read_default_config_name() -> str:
     return config_file.default_config_name
 
 
-def read_config_names(config_file_path: Optional[Union[str, Path]] = None) -> List[str]:
+def read_config_names() -> List[str]:
     """
     Reads the names of all configurations stored in the configuration file.
 
@@ -638,11 +614,11 @@ def read_config_names(config_file_path: Optional[Union[str, Path]] = None) -> Li
     """
     try:
         with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME, timeout=3):
-            return _read_config_names(config_file_path)
+            return _read_config_names()
     except filelock.Timeout:
         raise IOError(
             "Could not acquire the lock for the config file at "
-            f"'{_get_config_file_path(config_file_path)}' "
+            f"'{_get_config_file_path()}' "
             "- does another function or process currently hold it? "
             "If you're calling `read_config_names` from a context that has already "
             "acquired the lock, you may want to look into using `_read_config_names` "
@@ -650,9 +626,7 @@ def read_config_names(config_file_path: Optional[Union[str, Path]] = None) -> Li
         )
 
 
-def _read_config_names(
-    config_file_path: Optional[Union[str, Path]] = None
-) -> List[str]:
+def _read_config_names() -> List[str]:
     """
     Reads the names of all configurations stored in the configuration file.
 
@@ -668,10 +642,9 @@ def _read_config_names(
         list: a list of strings, each containing the name of a saved configuration. If
             the file does not exist, returns an empty list.
     """
-    _config_file_path = _get_config_file_path(config_file_path)
 
     try:
-        config_file = _open_config_file(_config_file_path)
+        config_file = _open_config_file()
     except (
         exceptions.ConfigFileNotFoundError,
         FileNotFoundError,

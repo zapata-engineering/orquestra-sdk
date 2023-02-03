@@ -278,7 +278,6 @@ class TestGetWorkflowRunStatus:
 
         run_reconnect = sdk.WorkflowRun.by_id(
             id,
-            config_save_file=tmp_path / "config.json",
         )
 
         # THEN

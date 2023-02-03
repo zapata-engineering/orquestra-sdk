@@ -15,6 +15,7 @@ import typing as t
 import unittest
 import warnings
 from datetime import timedelta
+from pathlib import Path
 from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospec, patch
 
 import pytest
@@ -60,6 +61,11 @@ def tmp_default_config_json(patch_config_location):
     return json_file
 
 
+@pytest.fixture(autouse=True)
+def set_config_location(patch_config_location):
+    pass
+
+
 class TestRunningInProcess:
     """
     Tests the public Python API for running workflows, using the "in-process"
@@ -72,7 +78,7 @@ class TestRunningInProcess:
 
     class TestTwoStepForm:
         @staticmethod
-        def test_pass_builtin_config_name_no_file(patch_config_location):
+        def test_pass_builtin_config_name_no_file():
             run = wf_pass_tuple().run("in_process")
             results = run.get_results()
 
@@ -1188,22 +1194,25 @@ class TestRuntimeConfiguration:
             assert config._runtime_name == runtime_name
 
     class TestEq:
-        config = _api.RuntimeConfig(
-            "QE_REMOTE", name="test_config", bypass_factory_methods=True
-        )
-        setattr(config, "uri", "test_uri")
-        setattr(config, "token", "test_token")
+        @pytest.fixture
+        def config(self):
+            config = _api.RuntimeConfig(
+                "QE_REMOTE", name="test_config", bypass_factory_methods=True
+            )
+            setattr(config, "uri", "test_uri")
+            setattr(config, "token", "test_token")
+            return config
 
-        def test_returns_true_for_matching_configs(self):
+        def test_returns_true_for_matching_configs(self, config):
             test_config = _api.RuntimeConfig(
-                self.config._runtime_name,
-                name=self.config.name,
+                config._runtime_name,
+                name=config.name,
                 bypass_factory_methods=True,
             )
-            test_config.uri = self.config.uri
-            test_config.token = self.config.token
+            test_config.uri = config.uri
+            test_config.token = config.token
 
-            assert self.config == test_config
+            assert config == test_config
 
         @pytest.mark.parametrize(
             "runtime_name, config_name, runtime_options",
@@ -1230,7 +1239,7 @@ class TestRuntimeConfiguration:
             ],
         )
         def test_returns_false_for_mismatched_configs(
-            self, runtime_name, config_name, runtime_options
+            self, config, runtime_name, config_name, runtime_options
         ):
             test_config = _api.RuntimeConfig(
                 runtime_name, name=config_name, bypass_factory_methods=True
@@ -1238,11 +1247,11 @@ class TestRuntimeConfiguration:
             for key in runtime_options:
                 setattr(test_config, key, runtime_options[key])
 
-            assert self.config != test_config
+            assert config != test_config
 
         @pytest.mark.parametrize("other", [9, "test_str", {"test_dict": None}])
-        def test_returns_false_for_mismatched_type(self, other):
-            assert self.config != other
+        def test_returns_false_for_mismatched_type(self, config, other):
+            assert config != other
 
     @pytest.mark.parametrize("runtime_name", VALID_RUNTIME_NAMES)
     class TestNameProperty:
@@ -1375,20 +1384,6 @@ class TestRuntimeConfiguration:
                 assert config.uri == "https://prod-d.orquestra.io/"
                 assert config.token == "test token"
 
-    class TestGetRuntime:
-        @staticmethod
-        def test_raises_exception_when_orquestra_runtime_is_not_installed(monkeypatch):
-            def invalid_import(*_):
-                raise ModuleNotFoundError
-
-            monkeypatch.setattr(_api, "_build_runtime", Mock())
-            monkeypatch.setattr(builtins, "__import__", invalid_import)
-
-            config = _api.RuntimeConfig.ray()
-
-            with pytest.raises(ModuleNotFoundError):
-                config._get_runtime()
-
     class TestStr:
         @staticmethod
         def test_with_essential_params_only(change_test_dir):
@@ -1431,9 +1426,12 @@ class TestRuntimeConfiguration:
             ] + list(_config.UNIQUE_CONFIGS)
 
         @staticmethod
-        def test_custom_file_location(tmp_config_json):
+        def test_custom_file_location(
+            tmp_config_json: Path, monkeypatch: pytest.MonkeyPatch
+        ):
+            monkeypatch.setenv("ORQ_CONFIG_PATH", str(tmp_config_json))
 
-            config_names = _api.RuntimeConfig.list_configs(tmp_config_json)
+            config_names = _api.RuntimeConfig.list_configs()
 
             assert config_names == [
                 name for name in TEST_CONFIG_JSON["configs"]
@@ -1476,11 +1474,13 @@ class TestRuntimeConfiguration:
                     assert getattr(config, key) == config_params["runtime_options"][key]
 
             @staticmethod
-            def test_with_custom_file_path(tmp_config_json, config_name):
-                config = _api.RuntimeConfig.load(
-                    config_name, config_save_file=tmp_config_json
-                )
+            def test_with_custom_file_path(
+                tmp_config_json: Path, config_name: str, monkeypatch: pytest.MonkeyPatch
+            ):
+                monkeypatch.setenv("ORQ_CONFIG_PATH", str(tmp_config_json))
+                config = _api.RuntimeConfig.load(config_name)
 
+                assert isinstance(TEST_CONFIG_JSON["configs"], t.Mapping)
                 config_params = TEST_CONFIG_JSON["configs"][config_name]
                 assert config.name == config_name
                 assert config._runtime_name == config_params["runtime_name"]
@@ -1488,10 +1488,11 @@ class TestRuntimeConfiguration:
                     assert getattr(config, key) == config_params["runtime_options"][key]
 
         @staticmethod
-        def test_invalid_name(tmp_config_json):
+        def test_invalid_name(tmp_config_json: Path, monkeypatch: pytest.MonkeyPatch):
+            monkeypatch.setenv("ORQ_CONFIG_PATH", str(tmp_config_json))
             with pytest.raises(ConfigNameNotFoundError):
                 _api.RuntimeConfig.load(
-                    "non-existing", config_save_file=tmp_config_json
+                    "non-existing",
                 )
 
     class TestLoadDefault:
@@ -1509,8 +1510,9 @@ class TestRuntimeConfiguration:
             assert config.token == default_config_params["runtime_options"]["token"]
 
         @staticmethod
-        def test_with_custom_file_path(tmp_config_json):
-            config = _api.RuntimeConfig.load_default(config_save_file=tmp_config_json)
+        def test_with_custom_file_path(tmp_config_json, monkeypatch):
+            monkeypatch.setenv("ORQ_CONFIG_PATH", str(tmp_config_json))
+            config = _api.RuntimeConfig.load_default()
 
             default_config_params = TEST_CONFIG_JSON["configs"][
                 TEST_CONFIG_JSON["default_config_name"]
@@ -1539,12 +1541,12 @@ class TestRuntimeConfiguration:
             assert not config.is_saved()
 
         @staticmethod
-        def test_returns_false_if_no_file():
+        def test_returns_false_if_no_file(monkeypatch: pytest.MonkeyPatch):
+            monkeypatch.setenv("ORQ_CONFIG_PATH", "not_a_valid_file")
             config = _api.RuntimeConfig(
                 "IN_PROCESS",
                 name="test_name",
                 bypass_factory_methods=True,
-                config_save_file="not_a_valid_file",
             )
             assert not config.is_saved()
 
@@ -1931,12 +1933,14 @@ class TestMigrateConfigFile:
         expected_stdout,
         capsys,
         tmp_path,
+        monkeypatch,
     ):
         config_file = tmp_path / "test_configs.json"
+        monkeypatch.setenv("ORQ_CONFIG_PATH", str(config_file))
         with open(config_file, "w") as f:
             json.dump(input_config_file, f, indent=2)
 
-        _api.migrate_config_file(config_file)
+        _api.migrate_config_file()
 
         with open(config_file, "r") as f:
             data = json.load(f)
@@ -1944,53 +1948,4 @@ class TestMigrateConfigFile:
         assert data == expected_output_config_file
         captured = capsys.readouterr()
         for string in expected_stdout:
-            assert string in captured.out
-
-    @staticmethod
-    def test_for_multiple_files(
-        input_config_file,
-        expected_output_config_file,
-        expected_stdout,
-        capsys,
-        tmp_path,
-    ):
-        config_file_1 = tmp_path / "test_configs_1.json"
-        config_file_2 = tmp_path / "test_configs_2.json"
-        with open(config_file_1, "w") as f:
-            json.dump(input_config_file, f, indent=2)
-        file_2_data = {
-            "configs": {
-                "single_config_no_changes": {
-                    "runtime_name": "RAY_LOCAL",
-                    "runtime_options": {},
-                }
-            },
-            "version": CONFIG_FILE_CURRENT_VERSION,
-        }
-        expected_file_2_data = {
-            "configs": {
-                "single_config_no_changes": {
-                    "runtime_name": "RAY_LOCAL",
-                    "runtime_options": {
-                        "temp_dir": None,
-                    },
-                }
-            },
-            "version": CONFIG_FILE_CURRENT_VERSION,
-        }
-        expected_file_2_outstr = f"Successfully migrated file {config_file_2} to version {CONFIG_FILE_CURRENT_VERSION}. Updated 1 entry:\n - single_config_no_changes"  # NOQA E501
-        with open(config_file_2, "w") as f:
-            json.dump(file_2_data, f)
-
-        _api.migrate_config_file([config_file_1, config_file_2])
-
-        with open(config_file_1, "r") as f:
-            data_1 = json.load(f)
-        with open(config_file_2, "r") as f:
-            data_2 = json.load(f)
-        assert data_1 == expected_output_config_file
-        assert data_2 == expected_file_2_data
-        captured = capsys.readouterr()
-
-        for string in expected_stdout + [expected_file_2_outstr]:
             assert string in captured.out

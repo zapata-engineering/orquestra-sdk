@@ -175,7 +175,7 @@ class TestCLIWithRay:
             submited_workflow,
             setup_ray,
         ):
-            def _mock_get_config_dir(_):
+            def _mock_get_config_dir():
                 return tmp_path
 
             monkeypatch.setattr(
@@ -291,7 +291,7 @@ class TestCLIWithRay:
     def test_get_workflow_v2_results_for_jsonable_outputs_no_config(
         self, tmp_path, monkeypatch, setup_ray
     ):
-        def _mock_get_config_dir(_):
+        def _mock_get_config_dir():
             return tmp_path
 
         monkeypatch.setattr(v2_config, "_get_config_directory", _mock_get_config_dir)
@@ -384,7 +384,7 @@ class TestCLIWithRay:
         raises,
         setup_ray,
     ):
-        def _mock_get_config_dir(_):
+        def _mock_get_config_dir():
             return tmp_path
 
         monkeypatch.setattr(v2_config, "_get_config_directory", _mock_get_config_dir)
@@ -443,7 +443,7 @@ class TestCLIWithRay:
             action.orq_stop_workflow_run(args)
 
     def test_orq_stop_workflow_run_no_config(self, tmp_path, monkeypatch, setup_ray):
-        def _mock_get_config_dir(_):
+        def _mock_get_config_dir():
             return tmp_path
 
         monkeypatch.setattr(v2_config, "_get_config_directory", _mock_get_config_dir)

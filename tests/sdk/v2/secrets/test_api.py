@@ -70,8 +70,10 @@ class TestSelectsAppropriateProvider:
 
     @staticmethod
     @pytest.fixture
-    def fake_config_path(tmp_path):
-        return tmp_path / "config.json"
+    def fake_config_path(tmp_path, monkeypatch):
+        config_path = tmp_path / "config.json"
+        monkeypatch.setenv("ORQ_CONFIG_PATH", str(config_path))
+        return config_path
 
     class TestGet:
         @staticmethod
@@ -90,7 +92,6 @@ class TestSelectsAppropriateProvider:
             sdk.secrets.get(
                 secret_name,
                 config_name=dummy_config_name,
-                config_file_path=fake_config_path,
             )
 
             # Then
@@ -114,7 +115,6 @@ class TestSelectsAppropriateProvider:
                 sdk.secrets.get(
                     secret_name,
                     config_name=dummy_config_name,
-                    config_file_path=fake_config_path,
                 )
 
             # Then
@@ -138,7 +138,6 @@ class TestSelectsAppropriateProvider:
                 sdk.secrets.get(
                     secret_name,
                     config_name=dummy_config_name,
-                    config_file_path=fake_config_path,
                 )
 
             # Then
@@ -162,7 +161,6 @@ class TestSelectsAppropriateProvider:
             sdk.secrets.delete(
                 secret_name,
                 config_name=dummy_config_name,
-                config_file_path=fake_config_path,
             )
 
             # Then
@@ -186,7 +184,6 @@ class TestSelectsAppropriateProvider:
                 sdk.secrets.delete(
                     secret_name,
                     config_name=dummy_config_name,
-                    config_file_path=fake_config_path,
                 )
 
             # Then
@@ -210,7 +207,6 @@ class TestSelectsAppropriateProvider:
                 sdk.secrets.delete(
                     secret_name,
                     config_name=dummy_config_name,
-                    config_file_path=fake_config_path,
                 )
 
             # Then
@@ -232,7 +228,6 @@ class TestSelectsAppropriateProvider:
             # When
             sdk.secrets.list(
                 config_name=dummy_config_name,
-                config_file_path=fake_config_path,
             )
 
             # Then
@@ -254,7 +249,6 @@ class TestSelectsAppropriateProvider:
             with _exec_ctx.local_ray():
                 sdk.secrets.list(
                     config_name=dummy_config_name,
-                    config_file_path=fake_config_path,
                 )
 
             # Then
@@ -276,7 +270,6 @@ class TestSelectsAppropriateProvider:
             with _exec_ctx.platform_qe():
                 sdk.secrets.list(
                     config_name=dummy_config_name,
-                    config_file_path=fake_config_path,
                 )
 
             # Then
@@ -302,7 +295,6 @@ class TestSelectsAppropriateProvider:
                 secret_name,
                 secret_value,
                 config_name=dummy_config_name,
-                config_file_path=fake_config_path,
             )
 
             # Then
@@ -328,7 +320,6 @@ class TestSelectsAppropriateProvider:
                     secret_name,
                     secret_value,
                     config_name=dummy_config_name,
-                    config_file_path=fake_config_path,
                 )
 
             # Then
@@ -354,7 +345,6 @@ class TestSelectsAppropriateProvider:
                     secret_name,
                     secret_value,
                     config_name=dummy_config_name,
-                    config_file_path=fake_config_path,
                 )
 
             # Then
