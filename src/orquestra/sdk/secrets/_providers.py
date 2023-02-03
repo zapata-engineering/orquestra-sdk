@@ -22,15 +22,12 @@ class SecretsProvider(t.Protocol):
     def make_client(
         self,
         config_name: t.Optional[str],
-        config_save_path: t.Optional[Path],
     ) -> SecretsClient:
         ...
 
 
-def _read_config_opts(config_name, config_path):
-    return _config.read_config(
-        config_name=config_name, config_file_path=config_path
-    ).runtime_options
+def _read_config_opts(config_name):
+    return _config.read_config(config_name=config_name).runtime_options
 
 
 class ConfigProvider:
@@ -43,9 +40,8 @@ class ConfigProvider:
     def make_client(
         self,
         config_name: t.Optional[str],
-        config_save_path: t.Optional[Path],
     ):
-        opts = _read_config_opts(config_name, config_save_path)
+        opts = _read_config_opts(config_name)
         return SecretsClient.from_token(base_uri=opts["uri"], token=opts["token"])
 
 
@@ -68,7 +64,6 @@ class PassportProvider:
     def make_client(
         self,
         config_name: t.Optional[str],
-        config_save_path: t.Optional[Path],
     ) -> SecretsClient:
         """
         Ignores the arguments and reads passport and cluster URI from env vars.

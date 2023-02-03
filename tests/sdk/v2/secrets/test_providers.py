@@ -60,13 +60,19 @@ class TestConfigProvider:
             config_path.unlink()
 
     @staticmethod
-    def test_reads_creds(config_name: str, config_file: Path, uri: str, token: str):
+    def test_reads_creds(
+        config_name: str,
+        config_file: Path,
+        uri: str,
+        token: str,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        monkeypatch.setenv("ORQ_CONFIG_PATH", str(config_file))
         provider = _providers.ConfigProvider()
 
         # When
         client = provider.make_client(
             config_name=config_name,
-            config_save_path=config_file,
         )
 
         # Then
@@ -74,17 +80,19 @@ class TestConfigProvider:
         assert client._session.headers["Authorization"] == f"Bearer {token}"
 
     @staticmethod
-    def test_uses_default_config(config_file: Path, uri: str, token: str):
+    def test_uses_default_config(
+        config_file: Path, uri: str, token: str, monkeypatch: pytest.MonkeyPatch
+    ):
         """
         Likely to happen when the user doesn't pass config name to Secrets(), and it's
         inside a local script, or a task on a local Ray.
         """
+        monkeypatch.setenv("ORQ_CONFIG_PATH", str(config_file))
         provider = _providers.ConfigProvider()
 
         # When
         client = provider.make_client(
             config_name=None,
-            config_save_path=config_file,
         )
 
         # Then
@@ -117,7 +125,6 @@ class TestPassportProvider:
         # When
         client = provider.make_client(
             config_name=None,
-            config_save_path=None,
         )
 
         # Then

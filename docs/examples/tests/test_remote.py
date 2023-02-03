@@ -133,9 +133,14 @@ class TestSnippets:
 
     @staticmethod
     @pytest.fixture
-    def define_test_config(httpserver: pytest_httpserver.HTTPServer):
+    def define_test_config(
+        httpserver: pytest_httpserver.HTTPServer,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
         from orquestra import sdk
 
+        monkeypatch.setenv("ORQ_CONFIG_PATH", str(tmp_path / "config.json"))
         sdk.RuntimeConfig.qe(uri=f"http://127.0.0.1:{httpserver.port}", token="nice")
 
     @staticmethod
@@ -173,6 +178,7 @@ class TestSnippets:
         change_test_dir,
         httpserver: pytest_httpserver.HTTPServer,
         change_db_location,
+        define_test_config,
     ):
         # Given
         httpserver.expect_request("/v1/workflow").respond_with_json(QE_STATUS_RESPONSE)

@@ -18,6 +18,9 @@ the user. It's a lot easier to figure out appropriate behavior this way.
 """
 import datetime
 import json
+import os
+import tempfile
+from pathlib import Path
 from unittest.mock import Mock
 
 import filelock
@@ -97,13 +100,11 @@ class TestResolveConfigFileForReading:
         assert _config._resolve_config_file_for_reading() is None
 
     @staticmethod
-    def test_returns_none_for_nonexistant_file_custom_location(tmp_path):
-        assert (
-            _config._resolve_config_file_for_reading(
-                config_file_path=tmp_path / "test.file"
-            )
-            is None
-        )
+    def test_returns_none_for_nonexistant_file_custom_location(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
+        monkeypatch.setenv("ORQ_CONFIG_PATH", str(tmp_path / "test.file"))
+        assert _config._resolve_config_file_for_reading() is None
 
 
 class TestResolveConfigName:

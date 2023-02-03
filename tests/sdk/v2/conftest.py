@@ -19,10 +19,8 @@ def patch_config_location(tmp_path, monkeypatch):
     Makes the functions in orquestra.sdk._base._config read/write file from a
     temporary directory.
     """
-    config_location = Mock(return_value=tmp_path / "config.json")
-    monkeypatch.setattr(
-        orquestra.sdk._base._config, "_get_config_file_path", config_location
-    )
+    config_location = tmp_path / "config.json"
+    monkeypatch.setenv("ORQ_CONFIG_PATH", str(config_location))
     return tmp_path
 
 
