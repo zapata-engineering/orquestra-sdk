@@ -32,13 +32,6 @@ from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 
 from .data.configs import TEST_CONFIG_JSON
 
-# @pytest.fixture(scope="module", autouse=True)
-# def mock_config_path():
-#     with tempfile.TemporaryDirectory() as dir_path:
-#         with pytest.MonkeyPatch.context() as mp:
-#             mp.setenv("ORQ_CONFIG_PATH", os.path.join(dir_path, "config.json"))
-#             yield mp
-
 
 class TestSavePartialConfig:
     """
