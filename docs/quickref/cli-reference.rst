@@ -9,3 +9,4 @@ execute and manage workflows.
 
 .. click:: orquestra.sdk._base.cli._dorq._entry:dorq
    :prog: orq
+   :nested: full
