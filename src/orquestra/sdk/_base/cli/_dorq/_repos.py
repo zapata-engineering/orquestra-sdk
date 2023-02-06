@@ -10,6 +10,7 @@ import sys
 import typing
 import typing as t
 import warnings
+from contextlib import contextmanager
 
 import requests
 
@@ -435,6 +436,17 @@ def resolve_dotted_name(module_spec: str) -> str:
         return module_spec
 
 
+@contextmanager
+def _extend_sys_path(sys_path_additions: t.Sequence[str]):
+    original_sys_path = list(sys.path)
+    sys.path[:] = [*sys_path_additions, *original_sys_path]
+
+    try:
+        yield
+    finally:
+        sys.path[:] = original_sys_path
+
+
 class WorkflowDefRepo:
     def get_module_from_spec(self, module_spec: str):
         """
@@ -445,12 +457,18 @@ class WorkflowDefRepo:
                 matching the resolved name
         """
         dotted_name = resolve_dotted_name(module_spec)
-        try:
-            return importlib.import_module(name=dotted_name)
-        except ModuleNotFoundError:
-            raise exceptions.WorkflowDefinitionModuleNotFound(
-                module_name=dotted_name, sys_path=sys.path
-            )
+
+        # Enable importing packages/modules from under current working dir even if
+        # they're not part of a setuptools distribution. This workaround is needed
+        # because we expose the 'orq' CLI as a "console script", and it in this set up
+        # PWD isn't added to 'sys.path' automatically.
+        with _extend_sys_path([os.getcwd()]):
+            try:
+                return importlib.import_module(name=dotted_name)
+            except ModuleNotFoundError:
+                raise exceptions.WorkflowDefinitionModuleNotFound(
+                    module_name=dotted_name, sys_path=sys.path
+                )
 
     def get_worklow_names(self, module) -> t.Sequence[str]:
         """
