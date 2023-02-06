@@ -145,3 +145,23 @@ class TestAction:
 
             # We expect a dump for each output
             assert len(dumper.mock_calls) == len(fake_outputs)
+
+    @staticmethod
+    def test_presents_errors():
+        # Given
+        error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
+        config_resolver = create_autospec(_arg_resolvers.WFConfigResolver)
+
+        err = RuntimeError()
+        config_resolver.resolve.side_effect = err
+
+        action = _results.Action(
+            error_presenter=error_presenter,
+            config_resolver=config_resolver,
+        )
+
+        # When
+        action.on_cmd_call(wf_run_id=None, config=None, download_dir=None)
+
+        # Then
+        error_presenter.show_error.assert_called_with(err)
