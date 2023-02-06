@@ -1126,6 +1126,33 @@ class TestWorkflowDefRepoIntegration:
                 # Then
                 assert mod.foo == "abc"
 
+            @staticmethod
+            def test_loads_from_cwd(tmp_path: Path, monkeypatch):
+                """
+                - We have some free-form project files outside of a setuptools-like
+                  distribution
+                - PWD is at the project root
+                - PWD wasn't added to sys.path explicitly
+                """
+                # Given
+                proj_dir = tmp_path / "my_proj"
+                proj_dir.mkdir()
+
+                module_path = proj_dir / "my_pkg" / "my_module.py"
+                module_path.parent.mkdir()
+                module_path.write_text("foo = 'abc'")
+
+                monkeypatch.chdir(proj_dir)
+
+                repo = _repos.WorkflowDefRepo()
+
+                with reloaders.restore_loaded_modules():
+                    # When
+                    mod = repo.get_module_from_spec("my_pkg.my_module")
+
+                    # Then
+                    assert mod.foo == "abc"
+
         class TestNonExistingModules:
             @staticmethod
             def test_invalid_path():
