@@ -65,12 +65,12 @@ Start Services
 Ray-based local runtime requires some services to run in the background: Ray cluster and Fluentbit docker container.
 There's a handy command to start them::
 
-    orq up
+    orq up --all
 
 This only needs to be once until you reboot your computer or
 you stop services manually using the command::
 
-   orq down
+   orq down --all
 
 
 Run Workflows
