@@ -10,10 +10,11 @@ import sys
 import typing as t
 import warnings
 from pathlib import Path
-from unittest.mock import Mock, create_autospec
+from unittest.mock import Mock, PropertyMock, create_autospec
 
 import pytest
 import requests
+from aiohttp import web
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
@@ -22,6 +23,8 @@ from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe._client import QEClient
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._base.cli._dorq import _repos
+from orquestra.sdk._base.cli._dorq._login._login_server import LoginServer
+from orquestra.sdk._base.cli._dorq._ui import _presenters
 from orquestra.sdk._ray import _dag
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeName
@@ -1018,13 +1021,15 @@ class TestRuntimeRepo:
         fake_login_url = "http://my_login.url"
 
         monkeypatch.setattr(
-            DriverClient if ce else QEClient, "get_login_url", lambda x: fake_login_url
+            DriverClient if ce else QEClient,
+            "get_login_url",
+            lambda x, _: fake_login_url,
         )
 
         repo = _repos.RuntimeRepo()
 
         # When
-        login_url = repo.get_login_url("uri", ce)
+        login_url = repo.get_login_url("uri", ce, 0)
 
         # Then
         assert login_url == fake_login_url
@@ -1035,7 +1040,7 @@ class TestRuntimeRepo:
     )
     def test_exceptions(self, monkeypatch, exception, ce):
         # Given
-        def _exception(_):
+        def _exception(_, __):
             raise exception
 
         monkeypatch.setattr(
@@ -1045,8 +1050,8 @@ class TestRuntimeRepo:
         repo = _repos.RuntimeRepo()
 
         # Then
-        with pytest.raises(exceptions.UnauthorizedError):
-            repo.get_login_url("uri", ce)
+        with pytest.raises(exceptions.LoginURLUnavailableError):
+            repo.get_login_url("uri", ce, 0)
 
 
 class TestResolveDottedName:
@@ -1234,3 +1239,64 @@ class TestWorkflowDefRepoIntegration:
             with pytest.raises(exceptions.WorkflowSyntaxError):
                 # When
                 _ = repo.get_workflow_def(_example_wfs, wf_name)
+
+
+@pytest.mark.parametrize("ce", [True, False])
+class TestTokenRepo:
+    def test_token_received(self, ce):
+        cluster_url = "url"
+        login_url = "login_url"
+        timeout = 60
+        listen_host = "listen_host"
+        token = "mocked_token"
+
+        runtime_repo = create_autospec(_repos.RuntimeRepo)
+        presenter = create_autospec(_presenters.LoginPresenter)
+        server = create_autospec(LoginServer)
+
+        server.run.side_effect = web.GracefulExit
+        type(server).token = PropertyMock(return_value=token)
+        type(server).login_url = PropertyMock(return_value=login_url)
+
+        repo = _repos.TokenRepo(runtime_repo, presenter, server)
+
+        t, url = repo.get_token(cluster_url, ce, timeout, listen_host)
+
+        server.run.assert_called_with(cluster_url, ce, listen_host, timeout)
+        assert t == token
+        assert url == login_url
+
+    def test_token_not_received(self, ce):
+        cluster_url = "url"
+        login_url = "login_url"
+        timeout = 60
+        listen_host = "listen_host"
+        token = None
+
+        runtime_repo = create_autospec(_repos.RuntimeRepo)
+        presenter = create_autospec(_presenters.LoginPresenter)
+        server = create_autospec(LoginServer)
+
+        type(server).token = PropertyMock(return_value=token)
+        type(server).login_url = PropertyMock(return_value=login_url)
+
+        repo = _repos.TokenRepo(runtime_repo, presenter, server)
+
+        t, url = repo.get_token(cluster_url, ce, timeout, listen_host)
+
+        server.run.assert_called_with(cluster_url, ce, listen_host, timeout)
+        assert t is None
+        assert url == login_url
+
+    def test_raises_no_login_url(self, ce):
+        cluster_url = "url"
+
+        runtime_repo = create_autospec(_repos.RuntimeRepo)
+        presenter = create_autospec(_presenters.LoginPresenter)
+        server = create_autospec(LoginServer)
+        server.run.side_effect = exceptions.LoginURLUnavailableError(cluster_url)
+
+        repo = _repos.TokenRepo(runtime_repo, presenter, server)
+
+        with pytest.raises(exceptions.LoginURLUnavailableError):
+            _ = repo.get_token(cluster_url, ce)

@@ -173,3 +173,8 @@ class ParseError(RuntimeError):
 # CLI Exceptions
 class UserCancelledPrompt(BaseRuntimeError):
     pass
+
+
+class LoginURLUnavailableError(BaseRuntimeError):
+    def __init__(self, base_uri: str):
+        self.base_uri = base_uri

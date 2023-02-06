@@ -212,7 +212,7 @@ class DriverClient:
             next_page_token=next_token,
         )
 
-    def get_login_url(self) -> str:
+    def get_login_url(self, redirect_port: int) -> str:
         """First step in the auth flow. Fetches the URL that the user has to visit.
 
         Raises:
@@ -221,7 +221,7 @@ class DriverClient:
         """
         resp = self._get(
             API_ACTIONS["get_login_url"],
-            query_params={"state": "0"},
+            query_params={"state": f"{redirect_port}"},
             allow_redirects=False,
         )
         return resp.headers["Location"]
