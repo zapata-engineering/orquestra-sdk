@@ -6,9 +6,11 @@ Unit tests for 'orq wf results' glue code.
 """
 
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import create_autospec
 
 from orquestra.sdk._base.cli._dorq._workflow import _results
+from orquestra.sdk._base.cli._dorq._ui import _presenters
+from orquestra.sdk._base.cli._dorq import _dumpers, _repos, _arg_resolvers
 
 
 class TestAction:
@@ -38,20 +40,22 @@ class TestAction:
             resolved_config = "<resolved config>"
 
             # Mocks
-            presenter = Mock()
-            dumper = Mock()
-            wf_run_repo = Mock()
+            artifact_presenter = create_autospec(_presenters.ArtifactPresenter)
+            error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
+            dumper = create_autospec(_dumpers.WFOutputDumper)
+            wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
             fake_outputs = [object(), "hello", None]
             wf_run_repo.get_wf_outputs.return_value = fake_outputs
 
-            config_resolver = Mock()
+            config_resolver = create_autospec(_arg_resolvers.WFConfigResolver)
             config_resolver.resolve.return_value = resolved_config
 
-            wf_run_resolver = Mock()
+            wf_run_resolver = create_autospec(_arg_resolvers.WFRunResolver)
             wf_run_resolver.resolve_id.return_value = resolved_id
 
             action = _results.Action(
-                presenter=presenter,
+                artifact_presenter=artifact_presenter,
+                error_presenter=error_presenter,
                 dumper=dumper,
                 wf_run_repo=wf_run_repo,
                 config_resolver=config_resolver,
@@ -76,7 +80,7 @@ class TestAction:
             )
 
             # We expect printing the workflow run returned from the repo.
-            presenter.show_workflow_outputs.assert_called_with(
+            artifact_presenter.show_workflow_outputs.assert_called_with(
                 fake_outputs, resolved_id
             )
 
@@ -96,20 +100,23 @@ class TestAction:
             resolved_config = "<resolved config>"
 
             # Mocks
-            presenter = Mock()
-            dumper = Mock()
-            wf_run_repo = Mock()
+            artifact_presenter = create_autospec(_presenters.ArtifactPresenter)
+            error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
+            dumper = create_autospec(_dumpers.WFOutputDumper)
+
+            wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
             fake_outputs = [object(), "hello", None]
             wf_run_repo.get_wf_outputs.return_value = fake_outputs
 
-            config_resolver = Mock()
+            config_resolver = create_autospec(_arg_resolvers.WFConfigResolver)
             config_resolver.resolve.return_value = resolved_config
 
-            wf_run_resolver = Mock()
+            wf_run_resolver = create_autospec(_arg_resolvers.WFRunResolver)
             wf_run_resolver.resolve_id.return_value = resolved_id
 
             action = _results.Action(
-                presenter=presenter,
+                artifact_presenter=artifact_presenter,
+                error_presenter=error_presenter,
                 dumper=dumper,
                 wf_run_repo=wf_run_repo,
                 config_resolver=config_resolver,
@@ -134,7 +141,7 @@ class TestAction:
             )
 
             # We expect a summary printed for each output
-            assert len(presenter.mock_calls) == len(fake_outputs)
+            assert len(artifact_presenter.mock_calls) == len(fake_outputs)
 
             # We expect a dump for each output
             assert len(dumper.mock_calls) == len(fake_outputs)
