@@ -15,22 +15,27 @@ Prerequisites
 Start Ray
 =========
 
-Ray executes workflows in the background.
-Run the following command in your terminal to start the Ray cluster::
+Run the following command in your terminal to start the background services on your machine:
 
-    ray start --head \
-        --temp-dir="$HOME/.orquestra/ray" \
-        --storage="$HOME/.orquestra/ray_storage"
+.. code:: bash
 
-
-.. warning::
-
-    Some features of Orquestra Workflow SDK won't properly if you pass different paths as ``--temp-dir`` and ``--storage`` , e.g. you won't be able to retrieve workflow logs.
+    orq up
 
 
-After you're done, the Ray cluster can be shut down with::
+This ``orq`` commands ensures that the Ray cluster was set up correctly.
 
-    ray stop
+
+.. note::
+
+    There are other ways to start Ray, e.g. via ``ray start``, but some features of Orquestra Workflow SDK might not work properly.
+    In particular, you won't be able to retrieve workflow logs.
+
+
+After you're done, the Ray cluster can be shut down with:
+
+.. code:: bash
+
+    orq down
 
 
 Execute Workflow

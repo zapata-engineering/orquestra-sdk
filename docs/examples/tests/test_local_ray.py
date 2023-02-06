@@ -34,7 +34,7 @@ class Snippets:
         from workflow_defs import hello_orquestra_wf
 
         # Start the workflow
-        wf_run = hello_orquestra_wf().run("local")
+        wf_run = hello_orquestra_wf().run("ray")
 
         # A workflow can be executed multiple times. Run ID can be used later to
         # identify a single run.
