@@ -61,7 +61,7 @@ Token and URI should be stored in local configuration file. To do this, execute 
 
 .. code:: bash
 
-    echo <paste token content> | orq set token -c <your_config_name> -t -
+    orq login -s https://<cluster-name>.orquestra.io -t <paste token content>
 
 .. warning::
 
