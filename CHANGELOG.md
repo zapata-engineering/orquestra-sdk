@@ -3,6 +3,26 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+
+
+🔥 *Features*
+
+
+👩‍🔬 *Experimental*
+
+
+🐛 *Bug Fixes*
+
+
+*Internal*
+
+
+*Docs*
+
+
+## v0.43.0
+
+🚨 *Breaking Changes*
 * Brand-new `orq` CLI with simplified command tree and interactive prompts when a required argument isn't passed. New commands:
     * `orq workflow submit`
     * `orq workflow view`
@@ -46,10 +66,6 @@ for task in wf_run.get_tasks():
 
 * `list_workflow_runs` added to the Public API. This lets you list the workflows for a given config, for example `sdk.list_workflow_runs("ray")` or `sdk.list_workflow_runs("prod-d")`.
 
-
-👩‍🔬 *Experimental*
-
-
 🐛 *Bug Fixes*
 
 * Fixed broken link on docs landing page.
@@ -60,12 +76,6 @@ for task in wf_run.get_tasks():
 * AST parser will no longer print a lot of "Info" messages
 * `sdk.WorkflowRun.get_logs()` now only returns logs produced by the user. Previously, it included internal debug messages produced by Ray.
 * Logs from workflows submitted to Ray are now always returned as JSONL lines
-
-
-*Internal*
-
-
-*Docs*
 
 
 ## v0.42.0
