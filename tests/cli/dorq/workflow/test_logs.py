@@ -6,7 +6,7 @@ Unit tests for 'orq wf results' glue code.
 """
 
 from pathlib import Path
-from unittest.mock import Mock, create_autospec
+from unittest.mock import create_autospec
 
 from orquestra.sdk._base.cli._dorq._arg_resolvers import WFConfigResolver, WFRunResolver
 from orquestra.sdk._base.cli._dorq._dumpers import LogsDumper
