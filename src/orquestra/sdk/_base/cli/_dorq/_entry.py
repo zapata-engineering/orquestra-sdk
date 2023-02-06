@@ -232,10 +232,26 @@ def task():
     pass
 
 
+WF_RUN_ID_OPTION = cloup.option(
+    "--wf-run-id", help="Workflow run ID. Get it from 'orq wf submit'"
+)
+FN_NAME_OPTION = cloup.option(
+    "--fn-name",
+    help=(
+        "Task function name. Narrows down the search. "
+        "Ignored when --task-inv-id is passed."
+    ),
+)
+TASK_INV_ID_OPTION = cloup.option(
+    "--task-inv-id",
+    help="Task invocation ID. Locates single use of the task in the workflow.",
+)
+
+
 @task.command(name="results", aliases=["outputs"])
-@cloup.option("--wf-run-id")
-@cloup.option("--fn-name")
-@cloup.option("--task-inv-id")
+@WF_RUN_ID_OPTION
+@FN_NAME_OPTION
+@TASK_INV_ID_OPTION
 @CONFIG_OPTION
 @DOWNLOAD_DIR_OPTION
 def task_results(*args, **kwargs):
@@ -257,9 +273,9 @@ def task_results(*args, **kwargs):
 
 
 @task.command(name="logs")
-@cloup.argument("wf-run-id", required=False)
-@cloup.argument("task-inv-id", required=False)
-@cloup.argument("fn-name", required=False)
+@WF_RUN_ID_OPTION
+@FN_NAME_OPTION
+@TASK_INV_ID_OPTION
 @CONFIG_OPTION
 @DOWNLOAD_DIR_OPTION
 def task_logs(*args, **kwargs):

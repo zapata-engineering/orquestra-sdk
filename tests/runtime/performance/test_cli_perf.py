@@ -11,8 +11,10 @@ See this ticket for more investigation:
 https://zapatacomputing.atlassian.net/browse/ORQSDK-507
 """
 import json
+import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import typing as t
 from pathlib import Path
@@ -37,8 +39,10 @@ def _run_command(command: t.List[str]):
     return subprocess.run(command, check=True, capture_output=True)
 
 
-def _run_orq_command(command: t.List[str]):
-    return _run_command(["orq", *command])
+def _run_corq_command(command: t.List[str]):
+    return _run_command(
+        [sys.executable, "-m", "orquestra.sdk._base.cli._corq._main", *command]
+    )
 
 
 @pytest.fixture(scope="module")
@@ -75,14 +79,14 @@ def orq_project_dir():
 @pytest.fixture(scope="module")
 def orq_workflow_run(ray_cluster, orq_project_dir):
     # Submit the workflow
-    output = _run_orq_command(
+    output = _run_corq_command(
         ["submit", "workflow-def", "-d", orq_project_dir, "-o", "json", "-c", "local"]
     )
     # Parse the stdout to get the workflow ID
     res = json.loads(output.stdout)
     workflow_id = res["workflow_runs"][0]["id"]
     # Get the results to ensure the job has finished
-    _run_orq_command(
+    _run_corq_command(
         [
             "get",
             "workflow-run-results",
@@ -101,40 +105,40 @@ TEST_TIMEOUT = 20
 
 @pytest.mark.expect_under(TEST_TIMEOUT)
 def test_orq_help():
-    _run_orq_command(["-h"])
+    _run_corq_command(["-h"])
 
 
 @pytest.mark.expect_under(TEST_TIMEOUT)
 def test_orq_invalid():
     with pytest.raises(subprocess.CalledProcessError):
-        _run_orq_command(["general-kenobi"])
+        _run_corq_command(["general-kenobi"])
 
 
 @pytest.mark.expect_under(TEST_TIMEOUT)
 def test_get_workflow_def(orq_project_dir):
-    _run_orq_command(["get", "workflow-def", "-d", orq_project_dir])
+    _run_corq_command(["get", "workflow-def", "-d", orq_project_dir])
 
 
 @pytest.mark.expect_under(TEST_TIMEOUT)
 def test_get_task_def(orq_project_dir):
-    _run_orq_command(["get", "task-def", "-d", orq_project_dir])
+    _run_corq_command(["get", "task-def", "-d", orq_project_dir])
 
 
 @pytest.mark.expect_under(TEST_TIMEOUT)
 def test_orq_submit_workflow_def(ray_cluster, orq_project_dir):
-    _run_orq_command(["submit", "workflow-def", "-d", orq_project_dir, "-c", "local"])
+    _run_corq_command(["submit", "workflow-def", "-d", orq_project_dir, "-c", "local"])
 
 
 @pytest.mark.expect_under(TEST_TIMEOUT)
 def test_get_workflow_run(orq_project_dir, orq_workflow_run):
-    _run_orq_command(
+    _run_corq_command(
         ["get", "workflow-run", orq_workflow_run, "-d", orq_project_dir, "-c", "local"]
     )
 
 
 @pytest.mark.expect_under(TEST_TIMEOUT)
 def test_get_workflow_run_results(orq_project_dir, orq_workflow_run):
-    _run_orq_command(
+    _run_corq_command(
         [
             "get",
             "workflow-run-results",

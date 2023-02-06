@@ -3,8 +3,22 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+* Brand-new `orq` CLI with simplified command tree and interactive prompts when a required argument isn't passed. New commands:
+    * `orq workflow submit`
+    * `orq workflow view`
+    * `orq workflow list`
+    * `orq workflow stop`
+    * `orq workflow logs`
+    * `orq workflow results`
+    * `orq wf` as a shorthand for `orq workflow`
+    * `orq task logs`
+    * `orq task results`
+    * `orq up`
+    * `orq down`
+    * `orq status`
+    * `orq login`
 * `sdk.WorkflowRun.get_logs()` doesn't accept any arguments any more. Now, it returns all the logs produced by the tasks in the workflow. If you're interested in only a subset of your workflow's logs, please consider using one of the following filtering options:
-```
+```python
 from orquestra import sdk
 from orquestra.sdk.schema.workflow_run import State
 
@@ -35,14 +49,6 @@ for task in wf_run.get_tasks():
 
 👩‍🔬 *Experimental*
 
-* New CLI command: `python -m orquestra.sdk._base.cli._dorq._entry login`.
-* New CLI Login commands allows to login to CE with --ce flag
-* Dorq wf submit now properly prompts users for config selection
-* New CLI command: `python -m orquestra.sdk._base.cli._dorq._entry workflow results`. It shows a preview of the workflow run output artifact and can download the result values to the provided directory.
-* New CLI command: `python -m orquestra.sdk._base.cli._dorq._entry workflow list`. It displays a list of workflow runs corresponding to specified configurations and filters.
-* New CLI command: `python -m orquestra.sdk._base.cli._dorq._entry workflow logs`.
-* New CLI command: `python -m orquestra.sdk._base.cli._dorq._entry task logs`.
-* New CLI command: `python -m orquestra.sdk._base.cli._dorq._entry task results`.
 
 🐛 *Bug Fixes*
 
