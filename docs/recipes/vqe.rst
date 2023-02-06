@@ -63,7 +63,7 @@ Copy the workflow ID that is printed to the terminal and paste it into the follo
 
 .. code-block:: bash
 
-   orq get workflow-run <workflow-id>
+   orq wf view <workflow-id>
 
 .. note::
 
