@@ -959,52 +959,6 @@ class TestCLIAgainstRuntimeMock:
             )
 
         @pytest.mark.parametrize("query_by_run_id", [True, False])
-        def test_follow(
-            self,
-            tmp_path,
-            monkeypatch,
-            capsys,
-            mocked_nonsense_config,
-            query_by_run_id: bool,
-        ):
-            """
-            Validates that when RayRuntime.iter_logs() yields something, it gets
-            printed to stdout.
-            """
-            # Given
-            wf_run_id = "hello_there_1234"
-            tell_tale = "general kenobi!"
-
-            runtime_mock = Mock()
-
-            def _mock_iter_logs(run_id):
-                if run_id in {None, wf_run_id}:
-                    return [[tell_tale]]
-                else:
-                    return []
-
-            runtime_mock.iter_logs = _mock_iter_logs
-
-            _setup_runtime_mock(monkeypatch, runtime_mock)
-
-            # When
-            query_id = wf_run_id if query_by_run_id else None
-            action.orq_get_logs(
-                argparse.Namespace(
-                    workflow_or_task_run_id=query_id,
-                    follow=True,
-                    output_format=ResponseFormat.PLAIN_TEXT,
-                    directory=tmp_path,
-                    config=TEST_CONFIG_NAME,
-                )
-            )
-
-            # Then
-            captured = capsys.readouterr()
-            assert tell_tale in captured.out
-            assert "Ctrl-C" in captured.err
-
-        @pytest.mark.parametrize("query_by_run_id", [True, False])
         def test_historical(
             self,
             tmp_path,

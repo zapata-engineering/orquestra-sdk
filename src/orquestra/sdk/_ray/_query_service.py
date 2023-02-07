@@ -111,6 +111,3 @@ class FluentbitReader:
 
         service = LogQueryService(run_id=run_id, logs_dir=self._logs_dir)
         return service.get_full_logs()
-
-    def iter_logs(self, run_id: t.Optional[str] = None) -> t.Iterator[t.Sequence[str]]:
-        raise NotImplementedError()

@@ -899,14 +899,6 @@ class RayRuntime(RuntimeInterface):
         else:
             return self._ray_reader.get_full_logs(run_id)
 
-    def iter_logs(
-        self, run_id: t.Optional[t.Union[WorkflowRunId, TaskRunId]] = None
-    ) -> t.Iterator[t.Sequence[str]]:
-        if self._service_manager.is_fluentbit_running():
-            yield from self._fluentbit_reader.iter_logs(run_id)
-        else:
-            yield from self._ray_reader.iter_logs(run_id)
-
     def list_workflow_runs(
         self,
         *,

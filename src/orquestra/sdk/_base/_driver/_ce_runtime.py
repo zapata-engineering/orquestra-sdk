@@ -306,12 +306,3 @@ class CERuntime(RuntimeInterface):
         See LogReader.get_full_logs.
         """
         raise NotImplementedError()
-
-    def iter_logs(
-        self,
-        workflow_or_task_run_id: Optional[Union[WorkflowRunId, TaskRunId]] = None,
-    ) -> Iterator[Sequence[str]]:
-        """
-        See LogReader.iter_logs.
-        """
-        raise NotImplementedError()

@@ -62,21 +62,6 @@ class LogReader(t.Protocol):
         """
         raise NotImplementedError()
 
-    def iter_logs(
-        self,
-        workflow_or_task_run_id: t.Optional[t.Union[WorkflowRunId, TaskRunId]] = None,
-    ) -> t.Iterator[t.Sequence[str]]:
-        """Returns an iterator for the logs from the runtime. Each yield is a batch of
-        log lines.
-
-        If the target ID is missing, this method will return all logs available from
-        the runtime.
-
-        Arguments:
-            workflow_or_task_run_id: target workflow/task run
-        """
-        ...
-
 
 # A typealias that hints where we expect raw artifact values.
 ArtifactValue = t.Any
@@ -186,16 +171,6 @@ class RuntimeInterface(ABC):
     ) -> t.Dict[TaskInvocationId, t.List[str]]:
         """
         See LogReader.get_full_logs.
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
-    def iter_logs(
-        self,
-        workflow_or_task_run_id: t.Optional[t.Union[WorkflowRunId, TaskRunId]] = None,
-    ) -> t.Iterator[t.Sequence[str]]:
-        """
-        See LogReader.iter_logs.
         """
         raise NotImplementedError()
 
