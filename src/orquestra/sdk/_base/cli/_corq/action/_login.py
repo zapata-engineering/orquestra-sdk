@@ -224,7 +224,7 @@ def orq_login(args: argparse.Namespace):
     client = _client.QEClient(session=requests.Session(), base_uri=server_uri)
     # Ask QE for the login url to log in to the platform
     try:
-        target_url = client.get_login_url()
+        target_url = client.get_login_url(0)
     except requests.ConnectionError:
         print(f"Unable to communicate with server: {server_uri}", file=sys.stderr)
         sys.exit(ResponseStatusCode.CONNECTION_ERROR.value)

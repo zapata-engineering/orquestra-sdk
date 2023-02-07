@@ -8,6 +8,7 @@ mostly adapters over the corq's formatters.
 import pprint
 import sys
 import typing as t
+import webbrowser
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterable, Iterator, List
@@ -200,7 +201,8 @@ class ServicePresenter:
 
 class LoginPresenter:
     def prompt_for_login(self, login_url, url, ce):
-        click.echo("Please follow this URL to proceed with login:")
+        click.echo("We were unable to automatically log you in.")
+        click.echo("Please login to your Orquestra account using the following URL.")
         click.echo(login_url)
         click.echo(
             (
@@ -213,3 +215,9 @@ class LoginPresenter:
     def prompt_config_saved(self, url, config_name):
         click.echo("Token saved in config file.")
         click.echo(f"Configuration name for {url} is {config_name}")
+
+    def print_login_help(self):
+        click.echo("Continue the login process in your web browser.")
+
+    def open_url_in_browser(self, url) -> bool:
+        return webbrowser.open(url)

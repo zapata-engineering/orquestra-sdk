@@ -108,7 +108,7 @@ class QEClient:
         response = self._get(API_ACTION["get_version"])
         return response.json()
 
-    def get_login_url(self) -> str:
+    def get_login_url(self, redirect_port: int) -> str:
         """First step in the auth flow. Fetches the URL that the user has to visit.
 
         Raises:
@@ -117,7 +117,7 @@ class QEClient:
         """
         resp = self._get(
             API_ACTION["get_login_url"],
-            params={"state": "0"},
+            params={"state": f"{redirect_port}"},
             timeout=10.0,
             allow_redirects=False,
         )

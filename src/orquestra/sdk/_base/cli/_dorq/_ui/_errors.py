@@ -89,10 +89,20 @@ def _(e: exceptions.WorkflowRunNotFinished) -> ResponseStatusCode:
 @pretty_print_exception.register
 def _(e: ConnectionError) -> ResponseStatusCode:
     _print_traceback(e)
-    click.echo("Unable to connect to Ray.")
+    click.echo(f"{e}")
     return ResponseStatusCode.CONNECTION_ERROR
 
 
 @pretty_print_exception.register
-def _(e: exceptions.UserCancelledPrompt) -> ResponseStatusCode:
+def _(e: exceptions.LoginURLUnavailableError) -> ResponseStatusCode:
+    _print_traceback(e)
+    click.echo(
+        f"The login URL for '{e.base_uri}' is unavailable. "
+        "Try checking your network connection and the cluster URL.",
+    )
+    return ResponseStatusCode.CONNECTION_ERROR
+
+
+@pretty_print_exception.register
+def _(_: exceptions.UserCancelledPrompt) -> ResponseStatusCode:
     return ResponseStatusCode.USER_CANCELLED

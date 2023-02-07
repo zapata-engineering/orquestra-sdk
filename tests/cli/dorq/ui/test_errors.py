@@ -47,7 +47,12 @@ class TestPrettyPrintException:
                     "selected run is RUNNING."
                 ),
             ),
-            (ConnectionError(), "Unable to connect to Ray"),
+            (ConnectionError("Unable to connect to Ray"), "Unable to connect to Ray"),
+            (
+                exceptions.LoginURLUnavailableError("localhost"),
+                "The login URL for 'localhost' is unavailable. "
+                "Try checking your network connection and the cluster URL.",
+            ),
         ],
     )
     def test_prints_to_std_streams(capsys, exc, stdout_marker: str):

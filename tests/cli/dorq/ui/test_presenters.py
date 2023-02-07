@@ -308,7 +308,11 @@ class TestLoginPresenter:
 
         # Then
         captured = capsys.readouterr()
-        assert "Please follow this URL to proceed with login" in captured.out
+        assert "We were unable to automatically log you in" in captured.out
+        assert (
+            "Please login to your Orquestra account using the following URL."
+            in captured.out
+        )
         assert login_url in captured.out
         assert "Then save the token using command:" in captured.out
         assert (
@@ -328,3 +332,25 @@ class TestLoginPresenter:
         # Then
         captured = capsys.readouterr()
         assert f"Configuration name for {url} is {config_name}" in captured.out
+
+    def test_print_login_help(self, capsys):
+        presenter = _presenters.LoginPresenter()
+
+        # When
+        presenter.print_login_help()
+
+        # Then
+        captured = capsys.readouterr()
+        assert "Continue the login process in your web browser." in captured.out
+
+    @pytest.mark.parametrize("success", [True, False])
+    def test_open_url_in_browser(self, success: bool, monkeypatch: pytest.MonkeyPatch):
+        open_browser = Mock(return_value=success)
+        monkeypatch.setattr("webbrowser.open", open_browser)
+        presenter = _presenters.LoginPresenter()
+        url = "test_url"
+
+        browser_opened = presenter.open_url_in_browser(url)
+
+        assert browser_opened == success
+        open_browser.assert_called_once_with(url)

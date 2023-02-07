@@ -29,6 +29,9 @@ from orquestra.sdk.schema.workflow_run import (
     WorkflowRunId,
 )
 
+from ._login._login_server import LoginServer
+from ._ui import _presenters
+
 
 def _find_first(f: t.Callable[[t.Any], bool], it: t.Iterable):
     return next(filter(f, it))
@@ -395,7 +398,7 @@ class RuntimeRepo:
     Wraps access to QE/CE clients
     """
 
-    def get_login_url(self, uri: str, ce: bool):
+    def get_login_url(self, uri: str, ce: bool, redirect_port: int):
         client: typing.Union[DriverClient, _client.QEClient]
         if ce:
             client = DriverClient(base_uri=uri, session=requests.Session())
@@ -403,9 +406,9 @@ class RuntimeRepo:
             client = _client.QEClient(session=requests.Session(), base_uri=uri)
             # Ask QE for the login url to log in to the platform
         try:
-            target_url = client.get_login_url()
-        except (requests.ConnectionError, requests.exceptions.MissingSchema):
-            raise exceptions.UnauthorizedError(f'Cannot connect to server "{uri}"')
+            target_url = client.get_login_url(redirect_port)
+        except (requests.RequestException) as e:
+            raise exceptions.LoginURLUnavailableError(uri) from e
         return target_url
 
 

@@ -10,10 +10,11 @@ import sys
 import typing as t
 import warnings
 from pathlib import Path
-from unittest.mock import Mock, create_autospec
+from unittest.mock import Mock, PropertyMock, create_autospec
 
 import pytest
 import requests
+from aiohttp import web
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
@@ -22,6 +23,8 @@ from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe._client import QEClient
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._base.cli._dorq import _repos
+from orquestra.sdk._base.cli._dorq._login._login_server import LoginServer
+from orquestra.sdk._base.cli._dorq._ui import _presenters
 from orquestra.sdk._ray import _dag
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeName
@@ -1018,13 +1021,15 @@ class TestRuntimeRepo:
         fake_login_url = "http://my_login.url"
 
         monkeypatch.setattr(
-            DriverClient if ce else QEClient, "get_login_url", lambda x: fake_login_url
+            DriverClient if ce else QEClient,
+            "get_login_url",
+            lambda x, _: fake_login_url,
         )
 
         repo = _repos.RuntimeRepo()
 
         # When
-        login_url = repo.get_login_url("uri", ce)
+        login_url = repo.get_login_url("uri", ce, 0)
 
         # Then
         assert login_url == fake_login_url
@@ -1035,7 +1040,7 @@ class TestRuntimeRepo:
     )
     def test_exceptions(self, monkeypatch, exception, ce):
         # Given
-        def _exception(_):
+        def _exception(_, __):
             raise exception
 
         monkeypatch.setattr(
@@ -1045,8 +1050,8 @@ class TestRuntimeRepo:
         repo = _repos.RuntimeRepo()
 
         # Then
-        with pytest.raises(exceptions.UnauthorizedError):
-            repo.get_login_url("uri", ce)
+        with pytest.raises(exceptions.LoginURLUnavailableError):
+            repo.get_login_url("uri", ce, 0)
 
 
 class TestResolveDottedName:
