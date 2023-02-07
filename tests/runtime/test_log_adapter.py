@@ -109,7 +109,7 @@ class TestMakeLogger:
             lines = proc.stderr.splitlines()
             assert len(lines) == 1
 
-            record = _ray_logs.parse_log_line(lines[0], searched_id=None)
+            record = _ray_logs.parse_log_line(lines[0])
             assert record is not None
 
             # Expect timezone-aware dates
@@ -141,7 +141,7 @@ class TestMakeLogger:
             lines = proc.stderr.splitlines()
             assert len(lines) == 1
 
-            record = _ray_logs.parse_log_line(lines[0], searched_id=None)
+            record = _ray_logs.parse_log_line(lines[0])
             assert record is not None
 
             # Expect timezone-aware dates

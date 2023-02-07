@@ -7,13 +7,14 @@ Ray connection, see tests/ray/test_integration.py instead.
 """
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from unittest.mock import Mock, PropertyMock
+from unittest.mock import Mock, PropertyMock, create_autospec
 
 import pytest
 
 from orquestra.sdk import exceptions
+from orquestra.sdk._base import _services
 from orquestra.sdk._base._config import RuntimeConfiguration, RuntimeName
-from orquestra.sdk._ray import _client, _dag
+from orquestra.sdk._ray import _client, _dag, _query_service, _ray_logs
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.workflow_run import State
 
@@ -199,46 +200,155 @@ class TestRayRuntime:
                                     └[FluentbitReader]
         """
 
-        @staticmethod
-        @pytest.mark.parametrize(
-            "runtime_attr_to_mock,fluentbit_running",
-            [
-                ("_ray_reader", False),
-                ("_fluentbit_reader", True),
-            ],
-        )
-        def test_get_full_logs(
-            runtime_attr_to_mock: str,
-            fluentbit_running: bool,
-            tmp_path: Path,
-            runtime_config: RuntimeConfiguration,
-        ):
-            """
-            Makes a spare ``RayRuntime`` object, mocks its attributes, and verifies
-            passing data between the reader and ``RayRuntime``.
-            """
-            # Given
-            rt = _dag.RayRuntime(
-                client=Mock(),
-                config=runtime_config,
-                project_dir=tmp_path,
-            )
-            rt._service_manager = Mock()
-            rt._service_manager.is_fluentbit_running.return_value = fluentbit_running
+        class TestGetWorkflowLogs:
+            @staticmethod
+            def test_direct_ray(
+                monkeypatch,
+                tmp_path: Path,
+                runtime_config: RuntimeConfiguration,
+            ):
+                """
+                Makes a spare ``RayRuntime`` object, mocks its attributes, and verifies
+                passing data between the reader and ``RayRuntime``.
+                """
+                # Given
+                rt = _dag.RayRuntime(
+                    client=Mock(),
+                    config=runtime_config,
+                    project_dir=tmp_path,
+                )
+                service_manager = create_autospec(_services.ServiceManager)
+                service_manager.is_fluentbit_running = Mock(return_value=False)
+                rt._service_manager = service_manager
 
-            reader_mock = Mock()
-            logs_dict = {"inv_id1": ["Hello, there!", "General Kenobi!"]}
-            reader_mock.get_full_logs.return_value = logs_dict
-            setattr(rt, runtime_attr_to_mock, reader_mock)
+                logs_dict = {"inv_id1": ["Hello, there!", "General Kenobi!"]}
+                get_workflow_logs = Mock(return_value=logs_dict)
+                monkeypatch.setattr(
+                    _ray_logs.DirectRayReader, "get_workflow_logs", get_workflow_logs
+                )
 
-            run_id = "wf_or_task_run_id"
+                wf_run_id = "wf.1"
 
-            # When
-            result_dict = rt.get_full_logs(run_id=run_id)
+                # When
+                result_dict = rt.get_workflow_logs(wf_run_id=wf_run_id)
 
-            # Then
-            assert result_dict == logs_dict
-            reader_mock.get_full_logs.assert_called_with(run_id)
+                # Then
+                assert result_dict == logs_dict
+                get_workflow_logs.assert_called_with(wf_run_id)
+
+            @staticmethod
+            def test_fluentbit(
+                monkeypatch,
+                tmp_path: Path,
+                runtime_config: RuntimeConfiguration,
+            ):
+                """
+                Makes a spare ``RayRuntime`` object, mocks its attributes, and verifies
+                passing data between the reader and ``RayRuntime``.
+                """
+                # Given
+                rt = _dag.RayRuntime(
+                    client=Mock(),
+                    config=runtime_config,
+                    project_dir=tmp_path,
+                )
+                service_manager = create_autospec(_services.ServiceManager)
+                service_manager.is_fluentbit_running = Mock(return_value=True)
+                rt._service_manager = service_manager
+
+                logs_dict = {"inv_id1": ["Hello, there!", "General Kenobi!"]}
+                get_workflow_logs = Mock(return_value=logs_dict)
+                monkeypatch.setattr(
+                    _query_service.FluentbitReader,
+                    "get_workflow_logs",
+                    get_workflow_logs,
+                )
+
+                wf_run_id = "wf.1"
+
+                # When
+                result_dict = rt.get_workflow_logs(wf_run_id=wf_run_id)
+
+                # Then
+                assert result_dict == logs_dict
+                get_workflow_logs.assert_called_with(wf_run_id)
+
+        class TestGetTaskLogs:
+            @staticmethod
+            def test_direct_ray(
+                monkeypatch,
+                tmp_path: Path,
+                runtime_config: RuntimeConfiguration,
+            ):
+                """
+                Makes a spare ``RayRuntime`` object, mocks its attributes, and verifies
+                passing data between the reader and ``RayRuntime``.
+                """
+                # Given
+                rt = _dag.RayRuntime(
+                    client=Mock(),
+                    config=runtime_config,
+                    project_dir=tmp_path,
+                )
+                service_manager = create_autospec(_services.ServiceManager)
+                service_manager.is_fluentbit_running = Mock(return_value=False)
+                rt._service_manager = service_manager
+
+                logs_list = ["hello", "there!"]
+                get_task_logs = Mock(return_value=logs_list)
+                monkeypatch.setattr(
+                    _ray_logs.DirectRayReader, "get_task_logs", get_task_logs
+                )
+
+                wf_run_id = "wf.1"
+                task_inv_id = "inv-2"
+
+                # When
+                result_list = rt.get_task_logs(
+                    wf_run_id=wf_run_id, task_inv_id=task_inv_id
+                )
+
+                # Then
+                assert result_list == logs_list
+                get_task_logs.assert_called_with(wf_run_id, task_inv_id)
+
+            @staticmethod
+            def test_fluentbit(
+                monkeypatch,
+                tmp_path: Path,
+                runtime_config: RuntimeConfiguration,
+            ):
+                """
+                Makes a spare ``RayRuntime`` object, mocks its attributes, and verifies
+                passing data between the reader and ``RayRuntime``.
+                """
+                # Given
+                rt = _dag.RayRuntime(
+                    client=Mock(),
+                    config=runtime_config,
+                    project_dir=tmp_path,
+                )
+                service_manager = create_autospec(_services.ServiceManager)
+                service_manager.is_fluentbit_running = Mock(return_value=True)
+                rt._service_manager = service_manager
+
+                logs_list = ["General", "Kenobi!"]
+                get_task_logs = Mock(return_value=logs_list)
+                monkeypatch.setattr(
+                    _query_service.FluentbitReader, "get_task_logs", get_task_logs
+                )
+
+                wf_run_id = "wf.1"
+                task_inv_id = "inv-2"
+
+                # When
+                result_list = rt.get_task_logs(
+                    wf_run_id=wf_run_id, task_inv_id=task_inv_id
+                )
+
+                # Then
+                assert result_list == logs_list
+                get_task_logs.assert_called_with(wf_run_id, task_inv_id)
 
     class TestListWorkflowRuns:
         def test_happy_path(self, client, runtime_config, monkeypatch, tmp_path):

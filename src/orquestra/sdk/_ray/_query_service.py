@@ -11,6 +11,7 @@ import typing as t
 import pydantic
 
 from orquestra.sdk.schema import workflow_run
+from orquestra.sdk.schema.ir import TaskInvocationId
 
 
 class LogMessage(pydantic.BaseModel):
@@ -103,11 +104,12 @@ class FluentbitReader:
         """
         self._logs_dir = logs_dir
 
-    def get_full_logs(self, run_id: t.Optional[str] = None) -> t.Dict[str, t.List[str]]:
-        if run_id is None:
-            raise ValueError(
-                "Reading logs for all runs isn't supported for FluentBit yet"
-            )
+    def get_workflow_logs(self, wf_run_id: workflow_run.WorkflowRunId):
+        # TODO: https://zapatacomputing.atlassian.net/browse/ORQSDK-755
+        raise NotImplementedError()
 
-        service = LogQueryService(run_id=run_id, logs_dir=self._logs_dir)
-        return service.get_full_logs()
+    def get_task_logs(
+        self, wf_run_id: workflow_run.WorkflowRunId, task_inv_id: TaskInvocationId
+    ):
+        # TODO: https://zapatacomputing.atlassian.net/browse/ORQSDK-755
+        raise NotImplementedError()

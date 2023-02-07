@@ -958,17 +958,15 @@ class TestCLIAgainstRuntimeMock:
                 ),
             )
 
-        @pytest.mark.parametrize("query_by_run_id", [True, False])
         def test_historical(
             self,
             tmp_path,
             monkeypatch,
             capsys,
             mocked_nonsense_config,
-            query_by_run_id: bool,
         ):
             """
-            Validates that when RayRuntime.get_full_logs() returns something, it's
+            Validates that when RayRuntime.get_workflow_logs() returns something, it's
             returned in the response.
             """
             # Given
@@ -977,20 +975,13 @@ class TestCLIAgainstRuntimeMock:
 
             runtime_mock = Mock()
 
-            def _mock_get_full_logs(run_id):
-                if run_id in {None, wf_run_id}:
-                    return {wf_run_id: [tell_tale]}
-                else:
-                    return {}
-
-            runtime_mock.get_full_logs = _mock_get_full_logs
+            runtime_mock.get_workflow_logs.return_value = {"inv1": [tell_tale]}
             _setup_runtime_mock(monkeypatch, runtime_mock)
 
             # When
-            query_id = wf_run_id if query_by_run_id else None
             response = action.orq_get_logs(
                 argparse.Namespace(
-                    workflow_or_task_run_id=query_id,
+                    workflow_or_task_run_id=wf_run_id,
                     follow=False,
                     output_format=ResponseFormat.PLAIN_TEXT,
                     directory=tmp_path,

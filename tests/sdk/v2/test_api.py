@@ -175,7 +175,7 @@ class TestWorkflowRun:
         wf_def_model = sample_wf_def.model
         task_invs = list(wf_def_model.task_invocations.values())
         # Get logs, the runtime interface returns invocation IDs
-        runtime.get_full_logs.return_value = {
+        runtime.get_workflow_logs.return_value = {
             task_invs[0].id: ["woohoo!\n"],
             task_invs[1].id: ["another\n", "line\n"],
             # This task invocation was executed, but it produced no logs.
@@ -807,14 +807,12 @@ class TestTaskRun:
             _api.TaskRun.get_logs() should return a list of log lines.
             """
             # Given
-            mock_runtime.get_full_logs.return_value = {
-                task_runs[0].task_invocation_id: ["woohoo!"],
-                task_runs[1].task_invocation_id: ["another", "line"],
+            mock_runtime.get_task_logs.side_effect = [
+                ["woohoo!"],
+                ["another", "line"],
                 # This task invocation was executed, but it produced no logs.
-                task_runs[2].task_invocation_id: [],
-                # There's also 4th task invocation in the workflow def, it wasn't
-                # executed yet, so we don't return it.
-            }
+                [],
+            ]
 
             # When
             log_lists = [task_run.get_logs() for task_run in task_runs]

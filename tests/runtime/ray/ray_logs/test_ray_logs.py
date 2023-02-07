@@ -4,13 +4,13 @@
 """
 Unit tests for RayLogs.
 """
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
 from orquestra.sdk._ray import _ray_logs
-from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
 DATA_PATH = Path(__file__).parent / "data"
 
@@ -57,12 +57,11 @@ class TestParseLogLine:
     def test_parsing_real_files(log_file: Path, expected_parsed):
         # Given
         input_lines = log_file.read_bytes().splitlines(keepends=True)
-        wf_run_id: WorkflowRunId = "wf.orquestra_basic_demo.3fcba90"
 
         # When
         parsed = []
         for input_line in input_lines:
-            parsed_log = _ray_logs.parse_log_line(input_line, searched_id=wf_run_id)
+            parsed_log = _ray_logs.parse_log_line(input_line)
             if parsed_log is not None:
                 parsed.append(parsed_log)
 
@@ -75,6 +74,7 @@ class TestParseLogLine:
         [
             pytest.param("", None, id="empty_line"),
             pytest.param("{}", None, id="empty_json"),
+            pytest.param("20.37", None, id="json_scalar"),
             pytest.param("{{}}", None, id="malformed_json"),
             pytest.param(
                 "2023-01-31 12:44:48,991	INFO workflow_executor.py:86 -- Workflow job [id=wf.orquestra_basic_demo.48c3618] started.",  # noqa: E501
@@ -82,7 +82,20 @@ class TestParseLogLine:
                 id="3rd_party_log_with_queried_id",
             ),
             pytest.param(
-                '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": "wf", "task_run_id": "wf@inv"}',  # noqa: E501
+                '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": "wf", "task_run_id": "wf@inv", "task_inv_id": "inv"}',  # noqa: E501
+                _ray_logs.WFLog(
+                    timestamp=SAMPLE_TIMESTAMP,
+                    level="INFO",
+                    filename="_log_adapter.py:138",
+                    message="hello there!",
+                    wf_run_id="wf",
+                    task_inv_id="inv",
+                    task_run_id="wf@inv",
+                ),
+                id="valid_log_all_ids",
+            ),
+            pytest.param(
+                '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": "wf", "task_run_id": "wf@inv", "task_inv_id": null}',  # noqa: E501
                 _ray_logs.WFLog(
                     timestamp=SAMPLE_TIMESTAMP,
                     level="INFO",
@@ -90,75 +103,242 @@ class TestParseLogLine:
                     message="hello there!",
                     wf_run_id="wf",
                     task_run_id="wf@inv",
+                    task_inv_id=None,
                 ),
-                id="valid_log_both_ids",
+                id="valid_log_no_inv",
             ),
             pytest.param(
-                '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": null, "task_run_id": null}',  # noqa: E501
+                '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": "wf.1", "task_run_id": null, "task_inv_id": null}',  # noqa: E501
+                _ray_logs.WFLog(
+                    timestamp=SAMPLE_TIMESTAMP,
+                    level="INFO",
+                    filename="_log_adapter.py:138",
+                    message="hello there!",
+                    wf_run_id="wf.1",
+                    task_inv_id=None,
+                    task_run_id=None,
+                ),
+                id="valid_log_only_wf_run_id",
+            ),
+            pytest.param(
+                '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": null, "task_run_id": null, "task_inv_id": null}',  # noqa: E501
                 _ray_logs.WFLog(
                     timestamp=SAMPLE_TIMESTAMP,
                     level="INFO",
                     filename="_log_adapter.py:138",
                     message="hello there!",
                     wf_run_id=None,
-                    task_run_id=None,
-                ),
-                id="no_run_ids",
-            ),
-        ],
-    )
-    def test_no_filter(line: str, expected):
-        # Given
-        raw_line = line.encode()
-
-        # When
-        parsed = _ray_logs.parse_log_line(raw_line, searched_id=None)
-
-        # Then
-        assert parsed == expected
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "line,expected",
-        [
-            pytest.param(
-                '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": "wf", "task_run_id": "wf@inv"}',  # noqa: E501
-                _ray_logs.WFLog(
-                    timestamp=SAMPLE_TIMESTAMP,
-                    level="INFO",
-                    filename="_log_adapter.py:138",
-                    message="hello there!",
-                    wf_run_id="wf",
-                    task_run_id="wf@inv",
-                ),
-                id="both_ids",
-            ),
-            pytest.param(
-                '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": "wf", "task_inv_id": null, "task_run_id": null}',  # noqa: E501
-                _ray_logs.WFLog(
-                    timestamp=SAMPLE_TIMESTAMP,
-                    level="INFO",
-                    filename="_log_adapter.py:138",
-                    message="hello there!",
-                    wf_run_id="wf",
                     task_inv_id=None,
                     task_run_id=None,
                 ),
-                id="only_wf_run_id",
+                id="valid_log_all_null_ids",
             ),
             pytest.param(
-                '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:131", "message": "hello there!", "wf_run_id": "other", "task_inv_id": "inv", "task_run_id": "wf@inv"}',  # noqa: E501
-                None,
-                id="different_wf_run_id",
+                '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!"}',  # noqa: E501
+                _ray_logs.WFLog(
+                    timestamp=SAMPLE_TIMESTAMP,
+                    level="INFO",
+                    filename="_log_adapter.py:138",
+                    message="hello there!",
+                    wf_run_id=None,
+                    task_inv_id=None,
+                    task_run_id=None,
+                ),
+                id="valid_log_no_id_fields",
             ),
         ],
     )
-    def test_search_by_wf_run_id(line: str, expected):
+    def test_examples(line: str, expected):
         # Given
         raw_line = line.encode()
 
         # When
-        parsed = _ray_logs.parse_log_line(raw_line, searched_id="wf")
+        parsed = _ray_logs.parse_log_line(raw_line)
 
         # Then
         assert parsed == expected
+
+
+class TestDirectRayReader:
+    class TestGetTaskLogs:
+        """
+        Test boundary::
+            [_get_parsed_logs()]->[get_task_logs()]
+        """
+
+        @staticmethod
+        @pytest.mark.parametrize(
+            "wf_run_id,task_inv_id,parsed_logs,expected",
+            [
+                pytest.param("wf.1", "inv1", [], [], id="no_parsed_logs"),
+                pytest.param(
+                    "wf.1",
+                    "inv1",
+                    [
+                        _ray_logs.WFLog(
+                            timestamp=SAMPLE_TIMESTAMP,
+                            level="INFO",
+                            filename="_log_adapter.py:138",
+                            message="hello there!",
+                            wf_run_id="wf.2",
+                            task_inv_id="inv1",
+                            task_run_id="wf.2@inv1",
+                        ),
+                    ],
+                    [],
+                    id="invalid_wf_run",
+                ),
+                pytest.param(
+                    "wf.1",
+                    "inv1",
+                    [
+                        _ray_logs.WFLog(
+                            timestamp=SAMPLE_TIMESTAMP,
+                            level="INFO",
+                            filename="_log_adapter.py:138",
+                            message="hello there!",
+                            wf_run_id="wf.2",
+                            task_inv_id="inv2",
+                            task_run_id="wf.1@inv2",
+                        ),
+                    ],
+                    [],
+                    id="invalid_task_inv",
+                ),
+                pytest.param(
+                    "wf.1",
+                    "inv1",
+                    [
+                        _ray_logs.WFLog(
+                            timestamp=SAMPLE_TIMESTAMP,
+                            level="INFO",
+                            filename="_log_adapter.py:138",
+                            message="hello there!",
+                            wf_run_id="wf.1",
+                            task_inv_id="inv1",
+                            task_run_id="wf.1@inv1",
+                        ),
+                    ],
+                    [
+                        '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": "wf.1", "task_inv_id": "inv1", "task_run_id": "wf.1@inv1"}',  # noqa: E501
+                    ],
+                    id="matching_ids",
+                ),
+            ],
+        )
+        def test_examples(monkeypatch, wf_run_id, task_inv_id, parsed_logs, expected):
+            # Given
+            ray_temp = Path("shouldnt/matter")
+            reader = _ray_logs.DirectRayReader(ray_temp=ray_temp)
+            monkeypatch.setattr(
+                reader, "_get_parsed_logs", Mock(return_value=parsed_logs)
+            )
+
+            # When
+            result_logs = reader.get_task_logs(
+                wf_run_id=wf_run_id, task_inv_id=task_inv_id
+            )
+
+            # Then
+            assert result_logs == expected
+
+    class TestGetWorkflowLogs:
+        """
+        Test boundary::
+            [_get_parsed_logs()]->[get_workflow_logs()]
+        """
+
+        @staticmethod
+        @pytest.mark.parametrize(
+            "wf_run_id,parsed_logs,expected",
+            [
+                pytest.param("wf.1", [], {}, id="no_parsed_logs"),
+                pytest.param(
+                    "wf.1",
+                    [
+                        _ray_logs.WFLog(
+                            timestamp=SAMPLE_TIMESTAMP,
+                            level="INFO",
+                            filename="_log_adapter.py:138",
+                            message="hello there!",
+                            wf_run_id="wf.1",
+                            task_inv_id="inv1",
+                            task_run_id="wf.1@inv1",
+                        ),
+                        _ray_logs.WFLog(
+                            timestamp=SAMPLE_TIMESTAMP,
+                            level="INFO",
+                            filename="_log_adapter.py:138",
+                            message="general kenobi!",
+                            wf_run_id="wf.1",
+                            task_inv_id="inv1",
+                            task_run_id="wf.1@inv1",
+                        ),
+                        _ray_logs.WFLog(
+                            timestamp=SAMPLE_TIMESTAMP,
+                            level="INFO",
+                            filename="_log_adapter.py:138",
+                            message="and another one",
+                            wf_run_id="wf.1",
+                            task_inv_id="inv2",
+                            task_run_id="wf.1@inv2",
+                        ),
+                    ],
+                    {
+                        "inv1": [
+                            '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": "wf.1", "task_inv_id": "inv1", "task_run_id": "wf.1@inv1"}',  # noqa: E501
+                            '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "general kenobi!", "wf_run_id": "wf.1", "task_inv_id": "inv1", "task_run_id": "wf.1@inv1"}',  # noqa: E501
+                        ],
+                        "inv2": [
+                            '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "and another one", "wf_run_id": "wf.1", "task_inv_id": "inv2", "task_run_id": "wf.1@inv2"}',  # noqa: E501
+                        ],
+                    },
+                    id="matching_wf_run",
+                ),
+                pytest.param(
+                    "wf.1",
+                    [
+                        _ray_logs.WFLog(
+                            timestamp=SAMPLE_TIMESTAMP,
+                            level="INFO",
+                            filename="_log_adapter.py:138",
+                            message="hello there!",
+                            wf_run_id="wf.1",
+                            task_inv_id=None,
+                            task_run_id=None,
+                        )
+                    ],
+                    {},
+                    id="no_task_ids",
+                ),
+                pytest.param(
+                    "wf.1",
+                    [
+                        _ray_logs.WFLog(
+                            timestamp=SAMPLE_TIMESTAMP,
+                            level="INFO",
+                            filename="_log_adapter.py:138",
+                            message="hello there!",
+                            wf_run_id="wf.2",
+                            task_inv_id="inv2",
+                            task_run_id="wf.2@inv2",
+                        )
+                    ],
+                    {},
+                    id="other_wf_run",
+                ),
+            ],
+        )
+        def test_examples(monkeypatch, wf_run_id, parsed_logs, expected):
+            # Given
+            ray_temp = Path("shouldnt/matter")
+            reader = _ray_logs.DirectRayReader(ray_temp=ray_temp)
+            monkeypatch.setattr(
+                reader, "_get_parsed_logs", Mock(return_value=parsed_logs)
+            )
+
+            # When
+            result_logs = reader.get_workflow_logs(wf_run_id=wf_run_id)
+
+            # Then
+            assert result_logs == expected

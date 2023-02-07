@@ -299,10 +299,8 @@ class CERuntime(RuntimeInterface):
             raise exceptions.UnauthorizedError(f"{e}") from e
         return runs.contents
 
-    def get_full_logs(
-        self, run_id: Optional[Union[WorkflowRunId, TaskRunId]] = None
-    ) -> Dict[TaskInvocationId, List[str]]:
-        """
-        See LogReader.get_full_logs.
-        """
+    def get_workflow_logs(self, wf_run_id: WorkflowRunId):
+        raise NotImplementedError()
+
+    def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
         raise NotImplementedError()
