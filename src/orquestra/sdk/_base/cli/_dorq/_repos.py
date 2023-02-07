@@ -4,7 +4,6 @@
 """
 Repositories that encapsulate data access used by dorq commands.
 """
-import asyncio
 import importlib
 import os
 import sys
@@ -14,7 +13,6 @@ import warnings
 from contextlib import contextmanager
 
 import requests
-from aiohttp import web
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
@@ -507,49 +505,3 @@ class WorkflowDefRepo:
         except exceptions.WorkflowSyntaxError:
             # Explicit re-raise
             raise
-
-
-class TokenRepo:
-    """A web server for automatically logging in a user"""
-
-    def __init__(
-        self,
-        runtime_repo: RuntimeRepo,
-        presenter: _presenters.LoginPresenter,
-        login_server: t.Optional[LoginServer] = None,
-    ):
-        self._runtime_repo = runtime_repo
-        self._presenter = presenter
-        self._login_server: LoginServer = login_server or LoginServer(
-            runtime_repo, presenter
-        )
-
-    def get_token(
-        self,
-        url: str,
-        is_ce: bool,
-        timeout: int = 60,
-        listen_host: str = "127.0.0.1",
-    ) -> t.Tuple[t.Optional[str], str]:
-        """
-        Runs the web server.
-
-        We have to start the web server first to get the port assigned to us by the
-        operating system. We pass this port to the login URL to enable automatic logins.
-
-        If we can't open a browser, we quit without receiving a token.
-        """
-
-        try:
-            asyncio.run(self._login_server.run(url, is_ce, listen_host, timeout))
-        except exceptions.LoginURLUnavailableError:
-            raise
-        except web.GracefulExit:
-            # Catch the web server gracefully exiting, we have to do this because
-            # GracefulExit inherits from SystemExit.
-            pass
-
-        # If we got here, there was a valid login_url
-        assert self._login_server.login_url is not None
-
-        return self._login_server.token, self._login_server.login_url

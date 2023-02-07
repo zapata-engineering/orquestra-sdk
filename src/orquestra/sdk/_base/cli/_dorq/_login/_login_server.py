@@ -1,17 +1,10 @@
-import asyncio
 from typing import Optional
 
 from aiohttp import web
 
 
 class LoginServer:
-    def __init__(
-        self,
-        runtime_repo,
-        presenter,
-    ):
-        self._runtime_repo = runtime_repo
-        self._presenter = presenter
+    def __init__(self):
         self._token: Optional[str] = None
         self._login_url: Optional[str] = None
 
@@ -19,35 +12,18 @@ class LoginServer:
     def token(self):
         return self._token
 
-    @property
-    def login_url(self):
-        return self._login_url
-
-    async def run(
-        self,
-        cluster_url: str,
-        is_ce: bool,
-        listen_host: str,
-        timeout: int,
-    ):
+    async def start(self, cluster_url: str, listen_host: str = "127.0.0.1") -> int:
         app = web.Application()
         app["cluster_url"] = cluster_url
         app.add_routes([web.get("/state", self._state_handler)])
-        runner = web.AppRunner(app)
-        await runner.setup()
-        try:
-            site = web.TCPSite(runner, listen_host, 0)
-            await site.start()
-            self._login_url = self._runtime_repo.get_login_url(
-                cluster_url, is_ce, runner.addresses[0][1]
-            )
-            browser_opened = self._presenter.open_url_in_browser(self._login_url)
-            # If we managed to open a browser, keep the server open
-            if browser_opened:
-                self._presenter.print_login_help()
-                await asyncio.sleep(timeout)
-        finally:
-            await runner.cleanup()
+        self._runner = web.AppRunner(app)
+        await self._runner.setup()
+        site = web.TCPSite(self._runner, listen_host, 0)
+        await site.start()
+        return self._runner.addresses[0][1]
+
+    async def cleanup(self):
+        await self._runner.cleanup()
 
     async def _send_response(self, request: web.Request, status_code: int):
         """Sends an empty response with a specified status code with CORS"""
