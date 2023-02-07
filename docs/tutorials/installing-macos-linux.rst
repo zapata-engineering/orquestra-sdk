@@ -31,6 +31,7 @@ For installation instruction for Windows, see: :doc:`Installing on Windows <inst
 
   To verify your configuration is correct run ``pip config list -v``. That will print the configuration being used, and the source configuration files it came from.
 
+
 Install Orquestra Workflow SDK
 ==============================
 
@@ -48,3 +49,22 @@ Install the Orquestra Workflow SDK by running:
         For Zapata employees, your Orquestra password might be different from the Okta single sign-on password you use for corporate applications.
 
 This will install ``orquestra-sdk`` and all of its dependencies. Note that ``orquestra-sdk`` also includes the :doc:`Orquestra command-line interface <../quickref/cli-reference>`.
+
+
+Apple Silicon
+=============
+
+When running on M1-like CPUs you might see errors like::
+
+    ImportError: Failed to import grpc on Apple Silicon. On Apple Silicon machines, try
+    `pip uninstall grpcio; conda install grpcio`. Check out https://docs.ray.io/en/master/ray-overview/installation.html#m1-mac-apple-silicon-support
+    for more details.
+
+It's related to one of Orquestra Workflow SDK's transitive dependencies.
+Contrary to the error's message, combining ``pip`` and ``conda`` is not advised.
+Instead, you can work around the error with the following:
+
+
+.. code:: bash
+
+    pip uninstall grpcio; pip install grpcio==1.43.0 --no-binary :all:
