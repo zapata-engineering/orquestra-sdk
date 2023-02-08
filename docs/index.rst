@@ -35,7 +35,6 @@ Quick Reference
 
    tutorials/index
    guides/index
-   recipes/index
    quickref/index
 
 
