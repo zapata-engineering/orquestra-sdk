@@ -28,7 +28,7 @@ def get(
     name: str,
     *,
     config_name: t.Optional[str] = None,
-) -> t.Union[str, _dsl.Secret]:
+) -> str:
     """
     Retrieves secret value from the remote vault.
 
@@ -47,7 +47,7 @@ def get(
             remote vault failed.
     """
     if _exec_ctx.global_context == _exec_ctx.ExecContext.WORKFLOW_BUILD:
-        return _dsl.Secret(name=name, config_name=config_name)
+        return t.cast(str, _dsl.Secret(name=name, config_name=config_name))
     provider = _infer_secrets_provider()
     client = provider.make_client(
         config_name=config_name,
