@@ -282,6 +282,8 @@ class SecretNode(BaseModel):
     secret_name: str
 
     # Secret config
+    # This is only used locally, and we expect this to be None (or ignored) on remote
+    # runtimes.
     secret_config: t.Optional[str] = None
 
 

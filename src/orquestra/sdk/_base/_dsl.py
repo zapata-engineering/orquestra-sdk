@@ -78,6 +78,10 @@ Argument = Union[Constant, "ArtifactFuture", "Secret"]
 
 class Secret(NamedTuple):
     name: str
+    # Config name is only used for the local runtimes where we can't infer the location
+    # where we get a secret's value from.
+    # This matches the behaviour of `sdk.secrets.get` where the config name is used to
+    # get a secret when running locally.
     config_name: Optional[str] = None
 
 
