@@ -494,22 +494,22 @@ class TestRayRuntimeMethods:
             _example_wfs.multioutput_wf,
             ("Emiliano Zapata", "Zapata computing"),
             {
-                "invocation-0-task-concat": ("Emiliano Zapata",),
-                "invocation-1-task-capitalize": ("Zapata",),
-                "invocation-2-task-capitalize": ("Zapata computing",),
-                "invocation-3-task-make-company-name": ("zapata computing",),
+                "invocation-0-task-capitalize": ("Zapata computing",),
+                "invocation-1-task-make-company-name": ("zapata computing",),
+                "invocation-2-task-concat": ("Emiliano Zapata",),
+                "invocation-3-task-capitalize": ("Zapata",),
             },
         ),
         (
             _example_wfs.multioutput_task_wf,
             ("Zapata", "Computing", "Computing", ("Zapata", "Computing")),
             {
-                "invocation-0-task-multioutput-task": ("Zapata", "Computing"),
                 # The outputs for invocation 1 and 2 should be just a single tuple, not
                 # tuple-in-tuple. TODO: change it when working on
                 # https://zapatacomputing.atlassian.net/browse/ORQSDK-695.
+                "invocation-0-task-multioutput-task": (("Zapata", "Computing"),),
                 "invocation-1-task-multioutput-task": (("Zapata", "Computing"),),
-                "invocation-2-task-multioutput-task": (("Zapata", "Computing"),),
+                "invocation-2-task-multioutput-task": ("Zapata", "Computing"),
             },
         ),
         (
@@ -525,10 +525,10 @@ class TestRayRuntimeMethods:
             _example_wfs.wf_using_inline_imports,
             ("Emiliano Zapata", "Zapata computing"),
             {
-                "invocation-0-task-concat": ("Emiliano Zapata",),
-                "invocation-1-task-capitalize-inline": ("Zapata",),
-                "invocation-2-task-capitalize-inline": ("Zapata computing",),
-                "invocation-3-task-make-company-name": ("zapata computing",),
+                "invocation-0-task-capitalize-inline": ("Zapata computing",),
+                "invocation-1-task-make-company-name": ("zapata computing",),
+                "invocation-2-task-concat": ("Emiliano Zapata",),
+                "invocation-3-task-capitalize-inline": ("Zapata",),
             },
         ),
     ],

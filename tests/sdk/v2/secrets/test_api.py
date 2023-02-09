@@ -77,6 +77,18 @@ class TestSelectsAppropriateProvider:
 
     class TestGet:
         @staticmethod
+        def test_returns_future_in_workflow_ctx(dummy_config_name, secret_name):
+            """
+            A special context for workflow builds. This does not use the underlying
+            config auth provider.
+            """
+            with _exec_ctx.workflow_build():
+                secret = sdk.secrets.get(secret_name, config_name=dummy_config_name)
+            assert isinstance(secret, sdk.Secret)
+            assert secret.name == secret_name
+            assert secret.config_name == dummy_config_name
+
+        @staticmethod
         def test_default_ctx(
             ConfigProvider,
             PassportProvider,

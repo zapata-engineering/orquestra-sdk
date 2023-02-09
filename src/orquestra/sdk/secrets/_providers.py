@@ -13,7 +13,7 @@ from .._base import _config
 from ._client import SecretsClient
 
 
-class SecretsProvider(t.Protocol):
+class SecretsAuthProvider(t.Protocol):
     """
     Builds a ``SecretsClient`` object with a proper authorization.
     Implementations of this protocol decide where to get the auth from.
@@ -34,7 +34,7 @@ class ConfigProvider:
     """
     Gets auth creds from a local config file.
 
-    Implements SecretsProvider.
+    Implements SecretsAuthProvider.
     """
 
     def make_client(
@@ -53,7 +53,7 @@ class PassportProvider:
       by ORQUESTRA_PASSPORT_FILE env var.
     * The URI is hardcoded to a self-reference.
 
-    Implements SecretsProvider. Ignores the ``config_name`` and ``config_save_path``
+    Implements SecretsAuthProvider. Ignores the ``config_name`` and ``config_save_path``
     arguments.
     """
 
