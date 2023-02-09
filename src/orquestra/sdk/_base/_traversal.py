@@ -95,9 +95,7 @@ class GraphTraversal:
         constant_counter = 0
         for n in _iter_nodes(root_futures):
             if isinstance(n, _dsl.ArtifactFuture):
-                self._artifacts[_make_key(n)] = _make_artifact_node(
-                    artifact_counter, n
-                )
+                self._artifacts[_make_key(n)] = _make_artifact_node(artifact_counter, n)
                 artifact_counter += 1
                 # Map the invocation to the future.
                 # Note: Each unique future has one invocation, but each invocation
@@ -112,9 +110,7 @@ class GraphTraversal:
                 )
                 secret_counter += 1
             else:
-                self._constants[_make_key(n)] = _make_constant_node(
-                    constant_counter, n
-                )
+                self._constants[_make_key(n)] = _make_constant_node(constant_counter, n)
                 constant_counter += 1
 
     @property
