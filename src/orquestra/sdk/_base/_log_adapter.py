@@ -107,7 +107,9 @@ class ISOFormatter(logging.Formatter):
 
 
 def _make_logger(
-    wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId, task_run_id: TaskRunId
+    wf_run_id: t.Optional[WorkflowRunId],
+    task_inv_id: t.Optional[TaskInvocationId],
+    task_run_id: t.Optional[TaskRunId],
 ):
     # Note: there are two loggers: "nested logger" and "main logger".
     #
@@ -162,12 +164,8 @@ def workflow_logger() -> logging.LoggerAdapter:
         # Workflow is running in the Orquestra QE environment
         wf_run_id, task_inv_id, task_run_id = get_argo_backend_ids()
     else:
-        try:
-            # Workflow may be running in the Ray environment
-            wf_run_id, task_inv_id, task_run_id = get_ray_backend_ids()
-        except (ModuleNotFoundError, AssertionError):
-            # Ray is not installed or not in a running Ray workflow
-            wf_run_id = task_run_id = None
+        # We assume the workflow is running on Ray
+        wf_run_id, task_inv_id, task_run_id = get_ray_backend_ids()
 
     logger = _make_logger(
         wf_run_id=wf_run_id, task_inv_id=task_inv_id, task_run_id=task_run_id
