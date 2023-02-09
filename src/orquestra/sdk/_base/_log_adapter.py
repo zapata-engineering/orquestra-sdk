@@ -159,7 +159,9 @@ def workflow_logger() -> logging.LoggerAdapter:
     Each call of this function creates a new object. It shouldn't be retained across
     task runs.
     """
-
+    wf_run_id: t.Optional[WorkflowRunId]
+    task_inv_id: t.Optional[TaskInvocationId]
+    task_run_id: t.Optional[TaskRunId]
     if is_argo_backend():
         # Workflow is running in the Orquestra QE environment
         wf_run_id, task_inv_id, task_run_id = get_argo_backend_ids()
