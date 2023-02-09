@@ -285,14 +285,14 @@ class TestArifactFutureMethodsCalls:
             )
             == 1
         )
-        assert [*wf_model.task_invocations.values()][0].resources is None
+        assert [*wf_model.task_invocations.values()][1].resources is None
         assert [*wf_model.task_invocations.values()][
-            1
+            0
         ].resources.dict() == resources_no_default
 
-        assert [*wf_model.task_invocations.values()][0].custom_image is DEFAULT_IMAGE
+        assert [*wf_model.task_invocations.values()][1].custom_image is DEFAULT_IMAGE
         assert [*wf_model.task_invocations.values()][
-            1
+            0
         ].custom_image == custom_image_no_default["custom_image"]
 
     @staticmethod
@@ -314,14 +314,14 @@ class TestArifactFutureMethodsCalls:
             )
             == 1
         )
-        assert [*wf_model.task_invocations.values()][0].resources is None
+        assert [*wf_model.task_invocations.values()][1].resources is None
         assert [*wf_model.task_invocations.values()][
-            1
+            0
         ].resources.dict() == resources_no_default
 
-        assert [*wf_model.task_invocations.values()][0].custom_image == [
+        assert [*wf_model.task_invocations.values()][1].custom_image == [
             *wf_model.task_invocations.values()
-        ][1].custom_image
+        ][0].custom_image
 
     @staticmethod
     def test_artifact_with_custom_image_workflow_model():
@@ -342,13 +342,13 @@ class TestArifactFutureMethodsCalls:
             )
             == 1
         )
-        assert [*wf_model.task_invocations.values()][0].resources == [
+        assert [*wf_model.task_invocations.values()][1].resources == [
             *wf_model.task_invocations.values()
-        ][1].resources
+        ][0].resources
 
-        assert [*wf_model.task_invocations.values()][0].custom_image == DEFAULT_IMAGE
+        assert [*wf_model.task_invocations.values()][1].custom_image == DEFAULT_IMAGE
         assert [*wf_model.task_invocations.values()][
-            1
+            0
         ].custom_image == custom_image_no_default["custom_image"]
 
     @staticmethod
@@ -370,12 +370,13 @@ class TestArifactFutureMethodsCalls:
             )
             == 1
         )
-        assert [*wf_model.task_invocations.values()][0].resources is None
+        print([*wf_model.task_invocations.values()])
+        assert [*wf_model.task_invocations.values()][1].resources is None
         assert [*wf_model.task_invocations.values()][
-            1
+            0
         ].resources.dict() == resources_no_default
 
-        assert [*wf_model.task_invocations.values()][0].custom_image is DEFAULT_IMAGE
+        assert [*wf_model.task_invocations.values()][1].custom_image is DEFAULT_IMAGE
         assert [*wf_model.task_invocations.values()][
-            1
+            0
         ].custom_image == custom_image_no_default["custom_image"]

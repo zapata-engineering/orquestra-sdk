@@ -73,7 +73,12 @@ class UnknownPlaceholderInCustomNameWarning(Warning):
 # ----- data structures -----
 
 Constant = Any
-Argument = Union[Constant, "ArtifactFuture"]
+Argument = Union[Constant, "ArtifactFuture", "Secret"]
+
+
+class Secret(NamedTuple):
+    name: str
+    config_name: Optional[str] = None
 
 
 class GitImport(NamedTuple):

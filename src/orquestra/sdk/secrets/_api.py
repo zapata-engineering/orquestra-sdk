@@ -8,11 +8,11 @@ import typing as t
 from pathlib import Path
 
 from .. import exceptions as sdk_exc
-from .._base import _exec_ctx
+from .._base import _dsl, _exec_ctx
 from . import _exceptions, _models, _providers
 
 
-def _infer_secrets_provider() -> _providers.SecretsProvider:
+def _infer_secrets_provider() -> _providers.SecretsAuthProvider:
     ctx = _exec_ctx.global_context
     if ctx == _exec_ctx.ExecContext.LOCAL_DIRECT:
         return _providers.ConfigProvider()
@@ -28,7 +28,7 @@ def get(
     name: str,
     *,
     config_name: t.Optional[str] = None,
-) -> str:
+) -> t.Union[str, _dsl.Secret]:
     """
     Retrieves secret value from the remote vault.
 
@@ -46,6 +46,8 @@ def get(
         orquestra.sdk.exceptions.UnauthorizedError: when the authorization with the
             remote vault failed.
     """
+    if _exec_ctx.global_context == _exec_ctx.ExecContext.WORKFLOW_BUILD:
+        return _dsl.Secret(name=name, config_name=config_name)
     provider = _infer_secrets_provider()
     client = provider.make_client(
         config_name=config_name,

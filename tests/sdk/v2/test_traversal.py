@@ -15,7 +15,7 @@ import git
 import pytest
 
 import orquestra.sdk.schema.ir as model
-from orquestra.sdk import exceptions
+from orquestra.sdk import exceptions, secrets
 from orquestra.sdk._base import _dsl, _traversal, _workflow, serde
 
 from .data.complex_serialization.workflow_defs import (
@@ -353,6 +353,12 @@ def wf_with_inline():
 @_workflow.workflow
 def dupe_import_wf():
     return duplicate_deps()
+
+
+@_workflow.workflow
+def workflow_with_secret():
+    secret = secrets.get("my_secret")
+    return simple_task(secret)
 
 
 def _id_from_wf(param):
@@ -1154,3 +1160,10 @@ def test_find_obj_in_nested_fields(root, needle_type, expected):
         return isinstance(o, needle_type)
 
     assert _traversal._find_nested_objs_in_fields(root, _predicate) == expected
+
+
+def test_workflow_with_secret():
+    wf = workflow_with_secret().model
+    assert len(wf.secret_nodes) == 1
+    assert len(wf.constant_nodes) == 0
+    assert wf.secret_nodes["secret-0"].secret_name == "my_secret"

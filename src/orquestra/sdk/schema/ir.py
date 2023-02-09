@@ -195,6 +195,7 @@ TaskInvocationId = str
 TaskNodeId = str
 ArtifactNodeId = str
 ConstantNodeId = str
+SecretNodeId = str
 
 
 class ArtifactNode(BaseModel):
@@ -269,7 +270,22 @@ class ConstantNodePickle(BaseModel):
 ConstantNode = t.Union[ConstantNodeJSON, ConstantNodePickle]
 
 
-ArgumentId = t.Union[ArtifactNodeId, ConstantNodeId]
+class SecretNode(BaseModel):
+    """
+    A reference to a secret stored in an external secret/config service.
+    """
+
+    # Workflow-scope unique ID used to refer from task invocations
+    id: SecretNodeId
+
+    # Serialized value
+    secret_name: str
+
+    # Secret config
+    secret_config: t.Optional[str] = None
+
+
+ArgumentId = t.Union[ArtifactNodeId, ConstantNodeId, SecretNodeId]
 
 
 class TaskInvocation(BaseModel):
@@ -313,6 +329,7 @@ class WorkflowDef(BaseModel):
     tasks: t.Dict[TaskDefId, TaskDef]
     artifact_nodes: t.Dict[ArtifactNodeId, ArtifactNode]
     constant_nodes: t.Dict[ConstantNodeId, ConstantNode]
+    secret_nodes: t.Dict[SecretNodeId, SecretNode] = {}
 
     # The actual graph in form node clusters ("invocations"). Each task invocation is a
     # small subgraph with TaskNode in the center and connections to data nodes

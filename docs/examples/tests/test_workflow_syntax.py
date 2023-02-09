@@ -423,9 +423,9 @@ class TestSnippets:
         # Exactly 2 constants
         assert len(model.constant_nodes) == 2
         assert (
-            model.constant_nodes["constant-0"].serialization_format == "ENCODED_PICKLE"
+            model.constant_nodes["constant-1"].serialization_format == "ENCODED_PICKLE"
         )
-        assert model.constant_nodes["constant-1"].serialization_format == "JSON"
+        assert model.constant_nodes["constant-0"].serialization_format == "JSON"
 
     @staticmethod
     def test_calling_regular_function():
