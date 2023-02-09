@@ -45,6 +45,13 @@ def get(
             was found.
         orquestra.sdk.exceptions.UnauthorizedError: when the authorization with the
             remote vault failed.
+
+    Returns:
+        Either:
+        - the value of the secret
+        - if used inside a workflow function (a function decorated with @sdk.workflow),
+            this function will return a "future" which will be used to retrieve the
+            secret at execution time.
     """
     if _exec_ctx.global_context == _exec_ctx.ExecContext.WORKFLOW_BUILD:
         return t.cast(str, _dsl.Secret(name=name, config_name=config_name))
