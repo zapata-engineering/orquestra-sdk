@@ -162,3 +162,9 @@ else:
 
         def cancel(self, workflow_id: str):
             ray.workflow.cancel(workflow_id)
+
+        def get_current_workflow_id(self):
+            return ray.workflow.workflow_context.get_current_workflow_id()
+
+        def get_current_task_id(self):
+            return ray.workflow.workflow_context.get_current_task_id()

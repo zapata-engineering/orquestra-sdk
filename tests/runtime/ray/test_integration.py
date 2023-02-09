@@ -6,12 +6,14 @@ Integration tests for our code that uses Ray. This file should be kept as small
 as possible, because it's slow to run. Please consider using unit tests and
 RuntimeInterface mocks instead of extending this file.
 """
+import json
 import time
 import typing as t
 from pathlib import Path
 
 import pytest
 
+from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._ray import _client, _dag, _ray_logs
@@ -729,3 +731,65 @@ def test_task_code_unavailable_at_building_dag(runtime: _dag.RayRuntime):
     assert (
         runtime.get_workflow_run_status(wf_id).task_runs[0].status.state == State.FAILED
     )
+
+
+# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
+# unraisable exceptions. Last tested with Ray 2.0.1.
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+class TestGetCurrentIDs:
+    def test_during_running_workflow(self, runtime: _dag.RayRuntime, tmp_path: Path):
+        # Given
+        output_path = (tmp_path / "output.json").absolute()
+
+        @sdk.task(source_import=sdk.InlineImport())
+        def dump_ids():
+            # Separate import just to avoid weird global state passing via closure.
+            import orquestra.sdk._ray._dag
+
+            (
+                wf_run_id,
+                task_inv_id,
+                task_run_id,
+            ) = orquestra.sdk._ray._dag.get_current_ids()
+
+            ids_dict = {
+                "wf_run_id": wf_run_id,
+                "task_inv_id": task_inv_id,
+                "task_run_id": task_run_id,
+            }
+
+            output_path.write_text(json.dumps(ids_dict))
+
+            return "done"
+
+        @sdk.workflow
+        def wf():
+            return dump_ids()
+
+        wf_model = wf().model
+
+        # When
+        # The function-under-test is called inside the workflow.
+        wf_run_id = runtime.create_workflow_run(wf_model)
+        _wait_to_finish_wf(wf_run_id, runtime)
+
+        # Precondition
+        wf_run = runtime.get_workflow_run_status(wf_run_id)
+        assert wf_run.status.state == State.SUCCEEDED
+
+        # Then
+        ids_dict = json.loads(output_path.read_text())
+        assert ids_dict["wf_run_id"] == wf_run_id
+
+        task_inv_ids = list(wf_model.task_invocations.keys())
+        assert ids_dict["task_inv_id"] in task_inv_ids
+
+        task_run_ids = [task_run.id for task_run in wf_run.task_runs]
+        assert ids_dict["task_run_id"] in task_run_ids
+
+    def test_outside_workflow(self):
+        # When
+        ids = _dag.get_current_ids()
+
+        # Then
+        assert ids == (None, None, None)

@@ -15,23 +15,25 @@ from orquestra.sdk.schema.workflow_run import WorkflowRunId
 DATA_PATH = Path(__file__).parent / "data"
 
 
-TIMEZONE = timezone(timedelta(seconds=3600))
-TIMESTAMP = datetime(2023, 2, 1, 16, 4, 59, tzinfo=TIMEZONE)
 INFO_LOG = _ray_logs.WFLog(
-    timestamp=TIMESTAMP,
+    timestamp=datetime(2023, 2, 9, 11, 26, 7, 98413, tzinfo=timezone.utc),
     level="INFO",
-    filename="_log_adapter.py:138",
+    filename="_log_adapter.py:184",
     message="hello there!",
-    wf_run_id="wf.orquestra_basic_demo.e82cbfa",
-    task_run_id="invocation-0-task-generate-data",
+    wf_run_id="wf.orquestra_basic_demo.3fcba90",
+    task_inv_id="invocation-0-task-generate-data",
+    task_run_id="wf.orquestra_basic_demo.3fcba90@invocation-0-task-generate-data.d0751",
 )
+
+SAMPLE_TIMESTAMP = datetime(2023, 2, 9, 11, 26, 7, 99382, tzinfo=timezone.utc)
 ERROR_LOG = _ray_logs.WFLog(
-    timestamp=TIMESTAMP,
+    timestamp=SAMPLE_TIMESTAMP,
     level="ERROR",
-    filename="_dag.py:194",
-    message='Traceback (most recent call last):\n  File "/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py", line 191, in _ray_remote\n    return wrapped(*inner_args, **inner_kwargs)\n  File "/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py", line 146, in __call__\n    return self._fn(*unpacked_args, **unpacked_kwargs)\n  File "/Users/alex/Code/zapata/evangelism-workflows/demos/basic/tasks.py", line 39, in generate_data\n    foo = 1 / 0\nZeroDivisionError: division by zero\n',  # noqa: E501
-    wf_run_id="wf.orquestra_basic_demo.e82cbfa",
-    task_run_id="invocation-0-task-generate-data",
+    filename="_dag.py:196",
+    message='Traceback (most recent call last):\n  File "/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py", line 193, in _ray_remote\n    return wrapped(*inner_args, **inner_kwargs)\n  File "/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py", line 148, in __call__\n    return self._fn(*unpacked_args, **unpacked_kwargs)\n  File "/Users/alex/Code/zapata/evangelism-workflows/demos/basic/tasks.py", line 42, in generate_data\n    foo = 1 / 0\nZeroDivisionError: division by zero\n',  # noqa: E501
+    wf_run_id="wf.orquestra_basic_demo.3fcba90",
+    task_inv_id="invocation-0-task-generate-data",
+    task_run_id="wf.orquestra_basic_demo.3fcba90@invocation-0-task-generate-data.d0751",
 )
 
 
@@ -55,7 +57,7 @@ class TestParseLogLine:
     def test_parsing_real_files(log_file: Path, expected_parsed):
         # Given
         input_lines = log_file.read_bytes().splitlines(keepends=True)
-        wf_run_id: WorkflowRunId = "wf.orquestra_basic_demo.e82cbfa"
+        wf_run_id: WorkflowRunId = "wf.orquestra_basic_demo.3fcba90"
 
         # When
         parsed = []
@@ -80,9 +82,9 @@ class TestParseLogLine:
                 id="3rd_party_log_with_queried_id",
             ),
             pytest.param(
-                '{"timestamp": "2023-02-01T16:04:59+0100", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": "wf", "task_run_id": "wf@inv"}',  # noqa: E501
+                '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": "wf", "task_run_id": "wf@inv"}',  # noqa: E501
                 _ray_logs.WFLog(
-                    timestamp=TIMESTAMP,
+                    timestamp=SAMPLE_TIMESTAMP,
                     level="INFO",
                     filename="_log_adapter.py:138",
                     message="hello there!",
@@ -92,9 +94,9 @@ class TestParseLogLine:
                 id="valid_log_both_ids",
             ),
             pytest.param(
-                '{"timestamp": "2023-02-01T16:04:59+0100", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": null, "task_run_id": null}',  # noqa: E501
+                '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": null, "task_run_id": null}',  # noqa: E501
                 _ray_logs.WFLog(
-                    timestamp=TIMESTAMP,
+                    timestamp=SAMPLE_TIMESTAMP,
                     level="INFO",
                     filename="_log_adapter.py:138",
                     message="hello there!",
@@ -120,9 +122,9 @@ class TestParseLogLine:
         "line,expected",
         [
             pytest.param(
-                '{"timestamp": "2023-02-01T16:04:59+0100", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": "wf", "task_run_id": "wf@inv"}',  # noqa: E501
+                '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": "wf", "task_run_id": "wf@inv"}',  # noqa: E501
                 _ray_logs.WFLog(
-                    timestamp=TIMESTAMP,
+                    timestamp=SAMPLE_TIMESTAMP,
                     level="INFO",
                     filename="_log_adapter.py:138",
                     message="hello there!",
@@ -132,19 +134,20 @@ class TestParseLogLine:
                 id="both_ids",
             ),
             pytest.param(
-                '{"timestamp": "2023-02-01T16:04:59+0100", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": "wf", "task_run_id": null}',  # noqa: E501
+                '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": "wf", "task_inv_id": null, "task_run_id": null}',  # noqa: E501
                 _ray_logs.WFLog(
-                    timestamp=TIMESTAMP,
+                    timestamp=SAMPLE_TIMESTAMP,
                     level="INFO",
                     filename="_log_adapter.py:138",
                     message="hello there!",
                     wf_run_id="wf",
+                    task_inv_id=None,
                     task_run_id=None,
                 ),
                 id="only_wf_run_id",
             ),
             pytest.param(
-                '{"timestamp": "2023-02-01 12:59:26,568", "level": "INFO", "filename": "_log_adapter.py:131", "message": "hello there!", "wf_run_id": "other", "task_run_id": "wf@inv"}',  # noqa: E501
+                '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:131", "message": "hello there!", "wf_run_id": "other", "task_inv_id": "inv", "task_run_id": "wf@inv"}',  # noqa: E501
                 None,
                 id="different_wf_run_id",
             ),
