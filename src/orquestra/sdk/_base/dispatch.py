@@ -11,6 +11,7 @@ import typing as t
 from functools import singledispatch
 from pathlib import Path
 
+from orquestra.sdk import secrets
 from orquestra.sdk._base import _exec_ctx, serde
 from orquestra.sdk.schema import ir
 
@@ -148,6 +149,7 @@ def ensure_sys_paths(additional_paths: t.Sequence[str]):
 
 
 SERIALIZATION_FORMAT_MAGIC_KEY = "serialization_format"
+SECRET_MAGIC_KEY = "secret_name"
 
 
 def exec_task_fn(
@@ -218,47 +220,56 @@ def exec_task_fn(
         fn = callable
 
     # --- Phase 2: acquire the arguments ---
-    # --- Phase 2.1: transform the arguments that need it ---
-    keyword_args = copy.deepcopy(fn_kwargs)
-
-    for yaml_input_name, yaml_value in keyword_args.items():
-        # If the input is a string and matches a path that exists then this is a value
-        # passed from another step so we have to load the file.
-        if isinstance(yaml_value, str) and Path(yaml_value).exists():
-            with open(yaml_value) as f:
-                yaml_value = json.load(f)
-
-        # If the value embedded in the YAML contains the magic key we deserialize it.
-        # Otherwise we assume that it should be passed as-is to the dispatched function.
-        #
-        # Note that there are two levels of serialization – one is turning an argument
-        # into a string using one of ways specified in the ArtifactFormat enum. Apart
-        # from this we also need to store metadata information, e.g. whether we used
-        # JSON or pickle serialization.
-        if (
-            isinstance(yaml_value, t.Mapping)
-            and SERIALIZATION_FORMAT_MAGIC_KEY in yaml_value
-        ):
-            embedded_value = serde.value_from_result_dict(yaml_value)
-            keyword_args[yaml_input_name] = embedded_value
-
-    # --- Phase 2.2: make some **kwargs work as *args ---
-    positional_args = []
-    for positional_arg_id in __sdk_positional_args_ids:
-        positional_args.append(keyword_args[positional_arg_id])
-
-    # cleanup keyword args from positional arguments
-    for positional_arg_id in __sdk_positional_args_ids:
-        try:
-            del keyword_args[positional_arg_id]
-        except KeyError:
-            # Positional argument already removed from keyword args
-            pass
-
-    # --- Phase 3: execute! ---
-    # --- Phase 3.1: set execution context flag ---
+    # --- Phase 2.1: set execution context flag ---
     with _exec_ctx.platform_qe():
-        # --- Phase 3.2: call user's function ---
+        # --- Phase 2.2: transform the arguments that need it ---
+        keyword_args = copy.deepcopy(fn_kwargs)
+
+        for yaml_input_name, yaml_value in keyword_args.items():
+            # If the input is a string and matches a path that exists then this is a
+            # value passed from another step so we have to load the file.
+            if isinstance(yaml_value, str) and Path(yaml_value).exists():
+                with open(yaml_value) as f:
+                    yaml_value = json.load(f)
+
+            # If the value embedded in the YAML contains a magic key we need to do some
+            # extra work.
+            # There are two magic keys:
+            #     1. a serialization format (we should deserialize)
+            #     2. a secret name (we should get the secret)
+            # Otherwise we assume that it should be passed as-is to the dispatched
+            # function.
+            #
+            # For serde:
+            # Note that there are two levels of serialization – one is turning an
+            # argument into a string using one of ways specified in the ArtifactFormat
+            # enum. Apart from this we also need to store metadata information, e.g.
+            # whether we used JSON or pickle serialization.
+            if (
+                isinstance(yaml_value, t.Mapping)
+                and SERIALIZATION_FORMAT_MAGIC_KEY in yaml_value
+            ):
+                embedded_value = serde.value_from_result_dict(yaml_value)
+                keyword_args[yaml_input_name] = embedded_value
+            elif isinstance(yaml_value, t.Mapping) and SECRET_MAGIC_KEY in yaml_value:
+                embedded_value = secrets.get(yaml_value[SECRET_MAGIC_KEY])
+                keyword_args[yaml_input_name] = embedded_value
+
+        # --- Phase 2.3: make some **kwargs work as *args ---
+        positional_args = []
+        for positional_arg_id in __sdk_positional_args_ids:
+            positional_args.append(keyword_args[positional_arg_id])
+
+        # cleanup keyword args from positional arguments
+        for positional_arg_id in __sdk_positional_args_ids:
+            try:
+                del keyword_args[positional_arg_id]
+            except KeyError:
+                # Positional argument already removed from keyword args
+                pass
+
+        # --- Phase 3: execute! ---
+        # --- Phase 3.1: call user's function ---
         ret_obj = fn(*positional_args, *fn_args, **keyword_args)
 
     # --- Phase 4: save the outputs ---

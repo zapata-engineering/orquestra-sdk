@@ -80,3 +80,4 @@ RlJxR3NzhnFIYi4=\n"]
 types:
 - sdk-metadata
 - workflow-result-dict
+- workflow-secret-dict

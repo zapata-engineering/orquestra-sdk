@@ -17,7 +17,9 @@ import yaml
 import orquestra.sdk as sdk
 from orquestra.sdk._base import dispatch, loader
 from orquestra.sdk._base._conversions import _yaml_exporter as yaml_converter
+from orquestra.sdk._base._testing._example_wfs import wf_with_secrets
 from orquestra.sdk.schema import ir
+from orquestra.sdk.secrets import _client, _models
 
 from .dirs import ch_temp_dir
 
@@ -56,9 +58,10 @@ def wf_with_ctx():
         (wf_with_uppercasing, '"EMILIANO ZAPATA"'),
         # Checks that we set the execution context flag correctly.
         (wf_with_ctx, '"PLATFORM_QE"'),
+        (wf_with_secrets, '"Mocked"'),
     ],
 )
-def test_execution(monkeypatch, wf, expected_out):
+def test_execution(monkeypatch, tmp_path, wf, expected_out):
     """The dispatcher is complicated, with multiple layers of abstraction. This
     test verifies that something we output from the yaml converter can be
     executed by the dispatcher.
@@ -78,6 +81,17 @@ def test_execution(monkeypatch, wf, expected_out):
     # doesn't have, etc.
     version_mock = Mock(return_value="0.1.0")
     monkeypatch.setattr(metadata, "version", version_mock)
+    # Setup a mocked secrets client
+    passport_file = tmp_path / "passport"
+    passport_file.write_text("mocked")
+    monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", str(passport_file))
+    monkeypatch.setattr(
+        _client.SecretsClient,
+        "get_secret",
+        Mock(return_value=_models.SecretDefinition(name="mocked", value="mocked")),
+    )
+
+    # Convert the workflow to a YAML workflow
     yaml_model = yaml_converter.workflow_to_yaml(wf().model)
 
     # 2. Get into a single step specification

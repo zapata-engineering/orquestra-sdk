@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pydantic
 
-from orquestra.sdk import exceptions
+from orquestra.sdk import exceptions, secrets
 from orquestra.sdk._base import _exec_ctx, _graphs, dispatch, serde
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base.abc import ArtifactValue, LogReader, RuntimeInterface
@@ -341,9 +341,13 @@ def _gather_kwargs(
 
 
 def _make_ray_dag(client: RayClient, wf: ir.WorkflowDef, wf_run_id: str):
-    ray_consts: t.Mapping[ir.ConstantNodeId, t.Any] = {
+    ray_consts: t.Dict[ir.ConstantNodeId, t.Any] = {
         id: serde.deserialize_constant(node) for id, node in wf.constant_nodes.items()
     }
+    for id, secret in wf.secret_nodes.items():
+        ray_consts[id] = secrets.get(
+            secret.secret_name, config_name=secret.secret_config
+        )
     # a mapping of "artifact ID" <-> "the ray Future needed to get the value"
     ray_futures: t.Dict[ir.ArtifactNodeId, t.Any] = {}
 
