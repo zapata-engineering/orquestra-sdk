@@ -268,8 +268,3 @@ class InProcessRuntime(abc.RuntimeInterface):
         raise NotImplementedError(
             "This functionality isn't available for 'in_process' runtime"
         )
-
-    def iter_logs(self, *args, **kwargs):
-        raise NotImplementedError(
-            "This functionality isn't available for 'in_process' runtime"
-        )

@@ -240,47 +240,6 @@ class TestRayRuntime:
             assert result_dict == logs_dict
             reader_mock.get_full_logs.assert_called_with(run_id)
 
-        @staticmethod
-        @pytest.mark.parametrize(
-            "runtime_attr_to_mock,fluentbit_running",
-            [
-                ("_ray_reader", False),
-                ("_fluentbit_reader", True),
-            ],
-        )
-        def test_iter_logs(
-            runtime_attr_to_mock: str,
-            fluentbit_running: bool,
-            tmp_path: Path,
-            runtime_config: RuntimeConfiguration,
-        ):
-            """
-            Makes a spare ``RayRuntime`` object, mocks its attributes, and verifies
-            passing data between the reader and ``RayRuntime``.
-            """
-            # Given
-            rt = _dag.RayRuntime(
-                client=Mock(),
-                config=runtime_config,
-                project_dir=tmp_path,
-            )
-            rt._service_manager = Mock()
-            rt._service_manager.is_fluentbit_running.return_value = fluentbit_running
-
-            reader_mock = Mock()
-            logs_batch = ["Hello, there!", "General Kenobi!"]
-            reader_mock.iter_logs.return_value = [logs_batch]
-            setattr(rt, runtime_attr_to_mock, reader_mock)
-
-            run_id = "wf_or_task_run_id"
-
-            # When
-            result_batch = next(rt.iter_logs(run_id=run_id))
-
-            # Then
-            assert result_batch == logs_batch
-            reader_mock.iter_logs.assert_called_with(run_id)
-
     class TestListWorkflowRuns:
         def test_happy_path(self, client, runtime_config, monkeypatch, tmp_path):
             # Given

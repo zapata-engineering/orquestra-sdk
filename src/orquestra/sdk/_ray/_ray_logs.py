@@ -144,12 +144,6 @@ class _RayLogs:
 
         return logs
 
-    def iter_logs(self):
-        while True:
-            parsed_logs = self._read_log_files()
-            yield [log.json() for log in parsed_logs]
-            time.sleep(2)
-
     def get_full_logs(self):
         parsed_logs = self._read_log_files()
         formatted = [log.json() for log in parsed_logs]
@@ -173,7 +167,3 @@ class DirectRayReader:
     def get_full_logs(self, run_id: t.Optional[str] = None) -> t.Dict[str, t.List[str]]:
         wrapped = _RayLogs(ray_temp=self._ray_temp, workflow_or_task_run_id=run_id)
         return wrapped.get_full_logs()
-
-    def iter_logs(self, run_id: t.Optional[str] = None) -> t.Iterator[t.Sequence[str]]:
-        wrapped = _RayLogs(ray_temp=self._ray_temp, workflow_or_task_run_id=run_id)
-        yield from wrapped.iter_logs()

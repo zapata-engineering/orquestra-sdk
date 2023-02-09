@@ -225,7 +225,6 @@ class TestUnsupportedMethods:
             InProcessRuntime.from_runtime_configuration,
             InProcessRuntime.get_all_workflow_runs_status,
             InProcessRuntime.get_full_logs,
-            InProcessRuntime.iter_logs,
         ],
     )
     def test_raises(runtime, method):

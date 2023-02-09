@@ -661,31 +661,6 @@ class TestDirectRayReader:
 
         assert tell_tale in log_lines_joined
 
-    def test_iter_logs(
-        self, shared_ray_conn, runtime, with_run_id: bool, wf, tell_tale: str
-    ):
-        """
-        Submit a workflow, wait for it to finish, get one batch of logs, look for
-        the test message.
-        """
-        # Given
-        ray_params = shared_ray_conn
-        reader = _ray_logs.DirectRayReader(Path(ray_params._temp_dir))
-
-        run_id = runtime.create_workflow_run(wf)
-        _wait_to_finish_wf(run_id, runtime)
-
-        query_run_id = run_id if with_run_id else None
-
-        # When
-        iterator = reader.iter_logs(run_id=query_run_id)
-        logs_batch = next(iterator)
-
-        # Then
-        log_lines_joined = "".join(log_line for log_line in logs_batch)
-
-        assert tell_tale in log_lines_joined
-
 
 @pytest.mark.slow
 # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
