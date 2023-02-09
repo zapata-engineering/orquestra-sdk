@@ -1,14 +1,13 @@
 ################################################################################
 # © Copyright 2022 Zapata Computing Inc.
 ################################################################################
-import json
 import subprocess
 import sys
-
-from ray.workflow import workflow_context
+import typing as t
+from unittest.mock import Mock
 
 from orquestra.sdk._base import _log_adapter
-from orquestra.sdk._ray import _ray_logs
+from orquestra.sdk._ray import _dag, _ray_logs
 
 TEST_ARGO_NODE_ID = "hello-orquestra-nk148-r000-4219834842"
 TEST_ARGO_TEMPLATE = """{
@@ -16,8 +15,6 @@ TEST_ARGO_TEMPLATE = """{
     "inputs": "",
     "outputs": ""
 }"""
-TEST_WF_RUN_ID = "hello-orquestra-nk148"
-TEST_TASK_RUN_ID = "hello-orquestra-nk148@some-task-id-xyz"
 
 
 def test_is_argo_backend(monkeypatch):
@@ -32,27 +29,37 @@ def test_not_argo_backend():
 
 def test_get_argo_backend_ids(monkeypatch):
     monkeypatch.setenv("ARGO_NODE_ID", TEST_ARGO_NODE_ID)
-
-    workflow_id, task_id = _log_adapter.get_argo_backend_ids()
-    assert workflow_id == TEST_WF_RUN_ID
-    assert task_id == TEST_ARGO_NODE_ID
-
-
-def test_get_argo_step_name(monkeypatch):
     monkeypatch.setenv("ARGO_TEMPLATE", TEST_ARGO_TEMPLATE)
-    assert _log_adapter.get_argo_step_name() == "hello"
+
+    wf_run_id, task_inv_id, task_run_id = _log_adapter.get_argo_backend_ids()
+
+    assert wf_run_id == "hello-orquestra-nk148"
+    assert task_inv_id == "hello"
+    assert task_run_id == TEST_ARGO_NODE_ID
 
 
-def test_get_ray_backend_ids():
-    with workflow_context.workflow_task_context(
-        context=workflow_context.WorkflowTaskContext(
-            workflow_id=TEST_WF_RUN_ID,
-            task_id=TEST_TASK_RUN_ID,
-        )
-    ):
-        workflow_id, task_id = _log_adapter.get_ray_backend_ids()
-        assert workflow_id == TEST_WF_RUN_ID
-        assert task_id == TEST_TASK_RUN_ID
+def test_get_ray_backend_ids(monkeypatch):
+    """
+    Test boundary::
+        [_dag.get_current_ids]
+
+    The Ray underlying machinery is tested in integration tests for RayRuntime.
+    """
+    # Given
+    wf_run_id = "wf.1"
+    task_inv_id = "inv-1-generate-data"
+    task_run_id = f"{wf_run_id}@{task_inv_id}"
+    monkeypatch.setattr(
+        _dag,
+        "get_current_ids",
+        Mock(return_value=(wf_run_id, task_inv_id, task_run_id)),
+    )
+
+    # When
+    ids = _log_adapter.get_ray_backend_ids()
+
+    # Then
+    assert ids == (wf_run_id, task_inv_id, task_run_id)
 
 
 class TestMakeLogger:
@@ -73,9 +80,9 @@ class TestMakeLogger:
         """
 
         @staticmethod
-        def _run_script(script: str) -> subprocess.CompletedProcess:
+        def _run_script(script: t.Sequence[str]) -> subprocess.CompletedProcess:
             # We wanna pass this as a single line to 'python -c my;script;lines'
-            test_script_joined = ";".join(script.splitlines())
+            test_script_joined = ";".join(script)
 
             proc = subprocess.run(
                 [sys.executable, "-c", test_script_joined], capture_output=True
@@ -85,9 +92,11 @@ class TestMakeLogger:
 
         def test_both_ids(self):
             # Given
-            test_script = """from orquestra.sdk._base import _log_adapter
-logger = _log_adapter._make_logger(wf_run_id="wf.1", task_run_id="task_run_2")
-logger.info("hello!")"""
+            test_script = [
+                "from orquestra.sdk._base import _log_adapter",
+                'logger = _log_adapter._make_logger(wf_run_id="wf.1", task_inv_id="inv2", task_run_id="task_run_3")',  # noqa: E501
+                'logger.info("hello!")',
+            ]
 
             # When
             proc = self._run_script(test_script)
@@ -109,13 +118,16 @@ logger.info("hello!")"""
             assert record.level == "INFO"
             assert record.message == "hello!"
             assert record.wf_run_id == "wf.1"
-            assert record.task_run_id == "task_run_2"
+            assert record.task_inv_id == "inv2"
+            assert record.task_run_id == "task_run_3"
 
         def test_no_ids(self):
             # Given
-            test_script = """from orquestra.sdk._base import _log_adapter
-                logger = _log_adapter._make_logger(wf_run_id=None, task_run_id=None)
-                logger.info("hello!")"""
+            test_script = [
+                "from orquestra.sdk._base import _log_adapter",
+                "logger = _log_adapter._make_logger(wf_run_id=None, task_inv_id=None, task_run_id=None)",  # noqa: E501
+                'logger.info("hello!")',
+            ]
 
             # When
             proc = self._run_script(test_script)
@@ -138,4 +150,5 @@ logger.info("hello!")"""
             assert record.level == "INFO"
             assert record.message == "hello!"
             assert record.wf_run_id is None
+            assert record.task_inv_id is None
             assert record.task_run_id is None

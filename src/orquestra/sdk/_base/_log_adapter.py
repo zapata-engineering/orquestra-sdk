@@ -11,12 +11,13 @@ import os
 import typing as t
 from datetime import datetime, timezone
 
+from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRunId
 
 # NOTE: the `message`, `wf_run_id`, and `task_run_id` value placeholders don't come with
 # "" quotes. We already add them when we json.dumps() the value. This ensure proper JSON
 # escaping and handling null values.
-FORMAT = '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "filename": "%(filename)s:%(lineno)s", "message": %(message)s, "wf_run_id": %(wf_run_id)s, "task_run_id": %(task_run_id)s}'  # noqa
+FORMAT = '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "filename": "%(filename)s:%(lineno)s", "message": %(message)s, "wf_run_id": %(wf_run_id)s, "task_inv_id": %(task_inv_id)s, "task_run_id": %(task_run_id)s}'  # noqa
 
 
 class TaggedWorkflowTaskLogger(logging.LoggerAdapter):
@@ -42,8 +43,8 @@ class TaggedWorkflowTaskLogger(logging.LoggerAdapter):
         # Workaround cases where run IDs are nulls.
         old_extra = self.extra or {}
         new_extra = dict(old_extra)
-        new_extra["wf_run_id"] = json.dumps(old_extra["wf_run_id"])
-        new_extra["task_run_id"] = json.dumps(old_extra["task_run_id"])
+        for key in ["wf_run_id", "task_inv_id", "task_run_id"]:
+            new_extra[key] = json.dumps(old_extra[key])
 
         # Mimick default behavior of logging.LoggerAdapter. Note we keep run IDs as
         # extras.
@@ -60,29 +61,33 @@ def is_argo_backend():
     return "ARGO_NODE_ID" in os.environ
 
 
-def get_argo_backend_ids() -> t.Tuple[WorkflowRunId, TaskRunId]:
+def get_argo_backend_ids() -> t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunId]:
     node_id = os.environ["ARGO_NODE_ID"]
     # Argo Workflow ID is the left part of the step ID
     # [wf-id]-[retry-number]-[step-number]
-    workflow_id = "-".join(node_id.split("-")[:-2])
-    return (workflow_id, node_id)
+    wf_run_id = "-".join(node_id.split("-")[:-2])
+    task_run_id = node_id
 
-
-def get_argo_step_name():
     argo_template = json.loads(os.environ["ARGO_TEMPLATE"])
-    return argo_template["name"]
+    # Looks like the template name on Argo matches our task invocation ID. Not sure how
+    # good this assumption is.
+    task_inv_id = argo_template["name"]
+
+    return wf_run_id, task_inv_id, task_run_id
 
 
-def get_ray_backend_ids() -> t.Tuple[WorkflowRunId, TaskRunId]:
-    from ray.workflow import workflow_context
+def get_ray_backend_ids() -> t.Tuple[
+    t.Optional[WorkflowRunId], t.Optional[TaskInvocationId], t.Optional[TaskRunId]
+]:
+    try:
+        # Deferred import because Ray isn't installed when running on QE.
+        import orquestra.sdk._ray._dag
 
-    # The IDs returned below are likely to be invalid. See:
-    # https://zapatacomputing.atlassian.net/browse/ORQSDK-746
+    except ModuleNotFoundError:
+        # Ray is not installed
+        return None, None, None
 
-    return (
-        workflow_context.get_current_workflow_id(),
-        workflow_context.get_current_task_id(),
-    )
+    return orquestra.sdk._ray._dag.get_current_ids()
 
 
 class ISOFormatter(logging.Formatter):
@@ -101,7 +106,9 @@ class ISOFormatter(logging.Formatter):
         return instant.isoformat()
 
 
-def _make_logger(wf_run_id: WorkflowRunId, task_run_id: TaskRunId):
+def _make_logger(
+    wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId, task_run_id: TaskRunId
+):
     # Note: there are two loggers: "nested logger" and "main logger".
     #
     # The "nested logger" is a singleton managed by `logging`. It's likely to be
@@ -135,6 +142,7 @@ def _make_logger(wf_run_id: WorkflowRunId, task_run_id: TaskRunId):
         nested_logger,
         extra={
             "wf_run_id": wf_run_id,
+            "task_inv_id": task_inv_id,
             "task_run_id": task_run_id,
         },
     )
@@ -152,18 +160,18 @@ def workflow_logger() -> logging.LoggerAdapter:
 
     if is_argo_backend():
         # Workflow is running in the Orquestra QE environment
-        wf_run_id, task_run_id = get_argo_backend_ids()
+        wf_run_id, task_inv_id, task_run_id = get_argo_backend_ids()
     else:
         try:
             # Workflow may be running in the Ray environment
-            wf_run_id, task_run_id = get_ray_backend_ids()
+            wf_run_id, task_inv_id, task_run_id = get_ray_backend_ids()
         except (ModuleNotFoundError, AssertionError):
-            # Ray is not installed or not in a running Ray workflow:
-            # Workflow running via `local_run()` or InProcessRuntime
-            # Continue with fallback
-            wf_run_id = task_run_id = json.dumps(None)
+            # Ray is not installed or not in a running Ray workflow
+            wf_run_id = task_run_id = None
 
-    logger = _make_logger(wf_run_id=wf_run_id, task_run_id=task_run_id)
+    logger = _make_logger(
+        wf_run_id=wf_run_id, task_inv_id=task_inv_id, task_run_id=task_run_id
+    )
 
     return logger
 

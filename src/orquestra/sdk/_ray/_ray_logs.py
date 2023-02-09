@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pydantic
 
+from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRunId
 
 from . import _client
@@ -50,6 +51,8 @@ class WFLog(pydantic.BaseModel):
     message: str
     # ID of the workflow that was run when this line was produced.
     wf_run_id: t.Optional[WorkflowRunId]
+    # ID of the task invocation (node inside the workflow def graph).
+    task_inv_id: t.Optional[TaskInvocationId]
     # ID of the task that was run when this line was produced.
     task_run_id: t.Optional[TaskRunId]
 
