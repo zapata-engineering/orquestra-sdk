@@ -90,32 +90,32 @@ class GraphTraversal:
         We iterate over the futures returned from the workflow find the artifacts,
         constants, and secrets.
         """
-        node_counts: t.Dict[str, int] = defaultdict(int)
+        artifact_counter = 0
+        secret_counter = 0
+        constant_counter = 0
         for n in _iter_nodes(root_futures):
-            node_type: str
             if isinstance(n, _dsl.ArtifactFuture):
-                node_type = "artifact"
                 self._artifacts[_make_key(n)] = _make_artifact_node(
-                    node_counts[node_type], n
+                    artifact_counter, n
                 )
+                artifact_counter += 1
                 # Map the invocation to the future.
                 # Note: Each unique future has one invocation, but each invocation
                 #       can have many Futures.
                 #       We're mapping `invocation: set(futures from invocation)`
                 self._invocations.setdefault(n.invocation, set()).add(n)
             elif isinstance(n, _dsl.Secret):
-                node_type = "secret"
                 self._secrets[_make_key(n)] = model.SecretNode(
-                    id=f"secret-{node_counts[node_type]}",
+                    id=f"secret-{secret_counter}",
                     secret_name=n.name,
                     secret_config=n.config_name,
                 )
+                secret_counter += 1
             else:
-                node_type = "constant"
                 self._constants[_make_key(n)] = _make_constant_node(
-                    node_counts[node_type], n
+                    constant_counter, n
                 )
-            node_counts[node_type] += 1
+                constant_counter += 1
 
     @property
     def artifacts(self):
