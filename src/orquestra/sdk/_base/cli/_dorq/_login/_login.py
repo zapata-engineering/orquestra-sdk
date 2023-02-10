@@ -61,7 +61,7 @@ class Action:
     def _prompt_for_login(self, url: str, ce: bool):
         try:
             asyncio.run(self._get_token_from_server(url, ce, 60))
-        except web.GracefulExit:
+        except (web.GracefulExit, KeyboardInterrupt):
             pass
         if self._login_server.token is None:
             # We didn't get a token, this means the collector timed out or otherwise
