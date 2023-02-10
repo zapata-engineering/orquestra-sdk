@@ -14,6 +14,10 @@ SECRET_DICT_TYPE_NAME = "workflow-secret-dict"
 SDK_METADATA_TYPE_NAME = "sdk-metadata"
 
 
+def _json_dict_from_pydantic(model):
+    return json.loads(model.json())
+
+
 class InvocationTranslator:
     """
     Translates task invocations from the IR (`orquestra.sdk.schema.ir`) to YAML
@@ -306,7 +310,7 @@ def _make_constant_input(
             f"are supported. ({type(constant.serialization_format)}) is not."
         )
 
-    json_dict = json.loads(result.json())
+    json_dict = _json_dict_from_pydantic(result)
 
     return {
         arg_name: json_dict,
@@ -315,7 +319,7 @@ def _make_constant_input(
 
 
 def _make_secret_input(arg_name: str, secret: ir.SecretNode) -> yaml_model.StepInput:
-    json_dict = json.loads(secret.json())
+    json_dict = _json_dict_from_pydantic(secret)
     return {
         arg_name: json_dict,
         "type": SECRET_DICT_TYPE_NAME,
