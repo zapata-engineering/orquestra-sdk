@@ -217,7 +217,9 @@ class LoginPresenter:
         click.echo(f"Configuration name for {url} is {config_name}")
 
     def print_login_help(self):
-        click.echo("Continue the login process in your web browser.")
+        click.echo(
+            "Continue the login process in your web browser. Press [ctrl-c] to cancel."
+        )
 
     def open_url_in_browser(self, url) -> bool:
         return webbrowser.open(url)
