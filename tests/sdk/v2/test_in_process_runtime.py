@@ -9,14 +9,17 @@ We need this file because test_api.py might be too coarse for some scenarios.
 When adding new tests, please consider that suite first.
 """
 from datetime import datetime, timedelta, timezone
+from unittest.mock import create_autospec
 
 import pytest
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
+from orquestra.sdk._base._testing._example_wfs import wf_with_secrets
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
+from orquestra.sdk.secrets import _client, _models
 
 from .data.complex_serialization.workflow_defs import (
     wf_pass_callables_from_task,
@@ -59,6 +62,20 @@ def wf_def_unused_outputs() -> ir.WorkflowDef:
 @pytest.fixture
 def wf_def_all_used() -> ir.WorkflowDef:
     return wf_all_used().model
+
+
+def test_secret_inside_ir(
+    tmp_default_config_json, monkeypatch: pytest.MonkeyPatch, runtime: InProcessRuntime
+):
+    mocked_secret = _models.SecretDefinition(name="a-secret", value="mocked")
+    get_secret = create_autospec(_client.SecretsClient.get_secret)
+    get_secret.return_value = mocked_secret
+    monkeypatch.setattr(_client.SecretsClient, "get_secret", get_secret)
+
+    run_id = runtime.create_workflow_run(wf_with_secrets().model)
+    result = runtime.get_workflow_run_outputs(run_id)
+
+    assert result == "Mocked"
 
 
 class TestQueriesAfterRunning:
@@ -225,7 +242,6 @@ class TestUnsupportedMethods:
             InProcessRuntime.from_runtime_configuration,
             InProcessRuntime.get_all_workflow_runs_status,
             InProcessRuntime.get_full_logs,
-            InProcessRuntime.iter_logs,
         ],
     )
     def test_raises(runtime, method):

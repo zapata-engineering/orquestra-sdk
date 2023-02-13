@@ -86,6 +86,7 @@ def workflow_to_yaml(
         types=[
             inv_translator.sdk_metadata_type_name,
             inv_translator.result_dict_type_name,
+            inv_translator.secret_dict_type_name,
         ],
         dataAggregation=data_aggregation,
     )

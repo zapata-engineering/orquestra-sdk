@@ -15,6 +15,7 @@ from orquestra.sdk.schema.workflow_run import (
     WorkflowRunId,
 )
 
+from .. import secrets
 from ..exceptions import WorkflowRunNotFoundError
 from ._graphs import iter_invocations_topologically
 from .dispatch import locate_fn_ref
@@ -95,6 +96,10 @@ class InProcessRuntime(abc.RuntimeInterface):
             id: deserialize_constant(node)
             for id, node in workflow_def.constant_nodes.items()
         }
+        for id, secret in workflow_def.secret_nodes.items():
+            consts[id] = secrets.get(
+                secret.secret_name, config_name=secret.secret_config
+            )
         # We'll store artifacts for this run here.
         self._artifact_store[run_id] = {}
 
@@ -265,11 +270,6 @@ class InProcessRuntime(abc.RuntimeInterface):
         )
 
     def get_full_logs(self, *args, **kwargs) -> t.Dict[str, t.List[str]]:
-        raise NotImplementedError(
-            "This functionality isn't available for 'in_process' runtime"
-        )
-
-    def iter_logs(self, *args, **kwargs):
         raise NotImplementedError(
             "This functionality isn't available for 'in_process' runtime"
         )

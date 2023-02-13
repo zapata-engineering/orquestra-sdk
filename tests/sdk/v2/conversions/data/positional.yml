@@ -55,3 +55,4 @@ steps:
 types:
 - sdk-metadata
 - workflow-result-dict
+- workflow-secret-dict

@@ -10,7 +10,12 @@ from orquestra.sdk.schema import ir, responses, yaml_model
 # TODO: it would be nice to have a single document where the user could look up a "type"
 # from the workflow yaml and see what it's about.
 RESULT_DICT_TYPE_NAME = "workflow-result-dict"
+SECRET_DICT_TYPE_NAME = "workflow-secret-dict"
 SDK_METADATA_TYPE_NAME = "sdk-metadata"
+
+
+def _json_dict_from_pydantic(model):
+    return json.loads(model.json())
 
 
 class InvocationTranslator:
@@ -51,6 +56,7 @@ class InvocationTranslator:
         self._task_defs_dict = wf.tasks
         self._constants_dict = wf.constant_nodes
         self._artifacts_dict = wf.artifact_nodes
+        self._secrets_dict = wf.secret_nodes
         self._ir_imports = wf.imports
         # Tells what invocation is required to produce a given artifact.
         self._artifact_producer_dict: t.Mapping[
@@ -71,6 +77,10 @@ class InvocationTranslator:
     @property
     def result_dict_type_name(self):
         return RESULT_DICT_TYPE_NAME
+
+    @property
+    def secret_dict_type_name(self):
+        return SECRET_DICT_TYPE_NAME
 
     @property
     def sdk_metadata_type_name(self):
@@ -182,6 +192,20 @@ class InvocationTranslator:
 
         return [fn_dict, output_dict, sys_path_dict]
 
+    def _make_input(
+        self, arg_id: ir.ArgumentId, name: t.Optional[ir.ParameterName] = None
+    ):
+        if arg_id in self._constants_dict:
+            constant = self._constants_dict[arg_id]
+            return _make_constant_input(name or arg_id, constant)
+        elif arg_id in self._secrets_dict:
+            secret = self._secrets_dict[arg_id]
+            return _make_secret_input(name or arg_id, secret)
+        else:
+            artifact = self._artifacts_dict[arg_id]
+            producing_invocation = self._artifact_producer_dict[arg_id]
+            return _make_artifact_input(name or arg_id, artifact, producing_invocation)
+
     def _make_args_inputs(self, args_ids: t.Sequence[ir.ArgumentId]):
         args_inputs = [
             {
@@ -190,15 +214,7 @@ class InvocationTranslator:
             }
         ]
         for arg_id in args_ids:
-            try:
-                constant = self._constants_dict[arg_id]
-                args_inputs.append(_make_constant_input(arg_id, constant))
-            except KeyError:
-                artifact = self._artifacts_dict[arg_id]
-                producing_invocation = self._artifact_producer_dict[arg_id]
-                args_inputs.append(
-                    _make_artifact_input(arg_id, artifact, producing_invocation)
-                )
+            args_inputs.append(self._make_input(arg_id))
         return args_inputs
 
     def _make_kwargs_inputs(
@@ -206,16 +222,7 @@ class InvocationTranslator:
     ):
         inputs = []
         for arg_name, arg_id in (kwargs_ids or {}).items():
-            try:
-                constant = self._constants_dict[arg_id]
-                inputs.append(_make_constant_input(arg_name, constant))
-            except KeyError:
-                artifact = self._artifacts_dict[arg_id]
-                producing_invocation = self._artifact_producer_dict[arg_id]
-                inputs.append(
-                    _make_artifact_input(arg_name, artifact, producing_invocation)
-                )
-
+            inputs.append(self._make_input(arg_id, arg_name))
         return inputs
 
     def _make_outputs(self, output_ids: t.Iterable[ir.ArtifactNodeId]):
@@ -303,11 +310,19 @@ def _make_constant_input(
             f"are supported. ({type(constant.serialization_format)}) is not."
         )
 
-    json_dict = json.loads(result.json())
+    json_dict = _json_dict_from_pydantic(result)
 
     return {
         arg_name: json_dict,
         "type": RESULT_DICT_TYPE_NAME,
+    }
+
+
+def _make_secret_input(arg_name: str, secret: ir.SecretNode) -> yaml_model.StepInput:
+    json_dict = _json_dict_from_pydantic(secret)
+    return {
+        arg_name: json_dict,
+        "type": SECRET_DICT_TYPE_NAME,
     }
 
 

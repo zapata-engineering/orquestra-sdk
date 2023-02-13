@@ -28,11 +28,13 @@ from typing_extensions import ParamSpec
 import orquestra.sdk.schema.ir as ir
 from orquestra.sdk.exceptions import ConfigNameNotFoundError, WorkflowSyntaxError
 
-from . import _api, _dsl, loader
+from .. import secrets
+from . import _api, _dsl, _exec_ctx, loader
 from ._ast import CallVisitor, NodeReference, NodeReferenceType, normalize_indents
 from ._dsl import (
     DataAggregation,
     FunctionRef,
+    Secret,
     TaskDef,
     UnknownPlaceholderInCustomNameWarning,
     get_fn_ref,
@@ -102,7 +104,8 @@ class WorkflowDef(Generic[_R]):
         """
         from orquestra.sdk._base import _traversal
 
-        futures = self._fn(*self._workflow_args, **self._workflow_kwargs)
+        with _exec_ctx.workflow_build():
+            futures = self._fn(*self._workflow_args, **self._workflow_kwargs)
 
         _futures: Sequence
         if not isinstance(futures, Sequence) or isinstance(futures, str):
@@ -256,6 +259,13 @@ class WorkflowTemplate(Generic[_P, _R]):
             orquestra.sdk.exceptions.WorkflowSyntaxError: if the arguments don't match
                 the workflow def's parameters.
         """
+        allowed_function_calls = (
+            Secret,
+            secrets.get,
+            secrets.delete,
+            secrets.list,
+            secrets.set,
+        )
         # First we check the contents of the workflow function and warn the user if we
         # find any function calls to non-tasks.
         fn_calls = _get_function_calls(self._fn)
@@ -265,7 +275,10 @@ class WorkflowTemplate(Generic[_P, _R]):
                     f'"{called_fn.name}" is currently loaded from a faked import. '
                     'Try adding it to "workflow_defs.py"'
                 )
-            elif not isinstance(called_fn.function, TaskDef):
+            elif not (
+                isinstance(called_fn.function, TaskDef)
+                or called_fn.function in allowed_function_calls
+            ):
                 warnings.warn_explicit(
                     f'"{called_fn.name}" is not a task. Did you mean to decorate '
                     "it with @task?",

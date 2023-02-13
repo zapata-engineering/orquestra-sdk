@@ -21,6 +21,7 @@ from ._base._dsl import (
     LocalImport,
     PythonImports,
     Resources,
+    Secret,
     TaskDef,
     task,
 )
@@ -39,6 +40,7 @@ __all__ = [
     "PythonImports",
     "Resources",
     "RuntimeConfig",
+    "Secret",
     "TaskDef",
     "TaskRun",
     "WorkflowDef",

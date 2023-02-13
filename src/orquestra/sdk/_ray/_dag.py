@@ -17,7 +17,9 @@ from datetime import datetime, timedelta, timezone
 from functools import singledispatch
 from pathlib import Path
 
-from orquestra.sdk import exceptions
+import pydantic
+
+from orquestra.sdk import exceptions, secrets
 from orquestra.sdk._base import _exec_ctx, _graphs, dispatch, serde
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base.abc import ArtifactValue, LogReader, RuntimeInterface
@@ -214,9 +216,12 @@ def _instant_from_timestamp(unix_timestamp: t.Optional[float]) -> t.Optional[dat
     return datetime.fromtimestamp(unix_timestamp, timezone.utc)
 
 
-class InvUserMetadata(t.TypedDict):
+class InvUserMetadata(pydantic.BaseModel):
     """
     Information about a task invocation we store as a Ray metadata dict.
+
+    Pydantic helps us check that the thing we read from Ray is indeed a dictionary we
+    set (i.e. it has proper fields).
     """
 
     # Invocation ID. Scoped to a single workflow def. Allows to distinguish
@@ -229,14 +234,16 @@ class InvUserMetadata(t.TypedDict):
     task_run_id: TaskRunId
 
 
-class WfUserMetadata(t.TypedDict):
+class WfUserMetadata(pydantic.BaseModel):
     """
     Information about a workflow run we store as a Ray metadata dict.
+
+    Pydantic helps us check that the thing we read from Ray is indeed a dictionary we
+    set (i.e. it has proper fields).
     """
 
-    # An orquestra.sdk.schema.ir.WorkflowDef object transformed into a JSON-able
-    # dict. Definition of the workflow that's being run.
-    workflow_def: t.Mapping[str, t.Any]
+    # Full definition of the workflow that's being run.
+    workflow_def: ir.WorkflowDef
 
 
 @singledispatch
@@ -334,9 +341,13 @@ def _gather_kwargs(
 
 
 def _make_ray_dag(client: RayClient, wf: ir.WorkflowDef, wf_run_id: str):
-    ray_consts: t.Mapping[ir.ConstantNodeId, t.Any] = {
+    ray_consts: t.Dict[ir.ConstantNodeId, t.Any] = {
         id: serde.deserialize_constant(node) for id, node in wf.constant_nodes.items()
     }
+    for id, secret in wf.secret_nodes.items():
+        ray_consts[id] = secrets.get(
+            secret.secret_name, config_name=secret.secret_config
+        )
     # a mapping of "artifact ID" <-> "the ray Future needed to get the value"
     ray_futures: t.Dict[ir.ArtifactNodeId, t.Any] = {}
 
@@ -359,20 +370,19 @@ def _make_ray_dag(client: RayClient, wf: ir.WorkflowDef, wf_run_id: str):
         # We want to store both the TaskInvocation.id and TaskRun.id. We use
         # TaskInvocation.id to refer to Ray tasks later. Solution: Ray task
         # name for identification and Ray metadata for anything else.
-        inv_metadata: InvUserMetadata = {
-            "task_run_id": _gen_task_run_id(
-                wf_run_id=wf_run_id, invocation=ir_invocation
-            ),
-            "task_invocation_id": ir_invocation.id,
-        }
+        inv_metadata = InvUserMetadata(
+            task_run_id=_gen_task_run_id(wf_run_id=wf_run_id, invocation=ir_invocation),
+            task_invocation_id=ir_invocation.id,
+        )
 
         pip = _import_pip_env(ir_invocation, wf)
 
         ray_options = {
-            # The task name should probably be the task run ID, not invocation ID. See:
-            # https://zapatacomputing.atlassian.net/browse/ORQSDK-746
+            # We're using task invocation ID as the Ray "task ID" instead of task run ID
+            # because it's easier to query this way. Use the "user_metadata" to get both
+            # identifiers.
             "name": ir_invocation.id,
-            "metadata": inv_metadata,
+            "metadata": _pydatic_to_json_dict(inv_metadata),
             # If there are any python packages to install for step - set runtime env
             "runtime_env": (_client.RuntimeEnv(pip=pip) if len(pip) > 0 else None),
             "catch_exceptions": False,
@@ -711,16 +721,14 @@ class RayRuntime(RuntimeInterface):
             # adding path to the sys_path, so we can de-ref functions in workflow_defs
             dispatch.ensure_sys_paths([str(self._project_dir)])
             dag = _make_ray_dag(self._client, workflow_def, wf_run_id)
-            wf_user_metadata: WfUserMetadata = {
-                "workflow_def": _pydatic_to_json_dict(workflow_def),
-            }
+            wf_user_metadata = WfUserMetadata(workflow_def=workflow_def)
 
             # Unfortunately, Ray doesn't validate uniqueness of workflow IDs. Let's
             # hope we won't get a collision.
             _ = self._client.run_dag_async(
                 dag,
                 workflow_id=wf_run_id,
-                metadata=wf_user_metadata,
+                metadata=_pydatic_to_json_dict(wf_user_metadata),
             )
 
         # .get blocks for the function to be completed. This is required because:
@@ -763,8 +771,8 @@ class RayRuntime(RuntimeInterface):
                 f"Workflow run {workflow_run_id} wasn't found"
             ) from e
 
-        wf_user_meta: WfUserMetadata = wf_meta["user_metadata"]
-        wf_def: ir.WorkflowDef = ir.WorkflowDef.parse_obj(wf_user_meta["workflow_def"])
+        wf_user_metadata = WfUserMetadata.parse_obj(wf_meta["user_metadata"])
+        wf_def = wf_user_metadata.workflow_def
 
         inv_ids = wf_def.task_invocations.keys()
         # We assume that:
@@ -899,14 +907,6 @@ class RayRuntime(RuntimeInterface):
         else:
             return self._ray_reader.get_full_logs(run_id)
 
-    def iter_logs(
-        self, run_id: t.Optional[t.Union[WorkflowRunId, TaskRunId]] = None
-    ) -> t.Iterator[t.Sequence[str]]:
-        if self._service_manager.is_fluentbit_running():
-            yield from self._fluentbit_reader.iter_logs(run_id)
-        else:
-            yield from self._ray_reader.iter_logs(run_id)
-
     def list_workflow_runs(
         self,
         *,
@@ -961,3 +961,42 @@ class RayRuntime(RuntimeInterface):
                 -limit:
             ]
         return wf_runs
+
+
+def get_current_ids() -> t.Tuple[
+    t.Optional[WorkflowRunId], t.Optional[TaskInvocationId], t.Optional[TaskRunId]
+]:
+    """
+    Uses Ray context to figure out what are the IDs of the currently running workflow
+    and task.
+
+    The returned TaskInvocationID and TaskRunID are None if we weren't able to get them
+    from current Ray context.
+    """
+    # NOTE: this is tightly coupled with how we create Ray workflow DAG, how we assign
+    # IDs and metadata.
+    client = _client.RayClient()
+
+    try:
+        wf_run_id = client.get_current_workflow_id()
+    except AssertionError:
+        # Ray has an 'assert' about checking the workflow context outside of a workflow
+        return None, None, None
+
+    # We don't need to care what kind of ID it is, we only need it to get the metadata
+    # dict.
+    ray_task_name = client.get_current_task_id()
+    task_meta: dict = client.get_task_metadata(
+        workflow_id=wf_run_id, name=ray_task_name
+    )
+
+    try:
+        user_meta = InvUserMetadata.parse_obj(task_meta.get("user_metadata"))
+    except pydantic.ValidationError:
+        # This ray task wasn't annotated with InvUserMetadata. It happens when
+        # `get_current_ids()` is used from a context that's not a regular Orquestra Task
+        # run. One example is the one-off task that we use to construct Ray DAG inside a
+        # Ray worker process.
+        return wf_run_id, None, None
+
+    return wf_run_id, user_meta.task_invocation_id, user_meta.task_run_id

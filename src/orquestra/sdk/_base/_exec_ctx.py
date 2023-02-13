@@ -21,6 +21,7 @@ from enum import Enum
 
 
 class ExecContext(Enum):
+    WORKFLOW_BUILD = "WORKFLOW_BUILD"
     LOCAL_DIRECT = "LOCAL_DIRECT"
     LOCAL_RAY = "LOCAL_RAY"
     PLATFORM_QE = "PLATFORM_QE"
@@ -42,6 +43,15 @@ def _set_context(ctx: ExecContext):
         yield
     finally:
         global_context = prev_val
+
+
+@contextmanager
+def workflow_build():
+    """
+    Helper. Sets the context for workflow traversal
+    """
+    with _set_context(ExecContext.WORKFLOW_BUILD):
+        yield
 
 
 @contextmanager

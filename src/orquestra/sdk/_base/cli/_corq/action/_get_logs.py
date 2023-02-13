@@ -45,19 +45,7 @@ def orq_get_logs(
     runtime = _factory.build_runtime_from_config(project_dir=project_dir, config=config)
 
     if args.follow:
-        # Special case: instead of returning a full response we await new log line
-        # batches and print as they arrive. This never exists unless the user sends
-        # an interrupt.
-        log_batch_iterator = runtime.iter_logs(args.workflow_or_task_run_id)
-
-        print("Listening to logs. Press Ctrl-C to quit.", file=sys.stderr)
-
-        for log_batch in log_batch_iterator:
-            for log_line in log_batch:
-                print(log_line)
-
-        # This will never be executed, but we need it to appease mypy
-        return None
+        raise NotImplementedError("Log streaming isn't implemented")
     else:
         # no follow/eager mode
         log_dict = runtime.get_full_logs(args.workflow_or_task_run_id)

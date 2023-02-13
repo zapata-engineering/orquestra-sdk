@@ -6,12 +6,14 @@ Integration tests for our code that uses Ray. This file should be kept as small
 as possible, because it's slow to run. Please consider using unit tests and
 RuntimeInterface mocks instead of extending this file.
 """
+import json
 import time
 import typing as t
 from pathlib import Path
 
 import pytest
 
+from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._ray import _client, _dag, _ray_logs
@@ -492,22 +494,22 @@ class TestRayRuntimeMethods:
             _example_wfs.multioutput_wf,
             ("Emiliano Zapata", "Zapata computing"),
             {
-                "invocation-0-task-concat": ("Emiliano Zapata",),
-                "invocation-1-task-capitalize": ("Zapata",),
-                "invocation-2-task-capitalize": ("Zapata computing",),
-                "invocation-3-task-make-company-name": ("zapata computing",),
+                "invocation-0-task-capitalize": ("Zapata computing",),
+                "invocation-1-task-make-company-name": ("zapata computing",),
+                "invocation-2-task-concat": ("Emiliano Zapata",),
+                "invocation-3-task-capitalize": ("Zapata",),
             },
         ),
         (
             _example_wfs.multioutput_task_wf,
             ("Zapata", "Computing", "Computing", ("Zapata", "Computing")),
             {
-                "invocation-0-task-multioutput-task": ("Zapata", "Computing"),
                 # The outputs for invocation 1 and 2 should be just a single tuple, not
                 # tuple-in-tuple. TODO: change it when working on
                 # https://zapatacomputing.atlassian.net/browse/ORQSDK-695.
+                "invocation-0-task-multioutput-task": (("Zapata", "Computing"),),
                 "invocation-1-task-multioutput-task": (("Zapata", "Computing"),),
-                "invocation-2-task-multioutput-task": (("Zapata", "Computing"),),
+                "invocation-2-task-multioutput-task": ("Zapata", "Computing"),
             },
         ),
         (
@@ -523,10 +525,10 @@ class TestRayRuntimeMethods:
             _example_wfs.wf_using_inline_imports,
             ("Emiliano Zapata", "Zapata computing"),
             {
-                "invocation-0-task-concat": ("Emiliano Zapata",),
-                "invocation-1-task-capitalize-inline": ("Zapata",),
-                "invocation-2-task-capitalize-inline": ("Zapata computing",),
-                "invocation-3-task-make-company-name": ("zapata computing",),
+                "invocation-0-task-capitalize-inline": ("Zapata computing",),
+                "invocation-1-task-make-company-name": ("zapata computing",),
+                "invocation-2-task-concat": ("Emiliano Zapata",),
+                "invocation-3-task-capitalize-inline": ("Zapata",),
             },
         ),
     ],
@@ -661,31 +663,6 @@ class TestDirectRayReader:
 
         assert tell_tale in log_lines_joined
 
-    def test_iter_logs(
-        self, shared_ray_conn, runtime, with_run_id: bool, wf, tell_tale: str
-    ):
-        """
-        Submit a workflow, wait for it to finish, get one batch of logs, look for
-        the test message.
-        """
-        # Given
-        ray_params = shared_ray_conn
-        reader = _ray_logs.DirectRayReader(Path(ray_params._temp_dir))
-
-        run_id = runtime.create_workflow_run(wf)
-        _wait_to_finish_wf(run_id, runtime)
-
-        query_run_id = run_id if with_run_id else None
-
-        # When
-        iterator = reader.iter_logs(run_id=query_run_id)
-        logs_batch = next(iterator)
-
-        # Then
-        log_lines_joined = "".join(log_line for log_line in logs_batch)
-
-        assert tell_tale in log_lines_joined
-
 
 @pytest.mark.slow
 # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
@@ -754,3 +731,65 @@ def test_task_code_unavailable_at_building_dag(runtime: _dag.RayRuntime):
     assert (
         runtime.get_workflow_run_status(wf_id).task_runs[0].status.state == State.FAILED
     )
+
+
+# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
+# unraisable exceptions. Last tested with Ray 2.0.1.
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+class TestGetCurrentIDs:
+    def test_during_running_workflow(self, runtime: _dag.RayRuntime, tmp_path: Path):
+        # Given
+        output_path = (tmp_path / "output.json").absolute()
+
+        @sdk.task(source_import=sdk.InlineImport())
+        def dump_ids():
+            # Separate import just to avoid weird global state passing via closure.
+            import orquestra.sdk._ray._dag
+
+            (
+                wf_run_id,
+                task_inv_id,
+                task_run_id,
+            ) = orquestra.sdk._ray._dag.get_current_ids()
+
+            ids_dict = {
+                "wf_run_id": wf_run_id,
+                "task_inv_id": task_inv_id,
+                "task_run_id": task_run_id,
+            }
+
+            output_path.write_text(json.dumps(ids_dict))
+
+            return "done"
+
+        @sdk.workflow
+        def wf():
+            return dump_ids()
+
+        wf_model = wf().model
+
+        # When
+        # The function-under-test is called inside the workflow.
+        wf_run_id = runtime.create_workflow_run(wf_model)
+        _wait_to_finish_wf(wf_run_id, runtime)
+
+        # Precondition
+        wf_run = runtime.get_workflow_run_status(wf_run_id)
+        assert wf_run.status.state == State.SUCCEEDED
+
+        # Then
+        ids_dict = json.loads(output_path.read_text())
+        assert ids_dict["wf_run_id"] == wf_run_id
+
+        task_inv_ids = list(wf_model.task_invocations.keys())
+        assert ids_dict["task_inv_id"] in task_inv_ids
+
+        task_run_ids = [task_run.id for task_run in wf_run.task_runs]
+        assert ids_dict["task_run_id"] in task_run_ids
+
+    def test_outside_workflow(self):
+        # When
+        ids = _dag.get_current_ids()
+
+        # Then
+        assert ids == (None, None, None)

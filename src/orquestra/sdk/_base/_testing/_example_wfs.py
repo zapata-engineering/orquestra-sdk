@@ -290,3 +290,9 @@ def wf_with_exec_ctx():
 @sdk.workflow
 def parametrized_wf(a: int):
     return add(a, 5)
+
+
+@sdk.workflow
+def wf_with_secrets():
+    secret = sdk.secrets.get("some-secret", config_name="test_config_default")
+    return capitalize_inline(secret)

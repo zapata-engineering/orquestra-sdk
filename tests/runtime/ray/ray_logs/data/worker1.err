@@ -1,35 +1,19 @@
 :actor_name:WorkflowManagementActor
-2023-02-01 16:04:57,663	INFO workflow_executor.py:86 -- Workflow job [id=wf.orquestra_basic_demo.e82cbfa] started.
-2023-02-01 16:04:59,442	ERROR workflow_executor.py:306 -- Task status [FAILED] due to an exception raised by the task.	[wf.orquestra_basic_demo.e82cbfa@invocation-0-task-generate-data]
-2023-02-01 16:04:59,449	ERROR workflow_executor.py:352 -- Workflow 'wf.orquestra_basic_demo.e82cbfa' failed due to [36mray::_workflow_task_executor_remote()[39m (pid=74588, ip=127.0.0.1)
+2023-02-09 12:26:05,407	INFO workflow_executor.py:86 -- Workflow job [id=wf.orquestra_basic_demo.3fcba90] started.
+2023-02-09 12:26:07,104	ERROR workflow_executor.py:306 -- Task status [FAILED] due to an exception raised by the task.	[wf.orquestra_basic_demo.3fcba90@invocation-0-task-generate-data]
+2023-02-09 12:26:07,112	ERROR workflow_executor.py:352 -- Workflow 'wf.orquestra_basic_demo.3fcba90' failed due to [36mray::_workflow_task_executor_remote()[39m (pid=25989, ip=127.0.0.1)
   File "/Users/alex/Code/zapata/evangelism-workflows/venv/lib/python3.10/site-packages/ray/workflow/task_executor.py", line 115, in _workflow_task_executor_remote
     return _workflow_task_executor(
   File "/Users/alex/Code/zapata/evangelism-workflows/venv/lib/python3.10/site-packages/ray/workflow/task_executor.py", line 84, in _workflow_task_executor
     raise e
   File "/Users/alex/Code/zapata/evangelism-workflows/venv/lib/python3.10/site-packages/ray/workflow/task_executor.py", line 79, in _workflow_task_executor
     output = func(*args, **kwargs)
-  File "/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py", line 198, in _ray_remote
+  File "/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py", line 200, in _ray_remote
     raise e
-  File "/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py", line 191, in _ray_remote
+  File "/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py", line 193, in _ray_remote
     return wrapped(*inner_args, **inner_kwargs)
-  File "/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py", line 146, in __call__
+  File "/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py", line 148, in __call__
     return self._fn(*unpacked_args, **unpacked_kwargs)
-  File "/Users/alex/Code/zapata/evangelism-workflows/demos/basic/tasks.py", line 39, in generate_data
-    foo = 1 / 0
-ZeroDivisionError: division by zero
-2023-02-01 16:14:24,732	ERROR worker.py:399 -- Unhandled error (suppress with 'RAY_IGNORE_UNHANDLED_ERRORS=1'): [36mray::_workflow_task_executor_remote()[39m (pid=74588, ip=127.0.0.1)
-  File "/Users/alex/Code/zapata/evangelism-workflows/venv/lib/python3.10/site-packages/ray/workflow/task_executor.py", line 115, in _workflow_task_executor_remote
-    return _workflow_task_executor(
-  File "/Users/alex/Code/zapata/evangelism-workflows/venv/lib/python3.10/site-packages/ray/workflow/task_executor.py", line 84, in _workflow_task_executor
-    raise e
-  File "/Users/alex/Code/zapata/evangelism-workflows/venv/lib/python3.10/site-packages/ray/workflow/task_executor.py", line 79, in _workflow_task_executor
-    output = func(*args, **kwargs)
-  File "/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py", line 198, in _ray_remote
-    raise e
-  File "/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py", line 191, in _ray_remote
-    return wrapped(*inner_args, **inner_kwargs)
-  File "/Users/alex/Code/zapata/evangelism-workflows/vendor/orquestra-workflow-sdk/src/orquestra/sdk/_ray/_dag.py", line 146, in __call__
-    return self._fn(*unpacked_args, **unpacked_kwargs)
-  File "/Users/alex/Code/zapata/evangelism-workflows/demos/basic/tasks.py", line 39, in generate_data
+  File "/Users/alex/Code/zapata/evangelism-workflows/demos/basic/tasks.py", line 42, in generate_data
     foo = 1 / 0
 ZeroDivisionError: division by zero

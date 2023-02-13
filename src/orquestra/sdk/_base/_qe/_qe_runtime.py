@@ -791,10 +791,6 @@ class QERuntime(RuntimeInterface):
             for task_run in workflow_run.task_runs
         }
 
-    def iter_logs(self, _: Optional[Union[WorkflowRunId, TaskRunId]] = None):
-        """Raises NotImplementedError as QE cannot stream logs in this manner"""
-        raise NotImplementedError("Unable to stream logs from Quantum Engine")
-
     def stop_workflow_run(self, run_id: WorkflowRunId) -> None:
         """Terminates a workflow run.
 

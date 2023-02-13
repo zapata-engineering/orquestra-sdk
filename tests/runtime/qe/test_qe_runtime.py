@@ -1235,16 +1235,6 @@ class TestGetFullLogs:
             _ = runtime.get_full_logs(task_run_id)
 
 
-class TestIterLogs:
-    def test_no_args(self, runtime):
-        with pytest.raises(NotImplementedError):
-            runtime.iter_logs()
-
-    def test_arg(self, runtime):
-        with pytest.raises(NotImplementedError):
-            runtime.iter_logs("workflow-run-id")
-
-
 class TestStopWorkflowRun:
     def test_invalid_run_id(self, monkeypatch, runtime, mocked_responses):
         with pytest.raises(exceptions.WorkflowRunCanNotBeTerminated):

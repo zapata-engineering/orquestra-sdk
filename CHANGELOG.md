@@ -6,6 +6,7 @@
 
 
 🔥 *Features*
+* Secrets can now be used inside workflow functions
 
 
 👩‍🔬 *Experimental*
