@@ -12,8 +12,6 @@ import pytest
 
 from orquestra.sdk._ray import _ray_logs
 
-DATA_PATH = Path(__file__).parent / "data"
-
 
 INFO_LOG = _ray_logs.WFLog(
     timestamp=datetime(2023, 2, 9, 11, 26, 7, 98413, tzinfo=timezone.utc),
@@ -36,22 +34,28 @@ ERROR_LOG = _ray_logs.WFLog(
     task_run_id="wf.orquestra_basic_demo.3fcba90@invocation-0-task-generate-data.d0751",
 )
 
+DATA_PATH = Path(__file__).parent / "data"
+TEST_RAY_TEMP_PATH = DATA_PATH / "ray_temp"
+WORKER_LOGS_PATH = (
+    TEST_RAY_TEMP_PATH / "session_2023-02-09_12-23-55_156174_25782" / "logs"
+)
+
 
 class TestParseLogLine:
     @staticmethod
     @pytest.mark.parametrize(
         "log_file, expected_parsed",
         [
-            pytest.param(DATA_PATH / "worker1.err", [], id="wf_manager_stderr"),
-            pytest.param(DATA_PATH / "worker1.out", [], id="wf_manager_stdout"),
-            pytest.param(DATA_PATH / "worker2.err", [], id="idle_worker_stderr"),
-            pytest.param(DATA_PATH / "worker2.err", [], id="idle_worker_stdout"),
+            pytest.param(WORKER_LOGS_PATH / "worker1.err", [], id="wf_manager_stderr"),
+            pytest.param(WORKER_LOGS_PATH / "worker1.out", [], id="wf_manager_stdout"),
+            pytest.param(WORKER_LOGS_PATH / "worker2.err", [], id="idle_worker_stderr"),
+            pytest.param(WORKER_LOGS_PATH / "worker2.err", [], id="idle_worker_stdout"),
             pytest.param(
-                DATA_PATH / "worker3.err",
+                WORKER_LOGS_PATH / "worker3.err",
                 [INFO_LOG, ERROR_LOG],
                 id="busy_worker_stderr",
             ),
-            pytest.param(DATA_PATH / "worker3.out", [], id="busy_worker_stdout"),
+            pytest.param(WORKER_LOGS_PATH / "worker3.out", [], id="busy_worker_stdout"),
         ],
     )
     def test_parsing_real_files(log_file: Path, expected_parsed):
@@ -159,11 +163,62 @@ class TestParseLogLine:
         assert parsed == expected
 
 
+class TestIterLogPaths:
+    """
+    Test boundary::
+        [FS]->[_iter_log_paths()]
+    """
+
+    @staticmethod
+    def test_with_real_files():
+        # Given
+        ray_temp = TEST_RAY_TEMP_PATH
+
+        # When
+        paths_iter = _ray_logs._iter_log_paths(ray_temp)
+
+        # Then
+        paths = list(paths_iter)
+        # There are logs for 3 workers with separate files for stdout and stderr.
+        # There's also a directory symlink (session_latest) but it shouldn't cause us to
+        # read the same logs twice.
+        assert len(paths) == 6
+        assert len([p for p in paths if "worker" in p.stem]) == 6
+        assert len([p for p in paths if p.suffix == ".err"]) == 3
+        assert len([p for p in paths if p.suffix == ".out"]) == 3
+
+
+class TestIterLogLines:
+    """
+    Test boundary::
+        [_iter_log_paths()]->[_iter_log_lines()]
+                       [FS]->[_iter_log_lines()]
+    """
+
+    @staticmethod
+    def test_number_of_lines(monkeypatch):
+        # Given
+        fake_paths = (p for p in WORKER_LOGS_PATH.iterdir() if p.is_file())
+        monkeypatch.setattr(_ray_logs, "_iter_log_paths", fake_paths)
+
+        # When
+        lines_iter = _ray_logs._iter_log_lines(fake_paths)
+
+        # Then
+        lines = list(lines_iter)
+        assert len(lines) == 70
+        assert lines[:3] == [
+            b":task_name:create_ray_workflow\n",
+            b":task_name:_workflow_task_executor_remote\n",
+            b":actor_name:Manager\n",
+        ]
+
+
 class TestDirectRayReader:
     class TestGetTaskLogs:
         """
         Test boundary::
-            [_get_parsed_logs()]->[get_task_logs()]
+            [_iter_log_lines()]->[DirectRayReader.get_task_logs()]
         """
 
         @staticmethod
