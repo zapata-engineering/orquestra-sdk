@@ -20,7 +20,7 @@ pip install orquestra-sdk[all]
 
 ## Usage
 
-Please refer to the [Orquestra Workflow SDK docs](https://docs.orquestra.io/docs/sdk/).
+Please refer to the [Orquestra Workflow SDK docs](https://docs.orquestra.io/docs/core/sdk/).
 
 ## Bug Reporting
 
