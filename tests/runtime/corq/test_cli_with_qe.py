@@ -7,7 +7,7 @@ import typing as t
 from argparse import Namespace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, create_autospec
 
 import pytest
 
@@ -76,7 +76,7 @@ def _read_config_file(dirpath: Path) -> RuntimeConfigurationFile:
 class TestCLIWithQEMock:
     """Tests CLI actions while using a mock instead the real QERuntime."""
 
-    def test_get_logs(self, monkeypatch, tmp_path, patch_config_location):
+    def test_get_logs(self, monkeypatch, patch_config_location):
         _write_new_config(patch_config_location, CONFIG_WITH_CUSTOM)
 
         # Set up runtime object mock
@@ -84,8 +84,8 @@ class TestCLIWithQEMock:
         log_lines1 = []
         inv_id_2 = "inv-id-2"
         log_lines2 = ["foo 2", "foo bar 2"]
-        mock_runtime = MagicMock(RuntimeInterface)
-        mock_runtime.get_full_logs = lambda _: {
+        mock_runtime = create_autospec(RuntimeInterface)
+        mock_runtime.get_workflow_logs = lambda _: {
             inv_id_1: log_lines1,
             inv_id_2: log_lines2,
         }
@@ -116,8 +116,8 @@ class TestCLIWithQEMock:
     ):
         _write_new_config(patch_config_location, CONFIG_WITH_CUSTOM)
 
-        mock_runtime = Mock(RuntimeInterface)
-        mock_runtime.get_full_logs.side_effect = exceptions.InvalidProjectError(
+        mock_runtime = create_autospec(RuntimeInterface)
+        mock_runtime.get_workflow_logs.side_effect = exceptions.InvalidProjectError(
             "Not an Orquestra project directory. Navigate to the repo root."
         )
         _set_up_runtime_mock(monkeypatch, mock_runtime)

@@ -629,12 +629,6 @@ class RayRuntime(RuntimeInterface):
         self._project_dir = project_dir
 
         self._service_manager = _services.ServiceManager()
-        self._fluentbit_reader: LogReader = _query_service.FluentbitReader(
-            logs_dir=_services.fluentbit_output_path()
-        )
-        self._ray_reader: LogReader = _ray_logs.DirectRayReader(
-            _services.ray_temp_path()
-        )
 
     @classmethod
     def from_runtime_configuration(
@@ -899,13 +893,19 @@ class RayRuntime(RuntimeInterface):
             ) from e
         self._client.cancel(workflow_run_id)
 
-    def get_full_logs(
-        self, run_id: t.Optional[t.Union[WorkflowRunId, TaskRunId]] = None
-    ) -> t.Dict[TaskInvocationId, t.List[str]]:
+    def _get_log_reader(self) -> LogReader:
         if self._service_manager.is_fluentbit_running():
-            return self._fluentbit_reader.get_full_logs(run_id)
+            return _query_service.FluentbitReader(
+                logs_dir=_services.fluentbit_output_path()
+            )
         else:
-            return self._ray_reader.get_full_logs(run_id)
+            return _ray_logs.DirectRayReader(_services.ray_temp_path())
+
+    def get_workflow_logs(self, wf_run_id: WorkflowRunId):
+        return self._get_log_reader().get_workflow_logs(wf_run_id)
+
+    def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
+        return self._get_log_reader().get_task_logs(wf_run_id, task_inv_id)
 
     def list_workflow_runs(
         self,

@@ -20,7 +20,6 @@ from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import (
     State,
-    TaskRunId,
     WorkflowRun,
     WorkflowRunId,
     WorkflowRunMinimal,
@@ -32,35 +31,32 @@ class LogReader(t.Protocol):
     A component that reads logs produced by tasks and workflows.
     """
 
-    def get_full_logs(
-        self, run_id: t.Optional[t.Union[WorkflowRunId, TaskRunId]] = None
-    ) -> t.Dict[TaskInvocationId, t.List[str]]:
-        """Returns the full logs. If the target ID is None,
-        this method will return all logs available from the runtime.
-
-        Note that the argument can be a WorkflowRunId/TaskRunId, but the keys in the
-        returned dictionary are TaskInvocationId for consistency with output from other
-        methods, like `get_workflow_run_all_outputs()`. You can use
-        `get_workflow_run_status()` if you need to map between TaskRunId and
-        TaskInvocationId.
-
-        See also:
-            orquestra.sdk.schema.ir.TaskInvocationId - identifier of a task invocation
-                node in the workflow graph. "Recipe" side of things.
-            orquestra.sdk.schema.workflow_run.TaskRunId - identifier of a run executed
-                by the runtime. "Execution" side of things.
-
-        Arguments:
-            run_id: target workflow/task run
+    def get_task_logs(
+        self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
+    ) -> t.List[str]:
+        """
+        Reads all available logs, specific to a single task invocation/run.
 
         Returns:
-            t.Dictionary with task logs. If passed in `run_id` was a task run ID,
-            this dictionary contains a single entry.
+            Log lines printed when running this task invocation. If the task didn't
+            produce any logs this should be an empty list.
+        """
+        ...
+
+    def get_workflow_logs(
+        self, wf_run_id: WorkflowRunId
+    ) -> t.Dict[TaskInvocationId, t.List[str]]:
+        """
+        Reads all available logs printed during execution of this workflow run.
+
+        Returns:
+            A mapping with task logs. Each key-value pair corresponds to one task
+            invocation.
             - key: task invocation ID (see
                 orquestra.sdk._base.ir.WorkflowDef.task_invocations)
-            - value: list of log lines from running this task invocation.
+            - value: log lines from running this task invocation
         """
-        raise NotImplementedError()
+        ...
 
 
 # A typealias that hints where we expect raw artifact values.
@@ -166,15 +162,6 @@ class RuntimeInterface(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_full_logs(
-        self, run_id: t.Optional[t.Union[WorkflowRunId, TaskRunId]] = None
-    ) -> t.Dict[TaskInvocationId, t.List[str]]:
-        """
-        See LogReader.get_full_logs.
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
     def list_workflow_runs(
         self,
         *,
@@ -191,6 +178,22 @@ class RuntimeInterface(ABC):
             status: Only return runs of runs with the specified status.
         Returns:
                 A list of the workflow runs
+        """
+        raise NotImplementedError()
+
+    def get_task_logs(
+        self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
+    ) -> t.List[str]:
+        """
+        See LogReader.get_task_logs()
+        """
+        raise NotImplementedError()
+
+    def get_workflow_logs(
+        self, wf_run_id: WorkflowRunId
+    ) -> t.Dict[TaskInvocationId, t.List[str]]:
+        """
+        See LogReader.get_task_logs()
         """
         raise NotImplementedError()
 

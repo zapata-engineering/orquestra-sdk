@@ -9,7 +9,6 @@ Usage:
 """
 
 import argparse
-import sys
 import typing as t
 from pathlib import Path
 
@@ -48,7 +47,7 @@ def orq_get_logs(
         raise NotImplementedError("Log streaming isn't implemented")
     else:
         # no follow/eager mode
-        log_dict = runtime.get_full_logs(args.workflow_or_task_run_id)
+        log_dict = runtime.get_workflow_logs(args.workflow_or_task_run_id)
         return GetLogsResponse(
             meta=ResponseMetadata(
                 success=True,

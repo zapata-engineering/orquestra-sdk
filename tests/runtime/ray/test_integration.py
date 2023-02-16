@@ -16,9 +16,10 @@ import pytest
 from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base._testing import _example_wfs
+from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk._ray import _client, _dag, _ray_logs
-from orquestra.sdk.schema import configs
-from orquestra.sdk.schema.workflow_run import State
+from orquestra.sdk.schema import configs, ir
+from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
 
 
 @pytest.fixture(scope="module")
@@ -46,7 +47,7 @@ def _poll_loop(
         time.sleep(interval)
 
 
-def _wait_to_finish_wf(run_id: str, runtime: _dag.RayRuntime):
+def _wait_to_finish_wf(run_id: str, runtime: RuntimeInterface):
     def _continue_condition():
         state = runtime.get_workflow_run_status(run_id).status.state
         return state in [
@@ -618,7 +619,6 @@ class TestRayRuntimeErrors:
 # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
 # unraisable exceptions. Last tested with Ray 2.2.0.
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
-@pytest.mark.parametrize("with_run_id", [True, False])
 @pytest.mark.parametrize(
     "wf,tell_tale",
     [
@@ -635,24 +635,27 @@ class TestDirectRayReader:
     The tests' boundary: `[DirectRayReader]-[task code]`
     """
 
-    def test_read_full_logs(
-        self, shared_ray_conn, runtime, with_run_id: bool, wf, tell_tale: str
-    ):
+    @staticmethod
+    def run_and_await_wf(
+        runtime: RuntimeInterface, wf: ir.WorkflowDef
+    ) -> WorkflowRunId:
+        run_id = runtime.create_workflow_run(wf)
+        _wait_to_finish_wf(run_id, runtime)
+
+        return run_id
+
+    def test_get_workflow_logs(self, shared_ray_conn, runtime, wf, tell_tale: str):
         """
-        Submit a workflow, wait for it to finish, get full logs, look for the test
+        Submit a workflow, wait for it to finish, get wf logs, look for the test
         message.
         """
         # Given
         ray_params = shared_ray_conn
+        wf_run_id = self.run_and_await_wf(runtime, wf)
         reader = _ray_logs.DirectRayReader(Path(ray_params._temp_dir))
 
-        run_id = runtime.create_workflow_run(wf)
-        _wait_to_finish_wf(run_id, runtime)
-
-        query_run_id = run_id if with_run_id else None
-
         # When
-        logs_dict = reader.get_full_logs(run_id=query_run_id)
+        logs_dict = reader.get_workflow_logs(wf_run_id=wf_run_id)
 
         # Then
         log_lines_joined = "".join(
@@ -662,6 +665,28 @@ class TestDirectRayReader:
         )
 
         assert tell_tale in log_lines_joined
+
+    def test_get_task_logs(
+        self, shared_ray_conn, runtime, wf: ir.WorkflowDef, tell_tale: str
+    ):
+        """
+        Submit a workflow, wait for it to finish, get task logs, look for the test
+        message.
+        """
+        # Given
+        ray_params = shared_ray_conn
+        reader = _ray_logs.DirectRayReader(Path(ray_params._temp_dir))
+        all_inv_ids = list(wf.task_invocations.keys())
+        wf_run_id = self.run_and_await_wf(runtime, wf)
+
+        # When
+        log_lines = reader.get_task_logs(
+            wf_run_id=wf_run_id, task_inv_id=all_inv_ids[0]
+        )
+
+        # Then
+        lines_joined = "\n".join(log_lines)
+        assert tell_tale in lines_joined
 
 
 @pytest.mark.slow
@@ -688,7 +713,7 @@ def test_ray_direct_reader_no_duplicate_lines(
     _wait_to_finish_wf(run_id, runtime)
 
     # When
-    logs_dict = reader.get_full_logs(run_id=run_id)
+    logs_dict = reader.get_workflow_logs(wf_run_id=run_id)
 
     # Then
     # First check for the tell_tale in all log lines

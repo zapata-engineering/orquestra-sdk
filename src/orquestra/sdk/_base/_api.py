@@ -154,17 +154,9 @@ class TaskRun:
         return task_run_model.status.state
 
     def get_logs(self) -> t.List[str]:
-        logs_dict = self._runtime.get_full_logs(self.task_run_id)
-        # NOTE: the line below will fail for Ray-produced logs until
-        # https://zapatacomputing.atlassian.net/browse/ORQSDK-676 is fixed.
-        # However, this is a bug, so we don't describe this exception in this method's
-        # signature, nor the functions that wrap it.
-        try:
-            return logs_dict[self.task_invocation_id]
-        except KeyError as e:
-            raise NotImplementedError(
-                "Reading single task logs isn't supported yet for this runtime."
-            ) from e
+        return self._runtime.get_task_logs(
+            wf_run_id=self.workflow_run_id, task_inv_id=self.task_invocation_id
+        )
 
     def get_outputs(self) -> t.Any:
         """
@@ -699,9 +691,7 @@ class WorkflowRun:
             )
             raise WorkflowRunNotStarted(message) from e
 
-        task_logs = self._runtime.get_full_logs(wf_run_id)
-
-        return task_logs
+        return self._runtime.get_workflow_logs(wf_run_id=wf_run_id)
 
     # TODO: ORQSDK-617 add filtering ability for the users
     def get_tasks(self) -> t.Set[TaskRun]:

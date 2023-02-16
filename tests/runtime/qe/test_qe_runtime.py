@@ -18,17 +18,12 @@ import orquestra.sdk as sdk
 import orquestra.sdk._base._db as _db
 import orquestra.sdk._base._qe._qe_runtime as _qe_runtime
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import _config
 from orquestra.sdk._base._conversions._yaml_exporter import (
     pydantic_to_yaml,
     workflow_to_yaml,
 )
 from orquestra.sdk._base._testing._example_wfs import my_workflow
-from orquestra.sdk.schema.configs import (
-    RuntimeConfiguration,
-    RuntimeConfigurationFile,
-    RuntimeName,
-)
+from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun, WorkflowRun
 
@@ -1065,125 +1060,58 @@ class TestGetWorkflowRunOutputsNonBlocking:
             _ = runtime.get_workflow_run_outputs_non_blocking("hello-there-abc123-r000")
 
 
-class TestGetFullLogs:
-    class TestHappyFlow:
-        def test_workflow_run_id(self, monkeypatch, runtime, mocked_responses):
-            wf_run_id = "hello-there-abc123-r000"
-            _get_workflow_run = Mock(
-                return_value=StoredWorkflowRun(
-                    workflow_run_id=wf_run_id,
-                    config_name="hello",
-                    workflow_def=TEST_WORKFLOW,
-                )
+class TestGetWorkflowLogs:
+    def test_happy_flow(self, monkeypatch, runtime, mocked_responses):
+        # Given
+        wf_run_id = "hello-there-abc123-r000"
+        _get_workflow_run = Mock(
+            return_value=StoredWorkflowRun(
+                workflow_run_id=wf_run_id,
+                config_name="hello",
+                workflow_def=TEST_WORKFLOW,
             )
-            monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
-            mocked_responses.add(
-                responses.GET,
-                "http://localhost/v1/workflow",
-                json=QE_RESPONSES["status"],
-            )
-            mocked_responses.add(
-                responses.GET,
-                f"http://localhost/v1/logs/{wf_run_id}",
-                json=QE_RESPONSES["logs"],
-            )
+        )
+        monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
+        mocked_responses.add(
+            responses.GET,
+            "http://localhost/v1/workflow",
+            json=QE_RESPONSES["status"],
+        )
+        mocked_responses.add(
+            responses.GET,
+            f"http://localhost/v1/logs/{wf_run_id}",
+            json=QE_RESPONSES["logs"],
+        )
 
-            logs = runtime.get_full_logs(wf_run_id)
+        # When
+        logs = runtime.get_workflow_logs(wf_run_id)
 
-            assert logs == {
-                "invocation-1-task-multi-output-test": [
-                    "a couple of mocked out lines",
-                    "joined with newline separator",
-                ],
-                "invocation-0-task-make-greeting-message": [
-                    "a couple of mocked out lines",
-                    "joined with newline separator",
-                ],
-            }
+        # Then
+        assert logs == {
+            "invocation-1-task-multi-output-test": [
+                "a couple of mocked out lines",
+                "joined with newline separator",
+            ],
+            "invocation-0-task-make-greeting-message": [
+                "a couple of mocked out lines",
+                "joined with newline separator",
+            ],
+        }
 
-        class TestTaskRunID:
-            def test_plain_string_logs(self, monkeypatch, runtime, mocked_responses):
-                wf_run_id = "hello-there-abc123-r000"
-                task_run_id = f"{wf_run_id}-3825957270"
-
-                _get_workflow_run = Mock(
-                    return_value=StoredWorkflowRun(
-                        workflow_run_id=wf_run_id,
-                        config_name="hello",
-                        workflow_def=TEST_WORKFLOW,
-                    )
-                )
-                monkeypatch.setattr(
-                    _db.WorkflowDB, "get_workflow_run", _get_workflow_run
-                )
-                mocked_responses.add(
-                    responses.GET,
-                    "http://localhost/v1/workflow",
-                    json=QE_RESPONSES["status"],
-                )
-                mocked_responses.add(
-                    responses.GET,
-                    f"http://localhost/v1/logs/{wf_run_id}?stepname={task_run_id}",
-                    json=QE_RESPONSES["logs_jsonl"],
-                )
-
-                logs = runtime.get_full_logs(task_run_id)
-
-                assert logs == {
-                    "invocation-0-task-make-greeting-message": [
-                        "sample log line",
-                        "another log entry in JSONL format",
-                    ]
-                }
-
-            def test_json_logs(self, monkeypatch, runtime, mocked_responses):
-                wf_run_id = "hello-there-abc123-r000"
-                task_run_id = f"{wf_run_id}-3825957270"
-
-                _get_workflow_run = Mock(
-                    return_value=StoredWorkflowRun(
-                        workflow_run_id=wf_run_id,
-                        config_name="hello",
-                        workflow_def=TEST_WORKFLOW,
-                    )
-                )
-                monkeypatch.setattr(
-                    _db.WorkflowDB, "get_workflow_run", _get_workflow_run
-                )
-                mocked_responses.add(
-                    responses.GET,
-                    "http://localhost/v1/workflow",
-                    json=QE_RESPONSES["status"],
-                )
-                mocked_responses.add(
-                    responses.GET,
-                    f"http://localhost/v1/logs/{wf_run_id}?stepname={task_run_id}",
-                    json=QE_RESPONSES["logs"],
-                )
-
-                logs = runtime.get_full_logs(task_run_id)
-
-                assert logs == {
-                    "invocation-0-task-make-greeting-message": [
-                        "a couple of mocked out lines",
-                        "joined with newline separator",
-                    ]
-                }
-
-    def test_no_id(self, runtime):
-        with pytest.raises(NotImplementedError):
-            runtime.get_full_logs()
-
-    def test_task_run_id_invalid_syntax(self, monkeypatch, runtime, mocked_responses):
+    def test_invalid_id(self, monkeypatch, runtime, mocked_responses):
         _get_workflow_run = Mock(side_effect=exceptions.NotFoundError)
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
 
         with pytest.raises(exceptions.NotFoundError):
-            runtime.get_full_logs("notvalidqetask")
+            runtime.get_workflow_logs("notvalidqetask")
 
-    def test_task_run_missing_from_wf(self, monkeypatch, runtime, mocked_responses):
+
+class TestGetTaskLogs:
+    def test_plain_string_logs(self, monkeypatch, runtime, mocked_responses):
+        # Given
         wf_run_id = "hello-there-abc123-r000"
-        task_run_id = f"{wf_run_id}-ihopeitsnotinmocks"
+        task_run_id = f"{wf_run_id}-3825957270"
+        task_inv_id = "invocation-0-task-make-greeting-message"
 
         _get_workflow_run = Mock(
             return_value=StoredWorkflowRun(
@@ -1198,19 +1126,92 @@ class TestGetFullLogs:
             "http://localhost/v1/workflow",
             json=QE_RESPONSES["status"],
         )
-        # QE returns empty logs if the stepname is invalid.
         mocked_responses.add(
             responses.GET,
             f"http://localhost/v1/logs/{wf_run_id}?stepname={task_run_id}",
-            json=QE_RESPONSES["logs_empty"],
+            json=QE_RESPONSES["logs_jsonl"],
         )
 
-        with pytest.raises(exceptions.NotFoundError):
-            _ = runtime.get_full_logs(task_run_id)
+        # When
+        logs = runtime.get_task_logs(wf_run_id, task_inv_id)
+
+        # Then
+        assert logs == [
+            "sample log line",
+            "another log entry in JSONL format",
+        ]
+
+    def test_json_logs(self, monkeypatch, runtime, mocked_responses):
+        wf_run_id = "hello-there-abc123-r000"
+        task_run_id = f"{wf_run_id}-3825957270"
+        task_inv_id = "invocation-0-task-make-greeting-message"
+
+        _get_workflow_run = Mock(
+            return_value=StoredWorkflowRun(
+                workflow_run_id=wf_run_id,
+                config_name="hello",
+                workflow_def=TEST_WORKFLOW,
+            )
+        )
+        monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
+        mocked_responses.add(
+            responses.GET,
+            "http://localhost/v1/workflow",
+            json=QE_RESPONSES["status"],
+        )
+        mocked_responses.add(
+            responses.GET,
+            f"http://localhost/v1/logs/{wf_run_id}?stepname={task_run_id}",
+            json=QE_RESPONSES["logs"],
+        )
+
+        # When
+        logs = runtime.get_task_logs(wf_run_id, task_inv_id)
+
+        # Then
+        assert logs == [
+            "a couple of mocked out lines",
+            "joined with newline separator",
+        ]
+
+    def test_wf_missing_from_db(self, monkeypatch, runtime, mocked_responses):
+        # Given
+        wf_run_id = "shouldn't matter"
+        task_inv_id = "shouldn't matter either"
+
+        _get_workflow_run = Mock(side_effect=exceptions.WorkflowNotFoundError)
+        monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
+
+        # Then
+        with pytest.raises(exceptions.WorkflowNotFoundError):
+            # When
+            _ = runtime.get_task_logs(wf_run_id, task_inv_id)
+
+    def test_task_inv_missing_from_wf(self, monkeypatch, runtime, mocked_responses):
+        wf_run_id = "hello-there-abc123-r000"
+        task_inv_id = "doesn't exist"
+
+        _get_workflow_run = Mock(
+            return_value=StoredWorkflowRun(
+                workflow_run_id=wf_run_id,
+                config_name="hello",
+                workflow_def=TEST_WORKFLOW,
+            )
+        )
+        monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
+        mocked_responses.add(
+            responses.GET,
+            "http://localhost/v1/workflow",
+            json=QE_RESPONSES["status"],
+        )
+
+        with pytest.raises(exceptions.TaskInvocationNotFoundError):
+            _ = runtime.get_task_logs(wf_run_id, task_inv_id)
 
     def test_wf_missing_on_qe(self, monkeypatch, runtime, mocked_responses):
         wf_run_id = "hello-there-abc123-r000"
-        task_run_id = f"{wf_run_id}-shouldn't-matter"
+        task_run_id = "hello-there-abc123-r000-3825957270"
+        task_inv_id = "invocation-0-task-make-greeting-message"
 
         _get_workflow_run = Mock(
             return_value=StoredWorkflowRun(
@@ -1232,7 +1233,7 @@ class TestGetFullLogs:
         )
 
         with pytest.raises(exceptions.NotFoundError):
-            _ = runtime.get_full_logs(task_run_id)
+            _ = runtime.get_task_logs(wf_run_id, task_inv_id)
 
 
 class TestStopWorkflowRun:
@@ -1538,11 +1539,3 @@ class TestHTTPErrors:
             runtime.stop_workflow_run("hello-there-abc123-r000")
         for telltale in telltales:
             assert telltale in str(exc_info)
-
-
-def test_get_full_logs(monkeypatch, runtime, mocked_responses):
-    _get_workflow_run = Mock(side_effect=exceptions.NotFoundError)
-    monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
-
-    with pytest.raises(exceptions.NotFoundError):
-        runtime.get_full_logs("hello-there-abc123-r000-abc")

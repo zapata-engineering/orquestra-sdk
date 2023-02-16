@@ -559,10 +559,17 @@ class QERuntime(RuntimeInterface):
             orquestra.sdk.exceptions.UnauthorizedError if QE returns 401
             orquestra.sdk.exceptions.InvalidProjectError: if an Orquestra
                 project directory is not found
+            orquestra.sdk.exceptions.WorkflowNotFoundError: if workflow run couldn't be
+                found in the local database.
         """
         try:
             with WorkflowDB.open_project_db(self._project_dir) as db:
-                wf_run = db.get_workflow_run(workflow_run_id)
+                try:
+                    wf_run = db.get_workflow_run(workflow_run_id)
+                except exceptions.WorkflowNotFoundError:
+                    # explicit re-raise
+                    raise
+
         except sqlite3.OperationalError as e:
             raise exceptions.InvalidProjectError(
                 "Not an Orquestra project directory. Navigate to the repo root."
@@ -694,98 +701,61 @@ class QERuntime(RuntimeInterface):
 
         return return_dict
 
-    def get_full_logs(
-        self, run_id: Optional[Union[WorkflowRunId, TaskRunId]] = None
-    ) -> Dict[TaskInvocationId, List[str]]:
+    def get_task_logs(
+        self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
+    ) -> List[str]:
         """
-        Returns the logs for workflow run, for all tasks.
-
-        Note that the argument can be a WorkflowRunId/TaskRunId, but the keys in the
-        returned dictionary are TaskInvocationId for consistency with output from other
-        methods, like `get_workflow_run_all_outputs()`. You can use
-        `get_workflow_run_status()` if you need to map between TaskRunId and
-        TaskInvocationId.
-
-        See also:
-            orquestra.sdk.schema.ir.TaskInvocationId - identifier of a task invocation
-                node in the workflow graph. "Recipe" side of things.
-            orquestra.sdk.schema.workflow_run.TaskRunId - identifier of a run executed
-                by the runtime. "Execution" side of things.
-
-        Arguments:
-            run_id: ID of the workflow run to grab logs for. Currently, we don't support
-                getting logs for a single task run only.
-
-        Returns:
-            Dictionary with task logs. If passed in `run_id` was a task run ID,
-            this dictionary contains a single entry.
-            - key: task invocation ID (see
-                orquestra.sdk._base.ir.WorkflowDef.task_invocations)
-            - value: list of log lines from running this task invocation.
-
-        Raises:
-            NotImplementedError: if workflow_or_task_run_id is None.
-            orquestra.sdk.exceptions.NotFoundError: if the workflow or
-                task is not found
-            orquestra.sdk.exceptions.UnauthorizedError if QE returns 401
+        Raise:
+            orquestra.sdk.exceptions.WorkflowNotFoundError: when couldn't find workflow
+                with ``wf_run_id``.
+            orquestra.sdk.exceptions.TaskInvocationNotFoundError: when ``task_inv_id``
+                doesn't fit any tasks in this workflow.
+            orquestra.sdk.exceptions.NotFoundError: when couldn't fetch logs from QE for
+                this task.
         """
-        # 1. Getting all logs from all workflows
-        if run_id is None:
-            raise NotImplementedError("Quantum Engine requires a workflow run ID")
-
-        # 2. Deciding if `run_id` is a wf_run_id or a task_run_id.
         try:
-            parsed_wf_run_id, step_suffix = parse_run_id(run_id)
-        except ValueError as e:
-            raise exceptions.NotFoundError(
-                f"Can't parse {run_id} to decide if it's a workflow or task run ID"
+            workflow_run = self.get_workflow_run_status(wf_run_id)
+        except exceptions.WorkflowNotFoundError as e:
+            # explicit re-raise
+            raise e
+
+        try:
+            # QE's API requires our TaskRunID. We know WorkflowRunID + TaskInvID so we
+            # need to map it via the workflow status model.
+            task_run = _find_first(
+                lambda task_run: task_run.invocation_id == task_inv_id,
+                workflow_run.task_runs,
+            )
+        except StopIteration as e:
+            raise exceptions.TaskInvocationNotFoundError(
+                invocation_id=task_inv_id
             ) from e
 
-        # 3. Getting a workflow_run. We need this to figure out the mapping
-        # between task_run_id and task_invocation_id.
-        # Note: most of the following awakward logic could be avoided if we
-        # returned task_run_ids as the output dict keys instead of
-        # task_invocation_ids.
         try:
-            workflow_run = self.get_workflow_run_status(parsed_wf_run_id)
+            log_lines = self._get_task_run_logs(
+                wf_run_id=wf_run_id,
+                task_run_id=task_run.id,
+            )
+        except requests.exceptions.HTTPError as e:
+            raise exceptions.NotFoundError(
+                f"Can't get logs for workflow run {parse_run_id}"
+            ) from e
+
+        return log_lines
+
+    def get_workflow_logs(
+        self, wf_run_id: WorkflowRunId
+    ) -> Dict[TaskInvocationId, List[str]]:
+        try:
+            workflow_run = self.get_workflow_run_status(wf_run_id)
         except exceptions.NotFoundError as e:
             # explicit re-raise
             raise e
 
-        # 4. Getting logs from a single task run
-        if step_suffix is not None:
-            try:
-                log_lines = self._get_task_run_logs(
-                    wf_run_id=parsed_wf_run_id,
-                    task_run_id=run_id,
-                )
-            except requests.exceptions.HTTPError as e:
-                raise exceptions.NotFoundError(
-                    f"Can't get logs for workflow run {parse_run_id}"
-                ) from e
-
-            try:
-                # We only need this to know what's the `invocation_id` because
-                # that's what the interface expects us to return as the output
-                # dict key. This could be avoided if we switch to keeping
-                # `task_run_id`s as the dict keys.
-                task_run = _find_first(
-                    lambda task_run: task_run.id == run_id,
-                    workflow_run.task_runs,
-                )
-            except StopIteration as e:
-                raise exceptions.NotFoundError(
-                    f"Can't find {run_id} in the task runs of the workflow run "
-                    f"{parsed_wf_run_id}"
-                ) from e
-
-            return {task_run.invocation_id: log_lines}
-
-        # 5. Getting all logs from a single workflow run
         # NOTE: we're making N requests here.
         return {
             task_run.invocation_id: self._get_task_run_logs(
-                wf_run_id=parsed_wf_run_id,
+                wf_run_id=wf_run_id,
                 task_run_id=task_run.id,
             )
             for task_run in workflow_run.task_runs

@@ -269,7 +269,12 @@ class InProcessRuntime(abc.RuntimeInterface):
             "This functionality isn't available for 'in_process' runtime"
         )
 
-    def get_full_logs(self, *args, **kwargs) -> t.Dict[str, t.List[str]]:
+    def get_task_logs(self, *args, **kwargs):
+        raise NotImplementedError(
+            "This functionality isn't available for 'in_process' runtime"
+        )
+
+    def get_workflow_logs(self, *args, **kwargs):
         raise NotImplementedError(
             "This functionality isn't available for 'in_process' runtime"
         )

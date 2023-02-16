@@ -130,7 +130,7 @@ def test_studio_like_flow():
         print(f"Workflow run state is {first_status.status.state}")
 
         # (4.1)
-        running_wf_logs_dict = rt.get_full_logs(wf_run_id)
+        running_wf_logs_dict = rt.get_workflow_logs(wf_run_id)
 
         # Unfortunately we can't assert much here, because the logs dict might
         # be empty right after submitting the workflow.
@@ -170,7 +170,7 @@ def test_studio_like_flow():
         )
 
         # (6.1)
-        wf_logs_dict = rt.get_full_logs(wf_run_id)
+        wf_logs_dict = rt.get_workflow_logs(wf_run_id)
         print(f"Fetched full workflow logs for {len(wf_logs_dict)} tasks")
 
         assert len(wf_logs_dict) == len(polled_status.task_runs)
@@ -178,17 +178,15 @@ def test_studio_like_flow():
         assert set(wf_logs_dict.keys()) == {
             run.invocation_id for run in polled_status.task_runs
         }
-        for key, log_lines in wf_logs_dict.items():
+        for _, log_lines in wf_logs_dict.items():
             assert len(log_lines) > 0
 
         # (6.2)
-        task_run_id = polled_status.task_runs[0].id
-        task_logs_dict = rt.get_full_logs(task_run_id)
-        print(f"Fetched logs for task run {task_run_id}")
+        task_inv_id = polled_status.task_runs[0].invocation_id
+        task_logs_list = rt.get_task_logs(wf_run_id, task_inv_id)
+        print(f"Fetched logs for {task_inv_id}")
 
-        assert len(task_logs_dict) == 1
-        # TODO: switch `run.invocation_id` into `run.id` when this change is implemented
-        assert len(task_logs_dict[polled_status.task_runs[0].invocation_id]) > 0
+        assert len(task_logs_list) > 0
 
         # (6.3)
         # Sometimes, QE fails to return artifacts even though it tells us that

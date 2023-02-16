@@ -4,12 +4,10 @@
 """
 Class to get logs from Ray for particular Workflow, both historical and live.
 """
-import glob
 import json
-import os
-import time
 import typing as t
-from dataclasses import dataclass
+
+# from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
@@ -19,21 +17,6 @@ from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRunId
 
 from . import _client
-
-
-@dataclass
-class _LogFileInfo:
-    """
-    Keeps track where we stopped reading a log file the last time we looked at it.
-
-    Mutated every time we read a log file.
-    """
-
-    # Absolute filepath without symlinks.
-    filepath: str
-    size_when_last_opened: int
-    # Last read index.
-    file_position: int
 
 
 class WFLog(pydantic.BaseModel):
@@ -64,9 +47,7 @@ def _parse_obj_or_none(model_class, json_dict):
         return None
 
 
-def parse_log_line(
-    raw_line: bytes, searched_id: t.Union[WorkflowRunId, TaskRunId, None]
-) -> t.Optional[WFLog]:
+def parse_log_line(raw_line: bytes) -> t.Optional[WFLog]:
     line = raw_line.decode("utf-8", "replace").rstrip("\r\n")
     if line.startswith(_client.LogPrefixActorName) or line.startswith(
         _client.LogPrefixTaskName
@@ -74,25 +55,39 @@ def parse_log_line(
         return None
 
     try:
-        json_dict = json.loads(line)
+        json_obj = json.loads(line)
     except (ValueError, TypeError):
         return None
 
-    if searched_id is not None:
-        if (
-            json_dict.get("wf_run_id") == searched_id
-            or json_dict.get("task_run_id") == searched_id
-        ):
-            return _parse_obj_or_none(WFLog, json_dict)
-        else:
-            return None
-    else:
-        return _parse_obj_or_none(WFLog, json_dict)
+    # Fixes log lines that are valid JSON literals but not objects
+    if not isinstance(json_obj, dict):
+        return None
+
+    return _parse_obj_or_none(WFLog, json_obj)
 
 
-class _RayLogs:
+def _iter_log_paths(ray_temp: Path) -> t.Iterator[Path]:
+    seen_paths: t.MutableSet[Path] = set()
+    for file_path in ray_temp.glob("session_*/logs/worker*[.err|.out]"):
+        real_path = file_path.resolve()
+        if real_path in seen_paths:
+            continue
+
+        yield real_path
+
+        seen_paths.add(real_path)
+
+
+def _iter_log_lines(paths: t.Iterable[Path]) -> t.Iterator[bytes]:
+    for path in paths:
+        with path.open("rb") as f:
+            yield from f
+
+
+class DirectRayReader:
     """
     Directly reads log files produced by Ray, bypassing the fluent-bit service.
+    Implements the orquestra.sdk._base.abc.LogReader interface.
 
     Requires ``ray_temp`` to be consistent with the path passed when initializing the
     Ray cluster. For example, if the cluster was started with::
@@ -104,62 +99,6 @@ class _RayLogs:
     the ``ray_temp`` needs to be ``~/.orquestra/ray``.
     """
 
-    def __init__(self, ray_temp: Path, workflow_or_task_run_id: t.Optional[str] = None):
-        self.ray_temp = ray_temp
-        self.workflow_or_task_run_id = workflow_or_task_run_id
-        self.log_filenames: t.MutableSet[str] = set()
-        self.log_file_infos: t.MutableSequence[_LogFileInfo] = []
-
-    def _update_log_filenames(self):
-        path_glob = self.ray_temp / "session**" / "logs" / "worker*[.out|.err]"
-        log_file_paths = glob.glob(str(path_glob))
-        for file_path in log_file_paths:
-            real_path = os.path.realpath(file_path)
-            if os.path.isfile(file_path) and real_path not in self.log_filenames:
-                self.log_filenames.add(real_path)
-                self.log_file_infos.append(
-                    _LogFileInfo(
-                        filepath=real_path,
-                        size_when_last_opened=0,
-                        file_position=0,
-                    )
-                )
-
-    def _read_log_files(self) -> t.Sequence[WFLog]:
-        logs: t.List[WFLog] = []
-
-        self._update_log_filenames()
-
-        for file_info in self.log_file_infos:
-            file_size = os.path.getsize(file_info.filepath)
-            if file_size > file_info.size_when_last_opened:
-                file_info.size_when_last_opened = file_size
-
-                with open(file_info.filepath, "rb") as f:
-                    f.seek(file_info.file_position)
-                    for next_line in f:
-                        parsed_log = parse_log_line(
-                            next_line, searched_id=self.workflow_or_task_run_id
-                        )
-                        if parsed_log is not None:
-                            logs.append(parsed_log)
-                    file_info.file_position = f.tell()
-
-        return logs
-
-    def get_full_logs(self):
-        parsed_logs = self._read_log_files()
-        formatted = [log.json() for log in parsed_logs]
-        # This is bad. The key should be a task invocation ID. To be fixed in the Jira
-        # ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-676
-        return {"logs": formatted}
-
-
-class DirectRayReader:
-    """
-    Adapter that wraps RayLogs in the orquestra.sdk._base.abc.LogReader interface.
-    """
-
     def __init__(self, ray_temp: Path):
         """
         Args:
@@ -167,6 +106,43 @@ class DirectRayReader:
         """
         self._ray_temp = ray_temp
 
-    def get_full_logs(self, run_id: t.Optional[str] = None) -> t.Dict[str, t.List[str]]:
-        wrapped = _RayLogs(ray_temp=self._ray_temp, workflow_or_task_run_id=run_id)
-        return wrapped.get_full_logs()
+    def _get_parsed_logs(self) -> t.Iterable[WFLog]:
+        log_paths = _iter_log_paths(self._ray_temp)
+        log_line_bytes = _iter_log_lines(log_paths)
+
+        return [
+            parsed_log
+            for log_line in log_line_bytes
+            if (parsed_log := parse_log_line(raw_line=log_line)) is not None
+        ]
+
+    def get_task_logs(
+        self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
+    ) -> t.List[str]:
+
+        parsed_logs = self._get_parsed_logs()
+
+        task_logs = [
+            log
+            for log in parsed_logs
+            if log.wf_run_id == wf_run_id and log.task_inv_id == task_inv_id
+        ]
+        return [log.json() for log in task_logs]
+
+    def get_workflow_logs(
+        self, wf_run_id: WorkflowRunId
+    ) -> t.Dict[TaskInvocationId, t.List[str]]:
+
+        parsed_logs = self._get_parsed_logs()
+
+        logs_dict: t.Dict[TaskInvocationId, t.List[str]] = {}
+        for log in parsed_logs:
+            if log.wf_run_id != wf_run_id:
+                continue
+
+            if log.task_inv_id is None:
+                continue
+
+            logs_dict.setdefault(log.task_inv_id, []).append(log.json())
+
+        return logs_dict
