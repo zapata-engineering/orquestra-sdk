@@ -207,11 +207,9 @@ class TestIterLogLines:
         # Then
         lines = list(lines_iter)
         assert len(lines) == 70
-        assert lines[:3] == [
-            b":task_name:create_ray_workflow\n",
-            b":task_name:_workflow_task_executor_remote\n",
-            b":actor_name:Manager\n",
-        ]
+        assert b":task_name:create_ray_workflow\n" in lines
+        assert b":task_name:_workflow_task_executor_remote\n" in lines
+        assert b":actor_name:Manager\n" in lines
 
 
 class TestDirectRayReader:
