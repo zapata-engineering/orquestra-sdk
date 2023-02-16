@@ -195,7 +195,7 @@ class TestIterLogLines:
     """
 
     @staticmethod
-    def test_number_of_lines(monkeypatch):
+    def test_lines_content(monkeypatch):
         # Given
         fake_paths = (p for p in WORKER_LOGS_PATH.iterdir() if p.is_file())
         monkeypatch.setattr(_ray_logs, "_iter_log_paths", fake_paths)
@@ -206,9 +206,12 @@ class TestIterLogLines:
         # Then
         lines = list(lines_iter)
         assert len(lines) == 70
-        assert b":task_name:create_ray_workflow\n" in lines
-        assert b":task_name:_workflow_task_executor_remote\n" in lines
-        assert b":actor_name:Manager\n" in lines
+
+        # Look for known sample content. We need to strip newlines to make the test
+        # OS-independent
+        stripped_lines = [line.strip() for line in lines]
+        assert b":task_name:create_ray_workflow" in stripped_lines
+        assert b"ZeroDivisionError: division by zero" in stripped_lines
 
 
 class TestDirectRayReader:
