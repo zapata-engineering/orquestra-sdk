@@ -11,357 +11,7 @@ import pytest
 
 from orquestra import sdk
 from orquestra.sdk import exceptions as sdk_exc
-from orquestra.sdk._base import _exec_ctx
-from orquestra.sdk.secrets import _exceptions, _models, _providers
-
-
-class TestSelectsAppropriateProvider:
-    """
-    Verifies that the secrets.{get,set} use the proper SecretProvider implementation
-    based on the 'auth_mode' and execution context.
-
-    Test boundary:
-    [sdk.secrets.{get,set}] -> [ConfigProvider]
-                            -> [PassportProvider]
-    """
-
-    @staticmethod
-    @pytest.fixture
-    def ConfigProvider(monkeypatch):
-        provider_cls = Mock()
-
-        # Workaround for 'Mock() not iterable' inside list_secrets tests.
-        provider_cls().make_client().list_secrets.return_value = []
-        # We just called the mock to set it up. We need to reset the counter to enable
-        # asserts on call count.
-        provider_cls.reset_mock()
-
-        monkeypatch.setattr(_providers, "ConfigProvider", provider_cls)
-        return provider_cls
-
-    @staticmethod
-    @pytest.fixture
-    def PassportProvider(monkeypatch):
-        provider_cls = Mock()
-
-        # Workaround for 'Mock() not iterable' inside list_secrets tests.
-        provider_cls().make_client().list_secrets.return_value = []
-        # We just called the mock to set it up. We need to reset the counter to enable
-        # asserts on call count.
-        provider_cls.reset_mock()
-
-        monkeypatch.setattr(_providers, "PassportProvider", provider_cls)
-        return provider_cls
-
-    @staticmethod
-    @pytest.fixture
-    def dummy_config_name():
-        return "shouldnt-matter"
-
-    @staticmethod
-    @pytest.fixture
-    def secret_name():
-        return "a_secret_name"
-
-    @staticmethod
-    @pytest.fixture
-    def secret_value():
-        return "a_secret_value"
-
-    @staticmethod
-    @pytest.fixture
-    def fake_config_path(tmp_path, monkeypatch):
-        config_path = tmp_path / "config.json"
-        monkeypatch.setenv("ORQ_CONFIG_PATH", str(config_path))
-        return config_path
-
-    class TestGet:
-        @staticmethod
-        def test_returns_future_in_workflow_ctx(dummy_config_name, secret_name):
-            """
-            A special context for workflow builds. This does not use the underlying
-            config auth provider.
-            """
-            with _exec_ctx.workflow_build():
-                secret = sdk.secrets.get(secret_name, config_name=dummy_config_name)
-            assert isinstance(secret, sdk.Secret)
-            assert secret.name == secret_name
-            assert secret.config_name == dummy_config_name
-
-        @staticmethod
-        def test_default_ctx(
-            ConfigProvider,
-            PassportProvider,
-            dummy_config_name,
-            fake_config_path,
-            secret_name,
-        ):
-            """
-            Default exec context (LOCAL_DIRECT). Simulates usage from a local
-            script outside of a runtime.
-            """
-            # When
-            sdk.secrets.get(
-                secret_name,
-                config_name=dummy_config_name,
-            )
-
-            # Then
-            ConfigProvider.assert_called()
-            PassportProvider.assert_not_called()
-
-        @staticmethod
-        def test_ray_ctx(
-            ConfigProvider,
-            PassportProvider,
-            dummy_config_name,
-            fake_config_path,
-            secret_name,
-        ):
-            """
-            Default exec context (LOCAL_DIRECT). Simulates a task running on the
-            local runtime in Ray.
-            """
-            # When
-            with _exec_ctx.local_ray():
-                sdk.secrets.get(
-                    secret_name,
-                    config_name=dummy_config_name,
-                )
-
-            # Then
-            ConfigProvider.assert_called()
-            PassportProvider.assert_not_called()
-
-        @staticmethod
-        def test_qe_ctx(
-            ConfigProvider,
-            PassportProvider,
-            dummy_config_name,
-            fake_config_path,
-            secret_name,
-        ):
-            """
-            Default exec context (LOCAL_DIRECT). Simulates a task running on the
-            remote runtime with QE.
-            """
-            # When
-            with _exec_ctx.platform_qe():
-                sdk.secrets.get(
-                    secret_name,
-                    config_name=dummy_config_name,
-                )
-
-            # Then
-            ConfigProvider.assert_not_called()
-            PassportProvider.assert_called()
-
-    class TestDelete:
-        @staticmethod
-        def test_default_ctx(
-            ConfigProvider,
-            PassportProvider,
-            dummy_config_name,
-            fake_config_path,
-            secret_name,
-        ):
-            """
-            Default exec context (LOCAL_DIRECT). Simulates usage from a local
-            script outside of a runtime.
-            """
-            # When
-            sdk.secrets.delete(
-                secret_name,
-                config_name=dummy_config_name,
-            )
-
-            # Then
-            ConfigProvider.assert_called()
-            PassportProvider.assert_not_called()
-
-        @staticmethod
-        def test_ray_ctx(
-            ConfigProvider,
-            PassportProvider,
-            dummy_config_name,
-            fake_config_path,
-            secret_name,
-        ):
-            """
-            Default exec context (LOCAL_DIRECT). Simulates a task running on the
-            local runtime in Ray.
-            """
-            # When
-            with _exec_ctx.local_ray():
-                sdk.secrets.delete(
-                    secret_name,
-                    config_name=dummy_config_name,
-                )
-
-            # Then
-            ConfigProvider.assert_called()
-            PassportProvider.assert_not_called()
-
-        @staticmethod
-        def test_qe_ctx(
-            ConfigProvider,
-            PassportProvider,
-            dummy_config_name,
-            fake_config_path,
-            secret_name,
-        ):
-            """
-            Default exec context (LOCAL_DIRECT). Simulates a task running on the
-            remote runtime with QE.
-            """
-            # When
-            with _exec_ctx.platform_qe():
-                sdk.secrets.delete(
-                    secret_name,
-                    config_name=dummy_config_name,
-                )
-
-            # Then
-            ConfigProvider.assert_not_called()
-            PassportProvider.assert_called()
-
-    class TestList:
-        @staticmethod
-        def test_default_ctx(
-            ConfigProvider,
-            PassportProvider,
-            dummy_config_name,
-            fake_config_path,
-        ):
-            """
-            Default exec context (LOCAL_DIRECT). Simulates usage from a local
-            script outside of a runtime.
-            """
-            # When
-            sdk.secrets.list(
-                config_name=dummy_config_name,
-            )
-
-            # Then
-            ConfigProvider.assert_called()
-            PassportProvider.assert_not_called()
-
-        @staticmethod
-        def test_ray_ctx(
-            ConfigProvider,
-            PassportProvider,
-            dummy_config_name,
-            fake_config_path,
-        ):
-            """
-            Default exec context (LOCAL_DIRECT). Simulates a task running on the
-            local runtime in Ray.
-            """
-            # When
-            with _exec_ctx.local_ray():
-                sdk.secrets.list(
-                    config_name=dummy_config_name,
-                )
-
-            # Then
-            ConfigProvider.assert_called()
-            PassportProvider.assert_not_called()
-
-        @staticmethod
-        def test_qe_ctx(
-            ConfigProvider,
-            PassportProvider,
-            dummy_config_name,
-            fake_config_path,
-        ):
-            """
-            Default exec context (LOCAL_DIRECT). Simulates a task running on the
-            remote runtime with QE.
-            """
-            # When
-            with _exec_ctx.platform_qe():
-                sdk.secrets.list(
-                    config_name=dummy_config_name,
-                )
-
-            # Then
-            ConfigProvider.assert_not_called()
-            PassportProvider.assert_called()
-
-    class TestSet:
-        @staticmethod
-        def test_default_ctx(
-            ConfigProvider,
-            PassportProvider,
-            dummy_config_name,
-            fake_config_path,
-            secret_name,
-            secret_value,
-        ):
-            """
-            Default exec context (LOCAL_DIRECT). Simulates usage from a local
-            script outside of a runtime.
-            """
-            # When
-            sdk.secrets.set(
-                secret_name,
-                secret_value,
-                config_name=dummy_config_name,
-            )
-
-            # Then
-            ConfigProvider.assert_called()
-            PassportProvider.assert_not_called()
-
-        @staticmethod
-        def test_ray_ctx(
-            ConfigProvider,
-            PassportProvider,
-            dummy_config_name,
-            fake_config_path,
-            secret_name,
-            secret_value,
-        ):
-            """
-            Default exec context (LOCAL_DIRECT). Simulates a task running on the
-            local runtime in Ray.
-            """
-            # When
-            with _exec_ctx.local_ray():
-                sdk.secrets.set(
-                    secret_name,
-                    secret_value,
-                    config_name=dummy_config_name,
-                )
-
-            # Then
-            ConfigProvider.assert_called()
-            PassportProvider.assert_not_called()
-
-        @staticmethod
-        def test_qe_ctx(
-            ConfigProvider,
-            PassportProvider,
-            dummy_config_name,
-            fake_config_path,
-            secret_name,
-            secret_value,
-        ):
-            """
-            Default exec context (LOCAL_DIRECT). Simulates a task running on the
-            remote runtime with QE.
-            """
-            # When
-            with _exec_ctx.platform_qe():
-                sdk.secrets.set(
-                    secret_name,
-                    secret_value,
-                    config_name=dummy_config_name,
-                )
-
-            # Then
-            ConfigProvider.assert_not_called()
-            PassportProvider.assert_called()
+from orquestra.sdk.secrets import _auth, _exceptions, _models
 
 
 class TestIntegrationWithClient:
@@ -369,7 +19,7 @@ class TestIntegrationWithClient:
     Assumes behavior of SecretsClient and tests how Secrets class reacts.
 
     Test boundary:
-    [sdk.secrets.{get,set}] -> [SecretsProvider] -> [SecretsClient]
+    [sdk.secrets.{get,set}] -> [_auth.authorized_client] -> [SecretsClient]
     """
 
     @staticmethod
@@ -378,9 +28,7 @@ class TestIntegrationWithClient:
         client = Mock()
         client.list_secrets.return_value = []
 
-        ConfigProvider = Mock()
-        ConfigProvider().make_client.return_value = client
-        monkeypatch.setattr(_providers, "ConfigProvider", ConfigProvider)
+        monkeypatch.setattr(_auth, "authorized_client", Mock(return_value=client))
 
         return client
 
@@ -410,6 +58,32 @@ class TestIntegrationWithClient:
                 secrets_client_mock.delete_secret.side_effect = exc
                 secrets_client_mock.list_secrets.side_effect = exc
                 secrets_client_mock.create_secret.side_effect = exc
+
+                with pytest.raises(type(exc)):
+                    secrets_action()
+
+        class TestForwardsConfigErrors:
+            @staticmethod
+            @pytest.mark.parametrize(
+                "exc",
+                [
+                    sdk_exc.ConfigNameNotFoundError(),
+                ],
+            )
+            @pytest.mark.parametrize(
+                "secrets_action",
+                [
+                    lambda: sdk.secrets.get(name="some-secret"),
+                    lambda: sdk.secrets.delete(name="some-secret"),
+                    lambda: sdk.secrets.list(),
+                    lambda: sdk.secrets.set(
+                        name="some-secret",
+                        value="You're doing great! :)",
+                    ),
+                ],
+            )
+            def test_common_errors(monkeypatch, secrets_action, exc):
+                monkeypatch.setattr(_auth, "authorized_client", Mock(side_effect=exc))
 
                 with pytest.raises(type(exc)):
                     secrets_action()
