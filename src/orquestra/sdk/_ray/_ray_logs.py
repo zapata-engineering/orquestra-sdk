@@ -4,9 +4,7 @@
 """
 Class to get logs from Ray for particular Workflow, both historical and live.
 """
-import glob
 import json
-import os
 import typing as t
 
 # from dataclasses import dataclass
@@ -19,21 +17,6 @@ from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRunId
 
 from . import _client
-
-
-# @dataclass
-# class _LogFileInfo:
-#     """
-#     Keeps track where we stopped reading a log file the last time we looked at it.
-
-#     Mutated every time we read a log file.
-#     """
-
-#     # Absolute filepath without symlinks.
-#     filepath: str
-#     size_when_last_opened: int
-#     # Last read index.
-#     file_position: int
 
 
 class WFLog(pydantic.BaseModel):
@@ -81,58 +64,6 @@ def parse_log_line(raw_line: bytes) -> t.Optional[WFLog]:
         return None
 
     return _parse_obj_or_none(WFLog, json_obj)
-
-
-# class _RayLogs:
-#     """ """
-
-#     def __init__(self, ray_temp: Path):
-#         self.ray_temp = ray_temp
-
-#         self.log_filenames: t.MutableSet[str] = set()
-#         self.log_file_infos: t.MutableSequence[_LogFileInfo] = []
-
-#         self.logs_by_wf: t.MutableMapping[WorkflowRunId, t.MutableSequence[WFLog]] = {}
-#         self.logs_by_task: t.MutableMapping[TaskRunId, t.MutableSequence[WFLog]] = {}
-
-#     def _update_log_filenames(self):
-#         path_glob = self.ray_temp / "session**" / "logs" / "worker*[.out|.err]"
-#         log_file_paths = glob.glob(str(path_glob))
-#         for file_path in log_file_paths:
-#             real_path = os.path.realpath(file_path)
-#             if os.path.isfile(file_path) and real_path not in self.log_filenames:
-#                 self.log_filenames.add(real_path)
-#                 self.log_file_infos.append(
-#                     _LogFileInfo(
-#                         filepath=real_path,
-#                         size_when_last_opened=0,
-#                         file_position=0,
-#                     )
-#                 )
-
-#     def read_new_logs(self):
-#         """
-#         Reads log files. Returns all lines produced since last call of this method.
-
-#         Updates `self`'s file infos and parsed log objects.
-
-#         Yields:
-#             Newly parsed log lines that haven't been seen before, as bytes. Each yield
-#             relates to one line, as a bytes.
-#         """
-#         self._update_log_filenames()
-
-#         for file_info in self.log_file_infos:
-#             file_size = os.path.getsize(file_info.filepath)
-#             if file_size > file_info.size_when_last_opened:
-#                 file_info.size_when_last_opened = file_size
-
-#                 with open(file_info.filepath, "rb") as f:
-#                     f.seek(file_info.file_position)
-
-#                     yield from f
-
-#                     file_info.file_position = f.tell()
 
 
 def _iter_log_paths(ray_temp: Path) -> t.Iterator[Path]:
