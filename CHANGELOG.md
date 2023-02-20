@@ -13,6 +13,8 @@
 
 
 🐛 *Bug Fixes*
+* Getting full logs produced by Ray workflows. Previously, the dictionary returned by `logs_dict = wf_run.get_logs()` had just a single entry: `{"logs": ["task 1 log", "task 1 log", "task 2 log", "task 2 log"]}`. Now, the dictionary has a correct shape: `{"task_invocation_id1": ["task 1 log", "task 1 log"], "task_invocation_id2": ["task 2 log", "task 2 log"]}`.
+* Getting single task logs. Previously `orq task logs` would raise an unhandled exception. Now, it prints the log lines.
 
 
 *Internal*
