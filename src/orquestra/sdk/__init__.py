@@ -4,13 +4,9 @@
 """Orquestra SDK allows to define computational workflows using Python DSL."""
 
 from . import secrets
-from ._base._api import (
-    RuntimeConfig,
-    TaskRun,
-    WorkflowRun,
-    list_workflow_runs,
-    migrate_config_file,
-)
+from ._base._api._config import RuntimeConfig, migrate_config_file
+from ._base._api._task_run import TaskRun
+from ._base._api._wf_run import WorkflowRun, list_workflow_runs
 from ._base._dsl import (
     ArtifactFuture,
     DataAggregation,
