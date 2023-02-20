@@ -9,8 +9,7 @@ from itertools import chain
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.workflow_run import State, TaskInvocationId
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
-from orquestra.sdk.schema.workflow_run import TaskRunId
-from orquestra.sdk.schema.workflow_run import WorkflowRunId
+from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRunId
 
 from ...exceptions import TaskRunNotFound
 from ..abc import ArtifactValue, RuntimeInterface

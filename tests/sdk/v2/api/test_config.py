@@ -9,7 +9,7 @@ import json
 import typing as t
 import warnings
 from pathlib import Path
-from unittest.mock import patch, mock_open
+from unittest.mock import mock_open, patch
 
 import pytest
 
@@ -19,7 +19,6 @@ from orquestra.sdk.exceptions import ConfigNameNotFoundError
 from orquestra.sdk.schema.configs import CONFIG_FILE_CURRENT_VERSION, RuntimeName
 
 from ..data.configs import TEST_CONFIG_JSON
-
 
 VALID_RUNTIME_NAMES: list = ["RAY_LOCAL", "QE_REMOTE", "IN_PROCESS", "CE_REMOTE"]
 VALID_CONFIG_NAMES: list = ["name_with_underscores", "name with spaces"]

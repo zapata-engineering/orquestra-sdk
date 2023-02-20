@@ -4,8 +4,8 @@
 import importlib.machinery
 import importlib.util
 import os
-import sys
 import subprocess
+import sys
 from contextlib import suppress as do_not_raise
 from pathlib import Path
 

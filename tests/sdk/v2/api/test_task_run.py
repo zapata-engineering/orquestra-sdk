@@ -18,10 +18,7 @@ from orquestra.sdk.schema.workflow_run import RunStatus, State
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
 from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
 
-from ..data.complex_serialization.workflow_defs import (
-    capitalize,
-    join_strings,
-)
+from ..data.complex_serialization.workflow_defs import capitalize, join_strings
 
 
 class TestTaskRun:

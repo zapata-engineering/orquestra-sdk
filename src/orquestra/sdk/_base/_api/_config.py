@@ -10,19 +10,19 @@ from pathlib import Path
 
 from packaging.version import parse as parse_version
 
-from ..abc import RuntimeInterface
-from ...schema.configs import (
-    CONFIG_FILE_CURRENT_VERSION,
-    RuntimeConfiguration,
-    RuntimeName,
-)
 from ...exceptions import (
     ConfigFileNotFoundError,
     ConfigNameNotFoundError,
     RuntimeConfigError,
     UnsavedConfigChangesError,
 )
+from ...schema.configs import (
+    CONFIG_FILE_CURRENT_VERSION,
+    RuntimeConfiguration,
+    RuntimeName,
+)
 from .. import _config
+from ..abc import RuntimeInterface
 
 
 class RuntimeConfig:
