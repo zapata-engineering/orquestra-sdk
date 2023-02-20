@@ -10,6 +10,7 @@ These internals are subject to change.
 """
 
 import importlib
+import importlib.machinery
 import sys
 import types
 import typing as t
@@ -75,7 +76,18 @@ class ImportFaker(abc.MetaPathFinder):
         self._loader.unload_fakes()
 
 
-class FakeLoader(importlib.abc.Loader):
+class DummyModule(types.ModuleType):
+    """
+    A module that always returns fake objects on attribute access.
+    """
+
+    __path__ = []
+
+    def __getattr__(self, name: str):
+        return FakeImportedAttribute()
+
+
+class FakeLoader(abc.Loader):
     """Implements a module loader for faked modules"""
 
     def __init__(self):
@@ -83,9 +95,7 @@ class FakeLoader(importlib.abc.Loader):
 
     def create_module(self, spec):
         """Creates a fake module from a given module spec"""
-        dummy = types.ModuleType(spec.name)
-        dummy.__path__ = []
-        dummy.__getattr__ = lambda name: FakeImportedAttribute()
+        dummy = DummyModule(spec.name)
         self._fake_modules[spec.name] = dummy
         return dummy
 

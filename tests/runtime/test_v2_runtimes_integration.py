@@ -114,7 +114,7 @@ def test_studio_like_flow():
         print(f"Submitted wf run {wf_run_id} to {config_name}")
 
         config = _config.read_config(config_name)
-        rt = QERuntime(config=config, project_dir=project_dir)
+        rt = QERuntime(config=config, project_dir=Path(project_dir))
 
         # We need to wait between submitting workflow and getting its status.
         # Otherwise, QE responds with status code 500.

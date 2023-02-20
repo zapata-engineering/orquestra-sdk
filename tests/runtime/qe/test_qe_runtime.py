@@ -449,7 +449,7 @@ class TestGeneral:
             runtime_options={},
         )
         with pytest.raises(exceptions.RuntimeConfigError):
-            _qe_runtime.QERuntime(config, "shouldnt_matter")
+            _qe_runtime.QERuntime(config, Path("shouldnt_matter"))
 
 
 class TestCreateWorkflowRun:
@@ -770,7 +770,7 @@ class TestGetWorkflowRunStatus:
             runtime_options={"uri": "http://localhost", "token": "blah"},
         )
         # Return a runtime object
-        runtime = _qe_runtime.QERuntime(config, "Nothing")
+        runtime = _qe_runtime.QERuntime(config, Path("Nothing"))
 
         stub_runID = "hello-there-abc123-r000"
         with pytest.raises(exceptions.WorkflowNotFoundError) as exc_info:
@@ -961,7 +961,7 @@ class TestGetWorkflowRunOutputsNonBlocking:
             runtime_options={"uri": "http://localhost", "token": "blah"},
         )
         # Return a runtime object
-        runtime = _qe_runtime.QERuntime(config, "Nothing")
+        runtime = _qe_runtime.QERuntime(config, Path("Nothing"))
 
         stub_runID = "hello-there-abc123-r000"
         with pytest.raises(exceptions.WorkflowNotFoundError) as exc_info:
@@ -1429,7 +1429,7 @@ class TestHTTPErrors:
             runtime.create_workflow_run(TEST_WORKFLOW)
         for telltale in telltales:
             assert telltale in str(exc_info)
-        assert _save_workflow_run.assert_not_called
+        _save_workflow_run.assert_not_called()
 
     def test_get_workflow_run_status(
         self,

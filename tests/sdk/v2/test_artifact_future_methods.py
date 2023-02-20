@@ -3,12 +3,14 @@
 ################################################################################
 """Tests for the methods of the ArtifactFuture class
 """
+import typing as t
+
 import pytest
 
 import orquestra.sdk as sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _workflow
-from orquestra.sdk._base._dsl import DEFAULT_IMAGE
+from orquestra.sdk._base._dsl import DEFAULT_IMAGE, ArtifactFuture
 
 resources_no_default = {
     "cpu": "2000m",
@@ -114,6 +116,7 @@ def wf_task_call():
 @sdk.workflow
 def wf_with_resources_call():
     future = _task_without_resources()
+    assert isinstance(future, ArtifactFuture)
     new_future = future.with_resources(**resources_no_default)
     return [future, new_future]
 
@@ -121,6 +124,7 @@ def wf_with_resources_call():
 @sdk.workflow
 def wf_with_custom_image_call():
     future = _task_without_resources()
+    assert isinstance(future, ArtifactFuture)
     new_future = future.with_custom_image(custom_image_no_default["custom_image"])
     return [future, new_future]
 
@@ -128,6 +132,7 @@ def wf_with_custom_image_call():
 @sdk.workflow
 def wf_with_invocation_meta_call():
     future = _task_without_resources()
+    assert isinstance(future, ArtifactFuture)
     new_future = future.with_invocation_meta(**metadata_no_default)
     return [future, new_future]
 
@@ -135,6 +140,7 @@ def wf_with_invocation_meta_call():
 @sdk.workflow
 def wf_with_resources_and_custom_image_call():
     future = _task_without_resources()
+    assert isinstance(future, ArtifactFuture)
     new_future = future.with_resources(**resources_no_default).with_custom_image(
         **custom_image_no_default
     )
@@ -144,10 +150,13 @@ def wf_with_resources_and_custom_image_call():
 @sdk.workflow
 def wf_with_method_task():
     simple_obj = ObjWithTask(13)
-    return [simple_obj.get_id()]
+    return [
+        simple_obj.get_id(),  # type: ignore
+    ]
 
 
 @sdk.workflow
+@t.no_type_check
 def wf_with_mixed_calls():
     simple_obj = ObjWithTask(13)
     simple_obj.get_id()
@@ -276,24 +285,16 @@ class TestArifactFutureMethodsCalls:
         assert len(wf_model.tasks) == 1
         assert len(wf_model.task_invocations) == 2
         assert len(wf_model.artifact_nodes) == 2
-        assert (
-            len(
-                set(
-                    invocation.task_id
-                    for invocation in wf_model.task_invocations.values()
-                )
-            )
-            == 1
-        )
-        assert [*wf_model.task_invocations.values()][1].resources is None
-        assert [*wf_model.task_invocations.values()][
-            0
-        ].resources.dict() == resources_no_default
 
-        assert [*wf_model.task_invocations.values()][1].custom_image is DEFAULT_IMAGE
-        assert [*wf_model.task_invocations.values()][
-            0
-        ].custom_image == custom_image_no_default["custom_image"]
+        invocations = [*wf_model.task_invocations.values()]
+        assert len(set(invocation.task_id for invocation in invocations)) == 1
+
+        assert invocations[0].resources is not None
+        assert invocations[0].resources.dict() == resources_no_default
+        assert invocations[0].custom_image == custom_image_no_default["custom_image"]
+
+        assert invocations[1].resources is None
+        assert invocations[1].custom_image is DEFAULT_IMAGE
 
     @staticmethod
     def test_artifact_with_resources_workflow_model():
@@ -305,23 +306,14 @@ class TestArifactFutureMethodsCalls:
         assert len(wf_model.tasks) == 1
         assert len(wf_model.task_invocations) == 2
         assert len(wf_model.artifact_nodes) == 2
-        assert (
-            len(
-                set(
-                    invocation.task_id
-                    for invocation in wf_model.task_invocations.values()
-                )
-            )
-            == 1
-        )
-        assert [*wf_model.task_invocations.values()][1].resources is None
-        assert [*wf_model.task_invocations.values()][
-            0
-        ].resources.dict() == resources_no_default
 
-        assert [*wf_model.task_invocations.values()][1].custom_image == [
-            *wf_model.task_invocations.values()
-        ][0].custom_image
+        invocations = [*wf_model.task_invocations.values()]
+        assert len(set(invocation.task_id for invocation in invocations)) == 1
+        assert invocations[0].resources is not None
+        assert invocations[0].resources.dict() == resources_no_default
+
+        assert invocations[1].resources is None
+        assert invocations[1].custom_image == invocations[0].custom_image
 
     @staticmethod
     def test_artifact_with_custom_image_workflow_model():
@@ -333,23 +325,13 @@ class TestArifactFutureMethodsCalls:
         assert len(wf_model.tasks) == 1
         assert len(wf_model.task_invocations) == 2
         assert len(wf_model.artifact_nodes) == 2
-        assert (
-            len(
-                set(
-                    invocation.task_id
-                    for invocation in wf_model.task_invocations.values()
-                )
-            )
-            == 1
-        )
-        assert [*wf_model.task_invocations.values()][1].resources == [
-            *wf_model.task_invocations.values()
-        ][0].resources
 
-        assert [*wf_model.task_invocations.values()][1].custom_image == DEFAULT_IMAGE
-        assert [*wf_model.task_invocations.values()][
-            0
-        ].custom_image == custom_image_no_default["custom_image"]
+        invocations = [*wf_model.task_invocations.values()]
+        assert len(set(invocation.task_id for invocation in invocations)) == 1
+        assert invocations[0].custom_image == custom_image_no_default["custom_image"]
+
+        assert invocations[1].resources == invocations[0].resources
+        assert invocations[1].custom_image == DEFAULT_IMAGE
 
     @staticmethod
     def test_artifact_with_resources_and_custom_image_workflow_model():
@@ -361,22 +343,12 @@ class TestArifactFutureMethodsCalls:
         assert len(wf_model.tasks) == 1
         assert len(wf_model.task_invocations) == 2
         assert len(wf_model.artifact_nodes) == 2
-        assert (
-            len(
-                set(
-                    invocation.task_id
-                    for invocation in wf_model.task_invocations.values()
-                )
-            )
-            == 1
-        )
-        print([*wf_model.task_invocations.values()])
-        assert [*wf_model.task_invocations.values()][1].resources is None
-        assert [*wf_model.task_invocations.values()][
-            0
-        ].resources.dict() == resources_no_default
 
-        assert [*wf_model.task_invocations.values()][1].custom_image is DEFAULT_IMAGE
-        assert [*wf_model.task_invocations.values()][
-            0
-        ].custom_image == custom_image_no_default["custom_image"]
+        invocations = [*wf_model.task_invocations.values()]
+        assert len(set(invocation.task_id for invocation in invocations)) == 1
+        assert invocations[0].resources is not None
+        assert invocations[0].resources.dict() == resources_no_default
+        assert invocations[0].custom_image == custom_image_no_default["custom_image"]
+
+        assert invocations[1].resources is None
+        assert invocations[1].custom_image is DEFAULT_IMAGE

@@ -135,16 +135,16 @@ class TupleUnwrapper:
         # because that's the easiest way for us not to rely on
         # `pos_specs`'s element order.
         unpacked_args = list(args)
-        for unpack_spec in self._pos_specs:
-            arg_val = args[unpack_spec.param_index]
-            unpacked_val = arg_val[unpack_spec.unpack_index]
-            unpacked_args[unpack_spec.param_index] = unpacked_val
+        for pos_spec in self._pos_specs:
+            arg_val = args[pos_spec.param_index]
+            unpacked_val = arg_val[pos_spec.unpack_index]
+            unpacked_args[pos_spec.param_index] = unpacked_val
 
         unpacked_kwargs = dict(kwargs)
-        for unpack_spec in self._kw_specs:
-            arg_val = kwargs[unpack_spec.param_name]
-            unpacked_val = arg_val[unpack_spec.unpack_index]
-            unpacked_kwargs[unpack_spec.param_name] = unpacked_val
+        for kw_spec in self._kw_specs:
+            arg_val = kwargs[kw_spec.param_name]
+            unpacked_val = arg_val[kw_spec.unpack_index]
+            unpacked_kwargs[kw_spec.param_name] = unpacked_val
 
         return self._fn(*unpacked_args, **unpacked_kwargs)
 

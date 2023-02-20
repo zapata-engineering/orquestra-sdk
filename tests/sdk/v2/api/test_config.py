@@ -18,7 +18,7 @@ from orquestra.sdk._base._api import _config as api_cfg
 from orquestra.sdk.exceptions import ConfigNameNotFoundError
 from orquestra.sdk.schema.configs import CONFIG_FILE_CURRENT_VERSION, RuntimeName
 
-from ..data.configs import TEST_CONFIG_JSON
+from ..data.configs import TEST_CONFIG_JSON, TEST_CONFIGS_DICT
 
 VALID_RUNTIME_NAMES: list = ["RAY_LOCAL", "QE_REMOTE", "IN_PROCESS", "CE_REMOTE"]
 VALID_CONFIG_NAMES: list = ["name_with_underscores", "name with spaces"]
@@ -93,7 +93,7 @@ class TestRuntimeConfiguration:
                 name=config.name,
                 bypass_factory_methods=True,
             )
-            test_config.uri = config.uri
+            test_config.uri = config.uri  # type: ignore
             test_config.token = config.token
 
             assert config == test_config
@@ -172,7 +172,7 @@ class TestRuntimeConfiguration:
             config = api_cfg.RuntimeConfig(
                 "QE_REMOTE", name="test_config", bypass_factory_methods=True
             )
-            config.uri = "test_uri"
+            config.uri = "test_uri"  # type: ignore
             config.token = "test_token"
             assert config._get_runtime_options() == {
                 "uri": "test_uri",
@@ -223,7 +223,7 @@ class TestRuntimeConfiguration:
                 name = config.name
                 assert name == "prod-d"
                 assert config._runtime_name == "QE_REMOTE"
-                assert config.uri == "https://prod-d.orquestra.io/"
+                assert config.uri == "https://prod-d.orquestra.io/"  # type: ignore
                 assert config.token == "test token"
 
             @staticmethod
@@ -237,7 +237,7 @@ class TestRuntimeConfiguration:
 
                 assert str(config.name) == "prod-d"
                 assert config._runtime_name == "QE_REMOTE"
-                assert config.uri == "https://prod-d.orquestra.io/"
+                assert config.uri == "https://prod-d.orquestra.io/"  # type: ignore
                 assert config.token == "test token"
 
         class TestRemoteRayFactory:
@@ -251,7 +251,7 @@ class TestRuntimeConfiguration:
                 name = config.name
                 assert name == "prod-d"
                 assert config._runtime_name == "QE_REMOTE"
-                assert config.uri == "https://prod-d.orquestra.io/"
+                assert config.uri == "https://prod-d.orquestra.io/"  # type: ignore
                 assert config.token == "test token"
 
             @staticmethod
@@ -265,7 +265,7 @@ class TestRuntimeConfiguration:
 
                 assert str(config.name) == "prod-d"
                 assert config._runtime_name == "QE_REMOTE"
-                assert config.uri == "https://prod-d.orquestra.io/"
+                assert config.uri == "https://prod-d.orquestra.io/"  # type: ignore
                 assert config.token == "test token"
 
     class TestStr:
@@ -283,8 +283,8 @@ class TestRuntimeConfiguration:
                 name="test_name",
                 bypass_factory_methods=True,
             )
-            config.address = "test_address"
-            config.uri = "test_url"
+            config.address = "test_address"  # type: ignore
+            config.uri = "test_url"  # type: ignore
             config.token = "blah"
 
             outstr = str(config)
@@ -302,12 +302,11 @@ class TestRuntimeConfiguration:
     class TestListConfigs:
         @staticmethod
         def test_default_file_location(tmp_default_config_json):
-
             config_names = api_cfg.RuntimeConfig.list_configs()
 
-            assert config_names == [
-                name for name in TEST_CONFIG_JSON["configs"]
-            ] + list(_config.UNIQUE_CONFIGS)
+            assert config_names == [name for name in TEST_CONFIGS_DICT] + list(
+                _config.UNIQUE_CONFIGS
+            )
 
         @staticmethod
         def test_custom_file_location(
@@ -317,9 +316,9 @@ class TestRuntimeConfiguration:
 
             config_names = api_cfg.RuntimeConfig.list_configs()
 
-            assert config_names == [
-                name for name in TEST_CONFIG_JSON["configs"]
-            ] + list(_config.UNIQUE_CONFIGS)
+            assert config_names == [name for name in TEST_CONFIGS_DICT] + list(
+                _config.UNIQUE_CONFIGS
+            )
 
         @staticmethod
         def test_empty_configs_key(patch_config_location):
@@ -340,15 +339,13 @@ class TestRuntimeConfiguration:
             assert config_names == list(_config.UNIQUE_CONFIGS)
 
     class TestLoad:
-        @pytest.mark.parametrize(
-            "config_name", [name for name in TEST_CONFIG_JSON["configs"]]
-        )
+        @pytest.mark.parametrize("config_name", [name for name in TEST_CONFIGS_DICT])
         class TestLoadSuccess:
             @staticmethod
             def test_with_default_file_path(tmp_default_config_json, config_name):
                 config = api_cfg.RuntimeConfig.load(config_name)
 
-                config_params = TEST_CONFIG_JSON["configs"][config_name]
+                config_params = TEST_CONFIGS_DICT[config_name]
                 assert config.name == config_name
                 assert config._runtime_name == config_params["runtime_name"], (
                     f"config '{config_name}' has runtime_name '{config._runtime_name}',"
@@ -364,8 +361,8 @@ class TestRuntimeConfiguration:
                 monkeypatch.setenv("ORQ_CONFIG_PATH", str(tmp_config_json))
                 config = api_cfg.RuntimeConfig.load(config_name)
 
-                assert isinstance(TEST_CONFIG_JSON["configs"], t.Mapping)
-                config_params = TEST_CONFIG_JSON["configs"][config_name]
+                assert isinstance(TEST_CONFIGS_DICT, t.Mapping)
+                config_params = TEST_CONFIGS_DICT[config_name]
                 assert config.name == config_name
                 assert config._runtime_name == config_params["runtime_name"]
                 for key in config_params["runtime_options"]:
@@ -382,15 +379,17 @@ class TestRuntimeConfiguration:
     class TestLoadDefault:
         @staticmethod
         def test_with_default_file_path(tmp_default_config_json):
-
             config = api_cfg.RuntimeConfig.load_default()
 
-            default_config_params = TEST_CONFIG_JSON["configs"][
+            default_config_params = TEST_CONFIGS_DICT[
                 TEST_CONFIG_JSON["default_config_name"]
             ]
             assert config.name == default_config_params["config_name"]
             assert config._runtime_name == default_config_params["runtime_name"]
-            assert config.uri == default_config_params["runtime_options"]["uri"]
+
+            config_uri = config.uri  # type: ignore
+            assert config_uri == default_config_params["runtime_options"]["uri"]
+
             assert config.token == default_config_params["runtime_options"]["token"]
 
         @staticmethod
@@ -398,12 +397,15 @@ class TestRuntimeConfiguration:
             monkeypatch.setenv("ORQ_CONFIG_PATH", str(tmp_config_json))
             config = api_cfg.RuntimeConfig.load_default()
 
-            default_config_params = TEST_CONFIG_JSON["configs"][
+            default_config_params = TEST_CONFIGS_DICT[
                 TEST_CONFIG_JSON["default_config_name"]
             ]
             assert config.name == default_config_params["config_name"]
             assert config._runtime_name == default_config_params["runtime_name"]
-            assert config.uri == default_config_params["runtime_options"]["uri"]
+
+            config_uri = config.uri  # type: ignore
+            assert config_uri == default_config_params["runtime_options"]["uri"]
+
             assert config.token == default_config_params["runtime_options"]["token"]
 
     class TestIsSaved:
@@ -460,16 +462,16 @@ class TestRuntimeConfiguration:
         @staticmethod
         def test_with_all_runtime_options():
             config = api_cfg.RuntimeConfig("IN_PROCESS", bypass_factory_methods=True)
-            config.uri = "test_uri"
-            config.address = "test_address"
+            config.uri = "test_uri"  # type: ignore
+            config.address = "test_address"  # type: ignore
             config.token = "test_token"
 
             dict = config._as_dict()
 
             assert dict["config_name"] == "None"
             assert dict["runtime_name"] == "IN_PROCESS"
-            assert dict["runtime_options"]["uri"] == config.uri
-            assert dict["runtime_options"]["address"] == config.address
+            assert dict["runtime_options"]["uri"] == config.uri  # type: ignore
+            assert dict["runtime_options"]["address"] == config.address  # type: ignore
             assert dict["runtime_options"]["token"] == config.token
 
 

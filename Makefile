@@ -97,7 +97,7 @@ isort:
 # For mypy we additionally need to exclude one of the testing directories.
 # (override)
 mypy:
-	$(PYTHON) -m mypy src tests --exclude tests/sdk/v2/typing
+	$(PYTHON) -m mypy src tests
 
 # (override)
 style: flake8 black isort mypy

@@ -394,6 +394,8 @@ class TestFlattenGraph:
         invocation = _first(wf.task_invocations.values())
         task = wf.tasks[invocation.task_id]
         source_import = wf.imports[task.source_import_id]
+
+        assert task.dependency_import_ids is not None
         assert len(task.dependency_import_ids) == 1
         dep_import = wf.imports[task.dependency_import_ids[0]]
 
@@ -437,7 +439,12 @@ class TestFlattenGraph:
 
     def test_equal_constants_different_types(self):
         wf = constant_collisions.model
-        serialised_constants = [con.value for con in wf.constant_nodes.values()]
+        constant_nodes = []
+        for constant_node in wf.constant_nodes.values():
+            assert isinstance(constant_node, model.ConstantNodeJSON)
+            constant_nodes.append(constant_node)
+
+        serialised_constants = [con.value for con in constant_nodes]
         assert len(wf.constant_nodes) == 3
         assert "true" in serialised_constants
         assert "1" in serialised_constants

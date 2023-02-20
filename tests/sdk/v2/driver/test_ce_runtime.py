@@ -15,7 +15,7 @@ from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
 
 
 @pytest.fixture
-def runtime(tmp_path, mock_workflow_db_location):
+def runtime(mock_workflow_db_location):
     # Fake CE configuration
     config = RuntimeConfiguration(
         config_name="hello",
@@ -61,8 +61,8 @@ class TestInitialization:
         )
 
         # then
-        assert rt._config == rt2._config
-        assert rt._verbose == rt2._verbose
+        assert rt._config == rt2._config  # type: ignore
+        assert rt._verbose == rt2._verbose  # type: ignore
 
     def test_invalid_config(self):
         config = RuntimeConfiguration(

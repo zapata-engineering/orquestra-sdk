@@ -6,24 +6,24 @@
 import argparse
 import json
 import logging
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
 
 import orquestra.sdk._base._config as v2_config
 import orquestra.sdk._base.cli._corq.services.action as services_action
-import orquestra.sdk.examples
+import orquestra.sdk.examples.workflow_defs
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _factory, _services
 from orquestra.sdk._base._config import BUILT_IN_CONFIG_NAME
 from orquestra.sdk._base.cli._corq import action
 from orquestra.sdk.schema.configs import (
     CONFIG_FILE_CURRENT_VERSION,
-    RuntimeConfiguration,
     RuntimeConfigurationFile,
-    RuntimeName,
 )
 from orquestra.sdk.schema.responses import (
+    GetDefaultConfig,
     ResponseStatusCode,
     ServicesStartedResponse,
     ServicesStatusResponse,
@@ -120,10 +120,11 @@ def test_orq_get_default_config_no_config(tmp_path, monkeypatch):
     response = action.orq_get_default_config(args)
     assert response.meta.success
     assert response.meta.code == ResponseStatusCode.OK
+    assert isinstance(response, GetDefaultConfig)
     assert response.default_config_name == "local"
 
 
-def test_orq_get_default(tmp_path, monkeypatch):
+def test_orq_get_default(monkeypatch):
     def _mock_read_default_config_name():
         return "local"
 
@@ -147,9 +148,7 @@ def test_orq_get_default(tmp_path, monkeypatch):
     ],
 )
 class TestMissingConfigErrors:
-    def test_invalid_config_entry(
-        self, patch_config_location, monkeypatch, test_action
-    ):
+    def test_invalid_config_entry(self, patch_config_location, test_action):
 
         cfg_file = RuntimeConfigurationFile(
             version=CONFIG_FILE_CURRENT_VERSION,
@@ -226,11 +225,14 @@ class TestDirtyGitRepo:
         assert "mocked ID" in [run.id for run in result.workflow_runs]
 
 
+EXAMPLES_PATH = Path(orquestra.sdk.examples.workflow_defs.__file__).parent
+
+
 class TestSubmitWorkflowErrors:
     def test_submit_multiple_workflows_no_wf_name(self):
         args = argparse.Namespace(
             workflow_def_name="",
-            directory=orquestra.sdk.examples.__path__._path[0],
+            directory=str(EXAMPLES_PATH),
             config=BUILT_IN_CONFIG_NAME,
             verbose=False,
             force=False,
@@ -242,7 +244,7 @@ class TestSubmitWorkflowErrors:
     def test_submit_not_workflow_function(self):
         args = argparse.Namespace(
             workflow_def_name="hello",  # hello is task function, not workflow function
-            directory=orquestra.sdk.examples.__path__._path[0],
+            directory=str(EXAMPLES_PATH),
             config=BUILT_IN_CONFIG_NAME,
             verbose=False,
             force=False,

@@ -7,6 +7,7 @@ import json
 import os
 import sys
 import traceback
+import typing as t
 
 import dill  # type: ignore
 import pytest
@@ -27,9 +28,21 @@ def cleanup():
     importlib.reload(sys.modules["orquestra.sdk.examples.exportable_wf"])
 
 
+def _call_dispatch(*args, **kwargs):
+    """
+    For some reason mypy shows errors like::
+
+        error: Missing named argument "?" for "exec_task_fn"  [call-arg]
+
+    This wrapper allows us to silence them in a single place. Last checked with
+    ``mypy==0.991``.
+    """
+    dispatch.exec_task_fn(*args, **kwargs)  # type: ignore
+
+
 def test_executing_task_by_module_ref():
     with ch_temp_dir() as dir_path:
-        dispatch.exec_task_fn(
+        _call_dispatch(
             "hello",
             __sdk_fn_ref_dict={
                 "module": "orquestra.sdk.examples.exportable_wf",
@@ -60,7 +73,7 @@ ENCODED_FN = codecs.encode(
 
 def test_executing_task_by_inline_ref():
     with ch_temp_dir() as dir_path:
-        dispatch.exec_task_fn(
+        _call_dispatch(
             "hello",
             __sdk_fn_ref_dict={
                 "function_name": "capitalize_inline",
@@ -99,7 +112,7 @@ def capitalize(text: str):
     return text.capitalize()
 """
             )
-        dispatch.exec_task_fn(
+        _call_dispatch(
             "hello",
             __sdk_fn_ref_dict={
                 "file_path": file_path,
@@ -141,7 +154,7 @@ def capitalize(text: str):
 """
             )
 
-        dispatch.exec_task_fn(
+        _call_dispatch(
             "hello",
             __sdk_fn_ref_dict={
                 "module": "my_tasks",
@@ -183,7 +196,7 @@ def capitalize(text: str):
     return text.capitalize()
 """
             )
-        dispatch.exec_task_fn(
+        _call_dispatch(
             "hello",
             __sdk_fn_ref_dict={
                 "file_path": file_path,
@@ -209,7 +222,7 @@ def capitalize(text: str):
 
 def test_executing_task_without_artifacts_dir():
     with ch_temp_dir():
-        dispatch.exec_task_fn(
+        _call_dispatch(
             "hello",
             __sdk_fn_ref_dict={
                 "module": "orquestra.sdk.examples.exportable_wf",
@@ -237,7 +250,7 @@ def test_executing_task_with_positional_args():
         kwargs = {
             "constant-0": "hello",
         }
-        dispatch.exec_task_fn(
+        _call_dispatch(
             __sdk_fn_ref_dict={
                 "module": "orquestra.sdk.examples.exportable_wf",
                 "function_name": "capitalize",
@@ -268,7 +281,7 @@ def test_executing_task_with_kwargs():
         kwargs = {
             "text": "hello",
         }
-        dispatch.exec_task_fn(
+        _call_dispatch(
             __sdk_fn_ref_dict={
                 "module": "orquestra.sdk.examples.exportable_wf",
                 "function_name": "capitalize",
@@ -305,7 +318,7 @@ def test_file_ref_with_invalid_file_type():
         with open(file_path, "w") as f:
             f.write("")
         with pytest.raises(ModuleNotFoundError):
-            dispatch.exec_task_fn(
+            _call_dispatch(
                 __sdk_fn_ref_dict={
                     "file_path": file_path,
                     "function_name": "lowercase",
@@ -321,7 +334,7 @@ def test_file_ref_with_invalid_file_type():
 def test_unknown_fn_ref_type():
     with ch_temp_dir() as dir_path:
         with pytest.raises(ValueError):
-            dispatch.exec_task_fn(
+            _call_dispatch(
                 __sdk_fn_ref_dict={
                     "type": "MAGIC_REF",
                 },
@@ -348,7 +361,7 @@ def identity(value):
     return value
 """
             )
-        dispatch.exec_task_fn(
+        _call_dispatch(
             __sdk_fn_ref_dict={
                 "file_path": file_path,
                 "function_name": "identity",
@@ -392,7 +405,7 @@ def pickle(value):
     return value
 """
             )
-        dispatch.exec_task_fn(
+        _call_dispatch(
             __sdk_fn_ref_dict={
                 "file_path": file_path,
                 "function_name": "pickle",
@@ -434,7 +447,7 @@ def multi_output():
     return "hello", "there"
 """
             )
-        dispatch.exec_task_fn(
+        _call_dispatch(
             __sdk_fn_ref_dict={
                 "file_path": file_path,
                 "function_name": "multi_output",
@@ -484,7 +497,7 @@ def multi_output():
     return "hello", "there"
 """
             )
-        dispatch.exec_task_fn(
+        _call_dispatch(
             __sdk_fn_ref_dict={
                 "file_path": file_path,
                 "function_name": "multi_output",
@@ -528,7 +541,7 @@ def multi_output(a ,b):
     return a, b
 """
             )
-        dispatch.exec_task_fn(
+        _call_dispatch(
             __sdk_fn_ref_dict={
                 "file_path": file_path,
                 "function_name": "multi_output",
@@ -560,7 +573,7 @@ def test_executing_task_with_json_input():
         input_file = "text.json"
         with open(input_file, "w") as f:
             f.write('{"serialization_format": "JSON","value": "\\"there\\""}')
-        dispatch.exec_task_fn(
+        _call_dispatch(
             __sdk_fn_ref_dict={
                 "module": "orquestra.sdk.examples.exportable_wf",
                 "function_name": "capitalize",
@@ -595,8 +608,10 @@ class TestLocateFnRef:
         assert callable(fn)
 
     def test_invalid_object(self):
+        fn_ref: t.Any = object()
+
         with pytest.raises(ValueError):
-            dispatch.locate_fn_ref(object())
+            dispatch.locate_fn_ref(fn_ref)
 
 
 @pytest.mark.parametrize(

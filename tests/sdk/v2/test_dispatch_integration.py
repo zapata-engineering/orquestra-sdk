@@ -15,7 +15,7 @@ import pytest
 import yaml
 
 import orquestra.sdk as sdk
-from orquestra.sdk._base import dispatch, loader
+from orquestra.sdk._base import _dsl, dispatch, loader
 from orquestra.sdk._base._conversions import _yaml_exporter as yaml_converter
 from orquestra.sdk._base._testing._example_wfs import wf_with_secrets
 from orquestra.sdk.schema import ir
@@ -112,7 +112,7 @@ def test_execution(monkeypatch, tmp_path, wf, expected_out):
 
     with ch_temp_dir() as temp_dir:
         # 4. Execute!
-        dispatch.exec_task_fn(**kwarg_inputs)
+        dispatch.exec_task_fn(**kwarg_inputs)  # type: ignore
 
         # 5. Validate outputs
         json_files = [
@@ -178,6 +178,7 @@ class TestModuleCaching:
                 function_name="capitalize_task",
             )
         )
+        assert isinstance(fn, _dsl.TaskDef)
         # If this doesn't raise, we're good. It would raise a RuntimeError if
         # the module with fakes was cached.
         assert fn._TaskDef__sdk_task_body("hello") == "Hello"

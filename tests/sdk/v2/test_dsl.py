@@ -185,6 +185,7 @@ def task_no_source():
 def test_task_no_linenumber_if_source_inaccessible():
     task_no_source.__code__ = task_no_source.__code__.replace(co_filename="fake")
     local_task = _dsl.task(task_no_source)
+    assert isinstance(local_task.fn_ref, _dsl.ModuleFunctionRef)
     assert local_task.fn_ref.line_number is None
 
 
@@ -392,8 +393,11 @@ def my_fake_repo_setup(tmp_path):
     repo_dir = tmp_path / "non-repo"
     # Create a non-bare repository where we can make our commits.
     my_fake_repo = git.Repo.init(repo_dir, bare=False)
+
     # Create remote repo
-    _ = my_fake_repo.create_remote("origin", url=my_fake_repo.working_tree_dir)
+    url = my_fake_repo.working_tree_dir
+    assert url is not None
+    _ = my_fake_repo.create_remote("origin", url=str(url))
 
     file_name = os.path.join(repo_dir, "new-file")
     # This function just creates an empty file ...
@@ -447,8 +451,11 @@ def test_deferred_git_import_resolved_dirty_repo_warning(my_fake_repo_setup):
 def test_deferred_git_import_resolved_no_remote(tmp_path):
     # Initialize a bare repo
     my_fake_repo = git.Repo.init(tmp_path / "bare-repo", bare=True)
+    path = my_fake_repo.working_dir
+    assert path is not None
+
     with pytest.raises(_dsl.NoRemoteRepo):
-        _ = _dsl.DeferredGitImport(my_fake_repo.working_dir).resolved()
+        _ = _dsl.DeferredGitImport(str(path)).resolved()
 
 
 def test_deferred_git_import_resolved_detached_head(my_fake_repo_setup):
@@ -634,6 +641,7 @@ def test_ref_to_main_in_task_error():
         "__main__", path_to_workflows + "workflow_defs.py"
     )
     spec = importlib.util.spec_from_loader(loader.name, loader)
+    assert spec is not None
     mod = importlib.util.module_from_spec(spec)
 
     with pytest.raises(sdk.exceptions.InvalidTaskDefinitionError):

@@ -741,7 +741,8 @@ class ArtifactFuture:
 
 
 def _resolve_module_path(fn):
-    abs_path = inspect.getsourcefile(fn)
+    if (abs_path := inspect.getsourcefile(fn)) is None:
+        return None
     try:
         relative_path = os.path.relpath(abs_path)
     except ValueError:

@@ -26,8 +26,15 @@ explicit_package_bases = true
 # directory path. If your repo has a different layout you can add the appropriate paths
 # by setting MYPYPATH env variable.
 mypy_path = "src:src/python"
-# Exclude anything in an examples directory, except the docs/examples dir.
-exclude = ['^(?!docs\/examples\/).*examples\/.*$',]
+exclude = [
+    # Exclude anything in an examples directory, except the docs/examples dir.
+    '^(?!docs\/examples\/).*examples\/.*$',
+    # Exclude our test files where we invoce mypy from pytest.
+    "tests/sdk/v2/typing"
+]
+# Without this, mypy would skip typechecking functions that don't have type
+# annotations in the signature.
+check_untyped_defs = true
 
 [tool.coverage.run]
 # main.py should be checked separately in an integration test.

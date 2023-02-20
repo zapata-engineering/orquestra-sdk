@@ -5,6 +5,7 @@
 Unit tests for 'orq wf list' glue code.
 """
 
+import typing as t
 from unittest.mock import Mock
 
 import pytest
@@ -29,9 +30,9 @@ class TestAction:
         # Given
         # CLI inputs
         config = ["<config sentinel>"]
-        limit = "<limit sentinel>"
+        limit: t.Any = "<limit sentinel>"
         max_age = "<max_age sentinel>"
-        state = "<state sentinel>"
+        state: t.Any = "<state sentinel>"
 
         # Resolved values
         resolved_configs = ["<resolved config 1>", "<resolved config 2>"]

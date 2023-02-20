@@ -211,7 +211,7 @@ def wf_non_picklable_constant_should_fail():
     """
     Rare case where an object can't be serialized using pickle.
     """
-    const = NonPicklable()
+    const: t.Any = NonPicklable()
     return [capitalize(const)]
 
 
