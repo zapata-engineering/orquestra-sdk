@@ -5,6 +5,7 @@ import importlib.machinery
 import importlib.util
 import os
 import sys
+import subprocess
 from contextlib import suppress as do_not_raise
 from pathlib import Path
 
@@ -637,3 +638,40 @@ def test_ref_to_main_in_task_error():
 
     with pytest.raises(sdk.exceptions.InvalidTaskDefinitionError):
         loader.exec_module(mod)
+
+
+def test_python_310_importlib_abc_bug():
+    """
+    In Python 3.10, there seems to be a bug in importlib that causes `importlib.abc` to
+    fail to resolve properly following `import importlib`. As a result,
+
+    ```bash
+    python -c "import orquestra.sdk as sdk"
+    ```
+
+    can raise an AttributeError if we've used that pattern anywhere, for example:
+
+    ```
+    File "<string>", line 1, in <module>
+    File "/Users/benjaminmummery/Documents/Projects/orquestra-sdk/src/orquestra/sdk/v2/__init__.py", line 23, in <module>
+        from ._workflow import NotATaskWarning, WorkflowDef, WorkflowTemplate, workflow
+    File "/Users/benjaminmummery/Documents/Projects/orquestra-sdk/src/orquestra/sdk/v2/_workflow.py", line 25, in <module>
+        from . import _api, _dsl, loader
+    File "/Users/benjaminmummery/Documents/Projects/orquestra-sdk/src/orquestra/sdk/v2/loader.py", line 34, in <module>
+        class ImportFaker(importlib.abc.MetaPathFinder):
+    AttributeError: module 'importlib' has no attribute 'abc'. Did you mean: '_abc'?
+    ```
+
+    If this test is failing, we'll need to track down the file where we're using `abc`
+    import it explicitly instead:
+
+    ```python
+    from importlib import abc
+    ...
+
+    and then reference `abc` rather than `importlib.abc`.
+
+    """  # noqa E501
+    command = f'{str(sys.executable)} -c "import orquestra.sdk as sdk"'
+    proc = subprocess.run(command, shell=True, capture_output=True)
+    assert proc.returncode == 0, proc.stderr.decode()

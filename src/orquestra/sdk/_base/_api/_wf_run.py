@@ -2,51 +2,32 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 
-import json
-import logging
-import os
 import re
 import time
 import typing as t
 import warnings
-from collections import namedtuple
 from datetime import timedelta
-from itertools import chain
 from pathlib import Path
 
-from packaging.version import parse as parse_version
-
-from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.configs import (
-    CONFIG_FILE_CURRENT_VERSION,
-    ConfigName,
-    RuntimeConfiguration,
-    RuntimeName,
-)
-from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.workflow_run import State, TaskInvocationId
-from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
-from orquestra.sdk.schema.workflow_run import TaskRunId
-from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
-from orquestra.sdk.schema.workflow_run import WorkflowRunId
-
-from .. import _config
-from ..abc import ArtifactValue, RuntimeInterface
-from ..exceptions import (
+from ...schema import ir
+from ...schema.configs import ConfigName
+from ...schema.local_database import StoredWorkflowRun
+from ...schema.workflow_run import State, TaskInvocationId
+from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
+from ...schema.workflow_run import WorkflowRunId
+from ..abc import RuntimeInterface
+from ...exceptions import (
     ConfigFileNotFoundError,
     ConfigNameNotFoundError,
-    RuntimeConfigError,
-    TaskRunNotFound,
     UnauthorizedError,
-    UnsavedConfigChangesError,
     WorkflowRunCanNotBeTerminated,
     WorkflowRunNotFinished,
     WorkflowRunNotFoundError,
     WorkflowRunNotStarted,
     WorkflowRunNotSucceeded,
 )
-from ..serde import deserialize_constant
 from ._config import RuntimeConfig
+from ._task_run import TaskRun, unwrap_task_retvals
 
 COMPLETED_STATES = [State.FAILED, State.TERMINATED, State.SUCCEEDED]
 
@@ -389,7 +370,7 @@ class WorkflowRun:
 
         # The runtime always returns tuples, even of the task has n_outputs = 1. We
         # need to unwrap it for user's convenience.
-        return _unwrap(
+        return unwrap_task_retvals(
             artifacts=workflow_artifacts, task_invocations=self._wf_def.task_invocations
         )
 
@@ -559,22 +540,6 @@ def _parse_max_age(age: t.Optional[str]) -> t.Optional[timedelta]:
         '- "10m" = 10 minutes,\n'
         '- "3D6h8M13s" = 3 days, 6 hours, 8 minutes and 13 seconds.'
     )
-
-
-def _unwrap(
-    artifacts: t.Mapping[ir.TaskInvocationId, ArtifactValue],
-    task_invocations: t.Mapping[TaskInvocationId, ir.TaskInvocation],
-) -> t.Mapping[ir.TaskInvocationId, t.Union[ArtifactValue, t.Tuple[ArtifactValue]]]:
-    unwrapped_dict = {}
-    for inv_id, outputs in artifacts.items():
-        inv = task_invocations[inv_id]
-        if len(inv.output_ids) == 1:
-            unwrapped = outputs[0]
-        else:
-            unwrapped = outputs
-
-        unwrapped_dict[inv_id] = unwrapped
-    return unwrapped_dict
 
 
 def _resolve_config(

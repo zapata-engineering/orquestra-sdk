@@ -3,4 +3,22 @@
 ################################################################################
 """
 User-facing API for controlling workflows.
+
+We re-export symbols here for grouping concepts under the "api" umbrella, e.g.
+"_api.WorkflowRun".
 """
+
+from ._config import RuntimeConfig
+from ._config import migrate_config_file
+from ._task_run import TaskRun
+from ._wf_run import WorkflowRun
+from ._wf_run import list_workflow_runs
+
+
+__all__ = [
+    "RuntimeConfig",
+    "TaskRun",
+    "WorkflowRun",
+    "list_workflow_runs",
+    "migrate_config_file",
+]

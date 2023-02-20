@@ -2,51 +2,19 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 
-import json
-import logging
-import os
-import re
-import time
 import typing as t
-import warnings
 from collections import namedtuple
-from datetime import timedelta
 from itertools import chain
-from pathlib import Path
-
-from packaging.version import parse as parse_version
 
 from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.configs import (
-    CONFIG_FILE_CURRENT_VERSION,
-    ConfigName,
-    RuntimeConfiguration,
-    RuntimeName,
-)
-from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import State, TaskInvocationId
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
 from orquestra.sdk.schema.workflow_run import TaskRunId
-from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
-from ...exceptions import (
-    ConfigFileNotFoundError,
-    ConfigNameNotFoundError,
-    RuntimeConfigError,
-    TaskRunNotFound,
-    UnauthorizedError,
-    UnsavedConfigChangesError,
-    WorkflowRunCanNotBeTerminated,
-    WorkflowRunNotFinished,
-    WorkflowRunNotFoundError,
-    WorkflowRunNotStarted,
-    WorkflowRunNotSucceeded,
-)
-from .. import _config
+from ...exceptions import TaskRunNotFound
 from ..abc import ArtifactValue, RuntimeInterface
 from ..serde import deserialize_constant
-from ._wf_run import _unwrap
 
 
 class TaskRun:
@@ -163,7 +131,7 @@ class TaskRun:
 
         # The runtime always returns tuples, even of the task has n_outputs = 1. We
         # need to unwrap it for user's convenience.
-        return _unwrap(
+        return unwrap_task_retvals(
             artifacts=filtered_artifacts,
             task_invocations=self._wf_def.task_invocations,
         )[self.task_invocation_id]
@@ -285,3 +253,19 @@ class TaskRun:
         ]
 
         return set(parents)
+
+
+def unwrap_task_retvals(
+    artifacts: t.Mapping[ir.TaskInvocationId, ArtifactValue],
+    task_invocations: t.Mapping[TaskInvocationId, ir.TaskInvocation],
+) -> t.Mapping[ir.TaskInvocationId, t.Union[ArtifactValue, t.Tuple[ArtifactValue]]]:
+    unwrapped_dict = {}
+    for inv_id, outputs in artifacts.items():
+        inv = task_invocations[inv_id]
+        if len(inv.output_ids) == 1:
+            unwrapped = outputs[0]
+        else:
+            unwrapped = outputs
+
+        unwrapped_dict[inv_id] = unwrapped
+    return unwrapped_dict
