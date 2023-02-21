@@ -5,23 +5,10 @@
 Code for user-facing utilities related to secrets.
 """
 import typing as t
-from pathlib import Path
 
 from .. import exceptions as sdk_exc
 from .._base import _dsl, _exec_ctx
-from . import _exceptions, _models, _providers
-
-
-def _infer_secrets_provider() -> _providers.SecretsAuthProvider:
-    ctx = _exec_ctx.global_context
-    if ctx == _exec_ctx.ExecContext.LOCAL_DIRECT:
-        return _providers.ConfigProvider()
-    elif ctx == _exec_ctx.ExecContext.LOCAL_RAY:
-        return _providers.ConfigProvider()
-    elif ctx == _exec_ctx.ExecContext.PLATFORM_QE:
-        return _providers.PassportProvider()
-    else:
-        raise RuntimeError(f"Can't infer auth mode for exec context {ctx}")
+from . import _auth, _exceptions, _models
 
 
 def get(
@@ -35,12 +22,12 @@ def get(
     Args:
         name: secret identifier.
         config_name: config entry to use to communicate with Orquestra Platform.
-            Required when used from a local machine. Ignored when running on Orquestra
-            Platform.
-        config_save_path: custom path of the config file. If omitted, uses the
-            standard config location. Ignored when running on Orquestra Platform.
+            Required when used from a local machine. Ignored when
+            ORQUESTRA_PASSPORT_FILE env variable is set.
 
     Raises:
+        orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was
+            found.
         orquestra.sdk.exceptions.NotFoundError: when no secret with the given name
             was found.
         orquestra.sdk.exceptions.UnauthorizedError: when the authorization with the
@@ -55,10 +42,12 @@ def get(
     """
     if _exec_ctx.global_context == _exec_ctx.ExecContext.WORKFLOW_BUILD:
         return t.cast(str, _dsl.Secret(name=name, config_name=config_name))
-    provider = _infer_secrets_provider()
-    client = provider.make_client(
-        config_name=config_name,
-    )
+
+    try:
+        client = _auth.authorized_client(config_name)
+    except sdk_exc.ConfigNameNotFoundError:
+        raise
+
     try:
         return client.get_secret(name).value
     # explicit rethrows of known errors
@@ -77,21 +66,22 @@ def list(
 
     Args:
         config_name: config entry to use to communicate with Orquestra Platform.
-            Required when used from a local machine. Ignored when running on Orquestra
-            Platform.
-        config_save_path: custom path of the config file. If omitted, uses the
-            standard config location. Ignored when running on Orquestra Platform.
+            Required when used from a local machine. Ignored when
+            ORQUESTRA_PASSPORT_FILE env variable is set.
 
     Raises:
+        orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was
+            found.
         orquestra.sdk.exceptions.NotFoundError: when no secret with the given name
             was found.
         orquestra.sdk.exceptions.UnauthorizedError: when the authorization with the
             remote vault failed.
     """
-    provider = _infer_secrets_provider()
-    client = provider.make_client(
-        config_name=config_name,
-    )
+    try:
+        client = _auth.authorized_client(config_name)
+    except sdk_exc.ConfigNameNotFoundError:
+        raise
+
     try:
         return [obj.name for obj in client.list_secrets()]
     # explicit rethrows of known errors
@@ -112,19 +102,20 @@ def set(
         name: secret identifier.
         value: new secret name.
         config_name: config entry to use to communicate with Orquestra Platform.
-            Required when used from a local machine. Ignored when running on Orquestra
-            Platform.
-        config_save_path: custom path of the config file. If omitted, uses the
-            standard config location. Ignored when running on Orquestra Platform.
+            Required when used from a local machine. Ignored when
+            ORQUESTRA_PASSPORT_FILE env variable is set.
 
     Raises:
+        orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was
+            found.
         orquestra.sdk.exceptions.UnauthorizedError: when the authorization with the
             remote vault failed.
     """
-    provider = _infer_secrets_provider()
-    client = provider.make_client(
-        config_name=config_name,
-    )
+    try:
+        client = _auth.authorized_client(config_name)
+    except sdk_exc.ConfigNameNotFoundError:
+        raise
+
     try:
         try:
             client.create_secret(_models.SecretDefinition(name=name, value=value))
@@ -147,21 +138,22 @@ def delete(
         name: secret identifier.
         value: new secret name.
         config_name: config entry to use to communicate with Orquestra Platform.
-            Required when used from a local machine. Ignored when running on Orquestra
-            Platform.
-        config_save_path: custom path of the config file. If omitted, uses the
-            standard config location. Ignored when running on Orquestra Platform.
+            Required when used from a local machine. Ignored when
+            ORQUESTRA_PASSPORT_FILE env variable is set.
 
     Raises:
+        orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was
+            found.
         orquestra.sdk.exceptions.NotFoundError: when the secret ``name`` couldn't be
             found.
         orquestra.sdk.exceptions.UnauthorizedError: when the authorization with the
             remote vault failed.
     """
-    provider = _infer_secrets_provider()
-    client = provider.make_client(
-        config_name=config_name,
-    )
+    try:
+        client = _auth.authorized_client(config_name)
+    except sdk_exc.ConfigNameNotFoundError:
+        raise
+
     try:
         client.delete_secret(name)
     # explicit rethrows of known errors

@@ -20,7 +20,6 @@ import pytest
 import responses
 
 import orquestra.sdk._base._config
-import orquestra.sdk._base._exec_ctx
 import orquestra.sdk.secrets._client
 from orquestra.sdk.schema import configs
 
@@ -134,7 +133,7 @@ class TestSecrets:
 
     @staticmethod
     def test_set_secret_from_repl(
-        monkeypatch, mocked_responses, base_uri, config_entry, secret_value
+        mocked_responses, base_uri, config_entry, secret_value
     ):
         # Given
         # Mock the http request
@@ -157,17 +156,10 @@ class TestSecrets:
         # request mock isn't exercised at least once.
 
     @staticmethod
-    @pytest.fixture
-    def qe_exec_context():
-        with orquestra.sdk._base._exec_ctx.platform_qe():
-            yield
-
-    @staticmethod
     def test_get_secret_from_task(
         tmp_path,
         monkeypatch,
         capsys,
-        qe_exec_context,
         mocked_responses,
         secret_value,
     ):

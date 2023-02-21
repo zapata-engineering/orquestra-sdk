@@ -21,15 +21,24 @@ from enum import Enum
 
 
 class ExecContext(Enum):
+    # No specific execution context set. Running regular Python code, e.g. in a Python
+    # REPL or a user script.
+    DIRECT = "DIRECT"
+
+    # We're running the function marked as `@sdk.workflow` to get the workflow graph.
     WORKFLOW_BUILD = "WORKFLOW_BUILD"
-    LOCAL_DIRECT = "LOCAL_DIRECT"
-    LOCAL_RAY = "LOCAL_RAY"
+
+    # We're inside a Ray task. This can be managed by the Local Runtime or remote
+    # Compute Engine.
+    RAY = "RAY"
+
+    # We're inside a remote task running on Quantum Engine.
     PLATFORM_QE = "PLATFORM_QE"
 
 
 # To be set by runtimes.
 # To be read by anybody inside our code.
-global_context: ExecContext = ExecContext.LOCAL_DIRECT
+global_context: ExecContext = ExecContext.DIRECT
 
 
 @contextmanager
@@ -55,11 +64,11 @@ def workflow_build():
 
 
 @contextmanager
-def local_ray():
+def ray():  # pragma: no cover - tested inside a Ray task via an integration test.
     """
-    Helper. Sets the context for running code in a task on a local Ray cluster.
+    Helper. Sets the context for running code in a task managed by Ray.
     """
-    with _set_context(ExecContext.LOCAL_RAY):
+    with _set_context(ExecContext.RAY):
         yield
 
 

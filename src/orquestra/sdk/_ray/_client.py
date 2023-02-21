@@ -4,7 +4,6 @@
 """
 Facade module for Ray API.
 """
-import enum
 import typing as t
 
 try:

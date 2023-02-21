@@ -98,7 +98,7 @@ class TestRayRuntimeMethods:
             # then
             _wait_to_finish_wf(run_id, runtime)
             outputs = runtime.get_workflow_run_outputs(run_id)
-            assert outputs == ("LOCAL_RAY",)
+            assert outputs == ("RAY",)
 
     class TestGetWorkflowRunStatus:
         """

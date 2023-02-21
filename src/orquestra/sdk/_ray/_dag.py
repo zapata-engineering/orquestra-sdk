@@ -190,7 +190,7 @@ def _make_ray_dag_node(
         )
         logger = _log_adapter.workflow_logger()
         try:
-            with _exec_ctx.local_ray():
+            with _exec_ctx.ray():
                 return wrapped(*inner_args, **inner_kwargs)
         except Exception as e:
             # Log the stacktrace as a single log line.
