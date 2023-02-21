@@ -11,9 +11,13 @@ from orquestra.sdk.schema.configs import ConfigName
 from .._base import _config
 from ._client import SecretsClient
 
-# env var name
+# Env var name. Should contain the passport file path as a string. The passport file
+# should be a text file that contains auth token that we can use to interact with remote
+# services.
 ORQUESTRA_PASSPORT_FILE = "ORQUESTRA_PASSPORT_FILE"
 
+# We assume that we can access the Config Service under a well-known URI if the passport
+# auth is being used. This relies on the DNS configuration on the remote cluster.
 BASE_URI = "http://config-service.config-service:8099"
 
 
