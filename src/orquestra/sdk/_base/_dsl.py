@@ -742,6 +742,8 @@ class ArtifactFuture:
 
 def _resolve_module_path(fn):
     if (abs_path := inspect.getsourcefile(fn)) is None:
+        # This can happen when the `fn` is defined in a binary module. We need to check
+        # it explicitly to appease mypy. It would be nice to have a test case for it.
         return None
     try:
         relative_path = os.path.relpath(abs_path)
