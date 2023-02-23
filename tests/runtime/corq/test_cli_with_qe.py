@@ -65,14 +65,6 @@ def _write_new_config(
     config_file_path.write_text(config_file.json())
 
 
-def _read_config_file(dirpath: Path) -> RuntimeConfigurationFile:
-    """
-    Reads the contents of the user config file at 'dirpath'.
-    """
-    config_file_path = dirpath / _config.CONFIG_FILE_NAME
-    return RuntimeConfigurationFile.parse_file(config_file_path)
-
-
 class TestCLIWithQEMock:
     """Tests CLI actions while using a mock instead the real QERuntime."""
 
@@ -81,7 +73,7 @@ class TestCLIWithQEMock:
 
         # Set up runtime object mock
         inv_id_1 = "inv-id-1"
-        log_lines1 = []
+        log_lines1: t.List[str] = []
         inv_id_2 = "inv-id-2"
         log_lines2 = ["foo 2", "foo bar 2"]
         mock_runtime = create_autospec(RuntimeInterface)

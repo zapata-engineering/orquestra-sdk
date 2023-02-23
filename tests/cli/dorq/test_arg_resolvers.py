@@ -1,6 +1,7 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
+import typing as t
 from unittest.mock import Mock
 
 import pytest
@@ -115,7 +116,7 @@ class TestConfigResolver:
             choose from available configs.
             """
             # Given
-            config = []
+            config: t.List = []
 
             config_repo = Mock()
             local_config_names = ["cfg1", "cfg2"]
@@ -965,7 +966,7 @@ class TestWFRunFilterResolver:
         @staticmethod
         def test_passing_no_state_default():
             # Given
-            states = []
+            states: t.List[str] = []
             return_states = ["WAITING"]
             prompter = Mock()
             resolver = _arg_resolvers.WFRunFilterResolver(prompter=prompter)
@@ -981,7 +982,7 @@ class TestWFRunFilterResolver:
         @staticmethod
         def test_passing_no_state_interactive():
             # Given
-            states = []
+            states: t.List[str] = []
             return_states = ["WAITING"]
             prompter = Mock()
             resolver = _arg_resolvers.WFRunFilterResolver(prompter=prompter)

@@ -3,6 +3,7 @@
 ################################################################################
 import ast
 import inspect
+import typing as t
 from types import FunctionType
 
 import numpy as np
@@ -35,6 +36,7 @@ def test_normalize_indents():
     assert inspect.getsource(fn1) == _ast.normalize_indents(inspect.getsource(fn2))
 
 
+@t.no_type_check
 def function_with_calls():
     np.arange(2)
     simple_obj = ObjWithTask(0)
@@ -54,7 +56,7 @@ function_calls = [
             _ast.NodeReference(name="np", node_type=_ast.NodeReferenceType.NAME),
             _ast.NodeReference(name="arange", node_type=_ast.NodeReferenceType.CALL),
         ],
-        line_no=2,
+        line_no=3,
     ),
     _ast._Call(
         callable_name="ObjWithTask",
@@ -63,7 +65,7 @@ function_calls = [
                 name="ObjWithTask", node_type=_ast.NodeReferenceType.CALL
             )
         ],
-        line_no=3,
+        line_no=4,
     ),
     _ast._Call(
         callable_name="get_id",
@@ -73,7 +75,7 @@ function_calls = [
             ),
             _ast.NodeReference(name="get_id", node_type=_ast.NodeReferenceType.CALL),
         ],
-        line_no=4,
+        line_no=5,
     ),
     _ast._Call(
         callable_name="_task_without_resources",
@@ -82,14 +84,14 @@ function_calls = [
                 name="_task_without_resources", node_type=_ast.NodeReferenceType.CALL
             )
         ],
-        line_no=5,
+        line_no=6,
     ),
     _ast._Call(
         callable_name="print",
         call_statement=[
             _ast.NodeReference(name="print", node_type=_ast.NodeReferenceType.CALL)
         ],
-        line_no=6,
+        line_no=7,
     ),
     _ast._Call(
         callable_name="with_resources",
@@ -99,14 +101,14 @@ function_calls = [
                 name="with_resources", node_type=_ast.NodeReferenceType.CALL
             ),
         ],
-        line_no=7,
+        line_no=8,
     ),
     _ast._Call(
         callable_name="range",
         call_statement=[
             _ast.NodeReference(name="range", node_type=_ast.NodeReferenceType.CALL)
         ],
-        line_no=8,
+        line_no=9,
     ),
     _ast._Call(
         callable_name="with_resources",
@@ -116,7 +118,7 @@ function_calls = [
                 name="with_resources", node_type=_ast.NodeReferenceType.CALL
             ),
         ],
-        line_no=9,
+        line_no=10,
     ),
 ]
 
@@ -129,7 +131,7 @@ wf_function_calls = [
                 name="ObjWithTask", node_type=_ast.NodeReferenceType.CALL
             )
         ],
-        line_no=3,
+        line_no=4,
     ),
     _ast._Call(
         callable_name="get_id",
@@ -139,7 +141,7 @@ wf_function_calls = [
             ),
             _ast.NodeReference(name="get_id", node_type=_ast.NodeReferenceType.CALL),
         ],
-        line_no=4,
+        line_no=5,
     ),
     _ast._Call(
         callable_name="with_invocation_meta",
@@ -151,7 +153,7 @@ wf_function_calls = [
                 name="with_invocation_meta", node_type=_ast.NodeReferenceType.CALL
             ),
         ],
-        line_no=5,
+        line_no=6,
     ),
 ]
 

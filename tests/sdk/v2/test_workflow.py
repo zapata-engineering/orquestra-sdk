@@ -1,6 +1,7 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
+import typing as t
 from pathlib import Path
 
 import pytest
@@ -93,10 +94,13 @@ class TestDataAggregationResources:
         with pytest.warns(Warning) as warns:
             wf = self._workflow_gpu_set_for_data_aggregation()
             assert len(warns.list) == 1
+            assert wf.model.data_aggregation is not None
+            assert wf.model.data_aggregation.resources is not None
             assert wf.model.data_aggregation.resources.gpu == "0"
 
     def test_workflow_data_aggregation_false(self):
         wf = self._workflow_data_aggregation_false()
+        assert wf.model.data_aggregation is not None
         assert wf.model.data_aggregation.run is False
 
     def test_workflow_data_aggregation_true(self):
@@ -226,12 +230,13 @@ def test_artifact_node_custom_names():
 class TestWorkflowTemplate:
     @staticmethod
     def test_wraps_fn():
-        assert _simple_workflow.__name__ == _simple_workflow._fn.__name__
+        wf: t.Any = _simple_workflow
+        assert wf.__name__ == wf._fn.__name__
 
     @staticmethod
     def test_parametrized_wf_with_no_args():
         with pytest.raises(WorkflowSyntaxError):
-            _parametrized_workflow()
+            _parametrized_workflow()  # type: ignore
 
 
 class TestGraph:

@@ -181,14 +181,15 @@ def _make_python_import_id(imp: _dsl.PythonImports, import_hash: str):
     return f"python-import-{import_hash}"
 
 
+# Hashing inline imports is useless since it gives the same result each time. To ensure
+# uniqueness in the system, use a global counter.
+_global_inline_import_counter: int = 0
+
+
 def _make_inline_import_id():
-    # hashing inline imports is useless since it gives the same result each time.
-    # to ensure uniqueness in the system, use global counter
-    try:
-        _make_inline_import_id.counter += 1
-    except AttributeError:
-        _make_inline_import_id.counter = 0
-    return f"inline-import-{_make_inline_import_id.counter}"
+    global _global_inline_import_counter
+    _global_inline_import_counter += 1
+    return f"inline-import-{_global_inline_import_counter}"
 
 
 def _make_import_model(imp: _dsl.Import):

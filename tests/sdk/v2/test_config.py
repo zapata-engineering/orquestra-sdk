@@ -18,8 +18,7 @@ the user. It's a lot easier to figure out appropriate behavior this way.
 """
 import datetime
 import json
-import os
-import tempfile
+import typing as t
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -55,7 +54,7 @@ class TestSavePartialConfig:
 class TestResolveRuntimeOptionsForWriting:
     @staticmethod
     def test_returns_builtins_if_name_is_builtin():
-        new_runtime_options = {}
+        new_runtime_options: t.Dict = {}
         config_name = _config.BUILT_IN_CONFIG_NAME
         stub_prev_config = RuntimeConfiguration(
             config_name="test_config", runtime_name="RAY_LOCAL", runtime_options={}
@@ -139,7 +138,7 @@ class TestGenerateConfigName:
     @staticmethod
     def test_raises_exception_if_qe_but_no_uri():
         with pytest.raises(AttributeError) as exc_info:
-            _config.generate_config_name(RuntimeName.QE_REMOTE, {})
+            _config.generate_config_name(RuntimeName.QE_REMOTE, None)
         assert "QE and CE runtime configurations must have a 'URI' value set." in str(
             exc_info
         )
