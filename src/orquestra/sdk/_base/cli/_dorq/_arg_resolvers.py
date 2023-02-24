@@ -102,7 +102,7 @@ class WFConfigResolver:
         return ConfigResolver(self._config_repo, self._prompter).resolve(config)
 
 
-class WFRunResolver:
+class WFRunIDResolver:
     """
     Resolves value of `wf_run_id` based on `config`.
     """
@@ -115,7 +115,7 @@ class WFRunResolver:
         self._wf_run_repo = wf_run_repo
         self._prompter = prompter
 
-    def resolve_id(
+    def resolve(
         self, wf_run_id: t.Optional[WorkflowRunId], config: ConfigName
     ) -> WorkflowRunId:
         if wf_run_id is not None:
@@ -128,22 +128,6 @@ class WFRunResolver:
         ids = self._wf_run_repo.list_wf_run_ids(config)
         selected_id = self._prompter.choice(ids, message="Workflow run ID")
         return selected_id
-
-    def resolve_run(
-        self, wf_run_id: t.Optional[WorkflowRunId], config: ConfigName
-    ) -> WorkflowRun:
-        if wf_run_id is not None:
-            return self._wf_run_repo.get_wf_by_run_id(wf_run_id, config)
-
-        # Query the runtime for suitable workflow run IDs.
-        # TODO: figure out sensible filters when listing workflow runs is implemented
-        # in the public API.
-        # Related ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-671
-        runs = self._wf_run_repo.list_wf_runs(config)
-        selected_run = self._prompter.choice(
-            [(run.id, run) for run in runs], message="Workflow run ID"
-        )
-        return selected_run
 
 
 class TaskInvIDResolver:
@@ -207,11 +191,11 @@ class TaskRunIDResolver:
     def __init__(
         self,
         wf_run_repo=_repos.WorkflowRunRepo(),
-        wf_run_resolver: t.Optional[WFRunResolver] = None,
+        wf_run_resolver: t.Optional[WFRunIDResolver] = None,
         task_inv_id_resolver: t.Optional[TaskInvIDResolver] = None,
     ):
         self._wf_run_repo = wf_run_repo
-        self._wf_run_resolver = wf_run_resolver or WFRunResolver(
+        self._wf_run_resolver = wf_run_resolver or WFRunIDResolver(
             wf_run_repo=wf_run_repo
         )
         self._task_inv_id_resolver = task_inv_id_resolver or TaskInvIDResolver(
@@ -230,7 +214,7 @@ class TaskRunIDResolver:
             # User passed task run ID directly.
             return task_run_id
 
-        resolved_wf_run_id = self._wf_run_resolver.resolve_id(wf_run_id, config)
+        resolved_wf_run_id = self._wf_run_resolver.resolve(wf_run_id, config)
 
         resolved_inv_id = self._task_inv_id_resolver.resolve(
             task_inv_id=task_inv_id,

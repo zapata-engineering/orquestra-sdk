@@ -2,7 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 import typing as t
-from unittest.mock import Mock
+from unittest.mock import Mock, create_autospec
 
 import pytest
 
@@ -327,13 +327,13 @@ class TestWFRunResolver:
             wf_run_id = "<wf run ID sentinel>"
             config = "<config sentinel>"
 
-            resolver = _arg_resolvers.WFRunResolver(
+            resolver = _arg_resolvers.WFRunIDResolver(
                 wf_run_repo=Mock(),
                 prompter=Mock(),
             )
 
             # When
-            resolved_id = resolver.resolve_id(wf_run_id=wf_run_id, config=config)
+            resolved_id = resolver.resolve(wf_run_id=wf_run_id, config=config)
 
             # Then
             assert resolved_id == wf_run_id
@@ -355,13 +355,13 @@ class TestWFRunResolver:
             selected_id = listed_run_ids[0]
             prompter.choice.return_value = selected_id
 
-            resolver = _arg_resolvers.WFRunResolver(
+            resolver = _arg_resolvers.WFRunIDResolver(
                 wf_run_repo=wf_run_repo,
                 prompter=prompter,
             )
 
             # When
-            resolved_id = resolver.resolve_id(wf_run_id=wf_run_id, config=config)
+            resolved_id = resolver.resolve(wf_run_id=wf_run_id, config=config)
 
             # Then
             # We should pass config value to wf_run_repo.
@@ -375,69 +375,6 @@ class TestWFRunResolver:
 
             # Resolver should return the user's choice.
             assert resolved_id == selected_id
-
-    class TestResolveRun:
-        @staticmethod
-        def test_passing_id_directly():
-            """
-            User passed ``wf_run_id`` value directly as CLI arg.
-            """
-            # Given
-            wf_run_id = "<wf run ID sentinel>"
-            wf_run = "<wf run sentinel>"
-            config = "<config sentinel>"
-
-            repo = Mock()
-            repo.get_wf_by_run_id.return_value = wf_run
-
-            resolver = _arg_resolvers.WFRunResolver(
-                wf_run_repo=repo,
-                prompter=Mock(),
-            )
-
-            # When
-            resolved_run = resolver.resolve_run(wf_run_id=wf_run_id, config=config)
-
-            # Then
-            assert resolved_run == wf_run
-
-        @staticmethod
-        def test_no_wf_run_id():
-            """
-            User didn't pass ``wf_run_id``.
-            """
-            # Given
-            wf_run_id = None
-            config = "<config sentinel>"
-
-            wf_run_repo = Mock()
-            listed_runs = [Mock(), Mock()]
-            wf_run_repo.list_wf_runs.return_value = listed_runs
-
-            prompter = Mock()
-            selected_run = listed_runs[0]
-            prompter.choice.return_value = selected_run
-
-            resolver = _arg_resolvers.WFRunResolver(
-                wf_run_repo=wf_run_repo,
-                prompter=prompter,
-            )
-
-            # When
-            resolved_run = resolver.resolve_run(wf_run_id=wf_run_id, config=config)
-
-            # Then
-            # We should pass config value to wf_run_repo.
-            wf_run_repo.list_wf_runs.assert_called_with(config)
-
-            # We should prompt for selecting workflow run from the IDs returned
-            # by the repo.
-            prompter.choice.assert_called_with(
-                [(run.id, run) for run in listed_runs], message="Workflow run ID"
-            )
-
-            # Resolver should return the user's choice.
-            assert resolved_run == selected_run
 
 
 class TestTaskInvIDResolver:
@@ -710,9 +647,9 @@ class TestTaskRunIDResolver:
         task_inv_id = "inv1"
 
         # Mocks
-        wf_run_resolver = Mock(_arg_resolvers.WFRunResolver)
+        wf_run_resolver = create_autospec(_arg_resolvers.WFRunIDResolver)
         resolved_wf_run_id = "resolved wf run id"
-        wf_run_resolver.resolve_id.return_value = resolved_wf_run_id
+        wf_run_resolver.resolve.return_value = resolved_wf_run_id
 
         task_inv_id_resolver = Mock(_arg_resolvers.TaskInvIDResolver)
         resolved_inv_id = "resolved inv id"
@@ -739,7 +676,7 @@ class TestTaskRunIDResolver:
 
         # Then
         # Should delegate wf_run_id resolution to the nested resolver.
-        wf_run_resolver.resolve_id.assert_called_with(wf_run_id, config)
+        wf_run_resolver.resolve.assert_called_with(wf_run_id, config)
 
         # Should delegate task_inv_id resolution to the nested resolver.
         task_inv_id_resolver.resolve.assert_called_with(

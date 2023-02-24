@@ -3,6 +3,8 @@
 ################################################################################
 """
 Repositories that encapsulate data access used by dorq commands.
+
+The "data" layer. Shouldn't directly depend on the "view" layer.
 """
 import importlib
 import os
@@ -24,17 +26,51 @@ from orquestra.sdk.schema.configs import ConfigName, RuntimeName
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.workflow_run import (
     State,
+    TaskRun,
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
 )
 
-from ._login._login_server import LoginServer
-from ._ui import _presenters
+from ._ui import _models as ui_models
 
 
 def _find_first(f: t.Callable[[t.Any], bool], it: t.Iterable):
     return next(filter(f, it))
+
+
+def _ui_model_from_task_run(task_run: TaskRun, wf_def: WorkflowDef):
+    invocation = wf_def.task_invocations[task_run.invocation_id]
+    task_def = wf_def.tasks[invocation.task_id]
+    fn_name = task_def.fn_ref.function_name
+
+    return ui_models.WFRunSummary.TaskRow(
+        task_fn_name=fn_name,
+        inv_id=task_run.invocation_id,
+        status=task_run.status,
+        message=task_run.message,
+    )
+
+
+def _ui_model_from_wf_run(run_model: WorkflowRun) -> ui_models.WFRunSummary:
+    n_succeeded = sum(
+        1
+        for task_run in run_model.task_runs
+        if task_run.status.state == State.SUCCEEDED
+    )
+    n_total = len(run_model.workflow_def.task_invocations)
+
+    return ui_models.WFRunSummary(
+        wf_def_name=run_model.workflow_def.name,
+        wf_run_id=run_model.id,
+        wf_run_status=run_model.status,
+        task_rows=[
+            _ui_model_from_task_run(task_run, wf_def=run_model.workflow_def)
+            for task_run in run_model.task_runs
+        ],
+        n_tasks_succeeded=n_succeeded,
+        n_task_invocations_total=n_total,
+    )
 
 
 class WorkflowRunRepo:
@@ -83,14 +119,17 @@ class WorkflowRunRepo:
     ) -> WorkflowRun:
         """
         Raises:
-            orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match any
-                available run ID.
+            orquestra.sdk.exceptions.WorkflowRunNotFoundError: when the wf_run_id
+                doesn't match any available run ID.
             orquestra.sdk.exceptions.ConfigNameNotFoundError: when the named config is
                 not found in the file.
         """
         try:
             wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
-        except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
+        except (
+            exceptions.WorkflowRunNotFoundError,
+            exceptions.ConfigNameNotFoundError,
+        ):
             raise
 
         return wf_run.get_status_model()
@@ -103,8 +142,8 @@ class WorkflowRunRepo:
     ) -> TaskRunId:
         """
         Raises:
-            orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match any
-                available run ID.
+            orquestra.sdk.exceptions.WorkflowRunNotFoundError: when the wf_run_id
+                doesn't match any available run ID.
             orquestra.sdk.exceptions.ConfigNameNotFoundError: when the named config is
                 not found in the file.
             orquestra.sdk.exceptions.TaskInvocationNotFoundError: when the task_inv_id
@@ -114,7 +153,10 @@ class WorkflowRunRepo:
             wf_run_model = self.get_wf_by_run_id(
                 wf_run_id=wf_run_id, config_name=config_name
             )
-        except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
+        except (
+            exceptions.WorkflowRunNotFoundError,
+            exceptions.ConfigNameNotFoundError,
+        ):
             raise
 
         try:
@@ -128,6 +170,28 @@ class WorkflowRunRepo:
             ) from e
 
         return task_run.id
+
+    def get_wf_run_summary(
+        self, wf_run_id: WorkflowRunId, config_name: t.Optional[ConfigName]
+    ) -> ui_models.WFRunSummary:
+        """
+        Raises:
+            orquestra.sdk.exceptions.WorkflowRunNotFoundError: when the wf_run_id
+                doesn't match any available run ID.
+            orquestra.sdk.exceptions.ConfigNameNotFoundError: when the named config is
+                not found in the file.
+        """
+        try:
+            wf_run_model = self.get_wf_by_run_id(
+                wf_run_id=wf_run_id, config_name=config_name
+            )
+        except (
+            exceptions.WorkflowRunNotFoundError,
+            exceptions.ConfigNameNotFoundError,
+        ):
+            raise
+
+        return _ui_model_from_wf_run(wf_run_model)
 
     def submit(
         self, wf_def: sdk.WorkflowDef, config: ConfigName, ignore_dirty_repo: bool
