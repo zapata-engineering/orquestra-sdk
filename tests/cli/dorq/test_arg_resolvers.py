@@ -762,16 +762,10 @@ class TestTaskRunIDResolver:
 @pytest.mark.parametrize(
     "args,expected_services",
     [
-        pytest.param((None, None, None), ("Ray",), id="Default"),
-        pytest.param((True, None, None), ("Ray",), id="Ray"),
-        pytest.param((None, True, None), ("Fluent Bit",), id="Fluent Bit"),
-        pytest.param((None, None, True), ("Ray", "Fluent Bit"), id="All"),
-        pytest.param(
-            (True, True, None), ("Ray", "Fluent Bit"), id="Ray and Fluent Bit"
-        ),
-        pytest.param(
-            (True, True, True), ("Ray", "Fluent Bit"), id="Ray, Fluent Bit and All"
-        ),
+        pytest.param((None, None), ("Ray",), id="Default"),
+        pytest.param((True, None), ("Ray",), id="Ray"),
+        pytest.param((None, True), ("Ray",), id="All"),
+        pytest.param((True, True), ("Ray",), id="Ray and All"),
     ],
 )
 def test_service_resolver(args, expected_services):

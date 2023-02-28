@@ -225,38 +225,21 @@ class TestServiceManager:
     """
     Tests' boundaries::
 
-        [ServiceManager]───┬─[FluentManager]
-                           └─[RayManager]
+        [ServiceManager]────[RayManager]
     """
 
     class TestUp:
         def test_happy_path(self):
             # Given
-            fluent = Mock()
             ray = Mock()
             sm = _services.ServiceManager(ray)
             # When
             sm.up()
             # Then
-            fluent.up.assert_called()
             ray.up.assert_called()
-
-        def test_fluent_fails(self):
-            # Given
-            fluent = Mock()
-            fluent.up.side_effect = RuntimeError
-            ray = Mock()
-            sm = _services.ServiceManager(ray)
-            # When
-            with pytest.raises(RuntimeError):
-                sm.up()
-            # Then
-            fluent.up.assert_called()
-            ray.up.assert_not_called()
 
         def test_ray_fails(self):
             # Given
-            fluent = Mock()
             ray = Mock()
             ray.up.side_effect = RuntimeError
             sm = _services.ServiceManager(ray)
@@ -264,12 +247,10 @@ class TestServiceManager:
             with pytest.raises(RuntimeError):
                 sm.up()
             # Then
-            fluent.up.assert_called()
             ray.up.assert_called()
 
         def test_ray_subprocess_fails(self):
             # Given
-            fluent = Mock()
             ray = Mock()
             ray.up.side_effect = subprocess.CalledProcessError(1, "mocked-out")
             sm = _services.ServiceManager(ray)
@@ -277,25 +258,21 @@ class TestServiceManager:
             with pytest.raises(subprocess.CalledProcessError):
                 sm.up()
             # Then
-            fluent.up.assert_called()
             ray.up.assert_called()
 
     class TestDown:
         def test_happy_path(self):
             # Given
-            fluent = Mock()
             ray = Mock()
             sm = _services.ServiceManager(ray)
             # When
             sm.down()
             # Then
-            fluent.down.assert_called()
             ray.down.assert_called()
 
         def test_ray_subprocess_fails(self):
             pass
             # Given
-            fluent = Mock()
             ray = Mock()
             ray.down.side_effect = subprocess.CalledProcessError(1, "mocked-out")
             sm = _services.ServiceManager(ray)
@@ -303,21 +280,18 @@ class TestServiceManager:
             with pytest.raises(subprocess.CalledProcessError):
                 sm.down()
             # Then
-            fluent.down.assert_called()
             ray.down.assert_called()
 
     class TestIsRayRunning:
         @pytest.mark.parametrize("result", [True, False])
         def test_happy_path(self, result):
             # Given
-            fluent = Mock()
             ray = Mock()
             ray.is_running.return_value = result
             sm = _services.ServiceManager(ray)
             # When
             running = sm.is_ray_running()
             # Then
-            fluent.is_running.assert_not_called()
             ray.is_running.assert_called()
             assert running == result
 

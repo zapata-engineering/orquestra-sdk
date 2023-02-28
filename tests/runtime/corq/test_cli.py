@@ -4,7 +4,6 @@
 """Test suite for CLI v2 tests that aren't specific to RayRuntime or QERuntime."""
 
 import argparse
-import json
 import logging
 from pathlib import Path
 from unittest.mock import Mock
@@ -12,10 +11,9 @@ from unittest.mock import Mock
 import pytest
 
 import orquestra.sdk._base._config as v2_config
-import orquestra.sdk._base.cli._corq.services.action as services_action
 import orquestra.sdk.examples.workflow_defs
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import _factory, _services
+from orquestra.sdk._base import _factory
 from orquestra.sdk._base._config import BUILT_IN_CONFIG_NAME
 from orquestra.sdk._base.cli._corq import action
 from orquestra.sdk.schema.configs import (
@@ -25,9 +23,6 @@ from orquestra.sdk.schema.configs import (
 from orquestra.sdk.schema.responses import (
     GetDefaultConfig,
     ResponseStatusCode,
-    ServicesStartedResponse,
-    ServicesStatusResponse,
-    ServicesStoppedResponse,
     SubmitWorkflowDefResponse,
 )
 
@@ -267,111 +262,3 @@ class TestSubmitWorkflowErrors:
             action.orq_submit_workflow_def(args)
 
         assert "No workflow definitions found in project" in str(exc_info)
-
-
-class TestServiceCommands:
-    """
-    Boundaries of the system-under-test: [CLI action]-[ServiceManager].
-    """
-
-    def test_orq_up(self, monkeypatch):
-        # Given
-        mock_sm = Mock()
-        monkeypatch.setattr(_services, "ServiceManager", Mock(return_value=mock_sm))
-
-        # When
-        response = services_action.orq_services_up(argparse.Namespace())
-
-        # Then
-        mock_sm.up.assert_called()
-        assert response.meta.success
-
-        assert isinstance(response, ServicesStartedResponse)
-
-    def test_orq_down(self, monkeypatch):
-        # Given
-        mock_sm = Mock()
-        monkeypatch.setattr(_services, "ServiceManager", Mock(return_value=mock_sm))
-
-        # When
-        response = services_action.orq_services_down(argparse.Namespace())
-
-        # Then
-        mock_sm.down.assert_called()
-        assert response.meta.success
-
-        assert isinstance(response, ServicesStoppedResponse)
-
-    class TestOrqStatus:
-        def test_none_running(self, monkeypatch):
-            # Given
-            mock_sm = Mock()
-            mock_sm.is_ray_running.return_value = False
-            mock_sm.is_fluentbit_running.return_value = False
-            monkeypatch.setattr(_services, "ServiceManager", Mock(return_value=mock_sm))
-
-            # When
-            response = services_action.orq_services_status(argparse.Namespace())
-
-            # Then
-            assert not response.meta.success
-            assert (
-                response.meta.message == "Ray isn't running. FluentBit isn't running."
-            )
-
-            assert isinstance(response, ServicesStatusResponse)
-            assert not response.ray_running
-            assert not response.fluentbit_running
-
-        def test_ray_only_running(self, monkeypatch):
-            # Given
-            mock_sm = Mock()
-            mock_sm.is_ray_running.return_value = True
-            mock_sm.is_fluentbit_running.return_value = False
-            monkeypatch.setattr(_services, "ServiceManager", Mock(return_value=mock_sm))
-
-            # When
-            response = services_action.orq_services_status(argparse.Namespace())
-
-            # Then
-            assert not response.meta.success
-            assert response.meta.message == "FluentBit isn't running."
-
-            assert isinstance(response, ServicesStatusResponse)
-            assert response.ray_running
-            assert not response.fluentbit_running
-
-        def test_fluentbit_only_running(self, monkeypatch):
-            # Given
-            mock_sm = Mock()
-            mock_sm.is_ray_running.return_value = False
-            mock_sm.is_fluentbit_running.return_value = True
-            monkeypatch.setattr(_services, "ServiceManager", Mock(return_value=mock_sm))
-
-            # When
-            response = services_action.orq_services_status(argparse.Namespace())
-
-            # Then
-            assert not response.meta.success
-            assert response.meta.message == "Ray isn't running."
-
-            assert isinstance(response, ServicesStatusResponse)
-            assert not response.ray_running
-            assert response.fluentbit_running
-
-        def test_both_running(self, monkeypatch):
-            # Given
-            mock_sm = Mock()
-            mock_sm.is_ray_running.return_value = True
-            mock_sm.is_fluentbit_running.return_value = True
-            monkeypatch.setattr(_services, "ServiceManager", Mock(return_value=mock_sm))
-
-            # When
-            response = services_action.orq_services_status(argparse.Namespace())
-
-            # Then
-            assert response.meta.success
-
-            assert isinstance(response, ServicesStatusResponse)
-            assert response.ray_running
-            assert response.fluentbit_running
