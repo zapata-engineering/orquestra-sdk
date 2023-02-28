@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 from orquestra.sdk._base._db._migration import migrate_project_db_to_shared_db
+from orquestra.sdk._base._environment import DB_PATH_ENV
 from orquestra.sdk._base.abc import WorkflowRepo
 from orquestra.sdk.exceptions import WorkflowNotFoundError
 from orquestra.sdk.schema.ir import WorkflowDef
@@ -27,7 +28,7 @@ def _create_workflow_table(db: sqlite3.Connection):
 
 def _get_default_db_location() -> Path:
     try:
-        return Path(os.environ["ORQ_DB_LOCATION"])
+        return Path(os.environ[DB_PATH_ENV])
     except KeyError:
         return Path.home() / ".orquestra" / "workflows.db"
 

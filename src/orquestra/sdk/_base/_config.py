@@ -22,6 +22,8 @@ from orquestra.sdk.schema.configs import (
     RuntimeName,
 )
 
+from ._environment import CONFIG_PATH_ENV
+
 # Why JSON?
 #  The Python TOML package is unmaintained as of 2022-02-18.
 #  It is not compatible with the 1.0 version of the TOML spec:
@@ -30,7 +32,6 @@ from orquestra.sdk.schema.configs import (
 #    https://github.com/samuelcolvin/pydantic/issues/136
 CONFIG_FILE_NAME = "config.json"
 LOCK_FILE_NAME = "config.json.lock"
-CONFIG_ENV_VARIABLE = "ORQ_CONFIG_PATH"
 BUILT_IN_CONFIG_NAME = "local"
 RAY_CONFIG_NAME_ALIAS = "ray"
 IN_PROCESS_CONFIG_NAME = "in_process"
@@ -100,7 +101,7 @@ def _get_config_file_path() -> Path:
         Path: Path to the configuration file. The default is `~/.orquestra/config.json`
             but can be configured using the `ORQ_CONFIG_PATH` environment variable.
     """
-    config_file_path = os.getenv(CONFIG_ENV_VARIABLE)
+    config_file_path = os.getenv(CONFIG_PATH_ENV)
     if config_file_path is not None:
         _config_file_path = Path(config_file_path).resolve()
     else:

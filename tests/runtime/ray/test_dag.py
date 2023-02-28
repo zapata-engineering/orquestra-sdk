@@ -546,26 +546,37 @@ class TestPipString:
             assert pip == ["mocked", "mocked"]
 
     class TestGitImports:
-        def test_http(self):
+        @pytest.fixture
+        def patch_env(self, monkeypatch: pytest.MonkeyPatch):
+            monkeypatch.setenv("ORQ_RAY_DOWNLOAD_GIT_IMPORTS", "1")
+
+        def test_http(self, patch_env):
             imp = ir.GitImport(
                 id="mock-import", repo_url="https://mock/mock/mock", git_ref="mock"
             )
             pip = _dag._pip_string(imp)
             assert pip == ["git+https://mock/mock/mock@mock"]
 
-        def test_pip_ssh_format(self):
+        def test_pip_ssh_format(self, patch_env):
             imp = ir.GitImport(
                 id="mock-import", repo_url="ssh://git@mock/mock/mock", git_ref="mock"
             )
             pip = _dag._pip_string(imp)
             assert pip == ["git+ssh://git@mock/mock/mock@mock"]
 
-        def test_usual_ssh_format(self):
+        def test_usual_ssh_format(self, patch_env):
             imp = ir.GitImport(
                 id="mock-import", repo_url="git@mock:mock/mock", git_ref="mock"
             )
             pip = _dag._pip_string(imp)
             assert pip == ["git+ssh://git@mock/mock/mock@mock"]
+
+        def test_no_env_set(self):
+            imp = ir.GitImport(
+                id="mock-import", repo_url="git@mock:mock/mock", git_ref="mock"
+            )
+            pip = _dag._pip_string(imp)
+            assert pip == []
 
     class TestOtherImports:
         def test_local_import(self):
