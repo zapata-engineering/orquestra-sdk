@@ -97,7 +97,7 @@ class CERuntime(RuntimeInterface):
             raise exceptions.WorkflowRunNotStarted(
                 f"Unable to start the workflow run: {e}"
             ) from e
-        except _exceptions.InvalidTokenError as e:
+        except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
             raise exceptions.UnauthorizedError(f"{e}") from e
 
         with WorkflowDB.open_db() as db:
@@ -134,7 +134,7 @@ class CERuntime(RuntimeInterface):
             raise exceptions.WorkflowRunNotFoundError(
                 f"Workflow run with id `{workflow_run_id}` not found"
             ) from e
-        except _exceptions.InvalidTokenError as e:
+        except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
             raise exceptions.UnauthorizedError(f"{e}") from e
 
     def get_workflow_run_outputs(self, workflow_run_id: WorkflowRunId) -> Sequence[Any]:
@@ -177,7 +177,7 @@ class CERuntime(RuntimeInterface):
             raise exceptions.WorkflowRunNotFoundError(
                 f"Workflow run with id `{workflow_run_id}` not found"
             ) from e
-        except _exceptions.InvalidTokenError as e:
+        except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
             raise exceptions.UnauthorizedError(f"{e}") from e
 
         if len(result_ids) == 0:
@@ -192,7 +192,7 @@ class CERuntime(RuntimeInterface):
         try:
             wf_result = self._client.get_workflow_run_result(result_ids[0])
             return tuple(serde.deserialize(wf_result))
-        except _exceptions.InvalidTokenError as e:
+        except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
             raise exceptions.UnauthorizedError(f"{e}") from e
 
     def get_available_outputs(
@@ -226,7 +226,7 @@ class CERuntime(RuntimeInterface):
             raise exceptions.WorkflowRunNotFoundError(
                 f"Workflow run with id `{workflow_run_id}` not found"
             ) from e
-        except _exceptions.InvalidTokenError as e:
+        except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
             raise exceptions.UnauthorizedError(f"{e}") from e
 
         artifact_vals: Dict[
@@ -268,7 +268,11 @@ class CERuntime(RuntimeInterface):
         """
         try:
             self._client.terminate_workflow_run(workflow_run_id)
-        except _exceptions.InvalidTokenError as e:
+        except _exceptions.WorkflowRunNotFound:
+            raise exceptions.WorkflowRunNotFoundError(
+                f"Workflow run with id `{workflow_run_id}` not found"
+            )
+        except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
             raise exceptions.UnauthorizedError(f"{e}") from e
 
     def list_workflow_runs(
@@ -295,7 +299,7 @@ class CERuntime(RuntimeInterface):
         try:
             # TODO(ORQSDK-684): driver client cannot do filtering via API yet
             runs = self._client.list_workflow_runs()
-        except _exceptions.InvalidTokenError as e:
+        except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
             raise exceptions.UnauthorizedError(f"{e}") from e
         return runs.contents
 

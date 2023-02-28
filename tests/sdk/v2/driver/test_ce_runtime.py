@@ -145,15 +145,17 @@ class TestCreateWorkflowRun:
             with pytest.raises(_exceptions.UnknownHTTPError):
                 _ = runtime.create_workflow_run(my_workflow.model)
 
-        def test_token_failure(
+        @pytest.mark.parametrize(
+            "failure_exc", [_exceptions.InvalidTokenError, _exceptions.ForbiddenError]
+        )
+        def test_auth_failure(
             self,
             mocked_client: MagicMock,
             runtime: _ce_runtime.CERuntime,
+            failure_exc: Exception,
         ):
             # Given
-            mocked_client.create_workflow_def.side_effect = (
-                _exceptions.InvalidTokenError
-            )
+            mocked_client.create_workflow_def.side_effect = failure_exc
 
             # When
             with pytest.raises(exceptions.UnauthorizedError):
@@ -191,15 +193,17 @@ class TestCreateWorkflowRun:
             with pytest.raises(_exceptions.UnknownHTTPError):
                 _ = runtime.create_workflow_run(my_workflow.model)
 
-        def test_token_failure(
+        @pytest.mark.parametrize(
+            "failure_exc", [_exceptions.InvalidTokenError, _exceptions.ForbiddenError]
+        )
+        def test_auth_failure(
             self,
             mocked_client: MagicMock,
             runtime: _ce_runtime.CERuntime,
+            failure_exc: Exception,
         ):
             # Given
-            mocked_client.create_workflow_run.side_effect = (
-                _exceptions.InvalidTokenError
-            )
+            mocked_client.create_workflow_run.side_effect = failure_exc
 
             # When
             with pytest.raises(exceptions.UnauthorizedError):
@@ -271,14 +275,18 @@ class TestGetWorkflowRunStatus:
         with pytest.raises(_exceptions.UnknownHTTPError):
             _ = runtime.get_workflow_run_status(workflow_run_id)
 
-    def test_token_failure(
+    @pytest.mark.parametrize(
+        "failure_exc", [_exceptions.InvalidTokenError, _exceptions.ForbiddenError]
+    )
+    def test_auth_failure(
         self,
         mocked_client: MagicMock,
         runtime: _ce_runtime.CERuntime,
         workflow_run_id: str,
+        failure_exc: Exception,
     ):
         # Given
-        mocked_client.get_workflow_run.side_effect = _exceptions.InvalidTokenError
+        mocked_client.get_workflow_run.side_effect = failure_exc
 
         # When
         with pytest.raises(exceptions.UnauthorizedError):
@@ -380,16 +388,18 @@ class TestGetWorkflowRunResultsNonBlocking:
             with pytest.raises(_exceptions.UnknownHTTPError):
                 _ = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
 
-        def test_token_failure(
+        @pytest.mark.parametrize(
+            "failure_exc", [_exceptions.InvalidTokenError, _exceptions.ForbiddenError]
+        )
+        def test_auth_failure(
             self,
             mocked_client: MagicMock,
             runtime: _ce_runtime.CERuntime,
             workflow_run_id: str,
+            failure_exc: Exception,
         ):
             # Given
-            mocked_client.get_workflow_run_results.side_effect = (
-                _exceptions.InvalidTokenError
-            )
+            mocked_client.get_workflow_run_results.side_effect = failure_exc
 
             # When
             with pytest.raises(exceptions.UnauthorizedError):
@@ -416,16 +426,18 @@ class TestGetWorkflowRunResultsNonBlocking:
             with pytest.raises(_exceptions.UnknownHTTPError):
                 _ = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
 
-        def test_token_failure(
+        @pytest.mark.parametrize(
+            "failure_exc", [_exceptions.InvalidTokenError, _exceptions.ForbiddenError]
+        )
+        def test_auth_failure(
             self,
             mocked_client: MagicMock,
             runtime: _ce_runtime.CERuntime,
             workflow_run_id: str,
+            failure_exc: Exception,
         ):
             # Given
-            mocked_client.get_workflow_run_result.side_effect = (
-                _exceptions.InvalidTokenError
-            )
+            mocked_client.get_workflow_run_result.side_effect = failure_exc
 
             # When
             with pytest.raises(exceptions.UnauthorizedError):
@@ -519,15 +531,17 @@ class TestGetAvailableOutputs:
             with pytest.raises(_exceptions.UnknownHTTPError):
                 _ = runtime.get_available_outputs(workflow_run_id)
 
-        def test_token_failure(
+        @pytest.mark.parametrize(
+            "failure_exc", [_exceptions.InvalidTokenError, _exceptions.ForbiddenError]
+        )
+        def test_auth_failure(
             self,
             mocked_client: MagicMock,
             runtime: _ce_runtime.CERuntime,
             workflow_run_id: str,
+            failure_exc: Exception,
         ):
-            mocked_client.get_workflow_run_artifacts.side_effect = (
-                _exceptions.InvalidTokenError
-            )
+            mocked_client.get_workflow_run_artifacts.side_effect = failure_exc
 
             # When
             with pytest.raises(exceptions.UnauthorizedError):
@@ -641,16 +655,18 @@ class TestGetAvailableOutputs:
             )
             assert results == {}
 
-        def test_token_failure(
+        @pytest.mark.parametrize(
+            "failure_exc", [_exceptions.InvalidTokenError, _exceptions.ForbiddenError]
+        )
+        def test_auth_failure(
             self,
             mocked_client: MagicMock,
             runtime: _ce_runtime.CERuntime,
             workflow_run_id: str,
+            failure_exc: Exception,
         ):
             # Given
-            mocked_client.get_workflow_run_artifact.side_effect = (
-                _exceptions.InvalidTokenError
-            )
+            mocked_client.get_workflow_run_artifact.side_effect = failure_exc
 
             # When
             results = runtime.get_available_outputs(workflow_run_id)
@@ -694,16 +710,34 @@ class TestStopWorkflowRun:
         with pytest.raises(_exceptions.UnknownHTTPError):
             runtime.stop_workflow_run(workflow_run_id)
 
-    def test_token_failure(
+    @pytest.mark.parametrize(
+        "failure_exc", [_exceptions.InvalidTokenError, _exceptions.ForbiddenError]
+    )
+    def test_auth_failure(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        workflow_run_id: str,
+        failure_exc: Exception,
+    ):
+        mocked_client.terminate_workflow_run.side_effect = failure_exc
+
+        # When
+        with pytest.raises(exceptions.UnauthorizedError):
+            runtime.stop_workflow_run(workflow_run_id)
+
+    def test_workflow_run_not_found(
         self,
         mocked_client: MagicMock,
         runtime: _ce_runtime.CERuntime,
         workflow_run_id: str,
     ):
-        mocked_client.terminate_workflow_run.side_effect = _exceptions.InvalidTokenError
+        mocked_client.terminate_workflow_run.side_effect = (
+            _exceptions.WorkflowRunNotFound(workflow_run_id)
+        )
 
         # When
-        with pytest.raises(exceptions.UnauthorizedError):
+        with pytest.raises(exceptions.WorkflowRunNotFoundError):
             runtime.stop_workflow_run(workflow_run_id)
 
 
@@ -748,7 +782,6 @@ class TestListWorkflowRuns:
         self,
         mocked_client: MagicMock,
         runtime: _ce_runtime.CERuntime,
-        workflow_run_id: str,
     ):
         # Given
         mocked_client.list_workflow_runs.side_effect = _exceptions.UnknownHTTPError(
@@ -759,13 +792,16 @@ class TestListWorkflowRuns:
         with pytest.raises(_exceptions.UnknownHTTPError):
             runtime.list_workflow_runs()
 
-    def test_token_failure(
+    @pytest.mark.parametrize(
+        "failure_exc", [_exceptions.InvalidTokenError, _exceptions.ForbiddenError]
+    )
+    def test_auth_failure(
         self,
         mocked_client: MagicMock,
         runtime: _ce_runtime.CERuntime,
-        workflow_run_id: str,
+        failure_exc: Exception,
     ):
-        mocked_client.list_workflow_runs.side_effect = _exceptions.InvalidTokenError
+        mocked_client.list_workflow_runs.side_effect = failure_exc
 
         # When
         with pytest.raises(exceptions.UnauthorizedError):

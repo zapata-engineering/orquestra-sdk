@@ -193,6 +193,17 @@ class TestClient:
                     _ = client.get_workflow_def(workflow_def_id)
 
             @staticmethod
+            def test_forbidden(endpoint_mocker, client: DriverClient, workflow_def_id):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-definition.yaml#L28
+                    status=403,
+                )
+
+                with pytest.raises(_exceptions.ForbiddenError):
+                    _ = client.get_workflow_def(workflow_def_id)
+
+            @staticmethod
             def test_unknown_error(
                 endpoint_mocker, client: DriverClient, workflow_def_id
             ):
@@ -322,7 +333,7 @@ class TestClient:
             def test_unauthorized(endpoint_mocker, client: DriverClient):
                 endpoint_mocker(
                     # Specified in:
-                    # https://github.com/zapatacomputing/workflow-driver/blob/2b353476d5b0161da31584533be208611a131bdc/openapi/src/resources/workflow-definition.yaml#L26
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-definitions.yaml#L25
                     status=401,
                 )
 
@@ -330,10 +341,21 @@ class TestClient:
                     _ = client.list_workflow_defs()
 
             @staticmethod
+            def test_forbidden(endpoint_mocker, client: DriverClient):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-definitions.yaml#L27
+                    status=403,
+                )
+
+                with pytest.raises(_exceptions.ForbiddenError):
+                    _ = client.list_workflow_defs()
+
+            @staticmethod
             def test_unknown_error(endpoint_mocker, client: DriverClient):
                 endpoint_mocker(
                     # Specified in:
-                    # https://github.com/zapatacomputing/workflow-driver/blob/2b353476d5b0161da31584533be208611a131bdc/openapi/src/resources/workflow-definition.yaml#L34
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-definitions.yaml#L29
                     status=500,
                 )
 
@@ -410,7 +432,7 @@ class TestClient:
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # https://github.com/zapatacomputing/workflow-driver/blob/2b353476d5b0161da31584533be208611a131bdc/openapi/src/resources/workflow-definitions.yaml#L44
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-definitions.yaml#L50
                     status=400,
                     json=resp_mocks.make_error_response("Bad definition", "details"),
                 )
@@ -423,12 +445,25 @@ class TestClient:
                 endpoint_mocker, client: DriverClient, workflow_def: WorkflowDef
             ):
                 endpoint_mocker(
-                    # Based on manual testing.
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-definitions.yaml#L56
                     status=401,
                 )
 
                 with pytest.raises(_exceptions.InvalidTokenError):
                     client.create_workflow_def(workflow_def)
+
+            @staticmethod
+            def test_forbidden(
+                endpoint_mocker, client: DriverClient, workflow_def: WorkflowDef
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-definitions.yaml#L58
+                    status=403,
+                )
+
+                with pytest.raises(_exceptions.ForbiddenError):
+                    _ = client.create_workflow_def(workflow_def)
 
             @staticmethod
             def test_unknown_error(
@@ -503,11 +538,24 @@ class TestClient:
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # https://github.com/zapatacomputing/workflow-driver/blob/2b353476d5b0161da31584533be208611a131bdc/openapi/src/resources/workflow-definition.yaml#L54
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-definition.yaml#L56
                     status=401,
                 )
 
                 with pytest.raises(_exceptions.InvalidTokenError):
+                    _ = client.delete_workflow_def(workflow_def_id)
+
+            @staticmethod
+            def test_forbidden(
+                endpoint_mocker, client: DriverClient, workflow_def_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-definition.yaml#L58
+                    status=403,
+                )
+
+                with pytest.raises(_exceptions.ForbiddenError):
                     _ = client.delete_workflow_def(workflow_def_id)
 
             @staticmethod
@@ -516,7 +564,7 @@ class TestClient:
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # https://github.com/zapatacomputing/workflow-driver/blob/2b353476d5b0161da31584533be208611a131bdc/openapi/src/resources/workflow-definition.yaml#L62
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-definition.yaml#L66
                     status=500,
                 )
 
@@ -659,12 +707,25 @@ class TestClient:
                     _ = client.get_workflow_run(workflow_run_id)
 
             @staticmethod
+            def test_forbidden(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-run.yaml#L28
+                    status=403,
+                )
+
+                with pytest.raises(_exceptions.ForbiddenError):
+                    _ = client.get_workflow_run(workflow_run_id)
+
+            @staticmethod
             def test_unknown_error(
                 endpoint_mocker, client: DriverClient, workflow_run_id: str
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-run.yaml#L34
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-run.yaml#L36
                     status=500,
                 )
 
@@ -813,7 +874,7 @@ class TestClient:
             def test_unauthorized(endpoint_mocker, client: DriverClient):
                 endpoint_mocker(
                     # Specified in:
-                    # manual testing
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-runs.yaml#L33
                     status=401,
                 )
 
@@ -821,10 +882,21 @@ class TestClient:
                     _ = client.list_workflow_runs()
 
             @staticmethod
+            def test_forbidden(endpoint_mocker, client: DriverClient):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-runs.yaml#L35
+                    status=403,
+                )
+
+                with pytest.raises(_exceptions.ForbiddenError):
+                    _ = client.list_workflow_runs()
+
+            @staticmethod
             def test_unknown_error(endpoint_mocker, client: DriverClient):
                 endpoint_mocker(
                     # Specified in
-                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-runs.yaml#L27
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-runs.yaml#L37
                     status=500,
                 )
 
@@ -888,11 +960,24 @@ class TestClient:
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-runs.yaml#L53
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-runs.yaml#L63
                     status=401,
                 )
 
                 with pytest.raises(_exceptions.InvalidTokenError):
+                    _ = client.create_workflow_run(workflow_def_id, runtime)
+
+            @staticmethod
+            def test_forbidden(
+                endpoint_mocker, client: DriverClient, workflow_def_id, runtime
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-runs.yaml#L65
+                    status=403,
+                )
+
+                with pytest.raises(_exceptions.ForbiddenError):
                     _ = client.create_workflow_run(workflow_def_id, runtime)
 
             @staticmethod
@@ -901,7 +986,7 @@ class TestClient:
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-runs.yaml#L55
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-runs.yaml#L67
                     status=500,
                 )
 
@@ -928,6 +1013,19 @@ class TestClient:
                 )
 
             @staticmethod
+            def test_not_found(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-run-terminate.yaml#L17
+                    status=404,
+                )
+
+                with pytest.raises(_exceptions.WorkflowRunNotFound):
+                    _ = client.terminate_workflow_run(workflow_run_id)
+
+            @staticmethod
             def test_sets_auth(
                 endpoint_mocker, client: DriverClient, token: str, workflow_run_id: str
             ):
@@ -951,11 +1049,24 @@ class TestClient:
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # TODO add location when spec updated
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-run-terminate.yaml#L13
                     status=401,
                 )
 
                 with pytest.raises(_exceptions.InvalidTokenError):
+                    _ = client.terminate_workflow_run(workflow_run_id)
+
+            @staticmethod
+            def test_forbidden(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-run-terminate.yaml#L15
+                    status=403,
+                )
+
+                with pytest.raises(_exceptions.ForbiddenError):
                     _ = client.terminate_workflow_run(workflow_run_id)
 
             @staticmethod
@@ -964,7 +1075,7 @@ class TestClient:
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-run-terminate.yaml#L13
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-run-terminate.yaml#L23
                     status=500,
                 )
 
@@ -1014,6 +1125,32 @@ class TestClient:
                 # The assertion is done by mocked_responses
 
             @staticmethod
+            def test_not_found(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/artifacts.yaml#L32
+                    status=404,
+                )
+
+                with pytest.raises(_exceptions.WorkflowRunNotFound):
+                    _ = client.get_workflow_run_artifacts(workflow_run_id)
+
+            @staticmethod
+            def test_invalid_id(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/artifacts.yaml#L22
+                    status=400,
+                )
+
+                with pytest.raises(_exceptions.InvalidWorkflowRunID):
+                    _ = client.get_workflow_run_artifacts(workflow_run_id)
+
+            @staticmethod
             def test_sets_auth(
                 endpoint_mocker, client: DriverClient, token: str, workflow_run_id: str
             ):
@@ -1036,11 +1173,24 @@ class TestClient:
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # TODO add location when spec updated
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/artifacts.yaml#L28
                     status=401,
                 )
 
                 with pytest.raises(_exceptions.InvalidTokenError):
+                    _ = client.get_workflow_run_artifacts(workflow_run_id)
+
+            @staticmethod
+            def test_forbidden(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/artifacts.yaml#L30
+                    status=403,
+                )
+
+                with pytest.raises(_exceptions.ForbiddenError):
                     _ = client.get_workflow_run_artifacts(workflow_run_id)
 
             @staticmethod
@@ -1049,7 +1199,7 @@ class TestClient:
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # TODO add location when spec updated
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/artifacts.yaml#L38
                     status=500,
                 )
 
@@ -1092,6 +1242,32 @@ class TestClient:
                 assert isinstance(result, (JSONResult, PickleResult))
 
             @staticmethod
+            def test_not_found(
+                endpoint_mocker, client: DriverClient, workflow_run_artifact_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/artifact.yaml#L29
+                    status=404,
+                )
+
+                with pytest.raises(_exceptions.WorkflowRunArtifactNotFound):
+                    _ = client.get_workflow_run_artifact(workflow_run_artifact_id)
+
+            @staticmethod
+            def test_invalid_id(
+                endpoint_mocker, client: DriverClient, workflow_run_artifact_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/artifact.yaml#L19
+                    status=400,
+                )
+
+                with pytest.raises(_exceptions.InvalidWorkflowRunArtifactID):
+                    _ = client.get_workflow_run_artifact(workflow_run_artifact_id)
+
+            @staticmethod
             def test_sets_auth(
                 endpoint_mocker,
                 client: DriverClient,
@@ -1117,11 +1293,24 @@ class TestClient:
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # TODO add location when spec updated
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/artifact.yaml#L25
                     status=401,
                 )
 
                 with pytest.raises(_exceptions.InvalidTokenError):
+                    _ = client.get_workflow_run_artifact(workflow_run_artifact_id)
+
+            @staticmethod
+            def test_forbidden(
+                endpoint_mocker, client: DriverClient, workflow_run_artifact_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/artifact.yaml#L27
+                    status=403,
+                )
+
+                with pytest.raises(_exceptions.ForbiddenError):
                     _ = client.get_workflow_run_artifact(workflow_run_artifact_id)
 
             @staticmethod
@@ -1130,7 +1319,7 @@ class TestClient:
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # TODO add location when spec updated
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/artifact.yaml#L35
                     status=500,
                 )
 
@@ -1198,7 +1387,7 @@ class TestClient:
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/run-results.yaml#L30
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/run-results.yaml#L32
                     status=404,
                 )
 
@@ -1236,12 +1425,25 @@ class TestClient:
                     _ = client.get_workflow_run_results(workflow_run_id)
 
             @staticmethod
+            def test_forbidden(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/run-results.yaml#L30
+                    status=403,
+                )
+
+                with pytest.raises(_exceptions.ForbiddenError):
+                    _ = client.get_workflow_run_results(workflow_run_id)
+
+            @staticmethod
             def test_unknown_error(
                 endpoint_mocker, client: DriverClient, workflow_run_id: str
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/run-results.yaml#L36
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/run-results.yaml#L38
                     status=500,
                 )
 
@@ -1304,16 +1506,55 @@ class TestClient:
                 # The assertion is done by mocked_responses
 
             @staticmethod
+            def test_not_found(
+                endpoint_mocker, client: DriverClient, workflow_run_result_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/run-result.yaml#L29
+                    status=404,
+                )
+
+                with pytest.raises(_exceptions.WorkflowRunResultNotFound):
+                    _ = client.get_workflow_run_result(workflow_run_result_id)
+
+            @staticmethod
+            def test_invalid_id(
+                endpoint_mocker, client: DriverClient, workflow_run_result_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/run-result.yaml#L19
+                    status=400,
+                )
+
+                with pytest.raises(_exceptions.InvalidWorkflowRunResultID):
+                    _ = client.get_workflow_run_result(workflow_run_result_id)
+
+            @staticmethod
             def test_unauthorized(
                 endpoint_mocker, client: DriverClient, workflow_run_result_id: str
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # TODO add location when spec updated
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/run-result.yaml#L25
                     status=401,
                 )
 
                 with pytest.raises(_exceptions.InvalidTokenError):
+                    _ = client.get_workflow_run_result(workflow_run_result_id)
+
+            @staticmethod
+            def test_forbidden(
+                endpoint_mocker, client: DriverClient, workflow_run_result_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/run-result.yaml#L27
+                    status=403,
+                )
+
+                with pytest.raises(_exceptions.ForbiddenError):
                     _ = client.get_workflow_run_result(workflow_run_result_id)
 
             @staticmethod
@@ -1322,7 +1563,7 @@ class TestClient:
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/run-result.yaml#L18
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/run-result.yaml#L35
                     status=500,
                 )
 
@@ -1368,6 +1609,32 @@ class TestClient:
                 # The assertion is done by mocked_responses
 
             @staticmethod
+            def test_invalid_id(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-run-logs.yaml#L18
+                    status=400,
+                )
+
+                with pytest.raises(_exceptions.InvalidWorkflowRunID):
+                    _ = client.get_workflow_run_logs(workflow_run_id)
+
+            @staticmethod
+            def test_not_found(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-run-logs.yaml#L28
+                    status=404,
+                )
+
+                with pytest.raises(_exceptions.WorkflowRunLogsNotFound):
+                    _ = client.get_workflow_run_logs(workflow_run_id)
+
+            @staticmethod
             def test_sets_auth(
                 endpoint_mocker, client: DriverClient, token: str, workflow_run_id: str
             ):
@@ -1390,11 +1657,24 @@ class TestClient:
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # TODO: add when spec is updated
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-run-logs.yaml#L24
                     status=401,
                 )
 
                 with pytest.raises(_exceptions.InvalidTokenError):
+                    _ = client.get_workflow_run_logs(workflow_run_id)
+
+            @staticmethod
+            def test_forbidden(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-run-logs.yaml#L26
+                    status=403,
+                )
+
+                with pytest.raises(_exceptions.ForbiddenError):
                     _ = client.get_workflow_run_logs(workflow_run_id)
 
             @staticmethod
@@ -1403,7 +1683,7 @@ class TestClient:
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-run-logs.yaml#L18
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-run-logs.yaml#L34
                     status=500,
                 )
 
@@ -1470,11 +1750,22 @@ class TestClient:
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # TODO: add when spec is updated
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/task-run-logs.yaml#L18
                     status=401,
                 )
 
                 with pytest.raises(_exceptions.InvalidTokenError):
+                    _ = client.get_task_run_logs(task_run_id)
+
+            @staticmethod
+            def test_forbidden(endpoint_mocker, client: DriverClient, task_run_id: str):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/task-run-logs.yaml#L20
+                    status=403,
+                )
+
+                with pytest.raises(_exceptions.ForbiddenError):
                     _ = client.get_task_run_logs(task_run_id)
 
             @staticmethod
@@ -1483,7 +1774,7 @@ class TestClient:
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-run-logs.yaml#L18
+                    # https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/task-run-logs.yaml#L22
                     status=500,
                 )
 
