@@ -32,7 +32,7 @@ from orquestra.sdk.schema.configs import RuntimeName
 from orquestra.sdk.schema.responses import ErrorResponse, ResponseFormat
 from orquestra.sdk.schema.workflow_run import State
 
-from . import action, services
+from . import action
 from .action import _exception_handling
 
 logging.basicConfig(level=logging.INFO)
@@ -111,7 +111,6 @@ def make_v2_parser():
     stop_sub_parser = subparsers.add_parser("stop").add_subparsers()
     set_sub_parser = subparsers.add_parser("set").add_subparsers()
     list_sub_parser = subparsers.add_parser("list").add_subparsers()
-    services.add_subparsers(subparsers)
 
     # ----------------- v2 commands -----------------
     # orq login
