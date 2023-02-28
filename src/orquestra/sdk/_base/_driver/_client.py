@@ -49,6 +49,8 @@ API_ACTIONS = {
 def _handle_common_errors(response: requests.Response):
     if response.status_code == codes.UNAUTHORIZED:
         raise _exceptions.InvalidTokenError()
+    elif response.status_code == codes.FORBIDDEN:
+        raise _exceptions.ForbiddenError()
     elif not response.ok:
         raise _exceptions.UnknownHTTPError(response)
 
@@ -161,6 +163,7 @@ class DriverClient:
         Raises:
             InvalidWorkflowDef: see the exception's docstring
             InvalidTokenError: see the exception's docstring
+            ForbiddenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
 
         Returns:
@@ -188,6 +191,14 @@ class DriverClient:
     def list_workflow_defs(
         self, page_size: Optional[int] = None, page_token: Optional[str] = None
     ) -> Paginated[WorkflowDef]:
+        """
+        Lists all known workflow definitions
+
+        Raises:
+            InvalidTokenError: see the exception's docstring
+            ForbiddenError: see the exception's docstring
+            UnknownHTTPError: see the exception's docstring
+        """
         resp = self._get(
             API_ACTIONS["list_workflow_defs"],
             query_params=_models.ListWorkflowDefsRequest(
@@ -234,6 +245,7 @@ class DriverClient:
             InvalidWorkflowDefID: see the exception's docstring
             WorkflowDefNotFound: see the exception's docstring
             InvalidTokenError: see the exception's docstring
+            ForbiddenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
 
         Returns:
@@ -265,6 +277,7 @@ class DriverClient:
             InvalidWorkflowDefID: see the exception's docstring
             WorkflowDefNotFound: see the exception's docstring
             InvalidTokenError: see the exception's docstring
+            ForbiddenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
         """
         resp = self._delete(
@@ -289,6 +302,7 @@ class DriverClient:
         Raises:
             InvalidWorkflowRunRequest: see the exception's docstring
             InvalidTokenError: see the exception's docstring
+            ForbiddenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
         """
         resp = self._post(
@@ -323,6 +337,7 @@ class DriverClient:
 
         Raises:
             InvalidTokenError: see the exception's docstring
+            ForbiddenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
         """
         resp = self._get(
@@ -363,6 +378,7 @@ class DriverClient:
             InvalidWorkflowRunID: see the exception's docstring
             WorkflowRunNotFound: see the exception's docstring
             InvalidTokenError: see the exception's docstring
+            ForbiddenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
         """
 
@@ -391,7 +407,9 @@ class DriverClient:
         Asks the workflow driver to terminate a workflow run
 
         Raises:
+            WorkflowRunNotFound: see the exception's docstring
             InvalidTokenError: see the exception's docstring
+            ForbiddenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
         """
 
@@ -399,7 +417,10 @@ class DriverClient:
             API_ACTIONS["terminate_workflow_run"].format(wf_run_id),
             body_params=None,
         )
-        # TODO: Handle other errors, not specified in spec yet (ORQSDK-646)
+
+        if resp.status_code == codes.NOT_FOUND:
+            raise _exceptions.WorkflowRunNotFound(wf_run_id)
+
         _handle_common_errors(resp)
 
     # --- Workflow Run Artifacts ---
@@ -411,7 +432,10 @@ class DriverClient:
         Gets the workflow run artifact IDs of a workflow run from the workflow driver
 
         Raises:
+            InvalidWorkflowRunID: see the exception's docstring
+            WorkflowRunNotFound: see the exception's docstring
             InvalidTokenError: see the exception's docstring
+            ForbiddenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
         """
 
@@ -422,7 +446,11 @@ class DriverClient:
             ).dict(),
         )
 
-        # TODO: Handle other errors, not specified in spec yet (ORQSDK-651)
+        if resp.status_code == codes.NOT_FOUND:
+            raise _exceptions.WorkflowRunNotFound(wf_run_id)
+        elif resp.status_code == codes.BAD_REQUEST:
+            raise _exceptions.InvalidWorkflowRunID(wf_run_id)
+
         _handle_common_errors(resp)
 
         parsed_response = _models.Response[
@@ -438,7 +466,10 @@ class DriverClient:
         Gets workflow run artifacts from the workflow driver
 
         Raises:
+            InvalidWorkflowRunArtifactID: see the exception's docstring
+            WorkflowRunArtifactNotFound: see the exception's docstring
             InvalidTokenError: see the exception's docstring
+            ForbiddenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
         """
 
@@ -447,7 +478,11 @@ class DriverClient:
             query_params=None,
         )
 
-        # TODO: Handle other errors, not specified in spec yet (ORQSDK-650)
+        if resp.status_code == codes.NOT_FOUND:
+            raise _exceptions.WorkflowRunArtifactNotFound(artifact_id)
+        elif resp.status_code == codes.BAD_REQUEST:
+            raise _exceptions.InvalidWorkflowRunArtifactID(artifact_id)
+
         _handle_common_errors(resp)
 
         # Bug with mypy and Pydantic:
@@ -468,6 +503,7 @@ class DriverClient:
             InvalidWorkflowRunID: see the exception's docstring
             WorkflowRunNotFound: see the exception's docstring
             InvalidTokenError: see the exception's docstring
+            ForbiddenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
         """
 
@@ -498,7 +534,10 @@ class DriverClient:
         Gets workflow run results from the workflow driver
 
         Raises:
+            InvalidWorkflowRunResultID: see the exception's docstring
+            WorkflowRunResultNotFound: see the exception's docstring
             InvalidTokenError: see the exception's docstring
+            ForbiddenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
         """
 
@@ -506,7 +545,11 @@ class DriverClient:
             API_ACTIONS["get_workflow_run_result"].format(result_id), query_params=None
         )
 
-        # TODO: Handle other errors, not specified in spec yet (ORQSDK-649)
+        if resp.status_code == codes.NOT_FOUND:
+            raise _exceptions.WorkflowRunResultNotFound(result_id)
+        elif resp.status_code == codes.BAD_REQUEST:
+            raise _exceptions.InvalidWorkflowRunResultID(result_id)
+
         _handle_common_errors(resp)
 
         # Bug with mypy and Pydantic:
@@ -522,7 +565,10 @@ class DriverClient:
         Gets the logs of a workflow run from the workflow driver
 
         Raises:
+            InvalidWorkflowRunID: see the exception's docstring
+            WorkflowRunNotFound: see the exception's docstring
             InvalidTokenError: see the exception's docstring
+            ForbiddenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
         """
 
@@ -533,7 +579,11 @@ class DriverClient:
             ).dict(),
         )
 
-        # TODO: Handle other errors, not specified in spec yet (ORQSDK-653)
+        if resp.status_code == codes.NOT_FOUND:
+            raise _exceptions.WorkflowRunLogsNotFound(wf_run_id)
+        elif resp.status_code == codes.BAD_REQUEST:
+            raise _exceptions.InvalidWorkflowRunID(wf_run_id)
+
         _handle_common_errors(resp)
 
         # TODO: unzip, get logs (ORQSDK-652)
@@ -545,6 +595,7 @@ class DriverClient:
 
         Raises:
             InvalidTokenError: see the exception's docstring
+            ForbiddenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
         """
 

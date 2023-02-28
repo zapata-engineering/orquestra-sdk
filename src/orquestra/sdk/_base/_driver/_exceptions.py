@@ -52,14 +52,43 @@ class InvalidWorkflowDefID(Exception):
 class InvalidWorkflowRunID(Exception):
     """
     Raised when an invalid Workflow Run ID is sent to the Workflow Driver
-
-    Workflow Run IDs are expected to be UUIDs, if an ID is sent that cannot be
-    parsed as a UUID, this exception will be raised.
     """
 
     def __init__(self, workflow_run_id: str):
         self.workflow_run_id = workflow_run_id
         super().__init__(workflow_run_id)
+
+
+class InvalidWorkflowRunArtifactID(Exception):
+    """
+    Raised when an invalid Workflow Run Artifact ID is sent to the Workflow Driver
+
+    Workflow Run Artifact IDs are expected to be UUIDs, if an ID is sent that cannot be
+    parsed as a UUID, this exception will be raised.
+    """
+
+    def __init__(self, workflow_run_artifact_id: str):
+        self.workflow_run_artifact_id = workflow_run_artifact_id
+        super().__init__(workflow_run_artifact_id)
+
+
+class InvalidWorkflowRunResultID(Exception):
+    """
+    Raised when an invalid Workflow Run Result ID is sent to the Workflow Driver
+
+    Workflow Run Result IDs are expected to be UUIDs, if an ID is sent that cannot be
+    parsed as a UUID, this exception will be raised.
+    """
+
+    def __init__(self, workflow_run_result_id: str):
+        self.workflow_run_result_id = workflow_run_result_id
+        super().__init__(workflow_run_result_id)
+
+
+class ForbiddenError(Exception):
+    """
+    Raised when the user did not have permission to access a specific resource
+    """
 
 
 class UnknownHTTPError(Exception):
@@ -90,3 +119,33 @@ class WorkflowRunNotFound(Exception):
     def __init__(self, workflow_run_id: str):
         self.workflow_run_id = workflow_run_id
         super().__init__(workflow_run_id)
+
+
+class WorkflowRunLogsNotFound(Exception):
+    """
+    Raised when a Workflow Run's Logs cannot be found
+    """
+
+    def __init__(self, workflow_run_id: str):
+        self.workflow_run_id = workflow_run_id
+        super().__init__(workflow_run_id)
+
+
+class WorkflowRunArtifactNotFound(Exception):
+    """
+    Raised when a Workflow Run Artifact cannot be found
+    """
+
+    def __init__(self, workflow_run_artifact_id: str):
+        self.workflow_run_artifact_id = workflow_run_artifact_id
+        super().__init__(workflow_run_artifact_id)
+
+
+class WorkflowRunResultNotFound(Exception):
+    """
+    Raised when a Workflow Run Result cannot be found
+    """
+
+    def __init__(self, workflow_run_result_id: str):
+        self.workflow_run_result_id = workflow_run_result_id
+        super().__init__(workflow_run_result_id)
