@@ -19,14 +19,14 @@ from pathlib import Path
 
 import pydantic
 
-from orquestra.sdk import exceptions, secrets
-from orquestra.sdk._base import _exec_ctx, _graphs, dispatch, serde
-from orquestra.sdk._base._db import WorkflowDB
-from orquestra.sdk._base.abc import ArtifactValue, LogReader, RuntimeInterface
-from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.configs import RuntimeConfiguration
-from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.workflow_run import (
+from .. import exceptions, secrets
+from .._base import _exec_ctx, _graphs, _log_adapter, _services, dispatch, serde
+from .._base._db import WorkflowDB
+from .._base.abc import ArtifactValue, LogReader, RuntimeInterface
+from ..schema import ir
+from ..schema.configs import RuntimeConfiguration
+from ..schema.local_database import StoredWorkflowRun
+from ..schema.workflow_run import (
     RunStatus,
     State,
     TaskInvocationId,
@@ -35,8 +35,6 @@ from orquestra.sdk.schema.workflow_run import (
     WorkflowRun,
     WorkflowRunId,
 )
-
-from .._base import _log_adapter, _services
 from . import _client, _id_gen, _ray_logs
 from ._client import RayClient
 
@@ -628,7 +626,9 @@ class RayRuntime(RuntimeInterface):
         self._config = config
         self._project_dir = project_dir
 
-        self._service_manager = _services.ServiceManager()
+        self._log_reader: LogReader = _ray_logs.DirectRayReader(
+            _services.ray_temp_path()
+        )
 
     @classmethod
     def from_runtime_configuration(
@@ -893,15 +893,11 @@ class RayRuntime(RuntimeInterface):
             ) from e
         self._client.cancel(workflow_run_id)
 
-    def _get_log_reader(self) -> LogReader:
-        # TODO: change to an i-var
-        return _ray_logs.DirectRayReader(_services.ray_temp_path())
-
     def get_workflow_logs(self, wf_run_id: WorkflowRunId):
-        return self._get_log_reader().get_workflow_logs(wf_run_id)
+        return self._log_reader.get_workflow_logs(wf_run_id)
 
     def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
-        return self._get_log_reader().get_task_logs(wf_run_id, task_inv_id)
+        return self._log_reader.get_task_logs(wf_run_id, task_inv_id)
 
     def list_workflow_runs(
         self,

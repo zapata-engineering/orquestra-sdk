@@ -215,8 +215,6 @@ class TestRayRuntime:
                     config=runtime_config,
                     project_dir=tmp_path,
                 )
-                service_manager = create_autospec(_services.ServiceManager)
-                rt._service_manager = service_manager
 
                 logs_dict = {"inv_id1": ["Hello, there!", "General Kenobi!"]}
                 get_workflow_logs = Mock(return_value=logs_dict)
@@ -250,8 +248,6 @@ class TestRayRuntime:
                     config=runtime_config,
                     project_dir=tmp_path,
                 )
-                service_manager = create_autospec(_services.ServiceManager)
-                rt._service_manager = service_manager
 
                 logs_list = ["hello", "there!"]
                 get_task_logs = Mock(return_value=logs_list)
