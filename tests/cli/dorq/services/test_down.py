@@ -47,7 +47,7 @@ class TestAction:
 
         # When
         action.on_cmd_call(
-            manage_ray=manage_ray, manage_fluent=manage_fluentbit, manage_all=manage_all
+            ray=manage_ray, manage_fluent=manage_fluentbit, all=manage_all
         )
 
         # Then

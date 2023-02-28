@@ -37,7 +37,7 @@ from orquestra.sdk.schema.workflow_run import (
 )
 
 from .._base import _log_adapter, _services
-from . import _client, _id_gen, _query_service, _ray_logs
+from . import _client, _id_gen, _ray_logs
 from ._client import RayClient
 
 
@@ -894,12 +894,8 @@ class RayRuntime(RuntimeInterface):
         self._client.cancel(workflow_run_id)
 
     def _get_log_reader(self) -> LogReader:
-        if self._service_manager.is_fluentbit_running():
-            return _query_service.FluentbitReader(
-                logs_dir=_services.fluentbit_output_path()
-            )
-        else:
-            return _ray_logs.DirectRayReader(_services.ray_temp_path())
+        # TODO: change to an i-var
+        return _ray_logs.DirectRayReader(_services.ray_temp_path())
 
     def get_workflow_logs(self, wf_run_id: WorkflowRunId):
         return self._get_log_reader().get_workflow_logs(wf_run_id)

@@ -296,12 +296,9 @@ def task_logs(*args, **kwargs):
 @cloup.option_group(
     "Services",
     cloup.option("--ray", is_flag=True, default=None, help="Start a Ray cluster"),
-    cloup.option(
-        "--fluentbit", is_flag=True, default=None, help="Start a Fluentbit container"
-    ),
     cloup.option("--all", is_flag=True, default=None, help="Start all known services"),
 )
-def up(ray: t.Optional[bool], fluentbit: t.Optional[bool], all: t.Optional[bool]):
+def up(ray: t.Optional[bool], all: t.Optional[bool]):
     """
     Starts managed services required to execute workflows locally.
 
@@ -310,19 +307,16 @@ def up(ray: t.Optional[bool], fluentbit: t.Optional[bool], all: t.Optional[bool]
     from ._services._up import Action
 
     action = Action()
-    action.on_cmd_call(ray, fluentbit, all)
+    action.on_cmd_call(manage_ray=ray, manage_all=all)
 
 
 @cloup.command()
 @cloup.option_group(
     "Services",
     cloup.option("--ray", is_flag=True, default=None, help="Start a Ray cluster"),
-    cloup.option(
-        "--fluentbit", is_flag=True, default=None, help="Start a Fluentbit container"
-    ),
     cloup.option("--all", is_flag=True, default=None, help="Start all known services"),
 )
-def down(ray: t.Optional[bool], fluentbit: t.Optional[bool], all: t.Optional[bool]):
+def down(ray: t.Optional[bool], all: t.Optional[bool]):
     """
     Stops managed services required to execute workflows locally.
 
@@ -331,7 +325,7 @@ def down(ray: t.Optional[bool], fluentbit: t.Optional[bool], all: t.Optional[boo
     from ._services._down import Action
 
     action = Action()
-    action.on_cmd_call(ray, fluentbit, all)
+    action.on_cmd_call(ray=ray, all=all)
 
 
 @cloup.command()
@@ -339,8 +333,7 @@ def status():
     """
     Prints the status of known services.
 
-    Currently, this will print the status of the managed Ray cluster and managed Fluent
-    Bit container.
+    Currently, this will print the status of the managed Ray cluster.
     """
     from ._services._status import Action
 

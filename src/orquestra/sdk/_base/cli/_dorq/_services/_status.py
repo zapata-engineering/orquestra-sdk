@@ -31,7 +31,9 @@ class Action:
     def on_cmd_call(
         self,
     ):
-        resolved_services = self._service_resolver.resolve(False, False, True)
+        resolved_services = self._service_resolver.resolve(
+            manage_ray=False, manage_all=True
+        )
         services = [
             ServiceResponse(name=svc.name, is_running=svc.is_running(), info=None)
             for svc in resolved_services

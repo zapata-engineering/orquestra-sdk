@@ -8,8 +8,8 @@ resolution logic extracted as components reusable across similar CLI commands.
 """
 import typing as t
 
-import orquestra.sdk._base._services as _services
 from orquestra.sdk import exceptions
+from orquestra.sdk._base import _services
 from orquestra.sdk.schema.configs import ConfigName
 from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import (
@@ -256,14 +256,12 @@ class ServiceResolver:
     def resolve(
         self,
         manage_ray: t.Optional[bool],
-        manage_fluent: t.Optional[bool],
         manage_all: t.Optional[bool],
     ) -> t.List[_services.Service]:
 
         ray = _services.RayManager()
-        fluent = _services.FluentManager()
 
-        if all(s is None for s in (manage_ray, manage_fluent, manage_all)):
+        if all(s is None for s in (manage_ray, manage_all)):
             # No options passed, we only start Ray by default.
             return [ray]
 
@@ -271,9 +269,6 @@ class ServiceResolver:
 
         if manage_ray or manage_all:
             managed_services.append(ray)
-
-        if manage_fluent or manage_all:
-            managed_services.append(fluent)
 
         return managed_services
 
