@@ -3,6 +3,7 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+* Removed FluentBit-related CLI options: `orq {up,down} --fluentbit` flag. Logs produced by the local Ray runtime are read directly by the SDK now. This only affects users who used the experimental integration with FluentBit docker container.
 
 
 🔥 *Features*
