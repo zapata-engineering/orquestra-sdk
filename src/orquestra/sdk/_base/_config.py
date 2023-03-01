@@ -22,7 +22,7 @@ from orquestra.sdk.schema.configs import (
     RuntimeName,
 )
 
-from ._environment import CONFIG_PATH_ENV
+from ._env import CONFIG_PATH_ENV
 
 # Why JSON?
 #  The Python TOML package is unmaintained as of 2022-02-18.

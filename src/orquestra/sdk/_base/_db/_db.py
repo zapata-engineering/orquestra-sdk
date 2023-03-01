@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 from orquestra.sdk._base._db._migration import migrate_project_db_to_shared_db
-from orquestra.sdk._base._environment import DB_PATH_ENV
+from orquestra.sdk._base._env import DB_PATH_ENV
 from orquestra.sdk._base.abc import WorkflowRepo
 from orquestra.sdk.exceptions import WorkflowNotFoundError
 from orquestra.sdk.schema.ir import WorkflowDef

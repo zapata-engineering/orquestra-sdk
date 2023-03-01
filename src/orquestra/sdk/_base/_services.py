@@ -11,7 +11,7 @@ import subprocess
 from pathlib import Path
 from typing import Protocol
 
-from ._environment import RAY_STORAGE_PATH_ENV, RAY_TEMP_PATH_ENV
+from ._env import RAY_STORAGE_PATH_ENV, RAY_TEMP_PATH_ENV
 
 ORQUESTRA_BASE_PATH = Path.home() / ".orquestra"
 

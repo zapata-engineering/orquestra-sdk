@@ -23,7 +23,7 @@ import pydantic
 from .. import exceptions, secrets
 from .._base import _exec_ctx, _graphs, _log_adapter, _services, dispatch, serde
 from .._base._db import WorkflowDB
-from .._base._environment import RAY_DOWNLOAD_GIT_IMPORTS_ENV
+from .._base._env import RAY_DOWNLOAD_GIT_IMPORTS_ENV
 from .._base.abc import ArtifactValue, LogReader, RuntimeInterface
 from ..schema import ir
 from ..schema.configs import RuntimeConfiguration
