@@ -313,8 +313,8 @@ def up(ray: t.Optional[bool], all: t.Optional[bool]):
 @cloup.command()
 @cloup.option_group(
     "Services",
-    cloup.option("--ray", is_flag=True, default=None, help="Start a Ray cluster"),
-    cloup.option("--all", is_flag=True, default=None, help="Start all known services"),
+    cloup.option("--ray", is_flag=True, default=None, help="Stop a Ray cluster"),
+    cloup.option("--all", is_flag=True, default=None, help="Stop all known services"),
 )
 def down(ray: t.Optional[bool], all: t.Optional[bool]):
     """
@@ -325,7 +325,7 @@ def down(ray: t.Optional[bool], all: t.Optional[bool]):
     from ._services._down import Action
 
     action = Action()
-    action.on_cmd_call(ray=ray, all=all)
+    action.on_cmd_call(manage_ray=ray, manage_all=all)
 
 
 @cloup.command()
