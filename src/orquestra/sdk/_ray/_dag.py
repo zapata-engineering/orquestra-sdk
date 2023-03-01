@@ -260,7 +260,7 @@ def _(imp: ir.PythonImports):
 def _(imp: ir.GitImport):
     # Only download Git imports if a specific environment variable is set
     # Short circuit the Git import otherwise
-    if os.getenv(RAY_DOWNLOAD_GIT_IMPORTS_ENV) is None:
+    if os.getenv(RAY_DOWNLOAD_GIT_IMPORTS_ENV) != "1":
         return []
     m = re.match(
         r"(?P<user>.+)@(?P<domain>[^/]+?):(?P<repo>.+)", imp.repo_url, re.IGNORECASE
