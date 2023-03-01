@@ -256,109 +256,6 @@ class TestWorkflowRunRepo:
                     # When
                     _ = repo.list_wf_run_ids(config)
 
-        class TestGetWFRunSummary:
-            @staticmethod
-            @pytest.mark.parametrize(
-                "wf_run,expected_summary",
-                [
-                    pytest.param(
-                        WorkflowRunModel(
-                            id="wf.2",
-                            workflow_def=_example_wfs.complicated_wf().model,
-                            task_runs=[],
-                            status=RunStatus(state=State.WAITING),
-                        ),
-                        ui_models.WFRunSummary(
-                            wf_def_name="complicated_wf",
-                            wf_run_id="wf.2",
-                            wf_run_status=RunStatus(state=State.WAITING),
-                            task_rows=[],
-                            n_tasks_succeeded=0,
-                            n_task_invocations_total=4,
-                        ),
-                        id="waiting",
-                    ),
-                    pytest.param(
-                        WorkflowRunModel(
-                            id="wf.2",
-                            workflow_def=_example_wfs.complicated_wf().model,
-                            task_runs=[
-                                TaskRunModel(
-                                    id="task_run_1",
-                                    invocation_id="invocation-1-task-capitalize",
-                                    status=RunStatus(
-                                        state=State.SUCCEEDED,
-                                        start_time=INSTANT_1,
-                                        end_time=INSTANT_2,
-                                    ),
-                                ),
-                                TaskRunModel(
-                                    id="task_run_2",
-                                    invocation_id="invocation-2-task-concat",
-                                    status=RunStatus(
-                                        state=State.RUNNING,
-                                        start_time=INSTANT_2,
-                                    ),
-                                ),
-                            ],
-                            status=RunStatus(state=State.RUNNING, start_time=INSTANT_1),
-                        ),
-                        ui_models.WFRunSummary(
-                            wf_def_name="complicated_wf",
-                            wf_run_id="wf.2",
-                            wf_run_status=RunStatus(
-                                state=State.RUNNING, start_time=INSTANT_1
-                            ),
-                            task_rows=[
-                                ui_models.WFRunSummary.TaskRow(
-                                    task_fn_name="capitalize",
-                                    inv_id="invocation-1-task-capitalize",
-                                    status=RunStatus(
-                                        state=State.SUCCEEDED,
-                                        start_time=INSTANT_1,
-                                        end_time=INSTANT_2,
-                                    ),
-                                    message=None,
-                                ),
-                                ui_models.WFRunSummary.TaskRow(
-                                    task_fn_name="concat",
-                                    inv_id="invocation-2-task-concat",
-                                    status=RunStatus(
-                                        state=State.RUNNING,
-                                        start_time=INSTANT_2,
-                                    ),
-                                    message=None,
-                                ),
-                            ],
-                            n_tasks_succeeded=1,
-                            n_task_invocations_total=4,
-                        ),
-                        id="running",
-                    ),
-                ],
-            )
-            def test_mapping(
-                monkeypatch,
-                wf_run: WorkflowRunModel,
-                expected_summary: ui_models.WFRunSummary,
-            ):
-                # Given
-                wf_run_id = "<run id sentinel>"
-                config_name = "<cfg sentinel>"
-                monkeypatch.setattr(
-                    _repos.WorkflowRunRepo,
-                    "get_wf_by_run_id",
-                    Mock(return_value=wf_run),
-                )
-
-                repo = _repos.WorkflowRunRepo()
-
-                # When
-                result_summary = repo.get_wf_run_summary(wf_run_id, config_name)
-
-                # Then
-                assert result_summary == expected_summary
-
         class TestSubmit:
             @staticmethod
             def test_passes_config_and_id():
@@ -969,6 +866,98 @@ class TestWorkflowRunRepo:
 
                 # Then
                 assert len(inv_ids) == 2
+
+
+class TestSummaryRepo:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "wf_run,expected_summary",
+        [
+            pytest.param(
+                WorkflowRunModel(
+                    id="wf.2",
+                    workflow_def=_example_wfs.complicated_wf().model,
+                    task_runs=[],
+                    status=RunStatus(state=State.WAITING),
+                ),
+                ui_models.WFRunSummary(
+                    wf_def_name="complicated_wf",
+                    wf_run_id="wf.2",
+                    wf_run_status=RunStatus(state=State.WAITING),
+                    task_rows=[],
+                    n_tasks_succeeded=0,
+                    n_task_invocations_total=4,
+                ),
+                id="waiting",
+            ),
+            pytest.param(
+                WorkflowRunModel(
+                    id="wf.2",
+                    workflow_def=_example_wfs.complicated_wf().model,
+                    task_runs=[
+                        TaskRunModel(
+                            id="task_run_1",
+                            invocation_id="invocation-1-task-capitalize",
+                            status=RunStatus(
+                                state=State.SUCCEEDED,
+                                start_time=INSTANT_1,
+                                end_time=INSTANT_2,
+                            ),
+                        ),
+                        TaskRunModel(
+                            id="task_run_2",
+                            invocation_id="invocation-2-task-concat",
+                            status=RunStatus(
+                                state=State.RUNNING,
+                                start_time=INSTANT_2,
+                            ),
+                        ),
+                    ],
+                    status=RunStatus(state=State.RUNNING, start_time=INSTANT_1),
+                ),
+                ui_models.WFRunSummary(
+                    wf_def_name="complicated_wf",
+                    wf_run_id="wf.2",
+                    wf_run_status=RunStatus(state=State.RUNNING, start_time=INSTANT_1),
+                    task_rows=[
+                        ui_models.WFRunSummary.TaskRow(
+                            task_fn_name="capitalize",
+                            inv_id="invocation-1-task-capitalize",
+                            status=RunStatus(
+                                state=State.SUCCEEDED,
+                                start_time=INSTANT_1,
+                                end_time=INSTANT_2,
+                            ),
+                            message=None,
+                        ),
+                        ui_models.WFRunSummary.TaskRow(
+                            task_fn_name="concat",
+                            inv_id="invocation-2-task-concat",
+                            status=RunStatus(
+                                state=State.RUNNING,
+                                start_time=INSTANT_2,
+                            ),
+                            message=None,
+                        ),
+                    ],
+                    n_tasks_succeeded=1,
+                    n_task_invocations_total=4,
+                ),
+                id="running",
+            ),
+        ],
+    )
+    def test_wf_run_summary(
+        wf_run: WorkflowRunModel, expected_summary: ui_models.WFRunSummary
+    ):
+        # Given
+        repo = _repos.SummaryRepo()
+
+        # When
+        result_summary = repo.wf_run_summary(wf_run)
+
+        # Then
+        assert result_summary == expected_summary
 
 
 class TestConfigRepo:

@@ -38,8 +38,8 @@ class TestAction:
         wf_run_presenter = create_autospec(_presenters.WFRunPresenter)
         error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
 
-        wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
-        wf_run_repo.get_wf_run_summary.return_value = summary
+        summary_repo = create_autospec(_repos.SummaryRepo)
+        summary_repo.wf_run_summary.return_value = summary
 
         config_resolver = create_autospec(_arg_resolvers.WFConfigResolver)
         config_resolver.resolve.return_value = resolved_config
@@ -50,7 +50,7 @@ class TestAction:
         action = _view.Action(
             wf_run_presenter=wf_run_presenter,
             error_presenter=error_presenter,
-            wf_run_repo=wf_run_repo,
+            summary_repo=summary_repo,
             config_resolver=config_resolver,
             wf_run_resolver=wf_run_resolver,
         )
@@ -63,7 +63,7 @@ class TestAction:
         config_resolver.resolve.assert_called_with(wf_run_id, config)
 
         # We should pass resolved_config to run ID resolver.
-        wf_run_resolver.resolve.assert_called_with(wf_run_id, resolved_config)
+        wf_run_resolver.resolve_run.assert_called_with(wf_run_id, resolved_config)
 
         # We expect printing the workflow run returned from the repo.
         wf_run_presenter.show_wf_run.assert_called_with(summary)

@@ -27,20 +27,15 @@ class Action:
         self,
         wf_run_presenter=_presenters.WFRunPresenter(),
         error_presenter=_presenters.WrappedCorqOutputPresenter(),
-        wf_run_repo=_repos.WorkflowRunRepo(),
-        config_resolver: t.Optional[_arg_resolvers.WFConfigResolver] = None,
-        wf_run_resolver: t.Optional[_arg_resolvers.WFRunIDResolver] = None,
+        summary_repo=_repos.SummaryRepo(),
+        config_resolver=_arg_resolvers.WFConfigResolver(),
+        wf_run_resolver=_arg_resolvers.WFRunIDResolver(),
     ):
-        # data sources
-        self._wf_run_repo = wf_run_repo
-
         # arg resolvers
-        self._config_resolver = config_resolver or _arg_resolvers.WFConfigResolver(
-            wf_run_repo=wf_run_repo
-        )
-        self._wf_run_resolver = wf_run_resolver or _arg_resolvers.WFRunIDResolver(
-            wf_run_repo=wf_run_repo
-        )
+        self._config_resolver = config_resolver
+        self._wf_run_resolver = wf_run_resolver
+
+        self._summary_repo = summary_repo
 
         # text IO
         self._wf_run_presenter = wf_run_presenter
@@ -58,10 +53,7 @@ class Action:
         # The order of resolving config and run ID is important. It dictactes the flow
         # user sees, and possible choices in the prompts.
         resolved_config = self._config_resolver.resolve(wf_run_id, config)
-        resolved_run_id = self._wf_run_resolver.resolve(wf_run_id, resolved_config)
-
-        summary = self._wf_run_repo.get_wf_run_summary(
-            wf_run_id=resolved_run_id, config_name=resolved_config
-        )
+        wf_run = self._wf_run_resolver.resolve_run(wf_run_id, resolved_config)
+        summary = self._summary_repo.wf_run_summary(wf_run)
 
         self._wf_run_presenter.show_wf_run(summary)

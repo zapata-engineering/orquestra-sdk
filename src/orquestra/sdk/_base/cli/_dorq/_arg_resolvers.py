@@ -129,6 +129,22 @@ class WFRunIDResolver:
         selected_id = self._prompter.choice(ids, message="Workflow run ID")
         return selected_id
 
+    def resolve_run(
+        self, wf_run_id: t.Optional[WorkflowRunId], config: ConfigName
+    ) -> WorkflowRun:
+        if wf_run_id is not None:
+            return self._wf_run_repo.get_wf_by_run_id(wf_run_id, config)
+
+        # Query the runtime for suitable workflow run IDs.
+        # TODO: figure out sensible filters when listing workflow runs is implemented
+        # in the public API.
+        # Related ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-671
+        runs = self._wf_run_repo.list_wf_runs(config)
+        selected_run = self._prompter.choice(
+            [(run.id, run) for run in runs], message="Workflow run ID"
+        )
+        return selected_run
+
 
 class TaskInvIDResolver:
     """
