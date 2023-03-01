@@ -32,3 +32,8 @@ Used to configure if Ray downloads Git imports
 Example:
     ORQ_RAY_DOWNLOAD_GIT_IMPORTS=1
 """
+
+PASSPORT_FILE_ENV = "ORQUESTRA_PASSPORT_FILE"
+"""
+Consumed by the Workflow SDK to set auth in remote contexts
+"""
