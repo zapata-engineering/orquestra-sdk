@@ -44,8 +44,8 @@ class TestAction:
         config_resolver = create_autospec(_arg_resolvers.WFConfigResolver)
         config_resolver.resolve.return_value = resolved_config
 
-        wf_run_resolver = create_autospec(_arg_resolvers.WFRunIDResolver)
-        wf_run_resolver.resolve.return_value = wf_run_id
+        wf_run_resolver = create_autospec(_arg_resolvers.WFRunResolver)
+        wf_run_resolver.resolve_id.return_value = wf_run_id
 
         action = _view.Action(
             wf_run_presenter=wf_run_presenter,

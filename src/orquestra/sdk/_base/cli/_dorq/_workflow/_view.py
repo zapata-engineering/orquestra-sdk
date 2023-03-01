@@ -29,7 +29,7 @@ class Action:
         error_presenter=_presenters.WrappedCorqOutputPresenter(),
         summary_repo=_repos.SummaryRepo(),
         config_resolver=_arg_resolvers.WFConfigResolver(),
-        wf_run_resolver=_arg_resolvers.WFRunIDResolver(),
+        wf_run_resolver=_arg_resolvers.WFRunResolver(),
     ):
         # arg resolvers
         self._config_resolver = config_resolver

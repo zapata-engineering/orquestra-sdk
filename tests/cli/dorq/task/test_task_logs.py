@@ -13,7 +13,7 @@ import pytest
 from orquestra.sdk._base.cli._dorq._arg_resolvers import (
     TaskInvIDResolver,
     WFConfigResolver,
-    WFRunIDResolver,
+    WFRunResolver,
 )
 from orquestra.sdk._base.cli._dorq._dumpers import LogsDumper
 from orquestra.sdk._base.cli._dorq._repos import WorkflowRunRepo
@@ -58,8 +58,8 @@ class TestAction:
             config_resolver = create_autospec(WFConfigResolver)
             config_resolver.resolve.return_value = resolved_config
 
-            wf_run_resolver = create_autospec(WFRunIDResolver)
-            wf_run_resolver.resolve.return_value = resolved_id
+            wf_run_resolver = create_autospec(WFRunResolver)
+            wf_run_resolver.resolve_id.return_value = resolved_id
 
             task_inv_id_resolver = create_autospec(TaskInvIDResolver)
             task_inv_id_resolver.resolve.return_value = resolved_invocation_id
@@ -100,11 +100,11 @@ class TestAction:
 
             # We should pass resolved_config to run ID resolver.
             resolved_config = action._config_resolver.resolve.return_value
-            action._wf_run_resolver.resolve.assert_called_with(
+            action._wf_run_resolver.resolve_id.assert_called_with(
                 wf_run_id, resolved_config
             )
 
-            resolved_wf_run_id = action._wf_run_resolver.resolve.return_value
+            resolved_wf_run_id = action._wf_run_resolver.resolve_id.return_value
             action._task_inv_id_resolver.resolve.assert_called_with(
                 task_inv_id, fn_name, resolved_wf_run_id, resolved_config
             )
@@ -150,11 +150,11 @@ class TestAction:
 
             # We should pass resolved_config to run ID resolver.
             resolved_config = action._config_resolver.resolve.return_value
-            action._wf_run_resolver.resolve.assert_called_with(
+            action._wf_run_resolver.resolve_id.assert_called_with(
                 wf_run_id, resolved_config
             )
 
-            resolved_wf_run_id = action._wf_run_resolver.resolve.return_value
+            resolved_wf_run_id = action._wf_run_resolver.resolve_id.return_value
             action._task_inv_id_resolver.resolve.assert_called_with(
                 task_inv_id, fn_name, resolved_wf_run_id, resolved_config
             )
