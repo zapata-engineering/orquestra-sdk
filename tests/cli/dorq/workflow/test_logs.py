@@ -108,10 +108,6 @@ class TestAction:
             config = "<config sentinel>"
             download_dir = Path("/cool/path")
 
-            # # Resolved values
-            # resolved_id = "<resolved ID>"
-            # resolved_config = "<resolved config>"
-
             # Custom mocks
             dumped_path = "<dumped path sentinel>"
             action._dumper.dump.return_value = dumped_path
