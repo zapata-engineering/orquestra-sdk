@@ -33,11 +33,10 @@ class Action:
     def on_cmd_call(
         self,
         manage_ray: Optional[bool],
-        manage_fluent: Optional[bool],
         manage_all: Optional[bool],
     ):
         resolved_services = self._service_resolver.resolve(
-            manage_ray, manage_fluent, manage_all
+            manage_ray=manage_ray, manage_all=manage_all
         )
 
         with self._presenter.show_progress(

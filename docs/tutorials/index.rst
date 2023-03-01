@@ -15,4 +15,3 @@ These tutorials will get you up and running with the Orquestra Workflow SDK. Aft
     parametrized-workflows
     jupyter-sdk
     secrets
-    fluentbit
