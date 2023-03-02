@@ -20,7 +20,7 @@ def _split_auth(auth_value: Optional[str]):
         return split_auth[0], ":".join(split_auth[1:])
 
 
-def build_git_url(url: GitURL, protocol_override: Optional[str] = None):
+def build_git_url(url: GitURL, protocol_override: Optional[str] = None) -> str:
     """
     Returns a usable string from a GitURL
     This will get the password from the secrets API, if required.
