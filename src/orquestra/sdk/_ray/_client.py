@@ -114,12 +114,12 @@ else:
             ray.workflow.run_async(dag_node, workflow_id=workflow_id, metadata=metadata)
 
             # Give some time to ray to actually submit workflow
-            submission_timeout_in_sec = 5
+            submission_timeout_in_sec = 1
             retry_time_in_sec = 0.1
             retries = 0
             try:
                 self.get_workflow_status(workflow_id)
-            except exceptions.WorkflowNotFoundError:
+            except workflow_exceptions.WorkflowNotFoundError:
                 if retries * retry_time_in_sec >= submission_timeout_in_sec:
                     raise
                 else:
