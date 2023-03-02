@@ -11,6 +11,8 @@ import subprocess
 from pathlib import Path
 from typing import Protocol
 
+from ._env import RAY_STORAGE_PATH_ENV, RAY_TEMP_PATH_ENV
+
 ORQUESTRA_BASE_PATH = Path.home() / ".orquestra"
 
 
@@ -38,7 +40,7 @@ def ray_temp_path():
     Studio/Portal
     """
     try:
-        return Path(os.environ["ORQ_RAY_TEMP"])
+        return Path(os.environ[RAY_TEMP_PATH_ENV])
     except KeyError:
         return ORQUESTRA_BASE_PATH / "ray"
 
@@ -48,7 +50,7 @@ def ray_storage_path():
     See ``ray_temp_path``
     """
     try:
-        return Path(os.environ["ORQ_RAY_STORAGE"])
+        return Path(os.environ[RAY_STORAGE_PATH_ENV])
     except KeyError:
         return ORQUESTRA_BASE_PATH / "ray_storage"
 

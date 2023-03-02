@@ -10,6 +10,7 @@ from __future__ import annotations
 import dataclasses
 import json
 import logging
+import os
 import re
 import traceback
 import typing as t
@@ -30,6 +31,7 @@ from .._base import (
     serde,
 )
 from .._base._db import WorkflowDB
+from .._base._env import RAY_DOWNLOAD_GIT_IMPORTS_ENV
 from .._base.abc import ArtifactValue, LogReader, RuntimeInterface
 from ..schema import ir
 from ..schema.configs import RuntimeConfiguration
@@ -264,6 +266,10 @@ def _(imp: ir.PythonImports):
 
 @_pip_string.register
 def _(imp: ir.GitImport):
+    # Only download Git imports if a specific environment variable is set
+    # Short circuit the Git import otherwise
+    if os.getenv(RAY_DOWNLOAD_GIT_IMPORTS_ENV) != "1":
+        return []
     protocol = imp.repo_url.protocol
     if not protocol.startswith("git+"):
         protocol = f"git+{protocol}"

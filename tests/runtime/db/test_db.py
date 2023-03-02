@@ -1,7 +1,6 @@
 ################################################################################
 # © Copyright 2022 Zapata Computing Inc.
 ################################################################################
-import os
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -17,10 +16,11 @@ class TestDBLocation:
         # Then
         assert location == Path.home() / ".orquestra" / "workflows.db"
 
-    def test_with_environment_variable(self, tmp_path, monkeypatch):
+    def test_with_environment_variable(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ):
         # Given
-        env = {"ORQ_DB_LOCATION": str(tmp_path / "workflows.db")}
-        monkeypatch.setattr("os.environ", env)
+        monkeypatch.setenv("ORQ_DB_PATH", str(tmp_path / "workflows.db"))
         # When
         location = _db._get_default_db_location()
         # Then
