@@ -4,6 +4,8 @@
 
 🚨 *Breaking Changes*
 * Removed FluentBit-related CLI options: `orq {up,down} --fluentbit` flag. Logs produced by the local Ray runtime are read directly by the SDK now. This only affects users who used the experimental integration with FluentBit docker container.
+* `GitImport` will no longer be downloaded automatically when using Ray locally. This reverts behavior to `v0.42.0`.
+* Internal configuration environment variables have changed.
 
 
 🔥 *Features*
