@@ -22,7 +22,6 @@ from orquestra.sdk._base.cli._dorq._ui._presenters import (
     ArtifactPresenter,
     WrappedCorqOutputPresenter,
 )
-from orquestra.sdk._base.serde import DumpDetails
 
 
 class TestAction:

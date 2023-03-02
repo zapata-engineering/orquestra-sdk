@@ -1,0 +1,15 @@
+Workflow overview
+-----------------  --------------------------------
+workflow def name  hello_orq
+run ID             wf.1
+status             RUNNING
+start time         2023-02-24T07:26:07.704015-05:00
+end time
+tasks succeeded    1 / 2
+-----------------  --------------------------------
+
+Task details
+function       invocation ID    status     start_time                        end_time                          message
+-------------  ---------------  ---------  --------------------------------  --------------------------------  ---------
+generate_data  inv-1-gen-dat    SUCCEEDED  2023-02-24T07:26:07.704015-05:00  2023-02-24T07:28:37.000123-05:00
+train_model    inv-2-tra-mod    RUNNING    2023-02-24T07:28:37.000123-05:00

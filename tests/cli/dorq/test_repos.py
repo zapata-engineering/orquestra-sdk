@@ -9,12 +9,12 @@ import json
 import sys
 import typing as t
 import warnings
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from unittest.mock import Mock, PropertyMock, create_autospec
+from unittest.mock import Mock, create_autospec
 
 import pytest
 import requests
-from aiohttp import web
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
@@ -23,17 +23,37 @@ from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe._client import QEClient
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._base.cli._dorq import _repos
-from orquestra.sdk._base.cli._dorq._login._login_server import LoginServer
-from orquestra.sdk._base.cli._dorq._ui import _presenters
+from orquestra.sdk._base.cli._dorq._ui import _models as ui_models
 from orquestra.sdk._ray import _dag
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeName
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
-from orquestra.sdk.schema.workflow_run import WorkflowRun
+from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
 
 from ... import reloaders
 from ...sdk.v2.data.configs import TEST_CONFIG_JSON
+
+INSTANT_1 = datetime(
+    2023,
+    2,
+    24,
+    7,
+    26,
+    7,
+    704015,
+    tzinfo=timezone(timedelta(hours=1)),
+)
+INSTANT_2 = datetime(
+    2023,
+    2,
+    24,
+    7,
+    28,
+    37,
+    123,
+    tzinfo=timezone(timedelta(hours=1)),
+)
 
 
 class TestWorkflowRunRepo:
@@ -711,7 +731,7 @@ class TestWorkflowRunRepo:
 
             for stub_id in stub_run_ids:
                 wf_run = Mock()
-                wf_run.get_status_model.return_value = WorkflowRun(
+                wf_run.get_status_model.return_value = WorkflowRunModel(
                     id=stub_id,
                     workflow_def=create_autospec(ir.WorkflowDef),
                     task_runs=[],
@@ -755,7 +775,7 @@ class TestWorkflowRunRepo:
             mock_wf_runs = []
             for stub_id in stub_run_ids:
                 wf_run = Mock()
-                wf_run.get_status_model.return_value = WorkflowRun(
+                wf_run.get_status_model.return_value = WorkflowRunModel(
                     id=stub_id,
                     workflow_def=create_autospec(ir.WorkflowDef),
                     task_runs=[],
@@ -846,6 +866,98 @@ class TestWorkflowRunRepo:
 
                 # Then
                 assert len(inv_ids) == 2
+
+
+class TestSummaryRepo:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "wf_run,expected_summary",
+        [
+            pytest.param(
+                WorkflowRunModel(
+                    id="wf.2",
+                    workflow_def=_example_wfs.complicated_wf().model,
+                    task_runs=[],
+                    status=RunStatus(state=State.WAITING),
+                ),
+                ui_models.WFRunSummary(
+                    wf_def_name="complicated_wf",
+                    wf_run_id="wf.2",
+                    wf_run_status=RunStatus(state=State.WAITING),
+                    task_rows=[],
+                    n_tasks_succeeded=0,
+                    n_task_invocations_total=4,
+                ),
+                id="waiting",
+            ),
+            pytest.param(
+                WorkflowRunModel(
+                    id="wf.2",
+                    workflow_def=_example_wfs.complicated_wf().model,
+                    task_runs=[
+                        TaskRunModel(
+                            id="task_run_1",
+                            invocation_id="invocation-1-task-capitalize",
+                            status=RunStatus(
+                                state=State.SUCCEEDED,
+                                start_time=INSTANT_1,
+                                end_time=INSTANT_2,
+                            ),
+                        ),
+                        TaskRunModel(
+                            id="task_run_2",
+                            invocation_id="invocation-2-task-concat",
+                            status=RunStatus(
+                                state=State.RUNNING,
+                                start_time=INSTANT_2,
+                            ),
+                        ),
+                    ],
+                    status=RunStatus(state=State.RUNNING, start_time=INSTANT_1),
+                ),
+                ui_models.WFRunSummary(
+                    wf_def_name="complicated_wf",
+                    wf_run_id="wf.2",
+                    wf_run_status=RunStatus(state=State.RUNNING, start_time=INSTANT_1),
+                    task_rows=[
+                        ui_models.WFRunSummary.TaskRow(
+                            task_fn_name="capitalize",
+                            inv_id="invocation-1-task-capitalize",
+                            status=RunStatus(
+                                state=State.SUCCEEDED,
+                                start_time=INSTANT_1,
+                                end_time=INSTANT_2,
+                            ),
+                            message=None,
+                        ),
+                        ui_models.WFRunSummary.TaskRow(
+                            task_fn_name="concat",
+                            inv_id="invocation-2-task-concat",
+                            status=RunStatus(
+                                state=State.RUNNING,
+                                start_time=INSTANT_2,
+                            ),
+                            message=None,
+                        ),
+                    ],
+                    n_tasks_succeeded=1,
+                    n_task_invocations_total=4,
+                ),
+                id="running",
+            ),
+        ],
+    )
+    def test_wf_run_summary(
+        wf_run: WorkflowRunModel, expected_summary: ui_models.WFRunSummary
+    ):
+        # Given
+        repo = _repos.SummaryRepo()
+
+        # When
+        result_summary = repo.wf_run_summary(wf_run)
+
+        # Then
+        assert result_summary == expected_summary
 
 
 class TestConfigRepo:

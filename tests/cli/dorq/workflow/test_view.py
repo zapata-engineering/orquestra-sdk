@@ -4,9 +4,11 @@
 """
 Unit tests for 'orq wf view' glue code.
 """
+import typing as t
+from unittest.mock import create_autospec
 
-from unittest.mock import Mock
-
+from orquestra.sdk._base.cli._dorq import _arg_resolvers, _repos
+from orquestra.sdk._base.cli._dorq._ui import _presenters
 from orquestra.sdk._base.cli._dorq._workflow import _view
 
 
@@ -27,24 +29,28 @@ class TestAction:
         # CLI inputs
         wf_run_id = "<wf run ID sentinel>"
         config = "<config sentinel>"
+        summary: t.Any = "<wf run summary sentinel>"
 
         # Resolved values
         resolved_config = "<resolved config>"
 
         # Mocks
-        presenter = Mock()
-        wf_run_repo = Mock()
-        wf_run = "<wf run sentinel>"
+        wf_run_presenter = create_autospec(_presenters.WFRunPresenter)
+        error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
 
-        config_resolver = Mock()
+        summary_repo = create_autospec(_repos.SummaryRepo)
+        summary_repo.wf_run_summary.return_value = summary
+
+        config_resolver = create_autospec(_arg_resolvers.WFConfigResolver)
         config_resolver.resolve.return_value = resolved_config
 
-        wf_run_resolver = Mock()
-        wf_run_resolver.resolve_run.return_value = wf_run
+        wf_run_resolver = create_autospec(_arg_resolvers.WFRunResolver)
+        wf_run_resolver.resolve_id.return_value = wf_run_id
 
         action = _view.Action(
-            presenter=presenter,
-            wf_run_repo=wf_run_repo,
+            wf_run_presenter=wf_run_presenter,
+            error_presenter=error_presenter,
+            summary_repo=summary_repo,
             config_resolver=config_resolver,
             wf_run_resolver=wf_run_resolver,
         )
@@ -60,4 +66,5 @@ class TestAction:
         wf_run_resolver.resolve_run.assert_called_with(wf_run_id, resolved_config)
 
         # We expect printing the workflow run returned from the repo.
-        presenter.show_wf_run.assert_called_with(wf_run)
+        wf_run_presenter.show_wf_run.assert_called_with(summary)
+        error_presenter.assert_not_called()

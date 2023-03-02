@@ -3,6 +3,7 @@
 ################################################################################
 import sys
 import typing as t
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -11,9 +12,12 @@ import pytest
 from orquestra import sdk
 from orquestra.sdk._base import serde
 from orquestra.sdk._base.cli._corq._format import per_command
-from orquestra.sdk._base.cli._dorq._ui import _errors, _presenters
+from orquestra.sdk._base.cli._dorq._ui import _errors
+from orquestra.sdk._base.cli._dorq._ui import _models as ui_models
+from orquestra.sdk._base.cli._dorq._ui import _presenters
 from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.responses import ServiceResponse
+from orquestra.sdk.schema.workflow_run import RunStatus, State
 
 
 @sdk.task
@@ -32,28 +36,6 @@ class TestWrappedCorqOutputPresenter:
         Tests WrappedCorqOutputPresenter's methods that delegate formatting outputs to
         the older, corq formatters.
         """
-
-        @staticmethod
-        def test_show_wf_run(monkeypatch):
-            """
-            Validates that we call the corq subroutine for formatting outputs. Not very
-            interesting ATM. To be expanded when we get rid of corq.
-            """
-            # Given
-            pretty_print_mock = Mock()
-            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
-
-            wf_run = my_wf().run("in_process").get_status_model()
-
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_wf_run(wf_run)
-
-            # Then
-            called_args = pretty_print_mock.call_args.args
-            response_model = called_args[0]
-            assert wf_run in response_model.workflow_runs
 
         @staticmethod
         def test_show_submitted_wf_run(monkeypatch):
@@ -354,3 +336,100 @@ class TestLoginPresenter:
 
         assert browser_opened == success
         open_browser.assert_called_once_with(url)
+
+
+DATA_DIR = Path(__file__).parent / "data"
+
+
+UTC_INSTANT = datetime(2023, 2, 24, 12, 26, 7, 704015, tzinfo=timezone.utc)
+ET_INSTANT_1 = datetime(
+    2023,
+    2,
+    24,
+    7,
+    26,
+    7,
+    704015,
+    tzinfo=timezone(timedelta(hours=-5)),
+)
+ET_INSTANT_2 = datetime(
+    2023,
+    2,
+    24,
+    7,
+    28,
+    37,
+    123,
+    tzinfo=timezone(timedelta(hours=-5)),
+)
+
+
+class TestWorkflowRunPresenter:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "summary,expected_path",
+        [
+            pytest.param(
+                ui_models.WFRunSummary(
+                    wf_def_name="hello_orq",
+                    wf_run_id="wf.1",
+                    wf_run_status=RunStatus(
+                        state=State.WAITING,
+                        start_time=UTC_INSTANT,
+                    ),
+                    task_rows=[],
+                    n_tasks_succeeded=0,
+                    n_task_invocations_total=21,
+                ),
+                DATA_DIR / "wf_runs" / "waiting.txt",
+                id="waiting",
+            ),
+            pytest.param(
+                ui_models.WFRunSummary(
+                    wf_def_name="hello_orq",
+                    wf_run_id="wf.1",
+                    wf_run_status=RunStatus(
+                        state=State.RUNNING,
+                        start_time=ET_INSTANT_1,
+                    ),
+                    task_rows=[
+                        ui_models.WFRunSummary.TaskRow(
+                            task_fn_name="generate_data",
+                            inv_id="inv-1-gen-dat",
+                            status=RunStatus(
+                                state=State.SUCCEEDED,
+                                start_time=ET_INSTANT_1,
+                                end_time=ET_INSTANT_2,
+                            ),
+                            message=None,
+                        ),
+                        ui_models.WFRunSummary.TaskRow(
+                            task_fn_name="train_model",
+                            inv_id="inv-2-tra-mod",
+                            status=RunStatus(
+                                state=State.RUNNING,
+                                start_time=ET_INSTANT_2,
+                            ),
+                            message=None,
+                        ),
+                    ],
+                    n_tasks_succeeded=1,
+                    n_task_invocations_total=2,
+                ),
+                DATA_DIR / "wf_runs" / "running.txt",
+                id="running",
+            ),
+        ],
+    )
+    def test_show_wf_run(capsys, summary: ui_models.WFRunSummary, expected_path: Path):
+        # Given
+        presenter = _presenters.WFRunPresenter()
+
+        # When
+        presenter.show_wf_run(summary)
+
+        # Then
+        captured = capsys.readouterr()
+
+        expected = expected_path.read_text()
+        assert captured.out == expected
