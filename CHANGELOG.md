@@ -25,6 +25,7 @@
 
 
 *Internal*
+* Git URL model changed inside the IR
 
 
 *Docs*
