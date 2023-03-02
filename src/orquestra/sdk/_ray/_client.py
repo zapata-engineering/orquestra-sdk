@@ -120,11 +120,13 @@ else:
             while True:
                 try:
                     self.get_workflow_status(workflow_id)
+                    break
                 except workflow_exceptions.WorkflowNotFoundError:
                     if retries * retry_time_in_sec >= submission_timeout_in_sec:
                         raise
                     else:
                         time.sleep(retry_time_in_sec)
+                        retries += 1
 
         def get_workflow_metadata(self, workflow_id: str) -> t.Dict[str, t.Any]:
             """
