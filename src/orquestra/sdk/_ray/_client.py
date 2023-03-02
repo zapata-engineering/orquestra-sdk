@@ -114,7 +114,7 @@ else:
             ray.workflow.run_async(dag_node, workflow_id=workflow_id, metadata=metadata)
 
             # Give some time to ray to actually submit workflow
-            submission_timeout_in_sec = 1
+            submission_timeout_in_sec = 5
             retry_time_in_sec = 0.1
             retries = 0
             try:
