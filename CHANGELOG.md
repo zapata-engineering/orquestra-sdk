@@ -25,6 +25,7 @@
 
 
 *Internal*
+* `orq up` will now configure Ray's Plasma directory
 
 
 *Docs*
