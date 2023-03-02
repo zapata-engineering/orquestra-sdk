@@ -9,6 +9,7 @@
 🔥 *Features*
 * Secrets can now be used inside workflow functions
 * `sdk.secrets.get("name")` will now use passport-based authorization if `ORQUESTRA_PASSPORT_FILE` environment variable is set. Otherwise, passing a valid `config_name="..."` is required.
+* Bump Ray version to 2.3
 
 👩‍🔬 *Experimental*
 
