@@ -73,6 +73,7 @@ def test_disallowed_package_versions(
 
 
 def test_skip_password_dereference_yaml(caplog: pytest.LogCaptureFixture):
+    caplog.set_level("DEBUG")
     ir_imports = {
         "sdk": GitImport(
             id="sdk",
@@ -107,4 +108,10 @@ def test_skip_password_dereference_yaml(caplog: pytest.LogCaptureFixture):
     }
     _ = _imports.ImportTranslator(ir_imports=ir_imports, orq_sdk_git_ref=None)
     logs = caplog.records
-    assert logs == []
+    assert len(logs) == 1
+    assert logs[0].name == "orquestra.sdk._base._conversions._imports"
+    assert logs[0].levelname == "DEBUG"
+    assert (
+        logs[0].msg
+        == "Refusing to dereference secret for url `https://example.com/some/path.git`"
+    )
