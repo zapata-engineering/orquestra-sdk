@@ -4,8 +4,8 @@
 """
 Facade module for Ray API.
 """
-import typing as t
 import time
+import typing as t
 
 try:
     import ray
