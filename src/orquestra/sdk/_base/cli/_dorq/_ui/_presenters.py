@@ -10,6 +10,7 @@ import sys
 import typing as t
 import webbrowser
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 from typing import Iterable, Iterator, List
 
@@ -28,23 +29,13 @@ from orquestra.sdk.schema.workflow_run import (
 
 from ..._corq._format import per_command
 from . import _errors
+from . import _models as ui_models
 
 
 class WrappedCorqOutputPresenter:
     """
     Uses corq's responses and formatters for pretty-printing dorq data.
     """
-
-    def show_wf_run(self, wf_run: WorkflowRun):
-        resp = responses.GetWorkflowRunResponse(
-            meta=responses.ResponseMetadata(
-                success=True,
-                code=responses.ResponseStatusCode.OK,
-                message="Success",
-            ),
-            workflow_runs=[wf_run],
-        )
-        per_command.pretty_print_response(resp, project_dir=None)
 
     def show_wf_runs_list(self, wf_runs: List[WorkflowRun]):
         resp = responses.GetWorkflowRunResponse(
@@ -223,3 +214,56 @@ class LoginPresenter:
 
     def open_url_in_browser(self, url) -> bool:
         return webbrowser.open(url)
+
+
+def _format_datetime(dt: t.Optional[datetime]) -> str:
+    if dt is None:
+        # Print empty table cell
+        return ""
+
+    return dt.isoformat()
+
+
+def _format_tasks_succeeded(summary: ui_models.WFRunSummary) -> str:
+    return f"{summary.n_tasks_succeeded} / {summary.n_task_invocations_total}"
+
+
+class WFRunPresenter:
+    def show_wf_run(self, summary: ui_models.WFRunSummary):
+        click.echo("Workflow overview")
+        click.echo(
+            tabulate(
+                [
+                    ["workflow def name", summary.wf_def_name],
+                    ["run ID", summary.wf_run_id],
+                    ["status", summary.wf_run_status.state.name],
+                    [
+                        "start time",
+                        _format_datetime(summary.wf_run_status.start_time),
+                    ],
+                    [
+                        "end time",
+                        _format_datetime(summary.wf_run_status.end_time),
+                    ],
+                    ["tasks succeeded", _format_tasks_succeeded(summary)],
+                ]
+            )
+        )
+        click.echo()
+
+        task_rows = [
+            ["function", "invocation ID", "status", "start_time", "end_time", "message"]
+        ]
+        for task_row in summary.task_rows:
+            task_rows.append(
+                [
+                    task_row.task_fn_name,
+                    task_row.inv_id,
+                    task_row.status.state.value,
+                    _format_datetime(task_row.status.start_time),
+                    _format_datetime(task_row.status.end_time),
+                    task_row.message or "",
+                ]
+            )
+        click.echo("Task details")
+        click.echo(tabulate(task_rows, headers="firstrow"))

@@ -141,6 +141,7 @@ class ServicesStatusResponse(BaseModel):
     ray_running: bool
 
     # True if a fluentbit service is running in the background.
+    # Deprecated, always set to ``False``.
     fluentbit_running: bool
 
 

@@ -313,6 +313,9 @@ class TaskInvocation(BaseModel):
     custom_image: t.Optional[str]
 
 
+WorkflowDefName = str
+
+
 class WorkflowDef(BaseModel):
     """The main data structure for intermediate workflow representation.
 
@@ -321,7 +324,7 @@ class WorkflowDef(BaseModel):
     constants and returned artifacts.
     """
 
-    name: str
+    name: WorkflowDefName
 
     # Used by Orquestra Studio to power jump-to-definition (file_path + line_number).
     fn_ref: FunctionRef

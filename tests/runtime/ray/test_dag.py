@@ -14,7 +14,7 @@ import pytest
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _services
 from orquestra.sdk._base._config import RuntimeConfiguration, RuntimeName
-from orquestra.sdk._ray import _client, _dag, _query_service, _ray_logs
+from orquestra.sdk._ray import _client, _dag, _ray_logs
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.workflow_run import State
 
@@ -192,12 +192,10 @@ class TestRayRuntime:
 
     class TestReadingLogs:
         """
-        Verifies that RayRuntime gets whatever DirectRayReader or FluentbitReader
-        produced.
+        Verifies that RayRuntime gets whatever DirectRayReader produced.
 
         Test boundary: [RayRuntime]─┬[ServiceManager]
-                                    ├[DirectRayReader]
-                                    └[FluentbitReader]
+                                    └[DirectRayReader]
         """
 
         class TestGetWorkflowLogs:
@@ -217,51 +215,11 @@ class TestRayRuntime:
                     config=runtime_config,
                     project_dir=tmp_path,
                 )
-                service_manager = create_autospec(_services.ServiceManager)
-                service_manager.is_fluentbit_running = Mock(return_value=False)
-                rt._service_manager = service_manager
 
                 logs_dict = {"inv_id1": ["Hello, there!", "General Kenobi!"]}
                 get_workflow_logs = Mock(return_value=logs_dict)
                 monkeypatch.setattr(
                     _ray_logs.DirectRayReader, "get_workflow_logs", get_workflow_logs
-                )
-
-                wf_run_id = "wf.1"
-
-                # When
-                result_dict = rt.get_workflow_logs(wf_run_id=wf_run_id)
-
-                # Then
-                assert result_dict == logs_dict
-                get_workflow_logs.assert_called_with(wf_run_id)
-
-            @staticmethod
-            def test_fluentbit(
-                monkeypatch,
-                tmp_path: Path,
-                runtime_config: RuntimeConfiguration,
-            ):
-                """
-                Makes a spare ``RayRuntime`` object, mocks its attributes, and verifies
-                passing data between the reader and ``RayRuntime``.
-                """
-                # Given
-                rt = _dag.RayRuntime(
-                    client=Mock(),
-                    config=runtime_config,
-                    project_dir=tmp_path,
-                )
-                service_manager = create_autospec(_services.ServiceManager)
-                service_manager.is_fluentbit_running = Mock(return_value=True)
-                rt._service_manager = service_manager
-
-                logs_dict = {"inv_id1": ["Hello, there!", "General Kenobi!"]}
-                get_workflow_logs = Mock(return_value=logs_dict)
-                monkeypatch.setattr(
-                    _query_service.FluentbitReader,
-                    "get_workflow_logs",
-                    get_workflow_logs,
                 )
 
                 wf_run_id = "wf.1"
@@ -290,52 +248,11 @@ class TestRayRuntime:
                     config=runtime_config,
                     project_dir=tmp_path,
                 )
-                service_manager = create_autospec(_services.ServiceManager)
-                service_manager.is_fluentbit_running = Mock(return_value=False)
-                rt._service_manager = service_manager
 
                 logs_list = ["hello", "there!"]
                 get_task_logs = Mock(return_value=logs_list)
                 monkeypatch.setattr(
                     _ray_logs.DirectRayReader, "get_task_logs", get_task_logs
-                )
-
-                wf_run_id = "wf.1"
-                task_inv_id = "inv-2"
-
-                # When
-                result_list = rt.get_task_logs(
-                    wf_run_id=wf_run_id, task_inv_id=task_inv_id
-                )
-
-                # Then
-                assert result_list == logs_list
-                get_task_logs.assert_called_with(wf_run_id, task_inv_id)
-
-            @staticmethod
-            def test_fluentbit(
-                monkeypatch,
-                tmp_path: Path,
-                runtime_config: RuntimeConfiguration,
-            ):
-                """
-                Makes a spare ``RayRuntime`` object, mocks its attributes, and verifies
-                passing data between the reader and ``RayRuntime``.
-                """
-                # Given
-                rt = _dag.RayRuntime(
-                    client=Mock(),
-                    config=runtime_config,
-                    project_dir=tmp_path,
-                )
-                service_manager = create_autospec(_services.ServiceManager)
-                service_manager.is_fluentbit_running = Mock(return_value=True)
-                rt._service_manager = service_manager
-
-                logs_list = ["General", "Kenobi!"]
-                get_task_logs = Mock(return_value=logs_list)
-                monkeypatch.setattr(
-                    _query_service.FluentbitReader, "get_task_logs", get_task_logs
                 )
 
                 wf_run_id = "wf.1"
