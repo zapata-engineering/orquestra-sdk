@@ -96,7 +96,7 @@ class ImportTranslator:
     def _translate_GitImport(self, imp: ir.GitImport, yaml_name) -> yaml_model.Import:
         git_url = imp.repo_url.copy()
         if imp.repo_url.password is not None:
-            logging.debug(
+            logging.getLogger(__name__).debug(
                 f"Refusing to dereference secret for url `{imp.repo_url.original_url}`"
             )
             git_url.password = None
