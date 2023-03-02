@@ -2,13 +2,14 @@
 # © Copyright 2022 Zapata Computing Inc.
 ################################################################################
 import importlib.metadata
+import logging
 import re
 import typing as t
 from functools import singledispatchmethod
 
 from orquestra.sdk.schema import ir, yaml_model
 
-from .. import serde
+from .. import _git_url_utils, serde
 from . import _ids
 
 POSSIBLE_IMPORTS = (ir.PythonImports, ir.GitImport)
@@ -93,11 +94,17 @@ class ImportTranslator:
 
     @_translate_Import.register
     def _translate_GitImport(self, imp: ir.GitImport, yaml_name) -> yaml_model.Import:
+        git_url = imp.repo_url.copy()
+        if imp.repo_url.password is not None:
+            logging.debug(
+                f"Refusing to dereference secret for url `{imp.repo_url.original_url}`"
+            )
+            git_url.password = None
         return yaml_model.Import(
             name=yaml_name,
             type="git",
             parameters=yaml_model.GitImportParameters(
-                repository=imp.repo_url,
+                repository=_git_url_utils.build_git_url(git_url),
                 commit=imp.git_ref,
             ),
         )
@@ -128,9 +135,10 @@ class ImportTranslator:
 def _find_git_import(
     imports: t.Iterable[ir.Import], url: str
 ) -> t.Optional[ir.GitImport]:
+    matching_url = _git_url_utils.parse_git_url(url)
     it: t.Iterable[t.Any] = imports
     it = filter(lambda imp: isinstance(imp, ir.GitImport), it)
-    it = filter(lambda imp: imp.repo_url == url, it)
+    it = filter(lambda imp: imp.repo_url == matching_url, it)
     return next(it, None)
 
 

@@ -7,6 +7,7 @@ from unittest.mock import Mock
 import pytest
 
 from orquestra.sdk._base._conversions import _imports
+from orquestra.sdk.schema.ir import GitImport, GitURL, SecretNode
 
 
 @pytest.mark.parametrize(
@@ -69,3 +70,41 @@ def test_disallowed_package_versions(
     with pytest.raises(_imports.PackageVersionError) as e:
         _ = _imports._get_package_version_tag("doesnt-matter")
     assert exception_message in str(e.value)
+
+
+def test_skip_password_dereference_yaml(caplog: pytest.LogCaptureFixture):
+    ir_imports = {
+        "sdk": GitImport(
+            id="sdk",
+            repo_url=GitURL(
+                original_url="git@github.com:zapatacomputing/orquestra-workflow-sdk.git",  # noqa: E501
+                protocol="ssh",
+                user="git",
+                password=None,
+                host="github.com",
+                port=None,
+                path="zapatacomputing/orquestra-workflow-sdk.git",
+                query=None,
+            ),
+            git_ref="main",
+        ),
+        "test": GitImport(
+            id="test",
+            repo_url=GitURL(
+                original_url="https://example.com/some/path.git",
+                protocol="https",
+                user="example",
+                password=SecretNode(
+                    id="secret", secret_name="my_secret", secret_config="config_name"
+                ),
+                host="example.com",
+                port=None,
+                path="some/path.git",
+                query=None,
+            ),
+            git_ref="main",
+        ),
+    }
+    _ = _imports.ImportTranslator(ir_imports=ir_imports, orq_sdk_git_ref=None)
+    logs = caplog.records
+    assert logs == []
