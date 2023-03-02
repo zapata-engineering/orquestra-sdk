@@ -26,6 +26,13 @@ Example:
     ORQ_RAY_STORAGE_PATH=/tmp/ray/storage
 """
 
+RAY_PLASMA_PATH_ENV = "ORQ_RAY_PLASMA_PATH"
+"""
+Used to configure the location of Ray's plasma storage
+Example:
+    ORQ_RAY_PLASMA_PATH=/tmp/ray/plasma
+"""
+
 RAY_DOWNLOAD_GIT_IMPORTS_ENV = "ORQ_RAY_DOWNLOAD_GIT_IMPORTS"
 """
 Used to configure if Ray downloads Git imports
