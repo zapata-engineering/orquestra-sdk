@@ -344,7 +344,9 @@ def _gather_kwargs(
     return ray_kwargs, kw_unpack_specs
 
 
-def _make_ray_dag(client: RayClient, wf: ir.WorkflowDef, wf_run_id: str, project_dir: Path):
+def _make_ray_dag(
+    client: RayClient, wf: ir.WorkflowDef, wf_run_id: str, project_dir: Path
+):
     ray_consts: t.Dict[ir.ConstantNodeId, t.Any] = {
         id: serde.deserialize_constant(node) for id, node in wf.constant_nodes.items()
     }
@@ -400,7 +402,7 @@ def _make_ray_dag(client: RayClient, wf: ir.WorkflowDef, wf_run_id: str, project
             ray_kwargs=ray_kwargs,
             pos_unpack_specs=pos_unpack_specs,
             kw_unpack_specs=kw_unpack_specs,
-            project_dir=project_dir
+            project_dir=project_dir,
         )
 
         for output_id in ir_invocation.output_ids:

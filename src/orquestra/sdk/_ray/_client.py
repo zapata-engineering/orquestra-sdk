@@ -120,7 +120,7 @@ else:
             try:
                 self.get_workflow_status(workflow_id)
             except exceptions.WorkflowNotFoundError:
-                if retries*retry_time_in_sec >= submission_timeout_in_sec:
+                if retries * retry_time_in_sec >= submission_timeout_in_sec:
                     raise
                 else:
                     time.sleep(retry_time_in_sec)
