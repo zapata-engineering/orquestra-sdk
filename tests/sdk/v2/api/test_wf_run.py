@@ -405,8 +405,8 @@ class TestWorkflowRun:
                 run.wait_until_finished()
 
                 # Then
-                # We expect wait_until_finished to keep calling get_workflow_run_status from
-                # the runtime until the status is in a completed state.
+                # We expect wait_until_finished to keep calling get_workflow_run_status
+                # from the runtime until the status is in a completed state.
                 # The mock runtime will return RUNNING twice before SUCCEEDED.
                 # We expect 3 total calls to get_workflow_run_status
                 assert mock_runtime.get_workflow_run_status.call_count == 3
@@ -430,8 +430,8 @@ class TestWorkflowRun:
                 run.wait_until_finished(verbose=False)
 
                 # Then
-                # We expect wait_until_finished to keep calling get_workflow_run_status from
-                # the runtime until the status is in a completed state.
+                # We expect wait_until_finished to keep calling get_workflow_run_status
+                # from the runtime until the status is in a completed state.
                 # The mock runtime will return RUNNING twice before SUCCEEDED.
                 # We expect 3 total calls to get_workflow_run_status
                 assert mock_runtime.get_workflow_run_status.call_count == 3
