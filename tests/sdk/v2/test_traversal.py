@@ -864,7 +864,18 @@ GENERATE_GRAPH_IMPORTS = [
 CAPITALIZE_IMPORTS_INFER = [
     model.GitImport(
         id=AnyMatchingStr(r"git-\w{10}_github_com_zapatacomputing_orquestra.*sdk"),
-        repo_url=AnyMatchingStr(r"git@github.com:zapatacomputing/orquestra.*sdk.*"),
+        repo_url=model.GitURL(
+            original_url=AnyMatchingStr(
+                r"git@github.com:zapatacomputing/orquestra.*sdk.*"
+            ),
+            protocol="ssh",
+            user="git",
+            password=None,
+            host="github.com",
+            port=None,
+            path=AnyMatchingStr(r"zapatacomputing/orquestra.*sdk.*"),
+            query=None,
+        ),
         git_ref="main",
     ),
 ]
@@ -932,9 +943,10 @@ def test_get_model_imports_from_task_def(monkeypatch, task_def, expected_imports
 
     monkeypatch.setattr(git.remote.Remote, "fetch", fake_fetch)
     monkeypatch.setattr(git.Repo, "is_dirty", fake_is_dirty)
-    assert [
+    imports = [
         imp.dict() for imp in _traversal.get_model_imports_from_task_def(task_def)
-    ] == [imp.dict() for imp in expected_imports]
+    ]
+    assert imports == [imp.dict() for imp in expected_imports]
 
 
 @pytest.mark.parametrize(

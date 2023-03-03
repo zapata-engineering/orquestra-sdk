@@ -21,7 +21,15 @@ from pathlib import Path
 import pydantic
 
 from .. import exceptions, secrets
-from .._base import _exec_ctx, _graphs, _log_adapter, _services, dispatch, serde
+from .._base import (
+    _exec_ctx,
+    _git_url_utils,
+    _graphs,
+    _log_adapter,
+    _services,
+    dispatch,
+    serde,
+)
 from .._base._db import WorkflowDB
 from .._base._env import RAY_DOWNLOAD_GIT_IMPORTS_ENV
 from .._base.abc import ArtifactValue, LogReader, RuntimeInterface
@@ -262,14 +270,11 @@ def _(imp: ir.GitImport):
     # Short circuit the Git import otherwise
     if os.getenv(RAY_DOWNLOAD_GIT_IMPORTS_ENV) != "1":
         return []
-    m = re.match(
-        r"(?P<user>.+)@(?P<domain>[^/]+?):(?P<repo>.+)", imp.repo_url, re.IGNORECASE
-    )
-    if m is not None:
-        url = f"ssh://{m.group('user')}@{m.group('domain')}/{m.group('repo')}"
-    else:
-        url = imp.repo_url
-    return [f"git+{url}@{imp.git_ref}"]
+    protocol = imp.repo_url.protocol
+    if not protocol.startswith("git+"):
+        protocol = f"git+{protocol}"
+    url = _git_url_utils.build_git_url(imp.repo_url, protocol)
+    return [f"{url}@{imp.git_ref}"]
 
 
 def _import_pip_env(ir_invocation: ir.TaskInvocation, wf: ir.WorkflowDef):

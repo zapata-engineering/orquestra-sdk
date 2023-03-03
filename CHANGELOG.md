@@ -25,6 +25,7 @@
 
 
 *Internal*
+* Git URL model changed inside the IR
 * `orq up` will now configure Ray's Plasma directory
 
 

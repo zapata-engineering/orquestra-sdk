@@ -14,15 +14,55 @@ import pydantic
 from pydantic import BaseModel
 
 ImportId = str
+SecretNodeId = str
+
+
+class SecretNode(BaseModel):
+    """
+    A reference to a secret stored in an external secret/config service.
+    """
+
+    # Workflow-scope unique ID used to refer from task invocations
+    id: SecretNodeId
+
+    # Serialized value
+    secret_name: str
+
+    # Secret config
+    # This is only used locally, and we expect this to be None (or ignored) on remote
+    # runtimes.
+    secret_config: t.Optional[str] = None
+
+
+class GitURL(BaseModel):
+    original_url: str
+    protocol: str
+    user: t.Optional[str]
+    password: t.Optional[SecretNode]
+    host: str
+    port: t.Optional[int]
+    path: str
+    query: t.Optional[str]
 
 
 class GitImport(BaseModel):
     id: ImportId
-    repo_url: str
+    repo_url: GitURL
     git_ref: str
 
     # we need this in the JSON to know which class to use when deserializing
     type: str = pydantic.Field("GIT_IMPORT", const=True)
+
+    @pydantic.validator("repo_url", pre=True)
+    def _backwards_compatible_repo_url(cls, v):
+        """Allows older models with a string URL to be imported"""
+        # Prevent circular imports
+        from .._base._git_url_utils import parse_git_url
+
+        if not isinstance(v, str):
+            return v
+
+        return parse_git_url(v)
 
 
 class LocalImport(BaseModel):
@@ -195,7 +235,6 @@ TaskInvocationId = str
 TaskNodeId = str
 ArtifactNodeId = str
 ConstantNodeId = str
-SecretNodeId = str
 
 
 class ArtifactNode(BaseModel):
@@ -268,25 +307,6 @@ class ConstantNodePickle(BaseModel):
 
 # General ConstantNode that can hold constants that are not JSON-serializable
 ConstantNode = t.Union[ConstantNodeJSON, ConstantNodePickle]
-
-
-class SecretNode(BaseModel):
-    """
-    A reference to a secret stored in an external secret/config service.
-    """
-
-    # Workflow-scope unique ID used to refer from task invocations
-    id: SecretNodeId
-
-    # Serialized value
-    secret_name: str
-
-    # Secret config
-    # This is only used locally, and we expect this to be None (or ignored) on remote
-    # runtimes.
-    secret_config: t.Optional[str] = None
-
-
 ArgumentId = t.Union[ArtifactNodeId, ConstantNodeId, SecretNodeId]
 
 
