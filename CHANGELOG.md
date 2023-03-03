@@ -24,6 +24,7 @@
 
 💅 *Improvements*
 * `orq wf view` now shows `TaskInvocationID`s instead of `TaskRunID`s. This improves usage of `orq wf view` with other CLI commands that require passing invocation ID, like `orq task {logs,results}`.
+* `sdk.WorkflowRun.wait_until_finished()` will now print workflow status every now and then.
 
 
 *Internal*
