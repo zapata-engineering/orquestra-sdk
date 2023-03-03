@@ -8,6 +8,7 @@ import numpy.testing
 import pytest
 from pydantic.error_wrappers import ValidationError
 
+import orquestra.sdk as sdk
 from orquestra.sdk._base import serde
 from orquestra.sdk.schema import ir
 
@@ -18,6 +19,13 @@ ROUNDTRIP_EXAMPLES = [
     {"foo": "bar", "baz": ["qux", "qux"]},
     {"a_float": 0.123},
 ]
+
+
+def test_sdk_can_be_serialised():
+    def sdk_pickle_by_ref():
+        sdk
+
+    serde.serialize_pickle(sdk_pickle_by_ref)
 
 
 class TestResultFromArtifact:
