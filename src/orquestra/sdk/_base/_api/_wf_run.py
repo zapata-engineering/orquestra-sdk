@@ -3,6 +3,7 @@
 ################################################################################
 
 import re
+import sys
 import time
 import typing as t
 import warnings
@@ -201,7 +202,7 @@ class WorkflowRun:
         run_id = self._runtime.create_workflow_run(self._wf_def)
         self._run_id = run_id
 
-    def wait_until_finished(self, frequency: float = 0.25) -> State:
+    def wait_until_finished(self, frequency: float = 0.25, verbose=True) -> State:
         """Block until the workflow run finishes.
 
         This method draws no distinctions between whether the workflow run completes
@@ -209,6 +210,8 @@ class WorkflowRun:
 
         Args:
             frequency: The frequence in Hz at which the status should be checked.
+            verbose: If ``True``, each iteration of the polling loop will print to
+                stderr.
 
         Raises:
             WorkflowRunNotStarted: when the workflow run has not started
@@ -231,13 +234,27 @@ class WorkflowRun:
             raise WorkflowRunNotStarted(message) from e
 
         while status == State.RUNNING or status == State.WAITING:
-            time.sleep(1.0 / frequency)
+            sleep_time = 1.0 / frequency
+
+            if verbose:
+                print(
+                    f"{self.run_id} is {status.name}. Sleeping for {sleep_time}s...",
+                    file=sys.stderr,
+                )
+
+            time.sleep(sleep_time)
             status = self.get_status()
 
         if status not in [State.SUCCEEDED, State.TERMINATED, State.FAILED]:
             raise NotImplementedError(
                 f'Workflow run with id "{self.run_id}" '
                 f'finished with unrecognised state "{status}"'
+            )
+
+        if verbose:
+            print(
+                f"{self.run_id} is {status.name}",
+                file=sys.stderr,
             )
 
         return status
