@@ -31,7 +31,7 @@ from .._base import (
     serde,
 )
 from .._base._db import WorkflowDB
-from .._base._env import RAY_DOWNLOAD_GIT_IMPORTS_ENV
+from .._base._env import RAY_DOWNLOAD_GIT_IMPORTS_ENV, RAY_GLOBAL_WF_RUN_ID_ENV
 from .._base.abc import ArtifactValue, LogReader, RuntimeInterface
 from ..schema import ir
 from ..schema.configs import RuntimeConfiguration
@@ -715,7 +715,8 @@ class RayRuntime(RuntimeInterface):
         client.shutdown()
 
     def create_workflow_run(self, workflow_def: ir.WorkflowDef) -> WorkflowRunId:
-        wf_run_id = _generate_wf_run_id(workflow_def)
+        global_run_id = os.getenv(RAY_GLOBAL_WF_RUN_ID_ENV)
+        wf_run_id = global_run_id or _generate_wf_run_id(workflow_def)
 
         # This is huge workaround for the issue:
         # https://github.com/ray-project/ray/issues/29253
