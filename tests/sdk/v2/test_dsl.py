@@ -475,10 +475,25 @@ def test_deferred_git_import_resolved(my_fake_repo_setup):
     assert resolved.git_ref == my_fake_repo.active_branch.name
 
 
-def test_github_import_is_git_import():
-    imp = _dsl.GithubImport("zapatacomputing/orquestra-workflow-sdk", "main")
-    assert imp == _dsl.GitImport(
-        "git@github.com:zapatacomputing/orquestra-workflow-sdk.git", "main"
+@pytest.mark.parametrize(
+    "username,personal_access_token",
+    [
+        (None, None),
+        ("emiliano_zapata", _dsl.Secret("my_secret")),
+    ],
+)
+def test_github_import_is_git_import_with_auth(username, personal_access_token):
+    imp = _dsl.GithubImport(
+        "zapatacomputing/orquestra-workflow-sdk",
+        "main",
+        username=username,
+        personal_access_token=personal_access_token,
+    )
+    assert imp == _dsl.GitImportWithAuth(
+        repo_url="https://github.com/zapatacomputing/orquestra-workflow-sdk.git",
+        git_ref="main",
+        username=username,
+        auth_secret=personal_access_token,
     )
 
 

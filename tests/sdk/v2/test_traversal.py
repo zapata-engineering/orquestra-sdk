@@ -961,15 +961,40 @@ def test_get_model_imports_from_task_def(monkeypatch, task_def, expected_imports
         ("some&&weird:/URI", 100, "git-100_some_weird_URI"),
     ],
 )
-def test_make_git_import_id(repo_url, index, expected_id):
+def test_make_import_id_gitimport(repo_url, index, expected_id):
     imp = _dsl.GitImport(repo_url=repo_url, git_ref="")
-    assert _traversal._make_git_import_id(imp, index) == expected_id
+    assert _traversal._make_import_id(imp, index) == expected_id
 
 
-def test_make_inline_import_id():
+def test_make_import_id_invalid_type():
+    with pytest.raises(TypeError):
+        _ = _traversal._make_import_id("not an import", "_")  # type: ignore
+
+
+def test_make_import_model_inline_import():
     imp1 = _dsl.InlineImport()
     imp2 = _dsl.InlineImport()
     assert _traversal._make_import_model(imp1) != _traversal._make_import_model(imp2)
+
+
+def test_make_import_model_git_import_with_auth():
+    original_url = "https://example.com/example/repo.git"
+    git_ref = "main"
+    user = "emilianozapata"
+    secret_name = "my_secret"
+    imp = _dsl.GitImportWithAuth(
+        repo_url=original_url,
+        git_ref=git_ref,
+        username=user,
+        auth_secret=_dsl.Secret(secret_name),
+    )
+    imp_model = _traversal._make_import_model(imp)
+    assert isinstance(imp_model, model.GitImport)
+    assert imp_model.git_ref == git_ref
+    assert imp_model.repo_url.original_url == original_url
+    assert imp_model.repo_url.user == user
+    assert imp_model.repo_url.password is not None
+    assert imp_model.repo_url.password.secret_name == secret_name
 
 
 @_dsl.task()
