@@ -85,6 +85,19 @@ class Secret(NamedTuple):
     config_name: Optional[str] = None
 
 
+class GitImportWithAuth(NamedTuple):
+    """
+    A task import that uses a private Git repo
+
+    Please use a helper method, such as GithubImport, instead of this class
+    """
+
+    repo_url: str
+    git_ref: str
+    username: Optional[str]
+    auth_secret: Optional[Secret]
+
+
 class GitImport(NamedTuple):
     """A task import that uses a Git repository"""
 
@@ -109,9 +122,19 @@ class GitImport(NamedTuple):
         return DeferredGitImport(local_repo_path, git_ref)
 
 
-def GithubImport(repo: str, git_ref: str = "main"):
+def GithubImport(
+    repo: str,
+    git_ref: str = "main",
+    username: Optional[str] = None,
+    personal_access_token: Optional[Secret] = None,
+):
     """Helper to create GitImports from Github repos"""
-    return GitImport(repo_url=f"git@github.com:{repo}.git", git_ref=git_ref)
+    return GitImportWithAuth(
+        repo_url=f"https://github.com/{repo}.git",
+        git_ref=git_ref,
+        username=username,
+        auth_secret=personal_access_token,
+    )
 
 
 class DeferredGitImport:
@@ -229,7 +252,14 @@ class InlineImport(NamedTuple):
     pass
 
 
-Import = Union[GitImport, LocalImport, DeferredGitImport, PythonImports, InlineImport]
+Import = Union[
+    LocalImport,
+    GitImport,
+    GitImportWithAuth,
+    DeferredGitImport,
+    PythonImports,
+    InlineImport,
+]
 """Type that includes all possible task imports"""
 
 
