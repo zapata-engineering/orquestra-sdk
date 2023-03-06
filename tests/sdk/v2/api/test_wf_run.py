@@ -394,19 +394,52 @@ class TestWorkflowRun:
                 "method."
             ) in str(exc_info)
 
-        @staticmethod
-        def test_waits_until_finished(monkeypatch, run, mock_runtime):
-            # Given
-            monkeypatch.setattr(time, "sleep", MagicMock())
-            # When
-            run.start()
-            run.wait_until_finished()
-            # Then
-            # We expect wait_until_finished to keep calling get_workflow_run_status from
-            # the runtime until the status is in a completed state.
-            # The mock runtime will return RUNNING twice before SUCCEEDED.
-            # We expect 3 total calls to get_workflow_run_status
-            assert mock_runtime.get_workflow_run_status.call_count == 3
+        class TestHappyPath:
+            @staticmethod
+            def test_verbose(monkeypatch, run, mock_runtime, capsys):
+                # Given
+                monkeypatch.setattr(time, "sleep", MagicMock())
+
+                # When
+                run.start()
+                run.wait_until_finished()
+
+                # Then
+                # We expect wait_until_finished to keep calling get_workflow_run_status
+                # from the runtime until the status is in a completed state.
+                # The mock runtime will return RUNNING twice before SUCCEEDED.
+                # We expect 3 total calls to get_workflow_run_status
+                assert mock_runtime.get_workflow_run_status.call_count == 3
+
+                # We expect x prints to stderr.
+                captured = capsys.readouterr()
+                assert captured.out == ""
+                assert captured.err == (
+                    "wf_pass_tuple-1 is RUNNING. Sleeping for 4.0s...\n"
+                    "wf_pass_tuple-1 is RUNNING. Sleeping for 4.0s...\n"
+                    "wf_pass_tuple-1 is SUCCEEDED\n"
+                )
+
+            @staticmethod
+            def test_quiet(monkeypatch, run, mock_runtime, capsys):
+                # Given
+                monkeypatch.setattr(time, "sleep", MagicMock())
+
+                # When
+                run.start()
+                run.wait_until_finished(verbose=False)
+
+                # Then
+                # We expect wait_until_finished to keep calling get_workflow_run_status
+                # from the runtime until the status is in a completed state.
+                # The mock runtime will return RUNNING twice before SUCCEEDED.
+                # We expect 3 total calls to get_workflow_run_status
+                assert mock_runtime.get_workflow_run_status.call_count == 3
+
+                # We expect no prints to stderr.
+                captured = capsys.readouterr()
+                assert captured.out == ""
+                assert captured.err == ""
 
     class TestGetResults:
         @staticmethod

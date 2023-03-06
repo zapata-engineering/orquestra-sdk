@@ -11,6 +11,7 @@ import hashlib
 import re
 import typing as t
 from collections import OrderedDict, defaultdict
+from functools import singledispatch
 
 from pip_api import Requirement
 
@@ -18,7 +19,7 @@ import orquestra.sdk.schema.ir as model
 from orquestra.sdk.schema import responses
 
 from .. import exceptions
-from . import _dsl, _workflow, serde
+from . import _dsl, _git_url_utils, _workflow, serde
 
 N_BYTES_IN_HASH = 8
 
@@ -162,11 +163,19 @@ def _iter_nodes(
         yield current_node
 
 
-def _make_local_import_id(imp: _dsl.LocalImport, import_hash: str):
+@singledispatch
+def _make_import_id(imp: _dsl.Import, import_hash: str):
+    raise TypeError(f"Unknown import: {type(imp)}")
+
+
+@_make_import_id.register
+def _(imp: _dsl.LocalImport, import_hash: str):
     return f"local-{import_hash}"
 
 
-def _make_git_import_id(imp: _dsl.GitImport, import_hash: str):
+@_make_import_id.register(_dsl.GitImport)
+@_make_import_id.register(_dsl.GitImportWithAuth)
+def _(imp: t.Union[_dsl.GitImport, _dsl.GitImportWithAuth], import_hash: str):
     # Remove git@, https://, and .git from repo_url
     proj_name = re.sub("https://|.git|git@", "", imp.repo_url)
     # Replace all non-alphanumeric characters with an underscore.
@@ -176,7 +185,8 @@ def _make_git_import_id(imp: _dsl.GitImport, import_hash: str):
     return f"git-{import_hash}_{proj_name}"
 
 
-def _make_python_import_id(imp: _dsl.PythonImports, import_hash: str):
+@_make_import_id.register
+def _(imp: _dsl.PythonImports, import_hash: str):
     # Imports might be too long to include in the ID
     return f"python-import-{import_hash}"
 
@@ -186,34 +196,47 @@ def _make_python_import_id(imp: _dsl.PythonImports, import_hash: str):
 _global_inline_import_counter: int = 0
 
 
-def _make_inline_import_id():
+@_make_import_id.register
+def _(imp: _dsl.InlineImport, import_hash: str):
     global _global_inline_import_counter
     _global_inline_import_counter += 1
     return f"inline-import-{_global_inline_import_counter}"
 
 
 def _make_import_model(imp: _dsl.Import):
+    # We should resolve the deferred git import before hashing
+    if isinstance(imp, _dsl.DeferredGitImport):
+        imp = imp.resolved()
+
     import_hash = _gen_id_hash(imp)
+    id_ = _make_import_id(imp, import_hash)
 
     if isinstance(imp, _dsl.LocalImport):
         return model.LocalImport(
-            id=_make_local_import_id(imp, import_hash),
+            id=id_,
         )
     elif isinstance(imp, _dsl.GitImport):
         return model.GitImport(
-            id=_make_git_import_id(imp, import_hash),
+            id=id_,
             repo_url=imp.repo_url,
             git_ref=imp.git_ref,
         )
-    elif isinstance(imp, _dsl.DeferredGitImport):
-        imp_resolved: _dsl.GitImport = imp.resolved()
+    elif isinstance(imp, _dsl.GitImportWithAuth):
+        url = _git_url_utils.parse_git_url(imp.repo_url)
+        url.user = imp.username
+        if imp.auth_secret is not None:
+            url.password = model.SecretNode(
+                id=f"secret-{id_}",
+                secret_name=imp.auth_secret.name,
+                secret_config=imp.auth_secret.config_name,
+            )
         return model.GitImport(
-            id=_make_git_import_id(imp_resolved, import_hash),
-            repo_url=imp_resolved.repo_url,
-            git_ref=imp_resolved.git_ref,
+            id=id_,
+            repo_url=url,
+            git_ref=imp.git_ref,
         )
     elif isinstance(imp, _dsl.InlineImport):
-        return model.InlineImport(id=_make_inline_import_id())
+        return model.InlineImport(id=id_)
 
     elif isinstance(imp, _dsl.PythonImports):
         reqs: t.List[Requirement] = imp.resolved()
@@ -226,9 +249,7 @@ def _make_import_model(imp: _dsl.Import):
                 environment_markers=str(req.marker) if req.marker else "",
             )
             deps.append(x)
-        return model.PythonImports(
-            id=_make_python_import_id(imp, import_hash), packages=deps, pip_options=[]
-        )
+        return model.PythonImports(id=id_, packages=deps, pip_options=[])
 
     else:
         raise ValueError(f"Invalid DSL import type: {type(imp)}")

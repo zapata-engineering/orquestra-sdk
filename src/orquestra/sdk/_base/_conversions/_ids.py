@@ -68,11 +68,11 @@ def _id_for_ir_obj(obj) -> str:  # pragma: no cover
 
 @_id_for_ir_obj.register
 def _id_for_GitImport(imp: ir.GitImport):
-    proj_name = imp.repo_url
+    proj_url = imp.repo_url
 
     # Get the repo name
     # "git@github.com:zapatacomputing/orquestra-core.git" -> "orquestra-core.git"
-    proj_name = proj_name.rsplit("/", maxsplit=2)[-1]
+    proj_name = proj_url.path.rsplit("/", maxsplit=2)[-1]
 
     # Remove the trailing '.git'
     # "orquestra-core.git" -> "orquestra-core"

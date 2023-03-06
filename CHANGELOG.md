@@ -4,12 +4,16 @@
 
 🚨 *Breaking Changes*
 * Removed FluentBit-related CLI options: `orq {up,down} --fluentbit` flag. Logs produced by the local Ray runtime are read directly by the SDK now. This only affects users who used the experimental integration with FluentBit docker container.
+* `GitImport` will no longer be downloaded automatically when using Ray locally. This reverts behavior to `v0.42.0`.
+* Internal configuration environment variables have changed.
 
 
 🔥 *Features*
 * Secrets can now be used inside workflow functions
 * `sdk.secrets.get("name")` will now use passport-based authorization if `ORQUESTRA_PASSPORT_FILE` environment variable is set. Otherwise, passing a valid `config_name="..."` is required.
 * Bump Ray version to 2.3
+* `GithubImport` can be used with a username and a secret referring to a "personal access token" to enable private GitHub repositories on Compute Engine. Server side support coming soon!
+
 
 👩‍🔬 *Experimental*
 
@@ -17,13 +21,17 @@
 🐛 *Bug Fixes*
 * Getting full logs produced by Ray workflows. Previously, the dictionary returned by `logs_dict = wf_run.get_logs()` had just a single entry: `{"logs": ["task 1 log", "task 1 log", "task 2 log", "task 2 log"]}`. Now, the dictionary has a correct shape: `{"task_invocation_id1": ["task 1 log", "task 1 log"], "task_invocation_id2": ["task 2 log", "task 2 log"]}`.
 * Getting single task logs. Previously `orq task logs` would raise an unhandled exception. Now, it prints the log lines.
+* Workflow run IDs inside logs on CE now match the expected run ID.
 
 
 💅 *Improvements*
 * `orq wf view` now shows `TaskInvocationID`s instead of `TaskRunID`s. This improves usage of `orq wf view` with other CLI commands that require passing invocation ID, like `orq task {logs,results}`.
+* `sdk.WorkflowRun.wait_until_finished()` will now print workflow status every now and then.
 
 
 *Internal*
+* Git URL model changed inside the IR
+* `orq up` will now configure Ray's Plasma directory
 
 
 *Docs*

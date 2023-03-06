@@ -311,7 +311,7 @@ class TestRayLocation:
     class TestRayTemp:
         def test_with_env(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
             # Given
-            monkeypatch.setenv("ORQ_RAY_TEMP", str(tmp_path))
+            monkeypatch.setenv("ORQ_RAY_TEMP_PATH", str(tmp_path))
 
             # When
             location = _services.ray_temp_path()
@@ -332,7 +332,7 @@ class TestRayLocation:
     class TestRayStorage:
         def test_with_env(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
             # Given
-            monkeypatch.setenv("ORQ_RAY_STORAGE", str(tmp_path))
+            monkeypatch.setenv("ORQ_RAY_STORAGE_PATH", str(tmp_path))
 
             # When
             location = _services.ray_storage_path()
@@ -349,3 +349,24 @@ class TestRayLocation:
 
             # Then
             assert location == Path.home() / ".orquestra" / "ray_storage"
+
+    class TestRayPlasma:
+        def test_with_env(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+            # Given
+            monkeypatch.setenv("ORQ_RAY_PLASMA_PATH", str(tmp_path))
+
+            # When
+            location = _services.ray_plasma_path()
+
+            # Then
+            assert location == tmp_path
+
+        def test_without_env(self):
+            # Given
+            # Nothing
+
+            # When
+            location = _services.ray_plasma_path()
+
+            # Then
+            assert location == Path.home() / ".orquestra" / "ray_plasma"

@@ -112,6 +112,19 @@ class TestRayRuntimeMethods:
             outputs = runtime.get_workflow_run_outputs(run_id)
             assert outputs == ("RAY",)
 
+        def test_sets_run_id_from_env(
+            self, monkeypatch: pytest.MonkeyPatch, runtime: _dag.RayRuntime
+        ):
+            wf_def = _example_wfs.multioutput_wf.model
+            # Appending the normal run ID to prevent collisions
+            global_wf_run_id = "run_id_from_env" + _dag._generate_wf_run_id(wf_def)
+            monkeypatch.setenv("GLOBAL_WF_RUN_ID", global_wf_run_id)
+
+            run_id = runtime.create_workflow_run(wf_def)
+
+            runtime.stop_workflow_run(run_id)
+            assert run_id == global_wf_run_id
+
     class TestGetWorkflowRunStatus:
         """
         Tests that validate .get_workflow_run_status().
