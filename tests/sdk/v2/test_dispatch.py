@@ -425,7 +425,7 @@ def pickle(value):
         expected_file_path = os.path.join(dir_path, "artifact-0_hello.json")
         with open(expected_file_path) as f:
             assert json.load(f) == {
-                "chunks": ["gANYBQAAAGhlbGxvcQAu\n"],
+                "chunks": ["gASVCQAAAAAAAACMBWhlbGxvlC4=\n"],
                 "serialization_format": "ENCODED_PICKLE",
             }
 

@@ -4,11 +4,11 @@
 import codecs
 import json
 import typing as t
+from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import singledispatch
 from pathlib import Path
 
-import dill  # type: ignore
 import cloudpickle
 import pydantic
 
@@ -40,6 +40,23 @@ def _encoded_pickle_chunks(object: t.Any) -> t.List[str]:
     )
 
 
+@contextmanager
+def registered_module(module):
+    if module is not None:
+        register_pickle_by_value(module)
+    yield
+    if module is not None:
+        unregister_pickle_by_value(module)
+
+
+def register_pickle_by_value(module):
+    cloudpickle.register_pickle_by_value(module)
+
+
+def unregister_pickle_by_value(module):
+    cloudpickle.unregister_pickle_by_value(module)
+
+
 def serialize_pickle(object: t.Any) -> t.List[str]:
     return _encoded_pickle_chunks(object)
 
@@ -67,7 +84,7 @@ def deserialize_json(serialized_value: str) -> t.Any:
 
 def deserialize_pickle(chunks: t.List[str]) -> t.Any:
     chunks_str: str = "".join(chunks)
-    return dill.loads(codecs.decode(chunks_str.encode(), ENCODING))
+    return cloudpickle.loads(codecs.decode(chunks_str.encode(), ENCODING))
 
 
 def result_from_artifact(
@@ -160,7 +177,7 @@ def dump_to_file(value: t.Any, dir_path: Path, file_name_prefix: str) -> DumpDet
 
     pickle_file_path = dir_path / f"{file_name_prefix}.pickle"
     with pickle_file_path.open("wb") as f:
-        dill.dump(value, f, protocol=PICKLE_PROTOCOL, recurse=True)
+        cloudpickle.dump(value, f, protocol=PICKLE_PROTOCOL)
 
     return DumpDetails(
         file_path=pickle_file_path, format=ir.ArtifactFormat.ENCODED_PICKLE
