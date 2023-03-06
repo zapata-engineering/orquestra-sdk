@@ -12,8 +12,6 @@ import typing as t
 from pathlib import Path
 
 import pytest
-import ray.workflow
-from ray.workflow import exceptions as workflow_exceptions
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
@@ -90,16 +88,6 @@ class TestRayRuntimeMethods:
             output2 = runtime.get_workflow_run_outputs(run_id2)
 
             assert output1 == output2
-
-        def test_ray_doesnt_start_wf(self, runtime: _dag.RayRuntime, monkeypatch):
-            def raise_wf_not_found(id):
-                raise workflow_exceptions.WorkflowNotFoundError(id)
-
-            wf_def = _example_wfs.multioutput_wf.model
-
-            monkeypatch.setattr(ray.workflow, "get_status", raise_wf_not_found)
-            with pytest.raises(workflow_exceptions.WorkflowNotFoundError):
-                _ = runtime.create_workflow_run(wf_def)
 
         def test_sets_context(self, runtime: _dag.RayRuntime):
             wf_def = _example_wfs.wf_with_exec_ctx().model

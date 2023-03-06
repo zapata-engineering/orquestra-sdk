@@ -4,7 +4,6 @@
 """
 Facade module for Ray API.
 """
-import time
 import typing as t
 
 try:
@@ -112,21 +111,6 @@ else:
             self, dag_node: ray.dag.DAGNode, workflow_id: str, metadata: t.Mapping
         ):
             ray.workflow.run_async(dag_node, workflow_id=workflow_id, metadata=metadata)
-
-            # Give some time to ray to actually submit workflow
-            submission_timeout_in_sec = 10
-            retry_time_in_sec = 0.1
-            retries = 0
-            while True:
-                try:
-                    self.get_workflow_status(workflow_id)
-                    break
-                except workflow_exceptions.WorkflowNotFoundError:
-                    if retries * retry_time_in_sec >= submission_timeout_in_sec:
-                        raise
-                    else:
-                        time.sleep(retry_time_in_sec)
-                        retries += 1
 
         def get_workflow_metadata(self, workflow_id: str) -> t.Dict[str, t.Any]:
             """
