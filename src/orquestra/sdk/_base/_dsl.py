@@ -625,7 +625,7 @@ class ArtifactFuture:
         ]
         return iter(futures)
 
-    def __reduce_ex__(self, protocol: int):
+    def __reduce_ex__(self, protocol):
         raise NotImplementedError("ArtifactFuture cannot be pickled")
 
     def with_invocation_meta(

@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from functools import singledispatch
 from pathlib import Path
 
-import cloudpickle
+import cloudpickle  # type: ignore
 import pydantic
 
 from orquestra.sdk.schema import ir, responses
