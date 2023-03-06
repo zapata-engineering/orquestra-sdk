@@ -33,7 +33,13 @@ from typing import (
     overload,
 )
 
-from typing_extensions import ParamSpec
+# ParamSpec was added to Python 3.10. In prev Python versions we need to use
+# typing_extensions. Using typing_extensions in Python 3.10 causes dill to fail
+# when serializing InlineImport-type tasks.
+try:
+    from typing import ParamSpec
+except ImportError:
+    from typing_extensions import ParamSpec
 
 if TYPE_CHECKING:
     import pip_api
