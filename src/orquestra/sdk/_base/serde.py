@@ -9,13 +9,14 @@ from functools import singledispatch
 from pathlib import Path
 
 import dill  # type: ignore
+import cloudpickle
 import pydantic
 
 from orquestra.sdk.schema import ir, responses
 
 CHUNK_SIZE = 40_000
 ENCODING = "base64"
-PICKLE_PROTOCOL = 3
+PICKLE_PROTOCOL = 4
 
 
 def _serialize_json(value: t.Any):
@@ -34,7 +35,7 @@ def _chunkify(s: str) -> t.List[str]:
 def _encoded_pickle_chunks(object: t.Any) -> t.List[str]:
     return _chunkify(
         codecs.encode(
-            dill.dumps(object, protocol=PICKLE_PROTOCOL, recurse=True), ENCODING
+            cloudpickle.dumps(object, protocol=PICKLE_PROTOCOL), ENCODING
         ).decode()
     )
 
