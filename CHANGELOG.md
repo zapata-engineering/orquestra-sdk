@@ -4,6 +4,7 @@
 
 
 🚨 *Breaking Changes*
+* Pickling library switched to `cloudpickle` instead of `dill`.
 
 
 🔥 *Features*
