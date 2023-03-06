@@ -84,6 +84,13 @@ class RayManager:
             subprocess.CalledProcessError: if calling the `ray` CLI failed. This
                 shouldn't happen in regular conditions.
         """
+        ray_temp = ray_temp_path()
+        ray_storage = ray_storage_path()
+        ray_plasma = ray_plasma_path()
+
+        for path in (ray_temp, ray_storage, ray_plasma):
+            path.mkdir(exist_ok=True, parents=True)
+
         # 'ray start' fails if the cluster can't be started, or another problem
         # occurred. I don't know a good way to differentiate between these
         # scenarios, so the strategy is:
@@ -95,9 +102,9 @@ class RayManager:
                 "ray",
                 "start",
                 "--head",
-                f"--temp-dir={ray_temp_path()}",
-                f"--storage={ray_storage_path()}",
-                f"--plasma-directory={ray_plasma_path()}",
+                f"--temp-dir={ray_temp}",
+                f"--storage={ray_storage}",
+                f"--plasma-directory={ray_plasma}",
             ],
             check=False,
             timeout=IPC_TIMEOUT,
