@@ -21,6 +21,7 @@ from pathlib import Path
 
 import pytest
 
+import orquestra.sdk as sdk
 from orquestra.sdk._base._testing._connections import ray_suitable_temp_dir
 
 WORKFLOW_DEF = """
@@ -85,18 +86,10 @@ def orq_workflow_run(ray_cluster, orq_project_dir):
     # Parse the stdout to get the workflow ID
     res = json.loads(output.stdout)
     workflow_id = res["workflow_runs"][0]["id"]
-    # Get the results to ensure the job has finished
-    _run_corq_command(
-        [
-            "get",
-            "workflow-run-results",
-            workflow_id,
-            "-d",
-            orq_project_dir,
-            "-c",
-            "local",
-        ]
-    )
+    # Wait for the workflow to finish to make sure that getting the results will succeed
+    wf = sdk.WorkflowRun.by_id(workflow_id)
+    wf.wait_until_finished()
+
     yield workflow_id
 
 
