@@ -42,6 +42,12 @@ def _encoded_pickle_chunks(object: t.Any) -> t.List[str]:
 
 @contextmanager
 def registered_module(module):
+    """
+    Used to temporarily register a module to be pickled by value
+
+    If a module (or its members) are not registered, they will be pickled by reference
+    which will require the modules to be installed when unpickling.
+    """
     if module is not None:
         register_pickle_by_value(module)
     try:
