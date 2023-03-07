@@ -625,6 +625,22 @@ class ArtifactFuture:
         ]
         return iter(futures)
 
+    def __reduce_ex__(self, protocol):
+        """
+        Handles Pickling for ArtifactFuture
+
+        We currently do not support pickling ArtifactFutures and instead have a
+        different format for passing artifacts between tasks.
+
+        The cases where ArtifactFutures can be pickled include when an artifact is
+        inside a container (for example `dict()` or `list()`) and we currently do not
+        support this pattern.
+
+        Raising an exception here allows us to catch unsupported attempts at pickling
+        and let the user know before execution time.
+        """
+        raise NotImplementedError("ArtifactFuture cannot be pickled")
+
     def with_invocation_meta(
         self,
         *,

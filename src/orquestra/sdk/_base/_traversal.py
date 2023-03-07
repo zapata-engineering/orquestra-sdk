@@ -8,6 +8,7 @@ The main highlight is `flatten_graph()`.
 
 import collections.abc
 import hashlib
+import inspect
 import re
 import typing as t
 from collections import OrderedDict, defaultdict
@@ -327,7 +328,9 @@ def _make_fn_ref(fn_ref: _dsl.FunctionRef) -> model.FunctionRef:
             line_number=fn_ref.line_number,
         )
     elif isinstance(fn_ref, _dsl.InlineFunctionRef):
-        encoded_fn = serde.serialize_pickle(fn_ref.fn)
+        module = inspect.getmodule(fn_ref.fn)
+        with serde.registered_module(module):
+            encoded_fn = serde.serialize_pickle(fn_ref.fn)
         return model.InlineFunctionRef(
             function_name=fn_ref.function_name,
             encoded_function=encoded_fn,
