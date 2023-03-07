@@ -44,9 +44,11 @@ def _encoded_pickle_chunks(object: t.Any) -> t.List[str]:
 def registered_module(module):
     if module is not None:
         register_pickle_by_value(module)
-    yield
-    if module is not None:
-        unregister_pickle_by_value(module)
+    try:
+        yield
+    finally:
+        if module is not None:
+            unregister_pickle_by_value(module)
 
 
 def register_pickle_by_value(module):
