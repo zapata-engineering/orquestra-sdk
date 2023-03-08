@@ -99,7 +99,7 @@ class RayManager:
         #    started, or it had been already running prior to this command.
         import os
         print(os.getenv('PATH'))
-        os.environ["PATH"] += os.pathsep + "C:\Windows\System32\Wbem"
+        os.environ["PATH"] += os.pathsep + "C:\\Windows\\System32\\Wbem"
         print(os.getenv('PATH'))
         x = subprocess.run(
             [
