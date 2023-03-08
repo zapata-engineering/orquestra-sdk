@@ -22,6 +22,7 @@ ifeq ($(OS), Windows_NT)
   PYTHON := $(shell env PATH="${VENV_NAME}/${VENV_BINDIR}:${SHELL_PATH}" ${PYTHON_EXE} -c 'import sys; print(sys.executable)')
   # Convert a Windows path to a Unix path for Windows Github Actions
   PYTHON := /$(subst \,/,$(subst :\,/,$(PYTHON)))
+  WHATEVER = $(shell wmic context)
 else
   VENV_BINDIR := bin
   PYTHON_EXE := python3
