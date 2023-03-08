@@ -112,6 +112,8 @@ class RayManager:
             stderr=subprocess.PIPE,
         )
         print(x)
+        import os
+        print(os.environ["PATH"])
         if not self.is_running():
             raise RuntimeError("Couldn't start Ray cluster")
 
