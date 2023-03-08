@@ -27,7 +27,7 @@ test:
 #
 # (override)
 coverage:
-	PATH=${PATH};${VENV_NAME}/${VENV_BINDIR} PYTHONPATH="." $(PYTHON) -m pytest -s\
+	PATH="${PATH};${VENV_NAME}/${VENV_BINDIR}" PYTHONPATH="." $(PYTHON) -m pytest -s\
 		-m "not needs_separate_project" \
 		--cov=src \
 		--cov-report xml \
