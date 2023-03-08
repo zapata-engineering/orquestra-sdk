@@ -113,7 +113,7 @@ class RayManager:
         )
         print(x)
         import os
-        print(os.environ["PATH"])
+        print(os.getenv('PATH'))
         if not self.is_running():
             raise RuntimeError("Couldn't start Ray cluster")
 
