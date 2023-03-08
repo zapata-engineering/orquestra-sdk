@@ -4,7 +4,23 @@
 
 🚨 *Breaking Changes*
 
-- Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a WorkflowSyntaxError if no tasks are required to be executed.
+* Pickling library switched to `cloudpickle` instead of `dill`. While no breakages are expected, this change may result in objects raising an error during pickling, even if they were previously able to be pickled. Please report any instances of these as bugs.
+* Tasks with multiple outputs need to be unpacked in the workflow function:
+```python
+@sdk.workflow
+def my_wf():
+    a, b = two_output_task()
+    return a, b
+```
+What worked previously, but now won't:
+```python
+@sdk.workflow
+def my_wf():
+    c = two_output_task()
+    return c
+```
+
+- Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a `WorkflowSyntaxError` if no tasks are required to be executed.
 
 🔥 *Features*
 - Sort WF runs by start date in `list wf` command. Show start date as one of the columns
@@ -15,8 +31,14 @@
 
 🐛 *Bug Fixes*
 * Stopping a QE workflow after it has already stopped will no longer raise an exception.
-* Attempting to use the "in-process" runtime on the CLI will no longer raise an exception. Instead, a message teeling you to use the Python API or Ray will be printed.
 * Fix dependency issues causing CE workflows to fail if WF constant was library-dependent object.
+* Attempting to use the "in-process" runtime on the CLI will no longer raise an exception. Instead, a message telling you to use the Python API or Ray will be printed.
+* Fixed returning intermediate workflow values (e.g. with `orq task results`) when the task has multiple outputs and only some of them were used in the rest of the workflow function. The following should work now as expected:
+```python
+@sdk.workflow
+def my_wf():
+    _, b = two_output_task()
+    return b
 
 
 💅 *Improvements*
