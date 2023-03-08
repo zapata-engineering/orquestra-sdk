@@ -97,7 +97,7 @@ class RayManager:
         # 1. Attempt to start the Ray cluster. Ignore errors.
         # 2. Check if the cluster is running to confirm that either the cluster was
         #    started, or it had been already running prior to this command.
-        _ = subprocess.run(
+        x = subprocess.run(
             [
                 "ray",
                 "start",
@@ -108,9 +108,10 @@ class RayManager:
             ],
             check=False,
             timeout=IPC_TIMEOUT,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
+        print(x)
         if not self.is_running():
             raise RuntimeError("Couldn't start Ray cluster")
 
