@@ -35,6 +35,7 @@
 
 
 *Docs*
+* Guide: Dependency Installation - sources, order, and best practice
 
 
 ## v0.43.0
