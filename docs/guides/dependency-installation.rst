@@ -17,7 +17,7 @@ For convenience the table below summarises which importer should be used in vari
       - ``GitHubImport``
       - remote
       - On Compute Engine, secrets can be used to access private repos.
-    * - Non-github git repo without a local clone
+    * - Non-GitHub git repo without a local clone
       - ``GitImport``
       - remote
       -
