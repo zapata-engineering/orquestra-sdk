@@ -27,7 +27,7 @@ For convenience the table below summarises which importer should be used in vari
       -
     * - Jupyter Notebook
       - ``InlineImport``
-      - local
+      - remote, local
       - Actually having to specify an ``InlineImport`` is rare as this is the default import when running in a Jupyter Notebook. There are occasional cases where this should be used outside of Notebooks, see the section below for details.
     * - Local - file within this repo.
       - None
