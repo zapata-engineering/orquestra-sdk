@@ -16,7 +16,7 @@ For convenience the table below summarises which importer should be used in vari
     * - GitHub repo
       - ``GitHubImport``
       - remote
-      - On Ray runtimes, secrets can be used to access private repos.
+      - On Compute Engine, secrets can be used to access private repos.
     * - Non-github git repo without a local clone
       - ``GitImport``
       - remote
