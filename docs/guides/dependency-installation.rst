@@ -34,6 +34,20 @@ For convenience the table below summarises which importer should be used in vari
       - local
       - This is the default in all non-interactive sessions, so does not need to specified explicitly.
 
+Good Practice
+-------------
+
+For workflows running remotely the ``GitHubImport`` importer should be used unless there is a specific reason to do otherwise (i.e. the code is hosted somewhere other than GitHub). ``GitImport.infer()`` is highly user-specific and so should never be used in a collaborative context.
+
+For workflows running locally, the task decorator can typically be used without specifying the source importer as the SDK will set this appropriately for the context:
+
+.. code-block:: python
+    @sdk.task
+    def my_task():
+        pass
+
+will perform a local import unless running in a Jupyter Notebook (or other interactive session) in which case am inline import will be performed.
+
 
 Source vs Dependency
 --------------------
@@ -206,18 +220,3 @@ The local importer
 ------------------
 
 The local importer is the default source importer where no other importer is specified. It imports the current repo as a module, making its methods available to tasks in local workflow runs.
-
-
-Good Practice
--------------
-
-For workflows running remotely the ``GitHubImport`` importer should be used unless there is a specific reason to do otherwise (i.e. the code is hosted somewhere other than GitHub). ``GitImport.infer()`` is highly user-specific and so should never be used in a collaborative context.
-
-For workflows running locally, the task decorator can typically be used without specifying the source importer as the SDK will set this appropriately for the context:
-
-.. code-block:: python
-    @sdk.task
-    def my_task():
-        pass
-
-will perform a local import unless running in a Jupyter Notebook (or other interactive session) in which case am inline import will be performed.
