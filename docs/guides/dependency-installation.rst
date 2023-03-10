@@ -164,7 +164,7 @@ As the name suggests, the ``PythonImports`` importer handles ingestion of Python
 
 The required modules can be specified as arguments to the importer, or listed in a requirements.txt file specified by the ``file`` argument.
 
-The examples below use ``PythonImports`` as the source importer for consistency with the other examples in this section. In actual usage, however, python imports will almost always be a dependency rather than a source.
+The examples below use ``PythonImports`` as the source importer for consistency with the other examples in this section. In actual usage, however, Python imports will most likely be a dependency rather than a source.
 
 .. code-block:: python
     import orquestra.sdk as sdk
