@@ -160,7 +160,7 @@ This utility can save time during prototyping, however its dependence on the ind
 ``PythonImports``
 -----------------
 
-As the name suggests, the ``PythonImports`` importer handles ingestion of python modules, specifically from PyPi.
+As the name suggests, the ``PythonImports`` importer handles ingestion of Python modules, specifically from PyPI.
 
 The required modules can be specified as arguments to the importer, or listed in a requirements.txt file specified by the ``file`` argument.
 
