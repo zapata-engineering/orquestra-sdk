@@ -2,6 +2,32 @@
 
 ## Unreleased
 
+
+🚨 *Breaking Changes*
+* Pickling library switched to `cloudpickle` instead of `dill`. While no breakages are expected, this change may result in objects raising an error during pickling, even if they were previously able to be pickled. Please report any instances of these as bugs.
+
+
+🔥 *Features*
+
+
+👩‍🔬 *Experimental*
+
+
+🐛 *Bug Fixes*
+
+
+
+💅 *Improvements*
+
+
+🥷 *Internal*
+
+
+📃 *Docs*
+
+
+## v0.44.0
+
 🚨 *Breaking Changes*
 * Removed FluentBit-related CLI options: `orq {up,down} --fluentbit` flag. Logs produced by the local Ray runtime are read directly by the SDK now. This only affects users who used the experimental integration with FluentBit docker container.
 * `GitImport` will no longer be downloaded automatically when using Ray locally. This reverts behavior to `v0.42.0`.
@@ -29,7 +55,7 @@
 * `sdk.WorkflowRun.wait_until_finished()` will now print workflow status every now and then.
 
 
-*Internal*
+🥷 *Internal*
 * Git URL model changed inside the IR
 * `orq up` will now configure Ray's Plasma directory
 
