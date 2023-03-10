@@ -200,7 +200,7 @@ The specified modules will be pip installed at execution time.
 
 Cases where the ``InlineImport`` importer must be specified explicitly are rare, as the SDK will set it as the default source importer in contexts where it applies. We include it here for completeness.
 
-The ``InlineImport`` importer ingests sources or dependencies that are defined in the ``__main__`` of the file that defines the workflow. This highly specific use case occurs almost exclusively in Jupyter Notebooks and interactive python sessions, however it is occasionally useful in rapid development or prototyping contexts. In general, the SDK's help messages will flag up instances where it should be used.
+The ``InlineImport`` importer ingests sources or dependencies that are defined in the ``__main__`` of the file that defines the workflow. This highly specific use case occurs almost exclusively in Jupyter Notebooks and interactive Python sessions, however it is occasionally useful in rapid development or prototyping contexts. In general, the Workflow SDK's help messages will flag up instances where it should be used.
 
 The local importer
 ------------------
