@@ -32,21 +32,12 @@ jobs:
         with:
           # Fetch depth 0 required to compare against `main`
           fetch-depth: 0
-
-      # Load a specific version of Python
-      - name: Setup python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
           architecture: x64
-
-      - name: Run Python commands
-        shell: bash
-        run: |
-          pip install --upgrade pip
-          python -m venv env
-          source env/bin/activate
-          echo "VIRTUAL ENV:" $VIRTUAL_ENV
+      - uses: syphar/restore-virtualenv@v1
+        id: cache-virtualenv
 
       - name: Install deps
         shell: bash
@@ -54,9 +45,7 @@ jobs:
 
       - name: Run tests and gather coverage stats
         shell: bash
-        run: |
-          echo "VIRTUAL ENV:" $VIRTUAL_ENV
-          make coverage
+        run: make coverage
 
       - name: Comment with code coverage
         uses: zapatacomputing/command-pr-comment@baca4fb9246eaaee3e47f35f296764acc394fae7
