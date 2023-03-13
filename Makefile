@@ -62,9 +62,8 @@ user-typing:
 
 # (override)
 github_actions:
-	${PYTHON_EXE} -m venv ${VENV_NAME}
-	${VENV_NAME}/${VENV_BINDIR}/${PYTHON_EXE} -m pip install --upgrade pip
-	${VENV_NAME}/${VENV_BINDIR}/${PYTHON_EXE} -m pip install -e '.[dev]'
+	${PYTHON_EXE} -m pip install --upgrade pip
+	${PYTHON_EXE} -m pip install -e '.[dev]'
 
 # Install deps required to build wheel. Used for release automation. See also:
 # https://github.com/zapatacomputing/cicd-actions/blob/67dd6765157e0baefee0dc874e0f46ccd2075657/.github/workflows/py-wheel-build-and-push.yml#L26
