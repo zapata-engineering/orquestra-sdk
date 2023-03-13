@@ -12,6 +12,14 @@ default:
 	@grep -E '^\w+(\-default)?:' $(TOP_DIR)/$(firstword $(MAKEFILE_LIST)) \
 	       | sed -r 's/-default//g; /default/d ; s/(.*)/\t make \1/g ; s/:.*$$//g'
 
+ifeq ($(OS), Windows_NT)
+  PYTHON := $(shell python -c 'import sys; print(sys.executable)')
+  # Convert a Windows path to a Unix path for Windows Github Actions
+  PYTHON := /$(subst \,/,$(subst :\,/,$(PYTHON)))
+else
+  PYTHON := $(shell python -c 'import sys; print(sys.executable)')
+endif
+
 REPO := $(shell git config --get remote.origin.url)
 PYTHON_MOD := $(shell find src -maxdepth 3 -mindepth 3 -type d | sed '/.*cache/d; s/src\/python\/// ; s/\//./')
 PACKAGE_NAME := "foo"
