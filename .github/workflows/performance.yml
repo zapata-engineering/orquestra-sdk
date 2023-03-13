@@ -19,8 +19,11 @@ jobs:
   TestPerformance:
     runs-on: ubuntu-latest
     steps:
-      - name: Git Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+      # Used to create OS-agnostic python virtual env used for other steps.
+      - uses: syphar/restore-virtualenv@v1
+        id: cache-virtualenv
 
       - name: Run performance test
         shell: bash
