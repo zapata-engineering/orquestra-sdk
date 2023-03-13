@@ -27,15 +27,17 @@ test:
 #
 # (override)
 coverage:
-	PATH="${PATH};${VENV_NAME}/${VENV_BINDIR}" PYTHONPATH="." $(PYTHON) -m pytest -s\
+	PYTHONPATH="." $(PYTHON) -m pytest \
 		-m "not needs_separate_project" \
 		--cov=src \
+		--cov-fail-under=$(MIN_COVERAGE) \
 		--cov-report xml \
 		--no-cov-on-fail \
 		--ignore=tests/runtime/performance \
 		--ignore=tests/sdk/v2/typing \
 		--durations=10 \
-		tests/runtime/test_services_integration.py \
+		docs/examples/tests \
+		tests \
 		&& echo Code coverage Passed the $(MIN_COVERAGE)% mark!
 
 # Reads the code coverage stats from '.coverage' file and prints a textual,

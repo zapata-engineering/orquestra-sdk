@@ -97,11 +97,7 @@ class RayManager:
         # 1. Attempt to start the Ray cluster. Ignore errors.
         # 2. Check if the cluster is running to confirm that either the cluster was
         #    started, or it had been already running prior to this command.
-        import os
-        print(os.getenv('PATH'))
-        os.environ["PATH"] += os.pathsep + "C:\\Windows\\System32\\Wbem"
-        print(os.getenv('PATH'))
-        x = subprocess.run(
+        _ = subprocess.run(
             [
                 "ray",
                 "start",
@@ -112,11 +108,9 @@ class RayManager:
             ],
             check=False,
             timeout=IPC_TIMEOUT,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
-        print(x)
-
         if not self.is_running():
             raise RuntimeError("Couldn't start Ray cluster")
 
