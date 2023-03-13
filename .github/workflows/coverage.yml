@@ -40,13 +40,23 @@ jobs:
           python-version: ${{ matrix.python }}
           architecture: x64
 
+      - name: Run Python commands
+        shell: bash
+        run: |
+          pip install --upgrade pip
+          python3.8 -m venv env
+          source env/bin/activate
+          echo "VIRTUAL ENV:" $VIRTUAL_ENV
+
       - name: Install deps
         shell: bash
         run: make github_actions
 
       - name: Run tests and gather coverage stats
         shell: bash
-        run: make coverage
+        run: |
+          echo "VIRTUAL ENV:" $VIRTUAL_ENV
+          make coverage
 
       - name: Comment with code coverage
         uses: zapatacomputing/command-pr-comment@baca4fb9246eaaee3e47f35f296764acc394fae7
