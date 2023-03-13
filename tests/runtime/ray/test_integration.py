@@ -439,8 +439,6 @@ class TestRayRuntimeMethods:
                     pytest.fail(
                         f"Timeout when awaiting for workflow finish. Full run: {wf_run}"
                     )
-                    break
-
 
                 time.sleep(0.2)
 
