@@ -10,6 +10,8 @@ from orquestra.sdk._base._testing._connections import ray_suitable_temp_dir
 @pytest.mark.slow
 #@pytest.mark.skip("PATH issues on CI: ORQSDK-771")
 def test_ray_roundtrip(monkeypatch: pytest.MonkeyPatch):
+    import os
+    print(os.getenv('PATH'))
     with ray_suitable_temp_dir() as tmp_path:
         orq_dir = tmp_path / ".orquestra"
         monkeypatch.setenv("ORQ_RAY_TEMP_PATH", str(orq_dir / "ray"))
