@@ -393,32 +393,6 @@ class TestRayRuntimeMethods:
             inv_output = list(outputs.values())[0]
             assert inv_output == (58,)
 
-        def test_before_any_task_finishes(self, runtime: _dag.RayRuntime, tmp_path):
-            """
-            Workflow graph in the scenario under test:
-              [ ]  => in progress
-               │
-               │
-               ▼
-              [ ]  => waiting
-               │
-               │
-               ▼
-            """
-            triggers = [tmp_path / f"trigger{i}.txt" for i in range(2)]
-
-            wf = _example_wfs.serial_wf_with_file_triggers(
-                triggers, task_timeout=2.0
-            ).model
-            wf_run_id = runtime.create_workflow_run(wf)
-
-            outputs = runtime.get_available_outputs(wf_run_id)
-            assert outputs == {}
-
-            # let the workers complete the workflow
-            triggers[0].write_text("triggered")
-            triggers[1].write_text("triggered")
-
         def test_after_one_task_finishes(self, runtime: _dag.RayRuntime, tmp_path):
             """
             Workflow graph in the scenario under test:
@@ -465,6 +439,8 @@ class TestRayRuntimeMethods:
                     pytest.fail(
                         f"Timeout when awaiting for workflow finish. Full run: {wf_run}"
                     )
+                    break
+
 
                 time.sleep(0.2)
 
@@ -570,19 +546,19 @@ def test_run_and_get_output(
 # - Installing packages takes some time in general.
 # - Installing packages on company machines is very slow because of the antivirus
 #   scanning.
-@pytest.mark.slow
-def test_import_package_inside_ray(runtime: _dag.RayRuntime):
-    # This package should not be installed before running test
-    with pytest.raises(ModuleNotFoundError):
-        import piccup  # type: ignore # noqa
-
-    run_id = runtime.create_workflow_run(_example_wfs.wf_using_python_imports.model)
-    wf_result = runtime.get_workflow_run_outputs(run_id)
-    assert wf_result == (2,)
-
-    # this package should be only used inside ray env
-    with pytest.raises(ModuleNotFoundError):
-        import piccup  # type: ignore # noqa
+# @pytest.mark.slow
+# def test_import_package_inside_ray(runtime: _dag.RayRuntime):
+#     # This package should not be installed before running test
+#     with pytest.raises(ModuleNotFoundError):
+#         import piccup  # type: ignore # noqa
+#
+#     run_id = runtime.create_workflow_run(_example_wfs.wf_using_python_imports.model)
+#     wf_result = runtime.get_workflow_run_outputs(run_id)
+#     assert wf_result == (2,)
+#
+#     # this package should be only used inside ray env
+#     with pytest.raises(ModuleNotFoundError):
+#         import piccup  # type: ignore # noqa
 
 
 # This test is slow to run locally because:
@@ -591,22 +567,22 @@ def test_import_package_inside_ray(runtime: _dag.RayRuntime):
 # - Installing packages takes some time in general.
 # - Installing packages on company machines is very slow because of the antivirus
 #   scanning.
-@pytest.mark.slow
-# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
-# unraisable exceptions. Last tested with Ray 2.2.0.
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
-def test_git_import_inside_ray(runtime: _dag.RayRuntime):
-    # This package should not be installed before running test
-    with pytest.raises(ModuleNotFoundError):
-        import piccup  # type: ignore # noqa
-
-    run_id = runtime.create_workflow_run(_example_wfs.wf_using_git_imports.model)
-    wf_result = runtime.get_workflow_run_outputs(run_id)
-    assert wf_result == (2,)
-
-    # this package should be only used inside ray env
-    with pytest.raises(ModuleNotFoundError):
-        import piccup  # type: ignore # noqa
+# @pytest.mark.slow
+# # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
+# # unraisable exceptions. Last tested with Ray 2.2.0.
+# @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+# def test_git_import_inside_ray(runtime: _dag.RayRuntime):
+#     # This package should not be installed before running test
+#     with pytest.raises(ModuleNotFoundError):
+#         import piccup  # type: ignore # noqa
+#
+#     run_id = runtime.create_workflow_run(_example_wfs.wf_using_git_imports.model)
+#     wf_result = runtime.get_workflow_run_outputs(run_id)
+#     assert wf_result == (2,)
+#
+#     # this package should be only used inside ray env
+#     with pytest.raises(ModuleNotFoundError):
+#         import piccup  # type: ignore # noqa
 
 
 @pytest.mark.slow

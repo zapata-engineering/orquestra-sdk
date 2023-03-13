@@ -36,6 +36,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           architecture: x64
+      # Used to create OS-agnostic python virtual env used for other steps.
       - uses: syphar/restore-virtualenv@v1
         id: cache-virtualenv
 
