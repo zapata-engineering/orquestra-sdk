@@ -54,7 +54,7 @@ github-actions-coverage-report:
 
 # We need to set PATH here because performance test calls the `orq` CLI in a subprocess.
 performance:
-	PATH="${VENV_NAME}/bin:${PATH}" $(PYTHON) -m pytest --durations=0 tests/runtime/performance
+	$(PYTHON) -m pytest --durations=0 tests/runtime/performance
 
 
 # This is NOT mypy checking, it is ensuring the Workflow SDK has correct type hints for our users
@@ -64,8 +64,8 @@ user-typing:
 
 # (override)
 github_actions:
-	${PYTHON_EXE} -m pip install --upgrade pip
-	${PYTHON_EXE} -m pip install -e '.[dev]'
+	${PYTHON} -m pip install --upgrade pip
+	${PYTHON} -m pip install -e '.[dev]'
 
 # Install deps required to build wheel. Used for release automation. See also:
 # https://github.com/zapatacomputing/cicd-actions/blob/67dd6765157e0baefee0dc874e0f46ccd2075657/.github/workflows/py-wheel-build-and-push.yml#L26

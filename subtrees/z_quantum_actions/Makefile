@@ -12,23 +12,6 @@ default:
 	@grep -E '^\w+(\-default)?:' $(TOP_DIR)/$(firstword $(MAKEFILE_LIST)) \
 	       | sed -r 's/-default//g; /default/d ; s/(.*)/\t make \1/g ; s/:.*$$//g'
 
-export VENV_NAME := my_little_venv
-ifeq ($(OS), Windows_NT)
-  VENV_BINDIR := Scripts
-  PYTHON_EXE := python.exe
-  # A workaround for Windows and Bash:
-  # By default, PATH will give the Windows Path, but we need to get the Path for the shell we'll be using
-  SHELL_PATH := $(shell env echo $$PATH)
-  PYTHON := $(shell env PATH="${VENV_NAME}/${VENV_BINDIR}:${SHELL_PATH}" ${PYTHON_EXE} -c 'import sys; print(sys.executable)')
-  # Convert a Windows path to a Unix path for Windows Github Actions
-  PYTHON := /$(subst \,/,$(subst :\,/,$(PYTHON)))
-  WHATEVER = $(shell wmic context)
-else
-  VENV_BINDIR := bin
-  PYTHON_EXE := python3
-  PYTHON := $(shell env PATH="${VENV_NAME}/${VENV_BINDIR}:${PATH}" ${PYTHON_EXE} -c 'import sys; print(sys.executable)')
-endif
-
 REPO := $(shell git config --get remote.origin.url)
 PYTHON_MOD := $(shell find src -maxdepth 3 -mindepth 3 -type d | sed '/.*cache/d; s/src\/python\/// ; s/\//./')
 PACKAGE_NAME := "foo"
@@ -73,9 +56,8 @@ dev-default: clean
 # `python3` here as it's more explicit, because $(PYTHON) would evaluate to 
 # something else after executing this task, which might be confusing.
 github_actions-default:
-	${PYTHON_EXE} -m venv ${VENV_NAME}
-	"${VENV_NAME}/${VENV_BINDIR}/${PYTHON_EXE}" -m pip install --upgrade pip
-	"${VENV_NAME}/${VENV_BINDIR}/${PYTHON_EXE}" -m pip install -e '.[dev]'
+	${PYTHON} -m pip install --upgrade pip
+	${PYTHON} -m pip install -e '.[dev]'
 
 # flake8p is a wrapper library that runs flake8 from config in pyproject.toml
 # we can now use it instead of flake8 to lint the code
@@ -127,7 +109,7 @@ build-system-deps-default:
 # Note: on CI we only run this step, this means we use the github_actions target as a dependency.
 # Because of this, we don't update the $(PYTHON) variable and have to manually build the path to our venv Python.
 get-next-version-default: github_actions
-	"${VENV_NAME}/${VENV_BINDIR}/${PYTHON_EXE}" subtrees/z_quantum_actions/bin/get_next_version.py $(PACKAGE_NAME)
+	$(PYTHON) subtrees/z_quantum_actions/bin/get_next_version.py $(PACKAGE_NAME)
 
 # This is what converts the -default targets into base target names.
 # Do not remove!!!
