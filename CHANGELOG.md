@@ -21,6 +21,7 @@
 
 
 🥷 *Internal*
+* RayRuntime can now be configured to pass resources to underlying remote functions
 
 
 📃 *Docs*
