@@ -8,6 +8,10 @@ Implemented API spec:
     https://github.com/zapatacomputing/workflow-driver/tree/2b3534/openapi
 """
 
+import io
+import json
+import zlib
+from tarfile import TarFile
 from typing import Generic, List, Mapping, Optional, TypeVar
 from urllib.parse import urljoin
 
@@ -17,7 +21,11 @@ from requests import codes
 
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import WorkflowResult
-from orquestra.sdk.schema.workflow_run import WorkflowRun, WorkflowRunMinimal
+from orquestra.sdk.schema.workflow_run import (
+    WorkflowRun,
+    WorkflowRunLog,
+    WorkflowRunMinimal,
+)
 
 from . import _exceptions, _models
 
@@ -560,7 +568,9 @@ class DriverClient:
 
     # --- Workflow Logs ---
 
-    def get_workflow_run_logs(self, wf_run_id: _models.WorkflowRunID) -> bytes:
+    def get_workflow_run_logs(
+        self, wf_run_id: _models.WorkflowRunID
+    ) -> List[WorkflowRunLog]:
         """
         Gets the logs of a workflow run from the workflow driver
 
@@ -570,6 +580,7 @@ class DriverClient:
             InvalidTokenError: see the exception's docstring
             ForbiddenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
+            WorkflowRunLogsNotReadable: see the exception's docstring
         """
 
         resp = self._get(
@@ -579,6 +590,7 @@ class DriverClient:
             ).dict(),
         )
 
+        # Handle errors
         if resp.status_code == codes.NOT_FOUND:
             raise _exceptions.WorkflowRunLogsNotFound(wf_run_id)
         elif resp.status_code == codes.BAD_REQUEST:
@@ -586,8 +598,49 @@ class DriverClient:
 
         _handle_common_errors(resp)
 
-        # TODO: unzip, get logs (ORQSDK-652)
-        return resp.content
+        # Decompress data
+        try:
+            unzipped: bytes = zlib.decompress(resp.content, 16 + zlib.MAX_WBITS)
+        except zlib.error as e:
+            raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id) from e
+
+        untarred = TarFile(fileobj=io.BytesIO(unzipped)).extractfile("step-logs")
+        if untarred is None:
+            raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id)
+        decoded = r"""{}""".format(untarred.read().decode("utf-8"))
+
+        # Parse the decoded data as logs
+        # TODO: index by taskinvocationID rather than workflowrunID [ORQSDK-777]
+        logs = []
+        for section in decoded.split("\n"):
+            if len(section) < 1:
+                continue
+            for log in json.loads(section):
+                try:
+                    # Orquestra logs are jsonable - where we can we parse these and
+                    # extract the useful information
+                    parsed_log_message = json.loads(log[1]["log"])
+                    interpreted_log = WorkflowRunLog(
+                        timestamp=log[0],
+                        message=parsed_log_message["message"],
+                        wf_id=parsed_log_message["wf_run_id"],
+                        task_id=parsed_log_message["task_run_id"],
+                        _content=log[1],
+                    )
+                except (json.JSONDecodeError, KeyError):
+                    # If the log isn't jsonable (i.e. it's from Ray) extract what info
+                    # we can.
+                    interpreted_log = WorkflowRunLog(
+                        timestamp=log[0],
+                        message=log[1]["log"],
+                        wf_id=log[1]["tag"],
+                        task_id=None,
+                        _content=log[1],
+                    )
+
+                logs.append(interpreted_log)
+
+        return logs
 
     def get_task_run_logs(self, task_run_id: _models.TaskRunID) -> bytes:
         """

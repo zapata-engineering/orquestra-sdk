@@ -16,8 +16,8 @@ from orquestra.sdk._base._driver import _exceptions
 from orquestra.sdk._base._driver._client import DriverClient, Paginated
 from orquestra.sdk._base._driver._models import RuntimeType
 from orquestra.sdk.schema.ir import WorkflowDef
-from orquestra.sdk.schema.responses import JSONResult, PickleResult, WorkflowResult
-from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun
+from orquestra.sdk.schema.responses import JSONResult, PickleResult
+from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun, WorkflowRunLog
 
 from . import resp_mocks
 
@@ -1589,6 +1589,48 @@ class TestClient:
                 )
 
             @staticmethod
+            def test_logs_decode(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    body=resp_mocks.make_get_wf_run_logs_response_with_content(),
+                    match=[
+                        responses.matchers.query_param_matcher(
+                            {"workflowRunId": workflow_run_id}
+                        )
+                    ],
+                )
+
+                logs = client.get_workflow_run_logs(workflow_run_id)
+
+                assert len(logs) == 64
+                # Spot checks on specific log entries.
+                assert logs[0] == WorkflowRunLog(
+                    timestamp="1678804402.015861",
+                    message=":actor_name:Manager",
+                    wf_id="workflow.logs.ray.wf_def-FfnTz-r000",
+                    task_id=None,
+                )
+                assert logs[6] == WorkflowRunLog(
+                    timestamp="1678804402.015901",
+                    message='Traceback (most recent call last):\n  File "/home/orquestra/venv/lib/python3.9/site-packages/orquestra/sdk/_ray/_dag.py", line 192, in _ray_remote\n    return wrapped(*inner_args, **inner_kwargs)\n  File "/home/orquestra/venv/lib/python3.9/site-packages/orquestra/sdk/_ray/_dag.py", line 147, in __call__\n    return self._fn(*unpacked_args, **unpacked_kwargs)\n  File "/Users/benjaminmummery/Documents/Projects/orquestra-workflow-sdk/../scratch/scratch.py", line 12, in do_thing\nException: Blah\n',  # noqa: E501
+                    wf_id="wf.wf_def.3c5f938",
+                    task_id="invocation-0-task-do-thing",
+                )
+                assert logs[20] == WorkflowRunLog(
+                    timestamp="1678804402.015908",
+                    message='  File "/home/orquestra/venv/lib/python3.9/site-packages/ray/workflow/task_executor.py", line 79, in _workflow_task_executor',  # noqa: E501
+                    wf_id="workflow.logs.ray.wf_def-FfnTz-r000",
+                    task_id=None,
+                )
+                assert logs[63] == WorkflowRunLog(
+                    timestamp="1678804402.015956",
+                    message=":actor_name:WorkflowManagementActor",
+                    wf_id="workflow.logs.ray.wf_def-FfnTz-r000",
+                    task_id=None,
+                )
+
+            @staticmethod
             def test_params_encoding(
                 endpoint_mocker, client: DriverClient, workflow_run_id: str
             ):
@@ -1596,7 +1638,8 @@ class TestClient:
                 Verifies that params are correctly sent to the server.
                 """
                 endpoint_mocker(
-                    json=resp_mocks.make_get_wf_run_logs_response(),
+                    # json=resp_mocks.make_get_wf_run_logs_response(),
+                    body=resp_mocks.make_get_wf_run_logs_response_with_content(),
                     match=[
                         responses.matchers.query_param_matcher(
                             {"workflowRunId": workflow_run_id}
@@ -1639,7 +1682,8 @@ class TestClient:
                 endpoint_mocker, client: DriverClient, token: str, workflow_run_id: str
             ):
                 endpoint_mocker(
-                    json=resp_mocks.make_get_wf_run_logs_response(),
+                    # json=resp_mocks.make_get_wf_run_logs_response(),
+                    body=resp_mocks.make_get_wf_run_logs_response_with_content(),
                     match=[
                         responses.matchers.header_matcher(
                             {"Authorization": f"Bearer {token}"}

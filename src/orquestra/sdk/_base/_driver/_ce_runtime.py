@@ -3,7 +3,7 @@
 ################################################################################
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import serde
@@ -17,6 +17,7 @@ from orquestra.sdk.schema.workflow_run import (
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
+    WorkflowRunLog,
     WorkflowRunMinimal,
 )
 
@@ -303,8 +304,45 @@ class CERuntime(RuntimeInterface):
             raise exceptions.UnauthorizedError(f"{e}") from e
         return runs.contents
 
-    def get_workflow_logs(self, wf_run_id: WorkflowRunId):
-        raise NotImplementedError()
+    def get_workflow_logs(
+        self, wf_run_id: WorkflowRunId
+    ) -> Dict[TaskInvocationId, List[str]]:
+        """
+        Get the workflow logs.
+
+        Args:
+            wf_run_id: the ID of a workflow run
+
+        Raises:
+            WorkflowRunNotFound: if the workflow run cannot be found
+            UnauthorizedError: if the remote cluster rejects the token
+            ...
+
+        Returns:
+            A list of log lines from the workflow.
+        """
+        try:
+            logs: List[WorkflowRunLog] = self._client.get_workflow_run_logs(wf_run_id)
+        except (_exceptions.InvalidWorkflowRunID, _exceptions.WorkflowRunNotFound) as e:
+            raise exceptions.WorkflowRunNotFoundError(
+                f"Workflow run with id `{wf_run_id}` not found"
+            ) from e
+        except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
+            raise exceptions.UnauthorizedError(f"{e}") from e
+        except _exceptions.UnknownHTTPError:
+            pass
+        except _exceptions.WorkflowRunLogsNotReadable as e:
+            raise exceptions.InvalidWorkflowRunLogsError(f"{e}") from e
+
+        # TODO: index by taskinvocationID rather than workflowrunID [ORQSDK-777]
+        logs_dict = {}
+        for log in logs:
+            if log.wf_id not in logs_dict:
+                logs_dict[log.wf_id] = [log.message]
+            else:
+                logs_dict[log.wf_id].append(log.message)
+
+        return logs_dict
 
     def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
         raise NotImplementedError()

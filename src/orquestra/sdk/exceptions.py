@@ -100,6 +100,10 @@ class InvalidWorkflowRunIDError(BaseRuntimeError):
     pass
 
 
+class InvalidWorkflowRunLogsError(BaseRuntimeError):
+    pass
+
+
 class InvalidTaskIDError(BaseRuntimeError):
     pass
 
