@@ -8,6 +8,7 @@
 
 
 🔥 *Features*
+* Use the requested resources from a workflow's tasks when submitting to CE
 
 
 👩‍🔬 *Experimental*
