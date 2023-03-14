@@ -11,6 +11,7 @@ from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _mode
 from orquestra.sdk._base._testing._example_wfs import (
     my_workflow,
     workflow_parametrised_with_resources,
+    workflow_with_different_resources,
 )
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.responses import JSONResult
@@ -184,6 +185,27 @@ class TestCreateWorkflowRun:
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
                 workflow_def_id, _models.Resources(cpu=None, memory=None, gpu="1")
+            )
+
+        def test_maximum_resource(
+            self,
+            mocked_client: MagicMock,
+            runtime: _ce_runtime.CERuntime,
+            workflow_def_id: str,
+            workflow_run_id: str,
+        ):
+            # Given
+            mocked_client.create_workflow_def.return_value = workflow_def_id
+            mocked_client.create_workflow_run.return_value = workflow_run_id
+
+            # When
+            _ = runtime.create_workflow_run(
+                workflow_with_different_resources().model
+            )
+
+            # Then
+            mocked_client.create_workflow_run.assert_called_once_with(
+                workflow_def_id, _models.Resources(cpu="5000m", memory="3G", gpu="1")
             )
 
     class TestWorkflowDefFailure:

@@ -1314,6 +1314,7 @@ class TestWorkflowDefRepoIntegration:
                 "parametrized_wf",
                 "wf_with_secrets",
                 "workflow_parametrised_with_resources",
+                "workflow_with_different_resources",
             ]
 
         @staticmethod

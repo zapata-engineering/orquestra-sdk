@@ -301,3 +301,14 @@ def wf_with_secrets():
 @sdk.workflow
 def workflow_parametrised_with_resources(cpu=None, memory=None, gpu=None):
     return add(1, 1).with_invocation_meta(cpu=cpu, memory=memory, gpu=gpu)
+
+
+@sdk.workflow
+def workflow_with_different_resources():
+    cpu = add(1, 1).with_invocation_meta(cpu="5000m")
+    small_cpu = add(1, 1).with_invocation_meta(cpu="1000m")
+    memory = add(1, 1).with_invocation_meta(memory="3G")
+    small_memory = add(1, 1).with_invocation_meta(memory="512Mi")
+    gpu = add(1, 1).with_invocation_meta(gpu="1")
+    all_resources = add(1, 1).with_invocation_meta(cpu="2000m", memory="2Gi", gpu="0")
+    return cpu, small_cpu, memory, small_memory, gpu, all_resources
