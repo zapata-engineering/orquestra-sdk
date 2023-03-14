@@ -199,9 +199,7 @@ class TestCreateWorkflowRun:
             mocked_client.create_workflow_run.return_value = workflow_run_id
 
             # When
-            _ = runtime.create_workflow_run(
-                workflow_with_different_resources().model
-            )
+            _ = runtime.create_workflow_run(workflow_with_different_resources().model)
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
