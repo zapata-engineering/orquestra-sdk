@@ -1228,6 +1228,7 @@ def test_metadata_on_release(monkeypatch: pytest.MonkeyPatch):
     assert wf.metadata.sdk_version.patch == 0
     assert not wf.metadata.sdk_version.is_prerelease
 
+
 def test_metadata_on_dev(monkeypatch: pytest.MonkeyPatch):
     # Given
     mocked_installed_version = Mock(return_value="22.42.0.dev1+gitAABBCC.20230101")
