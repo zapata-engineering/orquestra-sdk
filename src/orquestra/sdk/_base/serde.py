@@ -10,7 +10,6 @@ from functools import singledispatch
 from pathlib import Path
 
 import cloudpickle  # type: ignore
-import dill
 import pydantic
 
 from orquestra.sdk.schema import ir, responses
@@ -36,7 +35,7 @@ def _chunkify(s: str) -> t.List[str]:
 def _encoded_pickle_chunks(object: t.Any) -> t.List[str]:
     return _chunkify(
         codecs.encode(
-            dill.dumps(object, protocol=PICKLE_PROTOCOL, recurse=True), ENCODING
+            cloudpickle.dumps(object, protocol=PICKLE_PROTOCOL), ENCODING
         ).decode()
     )
 

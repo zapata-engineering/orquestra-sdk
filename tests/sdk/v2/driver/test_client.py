@@ -1691,6 +1691,22 @@ class TestClient:
                     _ = client.get_workflow_run_logs(workflow_run_id)
 
             @staticmethod
+            def test_zlib_error(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    body=b"invalid bytes",
+                    match=[
+                        responses.matchers.query_param_matcher(
+                            {"workflowRunId": workflow_run_id}
+                        )
+                    ],
+                )
+
+                with pytest.raises(_exceptions.WorkflowRunLogsNotReadable):
+                    _ = client.get_workflow_run_logs(workflow_run_id)
+
+            @staticmethod
             def test_sets_auth(
                 endpoint_mocker, client: DriverClient, token: str, workflow_run_id: str
             ):

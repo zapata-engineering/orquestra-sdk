@@ -892,3 +892,58 @@ class TestListWorkflowRuns:
         # When
         with pytest.raises(exceptions.UnauthorizedError):
             runtime.list_workflow_runs()
+
+
+class TestGetWorkflowLogs:
+    def test_happy_path(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        workflow_run_id: str,
+    ):
+        # Given
+        wf_logs = [
+            Mock(wf_id="<wf id sentinel 1>", message="<message sentinel 1>"),
+            Mock(wf_id="<wf id sentinel 1>", message="<message sentinel 2>"),
+            Mock(wf_id="<wf id sentinel 2>", message="<message sentinel 3>"),
+        ]
+        mocked_client.get_workflow_run_logs.return_value = wf_logs
+
+        # When
+        logs = runtime.get_workflow_logs(workflow_run_id)
+
+        # Then
+        mocked_client.get_workflow_run_logs.assert_called_once_with(workflow_run_id)
+        assert logs == {
+            "<wf id sentinel 1>": ["<message sentinel 1>", "<message sentinel 2>"],
+            "<wf id sentinel 2>": ["<message sentinel 3>"],
+        }
+
+    @pytest.mark.parametrize(
+        "exception, expected_exception",
+        [
+            (_exceptions.InvalidWorkflowRunID, exceptions.WorkflowRunNotFoundError),
+            (_exceptions.WorkflowRunNotFound, exceptions.WorkflowRunNotFoundError),
+            (_exceptions.InvalidTokenError, exceptions.UnauthorizedError),
+            (_exceptions.ForbiddenError, exceptions.UnauthorizedError),
+            (_exceptions.UnknownHTTPError, _exceptions.UnknownHTTPError),
+            (
+                _exceptions.WorkflowRunLogsNotReadable,
+                exceptions.InvalidWorkflowRunLogsError,
+            ),
+        ],
+    )
+    def test_exception_handling(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        workflow_run_id: str,
+        exception,
+        expected_exception,
+    ):
+        # Given
+        mocked_client.get_workflow_run_logs.side_effect = exception(MagicMock())
+
+        # When
+        with pytest.raises(expected_exception):
+            runtime.get_workflow_logs(workflow_run_id)

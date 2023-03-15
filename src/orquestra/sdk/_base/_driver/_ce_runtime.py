@@ -349,8 +349,6 @@ class CERuntime(RuntimeInterface):
             ) from e
         except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
             raise exceptions.UnauthorizedError(f"{e}") from e
-        except _exceptions.UnknownHTTPError:
-            pass
         except _exceptions.WorkflowRunLogsNotReadable as e:
             raise exceptions.InvalidWorkflowRunLogsError(f"{e}") from e
 

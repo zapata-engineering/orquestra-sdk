@@ -605,8 +605,7 @@ class DriverClient:
             raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id) from e
 
         untarred = TarFile(fileobj=io.BytesIO(unzipped)).extractfile("step-logs")
-        if untarred is None:
-            raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id)
+        assert untarred is not None
         decoded = r"""{}""".format(untarred.read().decode("utf-8"))
 
         # Parse the decoded data as logs
