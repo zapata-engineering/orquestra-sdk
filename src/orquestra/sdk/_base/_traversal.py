@@ -668,11 +668,11 @@ def flatten_graph(
     sdk_version_str = get_installed_version("orquestra-sdk")
     parsed_sdk_version = parse_version(sdk_version_str)
     sdk_version = model.Version(
-            original=sdk_version_str,
-            major=parsed_sdk_version.major,
-            minor=parsed_sdk_version.minor,
-            patch=parsed_sdk_version.micro,
-            is_prerelease=parsed_sdk_version.is_prerelease,
+        original=sdk_version_str,
+        major=parsed_sdk_version.major,
+        minor=parsed_sdk_version.minor,
+        patch=parsed_sdk_version.micro,
+        is_prerelease=parsed_sdk_version.is_prerelease,
     )
     return model.WorkflowDef(
         metadata=model.WorkflowMetadata(
