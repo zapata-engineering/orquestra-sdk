@@ -2,13 +2,10 @@
 
 ## Unreleased
 
-
 🚨 *Breaking Changes*
-* Pickling library switched to `cloudpickle` instead of `dill`. While no breakages are expected, this change may result in objects raising an error during pickling, even if they were previously able to be pickled. Please report any instances of these as bugs.
 
 
 🔥 *Features*
-* Use the requested resources from a workflow's tasks when submitting to CE
 
 
 👩‍🔬 *Experimental*
@@ -22,10 +19,23 @@
 
 
 🥷 *Internal*
-* RayRuntime can now be configured to pass resources to underlying remote functions
 
 
 📃 *Docs*
+
+
+## v0.45.0
+
+🚨 *Breaking Changes*
+* Pickling library switched to `cloudpickle` instead of `dill`. While no breakages are expected, this change may result in objects raising an error during pickling, even if they were previously able to be pickled. Please report any instances of these as bugs.
+
+
+🔥 *Features*
+* Use the requested resources from a workflow's tasks when submitting to CE
+
+
+🥷 *Internal*
+* RayRuntime can now be configured to pass resources to underlying remote functions
 
 
 ## v0.44.0
