@@ -37,7 +37,14 @@ def workflow():
 
 
 def _run_command(command: t.List[str]):
-    return subprocess.run(command, check=True, capture_output=True)
+    try:
+        return subprocess.run(command, check=True, capture_output=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Command: {e.cmd}", file=sys.stderr)
+        print(f"Return value: {e.returncode}", file=sys.stderr)
+        print(f"stdout:\n{e.stdout}", file=sys.stderr)
+        print(f"stderr:\n{e.stderr}", file=sys.stderr)
+        raise
 
 
 def _run_corq_command(command: t.List[str]):
