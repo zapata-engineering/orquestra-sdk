@@ -12,7 +12,6 @@
 
 
 🐛 *Bug Fixes*
-* Ensure `int`-like resource values are passed to Ray correctly
 
 💅 *Improvements*
 
@@ -22,6 +21,10 @@
 
 📃 *Docs*
 
+## v0.45.1
+
+🐛 *Bug Fixes*
+* Ensure `int`-like resource values are passed to Ray correctly
 
 ## v0.45.0
 
