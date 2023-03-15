@@ -1,7 +1,6 @@
 ################################################################################
 # © Copyright 2022 Zapata Computing Inc.
 ################################################################################
-import importlib.metadata
 import logging
 import re
 import typing as t
@@ -9,6 +8,7 @@ from functools import singledispatchmethod
 
 from orquestra.sdk.schema import ir, yaml_model
 
+from ...packaging import get_installed_version
 from .. import _git_url_utils, serde
 from . import _ids
 
@@ -150,7 +150,7 @@ class PackageVersionError(Exception):
 
 
 def _get_package_version_tag(package_name: str) -> str:
-    installed_version = importlib.metadata.version(package_name)
+    installed_version = get_installed_version(package_name)
     # We're following the setuptools_scm approach. see:
     # https://github.com/pypa/setuptools_scm/blob/ae62aab5bc99fe7c21bab6d0640313f615b437a0/README.rst#default-versioning-scheme=
     # A "tag" is a normal semver `major.minor.patch` version number and is what we are

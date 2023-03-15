@@ -336,6 +336,19 @@ class TaskInvocation(BaseModel):
 WorkflowDefName = str
 
 
+class Version(BaseModel):
+    original: str
+    major: int
+    minor: int
+    patch: int
+    is_prerelease: bool
+
+
+class WorkflowMetadata(BaseModel):
+    sdk_version: Version
+    python_version: Version
+
+
 class WorkflowDef(BaseModel):
     """The main data structure for intermediate workflow representation.
 
@@ -367,3 +380,6 @@ class WorkflowDef(BaseModel):
     output_ids: t.List[ArgumentId]
 
     data_aggregation: t.Optional[DataAggregation]
+
+    # Metadata defaults to None to allow older JSON to be loaded
+    metadata: t.Optional[WorkflowMetadata] = None
