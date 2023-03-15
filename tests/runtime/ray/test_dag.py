@@ -641,15 +641,16 @@ class TestResourcesInMakeDag:
         )
 
     @pytest.mark.parametrize(
-        "resources, expected",
+        "resources, expected, types",
         [
-            ({}, {}),
-            ({"cpu": "1000m"}, {"num_cpus": 1.0}),
-            ({"memory": "1Gi"}, {"memory": 1073741824}),
-            ({"gpu": "1"}, {"num_gpus": 1}),
+            ({}, {}, {}),
+            ({"cpu": "1000m"}, {"num_cpus": 1.0}, {"num_cpus": int}),
+            ({"memory": "1Gi"}, {"memory": 1073741824}, {"memory": int}),
+            ({"gpu": "1"}, {"num_gpus": 1}, {"num_gpus": int}),
             (
-                {"cpu": "2", "memory": "10G", "gpu": "1"},
-                {"num_cpus": 2, "memory": 10000000000, "num_gpus": 1},
+                {"cpu": "2500m", "memory": "10G", "gpu": "1"},
+                {"num_cpus": 2.5, "memory": 10000000000, "num_gpus": 1},
+                {"num_cpus": float, "memory": int, "num_gpus": int},
             ),
         ],
     )
@@ -660,6 +661,7 @@ class TestResourcesInMakeDag:
         wf_run_id: str,
         resources: Dict[str, str],
         expected: Dict[str, Union[int, float]],
+        types: Dict[str, type],
     ):
         workflow = workflow_parametrised_with_resources(**resources).model
         _ = _dag._make_ray_dag(client, workflow, wf_run_id, None)
@@ -676,3 +678,5 @@ class TestResourcesInMakeDag:
             catch_exceptions=ANY,
             **expected
         )
+        for kwarg_name, type_ in types.items():
+            assert isinstance(calls[0].kwargs[kwarg_name], type_)
