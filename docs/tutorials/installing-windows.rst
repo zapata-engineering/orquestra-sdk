@@ -108,7 +108,7 @@ You can install the Workflow SDK with:
 
 .. code-block::
 
-    pip install orquestra-sdk[all]
+    pip install "orquestra-sdk[all]"
 
 We highly recommended installing Orquestra Workflow SDK inside a virtual environment, which can be
 easily created with ``python -m venv <venv name>``.

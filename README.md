@@ -5,17 +5,18 @@
 `orquestra-sdk` is a Python library for expressing and executing computational workflows locally and on the [Orquestra](https://www.zapatacomputing.com/orquestra) platform.
 
 `orquestra-sdk` provides:
+
 - A Python DSL to express your workflows
 - An API for managing and using secrets inside workflows
 - An API for executing and managing your workflows
-- A CLI tool for executing and managing workflows 
+- A CLI tool for executing and managing workflows
 
 ## Installation
 
 Orquestra Workflow SDK is published to PyPI and should be installed from there via `pip`:
 
-```
-pip install orquestra-sdk[all]
+```bash
+pip install "orquestra-sdk[all]"
 ```
 
 ## Usage
