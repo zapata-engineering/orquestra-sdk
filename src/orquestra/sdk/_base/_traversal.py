@@ -10,16 +10,19 @@ import collections.abc
 import hashlib
 import inspect
 import re
+import sys
 import typing as t
 from collections import OrderedDict, defaultdict
 from functools import singledispatch
 
+from packaging.version import parse as parse_version
 from pip_api import Requirement
 
 import orquestra.sdk.schema.ir as model
 from orquestra.sdk.schema import responses
 
 from .. import exceptions
+from ..packaging import get_installed_version
 from . import _dsl, _git_url_utils, _workflow, serde
 
 N_BYTES_IN_HASH = 8
@@ -661,7 +664,27 @@ def flatten_graph(
     for output_future in futures:
         output_id = graph.get_argument_id(output_future)
         output_ids.append(output_id)
+
+    sdk_version_str = get_installed_version("orquestra-sdk")
+    parsed_sdk_version = parse_version(sdk_version_str)
+    sdk_version = model.Version(
+            original=sdk_version_str,
+            major=parsed_sdk_version.major,
+            minor=parsed_sdk_version.minor,
+            patch=parsed_sdk_version.micro,
+            is_prerelease=parsed_sdk_version.is_prerelease,
+    )
     return model.WorkflowDef(
+        metadata=model.WorkflowMetadata(
+            sdk_version=sdk_version,
+            python_version=model.Version(
+                original=sys.version,
+                major=sys.version_info.major,
+                minor=sys.version_info.minor,
+                patch=sys.version_info.micro,
+                is_prerelease=sys.version_info.releaselevel != "final",
+            ),
+        ),
         # At the moment 'orq submit workflow-def <name>' assumes that the <name> is
         # the same as the underlying function. Orquestra Studio seems to get it from
         # the 'orq get workflow-def', so for now we have to keep .name attribute same
