@@ -24,7 +24,7 @@ except ModuleNotFoundError:
                 raise ModuleNotFoundError(
                     "In order to run workflows locally using Ray, "
                     "please make sure you install the optional dependencies with:\n"
-                    "`pip install orquestra-sdk[all]`",
+                    "`pip install 'orquestra-sdk[all]'`",
                     name="ray",
                 )
 

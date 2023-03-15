@@ -7,23 +7,7 @@ user's project state.
 from pathlib import Path
 
 from orquestra.sdk._base import _config
-from orquestra.sdk.schema import configs, ir
-
-TINY_WORKFLOW_DEF = ir.WorkflowDef(
-    name="single_invocation",
-    fn_ref=ir.FileFunctionRef(
-        file_path="empty.py",
-        function_name="empty",
-        line_number=0,
-        type="FILE_FUNCTION_REF",
-    ),
-    imports={},
-    tasks={},
-    artifact_nodes={},
-    constant_nodes={},
-    task_invocations={},
-    output_ids=[],
-)
+from orquestra.sdk.schema import configs
 
 
 def write_user_config_file(

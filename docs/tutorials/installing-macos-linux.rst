@@ -39,7 +39,7 @@ Install the Orquestra Workflow SDK by running:
 
 .. code-block:: bash
 
-    pip install orquestra-sdk[all]
+    pip install "orquestra-sdk[all]"
 
 .. only:: internal
 
