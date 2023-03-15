@@ -12,8 +12,7 @@
 
 
 🐛 *Bug Fixes*
-
-
+* Ensure `int`-like resource values are passed to Ray correctly
 
 💅 *Improvements*
 
