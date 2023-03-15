@@ -89,6 +89,9 @@ else:
             metadata: t.Dict[str, t.Any],
             runtime_env: t.Optional[RuntimeEnv],
             catch_exceptions: t.Optional[bool],
+            num_cpus: t.Optional[t.Union[int, float]] = None,
+            num_gpus: t.Optional[t.Union[int, float]] = None,
+            memory: t.Optional[t.Union[int, float]] = None,
         ):
             # The type hint for 'ray.workflow.options' kwargs is invalid. We can
             # work it around by Any.
@@ -97,9 +100,17 @@ else:
                 "metadata": metadata,
                 "catch_exceptions": catch_exceptions,
             }
+            ray_optional_opts = {}
+            if num_cpus is not None:
+                ray_optional_opts["num_cpus"] = num_cpus
+            if num_gpus is not None:
+                ray_optional_opts["num_gpus"] = num_gpus
+            if memory is not None:
+                ray_optional_opts["memory"] = memory
             return ray_remote_fn.options(
                 **ray.workflow.options(**workflow_opts),
                 runtime_env=runtime_env,
+                **ray_optional_opts,
             )
 
         # ----- Ray Workflow -----

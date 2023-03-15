@@ -8,6 +8,7 @@
 
 
 🔥 *Features*
+* Use the requested resources from a workflow's tasks when submitting to CE
 
 
 👩‍🔬 *Experimental*
@@ -21,6 +22,7 @@
 
 
 🥷 *Internal*
+* RayRuntime can now be configured to pass resources to underlying remote functions
 
 
 📃 *Docs*
