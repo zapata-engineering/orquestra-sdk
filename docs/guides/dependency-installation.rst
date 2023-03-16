@@ -23,7 +23,7 @@ For convenience the table below summarises which importer should be used in vari
       -
     * - PyPi
       - ``PythonImports``
-      - remote
+      - remote, local
       -
     * - Jupyter Notebook
       - ``InlineImport``
