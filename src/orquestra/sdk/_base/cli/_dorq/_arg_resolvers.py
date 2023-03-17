@@ -8,6 +8,7 @@ resolution logic extracted as components reusable across similar CLI commands.
 """
 import datetime
 import typing as t
+
 from tabulate import tabulate
 
 from orquestra.sdk import exceptions
@@ -130,11 +131,18 @@ class WFRunResolver:
         wfs = self._wf_run_repo.list_wf_runs(config)
 
         # sort wfs by submission date. Take into account when there is no start_time
-        wfs.sort(key=lambda wf: wf.status.start_time if wf.status.start_time else datetime.datetime.fromtimestamp(0))
+        wfs.sort(
+            key=lambda wf: wf.status.start_time
+            if wf.status.start_time
+            else datetime.datetime.fromtimestamp(0)
+        )
 
         # Create labels  of wf shown to the user by prompter.
         # Label is <wf_id> <start_time> tabulated nicely to format good looking table
-        labels = [[wf.id, wf.status.start_time.isoformat() if wf.status.start_time else ''] for wf in wfs]
+        labels = [
+            [wf.id, wf.status.start_time.isoformat() if wf.status.start_time else ""]
+            for wf in wfs
+        ]
         tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
 
         prompt_choices = [(tabulated_labels[i], wf.id) for i, wf in enumerate(wfs)]
