@@ -133,7 +133,7 @@ The ``GitHubImport`` importer supports using the ``sdk.Secret`` functionality to
     def demo_task():
         pass
 
-The PAT is ingested from the portal secrets management facility at run time, and installation of the import proceeds as usual.
+The PAT is imported from the portal secrets management facility at run time, and installation of the import proceeds as usual.
 
 ``GitImport``
 -------------
@@ -152,7 +152,7 @@ For sources or dependencies stored in a git repo that is hosted somewhere other 
     def demo_task():
         pass
 
-As in the case of ``GitHubImport``, the code ingested from the repo is pip installed at execution time.
+As in the case of ``GitHubImport``, the code imported from the repo is pip installed at execution time.
 
 ``GitImport.infer``
 ~~~~~~~~~~~~~~~~~~~
@@ -174,7 +174,7 @@ This utility can save time during prototyping, however its dependence on the ind
 ``PythonImports``
 -----------------
 
-As the name suggests, the ``PythonImports`` importer handles ingestion of Python modules, specifically from PyPI.
+As the name suggests, the ``PythonImports`` importer handles the importing of Python modules, specifically from PyPI.
 
 The required modules can be specified as arguments to the importer, or listed in a requirements.txt file specified by the ``file`` argument.
 
@@ -214,7 +214,7 @@ The specified modules will be pip installed at execution time.
 
 Cases where the ``InlineImport`` importer must be specified explicitly are rare, as the Workflow SDK will set it as the default source importer in contexts where it applies. We include it here for completeness.
 
-The ``InlineImport`` importer ingests sources or dependencies that are defined in the ``__main__`` of the file that defines the workflow. This highly specific use case occurs almost exclusively in Jupyter Notebooks and interactive Python sessions, however it is occasionally useful in rapid development or prototyping contexts. In general, the Workflow SDK's help messages will flag up instances where it should be used.
+The ``InlineImport`` importer imports sources or dependencies that are defined in the ``__main__`` of the file that defines the workflow. This highly specific use case occurs almost exclusively in Jupyter Notebooks and interactive Python sessions, however it is occasionally useful in rapid development or prototyping contexts. In general, the Workflow SDK's help messages will flag up instances where it should be used.
 
 The local importer
 ------------------
