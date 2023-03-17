@@ -133,7 +133,7 @@ The ``GitHubImport`` importer supports using the ``sdk.Secret`` functionality to
     def demo_task():
         pass
 
-The PAT is imported from the portal secrets management facility at run time, and installation of the import proceeds as usual.
+The PAT is retrieved from Orquestra Portal at run time, and installation of the import proceeds as usual.
 
 ``GitImport``
 -------------
