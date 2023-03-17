@@ -168,7 +168,7 @@ The ``GitImport.infer`` importer is a shortcut for ``GitImport`` that tries to e
     def demo_task():
         pass
 
-This utility can save time during prototyping, however its dependence on the individual user#s filesystem makes it unsuitable for collaborative projects. These should use a fully specified ``GitImport`` or ``GitHubImport`` instead.
+This utility can save time during prototyping, however its dependence on the individual user's filesystem makes it unsuitable for collaborative projects. These should use a fully specified ``GitImport`` or ``GitHubImport`` instead.
 
 
 ``PythonImports``
