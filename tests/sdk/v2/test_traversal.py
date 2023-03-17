@@ -516,7 +516,7 @@ class TestFlattenGraph:
     def test_raises_exception_for_zero_tasks(self):
         # preconditions
         with pytest.raises(exceptions.WorkflowSyntaxError) as e:
-            pass
+            no_tasks.model
         assert (
             "The workflow 'no_tasks' requires 0 tasks to be executed. Workflows must execute at least one task."  # noqa: E501
             in str(e)
