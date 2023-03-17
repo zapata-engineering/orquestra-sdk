@@ -78,7 +78,7 @@ For illustration, the following example specifies a task that imports its source
 
 How sources and dependencies are treated depends on the runtime.
 
-The examples below omit ``dependency_imports`` for clarity as the call pattern for an importer is identical regardless of whether it is importing a source or a dependency.
+The examples below omit ``dependency_imports`` for clarity as the usage of an importer is identical regardless of whether it is importing a source or a dependency.
 
 ``GitHubImport``
 ----------------
