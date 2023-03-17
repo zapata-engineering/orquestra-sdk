@@ -518,8 +518,8 @@ class TestFlattenGraph:
         with pytest.raises(exceptions.WorkflowSyntaxError) as e:
             pass
         assert (
-            str(e)
-            == "The workflow 'no_tasks' requires 0 tasks to be executed. Workflows must execute at least one task."  # noqa: E501
+            "The workflow 'no_tasks' requires 0 tasks to be executed. Workflows must execute at least one task."  # noqa: E501
+            in str(e)
         )
 
 
