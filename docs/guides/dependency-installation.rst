@@ -117,7 +117,7 @@ The ``GitHubImport`` importer supports using the ``sdk.Secret`` functionality to
 
 1. Create a personal access token (PAT) in GitHub with permission to access the private repo.
 2. Create a new secret in Orquestra Portal containing the PAT. For this example we have named our secret "my_pat".
-3. Use the name of the portal secret to specify the ``personal_access_token`` argument for your import.
+3. Use the name of the Orquestra Portal secret to specify the ``personal_access_token`` argument for your import.
 
 .. code-block:: python
     import orquestra.sdk as sdk
