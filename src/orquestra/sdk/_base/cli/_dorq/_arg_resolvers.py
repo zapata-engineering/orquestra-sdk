@@ -6,7 +6,9 @@ When the user doesn't pass in all the required information as CLI arguments we n
 resolve the information from other sources. This module contains the CLI argument
 resolution logic extracted as components reusable across similar CLI commands.
 """
+import datetime
 import typing as t
+from tabulate import tabulate
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _services
@@ -125,8 +127,19 @@ class WFRunResolver:
         # TODO: figure out sensible filters when listing workflow runs is implemented
         # in the public API.
         # Related ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-671
-        ids = self._wf_run_repo.list_wf_run_ids(config)
-        selected_id = self._prompter.choice(ids, message="Workflow run ID")
+        wfs = self._wf_run_repo.list_wf_runs(config)
+
+        # sort wfs by submission date. Take into account when there is no start_time
+        wfs.sort(key=lambda wf: wf.status.start_time if wf.status.start_time else datetime.datetime.fromtimestamp(0))
+
+        # Create labels  of wf shown to the user by prompter.
+        # Label is <wf_id> <start_time> tabulated nicely to format good looking table
+        labels = [[wf.id, wf.status.start_time.isoformat() if wf.status.start_time else ''] for wf in wfs]
+        tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
+
+        prompt_choices = [(tabulated_labels[i], wf.id) for i, wf in enumerate(wfs)]
+
+        selected_id = self._prompter.choice(prompt_choices, message="Workflow run ID")
         return selected_id
 
     def resolve_run(

@@ -231,10 +231,17 @@ def _print_single_run(run: responses.WorkflowRun, project_dir: t.Optional[str]):
 
 
 def _format_multiple_runs(runs: t.Sequence[responses.WorkflowRun]):
-    headers = ["workflow run ID", "status", "tasks succeeded"]
+    headers = ["workflow run ID", "status", "tasks succeeded", "start time"]
+    # leave start_time at datetime.datetime format, so we can easily sort by it
     rows = [
-        [run.id, run.status.state.value, _tasks_number_summary(run)] for run in runs
+        [run.id, run.status.state.value, _tasks_number_summary(run), run.status.start_time] for run in runs
     ]
+    # take into account that we might be missing start time. Try our best to sort
+    # by start time of the workflow
+    rows.sort(key=lambda row: row[3] if row[3] else datetime.fromtimestamp(0))
+    for row in rows:
+        row[3] = _format_datetime(row[3])
+
     print(tabulate.tabulate(rows, headers=headers))
 
 
