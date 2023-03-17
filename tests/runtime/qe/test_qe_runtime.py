@@ -514,13 +514,17 @@ class TestCreateWorkflowRun:
             "ends-with-non.alphanumeric-",
         ],
     )
-    def test_raises_exception_if_worflow_name_does_not_match_qe_reqs(
+    def test_raises_exception_if_workflow_name_does_not_match_qe_reqs(
         workflow_name,
         runtime,
     ):
+        @sdk.task
+        def simple_task():
+            return None
+
         @sdk.workflow(custom_name=workflow_name)
         def BadNameWorkflow():
-            return [None]
+            return [simple_task()]
 
         workflow = BadNameWorkflow.model
 

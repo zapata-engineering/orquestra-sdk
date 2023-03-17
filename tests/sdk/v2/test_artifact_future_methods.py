@@ -110,7 +110,7 @@ def wf_deconstruc_task_invocation_with_metadata_assignment():
 
 @sdk.workflow
 def wf_task_call():
-    [_task_without_resources(), _resourced_task()]
+    return [_task_without_resources(), _resourced_task()]
 
 
 @sdk.workflow
