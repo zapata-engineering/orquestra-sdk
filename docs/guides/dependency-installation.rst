@@ -116,7 +116,7 @@ The contents of the repo are pip installed at execution time.
 The ``GitHubImport`` importer supports using the ``sdk.Secret`` functionality to allow runtimes to import from private repos when using the Compute Engine runtime. To use this functionality, the following steps must be carried out:
 
 1. Create a personal access token (PAT) in GitHub with permission to access the private repo.
-2. Create a new secret in the orquestra portal containing the PAT. For this example we have named our secret "my_pat".
+2. Create a new secret in Orquestra Portal containing the PAT. For this example we have named our secret "my_pat".
 3. Use the name of the portal secret to specify the ``personal_access_token`` argument for your import.
 
 .. code-block:: python
