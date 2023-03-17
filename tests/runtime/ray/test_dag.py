@@ -7,13 +7,17 @@ Ray connection, see tests/ray/test_integration.py instead.
 """
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from unittest.mock import Mock, PropertyMock, create_autospec
+from typing import Dict, Union
+from unittest.mock import ANY, Mock, PropertyMock, call, create_autospec
 
 import pytest
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _services
 from orquestra.sdk._base._config import RuntimeConfiguration, RuntimeName
+from orquestra.sdk._base._testing._example_wfs import (
+    workflow_parametrised_with_resources,
+)
 from orquestra.sdk._ray import _client, _dag, _ray_logs
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.workflow_run import State
@@ -588,3 +592,91 @@ class TestPipString:
             imp = ir.InlineImport(id="mock-import")
             pip = _dag._pip_string(imp)
             assert pip == []
+
+
+class TestResourcesInMakeDag:
+    @pytest.fixture
+    def wf_run_id(self):
+        return "mocked_wf_run_id"
+
+    @pytest.fixture
+    def client(self):
+        return create_autospec(_dag.RayClient)
+
+    @pytest.fixture
+    def patch_env(self, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setenv("ORQ_RAY_SET_TASK_RESOURCES", "1")
+
+    @pytest.mark.parametrize(
+        "resources, expected",
+        [
+            ({}, {}),
+            ({"cpu": "1000m"}, {}),
+            ({"memory": "1Gi"}, {}),
+            ({"gpu": "1"}, {}),
+            ({"cpu": "2", "memory": "10G", "gpu": "1"}, {}),
+        ],
+    )
+    def test_without_env_variable(
+        self,
+        client: Mock,
+        wf_run_id: str,
+        resources: Dict[str, str],
+        expected: Dict[str, Union[int, float]],
+    ):
+        workflow = workflow_parametrised_with_resources(**resources).model
+        _ = _dag._make_ray_dag(client, workflow, wf_run_id, None)
+        calls = client.add_options.call_args_list
+
+        # We should only have two calls: our invocation and the aggregation step
+        assert len(calls) == 2
+        # Checking our call did not have any resources included
+        assert calls[0] == call(
+            ANY,
+            name=ANY,
+            metadata=ANY,
+            runtime_env=ANY,
+            catch_exceptions=ANY,
+            **expected
+        )
+
+    @pytest.mark.parametrize(
+        "resources, expected, types",
+        [
+            ({}, {}, {}),
+            ({"cpu": "1000m"}, {"num_cpus": 1.0}, {"num_cpus": int}),
+            ({"memory": "1Gi"}, {"memory": 1073741824}, {"memory": int}),
+            ({"gpu": "1"}, {"num_gpus": 1}, {"num_gpus": int}),
+            (
+                {"cpu": "2500m", "memory": "10G", "gpu": "1"},
+                {"num_cpus": 2.5, "memory": 10000000000, "num_gpus": 1},
+                {"num_cpus": float, "memory": int, "num_gpus": int},
+            ),
+        ],
+    )
+    def test_with_env_variable(
+        self,
+        patch_env,
+        client: Mock,
+        wf_run_id: str,
+        resources: Dict[str, str],
+        expected: Dict[str, Union[int, float]],
+        types: Dict[str, type],
+    ):
+        workflow = workflow_parametrised_with_resources(**resources).model
+        _ = _dag._make_ray_dag(client, workflow, wf_run_id, None)
+        calls = client.add_options.call_args_list
+
+        # We should only have two calls: our invocation and the aggregation step
+        assert len(calls) == 2
+        # Checking our call did not have any resources included
+        assert calls[0] == call(
+            ANY,
+            name=ANY,
+            metadata=ANY,
+            runtime_env=ANY,
+            catch_exceptions=ANY,
+            **expected
+        )
+        for kwarg_name, type_ in types.items():
+            assert isinstance(calls[0].kwargs[kwarg_name], type_)

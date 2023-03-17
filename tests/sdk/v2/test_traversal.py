@@ -1211,3 +1211,35 @@ def test_workflow_with_secret():
     assert len(wf.secret_nodes) == 1
     assert len(wf.constant_nodes) == 0
     assert wf.secret_nodes["secret-0"].secret_name == "my_secret"
+
+
+def test_metadata_on_release(monkeypatch: pytest.MonkeyPatch):
+    # Given
+    mocked_installed_version = Mock(return_value="22.42.0")
+    monkeypatch.setattr(_traversal, "get_installed_version", mocked_installed_version)
+
+    # When
+    wf = workflow().model
+
+    # Then
+    assert wf.metadata is not None
+    assert wf.metadata.sdk_version.major == 22
+    assert wf.metadata.sdk_version.minor == 42
+    assert wf.metadata.sdk_version.patch == 0
+    assert not wf.metadata.sdk_version.is_prerelease
+
+
+def test_metadata_on_dev(monkeypatch: pytest.MonkeyPatch):
+    # Given
+    mocked_installed_version = Mock(return_value="22.42.0.dev1+gitAABBCC.20230101")
+    monkeypatch.setattr(_traversal, "get_installed_version", mocked_installed_version)
+
+    # When
+    wf = workflow().model
+
+    # Then
+    assert wf.metadata is not None
+    assert wf.metadata.sdk_version.major == 22
+    assert wf.metadata.sdk_version.minor == 42
+    assert wf.metadata.sdk_version.patch == 0
+    assert wf.metadata.sdk_version.is_prerelease

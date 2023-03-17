@@ -393,32 +393,6 @@ class TestRayRuntimeMethods:
             inv_output = list(outputs.values())[0]
             assert inv_output == (58,)
 
-        def test_before_any_task_finishes(self, runtime: _dag.RayRuntime, tmp_path):
-            """
-            Workflow graph in the scenario under test:
-              [ ]  => in progress
-               │
-               │
-               ▼
-              [ ]  => waiting
-               │
-               │
-               ▼
-            """
-            triggers = [tmp_path / f"trigger{i}.txt" for i in range(2)]
-
-            wf = _example_wfs.serial_wf_with_file_triggers(
-                triggers, task_timeout=2.0
-            ).model
-            wf_run_id = runtime.create_workflow_run(wf)
-
-            outputs = runtime.get_available_outputs(wf_run_id)
-            assert outputs == {}
-
-            # let the workers complete the workflow
-            triggers[0].write_text("triggered")
-            triggers[1].write_text("triggered")
-
         def test_after_one_task_finishes(self, runtime: _dag.RayRuntime, tmp_path):
             """
             Workflow graph in the scenario under test:

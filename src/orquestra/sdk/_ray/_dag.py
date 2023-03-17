@@ -31,8 +31,13 @@ from .._base import (
     serde,
 )
 from .._base._db import WorkflowDB
-from .._base._env import RAY_DOWNLOAD_GIT_IMPORTS_ENV, RAY_GLOBAL_WF_RUN_ID_ENV
+from .._base._env import (
+    RAY_DOWNLOAD_GIT_IMPORTS_ENV,
+    RAY_GLOBAL_WF_RUN_ID_ENV,
+    RAY_SET_TASK_RESOURCES_ENV,
+)
 from .._base.abc import ArtifactValue, LogReader, RuntimeInterface
+from ..kubernetes.quantity import parse_quantity
 from ..schema import ir
 from ..schema.configs import RuntimeConfiguration
 from ..schema.local_database import StoredWorkflowRun
@@ -354,7 +359,7 @@ def _gather_kwargs(
 
 
 def _make_ray_dag(
-    client: RayClient, wf: ir.WorkflowDef, wf_run_id: str, project_dir: Path
+    client: RayClient, wf: ir.WorkflowDef, wf_run_id: str, project_dir: t.Optional[Path]
 ):
     ray_consts: t.Dict[ir.ConstantNodeId, t.Any] = {
         id: serde.deserialize_constant(node) for id, node in wf.constant_nodes.items()
@@ -365,6 +370,10 @@ def _make_ray_dag(
         )
     # a mapping of "artifact ID" <-> "the ray Future needed to get the value"
     ray_futures: t.Dict[ir.ArtifactNodeId, t.Any] = {}
+
+    # Environment variable is used to configure if we apply task invocation resources
+    # to a Ray remote's options
+    add_resources = os.getenv(RAY_SET_TASK_RESOURCES_ENV) == "1"
 
     for ir_invocation in _graphs.iter_invocations_topologically(wf):
         # Prep args, kwargs, and the specs required to unpack tuples
@@ -402,6 +411,23 @@ def _make_ray_dag(
             "runtime_env": (_client.RuntimeEnv(pip=pip) if len(pip) > 0 else None),
             "catch_exceptions": False,
         }
+
+        # Task resources
+        if add_resources and ir_invocation.resources is not None:
+            if ir_invocation.resources.cpu is not None:
+                cpu = parse_quantity(ir_invocation.resources.cpu)
+                cpu_int = cpu.to_integral_value()
+                ray_options["num_cpus"] = int(cpu_int) if cpu == cpu_int else float(cpu)
+            if ir_invocation.resources.memory is not None:
+                memory = parse_quantity(ir_invocation.resources.memory)
+                memory_int = memory.to_integral_value()
+                ray_options["memory"] = (
+                    int(memory_int) if memory == memory_int else float(memory)
+                )
+            if ir_invocation.resources.gpu is not None:
+                # Fractional GPUs not supported currently
+                gpu = int(ir_invocation.resources.gpu)
+                ray_options["num_gpus"] = gpu
 
         ray_future = _make_ray_dag_node(
             client=client,

@@ -32,13 +32,13 @@ jobs:
         with:
           # Fetch depth 0 required to compare against `main`
           fetch-depth: 0
-
-      # Load a specific version of Python
-      - name: Setup python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
           architecture: x64
+      # Used to create OS-agnostic python virtual env used for other steps.
+      - uses: syphar/restore-virtualenv@v1
+        id: cache-virtualenv
 
       - name: Install deps
         shell: bash
