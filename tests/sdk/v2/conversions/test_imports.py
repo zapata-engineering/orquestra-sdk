@@ -115,3 +115,24 @@ def test_skip_password_dereference_yaml(caplog: pytest.LogCaptureFixture):
         logs[0].msg
         == "Refusing to dereference secret for url `https://example.com/some/path.git`"
     )
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://github.com/zapatacomputing/orquestra-workflow-sdk.git",
+        "ssh://git@github.com/zapatacomputing/orquestra-workflow-sdk.git",
+        "git@github.com:zapatacomputing/orquestra-workflow-sdk.git",
+    ],
+)
+def test_match_orq_sdk_repo(url: str):
+    # Given
+    sdk_import = GitImport(id="test", repo_url=url, git_ref="main")
+
+    # When
+    found_import = _imports._find_git_import([sdk_import], _imports.ORQ_SDK_URL)
+
+    # Then
+    assert found_import is not None
+    assert found_import.repo_url.host == "github.com"
+    assert found_import.repo_url.path == "zapatacomputing/orquestra-workflow-sdk.git"

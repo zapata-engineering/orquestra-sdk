@@ -13,11 +13,15 @@
 
 
 🐛 *Bug Fixes*
+* Stopping a QE workflow after it has already stopped will no longer raise an exception.
+
 
 💅 *Improvements*
 
 
 🥷 *Internal*
+* During YAML conversion, Workflow SDK repo matched on host and path, not full URL.
+* On QE, Github URLs will be converted to SSH URLs.
 
 
 📃 *Docs*

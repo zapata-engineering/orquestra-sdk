@@ -1260,6 +1260,17 @@ class TestStopWorkflowRun:
 
         assert response is None
 
+    def test_already_stopped(self, runtime, mocked_responses):
+        mocked_responses.add(
+            responses.DELETE,
+            "http://localhost/v1/workflows/hello-there-abc123-r000",
+            status=409,  # HTTP 409: Conflict
+        )
+
+        response = runtime.stop_workflow_run("hello-there-abc123-r000")
+
+        assert response is None
+
 
 class TestListWorkflowRuns:
     @pytest.fixture
