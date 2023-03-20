@@ -1264,7 +1264,7 @@ class TestStopWorkflowRun:
         mocked_responses.add(
             responses.DELETE,
             "http://localhost/v1/workflows/hello-there-abc123-r000",
-            status=409, # HTTP 409: Conflict
+            status=409,  # HTTP 409: Conflict
         )
 
         response = runtime.stop_workflow_run("hello-there-abc123-r000")
