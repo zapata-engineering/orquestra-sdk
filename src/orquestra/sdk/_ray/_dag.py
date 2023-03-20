@@ -417,12 +417,12 @@ def _make_ray_dag(
             if ir_invocation.resources.cpu is not None:
                 cpu = parse_quantity(ir_invocation.resources.cpu)
                 cpu_int = cpu.to_integral_value()
-                ray_options["num_cpus"] = cpu_int if cpu == cpu_int else float(cpu)
+                ray_options["num_cpus"] = int(cpu_int) if cpu == cpu_int else float(cpu)
             if ir_invocation.resources.memory is not None:
                 memory = parse_quantity(ir_invocation.resources.memory)
                 memory_int = memory.to_integral_value()
                 ray_options["memory"] = (
-                    memory_int if memory == memory_int else float(memory)
+                    int(memory_int) if memory == memory_int else float(memory)
                 )
             if ir_invocation.resources.gpu is not None:
                 # Fractional GPUs not supported currently
