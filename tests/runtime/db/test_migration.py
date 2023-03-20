@@ -23,9 +23,13 @@ class TestProjectToSharedDBMigration:
         mock_workflow_db_location: Path,
     ):
         # Given
+        @sdk.task
+        def simple_task():
+            return 0
+
         @sdk.workflow
         def test():
-            return 0
+            return simple_task()
 
         workflow_def = test.model
 
@@ -108,9 +112,13 @@ class TestProjectToSharedDBMigration:
         mock_workflow_db_location: Path,
     ):
         # Given
+        @sdk.task
+        def simple_task():
+            return 0
+
         @sdk.workflow
         def test():
-            return 0
+            return simple_task()
 
         workflow_def = test.model
 

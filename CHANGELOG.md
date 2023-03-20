@@ -4,6 +4,7 @@
 
 🚨 *Breaking Changes*
 
+- Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a WorkflowSyntaxError if no tasks are required to be executed.
 
 🔥 *Features*
 
