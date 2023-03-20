@@ -119,8 +119,11 @@ class WorkflowDef(Generic[_R]):
 
         if len(model.task_invocations) < 1:
             raise WorkflowSyntaxError(
-                f"The workflow '{model.name}' requires 0 tasks to be executed. "
-                "Workflows must execute at least one task."
+                f"The workflow '{model.name}' "
+                f"(defined at {model.fn_ref.file_path} line {model.fn_ref.line_number})"
+                " cannot be submitted as it does not define any tasks to be executed. "
+                "Please modify the workflow definition to define at least one task "
+                "and retry submitting the workflow."
             )
         return model
 

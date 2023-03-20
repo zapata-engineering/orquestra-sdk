@@ -517,9 +517,8 @@ class TestFlattenGraph:
         # preconditions
         with pytest.raises(exceptions.WorkflowSyntaxError) as e:
             no_tasks.model
-        assert (
-            "The workflow 'no_tasks' requires 0 tasks to be executed. Workflows must execute at least one task."  # noqa: E501
-            in str(e)
+        assert e.match(
+            r"The workflow 'no_tasks' \(defined at .+\.py line \d+\) cannot be submitted as it does not define any tasks to be executed. Please modify the workflow definition to define at least one task and retry submitting the workflow."  # noqa: E501
         )
 
 
