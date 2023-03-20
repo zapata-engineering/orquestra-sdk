@@ -118,13 +118,18 @@ class WorkflowDef(Generic[_R]):
         model = _traversal.flatten_graph(self, _futures)
 
         if len(model.task_invocations) < 1:
-            raise WorkflowSyntaxError(
-                f"The workflow '{model.name}' "
-                f"(defined at {model.fn_ref.file_path} line {model.fn_ref.line_number})"
-                " cannot be submitted as it does not define any tasks to be executed. "
+            helpstr = f"The workflow '{model.name}' "
+            if hasattr(model.fn_ref, "file_path"):  # If possible add the file and line.
+                helpstr += f"(defined at {model.fn_ref.file_path}"
+                if hasattr(model.fn_ref, "line_number"):
+                    helpstr += f" line {model.fn_ref.line_number}"
+                helpstr += ") "
+            helpstr += (
+                "cannot be submitted as it does not define any tasks to be executed. "
                 "Please modify the workflow definition to define at least one task "
                 "and retry submitting the workflow."
             )
+            raise WorkflowSyntaxError(helpstr)
         return model
 
     @property
