@@ -692,7 +692,7 @@ class QERuntime(RuntimeInterface):
                     # 404 error happens when task is not finished yet.
                     # 500 error is thrown by QE in case of failed task.
                     # A task invocation can have multiple outputs. If any of the above
-                    # errors happens for any of this invocation's outputs we consider
+                    # errors happen for any of this invocation's outputs we consider
                     # the whole invocation unavailable.
                     if e.response.status_code == 404 or e.response.status_code == 500:
                         continue

@@ -74,7 +74,7 @@ class UnknownPlaceholderInCustomNameWarning(Warning):
 
 # Typealias used to mark variables expected to hold raw constant values.
 Constant = Any
-# Typelias used to mark variables that can be used as task arguments. These are the
+# Typealias used to mark variables that can be used as task arguments. These are the
 # graph nodes that can represent data (contrary to task invocations that represent
 # function calls).
 Argument = Union[Constant, "ArtifactFuture", "Secret"]
