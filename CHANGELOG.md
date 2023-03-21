@@ -4,6 +4,7 @@
 
 🚨 *Breaking Changes*
 
+- Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a WorkflowSyntaxError if no tasks are required to be executed.
 
 🔥 *Features*
 
@@ -12,11 +13,15 @@
 
 
 🐛 *Bug Fixes*
+* Stopping a QE workflow after it has already stopped will no longer raise an exception.
+
 
 💅 *Improvements*
 
 
 🥷 *Internal*
+* During YAML conversion, Workflow SDK repo matched on host and path, not full URL.
+* On QE, Github URLs will be converted to SSH URLs.
 
 
 📃 *Docs*
@@ -72,6 +77,10 @@
 🥷 *Internal*
 * Git URL model changed inside the IR
 * `orq up` will now configure Ray's Plasma directory
+
+
+*Docs*
+* Guide: Dependency Installation - sources, order, and best practice
 
 
 ## v0.43.0

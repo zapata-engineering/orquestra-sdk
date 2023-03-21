@@ -12,7 +12,6 @@ import responses
 import orquestra.sdk as sdk
 import orquestra.sdk._base._db as _db
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import _api
 from orquestra.sdk._base._testing._example_wfs import my_workflow
 from orquestra.sdk.schema.configs import RuntimeName
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
@@ -147,9 +146,13 @@ class TestStartWorkflowRun:
     def test_raises_exception_if_worflow_name_does_not_match_qe_reqs(remote_config):
         workflow_name = "NameThatDoesNotMatchQEReqs"
 
+        @sdk.task
+        def simple_task():
+            return 0
+
         @sdk.workflow(custom_name=workflow_name)
         def BadNameWorkflow():
-            return [None]
+            return [simple_task()]
 
         run = BadNameWorkflow().prepare(remote_config)
 

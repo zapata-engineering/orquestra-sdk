@@ -101,6 +101,8 @@ class WorkflowDef(Generic[_R]):
             orquestra.sdk.exceptions.DirtyGitRepo: (warning) when a task def used by
                 this workflow def has a "GitImport" and the git repo that contains it
                 has uncommitted changes.
+            orquestra.sdk.exceptions.WorkflowSyntaxError: when there are no tasks
+                defined for this workflow.
         """
         from orquestra.sdk._base import _traversal
 
@@ -113,7 +115,22 @@ class WorkflowDef(Generic[_R]):
         else:
             _futures = futures
 
-        return _traversal.flatten_graph(self, _futures)
+        model = _traversal.flatten_graph(self, _futures)
+
+        if len(model.task_invocations) < 1:
+            helpstr = f"The workflow '{model.name}' "
+            if hasattr(model.fn_ref, "file_path"):  # If possible add the file and line.
+                helpstr += f"(defined at {model.fn_ref.file_path}"
+                if hasattr(model.fn_ref, "line_number"):
+                    helpstr += f" line {model.fn_ref.line_number}"
+                helpstr += ") "
+            helpstr += (
+                "cannot be submitted as it does not define any tasks to be executed. "
+                "Please modify the workflow definition to define at least one task "
+                "and retry submitting the workflow."
+            )
+            raise WorkflowSyntaxError(helpstr)
+        return model
 
     @property
     def graph(self):

@@ -779,6 +779,12 @@ class QERuntime(RuntimeInterface):
             requests.exceptions.HTTPError,
             requests.exceptions.ConnectionError,
         ) as e:
+            if (
+                e.response is not None
+                and e.response.status_code == requests.codes.conflict
+            ):
+                # This workflow has already been terminated
+                return
             raise exceptions.WorkflowRunCanNotBeTerminated(
                 f"{run_id} cannot be terminated."
             ) from e
