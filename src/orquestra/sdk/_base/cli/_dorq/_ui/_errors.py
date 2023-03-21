@@ -119,6 +119,6 @@ def _(_: exceptions.InProcessFromCLIError) -> ResponseStatusCode:
             ' - Use the Python API to debug workflows with the "{0}" runtime.\n'
             ' - Try the "{1}" runtime if you want to run a workflow locally via'
             " the CLI."
-        ).format(IN_PROCESS_CONFIG_NAME, RAY_CONFIG_NAME_ALIAS)
+        ).format(IN_PROCESS_CONFIG_NAME, RAY_CONFIG_NAME_ALIAS),
     )
     return ResponseStatusCode.USER_CANCELLED

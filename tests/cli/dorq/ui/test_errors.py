@@ -78,3 +78,29 @@ class TestPrettyPrintException:
         # Verifies that user sees the stack trace. This is useful for bug reports and
         # debugging.
         assert "Traceback (most recent call last):\n  File" in captured.err
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "exc,stdout_marker",
+        [
+            (
+                exceptions.InProcessFromCLIError,
+                'The "in_process" runtime is designed for debugging and testingvia the Python API only',
+            ),
+        ],
+    )
+    def tests_prints_exception_without_traceback(capsys, exc, stdout_marker: str):
+        # Given
+        try:
+            # Simulate raising the exception object. This is supposed to realistically
+            # set the stack trace.
+            raise exc
+        except Exception as e:
+            # When
+            _errors.pretty_print_exception(e)
+
+        # Then
+        captured = capsys.readouterr()
+
+        # Verifies that we describe the failure reason to the user.
+        assert stdout_marker in captured.out
