@@ -137,7 +137,12 @@ class WFRunResolver:
         # Create labels of wf shown to the user by prompter.
         # Label is <wf_id> <start_time> tabulated nicely to format good looking table
         labels = [
-            [wf.id, wf.status.start_time.astimezone().replace(tzinfo=None).ctime() if wf.status.start_time else ""]
+            [
+                wf.id,
+                wf.status.start_time.astimezone().replace(tzinfo=None).ctime()
+                if wf.status.start_time
+                else "",
+            ]
             for wf in wfs
         ]
         tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
