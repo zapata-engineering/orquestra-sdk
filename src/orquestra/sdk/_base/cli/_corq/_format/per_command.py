@@ -231,28 +231,37 @@ def _print_single_run(run: responses.WorkflowRun, project_dir: t.Optional[str]):
 
 
 def _format_multiple_runs(runs: t.Sequence[responses.WorkflowRun]):
-    headers = ["workflow run ID", "status", "tasks succeeded", "start time"]
     # leave start_time at datetime.datetime format, so we can easily sort by it
     rows = [
-        [
-            run.id,
-            run.status.state.value,
-            _tasks_number_summary(run),
-            run.status.start_time,
-        ]
+        {
+            "workflow run ID": run.id,
+            "status": run.status.state.value,
+            "tasks succeeded": _tasks_number_summary(run),
+            "default start time": run.status.start_time,  # start time taken from WF def
+        }
         for run in runs
     ]
     # take into account that we might be missing start time. Try our best to sort
     # by start time of the workflow
-    rows.sort(key=lambda row: row[3] if row[3] else datetime.fromtimestamp(0))
+    rows.sort(
+        key=lambda row: row["default start time"]
+        if row["default start time"]
+        else datetime.fromtimestamp(0)
+    )
     for row in rows:
-        row[3] = (
-            row[3].astimezone().replace(tzinfo=None).ctime()
-            if isinstance(row[3], datetime)  # just in case startime doesnt exist
+        row["start time"] = (
+            row["default start time"].astimezone().replace(tzinfo=None).ctime()
+            if row["default start time"]  # just in case start time doesn't exist
             else ""
         )
 
-    print(tabulate.tabulate(rows, headers=headers))
+    headers = ["workflow run ID", "status", "tasks succeeded", "start time"]
+
+    print(
+        tabulate.tabulate(
+            [[row[header] for header in headers] for row in rows], headers=headers
+        )
+    )
 
 
 def _tasks_number_summary(wf_run: responses.WorkflowRun) -> str:

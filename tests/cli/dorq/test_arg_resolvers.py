@@ -350,8 +350,8 @@ class TestWFRunResolver:
                 run.id = id
                 run.status = RunStatus(
                     state=State.RUNNING,
-                    start_time=datetime.fromtimestamp(ts),
-                    end_time=datetime.fromtimestamp(ts),
+                    start_time=datetime.fromtimestamp(ts, tz=timezone.utc),
+                    end_time=datetime.fromtimestamp(ts, tz=timezone.utc),
                 )
                 return run
 
