@@ -85,7 +85,8 @@ class TestPrettyPrintException:
         [
             (
                 exceptions.InProcessFromCLIError,
-                'The "in_process" runtime is designed for debugging and testingvia the Python API only',
+                'The "in_process" runtime is designed for debugging and testingvia the'
+                " Python API only",
             ),
         ],
     )
