@@ -7,7 +7,8 @@
 - Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a WorkflowSyntaxError if no tasks are required to be executed.
 
 🔥 *Features*
-
+- Sort WF runs by start date in `list wf` command. Show start date as one of the columns
+- Sort WF runs by start date in all workflow commands in prompt selection. Show start date with WF id
 
 👩‍🔬 *Experimental*
 
