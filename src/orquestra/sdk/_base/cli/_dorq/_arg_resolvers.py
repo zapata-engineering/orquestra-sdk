@@ -126,16 +126,15 @@ class WFRunResolver:
 
         # Query the runtime for suitable workflow run IDs.
         wfs = self._wf_run_repo.list_wf_runs(config)
-
         # sort wfs by submission date. Take into account when there is no start_time
         wfs.sort(
             key=lambda wf: wf.status.start_time
             if wf.status.start_time
-            else datetime.datetime.fromtimestamp(0)
+            else datetime.datetime.fromtimestamp(0),
+            reverse=True,
         )
-
-        # Create labels of wf shown to the user by prompter.
-        # Label is <wf_id> <start_time> tabulated nicely to format good looking table
+        # Create labels of wf that are printed by prompter
+        # Label is <wf_id> <start_time> tabulated nicely to create good-looking table
         labels = [
             [
                 wf.id,

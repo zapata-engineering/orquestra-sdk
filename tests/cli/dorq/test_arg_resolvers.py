@@ -2,13 +2,14 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 import typing as t
-from unittest.mock import Mock
+from datetime import datetime, timezone
+from unittest.mock import Mock, create_autospec
 
 import pytest
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base.cli._dorq import _arg_resolvers, _repos
-from orquestra.sdk.schema.workflow_run import State
+from orquestra.sdk.schema.workflow_run import RunStatus, State, WorkflowRun
 
 
 class TestConfigResolver:
@@ -344,15 +345,26 @@ class TestWFRunResolver:
             User didn't pass ``wf_run_id``.
             """
             # Given
+            def return_wf(id, ts):
+                run = Mock()
+                run.id = id
+                run.status = RunStatus(
+                    state=State.RUNNING,
+                    start_time=datetime.fromtimestamp(ts),
+                    end_time=datetime.fromtimestamp(ts),
+                )
+                return run
+
             wf_run_id = None
             config = "<config sentinel>"
 
             wf_run_repo = Mock()
-            listed_run_ids = ["wf1", "wf2"]
-            wf_run_repo.list_wf_run_ids.return_value = listed_run_ids
+
+            listed_runs = [return_wf("1", 0), return_wf("2", 100000)]
+            wf_run_repo.list_wf_runs.return_value = listed_runs
 
             prompter = Mock()
-            selected_id = listed_run_ids[0]
+            selected_id = listed_runs[0].id
             prompter.choice.return_value = selected_id
 
             resolver = _arg_resolvers.WFRunResolver(
@@ -365,12 +377,16 @@ class TestWFRunResolver:
 
             # Then
             # We should pass config value to wf_run_repo.
-            wf_run_repo.list_wf_run_ids.assert_called_with(config)
+            wf_run_repo.list_wf_runs.assert_called_with(config)
 
             # We should prompt for selecting workflow ID from the ones returned
-            # by the repo.
+            # by the repo. Those choices should be sorted from newest at the top
             prompter.choice.assert_called_with(
-                listed_run_ids, message="Workflow run ID"
+                [
+                    ("2  Fri Jan  2 04:46:40 1970", "2"),
+                    ("1  Thu Jan  1 01:00:00 1970", "1"),
+                ],
+                message="Workflow run ID",
             )
 
             # Resolver should return the user's choice.
