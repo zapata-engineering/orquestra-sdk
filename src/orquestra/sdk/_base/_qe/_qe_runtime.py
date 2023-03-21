@@ -25,7 +25,13 @@ from orquestra.sdk._base._conversions._yaml_exporter import (
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.schema.configs import RuntimeConfiguration
-from orquestra.sdk.schema.ir import TaskInvocation, TaskInvocationId, WorkflowDef
+from orquestra.sdk.schema.ir import (
+    ArtifactNode,
+    ArtifactNodeId,
+    TaskInvocation,
+    TaskInvocationId,
+    WorkflowDef,
+)
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import (
     RunStatus,
@@ -340,6 +346,17 @@ def _http_error_handling():
             ) from e
         else:
             raise e
+
+
+def _find_packed_artifact_id(
+    wf_def: WorkflowDef, inv_id: TaskInvocationId
+) -> ArtifactNodeId:
+    output_ids = wf_def.task_invocations[inv_id].output_ids
+    artifact_nodes = (wf_def.artifact_nodes[id] for id in output_ids)
+    packed: ArtifactNode = _find_first(
+        lambda node: node.artifact_index is None, artifact_nodes
+    )
+    return packed.id
 
 
 class QERuntime(RuntimeInterface):
@@ -673,34 +690,31 @@ class QERuntime(RuntimeInterface):
         # Return dict contains return values for task invocation
         return_dict = {}
         with _http_error_handling():
-            # retrieve each artifact for each step
+            # Assumption: task invoactions produce "packed" and "unpacked" artifacts.
+            # We want to fetch whatever object was returned from the task function, so
+            # we only need the "packed" artifact. For more info on artifact unpacking,
+            # see "orquestra.sdk._base._traversal".
             for inv in wf_def.task_invocations.values():
-                output_ids = wf_def.task_invocations[inv.id].output_ids
-                invocation_output_values = []
+                packed_id = _find_packed_artifact_id(wf_def, inv.id)
                 try:
-                    for artifact_id in output_ids:
-                        artifact_bytes = self._client.get_artifact(
-                            workflow_id=workflow_run_id,
-                            step_name=inv.id,
-                            artifact_name=artifact_id,
-                        )
-                        artifact_value = serde.value_from_result_dict(
-                            _parse_workflow_result(artifact_bytes)
-                        )
-                        invocation_output_values.append(artifact_value)
+                    artifact_bytes = self._client.get_artifact(
+                        workflow_id=workflow_run_id,
+                        step_name=inv.id,
+                        artifact_name=packed_id,
+                    )
                 except requests.exceptions.HTTPError as e:
                     # 404 error happens when task is not finished yet.
                     # 500 error is thrown by QE in case of failed task.
-                    # A task invocation can have multiple outputs. If any of the above
-                    # errors happen for any of this invocation's outputs we consider
-                    # the whole invocation unavailable.
                     if e.response.status_code == 404 or e.response.status_code == 500:
                         continue
                     else:
                         raise e
 
-                # Assumption: this line won't be executed if the invocation isn't ready.
-                return_dict[inv.id] = tuple(invocation_output_values)
+                artifact_value = serde.value_from_result_dict(
+                    _parse_workflow_result(artifact_bytes)
+                )
+
+                return_dict[inv.id] = artifact_value
 
         return return_dict
 

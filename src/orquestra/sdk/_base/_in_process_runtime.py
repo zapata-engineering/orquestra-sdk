@@ -155,14 +155,21 @@ class InProcessRuntime(abc.RuntimeInterface):
 
         inv_outputs: t.Dict[ir.TaskInvocationId, TaskOutputs] = {}
         for inv in wf_def.task_invocations.values():
-            output_vals = tuple(
-                [
-                    self._artifact_store[workflow_run_id][art_id]
-                    for art_id in inv.output_ids
-                ]
-            )
+            # Assumption there's always a non-unpacked artifact. We want to return
+            # whatever shape was returned from the task function so we can use the
+            # "packed" artifact. For more info on artifact unpacking, see
+            # "orquestra.sdk._base._traversal".
 
-            inv_outputs[inv.id] = output_vals
+            artifact_nodes = [wf_def.artifact_nodes[id] for id in inv.output_ids]
+            packed_artifact = [
+                artifact
+                for artifact in artifact_nodes
+                if artifact.artifact_index is None
+            ][0]
+
+            task_result = self._artifact_store[workflow_run_id][packed_artifact.id]
+
+            inv_outputs[inv.id] = task_result
 
         return inv_outputs
 

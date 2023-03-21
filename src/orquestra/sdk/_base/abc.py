@@ -137,9 +137,8 @@ class RuntimeInterface(ABC):
         artifacts only for the steps that did success. Might raise an exception if
         runtime doesn't support getting artifacts from in-progress workflow.
 
-        Either we have access to all outputs of a given task, or none. In other words,
-        the number of values in the tuple should always match the number of output IDs
-        in the corresponding task invocation.
+        Either we have access to all outputs of a given task, or none. If a given task
+        invocation didn't succeed yet, there shouldn't be an entry in the returned dict.
 
         Careful: This method does NOT return status of a workflow. Verify it beforehand
         to make sure if workflow failed/succeeded/is running. You might get incomplete
@@ -147,8 +146,8 @@ class RuntimeInterface(ABC):
 
         Returns:
             A mapping with an entry for each task run in the workflow. The key is the
-                task's invocation ID. The value is a n-tuple, where n is the number of
-                task's outputs. If task has 1 output, this will be a 1-tuple.
+                task's invocation ID. The value is whatever the task function returned,
+                independent of the ``@task(n_outputs=...)`` value.
         """
         raise NotImplementedError()
 

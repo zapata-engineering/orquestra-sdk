@@ -122,7 +122,7 @@ class TestQueriesAfterRunning:
             single-output task.
             """
             assert runtime.get_available_outputs(run_id) == {
-                "invocation-0-task-sum-tuple-numbers": (3,)
+                "invocation-0-task-sum-tuple-numbers": 3
             }
 
         class TestMultipleTaskOutputs:

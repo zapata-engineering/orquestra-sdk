@@ -122,7 +122,10 @@ def multioutput_wf():
 def multioutput_task_wf():
     a, b = multioutput_task()
     _, c = multioutput_task()
-    return a, b, c
+    d, _ = multioutput_task()
+    packed = multioutput_task()
+    f, g = packed
+    return a, b, c, d, packed, f, g
 
 
 @sdk.workflow

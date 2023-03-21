@@ -294,6 +294,13 @@ def two_task_outputs_all_used():
 
 
 @_workflow.workflow
+def two_task_outputs_packed_returned():
+    packed = two_outputs()
+    a, b = packed
+    return a, b, packed
+
+
+@_workflow.workflow
 def three_task_outputs():
     foo1, bar1, baz1 = three_outputs()
     _, bar2, baz2 = three_outputs()
@@ -713,8 +720,7 @@ class TestWorkflowsTasksProperties:
         expectation: ContextManager,
     ):
         """
-        Number of task invocation output IDs should match the number of task def's
-        outputs.
+        Number of task invocation output IDs should correspond to task def's outputs.
         """
         with expectation:
             wf_def = workflow_template.model
@@ -724,7 +730,16 @@ class TestWorkflowsTasksProperties:
                 # We assume that `fn_ref` points to a @task() decorated function.
                 assert isinstance(task_def_obj, _dsl.TaskDef)
 
-                assert len(inv.output_ids) == task_def_obj.output_metadata.n_outputs
+                if task_def_obj.output_metadata.is_subscriptable:
+                    # n + 1 artifacts for n-output task def:
+                    # - one artifact for each output to handle unpacking
+                    # - one artifact overall to handle using non-unpacked future
+                    assert (
+                        len(inv.output_ids)
+                        == task_def_obj.output_metadata.n_outputs + 1
+                    )
+                else:
+                    assert len(inv.output_ids) == 1
 
     @staticmethod
     def test_no_hanging_inputs(
@@ -1341,5 +1356,55 @@ class TestGraphTraversal:
             ir.ArtifactNode(
                 id="artifact-1-two-outputs",
                 artifact_index=1,
+            ),
+            # We expect a non-unpacked artifact node even though we instanteneously
+            # unpack it to other futures.
+            ir.ArtifactNode(
+                id="artifact-2-two-outputs",
+                artifact_index=None,
+            ),
+        ]
+
+    @staticmethod
+    def test_packed_and_unpacked():
+        # Given
+        graph = _traversal.GraphTraversal()
+        wf = two_task_outputs_packed_returned()
+        futures = _traversal.extract_root_futures(wf)
+
+        # When
+        graph.traverse(futures)
+
+        # Then
+        assert list(graph.artifacts) == [
+            ir.ArtifactNode(
+                id="artifact-0-two-outputs",
+                artifact_index=0,
+            ),
+            ir.ArtifactNode(
+                id="artifact-1-two-outputs",
+                artifact_index=1,
+            ),
+            ir.ArtifactNode(
+                id="artifact-2-two-outputs",
+                artifact_index=None,
+            ),
+        ]
+
+    @staticmethod
+    def test_non_subscriptable_output():
+        # Given
+        graph = _traversal.GraphTraversal()
+        wf = single_invocation()
+        futures = _traversal.extract_root_futures(wf)
+
+        # When
+        graph.traverse(futures)
+
+        # Then
+        assert list(graph.artifacts) == [
+            ir.ArtifactNode(
+                id="artifact-0-capitalize",
+                artifact_index=None,
             ),
         ]

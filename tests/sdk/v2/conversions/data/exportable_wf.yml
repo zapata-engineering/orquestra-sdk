@@ -79,6 +79,10 @@ steps:
       custom_name: null
       serialization_format: 'AUTO'
       artifact_index: 1
+    - id: 'artifact-3-multi-output-test'
+      custom_name: null
+      serialization_format: 'AUTO'
+      artifact_index: null
     type: sdk-metadata
   - __sdk_additional_sys_paths: ["step/orq-wor-sdk"]
     type: sdk-metadata
@@ -89,6 +93,8 @@ steps:
   - name: artifact-1-multi-output-test
     type: workflow-result-dict
   - name: artifact-2-multi-output-test
+    type: workflow-result-dict
+  - name: artifact-3-multi-output-test
     type: workflow-result-dict
   passed: []
 

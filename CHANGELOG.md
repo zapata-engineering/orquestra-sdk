@@ -5,21 +5,6 @@
 🚨 *Breaking Changes*
 
 * Pickling library switched to `cloudpickle` instead of `dill`. While no breakages are expected, this change may result in objects raising an error during pickling, even if they were previously able to be pickled. Please report any instances of these as bugs.
-* Tasks with multiple outputs need to be unpacked in the workflow function, as shown in the following example:
-```python
-@sdk.workflow
-def my_wf():
-    a, b = two_output_task()
-    return a, b
-```
-Tasks returning packed outputs, such as the example below, will no longer work.
-```python
-@sdk.workflow
-def my_wf():
-    c = two_output_task()
-    return c
-```
-
 - Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a `WorkflowSyntaxError` if no tasks are required to be executed.
 
 🔥 *Features*
@@ -38,7 +23,9 @@ def my_wf():
 @sdk.workflow
 def my_wf():
     _, b = two_output_task()
-    return b
+    all_outputs = two_output_task()
+    out1, out2 = all_outputs
+    return b, all_outputs, out1, out2
 
 
 💅 *Improvements*
@@ -47,6 +34,7 @@ def my_wf():
 🥷 *Internal*
 * During YAML conversion, Workflow SDK repo matched on host and path, not full URL.
 * On QE, Github URLs will be converted to SSH URLs.
+* `TaskOutputMetadata` model was added to the workflow def IR schema.
 
 
 📃 *Docs*

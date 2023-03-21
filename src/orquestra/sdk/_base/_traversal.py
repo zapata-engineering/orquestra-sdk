@@ -90,9 +90,93 @@ class GraphTraversal:
     def __init__(self):
         self._secrets: t.MutableMapping[t.Hashable, ir.SecretNode] = {}
         self._constants: t.MutableMapping[t.Hashable, ir.ConstantNode] = {}
-        self._invocation_outputs: t.MutableMapping[
+
+        # Running a task invocation results in values. The values are stored in
+        # artifacts. Some of the values can be subscripted. Some of the values
+        # can be left unused.
+        #
+        # If the task output is substritable, an invocation of an n-output task produces
+        # n+1 artifacts: one for each subscripted output and one for non-subscripted
+        # output.
+        #
+        # If the task output is not substriptable, an invocation produces one artifact.
+        #
+        # Use case example:
+        # foo = task()
+        # bar, baz, _ = foo
+        # qux = task2(bar)
+        # bla = task2(bar)
+        #
+        # In the example above, there are:
+        # - 3 task invocations ("task()", "task2(bar)", and "task2(bar)")
+        # - 5 futures ("foo", "bar", "baz", "qux", "bla")
+        # - 6 artifacts:
+        #     - 3 unpacked outputs "bar", "baz", "_"
+        #     - 3 non-unpacked outputs "foo", "qux", "bla"
+
+        # Each future points to an artifact. This field to powers "self.get_node_id()".
+        self._future_artifacts: t.MutableMapping[
+            _dsl.ArtifactFuture, ir.ArtifactNode
+        ] = {}
+
+        # Artifacts for "bar" and "baz" in the example above. This field powers
+        # "self.artifacts". We need it in addition to "self._future_artifacts" because
+        # some artifact nodes can be not referenced in the workflow function ("_" in
+        # the example above).
+        self._invocation_unpacked_artifacts: t.MutableMapping[
             _dsl.TaskInvocation, t.MutableSequence[ir.ArtifactNode]
         ] = {}
+
+        # Artifacts for "foo" in the example above. This field powers "self.artifacts".
+        # We need it in addition to "self._invocation_unpacked_artifacts" because of
+        # "foo" in the example above.
+        self._invocation_non_unpacked_artifacts: t.MutableMapping[
+            _dsl.TaskInvocation, ir.ArtifactNode
+        ] = {}
+
+        # Needed to generate workflow-def-scoped artifact IDs.
+        self._wf_artifact_counter = 0
+
+    def _point_future_to_artifact(self, future: _dsl.ArtifactFuture):
+        """
+        Helper subroutine used in ``traverse()``. Mutates ``self._future_artifacts`` to
+        point ``future`` to an already generated artifact node.
+        """
+        if future.output_index is not None:
+            # This future is a result of unpacking another future ("bar"
+            # and "baz" in the example above).
+            self._future_artifacts[future] = self._invocation_unpacked_artifacts[
+                future.invocation
+            ][future.output_index]
+        else:
+            # This future is non-unpacked output ("foo" in the example
+            # above).
+            self._future_artifacts[future] = self._invocation_non_unpacked_artifacts[
+                future.invocation
+            ]
+
+    def _gen_artifact(
+        self,
+        task_def: _dsl.TaskDef,
+        custom_name: t.Optional[str],
+        format: ir.ArtifactFormat,
+        invocation_output_index: t.Optional[int],
+    ) -> ir.ArtifactNode:
+        """
+        Creates artifact node models with workflow-def-scoped IDs.
+        """
+        artifact = ir.ArtifactNode(
+            id=_make_artifact_id(
+                source_task=task_def,
+                wf_scoped_artifact_index=self._wf_artifact_counter,
+            ),
+            custom_name=custom_name,
+            serialization_format=format,
+            artifact_index=invocation_output_index,
+        )
+        self._wf_artifact_counter += 1
+
+        return artifact
 
     def traverse(self, output_nodes: t.Sequence[DSLDataNode]):
         """
@@ -101,59 +185,78 @@ class GraphTraversal:
         We iterate over the futures returned from the workflow find the artifacts,
         constants, and secrets.
         """
-        wf_artifact_counter = 0
         secret_counter = 0
         constant_counter = 0
+
+        seen_futures: t.MutableSet[_dsl.ArtifactFuture] = set()
+        seen_invocations: t.MutableSet[_dsl.TaskInvocation] = set()
+
         for n in _iter_nodes(output_nodes):
             if isinstance(n, _dsl.ArtifactFuture):
-                if n.invocation not in self._invocation_outputs:
-                    # This future points to an invocation we haven't seen before. We
-                    # need to make as many artifact nodes as there are task outputs,
-                    # even if some artifacts were not bound to variables inside the
-                    # workflow fn. This is needed for proper support of cases like:
-                    #
-                    #      _, bar = my_task()
+                # The main point of handling artifact futures is to populate:
+                # - self._future_artifacts
+                # - self._invocation_unpacked_artifacts
+                # - self._invocation_non_unpacked_artifacts
 
-                    out_meta = n.invocation.task.output_metadata
+                # A single future can be used in multiple places in the workflow. We
+                # only want to handle it once.
+                if n in seen_futures:
+                    continue
+
+                out_meta = n.invocation.task.output_metadata
+
+                # There can be many futures requiring to run the same task invocation.
+                if n.invocation in seen_invocations:
+                    # We've already handled the invocation, but not this future. We're
+                    # supposed to have artifact nodes already generated for it. We just
+                    # need to point "self._future_artifacts" to it.
+
                     if out_meta.is_subscriptable:
-                        this_invocation_outputs = []
-                        for output_index in range(out_meta.n_outputs):
+                        assert n.invocation in self._invocation_unpacked_artifacts
+
+                    assert n.invocation in self._invocation_non_unpacked_artifacts
+
+                    self._point_future_to_artifact(n)
+                else:
+                    # We haven't seen the invocation and haven't seen the future. We'll
+                    # have to generate artifact nodes it before we can point
+                    # "self._future_artifacts" to it.
+
+                    if out_meta.is_subscriptable:
+                        # Generate artifact nodes for unpacking ("bar" and "baz" in the
+                        # example above).
+                        unpacked_artifacts = []
+                        for output_i in range(out_meta.n_outputs):
                             default_format = ir.ArtifactFormat(
                                 _dsl.ArtifactFuture.DEFAULT_SERIALIZATION_FORMAT.value
                             )
-                            artifact_node = ir.ArtifactNode(
-                                id=_make_artifact_id(
-                                    source_task=n.invocation.task,
-                                    wf_scoped_artifact_index=wf_artifact_counter,
-                                ),
+                            artifact = self._gen_artifact(
+                                task_def=n.invocation.task,
                                 custom_name=_dsl.ArtifactFuture.DEFAULT_CUSTOM_NAME,
-                                serialization_format=default_format,
-                                artifact_index=output_index,
+                                format=default_format,
+                                invocation_output_index=output_i,
                             )
-                            wf_artifact_counter += 1
-                            this_invocation_outputs.append(artifact_node)
+                            unpacked_artifacts.append(artifact)
+                        self._invocation_unpacked_artifacts[
+                            n.invocation
+                        ] = unpacked_artifacts
 
-                        self._invocation_outputs[n.invocation] = this_invocation_outputs
-                    else:
-                        assert n.output_index is None, (
-                            "Attempted to subscript an invocation that's not "
-                            "subscriptable"
-                        )
+                    # Generate artifact node for non-unpacked use ("foo", "qux", "bla"
+                    # in the example above).
+                    artifact = self._gen_artifact(
+                        task_def=n.invocation.task,
+                        custom_name=n.custom_name,
+                        format=ir.ArtifactFormat(n.serialization_format.value),
+                        invocation_output_index=None,
+                    )
 
-                        self._invocation_outputs[n.invocation] = [
-                            ir.ArtifactNode(
-                                id=_make_artifact_id(
-                                    source_task=n.invocation.task,
-                                    wf_scoped_artifact_index=wf_artifact_counter,
-                                ),
-                                custom_name=n.custom_name,
-                                serialization_format=ir.ArtifactFormat(
-                                    n.serialization_format.value
-                                ),
-                                artifact_index=None,
-                            )
-                        ]
-                        wf_artifact_counter += 1
+                    self._invocation_non_unpacked_artifacts[n.invocation] = artifact
+
+                    self._point_future_to_artifact(n)
+
+                # due dilligence
+                seen_futures.add(n)
+                seen_invocations.add(n.invocation)
 
             elif isinstance(n, _dsl.Secret):
                 self._secrets[_make_key(n)] = ir.SecretNode(
@@ -168,11 +271,16 @@ class GraphTraversal:
 
     @property
     def artifacts(self) -> t.Iterable[ir.ArtifactNode]:
-        return (
-            artifact_node
-            for outputs in self._invocation_outputs.values()
-            for artifact_node in outputs
+        # Collect unpacked artifacts
+        unpacked = (
+            artifact
+            for artifacts in self._invocation_unpacked_artifacts.values()
+            for artifact in artifacts
         )
+        # Collect non-unpacked artifacts
+        non_unpacked = self._invocation_non_unpacked_artifacts.values()
+
+        return (*unpacked, *non_unpacked)
 
     @property
     def constants(self) -> t.Iterable[ir.ConstantNode]:
@@ -180,12 +288,25 @@ class GraphTraversal:
 
     @property
     def invocations(self) -> t.Iterable[_dsl.TaskInvocation]:
-        return self._invocation_outputs.keys()
+        # Every seen invocation has a non-unpacked artifact so we can use this field.
+        return self._invocation_non_unpacked_artifacts.keys()
 
-    def invocation_output_ids(
+    def output_ids_for_invocation(
         self, invocation: _dsl.TaskInvocation
     ) -> t.Sequence[ir.ArtifactNodeId]:
-        return [artifact.id for artifact in self._invocation_outputs[invocation]]
+        # Collect unpacked artifacts (a sequence)
+        unpacked: t.Iterable[ir.ArtifactNode]
+        if invocation.task.output_metadata.is_subscriptable:
+            unpacked = (
+                artifact for artifact in self._invocation_unpacked_artifacts[invocation]
+            )
+        else:
+            unpacked = []
+
+        # Get the non-unpacked artifact (a single one)
+        non_unpacked = self._invocation_non_unpacked_artifacts[invocation]
+
+        return [artifact.id for artifact in (*unpacked, non_unpacked)]
 
     @property
     def secrets(self) -> t.Iterable[ir.SecretNode]:
@@ -195,13 +316,7 @@ class GraphTraversal:
         key = _make_key(node)
 
         if isinstance(node, _dsl.ArtifactFuture):
-            future = node
-            invocation = future.invocation
-            if (output_index := future.output_index) is not None:
-                artifact_node = self._invocation_outputs[invocation][output_index]
-            else:
-                artifact_node = self._invocation_outputs[invocation][0]
-            return artifact_node.id
+            return self._future_artifacts[node].id
 
         elif isinstance(node, _dsl.Secret):
             return self._secrets[key].id
@@ -607,7 +722,7 @@ def _make_invocation_model(
         task_id=task_models_dict[invocation.task].id,
         args_ids=args_ids,
         kwargs_ids=kwargs_ids,
-        output_ids=graph.invocation_output_ids(invocation),
+        output_ids=graph.output_ids_for_invocation(invocation),
         resources=_make_resources_model(invocation.resources),
         custom_image=invocation.custom_image,
     )
