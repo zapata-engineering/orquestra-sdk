@@ -2,7 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 import typing as t
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest.mock import Mock, create_autospec
 
 import pytest
@@ -345,13 +345,15 @@ class TestWFRunResolver:
             User didn't pass ``wf_run_id``.
             """
             # Given
-            def return_wf(id, ts):
+            current_time = datetime.now()
+
+            def return_wf(id, time_delay_in_sec: int):
                 run = Mock()
                 run.id = id
                 run.status = RunStatus(
                     state=State.RUNNING,
-                    start_time=datetime.fromtimestamp(ts).astimezone(),
-                    end_time=datetime.fromtimestamp(ts).astimezone(),
+                    start_time=current_time + timedelta(seconds=time_delay_in_sec),
+                    end_time=current_time + timedelta(seconds=time_delay_in_sec),
                 )
                 return run
 
@@ -359,8 +361,8 @@ class TestWFRunResolver:
             config = "<config sentinel>"
 
             wf_run_repo = Mock()
-
-            listed_runs = [return_wf("1", 0), return_wf("2", 100000)]
+            time_delta = 1000
+            listed_runs = [return_wf("1", 0), return_wf("2", time_delta)]
             wf_run_repo.list_wf_runs.return_value = listed_runs
 
             prompter = Mock()
@@ -383,8 +385,11 @@ class TestWFRunResolver:
             # by the repo. Those choices should be sorted from newest at the top
             prompter.choice.assert_called_with(
                 [
-                    ("2  Fri Jan  2 04:46:40 1970", "2"),
-                    ("1  Thu Jan  1 01:00:00 1970", "1"),
+                    (
+                        "2  " + (current_time + timedelta(seconds=time_delta)).ctime(),
+                        "2",
+                    ),
+                    ("1  " + current_time.ctime(), "1"),
                 ],
                 message="Workflow run ID",
             )
