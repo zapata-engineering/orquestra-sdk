@@ -246,7 +246,11 @@ def _format_multiple_runs(runs: t.Sequence[responses.WorkflowRun]):
     # by start time of the workflow
     rows.sort(key=lambda row: row[3] if row[3] else datetime.fromtimestamp(0))
     for row in rows:
-        row[3] = row[3].astimezone().replace(tzinfo=None).ctime()
+        row[3] = (
+            row[3].astimezone().replace(tzinfo=None).ctime()
+            if isinstance(row[3], datetime)  # just in case startime doesnt exist
+            else ""
+        )
 
     print(tabulate.tabulate(rows, headers=headers))
 
