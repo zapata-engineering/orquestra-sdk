@@ -23,7 +23,7 @@ from orquestra.sdk.schema.workflow_run import (
 )
 
 from . import _repos
-from ._ui import _prompts
+from ._ui import _presenters, _prompts
 
 
 class ConfigResolver:
@@ -114,32 +114,11 @@ class WFRunResolver:
         self,
         wf_run_repo=_repos.WorkflowRunRepo(),
         prompter=_prompts.Prompter(),
+        presenter=_presenters.PromptPresenter(),
     ):
         self._wf_run_repo = wf_run_repo
         self._prompter = prompter
-
-    def _prepare_wf_list_for_prompt(self, wfs):
-        # sort wfs by submission date. Take into account when there is no start_time
-        wfs.sort(
-            key=lambda wf: wf.status.start_time
-            if wf.status.start_time
-            else datetime.datetime.fromtimestamp(0),
-            reverse=True,
-        )
-        # Create labels of wf that are printed by prompter
-        # Label is <wf_id> <start_time> tabulated nicely to create good-looking table
-        labels = [
-            [
-                wf.id,
-                wf.status.start_time.astimezone().replace(tzinfo=None).ctime()
-                if wf.status.start_time
-                else "",
-            ]
-            for wf in wfs
-        ]
-        tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
-
-        return tabulated_labels
+        self._presenter = presenter
 
     def resolve_id(
         self, wf_run_id: t.Optional[WorkflowRunId], config: ConfigName
@@ -149,7 +128,7 @@ class WFRunResolver:
 
         wfs = self._wf_run_repo.list_wf_runs(config)
 
-        tabulated_labels = self._prepare_wf_list_for_prompt(wfs)
+        tabulated_labels = self._presenter.wf_list_for_prompt(wfs)
 
         prompt_choices = [(tabulated_labels[i], wf.id) for i, wf in enumerate(wfs)]
 
@@ -165,7 +144,7 @@ class WFRunResolver:
 
         runs = self._wf_run_repo.list_wf_runs(config)
 
-        tabulated_labels = self._prepare_wf_list_for_prompt(runs)
+        tabulated_labels = self._presenter.wf_list_for_prompt(runs)
 
         prompt_choices = [(tabulated_labels[i], wf) for i, wf in enumerate(runs)]
 

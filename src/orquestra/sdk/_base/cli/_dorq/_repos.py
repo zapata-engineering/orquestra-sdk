@@ -404,11 +404,7 @@ def _ui_model_from_wf(wf_run: WorkflowRun):
         workflow_run_id=wf_run.id,
         status=wf_run.status.state.value,
         tasks_succeeded=_tasks_number_summary(wf_run),
-        start_time=(
-            wf_run.status.start_time.astimezone().replace(tzinfo=None).ctime()
-            if wf_run.status.start_time
-            else ""
-        ),
+        start_time=wf_run.status.start_time,
     )
 
 

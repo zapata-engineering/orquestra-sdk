@@ -9,6 +9,7 @@ Ideally, most data transformations would be already done (like counting the numb
 inished tasks) but should be easy to assert on in tests (e.g. we prefer ``datetime``
 objects instead of date strings).
 """
+import datetime
 import typing as t
 from dataclasses import dataclass
 
@@ -51,6 +52,6 @@ class WFList:
         workflow_run_id: str
         status: str
         tasks_succeeded: str
-        start_time: str
+        start_time: t.Optional[datetime.datetime]
 
     wf_rows: t.Sequence[WFRow]
