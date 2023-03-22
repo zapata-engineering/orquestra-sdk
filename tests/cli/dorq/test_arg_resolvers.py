@@ -470,7 +470,7 @@ class TestWFRunResolver:
                 [
                     (
                         "2  " + (current_time + timedelta(seconds=time_delta)).ctime(),
-                        listed_runs[1], # this has later start_time than [0]
+                        listed_runs[1],  # this has later start_time than [0]
                     ),
                     ("1  " + current_time.ctime(), listed_runs[0]),
                 ],
