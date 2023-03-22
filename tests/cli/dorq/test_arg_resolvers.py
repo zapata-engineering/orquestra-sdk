@@ -345,7 +345,7 @@ class TestWFRunResolver:
             User didn't pass ``wf_run_id``.
             """
             # Given
-            current_time = datetime.now()
+            current_time = datetime.now().astimezone()
 
             def return_wf(id, time_delay_in_sec: int):
                 run = Mock()

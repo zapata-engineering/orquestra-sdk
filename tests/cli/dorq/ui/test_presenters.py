@@ -421,10 +421,16 @@ class TestWorkflowRunPresenter:
             ),
         ],
     )
-    def test_show_wf_run(capsys, summary: ui_models.WFRunSummary, expected_path: Path):
+    def test_show_wf_run(
+        monkeypatch, capsys, summary: ui_models.WFRunSummary, expected_path: Path
+    ):
         # Given
         presenter = _presenters.WFRunPresenter()
-
+        monkeypatch.setattr(
+            _presenters,
+            "_format_datetime",
+            lambda x: "Fri Feb 24 08:26:07 2023" if x else "",
+        )
         # When
         presenter.show_wf_run(summary)
 

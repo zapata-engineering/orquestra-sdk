@@ -3,7 +3,7 @@ Workflow overview
 workflow def name  hello_orq
 run ID             wf.1
 status             RUNNING
-start time         Fri Feb 24 13:26:07 2023
+start time         Fri Feb 24 08:26:07 2023
 end time
 tasks succeeded    1 / 2
 -----------------  ------------------------
@@ -11,5 +11,5 @@ tasks succeeded    1 / 2
 Task details
 function       invocation ID    status     start_time                end_time                  message
 -------------  ---------------  ---------  ------------------------  ------------------------  ---------
-generate_data  inv-1-gen-dat    SUCCEEDED  Fri Feb 24 13:26:07 2023  Fri Feb 24 13:28:37 2023
-train_model    inv-2-tra-mod    RUNNING    Fri Feb 24 13:28:37 2023
+generate_data  inv-1-gen-dat    SUCCEEDED  Fri Feb 24 08:26:07 2023  Fri Feb 24 08:26:07 2023
+train_model    inv-2-tra-mod    RUNNING    Fri Feb 24 08:26:07 2023
