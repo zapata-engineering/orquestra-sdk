@@ -231,55 +231,11 @@ def _print_single_run(run: responses.WorkflowRun, project_dir: t.Optional[str]):
 
 
 def _format_multiple_runs(runs: t.Sequence[responses.WorkflowRun]):
-
-    from typing import TypedDict
-
-    Row = TypedDict(
-        "Row",
-        {
-            "workflow run ID": str,
-            "status": str,
-            "tasks succeeded": str,
-            "default start time": t.Optional[datetime],
-            "start time": str,
-        },
-    )
-    # leave start_time at datetime.datetime format, so we can easily sort by it
-    rows: t.List[Row] = [
-        {
-            "workflow run ID": run.id,
-            "status": run.status.state.value,
-            "tasks succeeded": _tasks_number_summary(run),
-            "default start time": run.status.start_time,  # start time taken from WF def
-            "start time": "",
-        }
-        for run in runs
+    headers = ["workflow run ID", "status", "tasks succeeded"]
+    rows = [
+        [run.id, run.status.state.value, _tasks_number_summary(run)] for run in runs
     ]
-    # take into account that we might be missing start time. Try our best to sort
-    # by start time of the workflow
-    rows.sort(
-        key=lambda row: row["default start time"]
-        if row["default start time"]
-        else datetime.fromtimestamp(0)
-    )
-
-    for row in rows:
-        if row["default start time"]:
-            row["start time"] = (
-                row["default start time"].astimezone().replace(tzinfo=None).ctime()
-            )
-        else:
-            row["start time"] = ""
-
-    headers: t.List[
-        t.Literal["workflow run ID", "status", "tasks succeeded", "start time"]
-    ] = ["workflow run ID", "status", "tasks succeeded", "start time"]
-
-    print(
-        tabulate.tabulate(
-            [[row[header] for header in headers] for row in rows], headers=headers
-        )
-    )
+    print(tabulate.tabulate(rows, headers=headers))
 
 
 def _tasks_number_summary(wf_run: responses.WorkflowRun) -> str:

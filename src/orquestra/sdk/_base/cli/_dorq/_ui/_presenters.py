@@ -270,4 +270,5 @@ class WFRunPresenter:
 
     def show_wf_list(self, summary: ui_models.WFList):
         click.echo("Workflow List")
-        click.echo(tabulate([wf_row for wf_row in summary.wf_rows]))
+        headers = ["workflow run ID", "status", "tasks succeeded", "start time"]
+        click.echo(tabulate([wf_row for wf_row in summary.wf_rows], headers=headers))
