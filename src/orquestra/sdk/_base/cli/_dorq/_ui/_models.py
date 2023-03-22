@@ -38,3 +38,19 @@ class WFRunSummary:
     task_rows: t.Sequence[TaskRow]
     n_tasks_succeeded: int
     n_task_invocations_total: int
+
+
+@dataclass(frozen=True)
+class WFList:
+    """
+    UI model for ``orq wf list``
+    """
+
+    @dataclass(frozen=True)
+    class WFRow:
+        workflow_run_id: str
+        status: str
+        tasks_succeeded: str
+        start_time: str
+
+    wf_rows: t.Sequence[WFRow]

@@ -118,14 +118,7 @@ class WFRunResolver:
         self._wf_run_repo = wf_run_repo
         self._prompter = prompter
 
-    def resolve_id(
-        self, wf_run_id: t.Optional[WorkflowRunId], config: ConfigName
-    ) -> WorkflowRunId:
-        if wf_run_id is not None:
-            return wf_run_id
-
-        # Query the runtime for suitable workflow run IDs.
-        wfs = self._wf_run_repo.list_wf_runs(config)
+    def _prepare_wf_list_for_prompt(self, wfs):
         # sort wfs by submission date. Take into account when there is no start_time
         wfs.sort(
             key=lambda wf: wf.status.start_time
@@ -146,9 +139,22 @@ class WFRunResolver:
         ]
         tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
 
+        return tabulated_labels
+
+    def resolve_id(
+        self, wf_run_id: t.Optional[WorkflowRunId], config: ConfigName
+    ) -> WorkflowRunId:
+        if wf_run_id is not None:
+            return wf_run_id
+
+        wfs = self._wf_run_repo.list_wf_runs(config)
+
+        tabulated_labels = self._prepare_wf_list_for_prompt(wfs)
+
         prompt_choices = [(tabulated_labels[i], wf.id) for i, wf in enumerate(wfs)]
 
         selected_id = self._prompter.choice(prompt_choices, message="Workflow run ID")
+
         return selected_id
 
     def resolve_run(
@@ -157,14 +163,14 @@ class WFRunResolver:
         if wf_run_id is not None:
             return self._wf_run_repo.get_wf_by_run_id(wf_run_id, config)
 
-        # Query the runtime for suitable workflow run IDs.
-        # TODO: figure out sensible filters when listing workflow runs is implemented
-        # in the public API.
-        # Related ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-671
         runs = self._wf_run_repo.list_wf_runs(config)
-        selected_run = self._prompter.choice(
-            [(run.id, run) for run in runs], message="Workflow run ID"
-        )
+
+        tabulated_labels = self._prepare_wf_list_for_prompt(runs)
+
+        prompt_choices = [(tabulated_labels[i], wf) for i, wf in enumerate(runs)]
+
+        selected_run = self._prompter.choice(prompt_choices, message="Workflow run ID")
+
         return selected_run
 
 
