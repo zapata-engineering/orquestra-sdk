@@ -350,7 +350,7 @@ ET_INSTANT_1 = datetime(
     26,
     7,
     704015,
-    tzinfo=timezone(timedelta(hours=-5)),
+    tzinfo=timezone.utc,
 )
 ET_INSTANT_2 = datetime(
     2023,
@@ -360,7 +360,7 @@ ET_INSTANT_2 = datetime(
     28,
     37,
     123,
-    tzinfo=timezone(timedelta(hours=-5)),
+    tzinfo=timezone.utc,
 )
 
 
