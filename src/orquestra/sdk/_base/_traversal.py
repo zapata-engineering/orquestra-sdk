@@ -441,6 +441,10 @@ def _make_task_model(
             task_contents_hash,
         ),
         fn_ref=fn_ref_model,
+        output_metadata=ir.TaskOutputMetadata(
+            is_subscriptable=task.output_metadata.is_subscriptable,
+            n_outputs=task.output_metadata.n_outputs,
+        ),
         source_import_id=source_import.id,
         dependency_import_ids=dependency_import_ids,
         resources=resources,

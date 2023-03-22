@@ -186,6 +186,22 @@ class TaskParameter(BaseModel):
     # it should be added here.
 
 
+class TaskOutputMetadata(BaseModel):
+    """
+    Information about the data shape returned by a task function.
+    """
+
+    # If yes, it's possible to unpack the output in the workflow like:
+    # foo, bar = my_task()
+    #
+    # Separate from `n_outputs` to handle cases like:
+    # foo, = my_task()
+    is_subscriptable: bool
+
+    # Number of artifacts we can populate with the task results.
+    n_outputs: int
+
+
 class TaskDef(BaseModel):
     # workflow-unique ID used to refer from task invocations
     id: TaskDefId
@@ -200,6 +216,10 @@ class TaskDef(BaseModel):
     # None means we do not know the parameters for this Task (e.g. an external task)
     # An empty list [] means a Task with no parameters
     parameters: t.Optional[t.List[TaskParameter]]
+
+    # Statically inferred from the task function. See also `TaskOutputMetadata`'s
+    # docstring.
+    output_metadata: TaskOutputMetadata
 
     # ID of the import that contains the callable function
     source_import_id: ImportId

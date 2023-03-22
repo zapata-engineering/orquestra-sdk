@@ -419,6 +419,9 @@ class TestWorkflowRunRepo:
                                 function_name="task_in_another_module",
                             ),
                             parameters=[],
+                            output_metadata=ir.TaskOutputMetadata(
+                                is_subscriptable=False, n_outputs=1
+                            ),
                             source_import_id="imp1",
                         ),
                         ir.TaskDef(
@@ -428,6 +431,9 @@ class TestWorkflowRunRepo:
                                 function_name="task_in_another_file",
                             ),
                             parameters=[],
+                            output_metadata=ir.TaskOutputMetadata(
+                                is_subscriptable=False, n_outputs=1
+                            ),
                             source_import_id="imp1",
                         ),
                         ir.TaskDef(
@@ -436,6 +442,9 @@ class TestWorkflowRunRepo:
                                 function_name="inlined_task", encoded_function=[]
                             ),
                             parameters=[],
+                            output_metadata=ir.TaskOutputMetadata(
+                                is_subscriptable=False, n_outputs=1
+                            ),
                             source_import_id="imp1",
                         ),
                     ]
@@ -470,6 +479,9 @@ class TestWorkflowRunRepo:
                                 module="tasks1", function_name=fn_name
                             ),
                             parameters=[],
+                            output_metadata=ir.TaskOutputMetadata(
+                                is_subscriptable=False, n_outputs=1
+                            ),
                             source_import_id="imp1",
                         ),
                         ir.TaskDef(
@@ -478,6 +490,9 @@ class TestWorkflowRunRepo:
                                 module="tasks2", function_name=fn_name
                             ),
                             parameters=[],
+                            output_metadata=ir.TaskOutputMetadata(
+                                is_subscriptable=False, n_outputs=1
+                            ),
                             source_import_id="imp1",
                         ),
                     ]

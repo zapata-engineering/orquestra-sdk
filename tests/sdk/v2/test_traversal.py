@@ -820,6 +820,7 @@ CAPITALIZE_TASK_DEF = ir.TaskDef(
         file_path="tests/sdk/v2/test_traversal.py",
         line_number=AnyPositiveInt(),
     ),
+    output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
     parameters=[
         ir.TaskParameter(name="text", kind=ir.ParameterKind.POSITIONAL_OR_KEYWORD)
     ],
@@ -833,6 +834,7 @@ CAPITALIZE_INLINE_TASK_DEF = ir.TaskDef(
         function_name="capitalize_inline",
         encoded_function=[AnyMatchingStr(r".*")],  # dont test actual encoding here
     ),
+    output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
     parameters=[
         ir.TaskParameter(name="text", kind=ir.ParameterKind.POSITIONAL_OR_KEYWORD)
     ],
@@ -848,6 +850,7 @@ GIT_TASK_DEF = ir.TaskDef(
         file_path="tests/sdk/v2/test_traversal.py",
         line_number=AnyPositiveInt(),
     ),
+    output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
     parameters=[],
     source_import_id=AnyMatchingStr(r"git-\w{10}_hello"),
     custom_image=_dsl.DEFAULT_IMAGE,
@@ -862,6 +865,7 @@ GENERATE_GRAPH_TASK_DEF = ir.TaskDef(
         file_path="tests/sdk/v2/test_traversal.py",
         line_number=AnyPositiveInt(),
     ),
+    output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
     parameters=[],
     source_import_id=AnyMatchingStr(r"local-\w{10}"),
     dependency_import_ids=[
@@ -878,6 +882,7 @@ PYTHON_IMPORTS_MANUAL_TASK_DEF = ir.TaskDef(
         file_path="tests/sdk/v2/test_traversal.py",
         line_number=AnyPositiveInt(),
     ),
+    output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
     parameters=[
         ir.TaskParameter(name="text", kind=ir.ParameterKind.POSITIONAL_OR_KEYWORD)
     ],
