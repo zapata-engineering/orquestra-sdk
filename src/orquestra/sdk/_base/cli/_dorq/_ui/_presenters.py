@@ -280,7 +280,10 @@ class WFRunPresenter:
 
 class PromptPresenter:
     def wf_list_for_prompt(self, wfs):
-        # sort wfs by submission date. Take into account when there is no start_time
+        # Create labels of wf that are printed by prompter
+        # Label is <wf_id> <start_time> tabulated nicely to create good-looking
+        # table
+        # There is also expectations that labels correspond to matching wfs list indices
         wfs = sorted(
             wfs,
             key=lambda wf: wf.status.start_time
@@ -288,10 +291,8 @@ class PromptPresenter:
             else datetime.fromtimestamp(0),
             reverse=True,
         )
-        # Create labels of wf that are printed by prompter
-        # Label is <wf_id> <start_time> tabulated nicely to create good-looking
-        # table
+
         labels = [[wf.id, _format_datetime(wf.status.start_time)] for wf in wfs]
         tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
 
-        return tabulated_labels
+        return wfs, tabulated_labels

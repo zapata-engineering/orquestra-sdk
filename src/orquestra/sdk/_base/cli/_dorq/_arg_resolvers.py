@@ -6,10 +6,7 @@ When the user doesn't pass in all the required information as CLI arguments we n
 resolve the information from other sources. This module contains the CLI argument
 resolution logic extracted as components reusable across similar CLI commands.
 """
-import datetime
 import typing as t
-
-from tabulate import tabulate
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _services
@@ -128,10 +125,8 @@ class WFRunResolver:
 
         wfs = self._wf_run_repo.list_wf_runs(config)
 
-        tabulated_labels = self._presenter.wf_list_for_prompt(wfs)
-
-        prompt_choices = [(tabulated_labels[i], wf.id) for i, wf in enumerate(wfs)]
-
+        wfs, tabulated_labels = self._presenter.wf_list_for_prompt(wfs)
+        prompt_choices = [(label, wf.id) for label, wf in zip(tabulated_labels, wfs)]
         selected_id = self._prompter.choice(prompt_choices, message="Workflow run ID")
 
         return selected_id
@@ -144,9 +139,8 @@ class WFRunResolver:
 
         runs = self._wf_run_repo.list_wf_runs(config)
 
-        tabulated_labels = self._presenter.wf_list_for_prompt(runs)
-
-        prompt_choices = [(tabulated_labels[i], wf) for i, wf in enumerate(runs)]
+        runs, tabulated_labels = self._presenter.wf_list_for_prompt(runs)
+        prompt_choices = [(label, wf) for label, wf in zip(tabulated_labels, runs)]
 
         selected_run = self._prompter.choice(prompt_choices, message="Workflow run ID")
 

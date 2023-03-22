@@ -428,11 +428,24 @@ class TestWFRunResolver:
             User didn't pass ``wf_run_id``.
             """
             # Given
+            current_time = datetime.now()
+
+            def return_wf(id, time_delay_in_sec: int):
+                run = Mock()
+                run.id = id
+                run.status = RunStatus(
+                    state=State.RUNNING,
+                    start_time=current_time + timedelta(seconds=time_delay_in_sec),
+                    end_time=current_time + timedelta(seconds=time_delay_in_sec),
+                )
+                return run
+
             wf_run_id = None
             config = "<config sentinel>"
 
             wf_run_repo = Mock()
-            listed_runs = [Mock(), Mock()]
+            time_delta = 1000
+            listed_runs = [return_wf("1", 0), return_wf("2", time_delta)]
             wf_run_repo.list_wf_runs.return_value = listed_runs
 
             prompter = Mock()
@@ -454,7 +467,14 @@ class TestWFRunResolver:
             # We should prompt for selecting workflow run from the IDs returned
             # by the repo.
             prompter.choice.assert_called_with(
-                [(run.id, run) for run in listed_runs], message="Workflow run ID"
+                [
+                    (
+                        "2  " + (current_time + timedelta(seconds=time_delta)).ctime(),
+                        listed_runs[1], # this has later start_time than [0]
+                    ),
+                    ("1  " + current_time.ctime(), listed_runs[0]),
+                ],
+                message="Workflow run ID",
             )
 
             # Resolver should return the user's choice.
