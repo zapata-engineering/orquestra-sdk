@@ -602,7 +602,7 @@ class DriverClient:
 
         untarred = TarFile(fileobj=io.BytesIO(unzipped)).extractfile("step-logs")
         assert untarred is not None
-        decoded = r"""{}""".format(untarred.read().decode("utf-8"))
+        decoded = untarred.read().decode()
 
         # Parse the decoded data as logs
         # TODO: index by taskinvocationID rather than workflowrunID [ORQSDK-777]
