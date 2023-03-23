@@ -10,7 +10,7 @@ import sys
 import typing as t
 import webbrowser
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, Iterator, List
 
@@ -288,7 +288,7 @@ class PromptPresenter:
             wfs,
             key=lambda wf: wf.status.start_time
             if wf.status.start_time
-            else datetime.fromtimestamp(0),
+            else datetime.fromtimestamp(0).astimezone(timezone.utc),
             reverse=True,
         )
 

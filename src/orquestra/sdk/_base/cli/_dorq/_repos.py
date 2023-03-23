@@ -438,7 +438,7 @@ class SummaryRepo:
         wf_runs.sort(
             key=lambda wf_run: wf_run.status.start_time
             if wf_run.status.start_time
-            else datetime.datetime.fromtimestamp(0)
+            else datetime.datetime.fromtimestamp(0).astimezone(datetime.timezone.utc)
         )
 
         return ui_models.WFList(wf_rows=[_ui_model_from_wf(wf) for wf in wf_runs])

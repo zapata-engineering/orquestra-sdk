@@ -959,6 +959,112 @@ class TestSummaryRepo:
         # Then
         assert result_summary == expected_summary
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        "wf_run,expected_summary",
+        [
+            pytest.param(
+                [
+                    WorkflowRunModel(
+                        id="wf.2",
+                        workflow_def=_example_wfs.complicated_wf().model,
+                        task_runs=[
+                            TaskRunModel(
+                                id="task_run_1",
+                                invocation_id="invocation-1-task-capitalize",
+                                status=RunStatus(
+                                    state=State.SUCCEEDED,
+                                    start_time=INSTANT_1,
+                                    end_time=INSTANT_2,
+                                ),
+                            ),
+                            TaskRunModel(
+                                id="task_run_2",
+                                invocation_id="invocation-2-task-concat",
+                                status=RunStatus(
+                                    state=State.RUNNING,
+                                    start_time=INSTANT_2,
+                                ),
+                            ),
+                        ],
+                        status=RunStatus(
+                            state=State.RUNNING,
+                            start_time=INSTANT_1 + timedelta(seconds=30),
+                        ),
+                    ),
+                    WorkflowRunModel(
+                        id="wf.1",
+                        workflow_def=_example_wfs.complicated_wf().model,
+                        task_runs=[],
+                        status=RunStatus(state=State.WAITING, start_time=INSTANT_1),
+                    ),
+                ],
+                ui_models.WFList(
+                    wf_rows=[
+                        ui_models.WFList.WFRow(
+                            workflow_run_id="wf.1",
+                            status="WAITING",
+                            tasks_succeeded="0/0",
+                            start_time=INSTANT_1,
+                        ),
+                        ui_models.WFList.WFRow(
+                            workflow_run_id="wf.2",
+                            status="RUNNING",
+                            tasks_succeeded="1/2",
+                            start_time=INSTANT_1 + timedelta(seconds=30),
+                        ),
+                    ],
+                ),
+            ),
+            pytest.param(
+                [
+                    WorkflowRunModel(
+                        id="wf.2",
+                        workflow_def=_example_wfs.complicated_wf().model,
+                        task_runs=[],
+                        status=RunStatus(
+                            state=State.RUNNING,
+                            start_time=INSTANT_1 + timedelta(seconds=30),
+                        ),
+                    ),
+                    WorkflowRunModel(
+                        id="wf.1",
+                        workflow_def=_example_wfs.complicated_wf().model,
+                        task_runs=[],
+                        status=RunStatus(state=State.WAITING),
+                    ),
+                ],
+                ui_models.WFList(
+                    wf_rows=[
+                        ui_models.WFList.WFRow(
+                            workflow_run_id="wf.1",
+                            status="WAITING",
+                            tasks_succeeded="0/0",
+                            start_time=None,
+                        ),
+                        ui_models.WFList.WFRow(
+                            workflow_run_id="wf.2",
+                            status="RUNNING",
+                            tasks_succeeded="0/0",
+                            start_time=INSTANT_1 + timedelta(seconds=30),
+                        ),
+                    ],
+                ),
+            ),
+        ],
+    )
+    def test_wf_list_summary(
+        wf_run: t.List[WorkflowRunModel], expected_summary: ui_models.WFList
+    ):
+        # Given
+        repo = _repos.SummaryRepo()
+
+        # When
+        result = repo.wf_list_summary(wf_run)
+
+        # Then
+        assert result == expected_summary
+
 
 class TestConfigRepo:
     class TestUnit:
