@@ -198,12 +198,12 @@ def _make_ray_dag_node(
     def _ray_remote(*inner_args, **inner_kwargs):
         if project_dir is not None:
             dispatch.ensure_sys_paths([str(project_dir)])
-        inner_args = tuple(
+        inner_args = *(
             serde.deserialize_constant(arg)
             if isinstance(arg, t.get_args(ir.ConstantNode))
             else arg
             for arg in inner_args
-        )
+        ),
         inner_kwargs = {
             key: serde.deserialize_constant(value)
             if isinstance(value, t.get_args(ir.ConstantNode))
