@@ -140,6 +140,12 @@ class RuntimeInterface(ABC):
         Either we have access to all outputs of a given task, or none. If a given task
         invocation didn't succeed yet, there shouldn't be an entry in the returned dict.
 
+        This method should return all output values for a task even if some of them
+        aren't used in the workflow function. Reasons:
+        - Users might be interested in the computed value after running, even though the workflow didn't make an explicit use of it.
+        - Position in the task output tuple is significant. We can't just drop
+          some of the elements because this would shift indices.
+
         Careful: This method does NOT return status of a workflow. Verify it beforehand
         to make sure if workflow failed/succeeded/is running. You might get incomplete
         results

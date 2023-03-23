@@ -494,17 +494,27 @@ class TestRayRuntimeMethods:
         ),
         (
             _example_wfs.multioutput_task_wf,
-            ("Zapata", "Computing", "Computing"),
+            (
+                # Unpacked outputs
+                "Zapata",
+                "Computing",
+                # First output discarded
+                "Computing",
+                # Second output discarded
+                "Zapata",
+                # Returning both packed and unpacked outputs
+                ("Zapata", "Computing"),
+                "Zapata",
+                "Computing",
+            ),
             {
+                # We expect all task outputs for each task invocation, regardless of
+                # unpacking in the workflow. For more info, see
+                # `RuntimeInterface.get_available_outputs()`.
                 "invocation-0-task-multioutput-task": ("Zapata", "Computing"),
-                # One of this invocation's outputs is discarded after unpacking in the
-                # workflow function. However, we still need its value for a couple of
-                # reasons:
-                # - Users might be interested in the computed value after running, even
-                #   though the workflow didn't make an explicit use of it.
-                # - Position in the task output tuple is significant. We can't just drop
-                #   some of the elements because this would shift indices.
                 "invocation-1-task-multioutput-task": ("Zapata", "Computing"),
+                "invocation-2-task-multioutput-task": ("Zapata", "Computing"),
+                "invocation-3-task-multioutput-task": ("Zapata", "Computing"),
             },
         ),
         (
