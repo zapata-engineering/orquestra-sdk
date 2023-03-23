@@ -4,6 +4,7 @@
 """
 Tests for orquestra.sdk._base._driver._client.
 """
+from datetime import datetime, timezone
 from typing import Any, Dict
 from unittest.mock import create_autospec
 
@@ -15,9 +16,10 @@ import orquestra.sdk as sdk
 from orquestra.sdk._base._driver import _exceptions
 from orquestra.sdk._base._driver._client import DriverClient, Paginated
 from orquestra.sdk._base._driver._models import Resources
+from orquestra.sdk._ray._ray_logs import WFLog
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import JSONResult, PickleResult
-from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun, WorkflowRunLog
+from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun
 
 from . import resp_mocks
 
@@ -1618,29 +1620,34 @@ class TestClient:
 
                 assert len(logs) == 64
                 # Spot checks on specific log entries.
-                assert logs[0] == WorkflowRunLog(
-                    timestamp="1678804402.015861",
+                assert logs[0] == WFLog(
+                    timestamp=datetime(2023, 3, 14, 14, 33, 22, 15861, timezone.utc),
+                    level="",
+                    filename="/tmp/ray/session_latest/logs/worker-5ae5aa79521221bba27ab187fd801a6a2947eb9bbcdbcd99a4b57026-01000000-207.err",  # noqa: E501
                     message=":actor_name:Manager",
-                    wf_id="workflow.logs.ray.wf_def-FfnTz-r000",
-                    task_id=None,
-                )
-                assert logs[6] == WorkflowRunLog(
-                    timestamp="1678804402.015901",
+                    wf_run_id="workflow.logs.ray.wf_def-FfnTz-r000",
+                ), logs[0]
+                assert logs[6] == WFLog(
+                    timestamp=datetime(2023, 3, 14, 14, 33, 22, 15901, timezone.utc),
+                    level="ERROR",
+                    filename="_dag.py:195",
                     message='Traceback (most recent call last):\n  File "/home/orquestra/venv/lib/python3.9/site-packages/orquestra/sdk/_ray/_dag.py", line 192, in _ray_remote\n    return wrapped(*inner_args, **inner_kwargs)\n  File "/home/orquestra/venv/lib/python3.9/site-packages/orquestra/sdk/_ray/_dag.py", line 147, in __call__\n    return self._fn(*unpacked_args, **unpacked_kwargs)\n  File "/Users/benjaminmummery/Documents/Projects/orquestra-workflow-sdk/../scratch/scratch.py", line 12, in do_thing\nException: Blah\n',  # noqa: E501
-                    wf_id="wf.wf_def.3c5f938",
-                    task_id="invocation-0-task-do-thing",
-                )
-                assert logs[20] == WorkflowRunLog(
-                    timestamp="1678804402.015908",
+                    wf_run_id="wf.wf_def.3c5f938",
+                    task_run_id="invocation-0-task-do-thing",
+                ), logs[6]
+                assert logs[20] == WFLog(
+                    timestamp=datetime(2023, 3, 14, 14, 33, 22, 15908, timezone.utc),
+                    level="",
+                    filename="/tmp/ray/session_latest/logs/worker-a601931abcd04110b31760f245e4c61d1cbd00f5943fabd5eeca1d9e-01000000-235.err",  # noqa: E501
                     message='  File "/home/orquestra/venv/lib/python3.9/site-packages/ray/workflow/task_executor.py", line 79, in _workflow_task_executor',  # noqa: E501
-                    wf_id="workflow.logs.ray.wf_def-FfnTz-r000",
-                    task_id=None,
-                )
-                assert logs[63] == WorkflowRunLog(
-                    timestamp="1678804402.015956",
+                    wf_run_id="workflow.logs.ray.wf_def-FfnTz-r000",
+                ), logs[20]
+                assert logs[63] == WFLog(
+                    timestamp=datetime(2023, 3, 14, 14, 33, 22, 15956, timezone.utc),
+                    level="",
+                    filename="/tmp/ray/session_latest/logs/worker-b4584f711ed56477c7e7c0ea4b16717e36c35dd13ae66b6430a3e5a8-01000000-178.out",  # noqa: E501
                     message=":actor_name:WorkflowManagementActor",
-                    wf_id="workflow.logs.ray.wf_def-FfnTz-r000",
-                    task_id=None,
+                    wf_run_id="workflow.logs.ray.wf_def-FfnTz-r000",
                 )
 
             @staticmethod
