@@ -178,3 +178,7 @@ class UserCancelledPrompt(BaseRuntimeError):
 class LoginURLUnavailableError(BaseRuntimeError):
     def __init__(self, base_uri: str):
         self.base_uri = base_uri
+
+
+class InProcessFromCLIError(NotFoundError):
+    """Raised when the user requests the in-process runtime when using the CLI"""

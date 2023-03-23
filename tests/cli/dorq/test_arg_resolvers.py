@@ -65,6 +65,16 @@ class TestConfigResolver:
         # Resolver should return the user's choice.
         assert resolved_config == selected_config
 
+    @staticmethod
+    def test_with_in_process():
+        # Given
+        config = "in_process"
+        resolver = _arg_resolvers.ConfigResolver(config_repo=Mock(), prompter=Mock())
+
+        # When/Then
+        with pytest.raises(exceptions.InProcessFromCLIError):
+            resolver.resolve(config)
+
     class TestResolveMultiple:
         @staticmethod
         def test_passing_single_config_directly():

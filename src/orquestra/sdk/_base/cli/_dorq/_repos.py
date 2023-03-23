@@ -422,7 +422,11 @@ class ConfigRepo:
     """
 
     def list_config_names(self) -> t.Sequence[ConfigName]:
-        return sdk.RuntimeConfig.list_configs()
+        return [
+            config
+            for config in sdk.RuntimeConfig.list_configs()
+            if config not in _config.CLI_IGNORED_CONFIGS
+        ]
 
     def store_token_in_config(self, uri, token, ce):
         runtime_name = RuntimeName.CE_REMOTE if ce else RuntimeName.QE_REMOTE
