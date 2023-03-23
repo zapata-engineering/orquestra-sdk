@@ -198,7 +198,18 @@ def _make_ray_dag_node(
     def _ray_remote(*inner_args, **inner_kwargs):
         if project_dir is not None:
             dispatch.ensure_sys_paths([str(project_dir)])
-
+        inner_args = (
+            serde.deserialize_constant(arg)
+            if isinstance(arg, t.get_args(ir.ConstantNode))
+            else arg
+            for arg in inner_args
+        )
+        inner_kwargs = {
+            key: serde.deserialize_constant(value)
+            if isinstance(value, t.get_args(ir.ConstantNode))
+            else value
+            for key, value in inner_kwargs.items()
+        }
         user_fn = _locate_user_fn(user_fn_ref) if user_fn_ref else _aggregate_outputs
         wrapped = TupleUnwrapper(
             fn=user_fn,
@@ -362,7 +373,9 @@ def _make_ray_dag(
     client: RayClient, wf: ir.WorkflowDef, wf_run_id: str, project_dir: t.Optional[Path]
 ):
     ray_consts: t.Dict[ir.ConstantNodeId, t.Any] = {
-        id: serde.deserialize_constant(node) for id, node in wf.constant_nodes.items()
+        # id: serde.deserialize_constant(node) for id, node in wf.constant_nodes.items()
+        id: node
+        for id, node in wf.constant_nodes.items()
     }
     for id, secret in wf.secret_nodes.items():
         ray_consts[id] = secrets.get(
