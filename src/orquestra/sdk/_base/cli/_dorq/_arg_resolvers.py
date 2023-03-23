@@ -21,7 +21,7 @@ from orquestra.sdk.schema.workflow_run import (
 )
 
 from . import _repos
-from ._ui import _prompts
+from ._ui import _presenters, _prompts
 
 
 def _check_for_in_process(config_names: t.Sequence[ConfigName]):
@@ -120,9 +120,11 @@ class WFRunResolver:
         self,
         wf_run_repo=_repos.WorkflowRunRepo(),
         prompter=_prompts.Prompter(),
+        presenter=_presenters.PromptPresenter(),
     ):
         self._wf_run_repo = wf_run_repo
         self._prompter = prompter
+        self._presenter = presenter
 
     def resolve_id(
         self, wf_run_id: t.Optional[WorkflowRunId], config: ConfigName
@@ -130,12 +132,12 @@ class WFRunResolver:
         if wf_run_id is not None:
             return wf_run_id
 
-        # Query the runtime for suitable workflow run IDs.
-        # TODO: figure out sensible filters when listing workflow runs is implemented
-        # in the public API.
-        # Related ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-671
-        ids = self._wf_run_repo.list_wf_run_ids(config)
-        selected_id = self._prompter.choice(ids, message="Workflow run ID")
+        wfs = self._wf_run_repo.list_wf_runs(config)
+
+        wfs, tabulated_labels = self._presenter.wf_list_for_prompt(wfs)
+        prompt_choices = [(label, wf.id) for label, wf in zip(tabulated_labels, wfs)]
+        selected_id = self._prompter.choice(prompt_choices, message="Workflow run ID")
+
         return selected_id
 
     def resolve_run(
@@ -144,14 +146,13 @@ class WFRunResolver:
         if wf_run_id is not None:
             return self._wf_run_repo.get_wf_by_run_id(wf_run_id, config)
 
-        # Query the runtime for suitable workflow run IDs.
-        # TODO: figure out sensible filters when listing workflow runs is implemented
-        # in the public API.
-        # Related ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-671
         runs = self._wf_run_repo.list_wf_runs(config)
-        selected_run = self._prompter.choice(
-            [(run.id, run) for run in runs], message="Workflow run ID"
-        )
+
+        runs, tabulated_labels = self._presenter.wf_list_for_prompt(runs)
+        prompt_choices = [(label, wf) for label, wf in zip(tabulated_labels, runs)]
+
+        selected_run = self._prompter.choice(prompt_choices, message="Workflow run ID")
+
         return selected_run
 
 

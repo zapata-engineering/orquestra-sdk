@@ -25,7 +25,9 @@ class Action:
 
     def __init__(
         self,
-        presenter=_presenters.WrappedCorqOutputPresenter(),
+        presenter=_presenters.WFRunPresenter(),
+        error_presenter=_presenters.WrappedCorqOutputPresenter(),
+        summary_repo=_repos.SummaryRepo(),
         wf_run_repo=_repos.WorkflowRunRepo(),
         config_resolver: t.Optional[_arg_resolvers.ConfigResolver] = None,
         wf_run_filter_resolver: t.Optional[_arg_resolvers.WFRunFilterResolver] = None,
@@ -39,8 +41,10 @@ class Action:
             wf_run_filter_resolver or _arg_resolvers.WFRunFilterResolver()
         )
 
+        self._summary_repo = summary_repo
         # text IO
         self._presenter = presenter
+        self._error_presenter = error_presenter
 
     def on_cmd_call(
         self,
@@ -59,7 +63,7 @@ class Action:
                 interactive=interactive,
             )
         except Exception as e:
-            self._presenter.show_error(e)
+            self._error_presenter.show_error(e)
 
     def _on_cmd_call_with_exceptions(
         self,
@@ -95,5 +99,6 @@ class Action:
                 state=resolved_state,
             )
 
+        summary = self._summary_repo.wf_list_summary(wf_runs)
         # Display to the user
-        self._presenter.show_wf_runs_list(wf_runs)
+        self._presenter.show_wf_list(summary)

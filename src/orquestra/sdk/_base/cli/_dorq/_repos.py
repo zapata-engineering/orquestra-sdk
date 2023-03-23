@@ -6,6 +6,7 @@ Repositories that encapsulate data access used by dorq commands.
 
 The "data" layer. Shouldn't directly depend on the "view" layer.
 """
+import datetime
 import importlib
 import os
 import sys
@@ -390,6 +391,23 @@ def _ui_model_from_task_run(task_run: TaskRun, wf_def: WorkflowDef):
     )
 
 
+def _tasks_number_summary(wf_run: WorkflowRun) -> str:
+    total = len(wf_run.task_runs)
+    finished = sum(
+        1 for task_run in wf_run.task_runs if task_run.status.state == State.SUCCEEDED
+    )
+    return f"{finished}/{total}"
+
+
+def _ui_model_from_wf(wf_run: WorkflowRun):
+    return ui_models.WFList.WFRow(
+        workflow_run_id=wf_run.id,
+        status=wf_run.status.state.value,
+        tasks_succeeded=_tasks_number_summary(wf_run),
+        start_time=wf_run.status.start_time,
+    )
+
+
 class SummaryRepo:
     """
     Performs data wrangling to derive UI models that we can show to the user.
@@ -414,6 +432,18 @@ class SummaryRepo:
             n_tasks_succeeded=n_succeeded,
             n_task_invocations_total=n_total,
         )
+
+    def wf_list_summary(self, wf_runs: t.List[WorkflowRun]) -> ui_models.WFList:
+
+        wf_runs.sort(
+            key=lambda wf_run: wf_run.status.start_time
+            if wf_run.status.start_time
+            else datetime.datetime.fromtimestamp(0).replace(
+                tzinfo=datetime.timezone.utc
+            )
+        )
+
+        return ui_models.WFList(wf_rows=[_ui_model_from_wf(wf) for wf in wf_runs])
 
 
 class ConfigRepo:

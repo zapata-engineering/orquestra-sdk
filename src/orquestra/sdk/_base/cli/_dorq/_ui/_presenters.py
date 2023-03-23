@@ -10,7 +10,7 @@ import sys
 import typing as t
 import webbrowser
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, Iterator, List
 
@@ -217,11 +217,7 @@ class LoginPresenter:
 
 
 def _format_datetime(dt: t.Optional[datetime]) -> str:
-    if dt is None:
-        # Print empty table cell
-        return ""
-
-    return dt.isoformat()
+    return dt.astimezone().replace(tzinfo=None).ctime() if dt else ""
 
 
 def _format_tasks_succeeded(summary: ui_models.WFRunSummary) -> str:
@@ -267,3 +263,36 @@ class WFRunPresenter:
             )
         click.echo("Task details")
         click.echo(tabulate(task_rows, headers="firstrow"))
+
+    def show_wf_list(self, summary: ui_models.WFList):
+        rows = [["Workflow Run ID", "Status", "Tasks Succeeded", "Start Time"]]
+        for model_row in summary.wf_rows:
+            rows.append(
+                [
+                    model_row.workflow_run_id,
+                    model_row.status,
+                    model_row.tasks_succeeded,
+                    _format_datetime(model_row.start_time),
+                ]
+            )
+        click.echo(tabulate(rows, headers="firstrow"))
+
+
+class PromptPresenter:
+    def wf_list_for_prompt(self, wfs):
+        # Create labels of wf that are printed by prompter
+        # Label is <wf_id> <start_time> tabulated nicely to create good-looking
+        # table
+        # There is also expectations that labels correspond to matching wfs list indices
+        wfs = sorted(
+            wfs,
+            key=lambda wf: wf.status.start_time
+            if wf.status.start_time
+            else datetime.fromtimestamp(0).replace(tzinfo=timezone.utc),
+            reverse=True,
+        )
+
+        labels = [[wf.id, _format_datetime(wf.status.start_time)] for wf in wfs]
+        tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
+
+        return wfs, tabulated_labels
