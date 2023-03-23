@@ -288,7 +288,7 @@ class PromptPresenter:
             wfs,
             key=lambda wf: wf.status.start_time
             if wf.status.start_time
-            else datetime.fromtimestamp(0).astimezone(timezone.utc),
+            else datetime.fromtimestamp(0).replace(tzinfo=timezone.utc),
             reverse=True,
         )
 
