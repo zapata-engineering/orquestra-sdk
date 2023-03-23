@@ -353,9 +353,11 @@ class CERuntime(RuntimeInterface):
             raise exceptions.InvalidWorkflowRunLogsError(f"{e}") from e
 
         # TODO: index by taskinvocationID rather than workflowrunID [ORQSDK-777]
-        logs_dict = {}
+        logs_dict: Dict[str, List[str]] = {}
         for log in logs:
-            logs_dict.setdefault(log.wf_id, []).append(log.message)
+            logs_dict.setdefault(log.wf_run_id or "UNKNOWN RUN ID", []).append(
+                log.message
+            )
 
         return logs_dict
 
