@@ -64,15 +64,3 @@ class WorkflowRun(WorkflowRunMinimal):
 
     task_runs: t.List[TaskRun]
     status: RunStatus
-
-
-class WorkflowRunLog(BaseModel):
-    """
-    A single log from the workflow.
-    """
-
-    timestamp: str
-    message: str
-    wf_id: WorkflowRunId
-    task_id: t.Optional[TaskInvocationId]
-    _content: dict

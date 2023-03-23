@@ -9,6 +9,7 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base import serde
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base.abc import ArtifactValue, RuntimeInterface
+from orquestra.sdk._ray._ray_logs import WFLog
 from orquestra.sdk.kubernetes.quantity import parse_quantity
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
@@ -18,7 +19,6 @@ from orquestra.sdk.schema.workflow_run import (
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
-    WorkflowRunLog,
     WorkflowRunMinimal,
 )
 
@@ -342,7 +342,7 @@ class CERuntime(RuntimeInterface):
             A list of log lines from the workflow.
         """
         try:
-            logs: List[WorkflowRunLog] = self._client.get_workflow_run_logs(wf_run_id)
+            logs: List[WFLog] = self._client.get_workflow_run_logs(wf_run_id)
         except (_exceptions.InvalidWorkflowRunID, _exceptions.WorkflowRunNotFound) as e:
             raise exceptions.WorkflowRunNotFoundError(
                 f"Workflow run with id `{wf_run_id}` not found"

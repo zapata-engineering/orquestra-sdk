@@ -11,6 +11,7 @@ Implemented API spec:
 import io
 import json
 import zlib
+from datetime import datetime, timezone
 from tarfile import TarFile
 from typing import Generic, List, Mapping, Optional, TypeVar
 from urllib.parse import urljoin
@@ -19,13 +20,10 @@ import pydantic
 import requests
 from requests import codes
 
+from orquestra.sdk._ray._ray_logs import WFLog
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import WorkflowResult
-from orquestra.sdk.schema.workflow_run import (
-    WorkflowRun,
-    WorkflowRunLog,
-    WorkflowRunMinimal,
-)
+from orquestra.sdk.schema.workflow_run import WorkflowRun, WorkflowRunMinimal
 
 from . import _exceptions, _models
 
@@ -568,9 +566,7 @@ class DriverClient:
 
     # --- Workflow Logs ---
 
-    def get_workflow_run_logs(
-        self, wf_run_id: _models.WorkflowRunID
-    ) -> List[WorkflowRunLog]:
+    def get_workflow_run_logs(self, wf_run_id: _models.WorkflowRunID) -> List[WFLog]:
         """
         Gets the logs of a workflow run from the workflow driver
 
@@ -619,22 +615,27 @@ class DriverClient:
                     # Orquestra logs are jsonable - where we can we parse these and
                     # extract the useful information
                     parsed_log_message = json.loads(log[1]["log"])
-                    interpreted_log = WorkflowRunLog(
-                        timestamp=log[0],
+                    interpreted_log = WFLog(
+                        timestamp=datetime.fromtimestamp(log[0], timezone.utc),
+                        level=parsed_log_message["level"],
+                        filename=parsed_log_message["filename"],
                         message=parsed_log_message["message"],
-                        wf_id=parsed_log_message["wf_run_id"],
-                        task_id=parsed_log_message["task_run_id"],
-                        _content=log[1],
+                        wf_run_id=parsed_log_message["wf_run_id"],
+                        task_inv_id=None,
+                        task_run_id=parsed_log_message["task_run_id"],
                     )
+
                 except (json.JSONDecodeError, KeyError):
                     # If the log isn't jsonable (i.e. it's from Ray) extract what info
                     # we can.
-                    interpreted_log = WorkflowRunLog(
-                        timestamp=log[0],
+                    interpreted_log = WFLog(
+                        timestamp=datetime.fromtimestamp(log[0], timezone.utc),
+                        level="",
+                        filename=log[1]["ray_filename"],
                         message=log[1]["log"],
-                        wf_id=log[1]["tag"],
-                        task_id=None,
-                        _content=log[1],
+                        wf_run_id=log[1]["tag"],
+                        task_inv_id=None,
+                        task_run_id=None,
                     )
 
                 logs.append(interpreted_log)
