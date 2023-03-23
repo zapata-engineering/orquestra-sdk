@@ -903,9 +903,9 @@ class TestGetWorkflowLogs:
     ):
         # Given
         wf_logs = [
-            Mock(wf_id="<wf id sentinel 1>", message="<message sentinel 1>"),
-            Mock(wf_id="<wf id sentinel 1>", message="<message sentinel 2>"),
-            Mock(wf_id="<wf id sentinel 2>", message="<message sentinel 3>"),
+            Mock(wf_run_id="<wf id sentinel 1>", message="<message sentinel 1>"),
+            Mock(wf_run_id="<wf id sentinel 1>", message="<message sentinel 2>"),
+            Mock(wf_run_id="<wf id sentinel 2>", message="<message sentinel 3>"),
         ]
         mocked_client.get_workflow_run_logs.return_value = wf_logs
 
