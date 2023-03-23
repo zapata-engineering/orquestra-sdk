@@ -1062,7 +1062,6 @@ class TestConfigRepo:
             assert set(names) == {
                 # built-ins
                 "ray",
-                "in_process",
                 # config entries
                 "test_config_default",
                 "test_config_no_runtime_options",

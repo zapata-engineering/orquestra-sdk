@@ -62,6 +62,7 @@ SPECIAL_CONFIG_NAME_DICT = {
 # as SPECIAL_CONFIG_NAME_DICT might have duplicate names which could be confusing for
 # the user
 UNIQUE_CONFIGS = {RAY_CONFIG_NAME_ALIAS, IN_PROCESS_CONFIG_NAME}
+CLI_IGNORED_CONFIGS = {IN_PROCESS_CONFIG_NAME}
 
 
 # region: runtime options

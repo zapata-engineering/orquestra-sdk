@@ -8,6 +8,7 @@ from functools import singledispatch
 import click
 
 from orquestra.sdk import exceptions
+from orquestra.sdk._base._config import IN_PROCESS_CONFIG_NAME, RAY_CONFIG_NAME_ALIAS
 from orquestra.sdk.schema.responses import ResponseStatusCode
 
 
@@ -105,4 +106,19 @@ def _(e: exceptions.LoginURLUnavailableError) -> ResponseStatusCode:
 
 @pretty_print_exception.register
 def _(_: exceptions.UserCancelledPrompt) -> ResponseStatusCode:
+    return ResponseStatusCode.USER_CANCELLED
+
+
+@pretty_print_exception.register
+def _(_: exceptions.InProcessFromCLIError) -> ResponseStatusCode:
+    click.echo(
+        (
+            'The "{0}" runtime is designed for debugging and testing '
+            "via the Python API only. The results and workflow states are not "
+            "persisted.\n\nYou may want to:\n"
+            ' - Use the Python API to debug workflows with the "{0}" runtime.\n'
+            ' - Try the "{1}" runtime if you want to run a workflow locally via'
+            " the CLI."
+        ).format(IN_PROCESS_CONFIG_NAME, RAY_CONFIG_NAME_ALIAS),
+    )
     return ResponseStatusCode.USER_CANCELLED

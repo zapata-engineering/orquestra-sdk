@@ -15,6 +15,7 @@
 
 🐛 *Bug Fixes*
 * Stopping a QE workflow after it has already stopped will no longer raise an exception.
+* Attempting to use the "in-process" runtime on the CLI will no longer raise an exception. Instead, a message teeling you to use the Python API or Ray will be printed.
 
 
 💅 *Improvements*

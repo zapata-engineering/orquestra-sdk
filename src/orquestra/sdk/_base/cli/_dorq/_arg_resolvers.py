@@ -10,6 +10,7 @@ import typing as t
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _services
+from orquestra.sdk._base._config import IN_PROCESS_CONFIG_NAME
 from orquestra.sdk.schema.configs import ConfigName
 from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import (
@@ -21,6 +22,11 @@ from orquestra.sdk.schema.workflow_run import (
 
 from . import _repos
 from ._ui import _presenters, _prompts
+
+
+def _check_for_in_process(config_names: t.Sequence[ConfigName]):
+    if IN_PROCESS_CONFIG_NAME in config_names:
+        raise exceptions.InProcessFromCLIError()
 
 
 class ConfigResolver:
@@ -38,6 +44,7 @@ class ConfigResolver:
 
     def resolve(self, config: t.Optional[ConfigName]) -> ConfigName:
         if config is not None:
+            _check_for_in_process((config,))
             return config
 
         # 1.2. Prompt the user.
@@ -49,6 +56,7 @@ class ConfigResolver:
         self, configs: t.Optional[t.Sequence[str]]
     ) -> t.Sequence[ConfigName]:
         if configs is not None and len(configs) > 0:
+            _check_for_in_process(configs)
             return configs
 
         # Prompt the user.
@@ -86,6 +94,7 @@ class WFConfigResolver:
         self, wf_run_id: t.Optional[WorkflowRunId], config: t.Optional[ConfigName]
     ) -> ConfigName:
         if config is not None:
+            _check_for_in_process((config,))
             return config
 
         if wf_run_id is not None:
