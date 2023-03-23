@@ -690,7 +690,7 @@ class QERuntime(RuntimeInterface):
         # Return dict contains return values for task invocation
         return_dict = {}
         with _http_error_handling():
-            # Assumption: task invoactions produce "packed" and "unpacked" artifacts.
+            # Assumption: task invocations produce "packed" and "unpacked" artifacts.
             # We want to fetch whatever object was returned from the task function, so
             # we only need the "packed" artifact. For more info on artifact unpacking,
             # see "orquestra.sdk._base._traversal".

@@ -219,7 +219,7 @@ class GraphTraversal:
                     self._point_future_to_artifact(n)
                 else:
                     # We haven't seen the invocation and haven't seen the future. We'll
-                    # have to generate artifact nodes it before we can point
+                    # have to generate artifact nodes before we can point
                     # "self._future_artifacts" to it.
 
                     if out_meta.is_subscriptable:
