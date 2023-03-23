@@ -113,7 +113,7 @@ def _(_: exceptions.UserCancelledPrompt) -> ResponseStatusCode:
 def _(_: exceptions.InProcessFromCLIError) -> ResponseStatusCode:
     click.echo(
         (
-            'The "{0}" runtime is designed for debugging and testing'
+            'The "{0}" runtime is designed for debugging and testing '
             "via the Python API only. The results and workflow states are not "
             "persisted.\n\nYou may want to:\n"
             ' - Use the Python API to debug workflows with the "{0}" runtime.\n'
