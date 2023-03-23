@@ -355,10 +355,7 @@ class CERuntime(RuntimeInterface):
         # TODO: index by taskinvocationID rather than workflowrunID [ORQSDK-777]
         logs_dict = {}
         for log in logs:
-            if log.wf_id not in logs_dict:
-                logs_dict[log.wf_id] = [log.message]
-            else:
-                logs_dict[log.wf_id].append(log.message)
+            logs_dict.setdefault(log.wf_id, []).append(log.message)
 
         return logs_dict
 
