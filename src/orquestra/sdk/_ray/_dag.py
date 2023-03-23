@@ -174,6 +174,8 @@ def _make_ray_dag_node(
     ray_kwargs: t.Mapping[str, t.Any],
     pos_unpack_specs: t.Sequence[PosArgUnpackSpec],
     kw_unpack_specs: t.Sequence[KwArgUnpackSpec],
+    pos_deserialize_specs: t.Sequence[int],
+    kw_deserialize_specs: t.Sequence[str],
     project_dir: t.Optional[Path],
     user_fn_ref: t.Optional[ir.FunctionRef] = None,
 ) -> _client.FunctionNode:
@@ -201,14 +203,14 @@ def _make_ray_dag_node(
         inner_args = (
             *(
                 serde.deserialize_constant(arg)
-                if isinstance(arg, t.get_args(ir.ConstantNode))
+                if arg_id in pos_deserialize_specs
                 else arg
-                for arg in inner_args
+                for arg_id, arg in enumerate(inner_args)
             ),
         )
         inner_kwargs = {
             key: serde.deserialize_constant(value)
-            if isinstance(value, t.get_args(ir.ConstantNode))
+            if key in kw_deserialize_specs
             else value
             for key, value in inner_kwargs.items()
         }
@@ -316,15 +318,17 @@ def _gather_args(
     ray_consts: t.Mapping[ir.ConstantNodeId, t.Any],
     ray_futures: t.Mapping[ir.ArtifactNodeId, t.Any],
     artifact_nodes: t.Mapping[ir.ArtifactNodeId, ir.ArtifactNode],
-) -> t.Tuple[t.Sequence[t.Any], t.Sequence[PosArgUnpackSpec]]:
+) -> t.Tuple[t.Sequence[t.Any], t.Sequence[PosArgUnpackSpec], t.List[int]]:
 
     ray_args = []
     pos_unpack_specs: t.List[PosArgUnpackSpec] = []
+    pos_deserialize_specs: t.List[int] = []
 
     for param_i, arg_id in enumerate(arg_ids):
         try:
             arg_val = ray_consts[arg_id]
             ray_args.append(arg_val)
+            pos_deserialize_specs.append(param_i)
         except KeyError:
             # 'arg_id' isn't in 'ray_consts' -> it's an artifact, a result of
             # calling another task.
@@ -339,7 +343,7 @@ def _gather_args(
                     PosArgUnpackSpec(param_index=param_i, unpack_index=unpack_index)
                 )
 
-    return ray_args, pos_unpack_specs
+    return ray_args, pos_unpack_specs, pos_deserialize_specs
 
 
 def _gather_kwargs(
@@ -347,14 +351,16 @@ def _gather_kwargs(
     ray_consts: t.Mapping[ir.ConstantNodeId, t.Any],
     ray_futures: t.Mapping[ir.ArtifactNodeId, t.Any],
     artifact_nodes: t.Mapping[ir.ArtifactNodeId, ir.ArtifactNode],
-) -> t.Tuple[t.Mapping[str, t.Any], t.Sequence[KwArgUnpackSpec]]:
+) -> t.Tuple[t.Mapping[str, t.Any], t.Sequence[KwArgUnpackSpec], t.List[str]]:
     ray_kwargs = {}
     kw_unpack_specs: t.List[KwArgUnpackSpec] = []
+    kw_deserialize_specs: t.List[str] = []
 
     for param_name, arg_id in kwarg_ids.items():
         try:
             arg_val = ray_consts[arg_id]
             ray_kwargs[param_name] = arg_val
+            kw_deserialize_specs.append(param_name)
         except KeyError:
             # 'arg_id' isn't in 'ray_consts' -> it's an artifact, a result of
             # calling another task.
@@ -368,7 +374,7 @@ def _gather_kwargs(
                 kw_unpack_specs.append(
                     KwArgUnpackSpec(param_name=param_name, unpack_index=unpack_index)
                 )
-    return ray_kwargs, kw_unpack_specs
+    return ray_kwargs, kw_unpack_specs, kw_deserialize_specs
 
 
 def _make_ray_dag(
@@ -392,14 +398,14 @@ def _make_ray_dag(
 
     for ir_invocation in _graphs.iter_invocations_topologically(wf):
         # Prep args, kwargs, and the specs required to unpack tuples
-        ray_args, pos_unpack_specs = _gather_args(
+        ray_args, pos_unpack_specs, pos_deserialize_specs = _gather_args(
             arg_ids=ir_invocation.args_ids,
             ray_consts=ray_consts,
             ray_futures=ray_futures,
             artifact_nodes=wf.artifact_nodes,
         )
 
-        ray_kwargs, kw_unpack_specs = _gather_kwargs(
+        ray_kwargs, kw_unpack_specs, kw_deserialize_specs = _gather_kwargs(
             kwarg_ids=ir_invocation.kwargs_ids,
             ray_consts=ray_consts,
             ray_futures=ray_futures,
@@ -452,6 +458,8 @@ def _make_ray_dag(
             ray_kwargs=ray_kwargs,
             pos_unpack_specs=pos_unpack_specs,
             kw_unpack_specs=kw_unpack_specs,
+            pos_deserialize_specs=pos_deserialize_specs,
+            kw_deserialize_specs=kw_deserialize_specs,
             project_dir=project_dir,
         )
 
@@ -459,7 +467,7 @@ def _make_ray_dag(
             ray_futures[output_id] = ray_future
 
     # Gather futures for the last, fake task, and decide what args we need to unwrap.
-    aggr_task_args, aggr_task_specs = _gather_args(
+    aggr_task_args, aggr_task_specs, aggr_deserialize_specs = _gather_args(
         arg_ids=wf.output_ids,
         ray_consts=ray_consts,
         ray_futures=ray_futures,
@@ -480,6 +488,8 @@ def _make_ray_dag(
         ray_kwargs={},
         pos_unpack_specs=aggr_task_specs,
         kw_unpack_specs=[],
+        pos_deserialize_specs=aggr_deserialize_specs,
+        kw_deserialize_specs=[],
         project_dir=None,
     )
 
