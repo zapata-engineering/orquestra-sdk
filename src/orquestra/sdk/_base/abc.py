@@ -142,9 +142,10 @@ class RuntimeInterface(ABC):
 
         This method should return all output values for a task even if some of them
         aren't used in the workflow function. Reasons:
-        - Users might be interested in the computed value after running, even though the workflow didn't make an explicit use of it.
-        - Position in the task output tuple is significant. We can't just drop
-          some of the elements because this would shift indices.
+        - Users might be interested in the computed value after running, even though
+          the workflow didn't make an explicit use of it.
+        - Position in the task output tuple is significant. We can't just drop some of
+          the elements because this would shift indices.
 
         Careful: This method does NOT return status of a workflow. Verify it beforehand
         to make sure if workflow failed/succeeded/is running. You might get incomplete
