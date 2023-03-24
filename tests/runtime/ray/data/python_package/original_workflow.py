@@ -1,4 +1,4 @@
-import polars as pl # type: ignore
+import polars as pl  # type: ignore
 
 import orquestra.sdk as sdk
 
