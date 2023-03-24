@@ -399,14 +399,14 @@ def _make_ray_dag(
 
     for ir_invocation in _graphs.iter_invocations_topologically(wf):
         # Prep args, kwargs, and the specs required to unpack tuples
-        ray_args, pos_unpack_specs, pos_deserialize_specs = _gather_args(
+        ray_args, pos_unpack_specs, pos_arg_indices_to_deserialize = _gather_args(
             arg_ids=ir_invocation.args_ids,
             ray_consts=ray_consts,
             ray_futures=ray_futures,
             artifact_nodes=wf.artifact_nodes,
         )
 
-        ray_kwargs, kw_unpack_specs, kw_deserialize_specs = _gather_kwargs(
+        ray_kwargs, kw_unpack_specs, kw_arg_keys_to_deserialize = _gather_kwargs(
             kwarg_ids=ir_invocation.kwargs_ids,
             ray_consts=ray_consts,
             ray_futures=ray_futures,
@@ -459,8 +459,8 @@ def _make_ray_dag(
             ray_kwargs=ray_kwargs,
             pos_unpack_specs=pos_unpack_specs,
             kw_unpack_specs=kw_unpack_specs,
-            pos_deserialize_specs=pos_deserialize_specs,
-            kw_deserialize_specs=kw_deserialize_specs,
+            pos_arg_indices_to_deserialize=pos_arg_indices_to_deserialize,
+            kw_arg_keys_to_deserialize=kw_arg_keys_to_deserialize,
             project_dir=project_dir,
         )
 
@@ -468,7 +468,7 @@ def _make_ray_dag(
             ray_futures[output_id] = ray_future
 
     # Gather futures for the last, fake task, and decide what args we need to unwrap.
-    aggr_task_args, aggr_task_specs, aggr_deserialize_specs = _gather_args(
+    aggr_task_args, aggr_task_specs, pos_arg_indices_to_deserialize = _gather_args(
         arg_ids=wf.output_ids,
         ray_consts=ray_consts,
         ray_futures=ray_futures,
@@ -489,8 +489,8 @@ def _make_ray_dag(
         ray_kwargs={},
         pos_unpack_specs=aggr_task_specs,
         kw_unpack_specs=[],
-        pos_deserialize_specs=aggr_deserialize_specs,
-        kw_deserialize_specs=[],
+        pos_arg_indices_to_deserialize=pos_arg_indices_to_deserialize,
+        kw_arg_keys_to_deserialize=[],
         project_dir=None,
     )
 
