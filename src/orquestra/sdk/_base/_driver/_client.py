@@ -623,7 +623,7 @@ class DriverClient:
                     # we can.
                     interpreted_log = WFLog(
                         timestamp=datetime.fromtimestamp(log[0], timezone.utc),
-                        level="",
+                        level="FIXME",
                         filename=log[1]["ray_filename"],
                         message=log[1]["log"],
                         wf_run_id=log[1]["tag"],

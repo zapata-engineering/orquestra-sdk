@@ -1622,7 +1622,7 @@ class TestClient:
                 # Spot checks on specific log entries.
                 assert logs[0] == WFLog(
                     timestamp=datetime(2023, 3, 14, 14, 33, 22, 15861, timezone.utc),
-                    level="",
+                    level="FIXME",
                     filename="/tmp/ray/session_latest/logs/worker-5ae5aa79521221bba27ab187fd801a6a2947eb9bbcdbcd99a4b57026-01000000-207.err",  # noqa: E501
                     message=":actor_name:Manager",
                     wf_run_id="workflow.logs.ray.wf_def-FfnTz-r000",
@@ -1637,14 +1637,14 @@ class TestClient:
                 ), logs[6]
                 assert logs[20] == WFLog(
                     timestamp=datetime(2023, 3, 14, 14, 33, 22, 15908, timezone.utc),
-                    level="",
+                    level="FIXME",
                     filename="/tmp/ray/session_latest/logs/worker-a601931abcd04110b31760f245e4c61d1cbd00f5943fabd5eeca1d9e-01000000-235.err",  # noqa: E501
                     message='  File "/home/orquestra/venv/lib/python3.9/site-packages/ray/workflow/task_executor.py", line 79, in _workflow_task_executor',  # noqa: E501
                     wf_run_id="workflow.logs.ray.wf_def-FfnTz-r000",
                 ), logs[20]
                 assert logs[63] == WFLog(
                     timestamp=datetime(2023, 3, 14, 14, 33, 22, 15956, timezone.utc),
-                    level="",
+                    level="FIXME",
                     filename="/tmp/ray/session_latest/logs/worker-b4584f711ed56477c7e7c0ea4b16717e36c35dd13ae66b6430a3e5a8-01000000-178.out",  # noqa: E501
                     message=":actor_name:WorkflowManagementActor",
                     wf_run_id="workflow.logs.ray.wf_def-FfnTz-r000",
