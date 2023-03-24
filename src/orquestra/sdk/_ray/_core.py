@@ -56,6 +56,29 @@ class WorkflowRepo:
                 "wf_def": _pydatic_to_json_dict(wf_def),
             }
 
+    def save_constant_ref(
+        self, run_id: WorkflowRunId, constant_id: ir.ConstantNodeId, ray_ref_id: str
+    ):
+        """
+        Persists the Ray object ref ID for a workflow constant value.
+        """
+        with self._db_state() as state:
+            wf_runs = state.setdefault("wf_runs", {})
+            wf_run = wf_runs.setdefault(run_id, {})
+            constant_refs = wf_run.setdefault("constant_refs", {})
+            if constant_id in constant_refs:
+                raise ValueError(
+                    f"Can't assign {constant_id} to {ray_ref_id} because it's already "
+                    f"associated with {constant_refs[constant_id]}"
+                )
+            constant_refs[constant_id] = ray_ref_id
+
+    def read_constant_ref(
+        self, run_id: WorkflowRunId, constant_id: ir.ConstantNodeId
+    ) -> str:
+        with self._db_state() as state:
+            return state["wf_runs"][run_id]["constant_refs"][constant_id]
+
 
 @ray.remote
 def _exec_task(fn_ref_dict, task_args):
@@ -74,17 +97,20 @@ class TaskRunner:
     Suitable for running tasks from single workflow run.
     """
 
-    def __init__(self, wf_def):
+    def __init__(self, wf_def, repo: WorkflowRepo):
         self._wf_def = wf_def
-        self._constant_vals: t.Mapping[ir.ConstantNodeId, t.Any] = {
-            node.id: serde.deserialize_constant(node)
-            for node in wf_def.constant_nodes.values()
-        }
+        self._repo = repo
+        # self._constant_vals: t.Mapping[ir.ConstantNodeId, t.Any] = {
+        #     node.id: serde.deserialize_constant(node)
+        #     for node in wf_def.constant_nodes.values()
+        # }
         # The proof-of-concept only works with single-output tasks for simplicity.
-        self._inv_refs: t.MutableMapping[ir.TaskInvocationId, ray.ObjectRef] = {}
-        self._ready_artifact_vals: t.MutableMapping[
-            ir.ArtifactNodeId, ray.ObjectRef
-        ] = {}
+        # self._inv_refs: t.MutableMapping[ir.TaskInvocationId, ray.ObjectRef] = {}
+        # self._ready_artifact_vals: t.MutableMapping[
+        #     ir.ArtifactNodeId, ray.ObjectRef
+        # ] = {}
+        # self._constant_refs: t.MutableMapping[ir.ConstantNodeId, ray.ObjectRef] = {}
+        # self._inv_refs: t.MutableMapping[ir.TaskInvocationId, ray.ObjectRef] = {}
 
         ray.init(address="auto")
 
@@ -95,10 +121,9 @@ class TaskRunner:
     ):
         arg_vals = []
         for arg_id in node_ids:
-            if arg_id in self._constant_vals:
-                arg_val = self._constant_vals[arg_id]
-            elif arg_id in self._ready_artifact_vals:
-                arg_val = self._ready_artifact_vals[arg_id]
+            if arg_id in self._wf_def.constant_nodes:
+                self._repo.read_constant_ref(arg_id)
+                # arg_val = ray.get(arg_id)
             else:
                 producing_invocation = [
                     inv for inv in wf_task_invocations if arg_id in inv.output_ids
@@ -110,13 +135,16 @@ class TaskRunner:
 
                 arg_obj_ref = self._inv_refs[producing_invocation.id]
                 arg_val = ray.get(arg_obj_ref)
-                self._ready_artifact_vals[arg_id] = arg_val
-
             arg_vals.append(arg_val)
         return arg_vals
 
     # @ray.remote
     def run_tasks(self):
+        for constant_node in self._wf_def.constant_nodes.values():
+            constant_val = serde.deserialize_constant(constant_node)
+            ref = ray.put(constant_val)
+            # self._constant_refs[constant_node.id] = ref
+
         all_invs = list(self._wf_def.task_invocations.values())
         for inv in _graphs.iter_invocations_topologically(self._wf_def):
             arg_vals = self._prep_vals(
@@ -152,7 +180,7 @@ class LocalRayCoreRuntime:
         run_id = _id_gen.gen_short_uid(5)
         self._repo.create_run(run_id=run_id, wf_def=workflow_def)
 
-        runner = TaskRunner(workflow_def)
+        runner = TaskRunner(wf_def=workflow_def, repo=self._repo)
         outputs = runner.run_tasks()
         breakpoint()
 
