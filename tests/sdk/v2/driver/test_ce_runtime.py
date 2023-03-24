@@ -895,6 +895,9 @@ class TestListWorkflowRuns:
 
 
 class TestGetWorkflowLogs:
+    @pytest.mark.xfail(
+        reason="Until ORQSDK-777 is done, we're ignoring task invocation ids to avoid splitting up sdk and ray logs."  # noqa: E501
+    )
     def test_happy_path(
         self,
         mocked_client: MagicMock,
@@ -917,6 +920,39 @@ class TestGetWorkflowLogs:
         assert logs == {
             "<wf id sentinel 1>": ["<message sentinel 1>", "<message sentinel 2>"],
             "<wf id sentinel 2>": ["<message sentinel 3>"],
+        }
+
+    def test_ignore_task_inv_id(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        workflow_run_id: str,
+    ):
+        """
+        TODO: This test covers a stopgap measure that will no longer be needed after
+        ORQSDK-777. Remove it as soon as possible.
+        """
+        # Given
+        wf_logs = [
+            Mock(wf_run_id="<wf id sentinel 1>", message="<message sentinel 1>"),
+            Mock(wf_run_id="<wf id sentinel 1>", message="<message sentinel 2>"),
+            Mock(wf_run_id="<wf id sentinel 2>", message="<message sentinel 3>"),
+            Mock(wf_run_id=None, message="<message sentinel 4>"),
+        ]
+        mocked_client.get_workflow_run_logs.return_value = wf_logs
+
+        # When
+        logs = runtime.get_workflow_logs(workflow_run_id)
+
+        # Then
+        mocked_client.get_workflow_run_logs.assert_called_once_with(workflow_run_id)
+        assert logs == {
+            "UNKNOWN TASK INV ID": [
+                "<message sentinel 1>",
+                "<message sentinel 2>",
+                "<message sentinel 3>",
+                "<message sentinel 4>",
+            ]
         }
 
     @pytest.mark.parametrize(

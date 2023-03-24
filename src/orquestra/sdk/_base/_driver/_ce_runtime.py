@@ -367,7 +367,8 @@ class CERuntime(RuntimeInterface):
             ...
 
         Returns:
-            A list of log lines from the workflow.
+            A dictionary whose keys are the task invocation ids, and whose values are a
+                list of log lines corresponding to that invocation.
         """
         try:
             logs: List[WFLog] = self._client.get_workflow_run_logs(wf_run_id)
@@ -386,12 +387,17 @@ class CERuntime(RuntimeInterface):
                 "Please report this as a bug."
             ) from e
 
-        # TODO: index by taskinvocationID rather than workflowrunID [ORQSDK-777]
         logs_dict: Dict[str, List[str]] = {}
         for log in logs:
-            logs_dict.setdefault(log.wf_run_id or "UNKNOWN RUN ID", []).append(
-                log.message
-            )
+            # TODO: We want to be indexing by the task_inv_id here, however we don't
+            # have that information for Ray logs (yet! ORQSDK-777). Ideally this should
+            # be something like:
+            # logs_dict.setdefault(log.task_inv_id or "UNKNOWN TASK INV ID",[]).append(
+            #     log.message
+            # )
+            # but in the interim we assume that the task invocation id is unknown to
+            # avoid splitting up sdk and ray logs.
+            logs_dict.setdefault("UNKNOWN TASK INV ID", []).append(log.message)
 
         return logs_dict
 
