@@ -57,7 +57,7 @@ def task_with_import():
     return 2
 
 
-@sdk.task(dependency_imports=[sdk.GithubImport("alexjuda/piccup")])
+@sdk.task(dependency_imports=[sdk.GithubImport("alexjuda/piccup", git_ref="master")])
 def task_with_git_import():
     import piccup  # type: ignore # noqa
 
@@ -169,7 +169,7 @@ def wf_using_python_imports():
 
 @sdk.workflow
 def wf_using_git_imports():
-    return [task_with_import()]
+    return [task_with_git_import()]
 
 
 @sdk.task

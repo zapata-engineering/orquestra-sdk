@@ -569,11 +569,12 @@ def test_import_package_inside_ray(runtime: _dag.RayRuntime):
 # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
 # unraisable exceptions. Last tested with Ray 2.2.0.
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
-def test_git_import_inside_ray(runtime: _dag.RayRuntime):
+def test_git_import_inside_ray(monkeypatch, runtime: _dag.RayRuntime):
     # This package should not be installed before running test
     with pytest.raises(ModuleNotFoundError):
         import piccup  # type: ignore # noqa
 
+    monkeypatch.setenv(name="ORQ_RAY_SET_TASK_RESOURCES", value="1")
     run_id = runtime.create_workflow_run(_example_wfs.wf_using_git_imports.model)
     wf_result = runtime.get_workflow_run_outputs(run_id)
     assert wf_result == (2,)
