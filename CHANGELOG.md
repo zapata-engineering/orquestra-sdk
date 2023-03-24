@@ -4,19 +4,26 @@
 
 🚨 *Breaking Changes*
 
+- Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a WorkflowSyntaxError if no tasks are required to be executed.
 
 🔥 *Features*
-
+- Sort WF runs by start date in `list wf` command. Show start date as one of the columns
+- Sort WF runs by start date in all workflow commands in prompt selection. Show start date with WF id
 
 👩‍🔬 *Experimental*
 
 
 🐛 *Bug Fixes*
+* Stopping a QE workflow after it has already stopped will no longer raise an exception.
+* Attempting to use the "in-process" runtime on the CLI will no longer raise an exception. Instead, a message teeling you to use the Python API or Ray will be printed.
+
 
 💅 *Improvements*
 
 
 🥷 *Internal*
+* During YAML conversion, Workflow SDK repo matched on host and path, not full URL.
+* On QE, Github URLs will be converted to SSH URLs.
 
 
 📃 *Docs*

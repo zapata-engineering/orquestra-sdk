@@ -4,13 +4,14 @@
 """
 Unit tests for 'orq wf list' glue code.
 """
-
+import datetime
 import typing as t
 from unittest.mock import Mock
 
 import pytest
 
 from orquestra.sdk._base.cli._dorq._workflow import _list
+from orquestra.sdk.schema.workflow_run import RunStatus, State
 
 
 class TestAction:
@@ -28,6 +29,18 @@ class TestAction:
         Verifies how we pass variables between subcomponents.
         """
         # Given
+
+        def return_wf():
+            run = Mock()
+            run.id = "fake id"
+            run.status = RunStatus(
+                state=State.RUNNING,
+                start_time=datetime.datetime.fromtimestamp(0),
+                end_time=datetime.datetime.fromtimestamp(0),
+            )
+            run.task_runs = []
+            return run
+
         # CLI inputs
         config = ["<config sentinel>"]
         limit: t.Any = "<limit sentinel>"
@@ -44,11 +57,16 @@ class TestAction:
         presenter = Mock()
 
         wf_run_repo = Mock()
-        wf_runs = ["<wf run sentinel 1>", "<wf run sentinel 2>"]
+
+        wf_runs = [return_wf(), return_wf()]
         wf_run_repo.list_wf_runs.return_value = wf_runs
 
         config_resolver = Mock()
         config_resolver.resolve_multiple.return_value = resolved_configs
+
+        summary_repo = Mock()
+        showed_mocks = [Mock(), Mock()]
+        summary_repo.wf_list_summary.return_value = showed_mocks
 
         wf_run_filter_resolver = Mock()
         wf_run_filter_resolver.resolve_limit.return_value = resolved_limit
@@ -57,6 +75,7 @@ class TestAction:
 
         action = _list.Action(
             presenter=presenter,
+            summary_repo=summary_repo,
             wf_run_repo=wf_run_repo,
             config_resolver=config_resolver,
             wf_run_filter_resolver=wf_run_filter_resolver,
@@ -97,7 +116,8 @@ class TestAction:
 
         # We expect printing of the workflow runs returned from the repo.
         expected_wf_runs_list = wf_runs + wf_runs
-        presenter.show_wf_runs_list.assert_called_with(expected_wf_runs_list)
+        summary_repo.wf_list_summary.assert_called_with(expected_wf_runs_list)
+        presenter.show_wf_list.assert_called_with(showed_mocks)
 
         # This specifies all of the filters, so we shouldn't get anything flagging up
         # to the user

@@ -2,13 +2,14 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 import typing as t
-from unittest.mock import Mock
+from datetime import datetime, timedelta, timezone
+from unittest.mock import Mock, create_autospec
 
 import pytest
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base.cli._dorq import _arg_resolvers, _repos
-from orquestra.sdk.schema.workflow_run import State
+from orquestra.sdk.schema.workflow_run import RunStatus, State, WorkflowRun
 
 
 class TestConfigResolver:
@@ -64,6 +65,16 @@ class TestConfigResolver:
 
         # Resolver should return the user's choice.
         assert resolved_config == selected_config
+
+    @staticmethod
+    def test_with_in_process():
+        # Given
+        config = "in_process"
+        resolver = _arg_resolvers.ConfigResolver(config_repo=Mock(), prompter=Mock())
+
+        # When/Then
+        with pytest.raises(exceptions.InProcessFromCLIError):
+            resolver.resolve(config)
 
     class TestResolveMultiple:
         @staticmethod
@@ -344,15 +355,28 @@ class TestWFRunResolver:
             User didn't pass ``wf_run_id``.
             """
             # Given
+            current_time = datetime.now().astimezone()
+
+            def return_wf(id, time_delay_in_sec: int):
+                run = Mock()
+                run.id = id
+                run.status = RunStatus(
+                    state=State.RUNNING,
+                    start_time=current_time + timedelta(seconds=time_delay_in_sec),
+                    end_time=current_time + timedelta(seconds=time_delay_in_sec),
+                )
+                return run
+
             wf_run_id = None
             config = "<config sentinel>"
 
             wf_run_repo = Mock()
-            listed_run_ids = ["wf1", "wf2"]
-            wf_run_repo.list_wf_run_ids.return_value = listed_run_ids
+            time_delta = 1000
+            listed_runs = [return_wf("1", 0), return_wf("2", time_delta)]
+            wf_run_repo.list_wf_runs.return_value = listed_runs
 
             prompter = Mock()
-            selected_id = listed_run_ids[0]
+            selected_id = listed_runs[0].id
             prompter.choice.return_value = selected_id
 
             resolver = _arg_resolvers.WFRunResolver(
@@ -365,12 +389,19 @@ class TestWFRunResolver:
 
             # Then
             # We should pass config value to wf_run_repo.
-            wf_run_repo.list_wf_run_ids.assert_called_with(config)
+            wf_run_repo.list_wf_runs.assert_called_with(config)
 
             # We should prompt for selecting workflow ID from the ones returned
-            # by the repo.
+            # by the repo. Those choices should be sorted from newest at the top
             prompter.choice.assert_called_with(
-                listed_run_ids, message="Workflow run ID"
+                [
+                    (
+                        "2  " + (current_time + timedelta(seconds=time_delta)).ctime(),
+                        "2",
+                    ),
+                    ("1  " + current_time.ctime(), "1"),
+                ],
+                message="Workflow run ID",
             )
 
             # Resolver should return the user's choice.
@@ -407,11 +438,24 @@ class TestWFRunResolver:
             User didn't pass ``wf_run_id``.
             """
             # Given
+            current_time = datetime.now()
+
+            def return_wf(id, time_delay_in_sec: int):
+                run = Mock()
+                run.id = id
+                run.status = RunStatus(
+                    state=State.RUNNING,
+                    start_time=current_time + timedelta(seconds=time_delay_in_sec),
+                    end_time=current_time + timedelta(seconds=time_delay_in_sec),
+                )
+                return run
+
             wf_run_id = None
             config = "<config sentinel>"
 
             wf_run_repo = Mock()
-            listed_runs = [Mock(), Mock()]
+            time_delta = 1000
+            listed_runs = [return_wf("1", 0), return_wf("2", time_delta)]
             wf_run_repo.list_wf_runs.return_value = listed_runs
 
             prompter = Mock()
@@ -433,7 +477,14 @@ class TestWFRunResolver:
             # We should prompt for selecting workflow run from the IDs returned
             # by the repo.
             prompter.choice.assert_called_with(
-                [(run.id, run) for run in listed_runs], message="Workflow run ID"
+                [
+                    (
+                        "2  " + (current_time + timedelta(seconds=time_delta)).ctime(),
+                        listed_runs[1],  # this has later start_time than [0]
+                    ),
+                    ("1  " + current_time.ctime(), listed_runs[0]),
+                ],
+                message="Workflow run ID",
             )
 
             # Resolver should return the user's choice.

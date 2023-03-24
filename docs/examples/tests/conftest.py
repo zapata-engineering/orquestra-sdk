@@ -24,6 +24,6 @@ def shared_ray_conn():
 
 @pytest.fixture(scope="module")
 def change_db_location(change_test_dir):
-    os.environ["ORQ_DB_LOCATION"] = os.path.join(change_test_dir, "db.db")
+    os.environ["ORQ_DB_PATH"] = os.path.join(change_test_dir, "db.db")
     yield
-    del os.environ["ORQ_DB_LOCATION"]
+    del os.environ["ORQ_DB_PATH"]

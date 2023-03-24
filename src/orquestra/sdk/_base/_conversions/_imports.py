@@ -100,11 +100,14 @@ class ImportTranslator:
                 f"Refusing to dereference secret for url `{imp.repo_url.original_url}`"
             )
             git_url.password = None
+        protocol = None
+        if imp.repo_url.host == "github.com":
+            protocol = "ssh"
         return yaml_model.Import(
             name=yaml_name,
             type="git",
             parameters=yaml_model.GitImportParameters(
-                repository=_git_url_utils.build_git_url(git_url),
+                repository=_git_url_utils.build_git_url(git_url, protocol),
                 commit=imp.git_ref,
             ),
         )
@@ -138,7 +141,11 @@ def _find_git_import(
     matching_url = _git_url_utils.parse_git_url(url)
     it: t.Iterable[t.Any] = imports
     it = filter(lambda imp: isinstance(imp, ir.GitImport), it)
-    it = filter(lambda imp: imp.repo_url == matching_url, it)
+    it = filter(
+        lambda imp: imp.repo_url.host == matching_url.host
+        and imp.repo_url.path == matching_url.path,
+        it,
+    )
     return next(it, None)
 
 

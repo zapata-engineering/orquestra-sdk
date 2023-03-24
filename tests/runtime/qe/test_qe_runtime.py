@@ -514,13 +514,17 @@ class TestCreateWorkflowRun:
             "ends-with-non.alphanumeric-",
         ],
     )
-    def test_raises_exception_if_worflow_name_does_not_match_qe_reqs(
+    def test_raises_exception_if_workflow_name_does_not_match_qe_reqs(
         workflow_name,
         runtime,
     ):
+        @sdk.task
+        def simple_task():
+            return None
+
         @sdk.workflow(custom_name=workflow_name)
         def BadNameWorkflow():
-            return [None]
+            return [simple_task()]
 
         workflow = BadNameWorkflow.model
 
@@ -1250,6 +1254,17 @@ class TestStopWorkflowRun:
             responses.DELETE,
             "http://localhost/v1/workflows/hello-there-abc123-r000",
             json=QE_RESPONSES["stop"],
+        )
+
+        response = runtime.stop_workflow_run("hello-there-abc123-r000")
+
+        assert response is None
+
+    def test_already_stopped(self, runtime, mocked_responses):
+        mocked_responses.add(
+            responses.DELETE,
+            "http://localhost/v1/workflows/hello-there-abc123-r000",
+            status=409,  # HTTP 409: Conflict
         )
 
         response = runtime.stop_workflow_run("hello-there-abc123-r000")

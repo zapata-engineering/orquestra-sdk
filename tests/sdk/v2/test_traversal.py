@@ -231,6 +231,13 @@ def daisy_chain():
     return [plus_2]
 
 
+@_workflow.workflow
+def no_tasks():
+    first = "emiliano"
+    last = "zapata"
+    return [first, last]
+
+
 # Exposing a function from PyPI-available library
 numpy_eye = _dsl.external_module_task(
     module="numpy",
@@ -303,24 +310,25 @@ def multiple_task_outputs():
 
 @_workflow.workflow
 def constant_return():
-    return [42]
+    a = simple_task(1)
+    return [42, a]
 
 
 @_workflow.workflow
 def constant_collisions():
-    return [1.0, 1, True]
+    return [1.0, 1, True, simple_task(1)]
 
 
 @_workflow.workflow(
     data_aggregation=_dsl.DataAggregation(run=False, resources=_dsl.Resources(cpu="1"))
 )
 def workflow_with_data_aggregation():
-    return [1]
+    return [simple_task(1)]
 
 
 @_workflow.workflow(data_aggregation=_dsl.DataAggregation(run=True))
 def workflow_with_data_aggregation_no_resources():
-    return [1]
+    return [simple_task(1)]
 
 
 @_workflow.workflow(
@@ -329,7 +337,7 @@ def workflow_with_data_aggregation_no_resources():
     )
 )
 def workflow_with_data_aggregation_set_gpu():
-    return [1]
+    return [simple_task(1)]
 
 
 @_dsl.task()
@@ -431,10 +439,10 @@ class TestFlattenGraph:
 
     def test_constant_return_workflow(self):
         wf = constant_return.model
-        assert len(wf.task_invocations) == 0
-        assert len(wf.tasks) == 0
-        assert len(wf.constant_nodes) == 1
-        assert len(wf.output_ids) == 1
+        assert len(wf.task_invocations) == 1
+        assert len(wf.tasks) == 1
+        assert len(wf.constant_nodes) == 2
+        assert len(wf.output_ids) == 2
         assert wf.output_ids[0] in wf.constant_nodes
 
     def test_equal_constants_different_types(self):
@@ -504,6 +512,14 @@ class TestFlattenGraph:
         assert len(tasks) == 1
         assert tasks[0].dependency_import_ids is not None
         assert tasks[0].source_import_id not in tasks[0].dependency_import_ids
+
+    def test_raises_exception_for_zero_tasks(self):
+        # preconditions
+        with pytest.raises(exceptions.WorkflowSyntaxError) as e:
+            no_tasks.model
+        assert e.match(
+            r"The workflow 'no_tasks' \(defined at .+\.py line \d+\) cannot be submitted as it does not define any tasks to be executed. Please modify the workflow definition to define at least one task and retry submitting the workflow."  # noqa: E501
+        )
 
 
 class ContextManager(t.Protocol):

@@ -149,6 +149,10 @@ class Snippets:
             """
             return text[::-1]
 
+        @sdk.task
+        def further_workflow_tasks() -> int:
+            return 0
+
         @sdk.workflow
         def wf():
             greeting = "hello"
@@ -156,7 +160,7 @@ class Snippets:
             # The result workflow will contain an embedded `"olleh"` serialized value.
             ...
             # </snippet>
-            return reversed_greeting
+            return reversed_greeting, further_workflow_tasks()
 
         return wf
 
@@ -438,7 +442,7 @@ class TestSnippets:
         model = wf.model
 
         # Then
-        assert len(model.task_invocations) == 0
+        assert len(model.task_invocations) == 1
 
     @staticmethod
     def test_task_in_task_fails(change_test_dir):

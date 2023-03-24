@@ -350,7 +350,7 @@ ET_INSTANT_1 = datetime(
     26,
     7,
     704015,
-    tzinfo=timezone(timedelta(hours=-5)),
+    tzinfo=timezone.utc,
 )
 ET_INSTANT_2 = datetime(
     2023,
@@ -360,7 +360,7 @@ ET_INSTANT_2 = datetime(
     28,
     37,
     123,
-    tzinfo=timezone(timedelta(hours=-5)),
+    tzinfo=timezone.utc,
 )
 
 
@@ -421,10 +421,16 @@ class TestWorkflowRunPresenter:
             ),
         ],
     )
-    def test_show_wf_run(capsys, summary: ui_models.WFRunSummary, expected_path: Path):
+    def test_show_wf_run(
+        monkeypatch, capsys, summary: ui_models.WFRunSummary, expected_path: Path
+    ):
         # Given
         presenter = _presenters.WFRunPresenter()
-
+        monkeypatch.setattr(
+            _presenters,
+            "_format_datetime",
+            lambda x: "Fri Feb 24 08:26:07 2023" if x else "",
+        )
         # When
         presenter.show_wf_run(summary)
 
