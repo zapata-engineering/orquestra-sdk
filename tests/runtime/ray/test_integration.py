@@ -7,6 +7,7 @@ as possible, because it's slow to run. Please consider using unit tests and
 RuntimeInterface mocks instead of extending this file.
 """
 import json
+import os
 import time
 import typing as t
 from pathlib import Path
@@ -545,18 +546,39 @@ def test_run_and_get_output(
 # - Installing packages on company machines is very slow because of the antivirus
 #   scanning.
 @pytest.mark.slow
+# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
+# unraisable exceptions. Last tested with Ray 2.3.0.
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 def test_import_package_inside_ray(runtime: _dag.RayRuntime):
+    """
+    This test uses already generated workflow def from json file.
+    If necessary it can be recreated using ./data/python_package/original_workflow.py
+
+    This function tests 2 things
+    1. Proper package installation. Python Package defined in task definition
+    should only be installed inside venv of ray task and shouldn't leak into main env
+    2. We can create lib-dependent constant objects in the workflow definition and pass
+    them to task. This checks that we don't need python package outside an actual
+    task venv to deal with package-dependent constant values
+
+    We test those 2 things together as package installation is long, and we don't
+    want to do that twice unnecessarily
+    """
     # This package should not be installed before running test
     with pytest.raises(ModuleNotFoundError):
-        import piccup  # type: ignore # noqa
+        import polars  # type: ignore # noqa
 
-    run_id = runtime.create_workflow_run(_example_wfs.wf_using_python_imports.model)
+    path_to_json = Path(__file__).parent.joinpath(
+        "data/python_package/python_package_dependent_workflow.json"
+    )
+    wf = ir.WorkflowDef.parse_file(path_to_json)
+    run_id = runtime.create_workflow_run(wf)
     wf_result = runtime.get_workflow_run_outputs(run_id)
-    assert wf_result == (2,)
+    assert wf_result == (21,)
 
     # this package should be only used inside ray env
     with pytest.raises(ModuleNotFoundError):
-        import piccup  # type: ignore # noqa
+        import polars  # type: ignore # noqa
 
 
 # This test is slow to run locally because:
@@ -567,14 +589,15 @@ def test_import_package_inside_ray(runtime: _dag.RayRuntime):
 #   scanning.
 @pytest.mark.slow
 # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
-# unraisable exceptions. Last tested with Ray 2.2.0.
+# unraisable exceptions. Last tested with Ray 2.3.0.
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 def test_git_import_inside_ray(monkeypatch, runtime: _dag.RayRuntime):
     # This package should not be installed before running test
     with pytest.raises(ModuleNotFoundError):
         import piccup  # type: ignore # noqa
 
-    monkeypatch.setenv(name="ORQ_RAY_SET_TASK_RESOURCES", value="1")
+    monkeypatch.setenv(name="ORQ_RAY_DOWNLOAD_GIT_IMPORTS", value="1")
+
     run_id = runtime.create_workflow_run(_example_wfs.wf_using_git_imports.model)
     wf_result = runtime.get_workflow_run_outputs(run_id)
     assert wf_result == (2,)
