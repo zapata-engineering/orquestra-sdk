@@ -614,11 +614,8 @@ class DriverClient:
                 try:
                     # Orquestra logs are jsonable - where we can we parse these and
                     # extract the useful information
-                    parsed_log_message = json.loads(log[1]["log"])
-                    wf_log_json = log[1]["log"]
-                    interpreted_log = WFLog.parse_json(wf_log_json)
-
-                except (json.JSONDecodeError, KeyError):
+                    interpreted_log = WFLog.parse_raw(log[1]["log"])
+                except pydantic.ValidationError:
                     # If the log isn't jsonable (i.e. it's from Ray) extract what info
                     # we can.
                     interpreted_log = WFLog(

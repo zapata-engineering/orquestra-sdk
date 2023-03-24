@@ -58,7 +58,7 @@ def endpoint_mocker_base(mocked_responses):
 class TestClient:
     @pytest.fixture
     def base_uri(self):
-        return "https://shouldnt.matter.example.com"
+        return "https://should.not.matter.example.com"
 
     @pytest.fixture
     def token(self):
@@ -1619,6 +1619,7 @@ class TestClient:
                 logs = client.get_workflow_run_logs(workflow_run_id)
 
                 assert len(logs) == 64
+
                 # Spot checks on specific log entries.
                 assert logs[0] == WFLog(
                     timestamp=datetime(2023, 3, 14, 14, 33, 22, 15861, timezone.utc),
@@ -1628,13 +1629,14 @@ class TestClient:
                     wf_run_id="workflow.logs.ray.wf_def-FfnTz-r000",
                 ), logs[0]
                 assert logs[6] == WFLog(
-                    timestamp=datetime(2023, 3, 14, 14, 33, 22, 15901, timezone.utc),
+                    timestamp=datetime(2023, 3, 14, 14, 32, 57, 935535, timezone.utc),
                     level="ERROR",
                     filename="_dag.py:195",
                     message='Traceback (most recent call last):\n  File "/home/orquestra/venv/lib/python3.9/site-packages/orquestra/sdk/_ray/_dag.py", line 192, in _ray_remote\n    return wrapped(*inner_args, **inner_kwargs)\n  File "/home/orquestra/venv/lib/python3.9/site-packages/orquestra/sdk/_ray/_dag.py", line 147, in __call__\n    return self._fn(*unpacked_args, **unpacked_kwargs)\n  File "/Users/benjaminmummery/Documents/Projects/orquestra-workflow-sdk/../scratch/scratch.py", line 12, in do_thing\nException: Blah\n',  # noqa: E501
                     wf_run_id="wf.wf_def.3c5f938",
+                    task_inv_id=None,
                     task_run_id="invocation-0-task-do-thing",
-                ), logs[6]
+                )
                 assert logs[20] == WFLog(
                     timestamp=datetime(2023, 3, 14, 14, 33, 22, 15908, timezone.utc),
                     level="FIXME",
