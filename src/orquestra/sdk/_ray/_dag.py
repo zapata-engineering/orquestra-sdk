@@ -174,8 +174,8 @@ def _make_ray_dag_node(
     ray_kwargs: t.Mapping[str, t.Any],
     pos_unpack_specs: t.Sequence[PosArgUnpackSpec],
     kw_unpack_specs: t.Sequence[KwArgUnpackSpec],
-    pos_deserialize_specs: t.Sequence[int],
-    kw_deserialize_specs: t.Sequence[str],
+    pos_arg_indices_to_deserialize: t.Sequence[int],
+    kw_arg_keys_to_deserialize: t.Sequence[str],
     project_dir: t.Optional[Path],
     user_fn_ref: t.Optional[ir.FunctionRef] = None,
 ) -> _client.FunctionNode:
@@ -192,6 +192,10 @@ def _make_ray_dag_node(
             positional argument value at execution time.
         kw_unpack_specs: determines if the task will need to unwrap a
             keyword argument value at execution time.
+        pos_arg_indices_to_deserialize: determines which positional args of the task
+            will get deserialized - i.e. which are constants
+        kw_arg_keys_to_deserialize: determines which kw args of the task
+            will get deserialized - i.e. which are constants
         user_fn_ref: function reference for a function to be executed by Ray.
             if None - executes data aggregation step
     """
@@ -203,14 +207,14 @@ def _make_ray_dag_node(
         inner_args = (
             *(
                 serde.deserialize_constant(arg)
-                if arg_id in pos_deserialize_specs
+                if arg_index in pos_arg_indices_to_deserialize
                 else arg
-                for arg_id, arg in enumerate(inner_args)
+                for arg_index, arg in enumerate(inner_args)
             ),
         )
         inner_kwargs = {
             key: serde.deserialize_constant(value)
-            if key in kw_deserialize_specs
+            if key in kw_arg_keys_to_deserialize
             else value
             for key, value in inner_kwargs.items()
         }
