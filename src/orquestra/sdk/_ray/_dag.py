@@ -380,11 +380,8 @@ def _gather_kwargs(
 def _make_ray_dag(
     client: RayClient, wf: ir.WorkflowDef, wf_run_id: str, project_dir: t.Optional[Path]
 ):
-    ray_consts: t.Dict[ir.ConstantNodeId, t.Any] = {
-        # id: serde.deserialize_constant(node) for id, node in wf.constant_nodes.items()
-        id: node
-        for id, node in wf.constant_nodes.items()
-    }
+    ray_consts: t.Dict[ir.ConstantNodeId, t.Any] = wf.constant_nodes
+
     for id, secret in wf.secret_nodes.items():
         ray_consts[id] = secrets.get(
             secret.secret_name, config_name=secret.secret_config
