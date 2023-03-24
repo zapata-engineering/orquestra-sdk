@@ -615,15 +615,8 @@ class DriverClient:
                     # Orquestra logs are jsonable - where we can we parse these and
                     # extract the useful information
                     parsed_log_message = json.loads(log[1]["log"])
-                    interpreted_log = WFLog(
-                        timestamp=datetime.fromtimestamp(log[0], timezone.utc),
-                        level=parsed_log_message["level"],
-                        filename=parsed_log_message["filename"],
-                        message=parsed_log_message["message"],
-                        wf_run_id=parsed_log_message["wf_run_id"],
-                        task_inv_id=None,
-                        task_run_id=parsed_log_message["task_run_id"],
-                    )
+                    wf_log_json = log[1]["log"]
+                    interpreted_log = WFLog.parse_json(wf_log_json)
 
                 except (json.JSONDecodeError, KeyError):
                     # If the log isn't jsonable (i.e. it's from Ray) extract what info
