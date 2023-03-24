@@ -6,20 +6,23 @@ Workflow runtime based on the Ray Core/Ray Remotes API.
 """
 
 from contextlib import contextmanager
+from datetime import datetime, timezone
 import json
 import typing as t
 from pathlib import Path
 
 import ray
 from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
-from .._base.abc import ArtifactValue, RuntimeInterface
 from .._base import _graphs, serde
 from .._base.cli._dorq import _dumpers
 from . import _id_gen
 from ._dag import _locate_user_fn, _pydatic_to_json_dict
+
+
+def _make_timestamp():
+    return datetime.now(timezone.utc).astimezone()
 
 
 class WorkflowStateRepo:
@@ -47,7 +50,9 @@ class WorkflowStateRepo:
 
         self._write_state(state_dict)
 
-    def create_run(self, run_id: WorkflowRunId, wf_def: ir.WorkflowDef):
+    def create_run(
+        self, run_id: WorkflowRunId, wf_def: ir.WorkflowDef, started_at: datetime
+    ):
         with self._db_state() as state:
             if run_id in state.get("wf_runs", {}):
                 raise ValueError()
@@ -55,7 +60,13 @@ class WorkflowStateRepo:
             state.setdefault("wf_runs", {})[run_id] = {
                 "run_id": run_id,
                 "wf_def": _pydatic_to_json_dict(wf_def),
+                "started_at": started_at.isoformat(),
             }
+
+    def mark_run_as_succeeded(self, run_id: WorkflowRunId, finished_at: datetime):
+        with self._db_state() as state:
+            wf_run = state["wf_runs"][run_id]
+            wf_run["finished_at"] = finished_at.isoformat()
 
 
 @ray.remote
@@ -152,6 +163,10 @@ class TaskRunner:
             node_ids=self._wf_def.output_ids, wf_task_invocations=all_invs
         )
 
+        finished_at = _make_timestamp()
+        repo = WorkflowStateRepo()
+        repo.mark_run_as_succeeded(run_id=wf_run_id, finished_at=finished_at)
+
 
 # class LocalRayCoreRuntime(RuntimeInterface):
 class LocalRayCoreRuntime:
@@ -163,7 +178,8 @@ class LocalRayCoreRuntime:
         workflow_def: ir.WorkflowDef,
     ) -> WorkflowRunId:
         run_id = _id_gen.gen_short_uid(5)
-        self._repo.create_run(run_id=run_id, wf_def=workflow_def)
+        started_at = datetime.now(timezone.utc).astimezone()
+        self._repo.create_run(run_id=run_id, wf_def=workflow_def, started_at=started_at)
 
         runner = TaskRunner(wf_def=workflow_def, repo=self._repo)
         runner.run_tasks(wf_run_id=run_id)
