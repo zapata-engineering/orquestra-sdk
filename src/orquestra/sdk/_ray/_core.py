@@ -17,11 +17,12 @@ from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
 from .._base.abc import ArtifactValue, RuntimeInterface
 from .._base import _graphs, serde
+from .._base.cli._dorq import _dumpers
 from . import _id_gen
 from ._dag import _locate_user_fn, _pydatic_to_json_dict
 
 
-class WorkflowRepo:
+class WorkflowStateRepo:
     def __init__(self):
         self._path = Path.home() / ".orquestra" / "alpha" / "wfs.json"
 
@@ -56,38 +57,28 @@ class WorkflowRepo:
                 "wf_def": _pydatic_to_json_dict(wf_def),
             }
 
-    def save_constant_ref(
-        self, run_id: WorkflowRunId, constant_id: ir.ConstantNodeId, ray_ref_id: str
-    ):
-        """
-        Persists the Ray object ref ID for a workflow constant value.
-        """
-        with self._db_state() as state:
-            wf_runs = state.setdefault("wf_runs", {})
-            wf_run = wf_runs.setdefault(run_id, {})
-            constant_refs = wf_run.setdefault("constant_refs", {})
-            if constant_id in constant_refs:
-                raise ValueError(
-                    f"Can't assign {constant_id} to {ray_ref_id} because it's already "
-                    f"associated with {constant_refs[constant_id]}"
-                )
-            constant_refs[constant_id] = ray_ref_id
-
-    def read_constant_ref(
-        self, run_id: WorkflowRunId, constant_id: ir.ConstantNodeId
-    ) -> str:
-        with self._db_state() as state:
-            return state["wf_runs"][run_id]["constant_refs"][constant_id]
-
 
 @ray.remote
-def _exec_task(fn_ref_dict, task_args):
+def _exec_task(
+    fn_ref_dict, wf_run_id: WorkflowRunId, task_inv_id: ir.TaskInvocationId, task_args
+):
     # Ray Remote arguments need to be JSON-serializable.
     fn_ref = ir.ModuleFunctionRef.parse_obj(fn_ref_dict)
 
     user_fn = _locate_user_fn(fn_ref)
 
     fn_result = user_fn(*task_args)
+
+    dumper = _dumpers.TaskOutputDumper()
+    base_path = Path.home() / ".orquestra" / "alpha" / "computed_values"
+    dumper.dump(
+        # The POC assumes single-output tasks
+        value=fn_result,
+        wf_run_id=wf_run_id,
+        task_inv_id=task_inv_id,
+        output_index=0,
+        dir_path=base_path,
+    )
 
     return fn_result
 
@@ -97,20 +88,12 @@ class TaskRunner:
     Suitable for running tasks from single workflow run.
     """
 
-    def __init__(self, wf_def, repo: WorkflowRepo):
+    def __init__(self, wf_def, repo: WorkflowStateRepo):
         self._wf_def = wf_def
         self._repo = repo
-        # self._constant_vals: t.Mapping[ir.ConstantNodeId, t.Any] = {
-        #     node.id: serde.deserialize_constant(node)
-        #     for node in wf_def.constant_nodes.values()
-        # }
+        self._constant_refs: t.MutableMapping[ir.ConstantNodeId, ray.ObjectRef] = {}
         # The proof-of-concept only works with single-output tasks for simplicity.
-        # self._inv_refs: t.MutableMapping[ir.TaskInvocationId, ray.ObjectRef] = {}
-        # self._ready_artifact_vals: t.MutableMapping[
-        #     ir.ArtifactNodeId, ray.ObjectRef
-        # ] = {}
-        # self._constant_refs: t.MutableMapping[ir.ConstantNodeId, ray.ObjectRef] = {}
-        # self._inv_refs: t.MutableMapping[ir.TaskInvocationId, ray.ObjectRef] = {}
+        self._inv_refs: t.MutableMapping[ir.TaskInvocationId, ray.ObjectRef] = {}
 
         ray.init(address="auto")
 
@@ -121,9 +104,9 @@ class TaskRunner:
     ):
         arg_vals = []
         for arg_id in node_ids:
-            if arg_id in self._wf_def.constant_nodes:
-                self._repo.read_constant_ref(arg_id)
-                # arg_val = ray.get(arg_id)
+            if arg_id in self._constant_refs:
+                obj_ref = self._constant_refs[arg_id]
+                arg_val = ray.get(obj_ref)
             else:
                 producing_invocation = [
                     inv for inv in wf_task_invocations if arg_id in inv.output_ids
@@ -139,11 +122,11 @@ class TaskRunner:
         return arg_vals
 
     # @ray.remote
-    def run_tasks(self):
+    def run_tasks(self, wf_run_id: WorkflowRunId):
         for constant_node in self._wf_def.constant_nodes.values():
             constant_val = serde.deserialize_constant(constant_node)
             ref = ray.put(constant_val)
-            # self._constant_refs[constant_node.id] = ref
+            self._constant_refs[constant_node.id] = ref
 
         all_invs = list(self._wf_def.task_invocations.values())
         for inv in _graphs.iter_invocations_topologically(self._wf_def):
@@ -157,21 +140,23 @@ class TaskRunner:
 
             task_def = self._wf_def.tasks[inv.task_id]
             task_result_obj_ref = _exec_task.remote(
-                _pydatic_to_json_dict(task_def.fn_ref), arg_vals
+                fn_ref_dict=_pydatic_to_json_dict(task_def.fn_ref),
+                wf_run_id=wf_run_id,
+                task_inv_id=inv.id,
+                task_args=arg_vals,
             )
             self._inv_refs[inv.id] = task_result_obj_ref
 
-        wf_outputs = self._prep_vals(
+        # Hack: await all workflow outputs
+        _ = self._prep_vals(
             node_ids=self._wf_def.output_ids, wf_task_invocations=all_invs
         )
-
-        return wf_outputs
 
 
 # class LocalRayCoreRuntime(RuntimeInterface):
 class LocalRayCoreRuntime:
     def __init__(self):
-        self._repo = WorkflowRepo()
+        self._repo = WorkflowStateRepo()
 
     def create_workflow_run(
         self,
@@ -181,7 +166,10 @@ class LocalRayCoreRuntime:
         self._repo.create_run(run_id=run_id, wf_def=workflow_def)
 
         runner = TaskRunner(wf_def=workflow_def, repo=self._repo)
-        outputs = runner.run_tasks()
-        breakpoint()
+        runner.run_tasks(wf_run_id=run_id)
 
         return run_id
+
+    # def get_workflow_run_outputs_non_blocking(self, workflow_run_id: WorkflowRunId):
+    #     base_path = Path.home() / ".orquestra" / "alpha" / "computed_values"
+    #     inv_dir_path = base_path / workflow_run_id / "task_results" / inv_id
