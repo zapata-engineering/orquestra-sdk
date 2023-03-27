@@ -26,7 +26,6 @@ from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import (
-    ArtifactNode,
     ArtifactNodeId,
     TaskInvocation,
     TaskInvocationId,
@@ -353,10 +352,12 @@ def _find_packed_artifact_id(
 ) -> ArtifactNodeId:
     output_ids = wf_def.task_invocations[inv_id].output_ids
     artifact_nodes = (wf_def.artifact_nodes[id] for id in output_ids)
-    packed: ArtifactNode = _find_first(
-        lambda node: node.artifact_index is None, artifact_nodes
-    )
-    return packed.id
+    packed_nodes = [n for n in artifact_nodes if n.artifact_index is None]
+    assert len(
+        packed_nodes
+    ), f"Task invocation should have exactly 1 packed output. {inv_id} has {len(packed_nodes)}: {packed_nodes}"  # noqa: E501
+
+    return packed_nodes[0].id
 
 
 class QERuntime(RuntimeInterface):

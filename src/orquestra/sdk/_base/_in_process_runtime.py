@@ -10,9 +10,7 @@ from orquestra.sdk.schema.workflow_run import (
     RunStatus,
     State,
     TaskRun,
-    TaskRunId,
     WorkflowRun,
-    WorkflowRunId,
 )
 
 from .. import secrets
@@ -161,11 +159,11 @@ class InProcessRuntime(abc.RuntimeInterface):
             # "orquestra.sdk._base._traversal".
 
             artifact_nodes = [wf_def.artifact_nodes[id] for id in inv.output_ids]
-            packed_artifact = [
-                artifact
-                for artifact in artifact_nodes
-                if artifact.artifact_index is None
-            ][0]
+            packed_nodes = [n for n in artifact_nodes if n.artifact_index is None]
+            assert len(
+                packed_nodes
+            ), f"Task invocation should have exactly 1 packed output. {inv.id} has {len(packed_nodes)}: {packed_nodes}"  # noqa: E501
+            packed_artifact = packed_nodes[0]
 
             task_result = self._artifact_store[workflow_run_id][packed_artifact.id]
 
