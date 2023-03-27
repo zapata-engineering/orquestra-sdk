@@ -42,6 +42,7 @@
 
 🔥 *Features*
 * Use the requested resources from a workflow's tasks when submitting to CE
+* CE runtime now supports getting logs from remote Ray runtimes.
 
 
 🥷 *Internal*

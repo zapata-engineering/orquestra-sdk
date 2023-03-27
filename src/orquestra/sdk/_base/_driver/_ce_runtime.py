@@ -3,7 +3,7 @@
 ################################################################################
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import serde
@@ -112,13 +112,19 @@ class CERuntime(RuntimeInterface):
                 _models.Resources(cpu=max_cpu, memory=max_memory, gpu=max_gpu),
             )
         except _exceptions.InvalidWorkflowDef as e:
-            raise exceptions.WorkflowSyntaxError(f"{e}") from e
+            raise exceptions.WorkflowSyntaxError(
+                "Unable to start the workflow run "
+                "- there are errors in the workflow definition."
+            ) from e
         except _exceptions.InvalidWorkflowRunRequest as e:
             raise exceptions.WorkflowRunNotStarted(
-                f"Unable to start the workflow run: {e}"
+                "Unable to start the workflow run."
             ) from e
         except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
-            raise exceptions.UnauthorizedError(f"{e}") from e
+            raise exceptions.UnauthorizedError(
+                "Unable to start the workflow run "
+                "- the authorization token was rejected by the remote cluster."
+            ) from e
 
         with WorkflowDB.open_db() as db:
             db.save_workflow_run(
@@ -155,7 +161,11 @@ class CERuntime(RuntimeInterface):
                 f"Workflow run with id `{workflow_run_id}` not found"
             ) from e
         except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
-            raise exceptions.UnauthorizedError(f"{e}") from e
+            raise exceptions.UnauthorizedError(
+                "Could not get the workflow status for run with id "
+                f"`{workflow_run_id}` "
+                "- the authorization token was rejected by the remote cluster."
+            ) from e
 
     def get_workflow_run_outputs(self, workflow_run_id: WorkflowRunId) -> Sequence[Any]:
         """Returns the output artifacts of a workflow run
@@ -198,7 +208,11 @@ class CERuntime(RuntimeInterface):
                 f"Workflow run with id `{workflow_run_id}` not found"
             ) from e
         except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
-            raise exceptions.UnauthorizedError(f"{e}") from e
+            raise exceptions.UnauthorizedError(
+                "Could not get the outputs for workflow run with id "
+                f"`{workflow_run_id}` "
+                "- the authorization token was rejected by the remote cluster."
+            ) from e
 
         if len(result_ids) == 0:
             wf_run = self.get_workflow_run_status(workflow_run_id)
@@ -213,7 +227,11 @@ class CERuntime(RuntimeInterface):
             wf_result = self._client.get_workflow_run_result(result_ids[0])
             return tuple(serde.deserialize(wf_result))
         except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
-            raise exceptions.UnauthorizedError(f"{e}") from e
+            raise exceptions.UnauthorizedError(
+                "Could not get the outputs for workflow run with id "
+                f"`{workflow_run_id}` "
+                "- the authorization token was rejected by the remote cluster."
+            ) from e
 
     def get_available_outputs(
         self, workflow_run_id: WorkflowRunId
@@ -244,10 +262,14 @@ class CERuntime(RuntimeInterface):
             artifact_map = self._client.get_workflow_run_artifacts(workflow_run_id)
         except (_exceptions.InvalidWorkflowRunID, _exceptions.WorkflowRunNotFound) as e:
             raise exceptions.WorkflowRunNotFoundError(
-                f"Workflow run with id `{workflow_run_id}` not found"
+                f"Workflow run with id `{workflow_run_id}` not found."
             ) from e
         except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
-            raise exceptions.UnauthorizedError(f"{e}") from e
+            raise exceptions.UnauthorizedError(
+                "Could not get the outputs for workflow run with id "
+                f"`{workflow_run_id}` "
+                "- the authorization token was rejected by the remote cluster."
+            ) from e
 
         artifact_vals: Dict[
             TaskInvocationId, Union[ArtifactValue, Tuple[ArtifactValue]]
@@ -293,7 +315,10 @@ class CERuntime(RuntimeInterface):
                 f"Workflow run with id `{workflow_run_id}` not found"
             )
         except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
-            raise exceptions.UnauthorizedError(f"{e}") from e
+            raise exceptions.UnauthorizedError(
+                f"Could not stop workflow run with id `{workflow_run_id}` "
+                "- the authorization token was rejected by the remote cluster."
+            ) from e
 
     def list_workflow_runs(
         self,
@@ -320,11 +345,48 @@ class CERuntime(RuntimeInterface):
             # TODO(ORQSDK-684): driver client cannot do filtering via API yet
             runs = self._client.list_workflow_runs()
         except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
-            raise exceptions.UnauthorizedError(f"{e}") from e
+            raise exceptions.UnauthorizedError(
+                "Could not get list of workflow runs "
+                "- the authorization token was rejected by the remote cluster."
+            ) from e
         return runs.contents
 
-    def get_workflow_logs(self, wf_run_id: WorkflowRunId):
-        raise NotImplementedError()
+    def get_workflow_logs(
+        self, wf_run_id: WorkflowRunId
+    ) -> Dict[TaskInvocationId, List[str]]:
+        """
+        Get the workflow logs.
+
+        Args:
+            wf_run_id: the ID of a workflow run
+
+        Raises:
+            WorkflowRunNotFound: if the workflow run cannot be found
+            UnauthorizedError: if the remote cluster rejects the token
+            ...
+
+        Returns:
+            A dictionary whose keys are the task invocation ids, and whose values are a
+                list of log lines corresponding to that invocation.
+        """
+        try:
+            logs: List[str] = self._client.get_workflow_run_logs(wf_run_id)
+        except (_exceptions.InvalidWorkflowRunID, _exceptions.WorkflowRunNotFound) as e:
+            raise exceptions.WorkflowRunNotFoundError(
+                f"Workflow run with id `{wf_run_id}` not found"
+            ) from e
+        except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
+            raise exceptions.UnauthorizedError(
+                f"Could not access logs for workflow run with id `{wf_run_id}`. "
+                "- the authorization token was rejected by the remote cluster."
+            ) from e
+        except _exceptions.WorkflowRunLogsNotReadable as e:
+            raise exceptions.InvalidWorkflowRunLogsError(
+                f"Failed to decode logs for workflow run with id `{wf_run_id}`. "
+                "Please report this as a bug."
+            ) from e
+
+        return {"UNKNOWN TASK INV ID": logs}
 
     def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
         raise NotImplementedError()
