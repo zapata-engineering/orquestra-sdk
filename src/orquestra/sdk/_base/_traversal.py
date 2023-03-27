@@ -627,6 +627,18 @@ def flatten_graph(
     # to avoid git fetch spam for the same repos over and over.
     cached_git_import_dict: t.Dict[t.Tuple, model.Import] = {}
     for invocation in graph.invocations.keys():
+        if (
+            invocation.task.source_import is None
+            and workflow_def.default_source_import is not None
+        ):
+            invocation.task.source_import = workflow_def.default_source_import
+
+        if (
+            invocation.task.dependency_imports is None
+            and workflow_def.default_dependency_imports is not None
+        ):
+            invocation.task.dependency_imports = workflow_def.default_dependency_imports
+
         for imp in [
             invocation.task.source_import,
             *(invocation.task.dependency_imports or []),

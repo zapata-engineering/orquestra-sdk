@@ -14,6 +14,7 @@ from typing import (
     Callable,
     Dict,
     Generic,
+    Iterable,
     List,
     NamedTuple,
     Optional,
@@ -34,6 +35,7 @@ from ._ast import CallVisitor, NodeReference, NodeReferenceType, normalize_inden
 from ._dsl import (
     DataAggregation,
     FunctionRef,
+    Import,
     Secret,
     TaskDef,
     UnknownPlaceholderInCustomNameWarning,
@@ -70,6 +72,8 @@ class WorkflowDef(Generic[_R]):
         data_aggregation: Optional[DataAggregation] = None,
         workflow_args: Optional[Tuple[Any, ...]] = None,
         workflow_kwargs: Optional[Dict[str, Any]] = None,
+        default_source_import: Optional[Import] = None,
+        default_dependency_imports: Optional[Iterable[Import]] = None,
     ):
         self._name = name
         self._fn = workflow_fn
@@ -77,6 +81,8 @@ class WorkflowDef(Generic[_R]):
         self._data_aggregation = data_aggregation
         self._workflow_args = workflow_args or ()
         self._workflow_kwargs = workflow_kwargs or {}
+        self.default_source_import = default_source_import
+        self.default_dependency_imports = default_dependency_imports
 
     @property
     def name(self) -> str:
@@ -263,12 +269,16 @@ class WorkflowTemplate(Generic[_P, _R]):
         fn_ref: FunctionRef,
         is_parametrized: bool,
         data_aggregation: Optional[Union[DataAggregation, bool]] = None,
+        default_source_import: Optional[Import] = None,
+        default_dependency_imports: Optional[Iterable[Import]] = None,
     ):
         self._custom_name = custom_name
         self._fn = workflow_fn
         self._fn_ref = fn_ref
         self._data_aggregation = data_aggregation
         self._is_parametrized = is_parametrized
+        self._default_source_import = default_source_import
+        self._default_dependency_imports = default_dependency_imports
 
     def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> WorkflowDef[_R]:
         """
@@ -340,7 +350,16 @@ class WorkflowTemplate(Generic[_P, _R]):
                 raise WorkflowSyntaxError(
                     "Workflow arguments must be known at submission time. "
                 )
-        return WorkflowDef(name, self._fn, self._fn_ref, data_aggregation, args, kwargs)
+        return WorkflowDef(
+            name,
+            self._fn,
+            self._fn_ref,
+            data_aggregation,
+            args,
+            kwargs,
+            self._default_source_import,
+            self._default_dependency_imports,
+        )
 
     @property
     def is_parametrized(self) -> bool:
@@ -514,6 +533,8 @@ def workflow(
     *,
     data_aggregation: Optional[Union[DataAggregation, bool]] = None,
     custom_name: Optional[str] = None,
+    source_import: Optional[Import] = None,
+    dependency_imports: Optional[Iterable[Import]] = None,
 ) -> Callable[[Callable[_P, _R]], WorkflowTemplate[_P, _R]]:
     ...
 
@@ -523,6 +544,8 @@ def workflow(
     *,
     data_aggregation: Optional[Union[DataAggregation, bool]] = None,
     custom_name: Optional[str] = None,
+    default_source_import: Optional[Import] = None,
+    default_dependency_imports: Optional[Iterable[Import]] = None,
 ) -> Union[
     WorkflowTemplate[_P, _R],
     Callable[[Callable[_P, _R]], WorkflowTemplate[_P, _R]],
