@@ -628,7 +628,7 @@ def flatten_graph(
     cached_git_import_dict: t.Dict[t.Tuple, model.Import] = {}
     for invocation in graph.invocations.keys():
         if (
-            invocation.task.source_import is None
+            invocation.task.custom_source_import is False
             and workflow_def.default_source_import is not None
         ):
             invocation.task.source_import = workflow_def.default_source_import

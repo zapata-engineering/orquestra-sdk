@@ -535,6 +535,8 @@ def workflow(
     custom_name: Optional[str] = None,
     source_import: Optional[Import] = None,
     dependency_imports: Optional[Iterable[Import]] = None,
+    default_source_import: Optional[Import] = None,
+    default_dependency_imports: Optional[Iterable[Import]] = None,
 ) -> Callable[[Callable[_P, _R]], WorkflowTemplate[_P, _R]]:
     ...
 
@@ -599,6 +601,8 @@ def workflow(
             fn_ref=fn_ref,
             is_parametrized=len(signature.parameters) > 0,
             data_aggregation=data_aggregation,
+            default_source_import=default_source_import,
+            default_dependency_imports=default_dependency_imports,
         )
         functools.update_wrapper(template, fn)
         return template

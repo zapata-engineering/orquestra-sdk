@@ -397,6 +397,7 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
         resources: Resources = Resources(),
         custom_image: Optional[str] = None,
         custom_name: Optional[str] = None,
+        custom_source_import: Optional[bool] = True,
     ):
         if isinstance(fn, BuiltinFunctionType):
             raise NotImplementedError("Built-in functions are not supported as Tasks")
@@ -410,6 +411,7 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
         self.resources = resources
         self.custom_image = custom_image
         self.custom_name = custom_name
+        self.custom_source_import = custom_source_import
 
         if self.custom_image is None:
             if resources.gpu:
@@ -964,12 +966,16 @@ def task(
 
         # Set the default Import based on if the session is interactive
         task_source_import: Import
+        custom_source_import: bool
         if source_import is not None:
             task_source_import = source_import
+            custom_source_import = True
         elif _is_interactive():
             task_source_import = InlineImport()
+            custom_source_import = False
         else:
             task_source_import = LocalImport(module=fn.__module__)
+            custom_source_import = False
 
         # This is a little awkward
         # but to avoid complexity in get_fn_ref, I kept the complexity here.
@@ -989,6 +995,7 @@ def task(
             output_metadata=output_metadata,
             custom_image=custom_image,
             custom_name=custom_name,
+            custom_source_import=custom_source_import,
         )
 
         return task_def
