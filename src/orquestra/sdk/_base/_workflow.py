@@ -533,8 +533,6 @@ def workflow(
     *,
     data_aggregation: Optional[Union[DataAggregation, bool]] = None,
     custom_name: Optional[str] = None,
-    source_import: Optional[Import] = None,
-    dependency_imports: Optional[Iterable[Import]] = None,
     default_source_import: Optional[Import] = None,
     default_dependency_imports: Optional[Iterable[Import]] = None,
 ) -> Callable[[Callable[_P, _R]], WorkflowTemplate[_P, _R]]:

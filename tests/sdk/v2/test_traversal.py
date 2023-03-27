@@ -1286,7 +1286,7 @@ def test_default_imports():
 
     wf_model = wf_with_default_imports.model
     for id, task_model in wf_model.tasks.items():
-        dep_import = wf_model.imports[task_model.dependency_import_ids[0]]
+        dep_import = wf_model.imports[task_model.dependency_import_ids[0]]  # type: ignore
         source_import = wf_model.imports[task_model.source_import_id]
         if task_model.fn_ref.function_name == "no_overwrite_task":
             assert isinstance(dep_import, model.GitImport)
