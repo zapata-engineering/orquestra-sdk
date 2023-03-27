@@ -22,7 +22,7 @@ jobs:
   # The job ID has to match repo settings for PR required checks
   TypeChecking:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - name: Git Checkout
         uses: actions/checkout@v3

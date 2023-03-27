@@ -22,7 +22,7 @@ jobs:
   # The job ID has to match repo settings for PR required checks
   TestPerformance:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
