@@ -1281,10 +1281,10 @@ def test_default_imports():
         default_source_import=_dsl.GitImport(repo_url="2", git_ref="1"),
         default_dependency_imports=[_dsl.GitImport(repo_url="3", git_ref="6")],
     )
-    def test_default_imports():
+    def wf_with_default_imports():
         return [no_overwrite_task(), do_overwrite_task(), overwrite_source_only_task()]
 
-    wf_model = test_default_imports.model
+    wf_model = wf_with_default_imports.model
     for id, task_model in wf_model.tasks.items():
         dep_import = wf_model.imports[task_model.dependency_import_ids[0]]
         source_import = wf_model.imports[task_model.source_import_id]
