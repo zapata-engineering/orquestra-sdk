@@ -1,0 +1,107 @@
+{
+  "name": "wf",
+  "fn_ref": {
+    "module": "__main__",
+    "function_name": "wf",
+    "file_path": "a.py",
+    "line_number": 11,
+    "type": "MODULE_FUNCTION_REF"
+  },
+  "imports": {
+    "inline-import-1": {
+      "id": "inline-import-1",
+      "type": "INLINE_IMPORT"
+    },
+    "python-import-e0459ec73a": {
+      "id": "python-import-e0459ec73a",
+      "packages": [
+        {
+          "name": "polars",
+          "extras": [],
+          "version_constraints": [],
+          "environment_markers": ""
+        }
+      ],
+      "pip_options": [],
+      "type": "PYTHON_IMPORT"
+    }
+  },
+  "tasks": {
+    "task-my-fn-d3914c5e63": {
+      "id": "task-my-fn-d3914c5e63",
+      "fn_ref": {
+        "function_name": "my_fn",
+        "encoded_function": [
+          "gASVtAMAAAAAAACMF2Nsb3VkcGlja2xlLmNsb3VkcGlja2xllIwOX21ha2VfZnVuY3Rpb26Uk5Qo\naACMDV9idWlsdGluX3R5cGWUk5SMCENvZGVUeXBllIWUUpQoSwFLAEsASwFLAktDQwh8AKAAoQBT\nAJROhZSMBGl0ZW2UhZSMAmRmlIWUjARhLnB5lIwFbXlfZm6USwRDAgAFlCkpdJRSlH2UKIwLX19w\nYWNrYWdlX1+UTowIX19uYW1lX1+UjAhfX21haW5fX5SMCF9fZmlsZV9flGgOdU5OTnSUUpSMHGNs\nb3VkcGlja2xlLmNsb3VkcGlja2xlX2Zhc3SUjBJfZnVuY3Rpb25fc2V0c3RhdGWUk5RoGX2UKIwX\nX1Rhc2tEZWZfX3Nka190YXNrX2JvZHmUaBmMBmZuX3JlZpSMGG9ycXVlc3RyYS5zZGsuX2Jhc2Uu\nX2RzbJSMEUlubGluZUZ1bmN0aW9uUmVmlJOUaA9oGYaUgZSMDXNvdXJjZV9pbXBvcnSUaCCMDElu\nbGluZUltcG9ydJSTlCmBlIwPb3V0cHV0X21ldGFkYXRhlGggjBJUYXNrT3V0cHV0TWV0YWRhdGGU\nk5SJSwGGlIGUjApwYXJhbWV0ZXJzlIwLY29sbGVjdGlvbnOUjAtPcmRlcmVkRGljdJSTlClSlGgM\naCCMDVRhc2tQYXJhbWV0ZXKUk5RoDGggjA1QYXJhbWV0ZXJLaW5klJOUjBVQT1NJVElPTkFMX09S\nX0tFWVdPUkSUhZRSlIaUgZRzjBJkZXBlbmRlbmN5X2ltcG9ydHOUaCCMDVB5dGhvbkltcG9ydHOU\nk5QpgZR9lCiMDXVzZV9maWxlX3BhdGiUiYwIcGFja2FnZXOUjAZwb2xhcnOUhZR1YoWUjAlyZXNv\ndXJjZXOUaCCMCVJlc291cmNlc5STlChOTk5OdJSBlIwMY3VzdG9tX2ltYWdllIwoemFwYXRhY29t\ncHV0aW5nL29ycXVlc3RyYS1kZWZhdWx0OnYwLjAuMJSMC2N1c3RvbV9uYW1llE51fZQoaBVoD4wM\nX19xdWFsbmFtZV9flGgPjA9fX2Fubm90YXRpb25zX1+UfZSMDl9fa3dkZWZhdWx0c19flE6MDF9f\nZGVmYXVsdHNfX5ROjApfX21vZHVsZV9flGgWjAdfX2RvY19flE6MC19fY2xvc3VyZV9flE6MF19j\nbG91ZHBpY2tsZV9zdWJtb2R1bGVzlF2UjAtfX2dsb2JhbHNfX5R9lHWGlIZSMC4=\n"
+        ],
+        "type": "INLINE_FUNCTION_REF"
+      },
+      "parameters": [
+        {
+          "name": "df",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ],
+      "source_import_id": "inline-import-1",
+      "dependency_import_ids": [
+        "python-import-e0459ec73a"
+      ],
+      "resources": null,
+      "custom_image": "zapatacomputing/orquestra-default:v0.0.0"
+    }
+  },
+  "artifact_nodes": {
+    "artifact-0-my-fn": {
+      "id": "artifact-0-my-fn",
+      "custom_name": null,
+      "serialization_format": "AUTO",
+      "artifact_index": null
+    }
+  },
+  "constant_nodes": {
+    "constant-0": {
+      "id": "constant-0",
+      "chunks": [
+        "gASVqAAAAAAAAACMFnBvbGFycy5kYXRhZnJhbWUuZnJhbWWUjAlEYXRhRnJhbWWUk5QpgZRdlIwU\ncG9sYXJzLnNlcmllcy5zZXJpZXOUjAZTZXJpZXOUk5QpgZRDUAMAAAAAAAAABAAAAAAAAABuYW1l\nAQAAAAAAAABhCAAAAAAAAABkYXRhdHlwZQgAAAAGAAAAAAAAAHZhbHVlcwEAAAAAAAAAARUAAAAA\nAAAAlGJhYi4=\n"
+      ],
+      "serialization_format": "ENCODED_PICKLE",
+      "value_preview": "shape: (1, 1"
+    }
+  },
+  "secret_nodes": {},
+  "task_invocations": {
+    "invocation-0-task-my-fn": {
+      "id": "invocation-0-task-my-fn",
+      "task_id": "task-my-fn-d3914c5e63",
+      "args_ids": [
+        "constant-0"
+      ],
+      "kwargs_ids": {},
+      "output_ids": [
+        "artifact-0-my-fn"
+      ],
+      "resources": null,
+      "custom_image": "zapatacomputing/orquestra-default:v0.0.0"
+    }
+  },
+  "output_ids": [
+    "artifact-0-my-fn"
+  ],
+  "data_aggregation": null,
+  "metadata": {
+    "sdk_version": {
+      "original": "0.45.2.dev11+gf708e3b",
+      "major": 0,
+      "minor": 45,
+      "patch": 2,
+      "is_prerelease": true
+    },
+    "python_version": {
+      "original": "3.8.12 (default, Jun 28 2022, 14:32:09) \n[Clang 13.1.6 (clang-1316.0.21.2.5)]",
+      "major": 3,
+      "minor": 8,
+      "patch": 12,
+      "is_prerelease": false
+    }
+  }
+}

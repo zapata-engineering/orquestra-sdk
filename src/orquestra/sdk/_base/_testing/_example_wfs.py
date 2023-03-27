@@ -49,15 +49,7 @@ def multioutput_task():
     return "Zapata", "Computing"
 
 
-@sdk.task(dependency_imports=[sdk.PythonImports("piccup")])
-def task_with_import():
-    import piccup  # type: ignore # noqa
-
-    # return whatever - make sure it just doesnt assert on import
-    return 2
-
-
-@sdk.task(dependency_imports=[sdk.GithubImport("alexjuda/piccup")])
+@sdk.task(dependency_imports=[sdk.GithubImport("alexjuda/piccup", git_ref="master")])
 def task_with_git_import():
     import piccup  # type: ignore # noqa
 
@@ -163,13 +155,8 @@ def wf_using_inline_imports():
 
 
 @sdk.workflow
-def wf_using_python_imports():
-    return [task_with_import()]
-
-
-@sdk.workflow
 def wf_using_git_imports():
-    return [task_with_import()]
+    return [task_with_git_import()]
 
 
 @sdk.task

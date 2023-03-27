@@ -1409,7 +1409,6 @@ class TestWorkflowDefRepoIntegration:
                 "my_workflow",
                 "exception_wf",
                 "wf_using_inline_imports",
-                "wf_using_python_imports",
                 "wf_using_git_imports",
                 "serial_wf_with_slow_middle_task",
                 "serial_wf_with_file_triggers",
