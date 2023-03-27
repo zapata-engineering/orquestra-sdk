@@ -11,7 +11,6 @@ Implemented API spec:
 import io
 import json
 import zlib
-from datetime import datetime, timezone
 from tarfile import TarFile
 from typing import Generic, List, Mapping, Optional, TypeVar
 from urllib.parse import urljoin
@@ -566,7 +565,7 @@ class DriverClient:
 
     # --- Workflow Logs ---
 
-    def get_workflow_run_logs(self, wf_run_id: _models.WorkflowRunID) -> List[WFLog]:
+    def get_workflow_run_logs(self, wf_run_id: _models.WorkflowRunID) -> List[str]:
         """
         Gets the logs of a workflow run from the workflow driver
 
@@ -615,13 +614,11 @@ class DriverClient:
                     # Orquestra logs are jsonable - where we can we parse these and
                     # extract the useful information
                     interpreted_log = WFLog.parse_raw(log[1]["log"])
-                    return interpreted_log.message
+                    logs.append(interpreted_log.message)
                 except pydantic.ValidationError:
-                    # If the log isn't jsonable (i.e. it comes from Ray) we just return 
+                    # If the log isn't jsonable (i.e. it comes from Ray) we just return
                     # plain log content.
-                    return log[1]["log"]
-
-                logs.append(interpreted_log)
+                    logs.append(log[1]["log"])
 
         return logs
 

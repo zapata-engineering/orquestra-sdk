@@ -9,7 +9,6 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base import serde
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base.abc import ArtifactValue, RuntimeInterface
-from orquestra.sdk._ray._ray_logs import WFLog
 from orquestra.sdk.kubernetes.quantity import parse_quantity
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
@@ -371,7 +370,7 @@ class CERuntime(RuntimeInterface):
                 list of log lines corresponding to that invocation.
         """
         try:
-            logs: List[WFLog] = self._client.get_workflow_run_logs(wf_run_id)
+            logs: List[str] = self._client.get_workflow_run_logs(wf_run_id)
         except (_exceptions.InvalidWorkflowRunID, _exceptions.WorkflowRunNotFound) as e:
             raise exceptions.WorkflowRunNotFoundError(
                 f"Workflow run with id `{wf_run_id}` not found"
@@ -387,19 +386,7 @@ class CERuntime(RuntimeInterface):
                 "Please report this as a bug."
             ) from e
 
-        logs_dict: Dict[str, List[str]] = {}
-        for log in logs:
-            # TODO: We want to be indexing by the task_inv_id here, however we don't
-            # have that information for Ray logs (yet! ORQSDK-777). Ideally this should
-            # be something like:
-            # logs_dict.setdefault(log.task_inv_id or "UNKNOWN TASK INV ID",[]).append(
-            #     log.message
-            # )
-            # but in the interim we assume that the task invocation id is unknown to
-            # avoid splitting up sdk and ray logs.
-            logs_dict.setdefault("UNKNOWN TASK INV ID", []).append(log.message)
-
-        return logs_dict
+        return {"UNKNOWN TASK INV ID": logs}
 
     def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
         raise NotImplementedError()
