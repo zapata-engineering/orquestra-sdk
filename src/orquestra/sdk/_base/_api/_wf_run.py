@@ -385,6 +385,10 @@ class WorkflowRun:
         # NOTE: this is a possible place for improvement. If future runtime APIs support
         # getting a subset of artifacts, we should use them here.
         inv_outputs = self._runtime.get_available_outputs(run_id)
+
+        # The output shape differs across runtimes when the workflow functions returns a
+        # single, packed future. See more in:
+        # https://zapatacomputing.atlassian.net/browse/ORQSDK-801
         return inv_outputs
 
     def get_logs(self) -> t.Mapping[TaskInvocationId, t.List[str]]:
