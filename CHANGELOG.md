@@ -9,6 +9,9 @@
 🔥 *Features*
 - Sort WF runs by start date in `list wf` command. Show start date as one of the columns
 - Sort WF runs by start date in all workflow commands in prompt selection. Show start date with WF id
+- New parameters for `@workflow` decorator - default_source_import and default_dependency_imports.
+Defaults for imports for all tasks in given workflow can be specified on a workflow-decorator level now.
+If task defines its own imports (either source, dependencies or both) - it will overwrite workflow-defaults.
 
 👩‍🔬 *Experimental*
 
