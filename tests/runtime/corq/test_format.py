@@ -10,7 +10,7 @@ import pytest
 
 import orquestra.sdk as sdk
 from orquestra.sdk._base import _db
-from orquestra.sdk._base.cli._corq._format import per_command
+from orquestra.sdk._base.cli._dorq._ui._corq_format import per_command
 from orquestra.sdk.schema import local_database, responses, workflow_run
 
 OK_META = responses.ResponseMetadata(
