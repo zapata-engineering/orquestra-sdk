@@ -575,8 +575,6 @@ class QERuntime(RuntimeInterface):
 
         Raises:
             orquestra.sdk.exceptions.UnauthorizedError if QE returns 401
-            orquestra.sdk.exceptions.InvalidProjectError: if an Orquestra
-                project directory is not found
             orquestra.sdk.exceptions.WorkflowNotFoundError: if workflow run couldn't be
                 found in the local database.
         """
@@ -589,9 +587,7 @@ class QERuntime(RuntimeInterface):
                     raise
 
         except sqlite3.OperationalError as e:
-            raise exceptions.InvalidProjectError(
-                "Not an Orquestra project directory. Navigate to the repo root."
-            ) from e
+            raise exceptions.WorkflowNotFoundError(workflow_run_id) from e
 
         wf_def = wf_run.workflow_def
         with _http_error_handling():
@@ -632,9 +628,7 @@ class QERuntime(RuntimeInterface):
             with WorkflowDB.open_project_db(self._project_dir) as db:
                 wf_run = db.get_workflow_run(workflow_run_id)
         except sqlite3.OperationalError as e:
-            raise exceptions.InvalidProjectError(
-                "Not an Orquestra project directory. Navigate to the repo root."
-            ) from e
+            raise exceptions.NotFoundError(workflow_run_id) from e
         wf_def = wf_run.workflow_def
 
         # TODO: instead of querying wf status, can't we just send the

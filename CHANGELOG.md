@@ -35,6 +35,7 @@ def my_wf():
 * During YAML conversion, Workflow SDK repo matched on host and path, not full URL.
 * On QE, Github URLs will be converted to SSH URLs.
 * `TaskOutputMetadata` model was added to the workflow def IR schema.
+* Removed `corq` code.
 
 
 📃 *Docs*
@@ -52,6 +53,7 @@ def my_wf():
 
 🔥 *Features*
 * Use the requested resources from a workflow's tasks when submitting to CE
+* CE runtime now supports getting logs from remote Ray runtimes.
 
 
 🥷 *Internal*

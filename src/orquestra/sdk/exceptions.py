@@ -83,24 +83,12 @@ class InvalidTaskDefinitionError(BaseRuntimeError):
     pass
 
 
-class DirtyGitRepoError(BaseRuntimeError):
-    pass
-
-
 # Workflow Errors
 class WorkflowNotFoundError(BaseRuntimeError):
     pass
 
 
-class InvalidWorkflowRunError(BaseRuntimeError):
-    pass
-
-
-class InvalidWorkflowRunIDError(BaseRuntimeError):
-    pass
-
-
-class InvalidTaskIDError(BaseRuntimeError):
+class InvalidWorkflowRunLogsError(BaseRuntimeError):
     pass
 
 
@@ -142,19 +130,6 @@ class TaskInvocationNotFoundError(NotFoundError):
         self.invocation_id = invocation_id
 
 
-# Project Errors
-class MalformedProjectError(BaseRuntimeError):
-    pass
-
-
-class InvalidProjectError(BaseRuntimeError):
-    pass
-
-
-class PreexistingProjectError(BaseRuntimeError):
-    pass
-
-
 # Auth Errors
 class UnauthorizedError(BaseRuntimeError):
     pass
@@ -163,11 +138,6 @@ class UnauthorizedError(BaseRuntimeError):
 # Ray Errors
 class RayActorNameClashError(BaseRuntimeError):
     pass
-
-
-class ParseError(RuntimeError):
-    def __init__(self, message):
-        super(ParseError, self).__init__(message)
 
 
 # CLI Exceptions

@@ -27,9 +27,9 @@ from orquestra.sdk.schema.workflow_run import (
     WorkflowRunOnlyID,
 )
 
-from ..._corq._format import per_command
 from . import _errors
 from . import _models as ui_models
+from ._corq_format import per_command
 
 
 class WrappedCorqOutputPresenter:
