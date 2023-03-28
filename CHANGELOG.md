@@ -4,9 +4,7 @@
 
 🚨 *Breaking Changes*
 
-* Pickling library switched to `cloudpickle` instead of `dill`. While no breakages are expected, this change may result in objects raising an error during pickling, even if they were previously able to be pickled. Please report any instances of these as bugs.
 * Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a `WorkflowSyntaxError` if no tasks are required to be executed.
-* Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a WorkflowSyntaxError if no tasks are required to be executed.
 
 🔥 *Features*
 - Sort WF runs by start date in `list wf` command. Show start date as one of the columns
@@ -27,6 +25,7 @@ def my_wf():
     all_outputs = two_output_task()
     out1, out2 = all_outputs
     return b, all_outputs, out1, out2
+```
 
 
 💅 *Improvements*
