@@ -353,8 +353,8 @@ def _find_packed_artifact_id(
     output_ids = wf_def.task_invocations[inv_id].output_ids
     artifact_nodes = (wf_def.artifact_nodes[id] for id in output_ids)
     packed_nodes = [n for n in artifact_nodes if n.artifact_index is None]
-    assert len(
-        packed_nodes
+    assert (
+        len(packed_nodes) == 1
     ), f"Task invocation should have exactly 1 packed output. {inv_id} has {len(packed_nodes)}: {packed_nodes}"  # noqa: E501
 
     return packed_nodes[0].id
