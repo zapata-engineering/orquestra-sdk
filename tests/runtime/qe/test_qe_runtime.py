@@ -560,90 +560,6 @@ class TestCreateWorkflowRun:
         assert yaml_wf not in captured_without_yaml.err
 
 
-class TestGetAllWorkflowRunsStatus:
-    def test_empty_db(self, monkeypatch, runtime, mocked_responses):
-        # Testing an empty local DB. We should ignore workflows from QE
-        _get_workflow_runs_list = Mock(return_value=[])
-        monkeypatch.setattr(
-            _db.WorkflowDB, "get_workflow_runs_list", _get_workflow_runs_list
-        )
-        mocked_responses.add(
-            responses.GET,
-            "http://localhost/v1/workflowlist",
-            json=QE_RESPONSES["list"],
-        )
-
-        result = runtime.get_all_workflow_runs_status()
-
-        assert result == []
-
-    def test_with_local_runs(self, monkeypatch, runtime, mocked_responses):
-        # Mock the local DB with a local run
-        _get_workflow_runs_list = Mock(
-            return_value=[
-                StoredWorkflowRun(
-                    workflow_run_id="hello-there-abc123-r000",  # noqa: E501
-                    config_name="hello",
-                    workflow_def=TEST_WORKFLOW,
-                )
-            ]
-        )
-        monkeypatch.setattr(
-            _db.WorkflowDB, "get_workflow_runs_list", _get_workflow_runs_list
-        )
-        mocked_responses.add(
-            responses.GET,
-            "http://localhost/v1/workflowlist",
-            json=QE_RESPONSES["list"],
-        )
-
-        result = runtime.get_all_workflow_runs_status()
-
-        assert result == [
-            WorkflowRun(
-                id="hello-there-abc123-r000",
-                workflow_def=TEST_WORKFLOW,
-                task_runs=[
-                    TaskRun(
-                        id="hello-there-abc123-r000-2738763496",
-                        invocation_id="invocation-1-task-multi-output-test",
-                        status=RunStatus(
-                            state=State.SUCCEEDED,
-                            start_time=datetime.datetime(
-                                1989, 12, 13, 9, 3, 49, tzinfo=datetime.timezone.utc
-                            ),
-                            end_time=datetime.datetime(
-                                1989, 12, 13, 9, 4, 28, tzinfo=datetime.timezone.utc
-                            ),
-                        ),
-                    ),
-                    TaskRun(
-                        id="hello-there-abc123-r000-3825957270",
-                        invocation_id=("invocation-0-task-make-greeting-message"),
-                        status=RunStatus(
-                            state=State.SUCCEEDED,
-                            start_time=datetime.datetime(
-                                1989, 12, 13, 9, 4, 29, tzinfo=datetime.timezone.utc
-                            ),
-                            end_time=datetime.datetime(
-                                1989, 12, 13, 9, 5, 8, tzinfo=datetime.timezone.utc
-                            ),
-                        ),
-                    ),
-                ],
-                status=RunStatus(
-                    state=State.SUCCEEDED,
-                    start_time=datetime.datetime(
-                        1989, 12, 13, 9, 3, 49, tzinfo=datetime.timezone.utc
-                    ),
-                    end_time=datetime.datetime(
-                        1989, 12, 13, 9, 5, 14, tzinfo=datetime.timezone.utc
-                    ),
-                ),
-            )
-        ]
-
-
 def _mock_artifact_resp(
     responses,
     wf_run_id: WorkflowRunId,
@@ -950,12 +866,6 @@ class TestGetWorkflowRunStatus:
                 end_time=None,
             ),
         )
-
-
-class TestGetWorkflowRunOutputs:
-    def test_raises(self, runtime):
-        with pytest.raises(NotImplementedError):
-            runtime.get_workflow_run_outputs("hello-there-abc123-r000")
 
 
 class TestGetWorkflowRunOutputsNonBlocking:
@@ -1504,7 +1414,7 @@ class TestHTTPErrors:
         for telltale in telltales:
             assert telltale in str(exc_info)
 
-    def test_get_all_workflow_run_status(
+    def test_list_workflow_runs(
         self,
         error_code,
         expected_exception,
@@ -1513,6 +1423,7 @@ class TestHTTPErrors:
         runtime,
         mocked_responses,
     ):
+        # DB read 1: getting list of stored wf run IDs
         monkeypatch.setattr(
             _db.WorkflowDB,
             "get_workflow_runs_list",
@@ -1526,13 +1437,26 @@ class TestHTTPErrors:
                 ]
             ),
         )
+        # DB read 2: get the workflow def from the DB. The current implementation
+        # suffers from the "n+1 Queries Problem" but we don't plan to fix it for QE.
+        monkeypatch.setattr(
+            _db.WorkflowDB,
+            "get_workflow_run",
+            Mock(
+                return_value=StoredWorkflowRun(
+                    workflow_run_id="hello-there-abc123-r000",
+                    config_name="hello",
+                    workflow_def=TEST_WORKFLOW,
+                )
+            ),
+        )
         mocked_responses.add(
             responses.GET,
-            "http://localhost/v1/workflowlist",
+            "http://localhost/v1/workflow",
             status=error_code,
         )
         with pytest.raises(expected_exception) as exc_info:
-            runtime.get_all_workflow_runs_status()
+            runtime.list_workflow_runs()
         for telltale in telltales:
             assert telltale in str(exc_info)
 

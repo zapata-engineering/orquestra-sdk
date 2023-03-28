@@ -86,32 +86,8 @@ class RuntimeInterface(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_all_workflow_runs_status(self) -> t.List[WorkflowRun]:
-        """Gets the status of all workflow runs."""
-        raise NotImplementedError()
-
-    @abstractmethod
     def get_workflow_run_status(self, workflow_run_id: WorkflowRunId) -> WorkflowRun:
         """Gets the status of a workflow run"""
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_workflow_run_outputs(
-        self, workflow_run_id: WorkflowRunId
-    ) -> t.Sequence[ArtifactValue]:
-        """Returns the output artifacts of a workflow run
-
-        For example, for this workflow:
-
-            @sdk.workflow
-            def my_wf():
-                return [my_task(), another_task()]
-
-        this method will return an iterable that yields the results from my_task and
-        another_task().
-
-        This method blocks until the workflow is completed
-        """
         raise NotImplementedError()
 
     @abstractmethod
