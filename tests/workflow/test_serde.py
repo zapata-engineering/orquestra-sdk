@@ -29,6 +29,9 @@ MODELS = [
                         kind=ir.ParameterKind.POSITIONAL_OR_KEYWORD,
                     )
                 ],
+                output_metadata=ir.TaskOutputMetadata(
+                    is_subscriptable=False, n_outputs=1
+                ),
             )
         },
         artifact_nodes={

@@ -218,7 +218,7 @@ class TestTaskRun:
             # Given
             runtime = create_autospec(RuntimeInterface)
             runtime.get_available_outputs.return_value = {
-                "inv1": (42,),
+                "inv1": 42,
                 "inv2": (21, 38),
             }
 
