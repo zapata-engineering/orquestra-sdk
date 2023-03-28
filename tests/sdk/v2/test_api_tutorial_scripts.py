@@ -87,6 +87,7 @@ class TempConfigFile(object):
             )
 
 
+@pytest.mark.slow
 def test_quickstart(capsys, _examples_dir):
     command = f"{PYTHON_EXECUTABLE} {_examples_dir}/quickstart.py"
     result_status = run_command(command, shell=True, stdout=True)
@@ -105,6 +106,7 @@ def test_quickstart(capsys, _examples_dir):
     assert expected_output in captured.out
 
 
+@pytest.mark.slow
 def test_config_management(capsys, _examples_dir):
     """
     The config management example prints the details of a config three times: once

@@ -336,6 +336,7 @@ class Snippets:
         return wf
 
 
+@pytest.mark.slow
 class TestSnippets:
     @staticmethod
     def test_same_module():

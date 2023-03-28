@@ -42,6 +42,7 @@ class Snippets:
         wf().run("in_process")
 
 
+@pytest.mark.slow
 class TestSnippets:
     wf_id = None
 
