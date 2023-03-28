@@ -835,19 +835,21 @@ class RayRuntime(RuntimeInterface):
     def get_workflow_run_outputs_non_blocking(
         self, workflow_run_id: WorkflowRunId
     ) -> t.Sequence[t.Any]:
-        workflow_status = self.get_workflow_run_status(workflow_run_id)
+        try:
+            workflow_status = self.get_workflow_run_status(workflow_run_id)
+        except exceptions.WorkflowRunNotFoundError:
+            raise
+
         workflow_state = workflow_status.status.state
         if workflow_state != State.SUCCEEDED:
             raise exceptions.WorkflowRunNotSucceeded(
                 f"{workflow_run_id} has not succeeded. {workflow_state}",
                 workflow_state,
             )
-        try:
-            return self._client.get_workflow_output(workflow_run_id)
-        except ValueError as e:
-            raise exceptions.NotFoundError(
-                f"Workflow run {workflow_run_id} wasn't found"
-            ) from e
+
+        # By this line we're assuming the workflow run exists, otherwise we wouldn't get
+        # its status. If the following line raises errors we treat them as unexpected.
+        return self._client.get_workflow_output(workflow_run_id)
 
     def get_available_outputs(
         self, workflow_run_id: WorkflowRunId
