@@ -25,6 +25,7 @@
 🥷 *Internal*
 * During YAML conversion, Workflow SDK repo matched on host and path, not full URL.
 * On QE, Github URLs will be converted to SSH URLs.
+* Removed `corq` code.
 
 
 📃 *Docs*
