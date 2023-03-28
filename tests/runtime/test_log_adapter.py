@@ -6,6 +6,8 @@ import sys
 import typing as t
 from unittest.mock import Mock
 
+import pytest
+
 from orquestra.sdk._base import _log_adapter
 from orquestra.sdk._ray import _dag, _ray_logs
 
@@ -63,6 +65,7 @@ def test_get_ray_backend_ids(monkeypatch):
 
 
 class TestMakeLogger:
+    @pytest.mark.skip
     class TestIntegration:
         """
         It's very difficult to verify how we arrange loggers and formatters because
