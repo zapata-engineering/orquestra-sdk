@@ -570,7 +570,7 @@ def test_run_and_get_output(
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 class Test3rdPartyLibraries:
     @staticmethod
-    def test_constants_n_inline_imports(runtime: _dag.RayRuntime):
+    def test_constants_and_inline_imports(runtime: _dag.RayRuntime):
         """
         This test uses already generated workflow def from json file. If necessary, it
         can be recreated using ./data/python_package/original_workflow.py
