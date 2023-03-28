@@ -7,7 +7,6 @@ as possible, because it's slow to run. Please consider using unit tests and
 RuntimeInterface mocks instead of extending this file.
 """
 import json
-import os
 import time
 import typing as t
 from pathlib import Path
@@ -85,8 +84,10 @@ class TestRayRuntimeMethods:
 
             assert run_id1 != run_id2
 
-            output1 = runtime.get_workflow_run_outputs(run_id1)
-            output2 = runtime.get_workflow_run_outputs(run_id2)
+            _wait_to_finish_wf(run_id1, runtime)
+            _wait_to_finish_wf(run_id2, runtime)
+            output1 = runtime.get_workflow_run_outputs_non_blocking(run_id1)
+            output2 = runtime.get_workflow_run_outputs_non_blocking(run_id2)
 
             assert output1 == output2
 
@@ -98,7 +99,7 @@ class TestRayRuntimeMethods:
 
             # then
             _wait_to_finish_wf(run_id, runtime)
-            outputs = runtime.get_workflow_run_outputs(run_id)
+            outputs = runtime.get_workflow_run_outputs_non_blocking(run_id)
             assert outputs == ("RAY",)
 
         def test_sets_run_id_from_env(
@@ -180,7 +181,7 @@ class TestRayRuntimeMethods:
             run_id = runtime.create_workflow_run(wf_def)
 
             # Block until wf completes
-            _ = runtime.get_workflow_run_outputs(run_id)
+            _wait_to_finish_wf(run_id, runtime)
 
             # When
             run = runtime.get_workflow_run_status(run_id)
@@ -237,21 +238,21 @@ class TestRayRuntimeMethods:
             assert _count_task_runs(wf_run, State.SUCCEEDED) == 1
             assert _count_task_runs(wf_run, State.WAITING) == 1
 
-    class TestGetAllWorkflowRunStatus:
+    class TestListWorkflowRuns:
         """
-        Tests that validate .get_all_workflow_run_status().
+        Tests that validate .list_workflow_runs().
         """
 
         def test_two_runs(self, runtime: _dag.RayRuntime):
-            # GIVEN
+            # Given
             wf_def = _example_wfs.greet_wf.model
             run_id1 = runtime.create_workflow_run(wf_def)
             run_id2 = runtime.create_workflow_run(wf_def)
 
-            # WHEN
-            wf_runs = runtime.get_all_workflow_runs_status()
+            # When
+            wf_runs = runtime.list_workflow_runs()
 
-            # THEN
+            # Then
             wf_run_ids = {run.id for run in wf_runs}
             assert run_id1 in wf_run_ids
             assert run_id2 in wf_run_ids
@@ -292,7 +293,7 @@ class TestRayRuntimeMethods:
 
             wf = _example_wfs.multioutput_task_wf.model
             wf_run_id = runtime.create_workflow_run(wf)
-            _ = runtime.get_workflow_run_outputs(wf_run_id)  # wait for it to finish
+            _wait_to_finish_wf(wf_run_id, runtime)
             # ensure wf has finished
             status = runtime.get_workflow_run_status(wf_run_id)
             assert status.status.state == State.SUCCEEDED
@@ -546,9 +547,10 @@ def test_run_and_get_output(
     """
     # Given
     run_id = runtime.create_workflow_run(wf.model)
+    _wait_to_finish_wf(run_id, runtime)
 
     # When
-    wf_results = runtime.get_workflow_run_outputs(run_id)
+    wf_results = runtime.get_workflow_run_outputs_non_blocking(run_id)
     intermediate_outputs = runtime.get_available_outputs(run_id)
 
     # Then
@@ -589,7 +591,8 @@ def test_import_package_inside_ray(runtime: _dag.RayRuntime):
     )
     wf = ir.WorkflowDef.parse_file(path_to_json)
     run_id = runtime.create_workflow_run(wf)
-    wf_result = runtime.get_workflow_run_outputs(run_id)
+    _wait_to_finish_wf(run_id, runtime)
+    wf_result = runtime.get_workflow_run_outputs_non_blocking(run_id)
     assert wf_result == (21,)
 
     # this package should be only used inside ray env
@@ -615,7 +618,8 @@ def test_git_import_inside_ray(monkeypatch, runtime: _dag.RayRuntime):
     monkeypatch.setenv(name="ORQ_RAY_DOWNLOAD_GIT_IMPORTS", value="1")
 
     run_id = runtime.create_workflow_run(_example_wfs.wf_using_git_imports.model)
-    wf_result = runtime.get_workflow_run_outputs(run_id)
+    _wait_to_finish_wf(run_id, runtime)
+    wf_result = runtime.get_workflow_run_outputs_non_blocking(run_id)
     assert wf_result == (2,)
 
     # this package should be only used inside ray env
@@ -629,7 +633,6 @@ class TestRayRuntimeErrors:
         "method",
         [
             _dag.RayRuntime.get_available_outputs,
-            _dag.RayRuntime.get_workflow_run_outputs,
             _dag.RayRuntime.get_workflow_run_outputs_non_blocking,
             _dag.RayRuntime.get_workflow_run_status,
             _dag.RayRuntime.stop_workflow_run,

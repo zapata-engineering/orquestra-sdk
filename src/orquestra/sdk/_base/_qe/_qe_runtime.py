@@ -532,40 +532,6 @@ class QERuntime(RuntimeInterface):
 
         return workflow_run_id
 
-    def get_all_workflow_runs_status(self) -> List[WorkflowRun]:
-        """
-        Returns the workflow runs from QE that are inside the current project directory
-
-        Raises:
-            orquestra.sdk.exceptions.UnauthorizedError if QE returns 401
-        """
-        with WorkflowDB.open_project_db(self._project_dir) as db:
-            wf_runs = db.get_workflow_runs_list(config_name=self._config.config_name)
-        wf_run_dict = {
-            wf_run.workflow_run_id: wf_run.workflow_def for wf_run in wf_runs
-        }
-        # To avoid making N requests to get all known workflows, we ask QE to give us
-        # the list of workflows it knows about and return the ones in the local DB
-        # TODO: make sure we get all workflows
-
-        with _http_error_handling():
-            json_response = self._client.get_workflow_list()
-        workflow_runs = []
-        for qe_workflow_run in json_response:
-            workflow_run_id = qe_workflow_run["id"]
-            if workflow_run_id in wf_run_dict:
-                json_representation = json.loads(
-                    qe_workflow_run["currentRepresentation"]
-                )
-                workflow_run = _parse_workflow_run_representation(
-                    json_representation,
-                    workflow_run_id,
-                    wf_run_dict[workflow_run_id],
-                    qe_workflow_run["status"],
-                )
-                workflow_runs.append(workflow_run)
-        return workflow_runs
-
     def get_workflow_run_status(self, workflow_run_id: WorkflowRunId) -> WorkflowRun:
         """
         Returns the status of a given workflow run
@@ -599,11 +565,6 @@ class QERuntime(RuntimeInterface):
         json_representation = json.loads(representation)
         return _parse_workflow_run_representation(
             json_representation, workflow_run_id, wf_def, json_response["status"]
-        )
-
-    def get_workflow_run_outputs(self, workflow_run_id: WorkflowRunId) -> Sequence[Any]:
-        raise NotImplementedError(
-            "Blocking output is not implemented for Quantum Engine"
         )
 
     def get_workflow_run_outputs_non_blocking(

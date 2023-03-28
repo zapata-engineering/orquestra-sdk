@@ -73,7 +73,7 @@ def test_secret_inside_ir(
     monkeypatch.setattr(_client.SecretsClient, "get_secret", get_secret)
 
     run_id = runtime.create_workflow_run(wf_with_secrets().model)
-    result = runtime.get_workflow_run_outputs(run_id)
+    result = runtime.get_workflow_run_outputs_non_blocking(run_id)
 
     assert result == "Mocked"
 
@@ -92,13 +92,7 @@ class TestQueriesAfterRunning:
     class TestGetWorkflowRunOutputs:
         @staticmethod
         def test_output_values(runtime, run_id):
-            assert runtime.get_workflow_run_outputs(run_id) == 3
-
-        @staticmethod
-        def test_matches_non_blocking(runtime, run_id):
-            outputs = runtime.get_workflow_run_outputs(run_id)
-
-            assert outputs == runtime.get_workflow_run_outputs_non_blocking(run_id)
+            assert runtime.get_workflow_run_outputs_non_blocking(run_id) == 3
 
         @staticmethod
         def test_multiple_runs(runtime):
@@ -108,8 +102,8 @@ class TestQueriesAfterRunning:
             run_id1 = runtime.create_workflow_run(wf_def1)
             run_id2 = runtime.create_workflow_run(wf_def2)
 
-            outputs1 = runtime.get_workflow_run_outputs(run_id1)
-            outputs2 = runtime.get_workflow_run_outputs(run_id2)
+            outputs1 = runtime.get_workflow_run_outputs_non_blocking(run_id1)
+            outputs2 = runtime.get_workflow_run_outputs_non_blocking(run_id2)
 
             assert run_id1 != run_id2
             assert outputs1 != outputs2
@@ -238,7 +232,6 @@ class TestUnsupportedMethods:
         "method",
         [
             InProcessRuntime.from_runtime_configuration,
-            InProcessRuntime.get_all_workflow_runs_status,
         ],
     )
     def test_raises(runtime, method):

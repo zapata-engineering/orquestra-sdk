@@ -36,6 +36,7 @@ def my_wf():
 * On QE, Github URLs will be converted to SSH URLs.
 * `TaskOutputMetadata` model was added to the workflow def IR schema.
 * Removed `corq` code.
+* Old `RuntimeInterface` methods have been removed.
 
 
 📃 *Docs*
