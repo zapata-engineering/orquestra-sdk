@@ -6,7 +6,9 @@ import typing as t
 from collections import namedtuple
 from itertools import chain
 
+from orquestra.sdk._base import serde
 from orquestra.sdk.schema import ir
+from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import State, TaskInvocationId
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
 from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRunId
@@ -129,7 +131,7 @@ class TaskRun:
                 "It may have failed or not be completed yet."
             ) from e
 
-        return task_outputs
+        return serde.deserialize(task_outputs)
 
     def _find_invocation_by_output_id(self, output: ir.ArgumentId) -> ir.TaskInvocation:
         """
@@ -148,7 +150,7 @@ class TaskRun:
     def _find_value_by_id(
         self,
         arg_id: ir.ArgumentId,
-        available_outputs: t.Mapping[TaskInvocationId, t.Tuple[ArtifactValue, ...]],
+        available_outputs: t.Mapping[TaskInvocationId, WorkflowResult],
     ) -> ArtifactValue:
         """
         Helper method that finds and deserializes input artifact value based on the
@@ -158,11 +160,13 @@ class TaskRun:
         if arg_id in self._wf_def.constant_nodes:
             value = deserialize_constant(self._wf_def.constant_nodes[arg_id])
             return value
+        elif arg_id in self._wf_def.secret_nodes:
+            return self._wf_def.secret_nodes[arg_id]
 
         producer_inv = self._find_invocation_by_output_id(arg_id)
-        output_index = producer_inv.output_ids.index(arg_id)
+        output_index = self._wf_def.artifact_nodes[arg_id].artifact_index
         try:
-            parent_output_vals = available_outputs[producer_inv.id]
+            parent_output_vals = serde.deserialize(available_outputs[producer_inv.id])
         except KeyError:
             # Parent invocation ID not in available outputs => parent invocation
             # wasn't completed yet.
@@ -178,7 +182,10 @@ class TaskRun:
         # outputs (handled above) or we have access to all outputs of this task.
         # There shouldn't be a situation where we have access to a subset of a given
         # task's outputs.
-        return parent_output_vals[output_index]
+        if output_index is None:
+            return parent_output_vals
+        else:
+            return parent_output_vals[output_index]
 
     def get_inputs(self) -> Inputs:
         """
