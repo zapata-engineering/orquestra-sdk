@@ -11,10 +11,10 @@ import pytest
 
 from orquestra import sdk
 from orquestra.sdk._base import serde
-from orquestra.sdk._base.cli._corq._format import per_command
 from orquestra.sdk._base.cli._dorq._ui import _errors
 from orquestra.sdk._base.cli._dorq._ui import _models as ui_models
 from orquestra.sdk._base.cli._dorq._ui import _presenters
+from orquestra.sdk._base.cli._dorq._ui._corq_format import per_command
 from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.responses import ServiceResponse
 from orquestra.sdk.schema.workflow_run import RunStatus, State
