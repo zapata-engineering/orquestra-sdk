@@ -356,7 +356,7 @@ class TestTaskRun:
             assert parent.task_run_id == "top-task-run"
             assert parent.workflow_run_id == wf_run_id
 
-    class TestGetInput:
+    class TestGetInputs:
         @staticmethod
         @pytest.mark.parametrize(
             "workflow, expected_args, expected_kwargs",
