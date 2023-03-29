@@ -793,6 +793,7 @@ def test_task_code_unavailable_at_building_dag(runtime: _dag.RayRuntime):
     )
 
 
+@pytest.mark.slow
 # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
 # unraisable exceptions. Last tested with Ray 2.0.1.
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
