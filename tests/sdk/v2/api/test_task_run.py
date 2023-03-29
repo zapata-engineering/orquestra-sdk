@@ -12,6 +12,7 @@ import pytest
 
 from orquestra.sdk._base import _api, _workflow
 from orquestra.sdk._base.abc import RuntimeInterface
+from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk.exceptions import TaskRunNotFound
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.workflow_run import RunStatus, State
@@ -179,48 +180,28 @@ class TestTaskRun:
         @staticmethod
         @pytest.fixture
         def wf_def_model() -> ir.WorkflowDef:
-            wf_def = create_autospec(ir.WorkflowDef)
-            wf_def.task_invocations = {
-                "inv1": ir.TaskInvocation(
-                    id="inv1",
-                    task_id="task_def1",
-                    args_ids=[],
-                    kwargs_ids={},
-                    output_ids=["art1"],
-                    resources=None,
-                    custom_image=None,
-                ),
-                "inv2": ir.TaskInvocation(
-                    id="inv2",
-                    task_id="task_def1",
-                    args_ids=[],
-                    kwargs_ids={},
-                    output_ids=["art2", "art3"],
-                    resources=None,
-                    custom_image=None,
-                ),
-            }
-            task_def = create_autospec(ir.TaskDef)
-            task_def.fn_ref = Mock()
-            wf_def.tasks = {"task_def1": task_def}
-
-            return wf_def
+            return _example_wfs.my_workflow().model
 
         @staticmethod
         @pytest.mark.parametrize(
-            "inv_id,exp_output",
+            "inv_id",
             [
-                pytest.param("inv1", 42, id="single_output_invocation"),
-                pytest.param("inv2", (21, 38), id="multi_param_invocation"),
+                pytest.param(
+                    "invocation-0-task-make-greeting-message", id="single_output_inv"
+                ),
+                pytest.param(
+                    "invocation-1-task-multi-output-test", id="multi_output_inv"
+                ),
             ],
         )
-        def test_get_output_finished(wf_def_model, inv_id: str, exp_output):
+        def test_get_output_finished(wf_def_model, inv_id: ir.TaskInvocationId):
             # Given
             runtime = create_autospec(RuntimeInterface)
-            runtime.get_available_outputs.return_value = {
-                "inv1": 42,
-                "inv2": (21, 38),
+            mock_runtime_outputs = {
+                "invocation-0-task-make-greeting-message": "Greetings!",
+                "invocation-1-task-multi-output-test": ("hello", "there"),
             }
+            runtime.get_available_outputs.return_value = mock_runtime_outputs
 
             task_run = _api.TaskRun(
                 task_run_id="a_run",
@@ -234,7 +215,10 @@ class TestTaskRun:
             output = task_run.get_outputs()
 
             # Then
-            assert output == exp_output
+            # We expect that `TaskRun.get_outputs()` returns whatever
+            # `RuntimeInterface.get_available_outputs()` would return for this
+            # invocation.
+            assert output == mock_runtime_outputs[inv_id]
 
         @staticmethod
         def test_get_outputs_not_all_finished(wf_def_model):
