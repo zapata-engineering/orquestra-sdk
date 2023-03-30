@@ -1,4 +1,4 @@
-Task Resource Management
+Compute Engine Resource Management
 =======================
 
 Workflows submitted to run on Compute Engine can specify the computational resources they require, enabling precise management of resources and costs.

@@ -29,6 +29,8 @@
 
 📃 *Docs*
 
+* Guide: CE Resource Management
+
 ## v0.45.1
 
 🐛 *Bug Fixes*
