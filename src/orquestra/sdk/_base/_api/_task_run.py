@@ -160,9 +160,8 @@ class TaskRun:
             return value
 
         producer_inv = self._find_invocation_by_output_id(arg_id)
-        output_index = producer_inv.output_ids.index(arg_id)
         try:
-            parent_output_vals = available_outputs[producer_inv.id]
+            parent_output = available_outputs[producer_inv.id]
         except KeyError:
             # Parent invocation ID not in available outputs => parent invocation
             # wasn't completed yet.
@@ -178,7 +177,11 @@ class TaskRun:
         # outputs (handled above) or we have access to all outputs of this task.
         # There shouldn't be a situation where we have access to a subset of a given
         # task's outputs.
-        return parent_output_vals[output_index]
+        artifact_node = self._wf_def.artifact_nodes[arg_id]
+        if (unpack_index := artifact_node.artifact_index) is not None:
+            return parent_output[unpack_index]
+        else:
+            return parent_output
 
     def get_inputs(self) -> Inputs:
         """
@@ -191,8 +194,8 @@ class TaskRun:
 
         task_invocation = self._wf_def.task_invocations[self.task_invocation_id]
         args = [
-            self._find_value_by_id(arg_id, all_inv_outputs)
-            for arg_id in task_invocation.args_ids
+            self._find_value_by_id(artifact_id, all_inv_outputs)
+            for artifact_id in task_invocation.args_ids
         ]
         kwargs = {
             param_name: self._find_value_by_id(kwarg_id, all_inv_outputs)
