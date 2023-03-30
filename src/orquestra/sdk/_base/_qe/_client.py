@@ -189,7 +189,7 @@ class QEClient:
 
     def get_workflow_list(self):
         # For future filtering of workflow runs
-        # "detail": True lets get_all_workflow_runs_status use the same code as
+        # "detail": True lets list_workflow_runs use the same code as
         # get_workflow_run_status for parsing the workflow representation returned
         # from QE
         params: t.Dict[str, t.Any] = {"detail": "true"}

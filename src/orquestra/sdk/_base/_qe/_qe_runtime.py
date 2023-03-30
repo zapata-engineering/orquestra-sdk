@@ -25,7 +25,12 @@ from orquestra.sdk._base._conversions._yaml_exporter import (
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.schema.configs import RuntimeConfiguration
-from orquestra.sdk.schema.ir import TaskInvocation, TaskInvocationId, WorkflowDef
+from orquestra.sdk.schema.ir import (
+    ArtifactNodeId,
+    TaskInvocation,
+    TaskInvocationId,
+    WorkflowDef,
+)
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import (
     RunStatus,
@@ -342,6 +347,19 @@ def _http_error_handling():
             raise e
 
 
+def _find_packed_artifact_id(
+    wf_def: WorkflowDef, inv_id: TaskInvocationId
+) -> ArtifactNodeId:
+    output_ids = wf_def.task_invocations[inv_id].output_ids
+    artifact_nodes = (wf_def.artifact_nodes[id] for id in output_ids)
+    packed_nodes = [n for n in artifact_nodes if n.artifact_index is None]
+    assert (
+        len(packed_nodes) == 1
+    ), f"Task invocation should have exactly 1 packed output. {inv_id} has {len(packed_nodes)}: {packed_nodes}"  # noqa: E501
+
+    return packed_nodes[0].id
+
+
 class QERuntime(RuntimeInterface):
     def __init__(
         self,
@@ -514,40 +532,6 @@ class QERuntime(RuntimeInterface):
 
         return workflow_run_id
 
-    def get_all_workflow_runs_status(self) -> List[WorkflowRun]:
-        """
-        Returns the workflow runs from QE that are inside the current project directory
-
-        Raises:
-            orquestra.sdk.exceptions.UnauthorizedError if QE returns 401
-        """
-        with WorkflowDB.open_project_db(self._project_dir) as db:
-            wf_runs = db.get_workflow_runs_list(config_name=self._config.config_name)
-        wf_run_dict = {
-            wf_run.workflow_run_id: wf_run.workflow_def for wf_run in wf_runs
-        }
-        # To avoid making N requests to get all known workflows, we ask QE to give us
-        # the list of workflows it knows about and return the ones in the local DB
-        # TODO: make sure we get all workflows
-
-        with _http_error_handling():
-            json_response = self._client.get_workflow_list()
-        workflow_runs = []
-        for qe_workflow_run in json_response:
-            workflow_run_id = qe_workflow_run["id"]
-            if workflow_run_id in wf_run_dict:
-                json_representation = json.loads(
-                    qe_workflow_run["currentRepresentation"]
-                )
-                workflow_run = _parse_workflow_run_representation(
-                    json_representation,
-                    workflow_run_id,
-                    wf_run_dict[workflow_run_id],
-                    qe_workflow_run["status"],
-                )
-                workflow_runs.append(workflow_run)
-        return workflow_runs
-
     def get_workflow_run_status(self, workflow_run_id: WorkflowRunId) -> WorkflowRun:
         """
         Returns the status of a given workflow run
@@ -557,8 +541,6 @@ class QERuntime(RuntimeInterface):
 
         Raises:
             orquestra.sdk.exceptions.UnauthorizedError if QE returns 401
-            orquestra.sdk.exceptions.InvalidProjectError: if an Orquestra
-                project directory is not found
             orquestra.sdk.exceptions.WorkflowNotFoundError: if workflow run couldn't be
                 found in the local database.
         """
@@ -571,9 +553,7 @@ class QERuntime(RuntimeInterface):
                     raise
 
         except sqlite3.OperationalError as e:
-            raise exceptions.InvalidProjectError(
-                "Not an Orquestra project directory. Navigate to the repo root."
-            ) from e
+            raise exceptions.WorkflowNotFoundError(workflow_run_id) from e
 
         wf_def = wf_run.workflow_def
         with _http_error_handling():
@@ -585,11 +565,6 @@ class QERuntime(RuntimeInterface):
         json_representation = json.loads(representation)
         return _parse_workflow_run_representation(
             json_representation, workflow_run_id, wf_def, json_response["status"]
-        )
-
-    def get_workflow_run_outputs(self, workflow_run_id: WorkflowRunId) -> Sequence[Any]:
-        raise NotImplementedError(
-            "Blocking output is not implemented for Quantum Engine"
         )
 
     def get_workflow_run_outputs_non_blocking(
@@ -614,9 +589,7 @@ class QERuntime(RuntimeInterface):
             with WorkflowDB.open_project_db(self._project_dir) as db:
                 wf_run = db.get_workflow_run(workflow_run_id)
         except sqlite3.OperationalError as e:
-            raise exceptions.InvalidProjectError(
-                "Not an Orquestra project directory. Navigate to the repo root."
-            ) from e
+            raise exceptions.NotFoundError(workflow_run_id) from e
         wf_def = wf_run.workflow_def
 
         # TODO: instead of querying wf status, can't we just send the
@@ -673,31 +646,31 @@ class QERuntime(RuntimeInterface):
         # Return dict contains return values for task invocation
         return_dict = {}
         with _http_error_handling():
-            # retrieve each artifact for each step
-            for step in wf_def.task_invocations:
-                step_artifacts = []
-                for artifact in wf_def.task_invocations[step].output_ids:
-                    try:
-                        result = self._client.get_artifact(
-                            workflow_run_id, step, artifact
-                        )
-                    except requests.exceptions.HTTPError as e:
-                        # 404 error happens when task is not finished yet.
-                        # 500 error is thrown by QE in case of failed task
-                        if (
-                            e.response.status_code == 404
-                            or e.response.status_code == 500
-                        ):
-                            continue
-                        else:
-                            raise e
-                    parsed_output = serde.value_from_result_dict(
-                        _parse_workflow_result(result)
+            # Assumption: task invocations produce "packed" and "unpacked" artifacts.
+            # We want to fetch whatever object was returned from the task function, so
+            # we only need the "packed" artifact. For more info on artifact unpacking,
+            # see "orquestra.sdk._base._traversal".
+            for inv in wf_def.task_invocations.values():
+                packed_id = _find_packed_artifact_id(wf_def, inv.id)
+                try:
+                    artifact_bytes = self._client.get_artifact(
+                        workflow_id=workflow_run_id,
+                        step_name=inv.id,
+                        artifact_name=packed_id,
                     )
+                except requests.exceptions.HTTPError as e:
+                    # 404 error happens when task is not finished yet.
+                    # 500 error is thrown by QE in case of failed task.
+                    if e.response.status_code == 404 or e.response.status_code == 500:
+                        continue
+                    else:
+                        raise e
 
-                    step_artifacts.append(parsed_output)
-                if step_artifacts:
-                    return_dict[step] = tuple(step_artifacts)
+                artifact_value = serde.value_from_result_dict(
+                    _parse_workflow_result(artifact_bytes)
+                )
+
+                return_dict[inv.id] = artifact_value
 
         return return_dict
 

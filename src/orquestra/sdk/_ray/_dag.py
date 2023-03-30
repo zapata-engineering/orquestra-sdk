@@ -648,24 +648,6 @@ def _workflow_status_from_ray_meta(
     )
 
 
-def _wrap_single_outputs(
-    values: t.Sequence[t.Union[ArtifactValue, t.Tuple[ArtifactValue, ...]]],
-    invocations: t.Sequence[ir.TaskInvocation],
-) -> t.Sequence[t.Tuple[ArtifactValue, ...]]:
-    """
-    Ensures all values are tuples. This data shape is required by
-    ``RuntimeInterface.get_available_outputs()``.
-    """
-    wrapped: t.MutableSequence = []
-    for task_output, inv in zip(values, invocations):
-        if len(inv.output_ids) == 1:
-            wrapped.append((task_output,))
-        else:
-            wrapped.append(task_output)
-
-    return wrapped
-
-
 @dataclasses.dataclass(frozen=True)
 class RayParams:
     """Parameters we pass to Ray. See Ray documentation for reference of what values are
@@ -801,16 +783,6 @@ class RayRuntime(RuntimeInterface):
 
         return wf_run_id
 
-    def get_all_workflow_runs_status(self) -> t.List[WorkflowRun]:
-        all_workflows = self._client.list_all()
-        wf_runs = []
-        for run_id, _ in all_workflows:
-            try:
-                wf_runs.append(self.get_workflow_run_status(run_id))
-            except exceptions.NotFoundError as e:
-                raise e
-        return wf_runs
-
     def get_workflow_run_status(self, workflow_run_id: WorkflowRunId) -> WorkflowRun:
         """
         Raises:
@@ -860,27 +832,24 @@ class RayRuntime(RuntimeInterface):
             ),
         )
 
-    def get_workflow_run_outputs(
-        self, workflow_run_id: WorkflowRunId
-    ) -> t.Sequence[t.Any]:
-        try:
-            return self._client.get_workflow_output(workflow_run_id)
-        except ValueError as e:
-            raise exceptions.NotFoundError(
-                f"Workflow run {workflow_run_id} wasn't found"
-            ) from e
-
     def get_workflow_run_outputs_non_blocking(
         self, workflow_run_id: WorkflowRunId
     ) -> t.Sequence[t.Any]:
-        workflow_status = self.get_workflow_run_status(workflow_run_id)
+        try:
+            workflow_status = self.get_workflow_run_status(workflow_run_id)
+        except exceptions.WorkflowRunNotFoundError:
+            raise
+
         workflow_state = workflow_status.status.state
         if workflow_state != State.SUCCEEDED:
             raise exceptions.WorkflowRunNotSucceeded(
                 f"{workflow_run_id} has not succeeded. {workflow_state}",
                 workflow_state,
             )
-        return self.get_workflow_run_outputs(workflow_run_id)
+
+        # By this line we're assuming the workflow run exists, otherwise we wouldn't get
+        # its status. If the following line raises errors we treat them as unexpected.
+        return self._client.get_workflow_output(workflow_run_id)
 
     def get_available_outputs(
         self, workflow_run_id: WorkflowRunId
@@ -928,18 +897,7 @@ class RayRuntime(RuntimeInterface):
             succeeded_obj_refs, timeout=JUST_IN_CASE_TIMEOUT
         )
 
-        # Ray returns a plain value instead of 1-element tuple for 1-output tasks.
-        # We need to wrap such outputs in tuples to maintain the same data shape across
-        # RuntimeInterface implementations.
-        wrapped_values = _wrap_single_outputs(
-            values=succeeded_values,
-            invocations=[
-                wf_run.workflow_def.task_invocations[inv_id]
-                for inv_id in succeeded_inv_ids
-            ],
-        )
-
-        return dict(zip(succeeded_inv_ids, wrapped_values))
+        return dict(zip(succeeded_inv_ids, succeeded_values))
 
     def stop_workflow_run(self, workflow_run_id: WorkflowRunId) -> None:
         # cancel doesn't throw exceptions on non-existing runs... using this as

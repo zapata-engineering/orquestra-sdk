@@ -10,7 +10,6 @@ include subtrees/z_quantum_actions/Makefile
 # (override)
 test:
 	PYTHONPATH="." $(PYTHON) -m pytest \
-		-m "not needs_separate_project" \
 		--ignore=tests/runtime/performance \
 		--ignore=tests/sdk/v2/typing \
 		--durations=10 \
@@ -28,7 +27,6 @@ test:
 # (override)
 coverage:
 	PYTHONPATH="." $(PYTHON) -m pytest \
-		-m "not needs_separate_project" \
 		--cov=src \
 		--cov-fail-under=$(MIN_COVERAGE) \
 		--cov-report xml \
@@ -112,7 +110,7 @@ style-fix:
 # Run tests, but discard the ones that exceptionally slow to run locally.
 test-fast:
 	PYTHONPATH="." $(PYTHON) -m pytest \
-		-m "not needs_separate_project and not slow" \
+		-m "not slow" \
 		--ignore=tests/runtime/performance \
 		--ignore=tests/sdk/v2/typing \
 		--durations=10 \

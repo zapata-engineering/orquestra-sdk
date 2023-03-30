@@ -13,6 +13,7 @@ import sys
 import pytest
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "code_lines",
     [

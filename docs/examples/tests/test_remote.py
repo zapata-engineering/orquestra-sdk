@@ -127,6 +127,7 @@ class Snippets:
         # </snippet>
 
 
+@pytest.mark.slow
 class TestSnippets:
     wf_id = "test_workflow_id"
     config_name = "test-remote-tutorial-config"

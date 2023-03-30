@@ -7,7 +7,6 @@ as possible, because it's slow to run. Please consider using unit tests and
 RuntimeInterface mocks instead of extending this file.
 """
 import json
-import os
 import time
 import typing as t
 from pathlib import Path
@@ -48,7 +47,7 @@ def _poll_loop(
         time.sleep(interval)
 
 
-def _wait_to_finish_wf(run_id: str, runtime: RuntimeInterface):
+def _wait_to_finish_wf(run_id: str, runtime: RuntimeInterface, timeout=10.0):
     def _continue_condition():
         state = runtime.get_workflow_run_status(run_id).status.state
         return state in [
@@ -56,7 +55,7 @@ def _wait_to_finish_wf(run_id: str, runtime: RuntimeInterface):
             State.RUNNING,
         ]
 
-    _poll_loop(_continue_condition, interval=0.1, timeout=10.0)
+    _poll_loop(_continue_condition, interval=0.1, timeout=timeout)
 
 
 def _count_task_runs(wf_run, state: State) -> int:
@@ -85,8 +84,10 @@ class TestRayRuntimeMethods:
 
             assert run_id1 != run_id2
 
-            output1 = runtime.get_workflow_run_outputs(run_id1)
-            output2 = runtime.get_workflow_run_outputs(run_id2)
+            _wait_to_finish_wf(run_id1, runtime)
+            _wait_to_finish_wf(run_id2, runtime)
+            output1 = runtime.get_workflow_run_outputs_non_blocking(run_id1)
+            output2 = runtime.get_workflow_run_outputs_non_blocking(run_id2)
 
             assert output1 == output2
 
@@ -98,7 +99,7 @@ class TestRayRuntimeMethods:
 
             # then
             _wait_to_finish_wf(run_id, runtime)
-            outputs = runtime.get_workflow_run_outputs(run_id)
+            outputs = runtime.get_workflow_run_outputs_non_blocking(run_id)
             assert outputs == ("RAY",)
 
         def test_sets_run_id_from_env(
@@ -180,7 +181,7 @@ class TestRayRuntimeMethods:
             run_id = runtime.create_workflow_run(wf_def)
 
             # Block until wf completes
-            _ = runtime.get_workflow_run_outputs(run_id)
+            _wait_to_finish_wf(run_id, runtime)
 
             # When
             run = runtime.get_workflow_run_status(run_id)
@@ -237,21 +238,21 @@ class TestRayRuntimeMethods:
             assert _count_task_runs(wf_run, State.SUCCEEDED) == 1
             assert _count_task_runs(wf_run, State.WAITING) == 1
 
-    class TestGetAllWorkflowRunStatus:
+    class TestListWorkflowRuns:
         """
-        Tests that validate .get_all_workflow_run_status().
+        Tests that validate .list_workflow_runs().
         """
 
         def test_two_runs(self, runtime: _dag.RayRuntime):
-            # GIVEN
+            # Given
             wf_def = _example_wfs.greet_wf.model
             run_id1 = runtime.create_workflow_run(wf_def)
             run_id2 = runtime.create_workflow_run(wf_def)
 
-            # WHEN
-            wf_runs = runtime.get_all_workflow_runs_status()
+            # When
+            wf_runs = runtime.list_workflow_runs()
 
-            # THEN
+            # Then
             wf_run_ids = {run.id for run in wf_runs}
             assert run_id1 in wf_run_ids
             assert run_id2 in wf_run_ids
@@ -292,7 +293,7 @@ class TestRayRuntimeMethods:
 
             wf = _example_wfs.multioutput_task_wf.model
             wf_run_id = runtime.create_workflow_run(wf)
-            _ = runtime.get_workflow_run_outputs(wf_run_id)  # wait for it to finish
+            _wait_to_finish_wf(wf_run_id, runtime)
             # ensure wf has finished
             status = runtime.get_workflow_run_status(wf_run_id)
             assert status.status.state == State.SUCCEEDED
@@ -379,20 +380,20 @@ class TestRayRuntimeMethods:
             _wait_to_finish_wf(run_id, runtime)
 
             wf_run = runtime.get_workflow_run_status(run_id)
-            outputs = runtime.get_available_outputs(run_id)
+            inv_artifacts = runtime.get_available_outputs(run_id)
             if wf_run.status.state != State.FAILED:
                 pytest.fail(
                     "The workflow was supposed to fail, but it didn't. "
                     f"Wf run: {wf_run}"
                 )
 
-            # Expect only one finished task.
-            assert len(outputs) == 1
+            # Expect only one finished task invocation.
+            assert len(inv_artifacts) == 1
 
-            # The outputs dict has an entry for each task invocation. Each entry's value
-            # should be a tuple.
-            inv_output = list(outputs.values())[0]
-            assert inv_output == (58,)
+            # The outputs dict has an entry for each task invocation. The value is
+            # whatever the task returned; in this example it's a single int.
+            task_output = list(inv_artifacts.values())[0]
+            assert task_output == 58
 
         def test_after_one_task_finishes(self, runtime: _dag.RayRuntime, tmp_path):
             """
@@ -444,10 +445,10 @@ class TestRayRuntimeMethods:
                 time.sleep(0.2)
 
             # When
-            outputs = runtime.get_available_outputs(wf_run_id)
+            outputs_dict = runtime.get_available_outputs(wf_run_id)
 
             # Then
-            assert len(outputs) == len(succeeded_runs)
+            assert len(outputs_dict) == len(succeeded_runs)
 
             # let the workers complete the workflow
             triggers[1].write_text("triggered")
@@ -455,6 +456,9 @@ class TestRayRuntimeMethods:
 
 
 @pytest.mark.slow
+# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
+# unraisable exceptions. Last tested with Ray 2.3.0.
+@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.parametrize(
     "wf,expected_outputs,expected_intermediate",
     [
@@ -463,7 +467,7 @@ class TestRayRuntimeMethods:
             ("yooooo emiliano from zapata computing",),
             {
                 "invocation-0-task-make-greeting": (
-                    "yooooo emiliano from zapata computing",
+                    "yooooo emiliano from zapata computing"
                 )
             },
         ),
@@ -472,33 +476,46 @@ class TestRayRuntimeMethods:
             ("yooooo emiliano Zapata from Zapata computing",),
             {
                 "invocation-0-task-make-greeting": (
-                    ("yooooo emiliano Zapata from Zapata computing",)
+                    "yooooo emiliano Zapata from Zapata computing"
                 ),
-                "invocation-1-task-capitalize": ("Zapata computing",),
-                "invocation-2-task-concat": ("emiliano Zapata",),
-                "invocation-3-task-capitalize": ("Zapata",),
+                "invocation-1-task-capitalize": "Zapata computing",
+                "invocation-2-task-concat": "emiliano Zapata",
+                "invocation-3-task-capitalize": "Zapata",
             },
         ),
         (
             _example_wfs.multioutput_wf,
             ("Emiliano Zapata", "Zapata computing"),
             {
-                "invocation-0-task-capitalize": ("Zapata computing",),
-                "invocation-1-task-make-company-name": ("zapata computing",),
-                "invocation-2-task-concat": ("Emiliano Zapata",),
-                "invocation-3-task-capitalize": ("Zapata",),
+                "invocation-0-task-capitalize": "Zapata computing",
+                "invocation-1-task-make-company-name": "zapata computing",
+                "invocation-2-task-concat": "Emiliano Zapata",
+                "invocation-3-task-capitalize": "Zapata",
             },
         ),
         (
             _example_wfs.multioutput_task_wf,
-            ("Zapata", "Computing", "Computing", ("Zapata", "Computing")),
+            (
+                # Unpacked outputs
+                "Zapata",
+                "Computing",
+                # First output discarded
+                "Computing",
+                # Second output discarded
+                "Zapata",
+                # Returning both packed and unpacked outputs
+                ("Zapata", "Computing"),
+                "Zapata",
+                "Computing",
+            ),
             {
-                # The outputs for invocation 1 and 2 should be just a single tuple, not
-                # tuple-in-tuple. TODO: change it when working on
-                # https://zapatacomputing.atlassian.net/browse/ORQSDK-695.
-                "invocation-0-task-multioutput-task": (("Zapata", "Computing"),),
-                "invocation-1-task-multioutput-task": (("Zapata", "Computing"),),
+                # We expect all task outputs for each task invocation, regardless of
+                # unpacking in the workflow. For more info, see
+                # `RuntimeInterface.get_available_outputs()`.
+                "invocation-0-task-multioutput-task": ("Zapata", "Computing"),
+                "invocation-1-task-multioutput-task": ("Zapata", "Computing"),
                 "invocation-2-task-multioutput-task": ("Zapata", "Computing"),
+                "invocation-3-task-multioutput-task": ("Zapata", "Computing"),
             },
         ),
         (
@@ -506,7 +523,7 @@ class TestRayRuntimeMethods:
             ("yooooo emiliano from zapata computing",),
             {
                 "invocation-0-task-make-greeting": (
-                    "yooooo emiliano from zapata computing",
+                    "yooooo emiliano from zapata computing"
                 )
             },
         ),
@@ -514,10 +531,10 @@ class TestRayRuntimeMethods:
             _example_wfs.wf_using_inline_imports,
             ("Emiliano Zapata", "Zapata computing"),
             {
-                "invocation-0-task-capitalize-inline": ("Zapata computing",),
-                "invocation-1-task-make-company-name": ("zapata computing",),
-                "invocation-2-task-concat": ("Emiliano Zapata",),
-                "invocation-3-task-capitalize-inline": ("Zapata",),
+                "invocation-0-task-capitalize-inline": "Zapata computing",
+                "invocation-1-task-make-company-name": "zapata computing",
+                "invocation-2-task-concat": "Emiliano Zapata",
+                "invocation-3-task-capitalize-inline": "Zapata",
             },
         ),
     ],
@@ -530,9 +547,10 @@ def test_run_and_get_output(
     """
     # Given
     run_id = runtime.create_workflow_run(wf.model)
+    _wait_to_finish_wf(run_id, runtime)
 
     # When
-    wf_results = runtime.get_workflow_run_outputs(run_id)
+    wf_results = runtime.get_workflow_run_outputs_non_blocking(run_id)
     intermediate_outputs = runtime.get_available_outputs(run_id)
 
     # Then
@@ -540,8 +558,9 @@ def test_run_and_get_output(
     assert intermediate_outputs == expected_intermediate
 
 
-# This test is slow to run locally because:
-# - It installs packages inside a separated venv.
+# These tests are slow to run locally because:
+# - It installs packages inside a separated venv. This includes cloning the driver
+#   process' venv.
 # - Installing packages takes some time in general.
 # - Installing packages on company machines is very slow because of the antivirus
 #   scanning.
@@ -549,62 +568,68 @@ def test_run_and_get_output(
 # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
 # unraisable exceptions. Last tested with Ray 2.3.0.
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
-def test_import_package_inside_ray(runtime: _dag.RayRuntime):
-    """
-    This test uses already generated workflow def from json file.
-    If necessary it can be recreated using ./data/python_package/original_workflow.py
+class Test3rdPartyLibraries:
+    @staticmethod
+    def test_constants_and_inline_imports(runtime: _dag.RayRuntime):
+        """
+        This test uses already generated workflow def from json file. If necessary, it
+        can be recreated using ./data/python_package/original_workflow.py
 
-    This function tests 2 things
-    1. Proper package installation. Python Package defined in task definition
-    should only be installed inside venv of ray task and shouldn't leak into main env
-    2. We can create lib-dependent constant objects in the workflow definition and pass
-    them to task. This checks that we don't need python package outside an actual
-    task venv to deal with package-dependent constant values
+        This function tests 2 things
+        1. Proper package installation. Python Package defined in task definition should
+           only be installed inside venv of ray task and shouldn't leak into the main
+           env.
+        2. We can embed constants and inline import that depend on 3rd-party libraries
+           This checks that we don't need python package outside an actual task venv to
+           deal with package-dependent constant values.
 
-    We test those 2 things together as package installation is long, and we don't
-    want to do that twice unnecessarily
-    """
-    # This package should not be installed before running test
-    with pytest.raises(ModuleNotFoundError):
-        import polars  # type: ignore # noqa
+        We test those 2 things together as package installation is long, and we don't
+        want to do that twice unnecessarily.
+        """
+        # Given
+        # This package should not be installed before running test
+        with pytest.raises(ModuleNotFoundError):
+            import polars  # type: ignore # noqa
 
-    path_to_json = Path(__file__).parent.joinpath(
-        "data/python_package/python_package_dependent_workflow.json"
-    )
-    wf = ir.WorkflowDef.parse_file(path_to_json)
-    run_id = runtime.create_workflow_run(wf)
-    wf_result = runtime.get_workflow_run_outputs(run_id)
-    assert wf_result == (21,)
+        path_to_json = Path(__file__).parent.joinpath(
+            "data/python_package/python_package_dependent_workflow.json"
+        )
+        wf = ir.WorkflowDef.parse_file(path_to_json)
 
-    # this package should be only used inside ray env
-    with pytest.raises(ModuleNotFoundError):
-        import polars  # type: ignore # noqa
+        # When
+        run_id = runtime.create_workflow_run(wf)
+        # This test is notoriously slow to run, especially on local machines.
+        _wait_to_finish_wf(run_id, runtime, timeout=10 * 60.0)
+        wf_result = runtime.get_workflow_run_outputs_non_blocking(run_id)
 
+        # Then
+        assert wf_result == (21,)
 
-# This test is slow to run locally because:
-# - It installs packages inside a separated venv.
-# - It clones a repo from Github
-# - Installing packages takes some time in general.
-# - Installing packages on company machines is very slow because of the antivirus
-#   scanning.
-@pytest.mark.slow
-# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
-# unraisable exceptions. Last tested with Ray 2.3.0.
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
-def test_git_import_inside_ray(monkeypatch, runtime: _dag.RayRuntime):
-    # This package should not be installed before running test
-    with pytest.raises(ModuleNotFoundError):
-        import piccup  # type: ignore # noqa
+        # this package should be only used inside ray env
+        with pytest.raises(ModuleNotFoundError):
+            import polars  # type: ignore # noqa
 
-    monkeypatch.setenv(name="ORQ_RAY_DOWNLOAD_GIT_IMPORTS", value="1")
+    @staticmethod
+    def test_git_import_inside_ray(monkeypatch, runtime: _dag.RayRuntime):
+        # Given
+        # This package should not be installed before running test
+        with pytest.raises(ModuleNotFoundError):
+            import piccup  # type: ignore # noqa
 
-    run_id = runtime.create_workflow_run(_example_wfs.wf_using_git_imports.model)
-    wf_result = runtime.get_workflow_run_outputs(run_id)
-    assert wf_result == (2,)
+        monkeypatch.setenv(name="ORQ_RAY_DOWNLOAD_GIT_IMPORTS", value="1")
 
-    # this package should be only used inside ray env
-    with pytest.raises(ModuleNotFoundError):
-        import piccup  # type: ignore # noqa
+        # When
+        run_id = runtime.create_workflow_run(_example_wfs.wf_using_git_imports.model)
+        # This test is notoriously slow to run, especially on local machines.
+        _wait_to_finish_wf(run_id, runtime, timeout=10 * 60.0)
+        wf_result = runtime.get_workflow_run_outputs_non_blocking(run_id)
+
+        # Then
+        assert wf_result == (2,)
+
+        # this package should be only used inside ray env
+        with pytest.raises(ModuleNotFoundError):
+            import piccup  # type: ignore # noqa
 
 
 @pytest.mark.slow
@@ -613,7 +638,6 @@ class TestRayRuntimeErrors:
         "method",
         [
             _dag.RayRuntime.get_available_outputs,
-            _dag.RayRuntime.get_workflow_run_outputs,
             _dag.RayRuntime.get_workflow_run_outputs_non_blocking,
             _dag.RayRuntime.get_workflow_run_status,
             _dag.RayRuntime.stop_workflow_run,
@@ -769,6 +793,7 @@ def test_task_code_unavailable_at_building_dag(runtime: _dag.RayRuntime):
     )
 
 
+@pytest.mark.slow
 # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
 # unraisable exceptions. Last tested with Ray 2.0.1.
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
