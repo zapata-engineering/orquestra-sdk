@@ -9,4 +9,5 @@ Guides
     logging
     runtime-configuration
     workflow-syntax
+    task-resource-management
     dependency-installation
