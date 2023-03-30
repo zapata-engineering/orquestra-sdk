@@ -228,7 +228,7 @@ class TestTaskRun:
 
             task_run = _api.TaskRun(
                 task_run_id="a_run",
-                task_invocation_id="inv1",
+                task_invocation_id="invocation-0-task-make-greeting-message",
                 workflow_run_id="wf.1",
                 runtime=runtime,
                 wf_def=wf_def_model,

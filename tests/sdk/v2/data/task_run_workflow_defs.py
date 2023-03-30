@@ -1,11 +1,14 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-import orquestra.sdk as sdk
+from orquestra import sdk
 
 
 @sdk.task
 def return_num(*args):
+    """
+    Returns number of arguments.
+    """
     return len(args)
 
 
@@ -67,5 +70,6 @@ def task_multiple_outputs():
 
 @sdk.workflow
 def wf_multi_output_task():
-    art_1, _ = task_multiple_outputs()
-    return [return_num(art_1)]
+    num1, _ = task_multiple_outputs()
+    nums_packed = task_multiple_outputs()
+    return [return_num(num1), return_num(nums_packed), return_num(*nums_packed)]
