@@ -25,12 +25,7 @@ from orquestra.sdk._base._conversions._yaml_exporter import (
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.schema.configs import RuntimeConfiguration
-from orquestra.sdk.schema.ir import (
-    ArtifactNodeId,
-    TaskInvocation,
-    TaskInvocationId,
-    WorkflowDef,
-)
+from orquestra.sdk.schema.ir import TaskInvocation, TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import (
     RunStatus,
@@ -347,19 +342,6 @@ def _http_error_handling():
             raise e
 
 
-def _find_packed_artifact_id(
-    wf_def: WorkflowDef, inv_id: TaskInvocationId
-) -> ArtifactNodeId:
-    output_ids = wf_def.task_invocations[inv_id].output_ids
-    artifact_nodes = (wf_def.artifact_nodes[id] for id in output_ids)
-    packed_nodes = [n for n in artifact_nodes if n.artifact_index is None]
-    assert (
-        len(packed_nodes) == 1
-    ), f"Task invocation should have exactly 1 packed output. {inv_id} has {len(packed_nodes)}: {packed_nodes}"  # noqa: E501
-
-    return packed_nodes[0].id
-
-
 class QERuntime(RuntimeInterface):
     def __init__(
         self,
@@ -646,31 +628,31 @@ class QERuntime(RuntimeInterface):
         # Return dict contains return values for task invocation
         return_dict = {}
         with _http_error_handling():
-            # Assumption: task invocations produce "packed" and "unpacked" artifacts.
-            # We want to fetch whatever object was returned from the task function, so
-            # we only need the "packed" artifact. For more info on artifact unpacking,
-            # see "orquestra.sdk._base._traversal".
-            for inv in wf_def.task_invocations.values():
-                packed_id = _find_packed_artifact_id(wf_def, inv.id)
-                try:
-                    artifact_bytes = self._client.get_artifact(
-                        workflow_id=workflow_run_id,
-                        step_name=inv.id,
-                        artifact_name=packed_id,
+            # retrieve each artifact for each step
+            for step in wf_def.task_invocations:
+                step_artifacts = []
+                for artifact in wf_def.task_invocations[step].output_ids:
+                    try:
+                        result = self._client.get_artifact(
+                            workflow_run_id, step, artifact
+                        )
+                    except requests.exceptions.HTTPError as e:
+                        # 404 error happens when task is not finished yet.
+                        # 500 error is thrown by QE in case of failed task
+                        if (
+                            e.response.status_code == 404
+                            or e.response.status_code == 500
+                        ):
+                            continue
+                        else:
+                            raise e
+                    parsed_output = serde.value_from_result_dict(
+                        _parse_workflow_result(result)
                     )
-                except requests.exceptions.HTTPError as e:
-                    # 404 error happens when task is not finished yet.
-                    # 500 error is thrown by QE in case of failed task.
-                    if e.response.status_code == 404 or e.response.status_code == 500:
-                        continue
-                    else:
-                        raise e
 
-                artifact_value = serde.value_from_result_dict(
-                    _parse_workflow_result(artifact_bytes)
-                )
-
-                return_dict[inv.id] = artifact_value
+                    step_artifacts.append(parsed_output)
+                if step_artifacts:
+                    return_dict[step] = tuple(step_artifacts)
 
         return return_dict
 
