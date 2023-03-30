@@ -380,20 +380,20 @@ class TestRayRuntimeMethods:
             _wait_to_finish_wf(run_id, runtime)
 
             wf_run = runtime.get_workflow_run_status(run_id)
-            inv_artifacts = runtime.get_available_outputs(run_id)
+            outputs = runtime.get_available_outputs(run_id)
             if wf_run.status.state != State.FAILED:
                 pytest.fail(
                     "The workflow was supposed to fail, but it didn't. "
                     f"Wf run: {wf_run}"
                 )
 
-            # Expect only one finished task invocation.
-            assert len(inv_artifacts) == 1
+            # Expect only one finished task.
+            assert len(outputs) == 1
 
-            # The outputs dict has an entry for each task invocation. The value is
-            # whatever the task returned; in this example it's a single int.
-            task_output = list(inv_artifacts.values())[0]
-            assert task_output == 58
+            # The outputs dict has an entry for each task invocation. Each entry's value
+            # should be a tuple.
+            inv_output = list(outputs.values())[0]
+            assert inv_output == (58,)
 
         def test_after_one_task_finishes(self, runtime: _dag.RayRuntime, tmp_path):
             """
@@ -445,10 +445,10 @@ class TestRayRuntimeMethods:
                 time.sleep(0.2)
 
             # When
-            outputs_dict = runtime.get_available_outputs(wf_run_id)
+            outputs = runtime.get_available_outputs(wf_run_id)
 
             # Then
-            assert len(outputs_dict) == len(succeeded_runs)
+            assert len(outputs) == len(succeeded_runs)
 
             # let the workers complete the workflow
             triggers[1].write_text("triggered")
@@ -456,9 +456,6 @@ class TestRayRuntimeMethods:
 
 
 @pytest.mark.slow
-# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
-# unraisable exceptions. Last tested with Ray 2.3.0.
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.parametrize(
     "wf,expected_outputs,expected_intermediate",
     [
@@ -467,7 +464,7 @@ class TestRayRuntimeMethods:
             ("yooooo emiliano from zapata computing",),
             {
                 "invocation-0-task-make-greeting": (
-                    "yooooo emiliano from zapata computing"
+                    "yooooo emiliano from zapata computing",
                 )
             },
         ),
@@ -476,46 +473,33 @@ class TestRayRuntimeMethods:
             ("yooooo emiliano Zapata from Zapata computing",),
             {
                 "invocation-0-task-make-greeting": (
-                    "yooooo emiliano Zapata from Zapata computing"
+                    ("yooooo emiliano Zapata from Zapata computing",)
                 ),
-                "invocation-1-task-capitalize": "Zapata computing",
-                "invocation-2-task-concat": "emiliano Zapata",
-                "invocation-3-task-capitalize": "Zapata",
+                "invocation-1-task-capitalize": ("Zapata computing",),
+                "invocation-2-task-concat": ("emiliano Zapata",),
+                "invocation-3-task-capitalize": ("Zapata",),
             },
         ),
         (
             _example_wfs.multioutput_wf,
             ("Emiliano Zapata", "Zapata computing"),
             {
-                "invocation-0-task-capitalize": "Zapata computing",
-                "invocation-1-task-make-company-name": "zapata computing",
-                "invocation-2-task-concat": "Emiliano Zapata",
-                "invocation-3-task-capitalize": "Zapata",
+                "invocation-0-task-capitalize": ("Zapata computing",),
+                "invocation-1-task-make-company-name": ("zapata computing",),
+                "invocation-2-task-concat": ("Emiliano Zapata",),
+                "invocation-3-task-capitalize": ("Zapata",),
             },
         ),
         (
             _example_wfs.multioutput_task_wf,
-            (
-                # Unpacked outputs
-                "Zapata",
-                "Computing",
-                # First output discarded
-                "Computing",
-                # Second output discarded
-                "Zapata",
-                # Returning both packed and unpacked outputs
-                ("Zapata", "Computing"),
-                "Zapata",
-                "Computing",
-            ),
+            ("Zapata", "Computing", "Computing", ("Zapata", "Computing")),
             {
-                # We expect all task outputs for each task invocation, regardless of
-                # unpacking in the workflow. For more info, see
-                # `RuntimeInterface.get_available_outputs()`.
-                "invocation-0-task-multioutput-task": ("Zapata", "Computing"),
-                "invocation-1-task-multioutput-task": ("Zapata", "Computing"),
+                # The outputs for invocation 1 and 2 should be just a single tuple, not
+                # tuple-in-tuple. TODO: change it when working on
+                # https://zapatacomputing.atlassian.net/browse/ORQSDK-695.
+                "invocation-0-task-multioutput-task": (("Zapata", "Computing"),),
+                "invocation-1-task-multioutput-task": (("Zapata", "Computing"),),
                 "invocation-2-task-multioutput-task": ("Zapata", "Computing"),
-                "invocation-3-task-multioutput-task": ("Zapata", "Computing"),
             },
         ),
         (
@@ -523,7 +507,7 @@ class TestRayRuntimeMethods:
             ("yooooo emiliano from zapata computing",),
             {
                 "invocation-0-task-make-greeting": (
-                    "yooooo emiliano from zapata computing"
+                    "yooooo emiliano from zapata computing",
                 )
             },
         ),
@@ -531,10 +515,10 @@ class TestRayRuntimeMethods:
             _example_wfs.wf_using_inline_imports,
             ("Emiliano Zapata", "Zapata computing"),
             {
-                "invocation-0-task-capitalize-inline": "Zapata computing",
-                "invocation-1-task-make-company-name": "zapata computing",
-                "invocation-2-task-concat": "Emiliano Zapata",
-                "invocation-3-task-capitalize-inline": "Zapata",
+                "invocation-0-task-capitalize-inline": ("Zapata computing",),
+                "invocation-1-task-make-company-name": ("zapata computing",),
+                "invocation-2-task-concat": ("Emiliano Zapata",),
+                "invocation-3-task-capitalize-inline": ("Zapata",),
             },
         ),
     ],
