@@ -47,6 +47,9 @@ WORKFLOW_WITH_POSITIONAL_ARGS = model.WorkflowDef(
                     name="text", kind=model.ParameterKind.POSITIONAL_OR_KEYWORD
                 ),
             ],
+            output_metadata=model.TaskOutputMetadata(
+                is_subscriptable=False, n_outputs=1
+            ),
             source_import_id="orquestra-sdk",
             dependency_import_ids=[],
             resources=model.Resources(
@@ -112,6 +115,9 @@ WORKFLOW_WITH_POSITIONAL_ARTIFACT_ARGS = model.WorkflowDef(
                     name="text", kind=model.ParameterKind.POSITIONAL_OR_KEYWORD
                 ),
             ],
+            output_metadata=model.TaskOutputMetadata(
+                is_subscriptable=False, n_outputs=1
+            ),
             source_import_id="orquestra-sdk",
             dependency_import_ids=[],
             resources=model.Resources(
@@ -189,6 +195,9 @@ WORKFLOW_WITH_CUSTOM_JSON_ARGS = model.WorkflowDef(
                     name="text", kind=model.ParameterKind.POSITIONAL_OR_KEYWORD
                 ),
             ],
+            output_metadata=model.TaskOutputMetadata(
+                is_subscriptable=False, n_outputs=1
+            ),
             source_import_id="orquestra-sdk",
             dependency_import_ids=[],
             resources=model.Resources(
@@ -254,6 +263,9 @@ WORKFLOW_WITH_PICKLED_ARGS = model.WorkflowDef(
                     name="text", kind=model.ParameterKind.POSITIONAL_OR_KEYWORD
                 ),
             ],
+            output_metadata=model.TaskOutputMetadata(
+                is_subscriptable=False, n_outputs=1
+            ),
             source_import_id="orquestra-sdk",
             dependency_import_ids=[],
             resources=model.Resources(
@@ -318,6 +330,9 @@ BASICS_WORKFLOW = model.WorkflowDef(
                 line_number=7,
             ),
             parameters=[],
+            output_metadata=model.TaskOutputMetadata(
+                is_subscriptable=False, n_outputs=1
+            ),
             source_import_id="welcome-to-orquestra",
             dependency_import_ids=[],
             resources=model.Resources(
@@ -371,6 +386,9 @@ BASICS_WORKFLOW_WITH_GPU = model.WorkflowDef(
                 line_number=7,
             ),
             parameters=[],
+            output_metadata=model.TaskOutputMetadata(
+                is_subscriptable=False, n_outputs=1
+            ),
             source_import_id="welcome-to-orquestra",
             dependency_import_ids=[],
             resources=model.Resources(
@@ -423,6 +441,9 @@ BASICS_FILE_REF_WORKFLOW = model.WorkflowDef(
                 line_number=7,
             ),
             parameters=[],
+            output_metadata=model.TaskOutputMetadata(
+                is_subscriptable=False, n_outputs=1
+            ),
             source_import_id="welcome-to-orquestra",
             dependency_import_ids=[],
             resources=model.Resources(
@@ -487,6 +508,9 @@ ADDITIONAL_METRICS = model.WorkflowDef(
                     name="dataset_name", kind=model.ParameterKind.POSITIONAL_OR_KEYWORD
                 )
             ],
+            output_metadata=model.TaskOutputMetadata(
+                is_subscriptable=True, n_outputs=2
+            ),
             source_import_id="sklearn-component",
             dependency_import_ids=[],
             resources=None,
@@ -504,6 +528,9 @@ ADDITIONAL_METRICS = model.WorkflowDef(
                     name="data", kind=model.ParameterKind.POSITIONAL_OR_KEYWORD
                 )
             ],
+            output_metadata=model.TaskOutputMetadata(
+                is_subscriptable=True, n_outputs=2
+            ),
             source_import_id="sklearn-component",
             dependency_import_ids=[],
             resources=None,
@@ -584,6 +611,9 @@ MULTIPLE_TASK_OUTPUTS = model.WorkflowDef(
                 line_number=0,
             ),
             parameters=[],
+            output_metadata=model.TaskOutputMetadata(
+                is_subscriptable=True, n_outputs=2
+            ),
             source_import_id="my_import",
         )
     },
@@ -651,6 +681,9 @@ MULTIPLE_TASK_OUTPUTS_AS_INPUTS = model.WorkflowDef(
                 line_number=0,
             ),
             parameters=[],
+            output_metadata=model.TaskOutputMetadata(
+                is_subscriptable=True, n_outputs=2
+            ),
             source_import_id="my_import",
         )
     },
@@ -716,6 +749,9 @@ DATA_AGGREGATION_SETTINGS = model.WorkflowDef(
                 line_number=7,
             ),
             parameters=[],
+            output_metadata=model.TaskOutputMetadata(
+                is_subscriptable=False, n_outputs=1
+            ),
             source_import_id="welcome-to-orquestra",
             dependency_import_ids=[],
             resources=model.Resources(
@@ -799,6 +835,9 @@ INLINE_TASK = model.WorkflowDef(
                     name="text", kind=model.ParameterKind.POSITIONAL_OR_KEYWORD
                 )
             ],
+            output_metadata=model.TaskOutputMetadata(
+                is_subscriptable=False, n_outputs=1
+            ),
             source_import_id="inline-import-0",
         )
     },
@@ -882,6 +921,9 @@ PYTHON_REQUIREMENTS = model.WorkflowDef(
                     name="prev", kind=model.ParameterKind.POSITIONAL_OR_KEYWORD
                 )
             ],
+            output_metadata=model.TaskOutputMetadata(
+                is_subscriptable=False, n_outputs=1
+            ),
             source_import_id="hello_zapata",
             dependency_import_ids=[
                 "git-1871174d6e_github_com_zapatacomputing_orquestra_sdk",
@@ -1008,6 +1050,9 @@ OVERRIDE_WORKFLOW = model.WorkflowDef(
                 line_number=7,
             ),
             parameters=[],
+            output_metadata=model.TaskOutputMetadata(
+                is_subscriptable=False, n_outputs=1
+            ),
             source_import_id="welcome-to-orquestra",
             dependency_import_ids=[],
             resources=model.Resources(
@@ -1114,6 +1159,9 @@ PLAIN_WORKFLOW = model.WorkflowDef(
                 line_number=1,
             ),
             parameters=[],
+            output_metadata=model.TaskOutputMetadata(
+                is_subscriptable=False, n_outputs=1
+            ),
             source_import_id="orquestra-sdk",
             dependency_import_ids=[],
             resources=model.Resources(

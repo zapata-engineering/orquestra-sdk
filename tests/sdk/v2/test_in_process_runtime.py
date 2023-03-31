@@ -116,13 +116,11 @@ class TestQueriesAfterRunning:
             single-output task.
             """
             assert runtime.get_available_outputs(run_id) == {
-                "invocation-0-task-sum-tuple-numbers": (3,)
+                "invocation-0-task-sum-tuple-numbers": 3
             }
 
         class TestMultipleTaskOutputs:
             @staticmethod
-            # See ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-695
-            @pytest.mark.xfail(reason="Some artifact IDs are missing for TaskInvoation")
             def test_some_unused(runtime, wf_def_unused_outputs):
                 run_id = runtime.create_workflow_run(wf_def_unused_outputs, None)
 
