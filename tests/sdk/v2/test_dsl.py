@@ -374,18 +374,6 @@ def test_task_with_default_image():
     assert hello.invocation.task.custom_image == _dsl.DEFAULT_IMAGE
 
 
-class TestModelsSerializeProperly:
-    """The properties are Pydantic models. They would raise ValidationError if the
-    serialization went wrong.
-    """
-
-    def test_task_model(self):
-        _an_empty_task.model
-
-    def test_task_import_models(self):
-        _an_empty_task.import_models
-
-
 @pytest.fixture
 def my_fake_repo_setup(tmp_path):
     """Setup a fake repo containing a commit."""
@@ -572,7 +560,7 @@ def test_default_for_interactive_mode(monkeypatch):
         ...
 
     # type comparison to check if in interactive mode default is INLINE
-    assert type(task.import_models[0]) is type(inline_task.import_models[0])  # noqa
+    assert type(task.source_import) is type(inline_task.source_import)  # noqa
 
 
 def test_default_for_non_interactive_mode(monkeypatch):
@@ -587,7 +575,7 @@ def test_default_for_non_interactive_mode(monkeypatch):
         ...
 
     # type comparison to check if in  non-interactive mode default is INLINE
-    assert type(task.import_models[0]) is type(local_task.import_models[0])  # noqa
+    assert type(task.source_import) is type(local_task.source_import)  # noqa
 
 
 @pytest.mark.parametrize(
