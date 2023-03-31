@@ -57,23 +57,42 @@ class _TaskResult(t.NamedTuple):
 
 
 class ArgumentUnwrapper:
+    """
+    Unwraps arguments (constants, secrets, artifacts) before passing to a task
+    """
+
     def __init__(
         self,
         user_fn: t.Callable,
-        args_metadata: t.Mapping[int, ir.ArtifactNode],
-        kwargs_metadata: t.Mapping[str, ir.ArtifactNode],
+        args_artifact_nodes: t.Mapping[int, ir.ArtifactNode],
+        kwargs_artifact_nodes: t.Mapping[str, ir.ArtifactNode],
         deserialize: bool,
     ):
+        """
+        Args:
+            user_fn: the task function to wrap
+            args_artifact_nodes: A map of positional argument index to workflow artifact
+                node. This is to assist with unpacking artifact results.
+                Not all positional arguments will be included, i.e. a constant or secret
+            kwargs_artifact_nodes: A map of keyword argument name to workflow artifact
+                node. This is to assist with unpacking artifact results.
+                Not all positional arguments will be included, i.e. a constant or secret
+            deserialize: If true, we will first deserialize the argument before passing
+                to the task function. If false, the serialized argument is passed to
+                the underlying task function. This is used to avoid the deserialization
+                problem of having the Python dependencies for Pickles when aggregating
+                the outputs of a workflow.
+        """
         self._user_fn = user_fn
-        self._args_metadata = args_metadata
-        self._kwargs_metadata = kwargs_metadata
+        self._args_artifact_nodes = args_artifact_nodes
+        self._kwargs_artifact_nodes = kwargs_artifact_nodes
         self._deserialize = deserialize
 
     def _get_metadata(self, key: t.Union[int, str]) -> t.Optional[ir.ArtifactNode]:
         if isinstance(key, int):
-            return self._args_metadata.get(key)
+            return self._args_artifact_nodes.get(key)
         elif isinstance(key, str):
-            return self._kwargs_metadata.get(key)
+            return self._kwargs_artifact_nodes.get(key)
         else:
             assert_never(key)
 
@@ -123,8 +142,8 @@ def _make_ray_dag_node(
     ray_options: t.Mapping,
     ray_args: t.Iterable[t.Any],
     ray_kwargs: t.Mapping[str, t.Any],
-    args_metadata: t.Mapping,
-    kwargs_metadata: t.Mapping,
+    args_artifact_nodes: t.Mapping,
+    kwargs_artifact_nodes: t.Mapping,
     n_outputs: t.Optional[int],
     project_dir: t.Optional[Path],
     user_fn_ref: t.Optional[ir.FunctionRef] = None,
@@ -138,6 +157,12 @@ def _make_ray_dag_node(
         ray_options: dict passed to RayClient.add_options()
         ray_args: constants or futures required to build the DAG
         ray_kwargs: constants or futures required to build the DAG
+        args_artifact_nodes: a map of positional arg index to artifact node
+            see ArgumentUnwrapper
+        kwargs_artifact_nodes: a map of keyword arg name to artifact node
+            see ArgumentUnwrapper
+        n_outputs: the number of outputs for this task function (if known)
+        project_dir: the working directory the workflow was submitted from
         user_fn_ref: function reference for a function to be executed by Ray.
             if None - executes data aggregation step
     """
@@ -156,8 +181,8 @@ def _make_ray_dag_node(
 
         wrapped = ArgumentUnwrapper(
             user_fn=user_fn,
-            args_metadata=args_metadata,
-            kwargs_metadata=kwargs_metadata,
+            args_artifact_nodes=args_artifact_nodes,
+            kwargs_artifact_nodes=kwargs_artifact_nodes,
             deserialize=serialization,
         )
 
@@ -255,32 +280,32 @@ def _import_pip_env(ir_invocation: ir.TaskInvocation, wf: ir.WorkflowDef):
 
 def _gather_args(arg_ids, workflow_def, ray_futures):
     ray_args = []
-    ray_args_metadata: t.Dict[int, t.Optional[ir.ArtifactNode]] = {}
+    ray_args_artifact_nodes: t.Dict[int, t.Optional[ir.ArtifactNode]] = {}
     for i, arg_id in enumerate(arg_ids):
         ir_node = _arg_from_graph(arg_id, workflow_def)
         if isinstance(ir_node, ir.ArtifactNode):
             ray_args.append(ray_futures[arg_id])
-            ray_args_metadata[i] = ir_node
+            ray_args_artifact_nodes[i] = ir_node
         else:
             ray_args.append(ir_node)
-            ray_args_metadata[i] = None
+            ray_args_artifact_nodes[i] = None
 
-    return tuple(ray_args), ray_args_metadata
+    return tuple(ray_args), ray_args_artifact_nodes
 
 
 def _gather_kwargs(kwargs, workflow_def, ray_futures):
     ray_kwargs = {}
-    ray_kwargs_metadata: t.Dict[str, t.Optional[ir.ArtifactNode]] = {}
+    ray_kwargs_artifact_nodes: t.Dict[str, t.Optional[ir.ArtifactNode]] = {}
     for name, kwarg_id in kwargs.items():
         ir_node = _arg_from_graph(kwarg_id, workflow_def)
         if isinstance(ir_node, ir.ArtifactNode):
             ray_kwargs[name] = ray_futures[kwarg_id]
-            ray_kwargs_metadata[name] = ir_node
+            ray_kwargs_artifact_nodes[name] = ir_node
         else:
             ray_kwargs[name] = ir_node
-            ray_kwargs_metadata[name] = None
+            ray_kwargs_artifact_nodes[name] = None
 
-    return ray_kwargs, ray_kwargs_metadata
+    return ray_kwargs, ray_kwargs_artifact_nodes
 
 
 def make_ray_dag(
@@ -298,10 +323,10 @@ def make_ray_dag(
 
     for invocation in _graphs.iter_invocations_topologically(workflow_def):
         user_task = workflow_def.tasks[invocation.task_id]
-        pos_args, pos_args_metadata = _gather_args(
+        pos_args, pos_args_artifact_nodes = _gather_args(
             invocation.args_ids, workflow_def, ray_futures
         )
-        kwargs, kwargs_metadata = _gather_kwargs(
+        kwargs, kwargs_artifact_nodes = _gather_kwargs(
             invocation.kwargs_ids, workflow_def, ray_futures
         )
         # We want to store both the TaskInvocation.id and TaskRun.id. We use
@@ -349,8 +374,8 @@ def make_ray_dag(
             ray_options=ray_options,
             ray_args=pos_args,
             ray_kwargs=kwargs,
-            args_metadata=pos_args_metadata,
-            kwargs_metadata=kwargs_metadata,
+            args_artifact_nodes=pos_args_artifact_nodes,
+            kwargs_artifact_nodes=kwargs_artifact_nodes,
             n_outputs=user_task.output_metadata.n_outputs,
             project_dir=project_dir,
             user_fn_ref=user_task.fn_ref,
@@ -360,7 +385,7 @@ def make_ray_dag(
             ray_futures[output_id] = ray_result
 
     # Gather futures for the last, fake task, and decide what args we need to unwrap.
-    pos_args, pos_args_metadata = _gather_args(
+    pos_args, pos_args_artifact_nodes = _gather_args(
         workflow_def.output_ids, workflow_def, ray_futures
     )
     last_future = _make_ray_dag_node(
@@ -375,8 +400,8 @@ def make_ray_dag(
         },
         ray_args=pos_args,
         ray_kwargs={},
-        args_metadata=pos_args_metadata,
-        kwargs_metadata={},
+        args_artifact_nodes=pos_args_artifact_nodes,
+        kwargs_artifact_nodes={},
         n_outputs=len(pos_args),
         project_dir=None,
     )
