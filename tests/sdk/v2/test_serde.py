@@ -11,6 +11,7 @@ from pydantic.error_wrappers import ValidationError
 import orquestra.sdk as sdk
 from orquestra.sdk._base import serde
 from orquestra.sdk.schema import ir
+from orquestra.sdk.schema.responses import JSONResult
 
 ROUNDTRIP_EXAMPLES = [
     None,
@@ -18,6 +19,10 @@ ROUNDTRIP_EXAMPLES = [
     {"foo": "bar"},
     {"foo": "bar", "baz": ["qux", "qux"]},
     {"a_float": 0.123},
+    (1, 2, 3, 4),
+    (1, 2, 3, (1, 2, 3)),
+    {"hello": (1, 2, 3)},
+    ["a", 1, (1, 2, 3)],
 ]
 
 
@@ -96,6 +101,21 @@ def test_roundtrip_function_serialize():
     serialized = serde.serialize_pickle(fun)
 
     assert fun() == (serde.deserialize_pickle(serialized))()
+
+
+def test_tuple_magic():
+    # Given
+    serialised = serde.result_from_artifact((1, 2, 3), ir.ArtifactFormat.JSON)
+    assert isinstance(serialised, JSONResult)
+
+    # When
+    result_dict = json.loads(serialised.value)
+
+    # Then
+    assert "__tuple__" in result_dict
+    assert result_dict["__tuple__"]
+    assert "__values__" in result_dict
+    assert result_dict["__values__"] == [1, 2, 3]
 
 
 @pytest.mark.parametrize(
