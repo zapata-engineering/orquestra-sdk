@@ -160,6 +160,7 @@ class Resources(BaseModel):
     memory: t.Optional[str] = None
     disk: t.Optional[str] = None
     gpu: t.Optional[str] = None
+    nodes: t.Optional[int] = None
 
 
 class DataAggregation(BaseModel):
@@ -383,3 +384,4 @@ class WorkflowDef(BaseModel):
 
     # Metadata defaults to None to allow older JSON to be loaded
     metadata: t.Optional[WorkflowMetadata] = None
+    resources: t.Optional[Resources] = None

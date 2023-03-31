@@ -67,6 +67,7 @@ class WorkflowDef(Generic[_R]):
         name: str,
         workflow_fn: Callable[..., _R],
         fn_ref: FunctionRef,
+        resources: _dsl.Resources,
         data_aggregation: Optional[DataAggregation] = None,
         workflow_args: Optional[Tuple[Any, ...]] = None,
         workflow_kwargs: Optional[Dict[str, Any]] = None,
@@ -74,6 +75,7 @@ class WorkflowDef(Generic[_R]):
         self._name = name
         self._fn = workflow_fn
         self._fn_ref = fn_ref
+        self._resources = resources
         self._data_aggregation = data_aggregation
         self._workflow_args = workflow_args or ()
         self._workflow_kwargs = workflow_kwargs or {}
@@ -250,6 +252,54 @@ class WorkflowDef(Generic[_R]):
         run.start()
         return run
 
+    def with_resources(
+        self,
+        *,
+        cpu: Optional[Union[str, _dsl.Sentinel]] = _dsl.Sentinel.NO_UPDATE,
+        memory: Optional[Union[str, _dsl.Sentinel]] = _dsl.Sentinel.NO_UPDATE,
+        disk: Optional[Union[str, _dsl.Sentinel]] = _dsl.Sentinel.NO_UPDATE,
+        gpu: Optional[Union[str, _dsl.Sentinel]] = _dsl.Sentinel.NO_UPDATE,
+        nodes: Optional[Union[int, _dsl.Sentinel]] = _dsl.Sentinel.NO_UPDATE,
+    ) -> "WorkflowDef":
+        """Assigns optional metadata related to task invocation used to generate this
+        artifact.
+
+        Doesn't modify existing invocations, returns a new one.
+
+        Example usage:
+            text = capitalize("hello").with_invocation_meta(
+                cpu="1000m",custom_image="zapatacomputing/orquestra-qml:v0.1.0-cuda"
+                )
+
+        Args:
+            cpu: amount of cpu assigned to the task invocation
+            memory: amount of memory assigned to the task invocation
+            disk: amount of disk assigned to the task invocation
+            gpu: amount of gpu assigned to the task invocation
+            custom_image: docker image used to run the task invocation
+        """
+        # Only use the new properties if they have not been changed.
+        # None is a valid option, so we are using the Sentinel object pattern:
+        # https://python-patterns.guide/python/sentinel-object/
+
+        resources = self._resources
+        new_resources = _dsl.Resources(
+            cpu=resources.cpu if cpu is _dsl.Sentinel.NO_UPDATE else cpu,
+            gpu=resources.gpu if gpu is _dsl.Sentinel.NO_UPDATE else gpu,
+            memory=resources.memory if memory is _dsl.Sentinel.NO_UPDATE else memory,
+            disk=resources.disk if disk is _dsl.Sentinel.NO_UPDATE else disk,
+            nodes=resources.nodes if nodes is _dsl.Sentinel.NO_UPDATE else nodes,
+        )
+        return WorkflowDef(
+            name=self._name,
+            workflow_fn=self._fn,
+            fn_ref=self._fn_ref,
+            resources=new_resources,
+            data_aggregation=self._data_aggregation,
+            workflow_args=self._workflow_args,
+            workflow_kwargs=self._workflow_kwargs,
+        )
+
 
 class WorkflowTemplate(Generic[_P, _R]):
     """
@@ -262,13 +312,15 @@ class WorkflowTemplate(Generic[_P, _R]):
         workflow_fn: Callable[_P, _R],
         fn_ref: FunctionRef,
         is_parametrized: bool,
+        resources: _dsl.Resources,
         data_aggregation: Optional[Union[DataAggregation, bool]] = None,
     ):
         self._custom_name = custom_name
         self._fn = workflow_fn
         self._fn_ref = fn_ref
-        self._data_aggregation = data_aggregation
         self._is_parametrized = is_parametrized
+        self._resources = resources
+        self._data_aggregation = data_aggregation
 
     def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> WorkflowDef[_R]:
         """
@@ -340,7 +392,15 @@ class WorkflowTemplate(Generic[_P, _R]):
                 raise WorkflowSyntaxError(
                     "Workflow arguments must be known at submission time. "
                 )
-        return WorkflowDef(name, self._fn, self._fn_ref, data_aggregation, args, kwargs)
+        return WorkflowDef(
+            name=name,
+            workflow_fn=self._fn,
+            fn_ref=self._fn_ref,
+            resources=self._resources,
+            data_aggregation=data_aggregation,
+            workflow_args=args,
+            workflow_kwargs=kwargs,
+        )
 
     @property
     def is_parametrized(self) -> bool:
@@ -512,6 +572,7 @@ def workflow(fn: Callable[_P, _R]) -> WorkflowTemplate[_P, _R]:
 @overload
 def workflow(
     *,
+    resources: Optional[_dsl.Resources] = None,
     data_aggregation: Optional[Union[DataAggregation, bool]] = None,
     custom_name: Optional[str] = None,
 ) -> Callable[[Callable[_P, _R]], WorkflowTemplate[_P, _R]]:
@@ -521,6 +582,7 @@ def workflow(
 def workflow(
     fn: Optional[Callable[_P, _R]] = None,
     *,
+    resources: Optional[_dsl.Resources] = None,
     data_aggregation: Optional[Union[DataAggregation, bool]] = None,
     custom_name: Optional[str] = None,
 ) -> Union[
@@ -572,6 +634,7 @@ def workflow(
         fn_ref = get_fn_ref(fn)
         template = WorkflowTemplate(
             custom_name=name,
+            resources=resources or _dsl.Resources(),
             workflow_fn=fn,
             fn_ref=fn_ref,
             is_parametrized=len(signature.parameters) > 0,

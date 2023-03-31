@@ -116,7 +116,8 @@ class TestCreateWorkflowRun:
         # Then
         mocked_client.create_workflow_def.assert_called_once_with(my_workflow.model)
         mocked_client.create_workflow_run.assert_called_once_with(
-            workflow_def_id, _models.Resources(cpu=None, memory=None, gpu=None)
+            workflow_def_id,
+            _models.Resources(cpu=None, memory=None, gpu=None, nodes=None),
         )
         assert isinstance(wf_run_id, WorkflowRunId)
         assert (
@@ -142,7 +143,8 @@ class TestCreateWorkflowRun:
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
-                workflow_def_id, _models.Resources(cpu=None, memory="10Gi", gpu=None)
+                workflow_def_id,
+                _models.Resources(cpu=None, memory="10Gi", gpu=None, nodes=None),
             )
 
         def test_with_cpu(
@@ -163,7 +165,8 @@ class TestCreateWorkflowRun:
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
-                workflow_def_id, _models.Resources(cpu="1000m", memory=None, gpu=None)
+                workflow_def_id,
+                _models.Resources(cpu="1000m", memory=None, gpu=None, nodes=None),
             )
 
         def test_with_gpu(
@@ -184,7 +187,8 @@ class TestCreateWorkflowRun:
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
-                workflow_def_id, _models.Resources(cpu=None, memory=None, gpu="1")
+                workflow_def_id,
+                _models.Resources(cpu=None, memory=None, gpu="1", nodes=None),
             )
 
         def test_maximum_resource(
@@ -203,7 +207,32 @@ class TestCreateWorkflowRun:
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
-                workflow_def_id, _models.Resources(cpu="5000m", memory="3G", gpu="1")
+                workflow_def_id,
+                _models.Resources(cpu="5000m", memory="3G", gpu="1", nodes=None),
+            )
+
+        def test_resources_from_workflow(
+            self,
+            mocked_client: MagicMock,
+            runtime: _ce_runtime.CERuntime,
+            workflow_def_id: str,
+            workflow_run_id: str,
+        ):
+            # Given
+            mocked_client.create_workflow_def.return_value = workflow_def_id
+            mocked_client.create_workflow_run.return_value = workflow_run_id
+
+            # When
+            _ = runtime.create_workflow_run(
+                my_workflow()
+                .with_resources(cpu="1", memory="1.5G", gpu="1", nodes=20)
+                .model
+            )
+
+            # Then
+            mocked_client.create_workflow_run.assert_called_once_with(
+                workflow_def_id,
+                _models.Resources(cpu="1", memory="1.5G", gpu="1", nodes=20),
             )
 
     class TestWorkflowDefFailure:

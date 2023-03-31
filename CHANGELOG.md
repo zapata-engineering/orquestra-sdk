@@ -10,6 +10,7 @@
 🔥 *Features*
 - Sort WF runs by start date in `list wf` command. Show start date as one of the columns
 - Sort WF runs by start date in all workflow commands in prompt selection. Show start date with WF id
+- Set resources for workflows on CE via `resources` keyword argument in the `@workflow` decorator or with `.with_resources()` on a `WorkflowDef`.
 
 👩‍🔬 *Experimental*
 

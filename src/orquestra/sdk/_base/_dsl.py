@@ -270,6 +270,7 @@ class Resources(NamedTuple):
     memory: Optional[str] = None
     disk: Optional[str] = None
     gpu: Optional[str] = None
+    nodes: Optional[int] = None
 
     def is_empty(self) -> bool:
         # find out if all the Resources are None

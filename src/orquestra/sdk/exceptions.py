@@ -83,6 +83,10 @@ class InvalidTaskDefinitionError(BaseRuntimeError):
     pass
 
 
+class NodesInTaskResourcesWarning(Warning):
+    pass
+
+
 # Workflow Errors
 class WorkflowNotFoundError(BaseRuntimeError):
     pass
