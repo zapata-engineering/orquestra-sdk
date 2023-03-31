@@ -166,11 +166,13 @@ class TaskRun:
         producer_inv = self._find_invocation_by_output_id(arg_id)
         output_index = self._wf_def.artifact_nodes[arg_id].artifact_index
         try:
-            parent_output_vals = serde.deserialize(available_outputs[producer_inv.id])
+            artifact_node = available_outputs[producer_inv.id]
         except KeyError:
             # Parent invocation ID not in available outputs => parent invocation
             # wasn't completed yet.
             return self.INPUT_UNAVAILABLE
+
+        parent_output_vals = serde.deserialize(artifact_node)
 
         # A task function can return multiple values. We're only interested in one
         # of them.
