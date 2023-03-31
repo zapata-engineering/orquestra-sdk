@@ -27,7 +27,6 @@ def _get_artifacts(
     task_id: typing.Optional[str],
     runtime: RuntimeInterface,
 ) -> GetArtifactsResponse:
-
     artifacts = runtime.get_available_outputs(run_id)
 
     if task_id is not None:
@@ -49,7 +48,6 @@ def _get_artifacts(
 def orq_get_artifacts(
     args: argparse.Namespace,
 ) -> GetArtifactsResponse:
-
     config = _config.read_config(args.config)
 
     project_dir = Path(args.directory)

@@ -142,7 +142,6 @@ class TestCLIWithRay:
             submited_workflow,
             setup_ray,
         ):
-
             project_dir = str(orq_project_dir_with_defs)
 
             assert submited_workflow.meta.success

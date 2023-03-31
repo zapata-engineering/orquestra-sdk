@@ -91,7 +91,6 @@ def _resolve_config_name_and_existance(
     # against the list of know configs to determine, if it's there then case 2;
     # otherwise case 3.
     elif passed_config_name is not None:
-
         resolved_config_name = passed_config_name
         using_existing_config = passed_config_name in _config.read_config_names()
         if using_existing_config:

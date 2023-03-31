@@ -346,6 +346,7 @@ def _make_task_model(
     task: _dsl.TaskDef,
     imports_dict: t.Dict[_dsl.Import, model.Import],
 ) -> model.TaskDef:
+    task.resolve_fn_ref()
     fn_ref_model = _make_fn_ref(task.fn_ref)
 
     source_import = imports_dict[task.source_import]
@@ -627,17 +628,10 @@ def flatten_graph(
     # to avoid git fetch spam for the same repos over and over.
     cached_git_import_dict: t.Dict[t.Tuple, model.Import] = {}
     for invocation in graph.invocations.keys():
-        if (
-            invocation.task.custom_source_import is False
-            and workflow_def.default_source_import is not None
-        ):
-            invocation.task.source_import = workflow_def.default_source_import
-
-        if (
-            invocation.task.dependency_imports is None
-            and workflow_def.default_dependency_imports is not None
-        ):
-            invocation.task.dependency_imports = workflow_def.default_dependency_imports
+        invocation.task.resolve_source_import(workflow_def.default_source_import)
+        invocation.task.resolve_dependency_imports(
+            workflow_def.default_dependency_imports
+        )
 
         for imp in [
             invocation.task.source_import,

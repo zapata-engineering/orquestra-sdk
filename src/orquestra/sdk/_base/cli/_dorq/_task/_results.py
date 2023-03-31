@@ -64,7 +64,6 @@ class Action:
         config: t.Optional[ConfigName],
         download_dir: t.Optional[Path],
     ):
-
         # The order of resolving config and run ID is important. It dictactes the flow
         # user sees, and possible choices in the prompts.
         resolved_config = self._config_resolver.resolve(wf_run_id, config)

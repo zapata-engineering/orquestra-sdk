@@ -323,7 +323,6 @@ def _gather_args(
     ray_futures: t.Mapping[ir.ArtifactNodeId, t.Any],
     artifact_nodes: t.Mapping[ir.ArtifactNodeId, ir.ArtifactNode],
 ) -> t.Tuple[t.Sequence[t.Any], t.Sequence[PosArgUnpackSpec], t.List[int]]:
-
     ray_args = []
     pos_unpack_specs: t.List[PosArgUnpackSpec] = []
     pos_deserialize_specs: t.List[int] = []
@@ -1014,9 +1013,11 @@ class RayRuntime(RuntimeInterface):
         return wf_runs
 
 
-def get_current_ids() -> t.Tuple[
-    t.Optional[WorkflowRunId], t.Optional[TaskInvocationId], t.Optional[TaskRunId]
-]:
+def get_current_ids() -> (
+    t.Tuple[
+        t.Optional[WorkflowRunId], t.Optional[TaskInvocationId], t.Optional[TaskRunId]
+    ]
+):
     """
     Uses Ray context to figure out what are the IDs of the currently running workflow
     and task.

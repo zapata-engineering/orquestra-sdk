@@ -85,7 +85,6 @@ class TestSetDefaultConfig:
 
     @staticmethod
     def test_orq_set_default_builtin(config_name, monkeypatch):
-
         monkeypatch.setattr(v2_config, "update_default_config_name", value=callable)
 
         args = argparse.Namespace(config_name=config_name)
@@ -95,7 +94,6 @@ class TestSetDefaultConfig:
 
 
 def test_orq_set_default_remote(monkeypatch):
-
     monkeypatch.setattr(v2_config, "update_default_config_name", value=callable)
 
     args = argparse.Namespace(config_name="remote")
@@ -144,7 +142,6 @@ def test_orq_get_default(monkeypatch):
 )
 class TestMissingConfigErrors:
     def test_invalid_config_entry(self, patch_config_location, test_action):
-
         cfg_file = RuntimeConfigurationFile(
             version=CONFIG_FILE_CURRENT_VERSION,
             configs={},

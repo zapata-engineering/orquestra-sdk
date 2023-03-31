@@ -289,7 +289,6 @@ class TestRayRuntimeMethods:
             assert wf_run.status.state == State.TERMINATED
 
         def test_on_finished_workflow(self, runtime: _dag.RayRuntime, tmp_path):
-
             wf = _example_wfs.multioutput_task_wf.model
             wf_run_id = runtime.create_workflow_run(wf)
             _ = runtime.get_workflow_run_outputs(wf_run_id)  # wait for it to finish

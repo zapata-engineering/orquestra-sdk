@@ -389,15 +389,14 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
     def __init__(
         self,
         fn: Callable[_P, _R],
-        fn_ref: FunctionRef,
-        source_import: Import,
+        source_import: Optional[Import],
         output_metadata: TaskOutputMetadata,
         parameters: Optional[OrderedDict] = None,
         dependency_imports: Optional[Tuple[Import, ...]] = None,
         resources: Resources = Resources(),
         custom_image: Optional[str] = None,
         custom_name: Optional[str] = None,
-        custom_source_import: Optional[bool] = True,
+        fn_ref: Optional[FunctionRef] = None,
     ):
         if isinstance(fn, BuiltinFunctionType):
             raise NotImplementedError("Built-in functions are not supported as Tasks")
@@ -411,7 +410,6 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
         self.resources = resources
         self.custom_image = custom_image
         self.custom_name = custom_name
-        self.custom_source_import = custom_source_import
 
         if self.custom_image is None:
             if resources.gpu:
@@ -505,6 +503,39 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
         from orquestra.sdk._base import _traversal
 
         return _traversal.get_model_imports_from_task_def(self)
+
+    def resolve_source_import(self, wf_default_source_import: Optional[Import]):
+        # if user set source import explicitly, do nothing
+        if self.source_import is not None:
+            return
+
+        if wf_default_source_import:
+            self.source_import = wf_default_source_import
+        # Set the default Import based on if the session is interactive
+        elif _is_interactive():
+            self.source_import = InlineImport()
+        else:
+            self.source_import = LocalImport(module=self.fn.__module__)
+
+    def resolve_dependency_imports(
+        self, wf_default_dependency_imports: Optional[Iterable[Import]]
+    ):
+        # if user set imports explicitly, do nothing
+        if self.dependency_imports is not None:
+            return
+
+        if wf_default_dependency_imports:
+            self.dependency_imports = wf_default_dependency_imports
+
+    def resolve_fn_ref(self):
+        # resolve fn_ref is based on task source import. If user doesnt pass it,
+        # resolve_source_import should set it
+        assert self.source_import
+        self.fn_ref = (
+            InlineFunctionRef(self.fn.__name__, self.fn)
+            if isinstance(self.source_import, InlineImport)
+            else get_fn_ref(self.fn)
+        )
 
 
 # TaskInvocation is using a Plain Old Python Object on purpose:
@@ -964,38 +995,15 @@ def task(
         else:
             output_metadata = _get_number_of_outputs(fn)
 
-        # Set the default Import based on if the session is interactive
-        task_source_import: Import
-        custom_source_import: bool
-        if source_import is not None:
-            task_source_import = source_import
-            custom_source_import = True
-        elif _is_interactive():
-            task_source_import = InlineImport()
-            custom_source_import = False
-        else:
-            task_source_import = LocalImport(module=fn.__module__)
-            custom_source_import = False
-
-        # This is a little awkward
-        # but to avoid complexity in get_fn_ref, I kept the complexity here.
-        fn_ref = (
-            InlineFunctionRef(fn.__name__, fn)
-            if isinstance(task_source_import, InlineImport)
-            else get_fn_ref(fn)
-        )
-
         task_def = TaskDef(
             fn=fn,
-            fn_ref=fn_ref,
-            source_import=task_source_import,
+            source_import=source_import,
             dependency_imports=task_dependency_imports,
             resources=resources,
             parameters=_get_parameters(fn),
             output_metadata=output_metadata,
             custom_image=custom_image,
             custom_name=custom_name,
-            custom_source_import=custom_source_import,
         )
 
         return task_def
