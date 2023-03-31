@@ -610,19 +610,6 @@ class ContextManager(t.Protocol):
     ids=_id_from_wf,
 )
 class TestWorkflowsTasksProperties:
-    def test_wf_contains_task_ids(
-        self,
-        workflow_template: _workflow.WorkflowTemplate,
-        task_defs: t.Sequence[_dsl.TaskDef],
-        outputs: t.List,
-        expectation: ContextManager,
-    ):
-        with expectation:
-            wf_model = workflow_template.model
-            for task_def in task_defs:
-                task_model = task_def.model
-                assert task_model.id in wf_model.tasks
-
     def test_wf_imports_are_task_imports(
         self,
         workflow_template: _workflow.WorkflowTemplate,
@@ -644,15 +631,7 @@ class TestWorkflowsTasksProperties:
                 ]
             }
 
-            # refers to tasks passed to the test case manually
-            task_import_ids_manual = {
-                import_model.id
-                for task_def in task_defs
-                for import_model in task_def.import_models
-            }
-
             assert task_import_ids_embedded == wf_import_ids
-            assert task_import_ids_manual == wf_import_ids
 
     def test_task_ids_match_invocations(
         self,
@@ -840,129 +819,27 @@ PYTHON_IMPORTS_MANUAL_TASK_DEF = model.TaskDef(
 
 
 @pytest.mark.parametrize(
-    "task_def, expected_model",
+    "task_def, has_arg, expected_model",
     [
-        (capitalize, CAPITALIZE_TASK_DEF),
-        (git_task, GIT_TASK_DEF),
-        (generate_graph, GENERATE_GRAPH_TASK_DEF),
-        (capitalize_inline, CAPITALIZE_INLINE_TASK_DEF),
-        (python_imports_manual, PYTHON_IMPORTS_MANUAL_TASK_DEF),
+        (capitalize, True, CAPITALIZE_TASK_DEF),
+        (git_task, False, GIT_TASK_DEF),
+        (generate_graph, False, GENERATE_GRAPH_TASK_DEF),
+        (capitalize_inline, True, CAPITALIZE_INLINE_TASK_DEF),
+        (python_imports_manual, True, PYTHON_IMPORTS_MANUAL_TASK_DEF),
     ],
 )
-def test_get_model_from_task_def(task_def, expected_model):
-    assert _traversal.get_model_from_task_def(task_def).dict() == expected_model.dict()
+def test_individual_task_models(task_def, has_arg, expected_model):
+    @_workflow.workflow
+    def wf():
+        if has_arg:
+            return task_def("w/e")
+        else:
+            return task_def()
 
+    wf_model = wf.model
+    task_def = list(wf_model.tasks.values())[0]
 
-CAPITALIZE_IMPORTS = [
-    model.LocalImport(id=AnyMatchingStr(r"local-\w{10}")),
-]
-
-
-GIT_TASK_IMPORTS = [
-    model.GitImport(
-        id=AnyMatchingStr(r"git-\w{10}_hello"),
-        repo_url="hello",
-        git_ref="main",
-    ),
-]
-
-GENERATE_GRAPH_IMPORTS = [
-    model.LocalImport(id=AnyMatchingStr(r"local-\w{10}")),
-    model.GitImport(
-        id=AnyMatchingStr(
-            r"git-\w{10}_github_com_zapatacomputing_orquestra_workflow_sdk"
-        ),
-        repo_url="git@github.com:zapatacomputing/orquestra-workflow-sdk.git",
-        git_ref="main",
-    ),
-]
-
-CAPITALIZE_IMPORTS_INFER = [
-    model.GitImport(
-        id=AnyMatchingStr(r"git-\w{10}_github_com_zapatacomputing_orquestra.*sdk"),
-        repo_url=model.GitURL(
-            original_url=AnyMatchingStr(
-                r"git@github.com:zapatacomputing/orquestra.*sdk.*"
-            ),
-            protocol="ssh",
-            user="git",
-            password=None,
-            host="github.com",
-            port=None,
-            path=AnyMatchingStr(r"zapatacomputing/orquestra.*sdk.*"),
-            query=None,
-        ),
-        git_ref="main",
-    ),
-]
-
-
-CAPITALIZE_IMPORTS_INLINE = [
-    model.InlineImport(
-        id=AnyMatchingStr(r".*"),
-    )
-]
-
-PYTHON_IMPORTS_MANUAL = [
-    model.LocalImport(id=AnyMatchingStr(r"local-\w{10}")),
-    model.PythonImports(
-        id=AnyMatchingStr(r"python-import-\w{10}"),
-        packages=[
-            {
-                "environment_markers": "",
-                "extras": [],
-                "name": "numpy",
-                "version_constraints": ["==1.21.5"],
-            }
-        ],
-        pip_options=[],
-    ),
-]
-
-PYTHON_IMPORTS_FROM_REQS = [
-    model.LocalImport(id=AnyMatchingStr(r"local-\w{10}")),
-    model.PythonImports(
-        id=AnyMatchingStr(r"python-import-\w{10}"),
-        packages=[
-            {
-                "environment_markers": 'python_version > "2.7"',
-                "extras": ["security", "tests"],
-                "name": "requests",
-                "version_constraints": ["==2.8.*", ">=2.8.1"],
-            },
-        ],
-        pip_options=[],
-    ),
-]
-
-
-@pytest.mark.parametrize(
-    "task_def, expected_imports",
-    [
-        (capitalize, CAPITALIZE_IMPORTS),
-        (git_task, GIT_TASK_IMPORTS),
-        (generate_graph, GENERATE_GRAPH_IMPORTS),
-        (capitalize_infer, CAPITALIZE_IMPORTS_INFER),
-        (capitalize_inline, CAPITALIZE_IMPORTS_INLINE),
-        (python_imports_manual, PYTHON_IMPORTS_MANUAL),
-        (python_imports_from_requirements, PYTHON_IMPORTS_FROM_REQS),
-    ],
-)
-def test_get_model_imports_from_task_def(monkeypatch, task_def, expected_imports):
-    # Dont fetch repo in unit tests
-    def fake_fetch(_):
-        pass
-
-    # Dont raise errors about dirty repo in unit tests
-    def fake_is_dirty(_):
-        return False
-
-    monkeypatch.setattr(git.remote.Remote, "fetch", fake_fetch)
-    monkeypatch.setattr(git.Repo, "is_dirty", fake_is_dirty)
-    imports = [
-        imp.dict() for imp in _traversal.get_model_imports_from_task_def(task_def)
-    ]
-    assert imports == [imp.dict() for imp in expected_imports]
+    assert task_def == expected_model.dict()
 
 
 @pytest.mark.parametrize(

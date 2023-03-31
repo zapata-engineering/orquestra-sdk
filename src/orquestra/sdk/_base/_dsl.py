@@ -480,30 +480,6 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
             ),
         )
 
-    @property
-    def model(self) -> ir.TaskDef:
-        """Serializable form of the task def (intermediate representation).
-
-        returns:
-            Pydantic model.
-        """
-        # hack for circular imports
-        from orquestra.sdk._base import _traversal
-
-        return _traversal.get_model_from_task_def(self)
-
-    @property
-    def import_models(self) -> List[ir.Import]:
-        """All Orquestra Imports required by this task, in a serializable form.
-
-        returns:
-            Pydantic models.
-        """
-        # hack for circular imports
-        from orquestra.sdk._base import _traversal
-
-        return _traversal.get_model_imports_from_task_def(self)
-
 
 # TaskInvocation is using a Plain Old Python Object on purpose:
 # Using POPO instead of a NamedTuple means each instance of TaskInvocation
