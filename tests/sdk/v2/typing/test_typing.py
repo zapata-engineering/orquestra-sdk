@@ -36,28 +36,8 @@ def shared_cache(tmp_path_factory: pytest.TempPathFactory):
     [
         # task decorator
         (
-            "tests/sdk/v2/typing/task/assign_import_models.py",
-            'error: Property "import_models" defined in "TaskDef" is read-only',
-            [],
-        ),
-        (
-            "tests/sdk/v2/typing/task/assign_model.py",
-            'error: Property "model" defined in "TaskDef" is read-only',
-            [],
-        ),
-        (
             "tests/sdk/v2/typing/task/assign_n_outputs.py",
             'error: Property "n_outputs" defined in "TaskDef" is read-only',
-            [],
-        ),
-        (
-            "tests/sdk/v2/typing/task/has_import_models.py",
-            "Success: no issues found in 1 source file",
-            [],
-        ),
-        (
-            "tests/sdk/v2/typing/task/has_model.py",
-            "Success: no issues found in 1 source file",
             [],
         ),
         (
