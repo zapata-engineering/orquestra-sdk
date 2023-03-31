@@ -15,22 +15,25 @@ import pytest
 import responses
 
 import orquestra.sdk as sdk
-import orquestra.sdk._base._db as _db
-import orquestra.sdk._base._qe._qe_runtime as _qe_runtime
 from orquestra.sdk import exceptions
+from orquestra.sdk._base import _db, serde
 from orquestra.sdk._base._conversions._yaml_exporter import (
     pydantic_to_yaml,
     workflow_to_yaml,
 )
+from orquestra.sdk._base._qe import _qe_runtime
 from orquestra.sdk._base._testing._example_wfs import my_workflow
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
+from orquestra.sdk.schema.ir import ArtifactFormat, ArtifactNodeId, TaskInvocationId
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
+from orquestra.sdk.schema.responses import JSONResult, PickleResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
     ProjectRef,
     RunStatus,
     State,
     TaskRun,
     WorkflowRun,
+    WorkflowRunId,
 )
 
 QE_MINIMAL_CURRENT_REPRESENTATION: t.Dict[str, t.Any] = {
@@ -571,61 +574,84 @@ class TestCreateWorkflowRun:
         assert yaml_wf not in captured_without_yaml.err
 
 
+def _mock_artifact_resp(
+    responses,
+    wf_run_id: WorkflowRunId,
+    inv_id: TaskInvocationId,
+    art_id: ArtifactNodeId,
+    result_model: WorkflowResult,
+):
+    responses.add(
+        responses.GET,
+        f"http://localhost/v2/workflows/{wf_run_id}/step/{inv_id}/artifact/{art_id}",
+        content_type="application/x-gtar-compressed",
+        body=_make_result_bytes(dict(result_model)),
+    )
+
+
+def _make_pickle_result(artifact_value) -> PickleResult:
+    result = serde.result_from_artifact(
+        artifact_value, artifact_format=ArtifactFormat.ENCODED_PICKLE
+    )
+    assert isinstance(result, PickleResult), "Invalid serialization used"
+    return result
+
+
 class TestGetAvailableOutputs:
     def test_successful_workflow(self, monkeypatch, runtime, mocked_responses):
+        wf_run_id = "hello-there-abc123-r000"
         _get_workflow_run = Mock(
             return_value=StoredWorkflowRun(
-                workflow_run_id="hello-there-abc123-r000",
+                workflow_run_id=wf_run_id,
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
-        mocked_responses.add(
-            responses.GET,
-            "http://localhost/v2/workflows/hello-there-abc123-r000/step/invocation-0-task-make-greeting-message/artifact/artifact-0-make-greeting-message",  # noqa
-            content_type="application/x-gtar-compressed",
-            body=_make_result_bytes(
-                {"value": '"hello, alex zapata!there"', "serialization_format": "JSON"}
-            ),
+
+        _mock_artifact_resp(
+            mocked_responses,
+            wf_run_id=wf_run_id,
+            inv_id="invocation-0-task-make-greeting-message",
+            art_id="artifact-0-make-greeting-message",
+            result_model=JSONResult(value='"hello, alex zapata!there"'),
         )
-        mocked_responses.add(
-            responses.GET,
-            "http://localhost/v2/workflows/hello-there-abc123-r000/step/invocation-1-task-multi-output-test/artifact/artifact-1-multi-output-test",  # noqa
-            content_type="application/x-gtar-compressed",
-            body=_make_result_bytes(
-                {"value": '"there"', "serialization_format": "JSON"}
-            ),
+        _mock_artifact_resp(
+            mocked_responses,
+            wf_run_id=wf_run_id,
+            inv_id="invocation-1-task-multi-output-test",
+            art_id="artifact-3-multi-output-test",
+            result_model=_make_pickle_result(artifact_value=("hello", "there")),
         )
 
         result = runtime.get_available_outputs("hello-there-abc123-r000")
 
         assert result == {
-            "invocation-0-task-make-greeting-message": ("hello, alex zapata!there",),
-            "invocation-1-task-multi-output-test": ("there",),
+            "invocation-0-task-make-greeting-message": "hello, alex zapata!there",
+            "invocation-1-task-multi-output-test": ("hello", "there"),
         }
 
     def test_failed_workflow(self, monkeypatch, runtime, mocked_responses):
+        wf_run_id = "wf-3fmte-r000"
         _get_workflow_run = Mock(
             return_value=StoredWorkflowRun(
-                workflow_run_id="wf-3fmte-r000",
+                workflow_run_id=wf_run_id,
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
 
-        mocked_responses.add(
-            responses.GET,
-            "http://localhost/v2/workflows/wf-3fmte-r000/step/invocation-0-task-make-greeting-message/artifact/artifact-0-make-greeting-message",  # noqa
-            content_type="application/x-gtar-compressed",
-            body=_make_result_bytes(
-                {"value": '"hello, alex zapata!there"', "serialization_format": "JSON"}
-            ),
+        _mock_artifact_resp(
+            mocked_responses,
+            wf_run_id=wf_run_id,
+            inv_id="invocation-0-task-make-greeting-message",
+            art_id="artifact-0-make-greeting-message",
+            result_model=JSONResult(value='"hello, alex zapata!there"'),
         )
         mocked_responses.add(
             responses.GET,
-            "http://localhost/v2/workflows/wf-3fmte-r000/step/invocation-1-task-multi-output-test/artifact/artifact-1-multi-output-test",  # noqa
+            "http://localhost/v2/workflows/wf-3fmte-r000/step/invocation-1-task-multi-output-test/artifact/artifact-3-multi-output-test",  # noqa
             status=404,
             json={
                 "meta": {},
@@ -637,7 +663,7 @@ class TestGetAvailableOutputs:
         # There should be a result for 1 task that finish successfully
         assert len(result) == 1
         assert result["invocation-0-task-make-greeting-message"] == (
-            "hello, alex zapata!there",
+            "hello, alex zapata!there"
         )
 
 
