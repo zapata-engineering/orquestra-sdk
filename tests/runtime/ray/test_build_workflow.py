@@ -226,8 +226,8 @@ class TestArgumentUnwrapper:
             )
             arg_unwrapper = _build_workflow.ArgumentUnwrapper(
                 user_fn=fn,
-                args_metadata={},
-                kwargs_metadata={},
+                args_artifact_nodes={},
+                kwargs_artifact_nodes={},
                 deserialize=True,
             )
 
@@ -246,8 +246,8 @@ class TestArgumentUnwrapper:
             )
             arg_unwrapper = _build_workflow.ArgumentUnwrapper(
                 user_fn=fn,
-                args_metadata={},
-                kwargs_metadata={},
+                args_artifact_nodes={},
+                kwargs_artifact_nodes={},
                 deserialize=False,
             )
 
@@ -267,8 +267,8 @@ class TestArgumentUnwrapper:
             secret_node = ir.SecretNode(id="mocked", secret_name="mocked")
             arg_unwrapper = _build_workflow.ArgumentUnwrapper(
                 user_fn=fn,
-                args_metadata={},
-                kwargs_metadata={},
+                args_artifact_nodes={},
+                kwargs_artifact_nodes={},
                 deserialize=True,
             )
 
@@ -287,8 +287,8 @@ class TestArgumentUnwrapper:
             secret_node = ir.SecretNode(id="mocked", secret_name="mocked")
             arg_unwrapper = _build_workflow.ArgumentUnwrapper(
                 user_fn=fn,
-                args_metadata={},
-                kwargs_metadata={},
+                args_artifact_nodes={},
+                kwargs_artifact_nodes={},
                 deserialize=False,
             )
 
@@ -301,7 +301,7 @@ class TestArgumentUnwrapper:
 
     class TestUnrwapArtifact:
         @pytest.fixture
-        def args_metadata(self):
+        def args_artifact_nodes(self):
             return {
                 0: ir.ArtifactNode(id="mocked"),
                 1: ir.ArtifactNode(id="mocked", artifact_index=0),
@@ -309,7 +309,7 @@ class TestArgumentUnwrapper:
             }
 
         @pytest.fixture
-        def kwargs_metadata(self):
+        def kwargs_artifact_nodes(self):
             return {
                 "a": ir.ArtifactNode(id="mocked"),
                 "b": ir.ArtifactNode(id="mocked", artifact_index=0),
@@ -332,11 +332,11 @@ class TestArgumentUnwrapper:
             )
 
         def test_positional(
-            self, mock_deserialize, args_metadata, task_result, packed, unpacked
+            self, mock_deserialize, args_artifact_nodes, task_result, packed, unpacked
         ):
             fn = Mock()
             arg_unwrapper = _build_workflow.ArgumentUnwrapper(
-                fn, args_metadata, {}, True
+                fn, args_artifact_nodes, {}, True
             )
             _ = arg_unwrapper(task_result, task_result, task_result)
 
@@ -344,11 +344,11 @@ class TestArgumentUnwrapper:
             mock_deserialize.assert_has_calls(calls)
 
         def test_kwargs(
-            self, mock_deserialize, kwargs_metadata, task_result, packed, unpacked
+            self, mock_deserialize, kwargs_artifact_nodes, task_result, packed, unpacked
         ):
             fn = Mock()
             arg_unwrapper = _build_workflow.ArgumentUnwrapper(
-                fn, {}, kwargs_metadata, True
+                fn, {}, kwargs_artifact_nodes, True
             )
             _ = arg_unwrapper(a=task_result, b=task_result, c=task_result)
 
