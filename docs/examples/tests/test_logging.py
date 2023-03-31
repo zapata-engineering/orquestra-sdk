@@ -27,7 +27,7 @@ class Snippets:
             wfprint("Another good way to use raw prints from a workflow!")
 
         # </snippet>
-        say_hello._TaskDef__sdk_task_body()
+        say_hello.fn()
 
     @staticmethod
     def test_logging_execution():

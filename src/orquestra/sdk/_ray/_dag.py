@@ -64,7 +64,7 @@ def _locate_user_fn(fn_ref: ir.FunctionRef):
     # dsl.task() wraps a callable in a TaskDef object. We need to locate the
     # underlying user function, not the Task object.
     try:
-        return obj._TaskDef__sdk_task_body
+        return obj.fn
     except AttributeError:
         return obj
 
