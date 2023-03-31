@@ -185,6 +185,8 @@ def task_no_source():
 def test_task_no_linenumber_if_source_inaccessible():
     task_no_source.__code__ = task_no_source.__code__.replace(co_filename="fake")
     local_task = _dsl.task(task_no_source)
+    local_task.resolve_source_import(_dsl.InlineImport())
+    local_task.resolve_fn_ref()
     assert isinstance(local_task.fn_ref, _dsl.ModuleFunctionRef)
     assert local_task.fn_ref.line_number is None
 
@@ -197,7 +199,7 @@ def test_external_file_task_calling():
         n_outputs=1,
     )
     with pytest.raises(ValueError):
-        external_task._TaskDef__sdk_task_body()
+        external_task.fn()
 
 
 def test_external_module_task_calling():
@@ -208,7 +210,7 @@ def test_external_module_task_calling():
         n_outputs=1,
     )
     with pytest.raises(ValueError):
-        external_task._TaskDef__sdk_task_body()
+        external_task.fn()
 
 
 @pytest.mark.parametrize("num_outputs", [1, 100, 2])
@@ -372,18 +374,6 @@ def test_task_with_default_image():
 
     hello = _local_task()
     assert hello.invocation.task.custom_image == _dsl.DEFAULT_IMAGE
-
-
-class TestModelsSerializeProperly:
-    """The properties are Pydantic models. They would raise ValidationError if the
-    serialization went wrong.
-    """
-
-    def test_task_model(self):
-        _an_empty_task.model
-
-    def test_task_import_models(self):
-        _an_empty_task.import_models
 
 
 @pytest.fixture

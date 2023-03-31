@@ -72,10 +72,8 @@ def _gen_id_hash(*args):
     return shake.hexdigest(5)
 
 
-def _make_artifact_id(source_task: model.TaskDef, future_index: int):
-    return _qe_compliant_name(
-        f"artifact-{future_index}-{source_task.fn_ref.function_name}"
-    )
+def _make_artifact_id(source_task: _dsl.TaskDef, future_index: int):
+    return _qe_compliant_name(f"artifact-{future_index}-{source_task.fn_name}")
 
 
 GraphNode = t.Union[_dsl.ArtifactFuture, _dsl.Constant, _dsl.Secret]
@@ -491,7 +489,7 @@ def _make_constant_node(
     except (TypeError, ValueError, NotImplementedError):
         futures = _find_futures_in_container(constant_value)
         task_fn_names = ", ".join(
-            {f"`{fut.invocation.task.fn_ref.function_name}()`" for fut in futures}
+            {f"`{fut.invocation.task.fn_name}()`" for fut in futures}
         )
         if task_fn_names:
             raise exceptions.WorkflowSyntaxError(
@@ -588,16 +586,6 @@ def get_model_from_task_def(task_def: _dsl.TaskDef) -> model.TaskDef:
     """Returns an IR TaskDef from an SDK TaskDef"""
     imports_dict = _get_imports_from_task_def(task_def)
     return _make_task_model(task_def, imports_dict)
-
-
-def get_model_imports_from_task_def(task_def: _dsl.TaskDef) -> t.List[model.Import]:
-    """Returns the IR Imports a SDK TaskDef requires
-    Args:
-        task_def: dsl.TaskDef
-    Returns:
-        A list of model.Import objects the task requires
-    """
-    return list(_get_imports_from_task_def(task_def).values())
 
 
 def flatten_graph(

@@ -360,7 +360,7 @@ def parse_custom_name(
     format_dict = {}
     for ph in placeholders:
         if isinstance(signature.arguments[ph], ArtifactFuture):
-            fnc = signature.arguments[ph].invocation.task.fn_ref.function_name
+            fnc = signature.arguments[ph].invocation.task.fn_name
             format_dict[ph] = replacement_string.format(fnc)
             warnings.warn(
                 "Custom name contains placeholder with value"
@@ -389,8 +389,8 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
     def __init__(
         self,
         fn: Callable[_P, _R],
-        source_import: Optional[Import],
         output_metadata: TaskOutputMetadata,
+        source_import: Optional[Import] = None,
         parameters: Optional[OrderedDict] = None,
         dependency_imports: Optional[Tuple[Import, ...]] = None,
         resources: Resources = Resources(),
@@ -401,7 +401,8 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
         if isinstance(fn, BuiltinFunctionType):
             raise NotImplementedError("Built-in functions are not supported as Tasks")
         super(TaskDef, self).__init__(fn)
-        self.__sdk_task_body = fn
+        self.fn = fn
+        self.fn_name = fn.__name__
         self.fn_ref = fn_ref
         self.source_import = source_import
         self.output_metadata = output_metadata
@@ -428,23 +429,23 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
     def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         # In case of local run the workflow is executed as a python script
         if DIRECT_EXECUTION:
-            return self.__sdk_task_body(*args, **kwargs)
+            return self.fn(*args, **kwargs)
         if (
             not isinstance(self.source_import, InlineImport)
             and isinstance(self.fn_ref, ModuleFunctionRef)
             and self.fn_ref.module == "__main__"
         ):
             err = (
-                f"function {self.fn_ref.function_name} is defined inside __main__ "
+                f"function {self.fn_name} is defined inside __main__ "
                 "module. Please move task function to different file and import, "
                 "it or mark this task function as inline import \n\n"
                 "example: \n"
                 "@sdk.task(source_import=sdk.InlineImport())\n"
-                f"def {self.fn_ref.function_name}(): ..."
+                f"def {self.fn_name}(): ..."
             )
             raise InvalidTaskDefinitionError(err)
         try:
-            signature = inspect.signature(self.__sdk_task_body).bind(*args, **kwargs)
+            signature = inspect.signature(self.fn).bind(*args, **kwargs)
         except TypeError as exc:
             # Check if an error is generated when the args and kwargs of the task call
             # are bonded to the args and kwargs of the task function.
@@ -461,7 +462,7 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
             missing_self_arg = r".*(missing a required argument:)[^a-zA-Z\d]*(self).*"
             if re.match(missing_self_arg, str(exc)):
                 error_message = (
-                    f"The task {self.fn_ref.function_name} seems to be a method, if so"
+                    f"The task {self.fn_name} seems to be a method, if so"
                     " modify it to not be a method.\n"
                 ) + error_message
             raise WorkflowSyntaxError(error_message) from exc
@@ -480,31 +481,7 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
             ),
         )
 
-    @property
-    def model(self) -> ir.TaskDef:
-        """Serializable form of the task def (intermediate representation).
-
-        returns:
-            Pydantic model.
-        """
-        # hack for circular imports
-        from orquestra.sdk._base import _traversal
-
-        return _traversal.get_model_from_task_def(self)
-
-    @property
-    def import_models(self) -> List[ir.Import]:
-        """All Orquestra Imports required by this task, in a serializable form.
-
-        returns:
-            Pydantic models.
-        """
-        # hack for circular imports
-        from orquestra.sdk._base import _traversal
-
-        return _traversal.get_model_imports_from_task_def(self)
-
-    def resolve_source_import(self, wf_default_source_import: Optional[Import]):
+    def resolve_source_import(self, wf_default_source_import: Optional[Import] = None):
         # if user set source import explicitly, do nothing
         if self.source_import is not None:
             return
@@ -518,7 +495,7 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
             self.source_import = LocalImport(module=self.fn.__module__)
 
     def resolve_dependency_imports(
-        self, wf_default_dependency_imports: Optional[Iterable[Import]]
+        self, wf_default_dependency_imports: Optional[Iterable[Import]] = None
     ):
         # if user set imports explicitly, do nothing
         if self.dependency_imports is not None:
@@ -530,7 +507,7 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
     def resolve_fn_ref(self):
         # resolve fn_ref is based on task source import. If user doesnt pass it,
         # resolve_source_import should set it
-        assert self.source_import
+        assert self.source_import is not None
         self.fn_ref = (
             InlineFunctionRef(self.fn.__name__, self.fn)
             if isinstance(self.source_import, InlineImport)
@@ -701,7 +678,7 @@ class ArtifactFuture:
             custom_image: docker image used to run the task invocation
         """
         self._check_if_destructured(
-            fn_name=self.invocation.task.fn_ref.function_name,
+            fn_name=self.invocation.task.fn_name,
             assign_type="invocation metadata",
         )
 
@@ -765,7 +742,7 @@ class ArtifactFuture:
             gpu: amount of gpu assigned to the task invocation
         """
         self._check_if_destructured(
-            fn_name=self.invocation.task.fn_ref.function_name,
+            fn_name=self.invocation.task.fn_name,
             assign_type="resources",
         )
 
@@ -789,7 +766,7 @@ class ArtifactFuture:
             custom_image: docker image used to run the task invocation
         """
         self._check_if_destructured(
-            fn_name=self.invocation.task.fn_ref.function_name,
+            fn_name=self.invocation.task.fn_name,
             assign_type="custom image",
         )
 

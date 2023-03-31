@@ -186,7 +186,7 @@ class TestSecrets:
 
         # When
         task_def = Snippets.get_secret_from_task()
-        task_def._TaskDef__sdk_task_body()
+        task_def.fn()
 
         # Then
         captured = capsys.readouterr()

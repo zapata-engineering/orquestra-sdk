@@ -610,19 +610,6 @@ class ContextManager(t.Protocol):
     ids=_id_from_wf,
 )
 class TestWorkflowsTasksProperties:
-    def test_wf_contains_task_ids(
-        self,
-        workflow_template: _workflow.WorkflowTemplate,
-        task_defs: t.Sequence[_dsl.TaskDef],
-        outputs: t.List,
-        expectation: ContextManager,
-    ):
-        with expectation:
-            wf_model = workflow_template.model
-            for task_def in task_defs:
-                task_model = task_def.model
-                assert task_model.id in wf_model.tasks
-
     def test_wf_imports_are_task_imports(
         self,
         workflow_template: _workflow.WorkflowTemplate,
@@ -644,15 +631,7 @@ class TestWorkflowsTasksProperties:
                 ]
             }
 
-            # refers to tasks passed to the test case manually
-            task_import_ids_manual = {
-                import_model.id
-                for task_def in task_defs
-                for import_model in task_def.import_models
-            }
-
             assert task_import_ids_embedded == wf_import_ids
-            assert task_import_ids_manual == wf_import_ids
 
     def test_task_ids_match_invocations(
         self,
@@ -934,35 +913,6 @@ PYTHON_IMPORTS_FROM_REQS = [
         pip_options=[],
     ),
 ]
-
-
-@pytest.mark.parametrize(
-    "task_def, expected_imports",
-    [
-        (capitalize, CAPITALIZE_IMPORTS),
-        (git_task, GIT_TASK_IMPORTS),
-        (generate_graph, GENERATE_GRAPH_IMPORTS),
-        (capitalize_infer, CAPITALIZE_IMPORTS_INFER),
-        (capitalize_inline, CAPITALIZE_IMPORTS_INLINE),
-        (python_imports_manual, PYTHON_IMPORTS_MANUAL),
-        (python_imports_from_requirements, PYTHON_IMPORTS_FROM_REQS),
-    ],
-)
-def test_get_model_imports_from_task_def(monkeypatch, task_def, expected_imports):
-    # Dont fetch repo in unit tests
-    def fake_fetch(_):
-        pass
-
-    # Dont raise errors about dirty repo in unit tests
-    def fake_is_dirty(_):
-        return False
-
-    monkeypatch.setattr(git.remote.Remote, "fetch", fake_fetch)
-    monkeypatch.setattr(git.Repo, "is_dirty", fake_is_dirty)
-    imports = [
-        imp.dict() for imp in _traversal.get_model_imports_from_task_def(task_def)
-    ]
-    assert imports == [imp.dict() for imp in expected_imports]
 
 
 @pytest.mark.parametrize(

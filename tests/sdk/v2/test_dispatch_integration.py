@@ -167,7 +167,7 @@ class TestModuleCaching:
 
         # Verify that the import was faked.
         with pytest.raises(RuntimeError):
-            _ = module_with_fakes.capitalize_task._TaskDef__sdk_task_body("hello")
+            _ = module_with_fakes.capitalize_task.fn("hello")
 
         # 2. Simulate loading the module to execute the function like a Runtime would.
         dispatch.ensure_sys_paths([self.project_dir])
@@ -181,4 +181,4 @@ class TestModuleCaching:
         assert isinstance(fn, _dsl.TaskDef)
         # If this doesn't raise, we're good. It would raise a RuntimeError if
         # the module with fakes was cached.
-        assert fn._TaskDef__sdk_task_body("hello") == "Hello"
+        assert fn.fn("hello") == "Hello"

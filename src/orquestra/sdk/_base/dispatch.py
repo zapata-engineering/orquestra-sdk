@@ -215,7 +215,7 @@ def exec_task_fn(
     # dsl.task() wraps a callable in a Task object. We need to call the
     # underlying function, not the Task object.
     try:
-        fn = callable._TaskDef__sdk_task_body
+        fn = callable.fn
     except AttributeError:
         fn = callable
 

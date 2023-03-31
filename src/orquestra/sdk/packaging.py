@@ -97,4 +97,4 @@ def execute_task(task: TaskDef, args, kwargs) -> Any:
     Returns:
         the result of executing a task
     """
-    return task._TaskDef__sdk_task_body(*args, **kwargs)
+    return task.fn(*args, **kwargs)

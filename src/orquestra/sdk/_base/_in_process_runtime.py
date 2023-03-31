@@ -115,7 +115,7 @@ class InProcessRuntime(abc.RuntimeInterface):
 
             # Next, the task is executed with the args/kwargs
             try:
-                fn = task_fn._TaskDef__sdk_task_body
+                fn = task_fn.fn
             except AttributeError:
                 fn = task_fn
             fn_output = fn(*args, **kwargs)
