@@ -394,8 +394,7 @@ def make_ray_dag(
                     "Data Aggregation step failed. It might be caused by the return "
                     "object being dependent on task-scope installed library. Please "
                     "return objects that are available for the interpreter. "
-                    f"Original exception: {err}"
-                )
+                ) from err
             else:
                 raise err
         else:
