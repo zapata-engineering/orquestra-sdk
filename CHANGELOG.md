@@ -28,6 +28,8 @@ If task defines its own imports (either source, dependencies or both) - it will 
 🥷 *Internal*
 * During YAML conversion, Workflow SDK repo matched on host and path, not full URL.
 * On QE, Github URLs will be converted to SSH URLs.
+* Removed `corq` code.
+* Old `RuntimeInterface` methods have been removed.
 
 
 📃 *Docs*
@@ -45,6 +47,7 @@ If task defines its own imports (either source, dependencies or both) - it will 
 
 🔥 *Features*
 * Use the requested resources from a workflow's tasks when submitting to CE
+* CE runtime now supports getting logs from remote Ray runtimes.
 
 
 🥷 *Internal*

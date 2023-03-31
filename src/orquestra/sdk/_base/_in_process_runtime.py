@@ -140,13 +140,10 @@ class InProcessRuntime(abc.RuntimeInterface):
         self._workflow_def_store[run_id] = workflow_def
         return run_id
 
-    def get_workflow_run_outputs(self, workflow_run_id: WfRunId) -> t.Sequence[t.Any]:
-        return self._output_store[workflow_run_id]
-
     def get_workflow_run_outputs_non_blocking(
         self, workflow_run_id: WfRunId
     ) -> t.Sequence[t.Any]:
-        return self.get_workflow_run_outputs(workflow_run_id)
+        return self._output_store[workflow_run_id]
 
     def get_available_outputs(
         self, workflow_run_id: WfRunId
@@ -260,11 +257,6 @@ class InProcessRuntime(abc.RuntimeInterface):
 
     @classmethod
     def from_runtime_configuration(cls, *args, **kwargs):
-        raise NotImplementedError(
-            "This functionality isn't available for 'in_process' runtime"
-        )
-
-    def get_all_workflow_runs_status(self, *args, **kwargs):
         raise NotImplementedError(
             "This functionality isn't available for 'in_process' runtime"
         )
