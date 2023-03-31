@@ -13,19 +13,17 @@ import re
 import sys
 import typing as t
 import warnings
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 from functools import singledispatch
 
 from packaging.version import parse as parse_version
 from pip_api import Requirement
 
-import orquestra.sdk.schema.ir as model
-from orquestra.sdk.exceptions import NodesInTaskResourcesWarning
-from orquestra.sdk.schema import responses
+from orquestra.sdk.schema import ir, responses
 
 from .. import exceptions
 from ..packaging import get_installed_version
-from . import _dsl, _git_url_utils, _workflow, serde
+from . import _dsl, _exec_ctx, _git_url_utils, _workflow, serde
 
 N_BYTES_IN_HASH = 8
 
@@ -74,41 +72,191 @@ def _gen_id_hash(*args):
     return shake.hexdigest(5)
 
 
-def _make_artifact_id(source_task: _dsl.TaskDef, future_index: int):
-    return _qe_compliant_name(f"artifact-{future_index}-{source_task._fn_name}")
+def _make_artifact_id(source_task: _dsl.TaskDef, wf_scoped_artifact_index: int):
+    return _qe_compliant_name(
+        f"artifact-{wf_scoped_artifact_index}-{source_task._fn_name}"
+    )
 
 
-GraphNode = t.Union[_dsl.ArtifactFuture, _dsl.Constant, _dsl.Secret]
+# DSL object that represents a data node in the workflow graph. Data nodes are
+# constants, secrets, artifact futures, but not task invocations.
+DSLDataNode = _dsl.Argument
 
 
 class GraphTraversal:
     def __init__(self):
-        self._artifacts = {}
-        self._invocations = {}
-        self._secrets = {}
-        self._constants = {}
+        self._secrets: t.MutableMapping[t.Hashable, ir.SecretNode] = {}
+        self._constants: t.MutableMapping[t.Hashable, ir.ConstantNode] = {}
 
-    def traverse(self, root_futures: t.Sequence[GraphNode]):
+        # Running a task invocation results in values. The values are stored in
+        # artifacts. Some of the values can be subscripted. Some of the values
+        # can be left unused.
+        #
+        # If the task output is substritable, an invocation of an n-output task produces
+        # n+1 artifacts: one for each subscripted output and one for non-subscripted
+        # output.
+        #
+        # If the task output is not substriptable, an invocation produces one artifact.
+        #
+        # Use case example:
+        # foo = task()
+        # bar, baz, _ = foo
+        # qux = task2(bar)
+        # bla = task2(bar)
+        #
+        # In the example above, there are:
+        # - 3 task invocations ("task()", "task2(bar)", and "task2(bar)")
+        # - 5 futures ("foo", "bar", "baz", "qux", "bla")
+        # - 6 artifacts:
+        #     - 3 unpacked outputs "bar", "baz", "_"
+        #     - 3 non-unpacked outputs "foo", "qux", "bla"
+
+        # Each future points to an artifact. This field to powers "self.get_node_id()".
+        self._future_artifacts: t.MutableMapping[
+            _dsl.ArtifactFuture, ir.ArtifactNode
+        ] = {}
+
+        # Artifacts for "bar" and "baz" in the example above. This field powers
+        # "self.artifacts". We need it in addition to "self._future_artifacts" because
+        # some artifact nodes can be not referenced in the workflow function ("_" in
+        # the example above).
+        self._invocation_unpacked_artifacts: t.MutableMapping[
+            _dsl.TaskInvocation, t.MutableSequence[ir.ArtifactNode]
+        ] = {}
+
+        # Artifacts for "foo" in the example above. This field powers "self.artifacts".
+        # We need it in addition to "self._invocation_unpacked_artifacts" because of
+        # "foo" in the example above.
+        self._invocation_non_unpacked_artifacts: t.MutableMapping[
+            _dsl.TaskInvocation, ir.ArtifactNode
+        ] = {}
+
+        # Needed to generate workflow-def-scoped artifact IDs.
+        self._wf_artifact_counter = 0
+
+    def _point_future_to_artifact(self, future: _dsl.ArtifactFuture):
         """
-        Traverse the workflow graph.
+        Helper subroutine used in ``traverse()``. Mutates ``self._future_artifacts`` to
+        point ``future`` to an already generated artifact node.
+        """
+        if future.output_index is not None:
+            # This future is a result of unpacking another future ("bar"
+            # and "baz" in the example above).
+            self._future_artifacts[future] = self._invocation_unpacked_artifacts[
+                future.invocation
+            ][future.output_index]
+        else:
+            # This future is non-unpacked output ("foo" in the example
+            # above).
+            self._future_artifacts[future] = self._invocation_non_unpacked_artifacts[
+                future.invocation
+            ]
+
+    def _gen_artifact(
+        self,
+        task_def: _dsl.TaskDef,
+        custom_name: t.Optional[str],
+        format: ir.ArtifactFormat,
+        invocation_output_index: t.Optional[int],
+    ) -> ir.ArtifactNode:
+        """
+        Creates artifact node models with workflow-def-scoped IDs.
+        """
+        artifact = ir.ArtifactNode(
+            id=_make_artifact_id(
+                source_task=task_def,
+                wf_scoped_artifact_index=self._wf_artifact_counter,
+            ),
+            custom_name=custom_name,
+            serialization_format=format,
+            artifact_index=invocation_output_index,
+        )
+        self._wf_artifact_counter += 1
+
+        return artifact
+
+    def traverse(self, output_nodes: t.Sequence[DSLDataNode]):
+        """
+        Traverse the DSL workflow graph and collect the IR models.
 
         We iterate over the futures returned from the workflow find the artifacts,
         constants, and secrets.
         """
-        artifact_counter = 0
         secret_counter = 0
         constant_counter = 0
-        for n in _iter_nodes(root_futures):
+
+        seen_futures: t.MutableSet[_dsl.ArtifactFuture] = set()
+        seen_invocations: t.MutableSet[_dsl.TaskInvocation] = set()
+
+        for n in _iter_nodes(output_nodes):
             if isinstance(n, _dsl.ArtifactFuture):
-                self._artifacts[_make_key(n)] = _make_artifact_node(artifact_counter, n)
-                artifact_counter += 1
-                # Map the invocation to the future.
-                # Note: Each unique future has one invocation, but each invocation
-                #       can have many Futures.
-                #       We're mapping `invocation: set(futures from invocation)`
-                self._invocations.setdefault(n.invocation, set()).add(n)
+                # The main point of handling artifact futures is to populate:
+                # - self._future_artifacts
+                # - self._invocation_unpacked_artifacts
+                # - self._invocation_non_unpacked_artifacts
+
+                # A single future can be used in multiple places in the workflow. We
+                # only want to handle it once.
+                if n in seen_futures:
+                    continue
+
+                out_meta = n.invocation.task._output_metadata
+
+                # There can be many futures requiring to run the same task invocation.
+                if n.invocation in seen_invocations:
+                    # We've already handled the invocation, but not this future. We're
+                    # supposed to have artifact nodes already generated for it. We just
+                    # need to point "self._future_artifacts" to it.
+
+                    if out_meta.is_subscriptable:
+                        assert n.invocation in self._invocation_unpacked_artifacts
+
+                    assert n.invocation in self._invocation_non_unpacked_artifacts
+
+                    self._point_future_to_artifact(n)
+                else:
+                    # We haven't seen the invocation and haven't seen the future. We'll
+                    # have to generate artifact nodes before we can point
+                    # "self._future_artifacts" to it.
+
+                    if out_meta.is_subscriptable:
+                        # Generate artifact nodes for unpacking ("bar" and "baz" in the
+                        # example above).
+                        unpacked_artifacts = []
+                        for output_i in range(out_meta.n_outputs):
+                            default_format = ir.ArtifactFormat(
+                                _dsl.ArtifactFuture.DEFAULT_SERIALIZATION_FORMAT.value
+                            )
+                            artifact = self._gen_artifact(
+                                task_def=n.invocation.task,
+                                custom_name=_dsl.ArtifactFuture.DEFAULT_CUSTOM_NAME,
+                                format=default_format,
+                                invocation_output_index=output_i,
+                            )
+                            unpacked_artifacts.append(artifact)
+                        self._invocation_unpacked_artifacts[
+                            n.invocation
+                        ] = unpacked_artifacts
+
+                    # Generate artifact node for non-unpacked use ("foo", "qux", "bla"
+                    # in the example above).
+                    artifact = self._gen_artifact(
+                        task_def=n.invocation.task,
+                        custom_name=n.custom_name,
+                        format=ir.ArtifactFormat(n.serialization_format.value),
+                        invocation_output_index=None,
+                    )
+
+                    self._invocation_non_unpacked_artifacts[n.invocation] = artifact
+
+                    self._point_future_to_artifact(n)
+
+                # due dilligence
+                seen_futures.add(n)
+                seen_invocations.add(n.invocation)
+
             elif isinstance(n, _dsl.Secret):
-                self._secrets[_make_key(n)] = model.SecretNode(
+                self._secrets[_make_key(n)] = ir.SecretNode(
                     id=f"secret-{secret_counter}",
                     secret_name=n.name,
                     secret_config=n.config_name,
@@ -119,39 +267,62 @@ class GraphTraversal:
                 constant_counter += 1
 
     @property
-    def artifacts(self):
-        return self._artifacts
+    def artifacts(self) -> t.Iterable[ir.ArtifactNode]:
+        # Collect unpacked artifacts
+        unpacked = (
+            artifact
+            for artifacts in self._invocation_unpacked_artifacts.values()
+            for artifact in artifacts
+        )
+        # Collect non-unpacked artifacts
+        non_unpacked = self._invocation_non_unpacked_artifacts.values()
+
+        return (*unpacked, *non_unpacked)
 
     @property
-    def constants(self):
-        return self._constants
+    def constants(self) -> t.Iterable[ir.ConstantNode]:
+        return self._constants.values()
 
     @property
-    def invocations(self):
-        return self._invocations
+    def invocations(self) -> t.Iterable[_dsl.TaskInvocation]:
+        # Every seen invocation has a non-unpacked artifact so we can use this field.
+        return self._invocation_non_unpacked_artifacts.keys()
 
-    @property
-    def secrets(self):
-        return self._secrets
-
-    def get_argument_id(self, node: GraphNode):
-        return self[node].id
-
-    def __getitem__(self, node: GraphNode):
-        key = _make_key(node)
-        if key in self._artifacts:
-            return self._artifacts[key]
-        elif key in self._secrets:
-            return self._secrets[key]
-        elif key in self._constants:
-            return self._constants[key]
+    def output_ids_for_invocation(
+        self, invocation: _dsl.TaskInvocation
+    ) -> t.Sequence[ir.ArtifactNodeId]:
+        # Collect unpacked artifacts (a sequence)
+        unpacked: t.Iterable[ir.ArtifactNode]
+        if invocation.task._output_metadata.is_subscriptable:
+            unpacked = (
+                artifact for artifact in self._invocation_unpacked_artifacts[invocation]
+            )
         else:
-            # In normal circumstances, this should never happen
-            raise KeyError(node)  # pragma: no cover
+            unpacked = []
+
+        # Get the non-unpacked artifact (a single one)
+        non_unpacked = self._invocation_non_unpacked_artifacts[invocation]
+
+        return [artifact.id for artifact in (*unpacked, non_unpacked)]
+
+    @property
+    def secrets(self) -> t.Iterable[ir.SecretNode]:
+        return self._secrets.values()
+
+    def get_node_id(self, node: DSLDataNode) -> ir.ArgumentId:
+        key = _make_key(node)
+
+        if isinstance(node, _dsl.ArtifactFuture):
+            return self._future_artifacts[node].id
+
+        elif isinstance(node, _dsl.Secret):
+            return self._secrets[key].id
+        else:
+            return self._constants[key].id
 
 
 def _iter_nodes(
-    root_futures: t.Sequence[GraphNode],
+    root_futures: t.Sequence[DSLDataNode],
 ) -> t.Iterator[t.Union[_dsl.ArtifactFuture, _dsl.Constant]]:
     traversal_list = [*root_futures]
     traversed_nodes = set()
@@ -216,11 +387,11 @@ def _make_import_model(imp: _dsl.Import):
     id_ = _make_import_id(imp, import_hash)
 
     if isinstance(imp, _dsl.LocalImport):
-        return model.LocalImport(
+        return ir.LocalImport(
             id=id_,
         )
     elif isinstance(imp, _dsl.GitImport):
-        return model.GitImport(
+        return ir.GitImport(
             id=id_,
             repo_url=imp.repo_url,
             git_ref=imp.git_ref,
@@ -229,31 +400,31 @@ def _make_import_model(imp: _dsl.Import):
         url = _git_url_utils.parse_git_url(imp.repo_url)
         url.user = imp.username
         if imp.auth_secret is not None:
-            url.password = model.SecretNode(
+            url.password = ir.SecretNode(
                 id=f"secret-{id_}",
                 secret_name=imp.auth_secret.name,
                 secret_config=imp.auth_secret.config_name,
             )
-        return model.GitImport(
+        return ir.GitImport(
             id=id_,
             repo_url=url,
             git_ref=imp.git_ref,
         )
     elif isinstance(imp, _dsl.InlineImport):
-        return model.InlineImport(id=id_)
+        return ir.InlineImport(id=id_)
 
     elif isinstance(imp, _dsl.PythonImports):
         reqs: t.List[Requirement] = imp.resolved()
         deps = []
         for req in reqs:
-            x = model.PackageSpec(
+            x = ir.PackageSpec(
                 name=req.name,
                 extras=sorted(list(req.extras)),
                 version_constraints=sorted([str(spec) for spec in req.specifier]),
                 environment_markers=str(req.marker) if req.marker else "",
             )
             deps.append(x)
-        return model.PythonImports(id=id_, packages=deps, pip_options=[])
+        return ir.PythonImports(id=id_, packages=deps, pip_options=[])
 
     else:
         raise ValueError(f"Invalid DSL import type: {type(imp)}")
@@ -272,7 +443,7 @@ def _make_resources_model(resources: _dsl.Resources, is_task=True):
 
     if is_task and resources.nodes is not None:
         warnings.warn(
-            NodesInTaskResourcesWarning(
+            exceptions.NodesInTaskResourcesWarning(
                 "Tasks currently do not support the nodes resource."
             )
         )
@@ -280,7 +451,7 @@ def _make_resources_model(resources: _dsl.Resources, is_task=True):
     else:
         nodes = resources.nodes
 
-    return model.Resources(
+    return ir.Resources(
         cpu=resources.cpu,
         memory=resources.memory,
         disk=resources.disk,
@@ -290,7 +461,7 @@ def _make_resources_model(resources: _dsl.Resources, is_task=True):
 
 
 def _make_data_aggregation_model(data_aggregation: _dsl.DataAggregation):
-    return model.DataAggregation(
+    return ir.DataAggregation(
         run=data_aggregation.run,
         resources=_make_resources_model(data_aggregation.resources),
     )
@@ -319,23 +490,23 @@ def _make_task_id(fn_name, suffix):
 def _make_parameters(parameters: t.Optional[OrderedDict]):
     if parameters is not None:
         return [
-            model.TaskParameter(name=p.name, kind=model.ParameterKind[p.kind.value])
+            ir.TaskParameter(name=p.name, kind=ir.ParameterKind[p.kind.value])
             for p in parameters.values()
         ]
     else:
         return None
 
 
-def _make_fn_ref(fn_ref: _dsl.FunctionRef) -> model.FunctionRef:
+def _make_fn_ref(fn_ref: _dsl.FunctionRef) -> ir.FunctionRef:
     if isinstance(fn_ref, _dsl.ModuleFunctionRef):
-        return model.ModuleFunctionRef(
+        return ir.ModuleFunctionRef(
             module=fn_ref.module,
             function_name=fn_ref.function_name,
             file_path=fn_ref.file_path,
             line_number=fn_ref.line_number,
         )
     elif isinstance(fn_ref, _dsl.FileFunctionRef):
-        return model.FileFunctionRef(
+        return ir.FileFunctionRef(
             file_path=fn_ref.file_path,
             function_name=fn_ref.function_name,
             line_number=fn_ref.line_number,
@@ -344,7 +515,7 @@ def _make_fn_ref(fn_ref: _dsl.FunctionRef) -> model.FunctionRef:
         module = inspect.getmodule(fn_ref.fn)
         with serde.registered_module(module):
             encoded_fn = serde.serialize_pickle(fn_ref.fn)
-        return model.InlineFunctionRef(
+        return ir.InlineFunctionRef(
             function_name=fn_ref.function_name,
             encoded_function=encoded_fn,
         )
@@ -354,8 +525,8 @@ def _make_fn_ref(fn_ref: _dsl.FunctionRef) -> model.FunctionRef:
 
 def _make_task_model(
     task: _dsl.TaskDef,
-    imports_dict: t.Dict[_dsl.Import, model.Import],
-) -> model.TaskDef:
+    imports_dict: t.Dict[_dsl.Import, ir.Import],
+) -> ir.TaskDef:
     # fn_ref and source_imports are completely resolved during
     # creation of import_models_dict. At this point every task should have
     # those variables set - and they are needed to make task model
@@ -366,7 +537,7 @@ def _make_task_model(
 
     source_import = imports_dict[task._source_import]
 
-    dependency_import_ids: t.Optional[t.List[model.ImportId]]
+    dependency_import_ids: t.Optional[t.List[ir.ImportId]]
     if task._dependency_imports is not None:
         # We need to keep track of the seen dependencies so we don't include duplicates.
         # Why don't we use a set? We currently treat the source_import separately and
@@ -392,31 +563,21 @@ def _make_task_model(
         parameters,
     )
 
-    return model.TaskDef(
+    return ir.TaskDef(
         id=_make_task_id(
             task.__name__,
             task_contents_hash,
         ),
         fn_ref=fn_ref_model,
+        output_metadata=ir.TaskOutputMetadata(
+            is_subscriptable=task._output_metadata.is_subscriptable,
+            n_outputs=task._output_metadata.n_outputs,
+        ),
         source_import_id=source_import.id,
         dependency_import_ids=dependency_import_ids,
         resources=resources,
         parameters=parameters,
         custom_image=task._custom_image,
-    )
-
-
-def _make_artifact_node(
-    future_index: int, future: _dsl.ArtifactFuture
-) -> model.ArtifactNode:
-    return model.ArtifactNode(
-        id=_make_artifact_id(
-            source_task=future.invocation.task,
-            future_index=future_index,
-        ),
-        custom_name=future.custom_name,
-        serialization_format=model.ArtifactFormat(future.serialization_format.value),
-        artifact_index=future.output_index,
     )
 
 
@@ -488,7 +649,7 @@ def _preview_constant(constant: _dsl.Constant):
 
 def _make_constant_node(
     constant_index: int, constant_value: _dsl.Constant
-) -> model.ConstantNode:
+) -> ir.ConstantNode:
     if isinstance(constant_value, _dsl.TaskDef):
         raise exceptions.WorkflowSyntaxError(
             f"`{constant_value.__name__}` is a task definition and should be called "
@@ -502,7 +663,7 @@ def _make_constant_node(
         # - orquestra.sdk.schema.ir.ConstantNode
         # - orquestra.sdk.schema.responses.JSONResult
         # - orquestra.sdk.schema.responses.PickleResult
-        result = serde.result_from_artifact(constant_value, model.ArtifactFormat.AUTO)
+        result = serde.result_from_artifact(constant_value, ir.ArtifactFormat.AUTO)
     except (TypeError, ValueError, NotImplementedError):
         futures = _find_futures_in_container(constant_value)
         task_fn_names = ", ".join(
@@ -524,14 +685,14 @@ def _make_constant_node(
             )
 
     if isinstance(result, responses.JSONResult):
-        return model.ConstantNodeJSON(
+        return ir.ConstantNodeJSON(
             id=f"constant-{constant_index}",
             value=result.value,
             value_preview=_preview_constant(constant_value),
             serialization_format=result.serialization_format,
         )
     elif isinstance(result, responses.PickleResult):
-        return model.ConstantNodePickle(
+        return ir.ConstantNodePickle(
             id=f"constant-{constant_index}",
             chunks=result.chunks,
             value_preview=_preview_constant(constant_value),
@@ -553,29 +714,19 @@ def _make_invocation_id(task_name, invocation_i, custom_name):
         )
 
 
-def _sort_artifact_futures(artifact: _dsl.ArtifactFuture) -> int:
-    if artifact.output_index is None:
-        return -1
-    else:
-        return artifact.output_index
-
-
 def _make_invocation_model(
     invocation: _dsl.TaskInvocation,
     invocation_index: int,
-    task_models_dict: t.Dict[_dsl.TaskDef, model.TaskDef],
+    task_models_dict: t.Dict[_dsl.TaskDef, ir.TaskDef],
     graph: GraphTraversal,
 ):
-    args_ids = [graph.get_argument_id(arg) for arg in invocation.args]
+    args_ids = [graph.get_node_id(arg) for arg in invocation.args]
 
     kwargs_ids = {
-        arg_name: graph.get_argument_id(arg_val)
-        for arg_name, arg_val in invocation.kwargs
+        arg_name: graph.get_node_id(arg_val) for arg_name, arg_val in invocation.kwargs
     }
 
-    sorted_outputs = sorted(graph.invocations[invocation], key=_sort_artifact_futures)
-
-    return model.TaskInvocation(
+    return ir.TaskInvocation(
         id=_make_invocation_id(
             task_models_dict[invocation.task].fn_ref.function_name,
             invocation_index,
@@ -584,16 +735,29 @@ def _make_invocation_model(
         task_id=task_models_dict[invocation.task].id,
         args_ids=args_ids,
         kwargs_ids=kwargs_ids,
-        output_ids=[graph[output_future].id for output_future in sorted_outputs],
+        output_ids=graph.output_ids_for_invocation(invocation),
         resources=_make_resources_model(invocation.resources),
         custom_image=invocation.custom_image,
     )
 
 
+def extract_root_futures(wf_def: _workflow.WorkflowDef) -> t.Sequence[_dsl.Argument]:
+    """
+    Executes the ``wf_def`` function to get the workflow output futures.
+    """
+    with _exec_ctx.workflow_build():
+        futures = wf_def._fn(*wf_def._workflow_args, **wf_def._workflow_kwargs)
+
+    if not isinstance(futures, collections.abc.Sequence) or isinstance(futures, str):
+        return (futures,)
+    else:
+        return futures
+
+
 def flatten_graph(
     workflow_def: _workflow.WorkflowDef,
     futures: t.Sequence[t.Union[_dsl.ArtifactFuture, _dsl.Constant]],
-) -> model.WorkflowDef:
+) -> ir.WorkflowDef:
     """Traverse the nested linked list of futures and produce a flat graph.
 
     Each `dsl.ArtifactFuture` is mapped to a single `model.ArtifactNode`.
@@ -611,17 +775,20 @@ def flatten_graph(
     graph = GraphTraversal()
     graph.traverse(root_futures)
 
-    import_models_dict: t.Dict[_dsl.Import, model.Import] = {}
+    import_models_dict: t.Dict[_dsl.Import, ir.Import] = {}
 
     # this dict is used to store already processed deferred git imports in the WF
     # As deferred git imports are fetching repos inside model creation, this is used
     # to avoid git fetch spam for the same repos over and over.
-    cached_git_import_dict: t.Dict[t.Tuple, model.Import] = {}
-    for invocation in graph.invocations.keys():
+    cached_git_import_dict: t.Dict[t.Tuple, ir.Import] = {}
+    for invocation in graph.invocations:
         invocation.task._resolve_task_source_data(workflow_def.default_source_import)
-        invocation.task._resolve_task_dependencies(
-            workflow_def.default_dependency_imports
+        default_deps = (
+            tuple(workflow_def.default_dependency_imports)
+            if workflow_def.default_dependency_imports
+            else None
         )
+        invocation.task._resolve_task_dependencies(default_deps)
         for imp in [
             invocation.task._source_import,
             *(invocation.task._dependency_imports or []),
@@ -638,17 +805,17 @@ def flatten_graph(
                 else:
                     import_models_dict[imp] = _make_import_model(imp)
 
-    task_models_dict: t.Dict[_dsl.TaskDef, model.TaskDef] = {
+    task_models_dict: t.Dict[_dsl.TaskDef, ir.TaskDef] = {
         invocation.task: _make_task_model(invocation.task, import_models_dict)
-        for invocation in graph.invocations.keys()
+        for invocation in graph.invocations
     }
     # make sure we can execute tasks
     for task in task_models_dict:
         task.validate_task()
 
-    dsl_invocations = list(graph.invocations.keys())
+    dsl_invocations = list(graph.invocations)
 
-    invocation_models_dict: t.Dict[_dsl.TaskInvocation, model.TaskInvocation] = {
+    invocation_models_dict: t.Dict[_dsl.TaskInvocation, ir.TaskInvocation] = {
         dsl_invocation: _make_invocation_model(
             invocation=dsl_invocation,
             invocation_index=dsl_invocation_i,
@@ -658,24 +825,20 @@ def flatten_graph(
         for dsl_invocation_i, dsl_invocation in enumerate(dsl_invocations)
     }
 
-    output_ids: t.List[t.Union[model.ConstantNodeId, model.ArtifactNodeId]] = []
-    for output_future in futures:
-        output_id = graph.get_argument_id(output_future)
-        output_ids.append(output_id)
-
     sdk_version_str = get_installed_version("orquestra-sdk")
     parsed_sdk_version = parse_version(sdk_version_str)
-    sdk_version = model.Version(
+    sdk_version = ir.Version(
         original=sdk_version_str,
         major=parsed_sdk_version.major,
         minor=parsed_sdk_version.minor,
         patch=parsed_sdk_version.micro,
         is_prerelease=parsed_sdk_version.is_prerelease,
     )
-    return model.WorkflowDef(
-        metadata=model.WorkflowMetadata(
+
+    return ir.WorkflowDef(
+        metadata=ir.WorkflowMetadata(
             sdk_version=sdk_version,
-            python_version=model.Version(
+            python_version=ir.Version(
                 original=sys.version,
                 major=sys.version_info.major,
                 minor=sys.version_info.minor,
@@ -695,20 +858,16 @@ def flatten_graph(
         },
         tasks={task_model.id: task_model for task_model in task_models_dict.values()},
         artifact_nodes={
-            artifact_node.id: artifact_node
-            for artifact_node in graph.artifacts.values()
+            artifact_node.id: artifact_node for artifact_node in graph.artifacts
         },
-        secret_nodes={
-            secret_node.id: secret_node for secret_node in graph.secrets.values()
-        },
+        secret_nodes={secret_node.id: secret_node for secret_node in graph.secrets},
         constant_nodes={
-            constant_node.id: constant_node
-            for constant_node in graph.constants.values()
+            constant_node.id: constant_node for constant_node in graph.constants
         },
         task_invocations={
             invocation.id: invocation for invocation in invocation_models_dict.values()
         },
-        output_ids=output_ids,
+        output_ids=[graph.get_node_id(output_future) for output_future in futures],
         data_aggregation=_make_data_aggregation_model(workflow_def.data_aggregation)
         if workflow_def.data_aggregation
         else None,

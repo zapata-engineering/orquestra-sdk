@@ -110,6 +110,9 @@ class TaskRun:
         """
         Get values calculated by this task run.
 
+        Returns whatever the task function returned, regardless of
+        ``@task(n_outputs=...)``.
+
         Raises:
             TaskRunNotFound: if the task wasn't completed yet, or the ID is invalid.
         """
@@ -118,9 +121,7 @@ class TaskRun:
         workflow_artifacts = self._runtime.get_available_outputs(self.workflow_run_id)
 
         try:
-            filtered_artifacts = {
-                self.task_invocation_id: workflow_artifacts[self.task_invocation_id]
-            }
+            task_outputs = workflow_artifacts[self.task_invocation_id]
         except KeyError as e:
             raise TaskRunNotFound(
                 f"Output for task `{self.task_invocation_id}` in "
@@ -128,12 +129,7 @@ class TaskRun:
                 "It may have failed or not be completed yet."
             ) from e
 
-        # The runtime always returns tuples, even of the task has n_outputs = 1. We
-        # need to unwrap it for user's convenience.
-        return unwrap_task_retvals(
-            artifacts=filtered_artifacts,
-            task_invocations=self._wf_def.task_invocations,
-        )[self.task_invocation_id]
+        return task_outputs
 
     def _find_invocation_by_output_id(self, output: ir.ArgumentId) -> ir.TaskInvocation:
         """
@@ -252,19 +248,3 @@ class TaskRun:
         ]
 
         return set(parents)
-
-
-def unwrap_task_retvals(
-    artifacts: t.Mapping[ir.TaskInvocationId, ArtifactValue],
-    task_invocations: t.Mapping[TaskInvocationId, ir.TaskInvocation],
-) -> t.Mapping[ir.TaskInvocationId, t.Union[ArtifactValue, t.Tuple[ArtifactValue]]]:
-    unwrapped_dict = {}
-    for inv_id, outputs in artifacts.items():
-        inv = task_invocations[inv_id]
-        if len(inv.output_ids) == 1:
-            unwrapped = outputs[0]
-        else:
-            unwrapped = outputs
-
-        unwrapped_dict[inv_id] = unwrapped
-    return unwrapped_dict

@@ -523,9 +523,9 @@ class TestWorkflowRun:
             runtime = create_autospec(RuntimeInterface)
 
             # The RuntimeInterface's contract for get_available_outputs is
-            # to always return tuple as the dict value.
+            # to return whatever the task function returned.
             runtime.get_available_outputs.return_value = {
-                "inv1": (42,),
+                "inv1": 42,
                 "inv2": (21, 38),
             }
 
