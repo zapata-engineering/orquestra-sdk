@@ -574,31 +574,6 @@ def _make_invocation_model(
     )
 
 
-def _get_imports_from_task_def(
-    task_def: _dsl.TaskDef,
-) -> t.Dict[_dsl.Import, model.Import]:
-    return {
-        imp: _make_import_model(imp)
-        for imp in [task_def.source_import, *(task_def.dependency_imports or [])]
-    }
-
-
-def get_model_from_task_def(task_def: _dsl.TaskDef) -> model.TaskDef:
-    """Returns an IR TaskDef from an SDK TaskDef"""
-    imports_dict = _get_imports_from_task_def(task_def)
-    return _make_task_model(task_def, imports_dict)
-
-
-def get_model_imports_from_task_def(task_def: _dsl.TaskDef) -> t.List[model.Import]:
-    """Returns the IR Imports a SDK TaskDef requires
-    Args:
-        task_def: dsl.TaskDef
-    Returns:
-        A list of model.Import objects the task requires
-    """
-    return list(_get_imports_from_task_def(task_def).values())
-
-
 def flatten_graph(
     workflow_def: _workflow.WorkflowDef,
     futures: t.Sequence[t.Union[_dsl.ArtifactFuture, _dsl.Constant]],
