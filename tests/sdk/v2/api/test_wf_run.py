@@ -15,7 +15,7 @@ from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospe
 
 import pytest
 
-from orquestra.sdk._base import _api, _workflow
+from orquestra.sdk._base import _api, _workflow, serde
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import (
     ProjectInvalidError,
@@ -70,21 +70,21 @@ class TestRunningInProcess:
             run = wf_pass_tuple().run("in_process")
             results = run.get_results()
 
-            assert results == 3
+            assert results == (3,)
 
         @staticmethod
         def test_pass_builtin_config_name_with_file(tmp_default_config_json):
             run = wf_pass_tuple().run("in_process")
             results = run.get_results()
 
-            assert results == 3
+            assert results == (3,)
 
         def test_single_run(self):
             run = wf_pass_tuple().prepare("in_process")
             run.start()
             results = run.get_results()
 
-            assert results == 3
+            assert results == (3,)
 
         def test_multiple_starts(self):
             run = wf_pass_tuple().prepare("in_process")
@@ -102,7 +102,7 @@ class TestRunningInProcess:
             run = wf_pass_tuple().run("in_process")
             results = run.get_results()
 
-            assert results == 3
+            assert results == (3,)
 
     class TestWithConfig:
         @staticmethod
@@ -111,7 +111,7 @@ class TestRunningInProcess:
             run = wf_pass_tuple().run(config)
             results = run.get_results()
 
-            assert results == 3
+            assert results == (3,)
 
 
 class TestWorkflowRun:
@@ -134,7 +134,9 @@ class TestWorkflowRun:
         # For getting workflow ID
         runtime.create_workflow_run.return_value = "wf_pass_tuple-1"
         # For getting workflow outputs
-        runtime.get_workflow_run_outputs_non_blocking.return_value = "woohoo!"
+        runtime.get_workflow_run_outputs_non_blocking.return_value = (
+            serde.result_from_artifact("woohoo!", ir.ArtifactFormat.AUTO),
+        )
         # for simulating a workflow running
         succeeded_run_model = Mock(name="succeeded wf run model")
 
@@ -155,9 +157,9 @@ class TestWorkflowRun:
 
         # got getting task run artifacts
         runtime.get_available_outputs.return_value = {
-            "task_run1": "woohoo!",
-            "task_run2": "another",
-            "task_run3": 123,
+            "task_run1": serde.result_from_artifact("woohoo!", ir.ArtifactFormat.AUTO),
+            "task_run2": serde.result_from_artifact("another", ir.ArtifactFormat.AUTO),
+            "task_run3": serde.result_from_artifact(123, ir.ArtifactFormat.AUTO),
         }
 
         wf_def_model = sample_wf_def.model
@@ -480,7 +482,7 @@ class TestWorkflowRun:
             # Then
             assert mock_runtime.get_workflow_run_status.call_count >= 1
             assert results is not None
-            assert results == "woohoo!"
+            assert results == ("woohoo!",)
 
         @staticmethod
         def test_waits_when_wait_is_explicitly_false(run, mock_runtime):
@@ -492,7 +494,7 @@ class TestWorkflowRun:
             results = run.get_results(wait=False)
             # Then
             assert results is not None
-            assert results == "woohoo!"
+            assert results == ("woohoo!",)
             assert mock_runtime.get_workflow_run_status.call_count == 1
 
     class TestGetArtifacts:
@@ -525,8 +527,8 @@ class TestWorkflowRun:
             # The RuntimeInterface's contract for get_available_outputs is
             # to return whatever the task function returned.
             runtime.get_available_outputs.return_value = {
-                "inv1": 42,
-                "inv2": (21, 38),
+                "inv1": serde.result_from_artifact(42, ir.ArtifactFormat.AUTO),
+                "inv2": serde.result_from_artifact((21, 38), ir.ArtifactFormat.AUTO),
             }
 
             mock_inv1 = create_autospec(ir.TaskInvocation)

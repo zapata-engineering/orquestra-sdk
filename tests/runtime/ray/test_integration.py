@@ -19,6 +19,7 @@ from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk._ray import _client, _dag, _ray_logs
 from orquestra.sdk.schema import configs, ir
+from orquestra.sdk.schema.responses import JSONResult
 from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
 
 
@@ -100,7 +101,7 @@ class TestRayRuntimeMethods:
             # then
             _wait_to_finish_wf(run_id, runtime)
             outputs = runtime.get_workflow_run_outputs_non_blocking(run_id)
-            assert outputs == ("RAY",)
+            assert outputs == (JSONResult(value='"RAY"'),)
 
         def test_sets_run_id_from_env(
             self, monkeypatch: pytest.MonkeyPatch, runtime: _dag.RayRuntime
@@ -316,7 +317,9 @@ class TestRayRuntimeMethods:
 
             outputs = runtime.get_workflow_run_outputs_non_blocking(run_id)
 
-            assert outputs == ("yooooo emiliano from zapata computing",)
+            assert outputs == (
+                JSONResult(value='"yooooo emiliano from zapata computing"'),
+            )
 
         def test_failed_workflow(self, runtime: _dag.RayRuntime):
             wf_def = _example_wfs.exception_wf_with_multiple_values().model
@@ -393,7 +396,7 @@ class TestRayRuntimeMethods:
             # The outputs dict has an entry for each task invocation. The value is
             # whatever the task returned; in this example it's a single int.
             task_output = list(inv_artifacts.values())[0]
-            assert task_output == 58
+            assert task_output == JSONResult(value="58")
 
         def test_after_one_task_finishes(self, runtime: _dag.RayRuntime, tmp_path):
             """
@@ -464,77 +467,99 @@ class TestRayRuntimeMethods:
     [
         (
             _example_wfs.greet_wf,
-            ("yooooo emiliano from zapata computing",),
+            (JSONResult(value='"yooooo emiliano from zapata computing"'),),
             {
                 "invocation-0-task-make-greeting": (
-                    "yooooo emiliano from zapata computing"
+                    JSONResult(value='"yooooo emiliano from zapata computing"')
                 )
             },
         ),
         (
             _example_wfs.complicated_wf,
-            ("yooooo emiliano Zapata from Zapata computing",),
+            (JSONResult(value='"yooooo emiliano Zapata from Zapata computing"'),),
             {
                 "invocation-0-task-make-greeting": (
-                    "yooooo emiliano Zapata from Zapata computing"
+                    JSONResult(value='"yooooo emiliano Zapata from Zapata computing"')
                 ),
-                "invocation-1-task-capitalize": "Zapata computing",
-                "invocation-2-task-concat": "emiliano Zapata",
-                "invocation-3-task-capitalize": "Zapata",
+                "invocation-1-task-capitalize": JSONResult(value='"Zapata computing"'),
+                "invocation-2-task-concat": JSONResult(value='"emiliano Zapata"'),
+                "invocation-3-task-capitalize": JSONResult(value='"Zapata"'),
             },
         ),
         (
             _example_wfs.multioutput_wf,
-            ("Emiliano Zapata", "Zapata computing"),
+            (
+                JSONResult(value='"Emiliano Zapata"'),
+                JSONResult(value='"Zapata computing"'),
+            ),
             {
-                "invocation-0-task-capitalize": "Zapata computing",
-                "invocation-1-task-make-company-name": "zapata computing",
-                "invocation-2-task-concat": "Emiliano Zapata",
-                "invocation-3-task-capitalize": "Zapata",
+                "invocation-0-task-capitalize": JSONResult(value='"Zapata computing"'),
+                "invocation-1-task-make-company-name": JSONResult(
+                    value='"zapata computing"'
+                ),
+                "invocation-2-task-concat": JSONResult(value='"Emiliano Zapata"'),
+                "invocation-3-task-capitalize": JSONResult(value='"Zapata"'),
             },
         ),
         (
             _example_wfs.multioutput_task_wf,
             (
                 # Unpacked outputs
-                "Zapata",
-                "Computing",
+                JSONResult(value='"Zapata"'),
+                JSONResult(value='"Computing"'),
                 # First output discarded
-                "Computing",
+                JSONResult(value='"Computing"'),
                 # Second output discarded
-                "Zapata",
+                JSONResult(value='"Zapata"'),
                 # Returning both packed and unpacked outputs
-                ("Zapata", "Computing"),
-                "Zapata",
-                "Computing",
+                JSONResult(
+                    value='{"__tuple__": true, "__values__": ["Zapata", "Computing"]}'
+                ),
+                JSONResult(value='"Zapata"'),
+                JSONResult(value='"Computing"'),
             ),
             {
                 # We expect all task outputs for each task invocation, regardless of
                 # unpacking in the workflow. For more info, see
                 # `RuntimeInterface.get_available_outputs()`.
-                "invocation-0-task-multioutput-task": ("Zapata", "Computing"),
-                "invocation-1-task-multioutput-task": ("Zapata", "Computing"),
-                "invocation-2-task-multioutput-task": ("Zapata", "Computing"),
-                "invocation-3-task-multioutput-task": ("Zapata", "Computing"),
+                "invocation-0-task-multioutput-task": JSONResult(
+                    value='{"__tuple__": true, "__values__": ["Zapata", "Computing"]}'
+                ),
+                "invocation-1-task-multioutput-task": JSONResult(
+                    value='{"__tuple__": true, "__values__": ["Zapata", "Computing"]}'
+                ),
+                "invocation-2-task-multioutput-task": JSONResult(
+                    value='{"__tuple__": true, "__values__": ["Zapata", "Computing"]}'
+                ),
+                "invocation-3-task-multioutput-task": JSONResult(
+                    value='{"__tuple__": true, "__values__": ["Zapata", "Computing"]}'
+                ),
             },
         ),
         (
             _example_wfs.greet_wf_kw,
-            ("yooooo emiliano from zapata computing",),
+            (JSONResult(value='"yooooo emiliano from zapata computing"'),),
             {
                 "invocation-0-task-make-greeting": (
-                    "yooooo emiliano from zapata computing"
+                    JSONResult(value='"yooooo emiliano from zapata computing"')
                 )
             },
         ),
         (
             _example_wfs.wf_using_inline_imports,
-            ("Emiliano Zapata", "Zapata computing"),
+            (
+                JSONResult(value='"Emiliano Zapata"'),
+                JSONResult(value='"Zapata computing"'),
+            ),
             {
-                "invocation-0-task-capitalize-inline": "Zapata computing",
-                "invocation-1-task-make-company-name": "zapata computing",
-                "invocation-2-task-concat": "Emiliano Zapata",
-                "invocation-3-task-capitalize-inline": "Zapata",
+                "invocation-0-task-capitalize-inline": JSONResult(
+                    value='"Zapata computing"'
+                ),
+                "invocation-1-task-make-company-name": JSONResult(
+                    value='"zapata computing"'
+                ),
+                "invocation-2-task-concat": JSONResult(value='"Emiliano Zapata"'),
+                "invocation-3-task-capitalize-inline": JSONResult(value='"Zapata"'),
             },
         ),
     ],
@@ -603,7 +628,7 @@ class Test3rdPartyLibraries:
         wf_result = runtime.get_workflow_run_outputs_non_blocking(run_id)
 
         # Then
-        assert wf_result == (21,)
+        assert wf_result == (JSONResult(value=("21")),)
 
         # this package should be only used inside ray env
         with pytest.raises(ModuleNotFoundError):
@@ -627,7 +652,7 @@ class Test3rdPartyLibraries:
         wf_result = runtime.get_workflow_run_outputs_non_blocking(run_id)
 
         # Then
-        assert wf_result == (2,)
+        assert wf_result == (JSONResult(value=("2")),)
 
         # this package should be only used inside ray env
         with pytest.raises(ModuleNotFoundError):

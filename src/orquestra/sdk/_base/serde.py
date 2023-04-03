@@ -19,8 +19,34 @@ ENCODING = "base64"
 PICKLE_PROTOCOL = 4
 
 
+class _JSONTupleEncoder(json.JSONEncoder):
+    @staticmethod
+    def decode_tuple(obj):
+        if "__tuple__" in obj:
+            return tuple(obj["__values__"])
+        else:
+            return obj
+
+    @classmethod
+    def encode_tuple(cls, obj):
+        if isinstance(obj, tuple):
+            return {
+                "__tuple__": True,
+                "__values__": tuple(cls.encode_tuple(o) for o in obj),
+            }
+        elif isinstance(obj, list):
+            return [cls.encode_tuple(v) for v in obj]
+        elif isinstance(obj, dict):
+            return {k: cls.encode_tuple(v) for k, v in obj.items()}
+        else:
+            return obj
+
+    def encode(self, obj):
+        return super(_JSONTupleEncoder, self).encode(self.encode_tuple(obj))
+
+
 def _serialize_json(value: t.Any):
-    return json.dumps(value)
+    return json.dumps(value, cls=_JSONTupleEncoder)
 
 
 def _chunkify(s: str) -> t.List[str]:
@@ -86,8 +112,18 @@ def _(result: responses.PickleResult) -> t.Any:
     return deserialize_pickle(result.chunks)
 
 
+@deserialize.register
+def _(result: ir.ConstantNodeJSON) -> t.Any:
+    return deserialize_constant(result)
+
+
+@deserialize.register
+def _(result: ir.ConstantNodePickle) -> t.Any:
+    return deserialize_constant(result)
+
+
 def deserialize_json(serialized_value: str) -> t.Any:
-    return json.loads(serialized_value)
+    return json.loads(serialized_value, object_hook=_JSONTupleEncoder.decode_tuple)
 
 
 def deserialize_pickle(chunks: t.List[str]) -> t.Any:
