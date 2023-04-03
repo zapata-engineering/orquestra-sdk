@@ -415,7 +415,7 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
         self._use_default_source_import = source_import is None
 
         # task itself is not part of any workflow yet. Don't pass wf defaults
-        self.resolve_task_source_data()
+        self._resolve_task_source_data()
 
         if self._custom_image is None:
             if resources.gpu:
@@ -486,10 +486,11 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
             ),
         )
 
-    def resolve_task_source_data(
+    def _resolve_task_source_data(
         self, wf_default_source_import: Optional[Import] = None
     ):
-        # if user set source import explicitly, do nothing
+        # if user set source import explicitly, we use that import
+        # else we either take wf default, or base on if the session is interactive
         if self._use_default_source_import:
             if wf_default_source_import:
                 self._source_import = wf_default_source_import
@@ -512,7 +513,7 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
             else get_fn_ref(self.__sdk_task_body)
         )
 
-    def resolve_task_dependencies(
+    def _resolve_task_dependencies(
         self, wf_default_dependency_imports: Optional[Tuple[Import, ...]] = None
     ):
         # if user set imports explicitly, do nothing

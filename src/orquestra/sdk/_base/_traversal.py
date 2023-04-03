@@ -344,8 +344,12 @@ def _make_task_model(
     task: _dsl.TaskDef,
     imports_dict: t.Dict[_dsl.Import, model.Import],
 ) -> model.TaskDef:
+    # fn_ref and source_imports are completely resolved during
+    # creation of import_models_dict. At this point every task should have
+    # those variables set - and they are needed to make task model
     assert task._fn_ref is not None
     assert task._source_import is not None
+
     fn_ref_model = _make_fn_ref(task._fn_ref)
 
     source_import = imports_dict[task._source_import]
@@ -602,8 +606,8 @@ def flatten_graph(
     # to avoid git fetch spam for the same repos over and over.
     cached_git_import_dict: t.Dict[t.Tuple, model.Import] = {}
     for invocation in graph.invocations.keys():
-        invocation.task.resolve_task_source_data(workflow_def.default_source_import)
-        invocation.task.resolve_task_dependencies(
+        invocation.task._resolve_task_source_data(workflow_def.default_source_import)
+        invocation.task._resolve_task_dependencies(
             workflow_def.default_dependency_imports
         )
         for imp in [

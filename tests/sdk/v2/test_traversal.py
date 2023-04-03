@@ -1138,52 +1138,49 @@ def test_metadata_on_dev(monkeypatch: pytest.MonkeyPatch):
     assert wf.metadata.sdk_version.is_prerelease
 
 
-def test_wf_default_imports():
+class TestDefaultImports:
     @_dsl.task
-    def no_overwrite_task():
+    def no_overwrite_task(self):
         return 21
 
     @_dsl.task(
-        source_import=_dsl.GitImport(repo_url="overwrite", git_ref="source"),
+        source_import=_dsl.GitImport(repo_url="overwrite_source", git_ref="source"),
         dependency_imports=[_dsl.GitImport(repo_url="overwrite", git_ref="dep")],
     )
-    def do_overwrite_task():
+    def do_overwrite_task(self):
         return 21
 
     @_dsl.task(source_import=_dsl.GitImport(repo_url="another", git_ref="source"))
-    def overwrite_source_only_task():
+    def overwrite_source_only_task(self):
         return 21
 
-    @_workflow.workflow(
-        default_source_import=_dsl.GitImport(repo_url="2", git_ref="1"),
-        default_dependency_imports=[_dsl.GitImport(repo_url="3", git_ref="6")],
+    @pytest.mark.parametrize(
+        "task, expectation",
+        [
+            (no_overwrite_task, ("2", "1", "3", "6")),
+            (do_overwrite_task, ("dep", "overwrite", "source", "overwrite_source")),
+            (overwrite_source_only_task, ("2", "1", "source", "another")),
+        ],
     )
-    def wf_with_default_imports():
-        return [no_overwrite_task(), do_overwrite_task(), overwrite_source_only_task()]
+    def test_wf_default_imports(self, task, expectation):
+        @_workflow.workflow(
+            default_source_import=_dsl.GitImport(repo_url="6", git_ref="3"),
+            default_dependency_imports=[_dsl.GitImport(repo_url="1", git_ref="2")],
+        )
+        def wf_with_default_imports():
+            return [
+                task(None),
+            ]
 
-    wf_model = wf_with_default_imports.model
-    for id, task_model in wf_model.tasks.items():
+        wf_model = wf_with_default_imports.model
+        task_model = list(wf_model.tasks.values())[0]
         assert task_model.dependency_import_ids
         dep_import = wf_model.imports[task_model.dependency_import_ids[0]]
         source_import = wf_model.imports[task_model.source_import_id]
-        if task_model.fn_ref.function_name == "no_overwrite_task":
-            assert isinstance(dep_import, model.GitImport)
-            assert dep_import.git_ref == "6"
-            assert dep_import.repo_url.original_url == "3"
-            assert isinstance(source_import, model.GitImport)
-            assert source_import.git_ref == "1"
-            assert source_import.repo_url.original_url == "2"
-        elif task_model.fn_ref.function_name == "do_overwrite_task":
-            assert isinstance(dep_import, model.GitImport)
-            assert dep_import.git_ref == "dep"
-            assert dep_import.repo_url.original_url == "overwrite"
-            assert isinstance(source_import, model.GitImport)
-            assert source_import.git_ref == "source"
-            assert source_import.repo_url.original_url == "overwrite"
-        elif task_model.fn_ref.function_name == "overwrite_source_only_task":
-            assert isinstance(dep_import, model.GitImport)
-            assert dep_import.git_ref == "6"
-            assert dep_import.repo_url.original_url == "3"
-            assert isinstance(source_import, model.GitImport)
-            assert source_import.git_ref == "source"
-            assert source_import.repo_url.original_url == "another"
+
+        assert isinstance(dep_import, model.GitImport)
+        assert isinstance(source_import, model.GitImport)
+        assert dep_import.git_ref == expectation[0]
+        assert dep_import.repo_url.original_url == expectation[1]
+        assert source_import.git_ref == expectation[2]
+        assert source_import.repo_url.original_url == expectation[3]

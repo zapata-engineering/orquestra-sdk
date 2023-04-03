@@ -557,14 +557,15 @@ def workflow(
             or assigned True default values will be used. If assigned False
             data aggregation step will not run.
         custom_name: custom name for the workflow
-        default_source_import: Set default source import for all tasks inside
-           this workflow
-           Important: if task defines its own individual source import, wf-scoped
-           default_source_import will be ignored
-        default_dependency_imports: Set default dependency imports for all tasks inside
-           this workflow
-           Important: if task defines its own individual dependency imports, wf-scoped
-           default_dependency_imports will be ignored for that particular task
+        default_source_import: Set the default source import for all tasks inside
+           this workflow.
+           Important: if a task defines its own individual source import, the workflow
+           scoped default_source_import will be ignored.
+        default_dependency_imports: Set the default dependency imports for all tasks
+           inside this workflow.
+           Important: if a task defines its own individual dependency imports, the
+           workflow scoped default_dependency_imports will be ignored for that
+           particular task
 
     You can use the Python API to submit workflows for execution::
 
