@@ -360,7 +360,7 @@ def parse_custom_name(
     format_dict = {}
     for ph in placeholders:
         if isinstance(signature.arguments[ph], ArtifactFuture):
-            fnc = signature.arguments[ph].invocation.task._fn_ref.function_name
+            fnc = signature.arguments[ph].invocation.task._fn_name
             format_dict[ph] = replacement_string.format(fnc)
             warnings.warn(
                 "Custom name contains placeholder with value"
