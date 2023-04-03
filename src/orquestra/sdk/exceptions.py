@@ -83,6 +83,14 @@ class InvalidTaskDefinitionError(BaseRuntimeError):
     pass
 
 
+class NodesInTaskResourcesWarning(Warning):
+    """
+    Raised when a "nodes" resource is passed to a Task.
+
+    Nodes currently only apply to workflows and this option will be ignored.
+    """
+
+
 # Workflow Errors
 class WorkflowNotFoundError(BaseRuntimeError):
     pass

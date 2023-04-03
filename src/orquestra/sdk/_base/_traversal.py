@@ -12,6 +12,7 @@ import inspect
 import re
 import sys
 import typing as t
+import warnings
 from collections import OrderedDict, defaultdict
 from functools import singledispatch
 
@@ -19,6 +20,7 @@ from packaging.version import parse as parse_version
 from pip_api import Requirement
 
 import orquestra.sdk.schema.ir as model
+from orquestra.sdk.exceptions import NodesInTaskResourcesWarning
 from orquestra.sdk.schema import responses
 
 from .. import exceptions
@@ -257,7 +259,7 @@ def _make_import_model(imp: _dsl.Import):
         raise ValueError(f"Invalid DSL import type: {type(imp)}")
 
 
-def _make_resources_model(resources: _dsl.Resources):
+def _make_resources_model(resources: _dsl.Resources, is_task=True):
     """Create a resources object of the IR based on a resources
     of the DSL. If no resources are allocated then returns None.
     Args:
@@ -265,15 +267,25 @@ def _make_resources_model(resources: _dsl.Resources):
     Returns:
         resources object from the IR
     """
-    return (
-        model.Resources(
-            cpu=resources.cpu,
-            memory=resources.memory,
-            disk=resources.disk,
-            gpu=resources.gpu,
+    if resources.is_empty():
+        return None
+
+    if is_task and resources.nodes is not None:
+        warnings.warn(
+            NodesInTaskResourcesWarning(
+                "Tasks currently do not support the nodes resource."
+            )
         )
-        if not resources.is_empty()
-        else None
+        nodes = None
+    else:
+        nodes = resources.nodes
+
+    return model.Resources(
+        cpu=resources.cpu,
+        memory=resources.memory,
+        disk=resources.disk,
+        gpu=resources.gpu,
+        nodes=nodes,
     )
 
 
@@ -668,6 +680,7 @@ def flatten_graph(
                 is_prerelease=sys.version_info.releaselevel != "final",
             ),
         ),
+        resources=_make_resources_model(workflow_def._resources, is_task=False),
         # At the moment 'orq submit workflow-def <name>' assumes that the <name> is
         # the same as the underlying function. Orquestra Studio seems to get it from
         # the 'orq get workflow-def', so for now we have to keep .name attribute same

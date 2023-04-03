@@ -1138,6 +1138,19 @@ def test_metadata_on_dev(monkeypatch: pytest.MonkeyPatch):
     assert wf.metadata.sdk_version.is_prerelease
 
 
+def test_warning_when_nodes_passed_to_task():
+    @_dsl.task(resources=_dsl.Resources(nodes=100))
+    def _task():
+        return
+
+    @_workflow.workflow
+    def _wf():
+        return _task()
+
+    with pytest.warns(exceptions.NodesInTaskResourcesWarning):
+        _ = _wf().model
+
+
 class TestDefaultImports:
     @_dsl.task
     def no_overwrite_task(self):

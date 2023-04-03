@@ -264,12 +264,32 @@ Import = Union[
 
 
 class Resources(NamedTuple):
-    """The computational resources a workflow task requires"""
+    """
+    The computational resources a workflow or task requires.
+
+    If any of these options are omitted, (or is None) the runtime's default value will
+    be used.
+
+    If a runtime doesn't support a particular value, it may be silently ignored.
+    Please check the documentation for each runtime!
+
+    Args:
+        cpu: The requested CPU in "CPU units".
+            e.g. for a single CPU core use "1" or "1000m"
+        memory: The requested memory in "bytes".
+            Binary or decimal suffixes are supported. e.g. "10G" for 10 gigabytes
+        disk: The requested disk space in "bytes".
+            Binary or decimal suffixes are supported. e.g. "10Gi" for 10 gibibytes
+        gpu: Either "0" or "1" to use a GPU or not.
+        nodes: The number of nodes requested. This option only applies to workflows.
+            This should be a positive integer.
+    """
 
     cpu: Optional[str] = None
     memory: Optional[str] = None
     disk: Optional[str] = None
     gpu: Optional[str] = None
+    nodes: Optional[int] = None
 
     def is_empty(self) -> bool:
         # find out if all the Resources are None
