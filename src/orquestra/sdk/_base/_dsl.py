@@ -511,7 +511,7 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
         )
 
     def resolve_task_dependencies(
-        self, wf_default_dependency_imports: Optional[Iterable[Import]] = None
+        self, wf_default_dependency_imports: Optional[Tuple[Import, ...]] = None
     ):
         # if user set imports explicitly, do nothing
         if not self._use_default_dependency_imports:

@@ -344,6 +344,8 @@ def _make_task_model(
     task: _dsl.TaskDef,
     imports_dict: t.Dict[_dsl.Import, model.Import],
 ) -> model.TaskDef:
+    assert task.fn_ref is not None
+    assert task.source_import is not None
     fn_ref_model = _make_fn_ref(task.fn_ref)
 
     source_import = imports_dict[task.source_import]
