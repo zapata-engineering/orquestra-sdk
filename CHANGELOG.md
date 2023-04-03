@@ -3,6 +3,7 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+* Workflow and task results on CE have changed shape. This may cause some oddness when downloading older workflow results.
 
 🔥 *Features*
 
@@ -19,6 +20,7 @@ def my_wf():
     out1, out2 = all_outputs
     return b, all_outputs, out1, out2
 ```
+* Pickled workflow/task results should no longer cause workflows to fail inside the SDK machinery. Note: when passing a Python object between your tasks, you **must** ensure the Python dependencies are installed.
 
 💅 *Improvements*
 
