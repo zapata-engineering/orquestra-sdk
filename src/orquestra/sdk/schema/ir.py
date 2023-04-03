@@ -160,6 +160,9 @@ class Resources(BaseModel):
     memory: t.Optional[str] = None
     disk: t.Optional[str] = None
     gpu: t.Optional[str] = None
+    # nodes should be a positive integer representing the number of nodes assigned
+    # to a workflow. If None, the runtime will choose.
+    # This only applies to workflows and not tasks.
     nodes: t.Optional[int] = None
 
 
@@ -384,4 +387,7 @@ class WorkflowDef(BaseModel):
 
     # Metadata defaults to None to allow older JSON to be loaded
     metadata: t.Optional[WorkflowMetadata] = None
+
+    # The resources that are available for the workflow to use.
+    # If none, the runtime will decide.
     resources: t.Optional[Resources] = None

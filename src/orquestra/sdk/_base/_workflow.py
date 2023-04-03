@@ -261,22 +261,22 @@ class WorkflowDef(Generic[_R]):
         gpu: Optional[Union[str, _dsl.Sentinel]] = _dsl.Sentinel.NO_UPDATE,
         nodes: Optional[Union[int, _dsl.Sentinel]] = _dsl.Sentinel.NO_UPDATE,
     ) -> "WorkflowDef":
-        """Assigns optional metadata related to task invocation used to generate this
-        artifact.
+        """
+        Assigns optional metadata related to this workflow definition object.
 
-        Doesn't modify existing invocations, returns a new one.
+        Doesn't modify the existing workflow definition, returns a new one.
 
         Example usage:
-            text = capitalize("hello").with_invocation_meta(
-                cpu="1000m",custom_image="zapatacomputing/orquestra-qml:v0.1.0-cuda"
-                )
+            wf_run = my_workflow().with_resources(
+                cpu="10", memory="10Gi"
+            ).run("my_cluster")
 
         Args:
-            cpu: amount of cpu assigned to the task invocation
-            memory: amount of memory assigned to the task invocation
-            disk: amount of disk assigned to the task invocation
-            gpu: amount of gpu assigned to the task invocation
-            custom_image: docker image used to run the task invocation
+            cpu: amount of cpu requested for the workflow
+            memory: amount of memory requested for the workflow
+            disk: amount of disk requested for the workflow
+            gpu: amount of gpu requested for the workflow
+            nodes: the number of nodes requested for the workflow
         """
         # Only use the new properties if they have not been changed.
         # None is a valid option, so we are using the Sentinel object pattern:
@@ -592,6 +592,12 @@ def workflow(
     """Decorator that produces a workflow definition.
 
     Args:
+        resources: !Unstable API! The resources that this workflow requires.
+            The exact behaviour depends on the runtime, based on a Compute Engine
+            workflow, you can set the cluster your workflow will use:
+            10 nodes with 20 CPUs and a GPU each would be:
+            resources=sdk.Resources(cpu="20", gpu="1", nodes=10)
+            If omitted, the cluster's default resources will be used.
         data_aggregation: Used to set up resources used during data step. If skipped,
             or assigned True default values will be used. If assigned False
             data aggregation step will not run.
