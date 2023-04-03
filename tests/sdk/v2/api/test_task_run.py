@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, Mock, create_autospec
 
 import pytest
 
-from orquestra.sdk._base import _api, _workflow
+from orquestra.sdk._base import _api, _workflow, serde
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import TaskRunNotFound
 from orquestra.sdk.schema import ir
@@ -218,8 +218,8 @@ class TestTaskRun:
             # Given
             runtime = create_autospec(RuntimeInterface)
             runtime.get_available_outputs.return_value = {
-                "inv1": 42,
-                "inv2": (21, 38),
+                "inv1": serde.result_from_artifact(42, ir.ArtifactFormat.AUTO),
+                "inv2": serde.result_from_artifact((21, 38), ir.ArtifactFormat.AUTO),
             }
 
             task_run = _api.TaskRun(
@@ -379,6 +379,15 @@ class TestTaskRun:
             [
                 ("simple_wf_one_task_inline", [], {}),
                 ("wf_single_task_with_const_parent", [21], {}),
+                (
+                    "wf_single_task_with_secret_parent",
+                    [
+                        ir.SecretNode(
+                            id="secret-0", secret_name="test", secret_config=None
+                        )
+                    ],
+                    {},
+                ),
                 ("wf_single_task_with_const_parent_kwargs", [], {"kwargs": 36}),
                 ("wf_single_task_with_const_parent_args_kwargs", [21], {"kwargs": 36}),
             ],
@@ -446,7 +455,10 @@ class TestTaskRun:
             second_inv_2 = self._find_task_by_args_and_kwargs_number(1, 1, wf_def)
 
             runtime = MagicMock(RuntimeInterface)
-            runtime_outputs = {first_inv_id: (15,), second_inv_2: (25,)}
+            runtime_outputs = {
+                first_inv_id: serde.result_from_artifact(15, ir.ArtifactFormat.AUTO),
+                second_inv_2: serde.result_from_artifact(25, ir.ArtifactFormat.AUTO),
+            }
             runtime.get_available_outputs.return_value = runtime_outputs
             wf_run_id = "wf.3"
 
@@ -488,7 +500,12 @@ class TestTaskRun:
             second_inv_id = self._find_task_by_args_and_kwargs_number(1, 0, wf_def)
 
             runtime = MagicMock(RuntimeInterface)
-            runtime_outputs = {first_inv_id: (21, 36), second_inv_id: (25,)}
+            runtime_outputs = {
+                first_inv_id: serde.result_from_artifact(
+                    (21, 36), ir.ArtifactFormat.AUTO
+                ),
+                second_inv_id: serde.result_from_artifact(25, ir.ArtifactFormat.AUTO),
+            }
             runtime.get_available_outputs.return_value = runtime_outputs
 
             task_run = _api.TaskRun(

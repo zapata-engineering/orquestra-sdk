@@ -4,8 +4,9 @@
 
 🚨 *Breaking Changes*
 
-- Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a WorkflowSyntaxError if no tasks are required to be executed.
-- Remove TaskDef.model and TaskDef.import_models interfaces
+* Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a `WorkflowSyntaxError` if no tasks are required to be executed.
+* Workflow and task results on CE have changed shape. This may cause some oddness when downloading older workflow results.
+* Remove TaskDef.model and TaskDef.import_models interfaces
 
 🔥 *Features*
 - Sort WF runs by start date in `list wf` command. Show start date as one of the columns
@@ -31,6 +32,7 @@ def my_wf():
     out1, out2 = all_outputs
     return b, all_outputs, out1, out2
 ```
+* Pickled workflow/task results should no longer cause workflows to fail inside the SDK machinery. Note: when passing a Python object between your tasks, you **must** ensure the Python dependencies are installed.
 
 
 💅 *Improvements*

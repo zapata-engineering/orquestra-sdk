@@ -14,6 +14,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
+import pydantic
 import requests
 
 from orquestra.sdk import exceptions
@@ -32,6 +33,7 @@ from orquestra.sdk.schema.ir import (
     WorkflowDef,
 )
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
+from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
     RunStatus,
     State,
@@ -609,15 +611,16 @@ class QERuntime(RuntimeInterface):
 
         # 1. Find the output IDs from the workflow def
         # 2, Find the artifact from the artifact dict
-        # 3. Deserialise the artifact
-        # 4. Append the artifact to the outputs list
-        # 5. ???
-        # 6. Profit
+        # 3. Append the artifact to the outputs tuple
+        # 4. ???
+        # 5. Profit
         output_ids = wf_def.output_ids
 
+        # Bug with mypy and Pydantic:
+        #   Unions cannot be passed to parse_obj_as: pydantic/pydantic#1847
         return (
             *(
-                serde.value_from_result_dict(artifacts[output_id])
+                pydantic.parse_obj_as(WorkflowResult, artifacts[output_id])  # type: ignore[arg-type] # noqa: E501
                 for output_id in output_ids
             ),
         )
@@ -644,7 +647,7 @@ class QERuntime(RuntimeInterface):
             wf_run = db.get_workflow_run(workflow_run_id)
         wf_def = wf_run.workflow_def
         # Return dict contains return values for task invocation
-        return_dict = {}
+        return_dict: Dict[str, WorkflowResult] = {}
         with _http_error_handling():
             # Assumption: task invocations produce "packed" and "unpacked" artifacts.
             # We want to fetch whatever object was returned from the task function, so
@@ -666,11 +669,11 @@ class QERuntime(RuntimeInterface):
                     else:
                         raise e
 
-                artifact_value = serde.value_from_result_dict(
-                    _parse_workflow_result(artifact_bytes)
-                )
+                artifact_value = _parse_workflow_result(artifact_bytes)
 
-                return_dict[inv.id] = artifact_value
+                # Bug with mypy and Pydantic:
+                #   Unions cannot be passed to parse_obj_as: pydantic/pydantic#1847
+                return_dict[inv.id] = pydantic.parse_obj_as(WorkflowResult, artifact_value)  # type: ignore[arg-type] # noqa: E501
 
         return return_dict
 

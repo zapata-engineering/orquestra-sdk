@@ -7,6 +7,7 @@ from unittest.mock import DEFAULT, MagicMock, Mock, call
 import pytest
 
 from orquestra.sdk import exceptions
+from orquestra.sdk._base import serde
 from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _models
 from orquestra.sdk._base._testing._example_wfs import (
     my_workflow,
@@ -14,6 +15,7 @@ from orquestra.sdk._base._testing._example_wfs import (
     workflow_with_different_resources,
 )
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
+from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.responses import JSONResult
 from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
 
@@ -425,7 +427,7 @@ class TestGetWorkflowRunResultsNonBlocking:
         # Then
         mocked_client.get_workflow_run_results.assert_called_once_with(workflow_run_id)
         mocked_client.get_workflow_run_result.assert_has_calls([call("result_id")])
-        assert results == (1,)
+        assert results == (JSONResult(value="[1]"),)
 
     def test_happy_path_tuple(
         self,
@@ -434,10 +436,14 @@ class TestGetWorkflowRunResultsNonBlocking:
         workflow_run_id: str,
     ):
         # Given
-        mocked_client.get_workflow_run_results.return_value = ["result_id"]
-        # Currently, the result is JSON serialised, which means the tuple information
-        # is discarded
-        mocked_client.get_workflow_run_result.return_value = JSONResult(value="[1, 2]")
+        mocked_client.get_workflow_run_results.return_value = [
+            "result_id",
+            "result_id2",
+        ]
+        mocked_client.get_workflow_run_result.side_effect = [
+            JSONResult(value="1"),
+            JSONResult(value="2"),
+        ]
 
         # When
         results = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
@@ -445,7 +451,7 @@ class TestGetWorkflowRunResultsNonBlocking:
         # Then
         mocked_client.get_workflow_run_results.assert_called_once_with(workflow_run_id)
         mocked_client.get_workflow_run_result.assert_has_calls([call("result_id")])
-        assert results == (1, 2)
+        assert results == (JSONResult(value="1"), JSONResult(value="2"))
 
     class TestGetWorkflowRunResultsFailure:
         def test_bad_workflow_run_id(
@@ -568,7 +574,7 @@ class TestGetAvailableOutputs:
     ):
         # Given
         mocked_client.get_workflow_run_artifacts.return_value = {
-            f"{workflow_run_id}@task-inv-1": ["wf-art-1", "wf-art-2"],
+            f"{workflow_run_id}@task-inv-1": ["wf-art-1"],
             f"{workflow_run_id}@task-inv-2": ["wf-art-3"],
         }
         mocked_client.get_workflow_run_artifact.return_value = JSONResult(value="1")
@@ -581,11 +587,11 @@ class TestGetAvailableOutputs:
             workflow_run_id
         )
         mocked_client.get_workflow_run_artifact.assert_has_calls(
-            [call("wf-art-1"), call("wf-art-2"), call("wf-art-3")]
+            [call("wf-art-1"), call("wf-art-3")]
         )
         assert results == {
-            "task-inv-1": (1, 1),
-            "task-inv-2": (1,),
+            "task-inv-1": JSONResult(value="1"),
+            "task-inv-2": JSONResult(value="1"),
         }
 
     class TestGetWorkflowRunArtifactsFailure:
@@ -666,7 +672,7 @@ class TestGetAvailableOutputs:
         @pytest.fixture
         def mocked_client(self, mocked_client: MagicMock, workflow_run_id):
             mocked_client.get_workflow_run_artifacts.return_value = {
-                f"{workflow_run_id}@task-inv-1": ["wf-art-1", "wf-art-2"],
+                f"{workflow_run_id}@task-inv-1": ["wf-art-1"],
                 f"{workflow_run_id}@task-inv-2": ["wf-art-3"],
             }
             return mocked_client
@@ -688,7 +694,7 @@ class TestGetAvailableOutputs:
                 workflow_run_id
             )
             mocked_client.get_workflow_run_artifact.assert_has_calls(
-                [call("wf-art-1"), call("wf-art-2"), call("wf-art-3")]
+                [call("wf-art-1"), call("wf-art-3")]
             )
             assert results == {}
 
@@ -702,7 +708,6 @@ class TestGetAvailableOutputs:
             mocked_client.get_workflow_run_artifact.return_value = JSONResult(value="1")
             mocked_client.get_workflow_run_artifact.side_effect = (
                 DEFAULT,
-                DEFAULT,
                 Exception,
             )
 
@@ -714,9 +719,9 @@ class TestGetAvailableOutputs:
                 workflow_run_id
             )
             mocked_client.get_workflow_run_artifact.assert_has_calls(
-                [call("wf-art-1"), call("wf-art-2"), call("wf-art-3")]
+                [call("wf-art-1"), call("wf-art-3")]
             )
-            assert results == {"task-inv-1": (1, 1)}
+            assert results == {"task-inv-1": JSONResult(value="1")}
 
         def test_continues_after_failure(
             self,
@@ -729,7 +734,6 @@ class TestGetAvailableOutputs:
             mocked_client.get_workflow_run_artifact.side_effect = (
                 Exception,
                 DEFAULT,
-                DEFAULT,
             )
 
             # When
@@ -740,11 +744,10 @@ class TestGetAvailableOutputs:
                 workflow_run_id
             )
             mocked_client.get_workflow_run_artifact.assert_has_calls(
-                [call("wf-art-1"), call("wf-art-2"), call("wf-art-3")]
+                [call("wf-art-1"), call("wf-art-3")]
             )
             assert results == {
-                "task-inv-1": (1,),
-                "task-inv-2": (1,),
+                "task-inv-2": JSONResult(value="1"),
             }
 
         def test_unknown_http(
@@ -766,7 +769,7 @@ class TestGetAvailableOutputs:
                 workflow_run_id
             )
             mocked_client.get_workflow_run_artifact.assert_has_calls(
-                [call("wf-art-1"), call("wf-art-2"), call("wf-art-3")]
+                [call("wf-art-1"), call("wf-art-3")]
             )
             assert results == {}
 
@@ -791,7 +794,7 @@ class TestGetAvailableOutputs:
                 workflow_run_id
             )
             mocked_client.get_workflow_run_artifact.assert_has_calls(
-                [call("wf-art-1"), call("wf-art-2"), call("wf-art-3")]
+                [call("wf-art-1"), call("wf-art-3")]
             )
             assert results == {}
 

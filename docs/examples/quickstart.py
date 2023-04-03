@@ -33,6 +33,6 @@ wf_run_2 = wf.run("in_process")
 results_1 = wf_run_1.get_results()
 results_2 = wf_run_2.get_results()
 assert results_1 == results_2, f"Expected {results_1} to look like {results_2}"
-assert (
-    results_1 == "Hello Orquestra!"
-), f"Expected {results_1} to look like 'Hello Orquestra!'"
+assert results_1 == (
+    "Hello Orquestra!",
+), f"Expected {results_1} to look like ('Hello Orquestra!',)"

@@ -26,6 +26,7 @@ from ...schema.local_database import StoredWorkflowRun
 from ...schema.workflow_run import State, TaskInvocationId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId
+from .. import serde
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig
 from ._task_run import TaskRun
@@ -351,7 +352,12 @@ class WorkflowRun:
                 state,
             )
         try:
-            return self._runtime.get_workflow_run_outputs_non_blocking(run_id)
+            return (
+                *(
+                    serde.deserialize(o)
+                    for o in self._runtime.get_workflow_run_outputs_non_blocking(run_id)
+                ),
+            )
         except WorkflowRunNotSucceeded:
             raise
 
@@ -389,7 +395,10 @@ class WorkflowRun:
         # The output shape differs across runtimes when the workflow functions returns a
         # single, packed future. See more in:
         # https://zapatacomputing.atlassian.net/browse/ORQSDK-801
-        return inv_outputs
+        return {
+            inv_id: serde.deserialize(inv_output)
+            for inv_id, inv_output in inv_outputs.items()
+        }
 
     def get_logs(self) -> t.Mapping[TaskInvocationId, t.List[str]]:
         """
