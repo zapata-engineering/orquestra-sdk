@@ -389,27 +389,33 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
     def __init__(
         self,
         fn: Callable[_P, _R],
-        fn_ref: FunctionRef,
-        source_import: Import,
         output_metadata: TaskOutputMetadata,
+        source_import: Optional[Import] = None,
         parameters: Optional[OrderedDict] = None,
         dependency_imports: Optional[Tuple[Import, ...]] = None,
         resources: Resources = Resources(),
         custom_image: Optional[str] = None,
         custom_name: Optional[str] = None,
+        fn_ref: Optional[FunctionRef] = None,
     ):
         if isinstance(fn, BuiltinFunctionType):
             raise NotImplementedError("Built-in functions are not supported as Tasks")
         super(TaskDef, self).__init__(fn)
         self.__sdk_task_body = fn
-        self.fn_ref = fn_ref
-        self.source_import = source_import
+        self.fn_name = fn.__name__
         self.output_metadata = output_metadata
         self.parameters = parameters
-        self.dependency_imports = dependency_imports
         self.resources = resources
         self.custom_image = custom_image
         self.custom_name = custom_name
+        self.dependency_imports = dependency_imports
+        self._use_default_dependency_imports = dependency_imports is None
+        self.source_import = source_import
+        self._use_default_source_import = source_import is None
+        self.fn_ref = fn_ref
+
+        # task itself is not part of any workflow yet. Don't pass wf defaults
+        self.resolve_task_source_data()
 
         if self.custom_image is None:
             if resources.gpu:
@@ -435,12 +441,12 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
             and self.fn_ref.module == "__main__"
         ):
             err = (
-                f"function {self.fn_ref.function_name} is defined inside __main__ "
+                f"function {self.fn_name} is defined inside __main__ "
                 "module. Please move task function to different file and import, "
                 "it or mark this task function as inline import \n\n"
                 "example: \n"
                 "@sdk.task(source_import=sdk.InlineImport())\n"
-                f"def {self.fn_ref.function_name}(): ..."
+                f"def {self.fn_name}(): ..."
             )
             raise InvalidTaskDefinitionError(err)
         try:
@@ -461,7 +467,7 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
             missing_self_arg = r".*(missing a required argument:)[^a-zA-Z\d]*(self).*"
             if re.match(missing_self_arg, str(exc)):
                 error_message = (
-                    f"The task {self.fn_ref.function_name} seems to be a method, if so"
+                    f"The task {self.fn_name} seems to be a method, if so"
                     " modify it to not be a method.\n"
                 ) + error_message
             raise WorkflowSyntaxError(error_message) from exc
@@ -479,6 +485,40 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
                 )
             ),
         )
+
+    def resolve_task_source_data(
+        self, wf_default_source_import: Optional[Import] = None
+    ):
+        # if user set source import explicitly, do nothing
+        if self._use_default_source_import:
+            if wf_default_source_import:
+                self.source_import = wf_default_source_import
+            # Set the default Import based on if the session is interactive
+            elif _is_interactive():
+                self.source_import = InlineImport()
+            else:
+                self.source_import = LocalImport(module=self.__sdk_task_body.__module__)
+        self._resolve_fn_ref()
+
+    def _resolve_fn_ref(self):
+        # resolve fn_ref is based on task source import. If user doesn't pass it,
+        # resolve_source_import should set it
+        assert self.source_import is not None
+        self.fn_ref = (
+            InlineFunctionRef(self.__sdk_task_body.__name__, self.__sdk_task_body)
+            if isinstance(self.source_import, InlineImport)
+            else get_fn_ref(self.__sdk_task_body)
+        )
+
+    def resolve_task_dependencies(
+        self, wf_default_dependency_imports: Optional[Iterable[Import]] = None
+    ):
+        # if user set imports explicitly, do nothing
+        if not self._use_default_dependency_imports:
+            return
+
+        if wf_default_dependency_imports:
+            self.dependency_imports = wf_default_dependency_imports
 
 
 # TaskInvocation is using a Plain Old Python Object on purpose:
@@ -644,7 +684,7 @@ class ArtifactFuture:
             custom_image: docker image used to run the task invocation
         """
         self._check_if_destructured(
-            fn_name=self.invocation.task.fn_ref.function_name,
+            fn_name=self.invocation.task.fn_name,
             assign_type="invocation metadata",
         )
 
@@ -708,7 +748,7 @@ class ArtifactFuture:
             gpu: amount of gpu assigned to the task invocation
         """
         self._check_if_destructured(
-            fn_name=self.invocation.task.fn_ref.function_name,
+            fn_name=self.invocation.task.fn_name,
             assign_type="resources",
         )
 
@@ -732,7 +772,7 @@ class ArtifactFuture:
             custom_image: docker image used to run the task invocation
         """
         self._check_if_destructured(
-            fn_name=self.invocation.task.fn_ref.function_name,
+            fn_name=self.invocation.task.fn_name,
             assign_type="custom image",
         )
 
@@ -938,27 +978,9 @@ def task(
         else:
             output_metadata = _get_number_of_outputs(fn)
 
-        # Set the default Import based on if the session is interactive
-        task_source_import: Import
-        if source_import is not None:
-            task_source_import = source_import
-        elif _is_interactive():
-            task_source_import = InlineImport()
-        else:
-            task_source_import = LocalImport(module=fn.__module__)
-
-        # This is a little awkward
-        # but to avoid complexity in get_fn_ref, I kept the complexity here.
-        fn_ref = (
-            InlineFunctionRef(fn.__name__, fn)
-            if isinstance(task_source_import, InlineImport)
-            else get_fn_ref(fn)
-        )
-
         task_def = TaskDef(
             fn=fn,
-            fn_ref=fn_ref,
-            source_import=task_source_import,
+            source_import=source_import,
             dependency_imports=task_dependency_imports,
             resources=resources,
             parameters=_get_parameters(fn),
