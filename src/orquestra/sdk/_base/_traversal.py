@@ -72,10 +72,8 @@ def _gen_id_hash(*args):
     return shake.hexdigest(5)
 
 
-def _make_artifact_id(source_task: model.TaskDef, future_index: int):
-    return _qe_compliant_name(
-        f"artifact-{future_index}-{source_task.fn_ref.function_name}"
-    )
+def _make_artifact_id(source_task: _dsl.TaskDef, future_index: int):
+    return _qe_compliant_name(f"artifact-{future_index}-{source_task._fn_name}")
 
 
 GraphNode = t.Union[_dsl.ArtifactFuture, _dsl.Constant, _dsl.Secret]
@@ -346,18 +344,24 @@ def _make_task_model(
     task: _dsl.TaskDef,
     imports_dict: t.Dict[_dsl.Import, model.Import],
 ) -> model.TaskDef:
-    fn_ref_model = _make_fn_ref(task.fn_ref)
+    # fn_ref and source_imports are completely resolved during
+    # creation of import_models_dict. At this point every task should have
+    # those variables set - and they are needed to make task model
+    assert task._fn_ref is not None
+    assert task._source_import is not None
 
-    source_import = imports_dict[task.source_import]
+    fn_ref_model = _make_fn_ref(task._fn_ref)
+
+    source_import = imports_dict[task._source_import]
 
     dependency_import_ids: t.Optional[t.List[model.ImportId]]
-    if task.dependency_imports is not None:
+    if task._dependency_imports is not None:
         # We need to keep track of the seen dependencies so we don't include duplicates.
         # Why don't we use a set? We currently treat the source_import separately and
         # we need to preserve the ordering of the dependency IDs.
         seen_ids = set([source_import.id])
         dependency_import_ids = []
-        for imp in task.dependency_imports:
+        for imp in task._dependency_imports:
             dep_id = imports_dict[imp].id
             if dep_id not in seen_ids:
                 seen_ids.add(dep_id)
@@ -365,8 +369,8 @@ def _make_task_model(
     else:
         dependency_import_ids = None
 
-    resources = _make_resources_model(task.resources)
-    parameters = _make_parameters(task.parameters)
+    resources = _make_resources_model(task._resources)
+    parameters = _make_parameters(task._parameters)
 
     task_contents_hash = _gen_id_hash(
         fn_ref_model,
@@ -386,7 +390,7 @@ def _make_task_model(
         dependency_import_ids=dependency_import_ids,
         resources=resources,
         parameters=parameters,
-        custom_image=task.custom_image,
+        custom_image=task._custom_image,
     )
 
 
@@ -490,7 +494,7 @@ def _make_constant_node(
     except (TypeError, ValueError, NotImplementedError):
         futures = _find_futures_in_container(constant_value)
         task_fn_names = ", ".join(
-            {f"`{fut.invocation.task.fn_ref.function_name}()`" for fut in futures}
+            {f"`{fut.invocation.task._fn_name}()`" for fut in futures}
         )
         if task_fn_names:
             raise exceptions.WorkflowSyntaxError(
@@ -602,9 +606,13 @@ def flatten_graph(
     # to avoid git fetch spam for the same repos over and over.
     cached_git_import_dict: t.Dict[t.Tuple, model.Import] = {}
     for invocation in graph.invocations.keys():
+        invocation.task._resolve_task_source_data(workflow_def.default_source_import)
+        invocation.task._resolve_task_dependencies(
+            workflow_def.default_dependency_imports
+        )
         for imp in [
-            invocation.task.source_import,
-            *(invocation.task.dependency_imports or []),
+            invocation.task._source_import,
+            *(invocation.task._dependency_imports or []),
         ]:
             if imp not in import_models_dict:
                 if isinstance(imp, _dsl.DeferredGitImport):

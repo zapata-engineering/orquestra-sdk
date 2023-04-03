@@ -18,8 +18,8 @@ def _a_top_level_task():
 
 class TestNOutputsEdgeCases:
     def test_top_level(self):
-        assert _a_top_level_task.output_metadata.n_outputs == 2
-        assert _a_top_level_task.output_metadata.is_subscriptable
+        assert _a_top_level_task._output_metadata.n_outputs == 2
+        assert _a_top_level_task._output_metadata.is_subscriptable
 
     def test_nested_function(self):
         # In the future it might be nice to look only at the outer-most return.
@@ -38,8 +38,8 @@ class TestNOutputsEdgeCases:
                 # A return with three outputs
                 return 1, 2, 3
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_union_signature(self):
         with pytest.warns(UserWarning):
@@ -51,8 +51,8 @@ class TestNOutputsEdgeCases:
                 else:
                     return 42, 100
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
 
 class TestNOutputsByNodeType:
@@ -61,40 +61,40 @@ class TestNOutputsByNodeType:
         def _a_task():
             return
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_pass(self):
         @sdk.task
         def _a_task():
             pass
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_no_return(self):
         @sdk.task
         def _a_task():
             print("hello!")
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_single_literal(self):
         @sdk.task
         def _a_task():
             return "hello"
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_two_literals(self):
         @sdk.task
         def _a_task():
             return "hello", "there"
 
-        assert _a_task.output_metadata.n_outputs == 2
-        assert _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 2
+        assert _a_task._output_metadata.is_subscriptable
 
     def test_single_variable(self):
         @sdk.task
@@ -102,8 +102,8 @@ class TestNOutputsByNodeType:
             results = "hello", "there"
             return results
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_overriding(self):
         @sdk.task(n_outputs=2)
@@ -111,8 +111,8 @@ class TestNOutputsByNodeType:
             results = "hello", "there"
             return results
 
-        assert _a_task.output_metadata.n_outputs == 2
-        assert _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 2
+        assert _a_task._output_metadata.is_subscriptable
 
     def test_module_function_call(self):
         @sdk.task
@@ -121,16 +121,16 @@ class TestNOutputsByNodeType:
             hello = "hello"
             return os.path.join(hello, "world")
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_module_attr(self):
         @sdk.task
         def _a_task():
             return os.path.sep
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_inner_function_call(self):
         @sdk.task
@@ -140,8 +140,8 @@ class TestNOutputsByNodeType:
 
             return _inner()
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_method_call(self, caplog):
         @sdk.task
@@ -149,8 +149,8 @@ class TestNOutputsByNodeType:
             text = "hello"
             return text.capitalize()
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
         assert "Assuming a single output for node" not in caplog.text
 
     def test_fstring(self):
@@ -158,8 +158,8 @@ class TestNOutputsByNodeType:
         def _a_task(name: str):
             return f"hello, {name}"
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_starred_tuple(self):
         @sdk.task
@@ -167,16 +167,16 @@ class TestNOutputsByNodeType:
             names = ["emiliano", "zapata"]
             return ("hello", *names, "world")
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_set(self):
         @sdk.task
         def _a_task(name: str):
             return {"hello", name}
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_starred_set(self):
         @sdk.task
@@ -184,16 +184,16 @@ class TestNOutputsByNodeType:
             names = ["emiliano", "zapata"]
             return {"hello", *names, name}
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_set_comp(self):
         @sdk.task
         def _a_task(name: str):
             return {word for word in "hello world".split()}
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_empty_sequences(self):
         @sdk.task
@@ -210,15 +210,15 @@ class TestNOutputsByNodeType:
 
         # Let's treat an empty sequences similarly to how we treat empty returns
         assert (
-            _empty_list.output_metadata.n_outputs
-            == _empty_dict.output_metadata.n_outputs
-            == _empty_return.output_metadata.n_outputs
+            _empty_list._output_metadata.n_outputs
+            == _empty_dict._output_metadata.n_outputs
+            == _empty_return._output_metadata.n_outputs
             == 1
         )
         assert (
-            _empty_list.output_metadata.is_subscriptable
-            == _empty_dict.output_metadata.is_subscriptable
-            == _empty_return.output_metadata.is_subscriptable
+            _empty_list._output_metadata.is_subscriptable
+            == _empty_dict._output_metadata.is_subscriptable
+            == _empty_return._output_metadata.is_subscriptable
             is False
         )
 
@@ -227,16 +227,16 @@ class TestNOutputsByNodeType:
         def _a_task():
             return ["hello", "world"]
 
-        assert _a_task.output_metadata.n_outputs == 2
-        assert _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 2
+        assert _a_task._output_metadata.is_subscriptable
 
     def test_list_a_lot_of_elements(self):
         @sdk.task
         def _a_task():
             return ["hello", "world", "hello", "world", "hello"]
 
-        assert _a_task.output_metadata.n_outputs == 5
-        assert _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 5
+        assert _a_task._output_metadata.is_subscriptable
 
     def test_starred_list(self):
         @sdk.task
@@ -244,16 +244,16 @@ class TestNOutputsByNodeType:
             names = ["emiliano", "zapata"]
             return ["hello", *names, "world"]
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_list_comp(self):
         @sdk.task
         def _a_task():
             return [word.upper() for word in "hello world".split()]
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_dict(self):
         @sdk.task
@@ -261,32 +261,32 @@ class TestNOutputsByNodeType:
             val2 = "val2"
             return {"key1": "val1", "key2": val2}
 
-        assert _a_task.output_metadata.n_outputs == 2
-        assert _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 2
+        assert _a_task._output_metadata.is_subscriptable
 
     def test_starred_dict(self):
         @sdk.task
         def _a_task():
             return {**{"hello": "world"}, "hey": "there"}
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_dict_comp(self):
         @sdk.task
         def _a_task():
             return {f"key{i}": f"val{i}" for i in range(3)}
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_generator(self):
         @sdk.task
         def _a_task():
             return (word for word in "hello world".split())
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_subscript(self):
         @sdk.task
@@ -294,8 +294,8 @@ class TestNOutputsByNodeType:
             words = {"hello": "world"}
             return words["hello"]
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_bin_op(self):
         @sdk.task
@@ -304,8 +304,8 @@ class TestNOutputsByNodeType:
             b = ["emiliano", "zapata"]
             return a + b
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_unary_op(self):
         @sdk.task
@@ -313,8 +313,8 @@ class TestNOutputsByNodeType:
             num1 = 42
             return -num1
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_bool_op(self):
         @sdk.task
@@ -322,13 +322,13 @@ class TestNOutputsByNodeType:
             num1 = 42
             return num1 < 0 and num1 > -100
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_comparison(self):
         @sdk.task
         def _a_task():
             return 42 > 12
 
-        assert _a_task.output_metadata.n_outputs == 1
-        assert not _a_task.output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
