@@ -609,26 +609,28 @@ class TestGetAvailableOutputs:
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
 
+        expected_inv_0 = JSONResult(value='"hello, alex zapata!there"')
         _mock_artifact_resp(
             mocked_responses,
             wf_run_id=wf_run_id,
             inv_id="invocation-0-task-make-greeting-message",
             art_id="artifact-0-make-greeting-message",
-            result_model=JSONResult(value='"hello, alex zapata!there"'),
+            result_model=expected_inv_0,
         )
+        expected_inv_1 = _make_pickle_result(artifact_value=("hello", "there"))
         _mock_artifact_resp(
             mocked_responses,
             wf_run_id=wf_run_id,
             inv_id="invocation-1-task-multi-output-test",
             art_id="artifact-3-multi-output-test",
-            result_model=_make_pickle_result(artifact_value=("hello", "there")),
+            result_model=expected_inv_1,
         )
 
         result = runtime.get_available_outputs("hello-there-abc123-r000")
 
         assert result == {
-            "invocation-0-task-make-greeting-message": "hello, alex zapata!there",
-            "invocation-1-task-multi-output-test": ("hello", "there"),
+            "invocation-0-task-make-greeting-message": expected_inv_0,
+            "invocation-1-task-multi-output-test": expected_inv_1,
         }
 
     def test_failed_workflow(self, monkeypatch, runtime, mocked_responses):
@@ -642,12 +644,13 @@ class TestGetAvailableOutputs:
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
 
+        expected_inv_0 = JSONResult(value='"hello, alex zapata!there"')
         _mock_artifact_resp(
             mocked_responses,
             wf_run_id=wf_run_id,
             inv_id="invocation-0-task-make-greeting-message",
             art_id="artifact-0-make-greeting-message",
-            result_model=JSONResult(value='"hello, alex zapata!there"'),
+            result_model=expected_inv_0,
         )
         mocked_responses.add(
             responses.GET,
@@ -662,9 +665,7 @@ class TestGetAvailableOutputs:
         result = runtime.get_available_outputs("wf-3fmte-r000")
         # There should be a result for 1 task that finish successfully
         assert len(result) == 1
-        assert result["invocation-0-task-make-greeting-message"] == (
-            "hello, alex zapata!there"
-        )
+        assert result["invocation-0-task-make-greeting-message"] == expected_inv_0
 
 
 class TestGetWorkflowRunStatus:
@@ -908,7 +909,7 @@ class TestGetWorkflowRunOutputsNonBlocking:
             "hello-there-abc123-r000"
         )
 
-        assert result == ("hello, alex zapata!there",)
+        assert result == (JSONResult(value='"hello, alex zapata!there"'),)
 
     def test_get_workflow_run_outputs_non_blocking_fails(
         self, mock_workflow_db_location

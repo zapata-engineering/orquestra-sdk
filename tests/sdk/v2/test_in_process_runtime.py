@@ -15,6 +15,7 @@ import pytest
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
+from orquestra.sdk._base import serde
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
 from orquestra.sdk._base._testing._example_wfs import wf_with_secrets
 from orquestra.sdk.schema import ir
@@ -75,7 +76,7 @@ def test_secret_inside_ir(
     run_id = runtime.create_workflow_run(wf_with_secrets().model, None)
     result = runtime.get_workflow_run_outputs_non_blocking(run_id)
 
-    assert result == "Mocked"
+    assert result == (serde.result_from_artifact("Mocked", ir.ArtifactFormat.AUTO),)
 
 
 class TestQueriesAfterRunning:
@@ -92,7 +93,9 @@ class TestQueriesAfterRunning:
     class TestGetWorkflowRunOutputs:
         @staticmethod
         def test_output_values(runtime, run_id):
-            assert runtime.get_workflow_run_outputs_non_blocking(run_id) == 3
+            assert runtime.get_workflow_run_outputs_non_blocking(run_id) == (
+                serde.result_from_artifact(3, ir.ArtifactFormat.AUTO),
+            )
 
         @staticmethod
         def test_multiple_runs(runtime):
@@ -116,7 +119,9 @@ class TestQueriesAfterRunning:
             single-output task.
             """
             assert runtime.get_available_outputs(run_id) == {
-                "invocation-0-task-sum-tuple-numbers": 3
+                "invocation-0-task-sum-tuple-numbers": serde.result_from_artifact(
+                    3, ir.ArtifactFormat.AUTO
+                )
             }
 
         class TestMultipleTaskOutputs:
@@ -125,7 +130,9 @@ class TestQueriesAfterRunning:
                 run_id = runtime.create_workflow_run(wf_def_unused_outputs, None)
 
                 assert runtime.get_available_outputs(run_id) == {
-                    "invocation-0-task-two-outputs": (6, 4)
+                    "invocation-0-task-two-outputs": serde.result_from_artifact(
+                        (6, 4), ir.ArtifactFormat.AUTO
+                    ),
                 }
 
             @staticmethod
@@ -133,7 +140,9 @@ class TestQueriesAfterRunning:
                 run_id = runtime.create_workflow_run(wf_def_all_used, None)
 
                 assert runtime.get_available_outputs(run_id) == {
-                    "invocation-0-task-two-outputs": (6, 4)
+                    "invocation-0-task-two-outputs": serde.result_from_artifact(
+                        (6, 4), ir.ArtifactFormat.AUTO
+                    ),
                 }
 
 
