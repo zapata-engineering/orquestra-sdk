@@ -764,7 +764,7 @@ def test_task_code_unavailable_at_building_dag(runtime: _dag.RayRuntime):
     task_id = list(wf_def.tasks.keys())[0]
 
     # ignoring mypy, this is supposed to be module fn repo
-    wf_def.tasks[task_id].fn_ref.module = "nope"  # type: ignore
+    wf_def.tasks[task_id]._fn_ref.module = "nope"  # type: ignore
 
     # when
     wf_id = runtime.create_workflow_run(wf_def)
