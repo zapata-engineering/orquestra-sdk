@@ -3,6 +3,7 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+* Workflow and task results on CE have changed shape. This may cause some oddness when downloading older workflow results.
 
 🔥 *Features*
 * New built-in config name - "auto" - used to submit workflows to a remote cluster when used inside Orquestra Studio.
@@ -24,6 +25,7 @@ def my_wf():
     out1, out2 = all_outputs
     return b, all_outputs, out1, out2
 ```
+* Pickled workflow/task results should no longer cause workflows to fail inside the SDK machinery. Note: when passing a Python object between your tasks, you **must** ensure the Python dependencies are installed.
 
 💅 *Improvements*
 

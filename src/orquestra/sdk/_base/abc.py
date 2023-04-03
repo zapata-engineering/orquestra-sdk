@@ -18,6 +18,7 @@ from pathlib import Path
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
+from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
     ProjectRef,
     State,
@@ -100,7 +101,7 @@ class RuntimeInterface(ABC):
     @abstractmethod
     def get_workflow_run_outputs_non_blocking(
         self, workflow_run_id: WorkflowRunId
-    ) -> t.Sequence[ArtifactValue]:
+    ) -> t.Sequence[WorkflowResult]:
         """Non-blocking version of get_workflow_run_outputs.
 
         This method raises exceptions if the workflow output artifacts are not available
@@ -113,7 +114,7 @@ class RuntimeInterface(ABC):
     @abstractmethod
     def get_available_outputs(
         self, workflow_run_id: WorkflowRunId
-    ) -> t.Dict[TaskInvocationId, t.Tuple[ArtifactValue, ...]]:
+    ) -> t.Dict[TaskInvocationId, WorkflowResult]:
         """Returns all available outputs for a workflow
 
         This method returns all available artifacts. When the workflow fails it returns
