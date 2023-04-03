@@ -103,7 +103,7 @@ class TestArtifactFuturePublicMethods:
             if attr != "custom_image":
                 if future.invocation.resources is None:
                     assert (
-                        new_future.invocation.resources == future.invocation.resources
+                        new_future.invocation.resources == future.invocation._resources
                     )
                 else:
                     assert getattr(new_future.invocation.resources, attr) == getattr(
@@ -132,7 +132,7 @@ class TestArtifactFuturePublicMethods:
             assert getattr(new_future.invocation.resources, attr) == expected_value
         else:
             if future.invocation.resources is None:
-                assert new_future.invocation.resources == future.invocation.resources
+                assert new_future.invocation.resources == future.invocation._resources
             else:
                 assert getattr(new_future.invocation.resources, attr) == getattr(
                     future.invocation.resources, attr
@@ -185,8 +185,8 @@ def task_no_source():
 def test_task_no_linenumber_if_source_inaccessible():
     task_no_source.__code__ = task_no_source.__code__.replace(co_filename="fake")
     local_task = _dsl.task(task_no_source)
-    assert isinstance(local_task.fn_ref, _dsl.ModuleFunctionRef)
-    assert local_task.fn_ref.line_number is None
+    assert isinstance(local_task._fn_ref, _dsl.ModuleFunctionRef)
+    assert local_task._fn_ref.line_number is None
 
 
 def test_external_file_task_calling():
@@ -260,7 +260,7 @@ def test_accessing_deprecated_n_outputs():
         return 0, 1
 
     with pytest.warns(DeprecationWarning):
-        assert _local_task.n_outputs == _local_task.output_metadata.n_outputs == 2
+        assert _local_task.n_outputs == _local_task._output_metadata.n_outputs == 2
 
 
 def test_iter_artifact_future():
@@ -356,13 +356,13 @@ def test_resourced_task_with_custom_gpu_image():
         return "hello"
 
     hello = _local_task()
-    assert hello.invocation.task.custom_image == _dsl.GPU_IMAGE
+    assert hello.invocation.task._custom_image == _dsl.GPU_IMAGE
 
 
 def test_resourced_task_with_default_gpu_image():
     future = _resourced_task()
 
-    assert future.invocation.task.custom_image == _dsl.GPU_IMAGE
+    assert future.invocation.task._custom_image == _dsl.GPU_IMAGE
 
 
 def test_task_with_default_image():
@@ -371,7 +371,7 @@ def test_task_with_default_image():
         return "hello"
 
     hello = _local_task()
-    assert hello.invocation.task.custom_image == _dsl.DEFAULT_IMAGE
+    assert hello.invocation.task._custom_image == _dsl.DEFAULT_IMAGE
 
 
 @pytest.fixture
@@ -560,7 +560,7 @@ def test_default_for_interactive_mode(monkeypatch):
         ...
 
     # type comparison to check if in interactive mode default is INLINE
-    assert type(task.source_import) is type(inline_task.source_import)  # noqa
+    assert type(task._source_import) is type(inline_task._source_import)  # noqa
 
 
 def test_default_for_non_interactive_mode(monkeypatch):
@@ -575,7 +575,7 @@ def test_default_for_non_interactive_mode(monkeypatch):
         ...
 
     # type comparison to check if in  non-interactive mode default is INLINE
-    assert type(task.source_import) is type(local_task.source_import)  # noqa
+    assert type(task._source_import) is type(local_task._source_import)  # noqa
 
 
 @pytest.mark.parametrize(

@@ -14,6 +14,7 @@ from typing import (
     Callable,
     Dict,
     Generic,
+    Iterable,
     List,
     NamedTuple,
     Optional,
@@ -34,6 +35,7 @@ from ._ast import CallVisitor, NodeReference, NodeReferenceType, normalize_inden
 from ._dsl import (
     DataAggregation,
     FunctionRef,
+    Import,
     Secret,
     TaskDef,
     UnknownPlaceholderInCustomNameWarning,
@@ -71,6 +73,8 @@ class WorkflowDef(Generic[_R]):
         data_aggregation: Optional[DataAggregation] = None,
         workflow_args: Optional[Tuple[Any, ...]] = None,
         workflow_kwargs: Optional[Dict[str, Any]] = None,
+        default_source_import: Optional[Import] = None,
+        default_dependency_imports: Optional[Iterable[Import]] = None,
     ):
         self._name = name
         self._fn = workflow_fn
@@ -79,6 +83,8 @@ class WorkflowDef(Generic[_R]):
         self._data_aggregation = data_aggregation
         self._workflow_args = workflow_args or ()
         self._workflow_kwargs = workflow_kwargs or {}
+        self.default_source_import = default_source_import
+        self.default_dependency_imports = default_dependency_imports
 
     @property
     def name(self) -> str:
@@ -314,6 +320,8 @@ class WorkflowTemplate(Generic[_P, _R]):
         is_parametrized: bool,
         resources: _dsl.Resources,
         data_aggregation: Optional[Union[DataAggregation, bool]] = None,
+        default_source_import: Optional[Import] = None,
+        default_dependency_imports: Optional[Iterable[Import]] = None,
     ):
         self._custom_name = custom_name
         self._fn = workflow_fn
@@ -321,6 +329,8 @@ class WorkflowTemplate(Generic[_P, _R]):
         self._is_parametrized = is_parametrized
         self._resources = resources
         self._data_aggregation = data_aggregation
+        self._default_source_import = default_source_import
+        self._default_dependency_imports = default_dependency_imports
 
     def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> WorkflowDef[_R]:
         """
@@ -400,6 +410,8 @@ class WorkflowTemplate(Generic[_P, _R]):
             data_aggregation=data_aggregation,
             workflow_args=args,
             workflow_kwargs=kwargs,
+            default_source_import=self._default_source_import,
+            default_dependency_imports=self._default_dependency_imports,
         )
 
     @property
@@ -575,6 +587,8 @@ def workflow(
     resources: Optional[_dsl.Resources] = None,
     data_aggregation: Optional[Union[DataAggregation, bool]] = None,
     custom_name: Optional[str] = None,
+    default_source_import: Optional[Import] = None,
+    default_dependency_imports: Optional[Iterable[Import]] = None,
 ) -> Callable[[Callable[_P, _R]], WorkflowTemplate[_P, _R]]:
     ...
 
@@ -585,6 +599,8 @@ def workflow(
     resources: Optional[_dsl.Resources] = None,
     data_aggregation: Optional[Union[DataAggregation, bool]] = None,
     custom_name: Optional[str] = None,
+    default_source_import: Optional[Import] = None,
+    default_dependency_imports: Optional[Iterable[Import]] = None,
 ) -> Union[
     WorkflowTemplate[_P, _R],
     Callable[[Callable[_P, _R]], WorkflowTemplate[_P, _R]],
@@ -602,6 +618,15 @@ def workflow(
             or assigned True default values will be used. If assigned False
             data aggregation step will not run.
         custom_name: custom name for the workflow
+        default_source_import: Set the default source import for all tasks inside
+           this workflow.
+           Important: if a task defines its own individual source import, the workflow
+           scoped default_source_import will be ignored.
+        default_dependency_imports: Set the default dependency imports for all tasks
+           inside this workflow.
+           Important: if a task defines its own individual dependency imports, the
+           workflow scoped default_dependency_imports will be ignored for that
+           particular task
 
     You can use the Python API to submit workflows for execution::
 
@@ -645,6 +670,8 @@ def workflow(
             fn_ref=fn_ref,
             is_parametrized=len(signature.parameters) > 0,
             data_aggregation=data_aggregation,
+            default_source_import=default_source_import,
+            default_dependency_imports=default_dependency_imports,
         )
         functools.update_wrapper(template, fn)
         return template
