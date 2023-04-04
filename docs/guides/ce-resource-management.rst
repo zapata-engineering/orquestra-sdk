@@ -21,12 +21,41 @@ Required hardware resources are configured on a per-task basis by setting the ``
         ...
 
 ``resources`` expects a ``sdk.Resources()`` object that specifies some or all of:
-* number of cores (``cpu``)
-* amount of RAM (``memory``)
-* disk space (``disk``)
-* number of GPU computing units (``gpu``)
+* ``cpu``: number of cores.
+* ``memory``: amount of RAM (bytes).
+* ``disk``: disk space (bytes).
+* ``gpu``: whether access to a gpu unit is required (``1`` if a GPU is required, ``0`` otherwise).
 
-The example above specifies a task that requires 100 milicores (or 0.1 cores), 1 Gb of RAM, 10 Gb of disk space, and access to a GPU.
+Amounts of cpu and memory resources can be specified as a plain integer, or as a fixed-point float appended with the string representation of one of the following unit prefixes. These can be SI (metric), or IEC (binary) prefixes.
+
+.. table:: unit prefixes
+    :widths: auto
+
+    +---------+-------+--------+------------+----------------+-----------------+
+    |         | Name  | String | Power of 2 | Power of 1024  | Power of 10     |
+    +=========+=======+========+============+================+=================+
+    | Binary  | kibi  | ki     | 2^10       | 1024^1         | 1.024 x 10^3    |
+    |         | mibi  | Mi     | 2^20       | 1024^2         | ~ 1.049 x 10^6  |
+    |         | gibi  | Gi     | 2^30       | 1024^3         | ~ 1.074 x 10^9  |
+    |         | tebi  | Ti     | 2^40       | 1024^4         | ~ 1.100 x 10^12 |
+    |         | pebi  | Pi     | 2^50       | 1024^5         | ~ 1.126 x 10^15 |
+    |         | exbi  | Ei     | 2^60       | 1025^6         | ~ 1.153 x 10^18 |
+    +---------+-------+--------+------------+----------------+-----------------+
+    | Metric  | nano  | n      | ~ 2^-29.90 | ~ 1024^-2.990  | 10^-9           |
+    |         | micro | u      | ~ 2^-19.93 | ~ 1024^-1.993  | 10^-6           |
+    |         | milli | m      | ~ 2^-9.966 | ~ 1024^-0.9966 | 10^-3           |
+    |         | kilo  | k      | ~ 2^9.966  | ~ 1024^0.9966  | 10^3            |
+    |         | mega  | M      | ~ 2^19.93  | ~ 1024^1.993   | 10^6            |
+    |         | giga  | G      | ~ 2^29.90  | ~ 1024^2.990   | 10^9            |
+    |         | tera  | T      | ~ 2^39.86  | ~ 1024^3.986   | 10^12           |
+    |         | peta  | P      | ~ 2^49.83  | ~ 1024^4.983   | 10^15           |
+    |         | exa   | E      | ~ 2^59.79  | ~ 1024^5.979   | 10^18           |
+    +---------+-------+--------+------------+----------------+-----------------+
+
+Convention is to use binary prefixes for memory resource requests (``disk`` and ``memory``), and decimal prefixes to specify the number of cores. The task resource request example above specifies a task that requires 100 milicores (or 0.1 cores), 1 gibibyte of RAM (2^30 bytes), 10 gibibytes of disk space(1.25*2^33 bytes), and access to a GPU.
+
+.. note:: mixing unit prefixes
+    Binary and decimal units can be used interchangeably, however this can occasionally cause confusion, and care must be taken when specifying these parameters. For example, a memory request of ``100m`` specifies not 100 megabytes, but 100 millibytes, or 0.1 bytes.
 
 Setting Workflow Resources
 --------------------------
