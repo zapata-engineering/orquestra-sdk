@@ -42,8 +42,8 @@ class TestInstalledImport:
         imp = packaging.InstalledImport(package_name="some-package")
         # Then
         assert isinstance(imp, sdk.PythonImports)
-        assert len(imp.packages) == 1
-        assert imp.packages[0] == "some-package==1.2.3"
+        assert len(imp._packages) == 1
+        assert imp._packages[0] == "some-package==1.2.3"
 
     @staticmethod
     def test_package_not_found(monkeypatch):
@@ -78,8 +78,8 @@ class TestInstalledImport:
         )
         # Then
         assert isinstance(imp, sdk.PythonImports)
-        assert len(imp.packages) == 1
-        assert imp.packages[0] == "some-package==1.2.3"
+        assert len(imp._packages) == 1
+        assert imp._packages[0] == "some-package==1.2.3"
 
     @staticmethod
     def test_package_version_does_not_match(monkeypatch):
