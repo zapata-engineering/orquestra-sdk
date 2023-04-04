@@ -56,12 +56,12 @@ A deadlock can be created on Compute Engine if a task attempts to spawn addition
     def task():
         config = DQNConfig()
         ...
-        config.rollouts(num_rollout_workers=2)  # child processes do not have access to
-        ...                                     # task resources.
+        config.rollouts(num_rollout_workers=2)  # additional processes do not have
+        ...                                     # access to task resources.
         return results
 
     @sdk.workflow(resources=...)                # Override the aggregated task
     def wf():                                   # resources to provision additional
-        results = []                            # resources for the child processes.
-        for _ in range(5):
+        results = []                            # resources for the additional
+        for _ in range(5):                      # processes.
             results.append(task())
