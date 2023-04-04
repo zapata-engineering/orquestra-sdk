@@ -11,6 +11,7 @@ import re
 import traceback
 import warnings
 from collections import OrderedDict
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from string import Formatter
@@ -39,8 +40,6 @@ if TYPE_CHECKING:
     import pip_api
 
 import wrapt  # type: ignore
-
-import orquestra.sdk.schema.ir as ir
 
 from ..exceptions import DirtyGitRepo, InvalidTaskDefinitionError, WorkflowSyntaxError
 from . import _ast
@@ -85,7 +84,8 @@ class Secret(NamedTuple):
     config_name: Optional[str] = None
 
 
-class GitImportWithAuth(NamedTuple):
+@dataclass(frozen=True, eq=True)
+class GitImportWithAuth:
     """
     A task import that uses a private Git repo
 
@@ -98,7 +98,8 @@ class GitImportWithAuth(NamedTuple):
     auth_secret: Optional[Secret]
 
 
-class GitImport(NamedTuple):
+@dataclass(frozen=True, eq=True)
+class GitImport:
     """A task import that uses a Git repository"""
 
     repo_url: str
@@ -199,11 +200,12 @@ class PythonImports:
         # Path to a `requirements.txt` file
         file: Optional[str] = None,
     ):
-        self.use_file_path = False
+        self._file: Optional[Path]
         if file is not None:
-            self.file = pathlib.Path(file)
-            self.use_file_path = True
-        self.packages = packages
+            self._file = pathlib.Path(file)
+        else:
+            self._file = None
+        self._packages = packages
 
     def resolved(self) -> List[pip_api.Requirement]:
         import pip_api
@@ -211,14 +213,14 @@ class PythonImports:
         # on Windows file cannot be reopened when it's opened with delete=True
         # So the temp file is closed first and then deleted manually.
         tmp_file = NamedTemporaryFile(mode="w+", delete=False)
-        if self.use_file_path:
+        if self._file is not None:
             # gather all requirements from file
-            with open(self.file) as file:
+            with open(self._file) as file:
                 lines = file.readlines()
             for line in lines:
                 tmp_file.write(line)
         # gather all requirements passed by the user
-        for package in self.packages:
+        for package in self._packages:
             tmp_file.write(f"{package}\n")
         tmp_file.flush()
         tmp_file.close()
@@ -235,8 +237,18 @@ class PythonImports:
             req for req in requirements.values() if isinstance(req, pip_api.Requirement)
         ]
 
+    def __eq__(self, other):
+        if not isinstance(other, PythonImports):
+            return False
 
-class LocalImport(NamedTuple):
+        return self._file == other._file and self._packages == other._packages
+
+    def __hash__(self):
+        return hash((self._file, self._packages))
+
+
+@dataclass(frozen=True, eq=True)
+class LocalImport:
     """Used to specify that the source code is only available locally.
     e.g. not committed to any git repo or in a Python package
     """
@@ -244,7 +256,8 @@ class LocalImport(NamedTuple):
     module: str
 
 
-class InlineImport(NamedTuple):
+@dataclass(frozen=True, eq=True)
+class InlineImport:
     """
     A task import that stores the function "inline" with the workflow definition.
     """
@@ -252,6 +265,17 @@ class InlineImport(NamedTuple):
     pass
 
 
+# If updating this list, you must also update the Import type.
+# These are both here to more easily support isinstance(obj, Import)
+# Python 3.10 fixes this by allowing Unions in isinstance checks
+ImportTypes = (
+    LocalImport,
+    GitImport,
+    GitImportWithAuth,
+    DeferredGitImport,
+    PythonImports,
+    InlineImport,
+)
 Import = Union[
     LocalImport,
     GitImport,
@@ -922,7 +946,7 @@ def task(fn: Callable[_P, _R]) -> TaskDef[_P, _R]:
 def task(
     *,
     source_import: Optional[Import] = None,
-    dependency_imports: Optional[Iterable[Import]] = None,
+    dependency_imports: Union[Iterable[Import], Import, None] = None,
     resources: Resources = Resources(),
     n_outputs: Optional[int] = None,
     custom_image: Optional[str] = None,
@@ -936,7 +960,7 @@ def task(
     fn: Callable[_P, _R],
     *,
     source_import: Optional[Import] = None,
-    dependency_imports: Optional[Iterable[Import]] = None,
+    dependency_imports: Union[Iterable[Import], Import, None] = None,
     resources: Resources = Resources(),
     n_outputs: Optional[int] = None,
     custom_image: Optional[str] = None,
@@ -949,7 +973,7 @@ def task(
     fn: Optional[Callable[_P, _R]] = None,
     *,
     source_import: Optional[Import] = None,
-    dependency_imports: Optional[Iterable[Import]] = None,
+    dependency_imports: Union[Iterable[Import], Import, None] = None,
     resources: Resources = Resources(),
     n_outputs: Optional[int] = None,
     custom_image: Optional[str] = None,
@@ -982,9 +1006,14 @@ def task(
             every char that is non-alphanumeric will be changed to dash ("-").
             Also only first 128 characters of the name will be used
     """
-    task_dependency_imports: Optional[Tuple[Import, ...]] = (
-        tuple(dependency_imports) if dependency_imports else None
-    )
+    task_dependency_imports: Optional[Tuple[Import, ...]]
+
+    if dependency_imports is None:
+        task_dependency_imports = None
+    elif isinstance(dependency_imports, ImportTypes):
+        task_dependency_imports = (dependency_imports,)
+    elif dependency_imports is not None:
+        task_dependency_imports = tuple(dependency_imports)
 
     if n_outputs is not None:
         if n_outputs <= 0:

@@ -686,3 +686,49 @@ def test_python_310_importlib_abc_bug():
     command = f'{str(sys.executable)} -c "import orquestra.sdk as sdk"'
     proc = subprocess.run(command, shell=True, capture_output=True)
     assert proc.returncode == 0, proc.stderr.decode()
+
+
+@pytest.mark.parametrize(
+    "obj",
+    [
+        sdk.GitImport(
+            git_ref="https://github.com/zapatacomputing/orquestra-workflow-sdk.git",
+            repo_url="main",
+        ),
+        sdk.GithubImport("zapatacomputing/orquestra-workflow-sdk"),
+        sdk.PythonImports("numpy"),
+        sdk.LocalImport("module"),
+        sdk.InlineImport(),
+    ],
+)
+def test_dsl_imports_not_iterable(obj):
+    with pytest.raises(TypeError):
+        [a for a in obj]
+
+
+@pytest.mark.parametrize(
+    "dependency_imports, expected_imports",
+    [
+        (None, None),
+        (sdk.InlineImport(), (sdk.InlineImport(),)),
+        (sdk.LocalImport("mod"), (sdk.LocalImport("mod"),)),
+        (
+            sdk.GitImport(repo_url="abc", git_ref="xyz"),
+            (sdk.GitImport(repo_url="abc", git_ref="xyz"),),
+        ),
+        (
+            sdk.GithubImport("abc"),
+            (sdk.GithubImport("abc"),),
+        ),
+        (
+            sdk.PythonImports("abc"),
+            (sdk.PythonImports("abc"),),
+        ),
+    ],
+)
+def test_dependency_imports(dependency_imports, expected_imports):
+    @sdk.task(dependency_imports=dependency_imports)
+    def my_task():
+        pass
+
+    assert my_task._dependency_imports == expected_imports
