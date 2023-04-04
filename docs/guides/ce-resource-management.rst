@@ -28,29 +28,29 @@ Required hardware resources are configured on a per-task basis by setting the ``
 
 Amounts of cpu and memory resources can be specified as a plain integer, or as a fixed-point float appended with the string representation of one of the following unit prefixes. These can be SI (metric), or IEC (binary) prefixes. The specified prefix will be used to modify the base unit for the parameter, 'byte' in the case of ``memory`` and ``disk`` requests, 'cores' in the case of ``cpu`` requests. So ``disk="10k"`` will be interpreted as '10 kilobytes', while ``cpu="10k"`` would request 10^7 cores.
 
-.. table:: unit prefixes
+.. table:: unit multipliers
     :widths: auto
 
-    +---------+-------+--------+------------+----------------+-----------------+
-    |         | Name  | String | Power of 2 | Power of 1024  | Power of 10     |
-    +=========+=======+========+============+================+=================+
-    | Binary  | kibi  | Ki     | 2^10       | 1024^1         | 1.024 x 10^3    |
-    |         | mibi  | Mi     | 2^20       | 1024^2         | ~ 1.049 x 10^6  |
-    |         | gibi  | Gi     | 2^30       | 1024^3         | ~ 1.074 x 10^9  |
-    |         | tebi  | Ti     | 2^40       | 1024^4         | ~ 1.100 x 10^12 |
-    |         | pebi  | Pi     | 2^50       | 1024^5         | ~ 1.126 x 10^15 |
-    |         | exbi  | Ei     | 2^60       | 1025^6         | ~ 1.153 x 10^18 |
-    +---------+-------+--------+------------+----------------+-----------------+
-    | Metric  | nano  | n      | ~ 2^-29.90 | ~ 1024^-2.990  | 10^-9           |
-    |         | micro | u      | ~ 2^-19.93 | ~ 1024^-1.993  | 10^-6           |
-    |         | milli | m      | ~ 2^-9.966 | ~ 1024^-0.9966 | 10^-3           |
-    |         | kilo  | k      | ~ 2^9.966  | ~ 1024^0.9966  | 10^3            |
-    |         | mega  | M      | ~ 2^19.93  | ~ 1024^1.993   | 10^6            |
-    |         | giga  | G      | ~ 2^29.90  | ~ 1024^2.990   | 10^9            |
-    |         | tera  | T      | ~ 2^39.86  | ~ 1024^3.986   | 10^12           |
-    |         | peta  | P      | ~ 2^49.83  | ~ 1024^4.983   | 10^15           |
-    |         | exa   | E      | ~ 2^59.79  | ~ 1024^5.979   | 10^18           |
-    +---------+-------+--------+------------+----------------+-----------------+
+    +---------+-------+--------+-------+
+    |         | Name  | String | Value |
+    +=========+=======+========+=======+
+    | Binary  | kibi  | Ki     | 2^10  |
+    |         | mibi  | Mi     | 2^20  |
+    |         | gibi  | Gi     | 2^30  |
+    |         | tebi  | Ti     | 2^40  |
+    |         | pebi  | Pi     | 2^50  |
+    |         | exbi  | Ei     | 2^60  |
+    +---------+-------+--------+-------+
+    | Metric  | nano  | n      | 10^-9 |
+    |         | micro | u      | 10^-6 |
+    |         | milli | m      | 10^-3 |
+    |         | kilo  | k      | 10^3  |
+    |         | mega  | M      | 10^6  |
+    |         | giga  | G      | 10^9  |
+    |         | tera  | T      | 10^12 |
+    |         | peta  | P      | 10^15 |
+    |         | exa   | E      | 10^18 |
+    +---------+-------+--------+-------+
 
 Convention is to use binary prefixes for memory resource requests (``disk`` and ``memory``), and decimal prefixes to specify the number of cores. The task resource request example above specifies a task that requires 100 milicores (or 0.1 cores), 1 gibibyte of RAM (2^30 bytes), 10 gibibytes of disk space(1.25*2^33 bytes), and access to a GPU.
 
