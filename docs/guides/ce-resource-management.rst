@@ -48,7 +48,7 @@ In most cases, defining resources in this way will be unnecessary as Compute Eng
 Troubleshooting Common Resource Issues
 --------------------------------------
 
-A deadlock can be created on Compute Engine if a task attempts to spawn additional processes, notably via the DNQ ``rollouts`` facility. Resources requested in a task definition are bound to the task process, so additional processes can rapidly exhaust the provisioned resources. In these cases, additional resources should be specified in the workflow decorator.
+Due to the way Ray's RLLib works, a deadlock can be created on Compute Engine if a task attempts to spawn additional processes, notably via the DNQ ``rollouts`` facility. Resources requested in a task definition are bound to the task process, so additional processes can rapidly exhaust the provisioned resources. In these cases, additional resources should be specified in the workflow decorator.
 
 .. code-block::
     :caption: Example: override workflow resources.
