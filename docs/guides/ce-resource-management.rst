@@ -26,7 +26,7 @@ Required hardware resources are configured on a per-task basis by setting the ``
 * ``disk``: disk space (bytes).
 * ``gpu``: whether access to a gpu unit is required (``1`` if a GPU is required, ``0`` otherwise).
 
-Amounts of cpu and memory resources can be specified as a plain integer, or as a fixed-point float appended with the string representation of one of the following unit prefixes. These can be SI (metric), or IEC (binary) prefixes.
+Amounts of cpu and memory resources can be specified as a plain integer, or as a fixed-point float appended with the string representation of one of the following unit prefixes. These can be SI (metric), or IEC (binary) prefixes. The specified prefix will be used to modify the base unit for the parameter, 'byte' in the case of ``memory`` and ``disk`` requests, 'cores' in the case of ``cpu`` requests. So ``disk="10k"`` will be interpreted as '10 kilobytes', while ``cpu="10k"`` would request 10^7 cores.
 
 .. table:: unit prefixes
     :widths: auto
