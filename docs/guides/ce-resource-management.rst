@@ -34,7 +34,7 @@ Amounts of cpu and memory resources can be specified as a plain integer, or as a
     +---------+-------+--------+------------+----------------+-----------------+
     |         | Name  | String | Power of 2 | Power of 1024  | Power of 10     |
     +=========+=======+========+============+================+=================+
-    | Binary  | kibi  | ki     | 2^10       | 1024^1         | 1.024 x 10^3    |
+    | Binary  | kibi  | Ki     | 2^10       | 1024^1         | 1.024 x 10^3    |
     |         | mibi  | Mi     | 2^20       | 1024^2         | ~ 1.049 x 10^6  |
     |         | gibi  | Gi     | 2^30       | 1024^3         | ~ 1.074 x 10^9  |
     |         | tebi  | Ti     | 2^40       | 1024^4         | ~ 1.100 x 10^12 |
