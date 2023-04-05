@@ -36,6 +36,7 @@ from ._dsl import (
     DataAggregation,
     FunctionRef,
     Import,
+    ImportTypes,
     Secret,
     TaskDef,
     UnknownPlaceholderInCustomNameWarning,
@@ -600,7 +601,7 @@ def workflow(
     data_aggregation: Optional[Union[DataAggregation, bool]] = None,
     custom_name: Optional[str] = None,
     default_source_import: Optional[Import] = None,
-    default_dependency_imports: Optional[Iterable[Import]] = None,
+    default_dependency_imports: Union[Iterable[Import], Import, None] = None,
 ) -> Union[
     WorkflowTemplate[_P, _R],
     Callable[[Callable[_P, _R]], WorkflowTemplate[_P, _R]],
@@ -658,6 +659,14 @@ def workflow(
 
     will raise a NotATaskWarning on the `np.ones` call, but not for the `my_task` call.
     """
+    workflow_default_dependency_imports: Optional[Tuple[Import, ...]]
+
+    if default_dependency_imports is None:
+        workflow_default_dependency_imports = None
+    elif isinstance(default_dependency_imports, ImportTypes):
+        workflow_default_dependency_imports = (default_dependency_imports,)
+    elif default_dependency_imports is not None:
+        workflow_default_dependency_imports = tuple(default_dependency_imports)
 
     def _inner(fn: Callable[_P, _R]):
         signature = inspect.signature(fn)
@@ -671,7 +680,7 @@ def workflow(
             is_parametrized=len(signature.parameters) > 0,
             data_aggregation=data_aggregation,
             default_source_import=default_source_import,
-            default_dependency_imports=default_dependency_imports,
+            default_dependency_imports=workflow_default_dependency_imports,
         )
         functools.update_wrapper(template, fn)
         return template

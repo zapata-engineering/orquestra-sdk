@@ -642,6 +642,9 @@ def flatten_graph(
         invocation.task: _make_task_model(invocation.task, import_models_dict)
         for invocation in graph.invocations.keys()
     }
+    # make sure we can execute tasks
+    for task in task_models_dict:
+        task.validate_task()
 
     dsl_invocations = list(graph.invocations.keys())
 
