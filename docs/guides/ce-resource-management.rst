@@ -60,18 +60,27 @@ Convention is to use binary prefixes for memory resource requests (``disk`` and 
 Setting Workflow Resources
 --------------------------
 
-Resources can also be configured at the workflow definition level using the same syntax as with tasks:
+Resources can also be configured at the workflow definition level using the same syntax as with tasks, with one difference - the ``sdk.Resources()`` object my additionally specify a number of nodes to be requested for the workflow. The full parameter list is therefore:
+* ``cpu``: number of cores.
+* ``memory``: amount of RAM (bytes).
+* ``disk``: disk space (bytes).
+* ``gpu``: whether access to a gpu unit is required (``1`` if a GPU is required, ``0`` otherwise).
+* ``nodes``: the number of nodes requested.
 
 .. code-block::
     :caption: workflow resource request example
 
     @sdk.workflow(
-        resources=sdk.Resources(cpu="100m", memory="1Gi", disk="10Gi", gpu="1")
+        resources=sdk.Resources(cpu="100m", memory="1Gi", disk="10Gi", gpu="1", nodes=5)
     )
     def my_workflow():
         ...
 
-In most cases, defining resources in this way will be unnecessary as Compute Engine can infer the overall resource requirements from the aggregated requirements of individual tasks. The primary use-case for this facility is to provision additional resources that aren't covered by the task definitions, such as when tasks spawn additional actors or remote functions.
+
+.. note:: nodes
+    Note that unlike the other parameters, ``nodes`` must be an integer rather than a string.
+
+In most cases, defining resources in this way will be unnecessary as Compute Engine can infer the overall resource requirements from the aggregated requirements of individual tasks. The primary use-cases for this facility is to provision additional resources that aren't covered by the task definitions, such as when tasks spawn additional actors or remote functions, or to specify a the number of nodes.
 
 
 Troubleshooting Common Resource Issues
