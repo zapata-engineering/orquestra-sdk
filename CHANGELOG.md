@@ -38,6 +38,8 @@ If a task defines its own imports (either source, dependencies, or both) - it wi
 
 📃 *Docs*
 
+* Guide: CE Resource Management
+
 ## v0.45.1
 
 🐛 *Bug Fixes*

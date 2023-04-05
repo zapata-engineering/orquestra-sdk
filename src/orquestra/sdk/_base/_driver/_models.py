@@ -204,6 +204,9 @@ class Resources(pydantic.BaseModel):
         https://github.com/zapatacomputing/workflow-driver/blob/580c8d8/openapi/src/schemas/Resources.yaml
     """
 
+    # If this schema is changed, the documentation in
+    # docs/guides/ce-resource-management.rst should also be updated.
+
     nodes: Optional[int]
     cpu: Optional[str] = pydantic.Field(
         regex=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
