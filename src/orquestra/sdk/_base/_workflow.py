@@ -36,12 +36,12 @@ from ._dsl import (
     DataAggregation,
     FunctionRef,
     Import,
+    ImportTypes,
     Secret,
     TaskDef,
     UnknownPlaceholderInCustomNameWarning,
     get_fn_ref,
     parse_custom_name,
-    ImportTypes,
 )
 from ._in_process_runtime import InProcessRuntime
 
