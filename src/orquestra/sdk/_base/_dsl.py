@@ -475,10 +475,7 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
         )
         return self._output_metadata.n_outputs
 
-    def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> _R:
-        # In case of local run the workflow is executed as a python script
-        if DIRECT_EXECUTION:
-            return self.__sdk_task_body(*args, **kwargs)
+    def _validate_task_not_in_main(self):
         if (
             not isinstance(self._source_import, InlineImport)
             and isinstance(self._fn_ref, ModuleFunctionRef)
@@ -493,6 +490,14 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
                 f"def {self._fn_name}(): ..."
             )
             raise InvalidTaskDefinitionError(err)
+
+    def validate_task(self):
+        self._validate_task_not_in_main()
+
+    def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+        # In case of local run the workflow is executed as a python script
+        if DIRECT_EXECUTION:
+            return self.__sdk_task_body(*args, **kwargs)
         try:
             signature = inspect.signature(self.__sdk_task_body).bind(*args, **kwargs)
         except TypeError as exc:
