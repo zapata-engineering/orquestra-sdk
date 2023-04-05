@@ -641,7 +641,7 @@ class TestRefToMain:
                 "workflow_defs.py",
                 pytest.raises(sdk.exceptions.InvalidTaskDefinitionError),
             ),
-            ("wokrflow_defs_no_raise", do_not_raise()),
+            ("workflow_defs_no_raise.py", do_not_raise()),
         ],
     )
     def test_ref_to_main_in_task(self, workflow_defs_file, raises):
