@@ -369,3 +369,31 @@ class TestResources:
         )
 
         assert wf.resources == expected_resources
+
+
+@pytest.mark.parametrize(
+    "dependency_imports, expected_imports",
+    [
+        (None, None),
+        (sdk.InlineImport(), (sdk.InlineImport(),)),
+        (sdk.LocalImport("mod"), (sdk.LocalImport("mod"),)),
+        (
+            sdk.GitImport(repo_url="abc", git_ref="xyz"),
+            (sdk.GitImport(repo_url="abc", git_ref="xyz"),),
+        ),
+        (
+            sdk.GithubImport("abc"),
+            (sdk.GithubImport("abc"),),
+        ),
+        (
+            sdk.PythonImports("abc"),
+            (sdk.PythonImports("abc"),),
+        ),
+    ],
+)
+def test_default_dependency_imports(dependency_imports, expected_imports):
+    @sdk.workflow(default_dependency_imports=dependency_imports)
+    def my_workflow():
+        pass
+
+    assert my_workflow._default_dependency_imports == expected_imports

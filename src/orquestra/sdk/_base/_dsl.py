@@ -492,6 +492,12 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
             raise InvalidTaskDefinitionError(err)
 
     def validate_task(self):
+        """Validate tasks for possible incompatibilities
+
+        Raises:
+            InvalidTaskDefinitionError: If task is defined in __main__module and is not
+            inlined using source_import==InlineImport()
+        """
         self._validate_task_not_in_main()
 
     def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> _R:
