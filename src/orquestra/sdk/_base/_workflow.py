@@ -5,6 +5,7 @@ import ast
 import functools
 import inspect
 import warnings
+from collections.abc import Sequence
 from enum import Enum
 from pathlib import Path
 from types import FunctionType
@@ -13,6 +14,7 @@ from typing import (
     Callable,
     Dict,
     Generic,
+    Iterable,
     List,
     NamedTuple,
     Optional,
@@ -28,11 +30,12 @@ import orquestra.sdk.schema.ir as ir
 from orquestra.sdk.exceptions import ConfigNameNotFoundError, WorkflowSyntaxError
 
 from .. import secrets
-from . import _api, _dsl, loader
+from . import _api, _dsl, _exec_ctx, loader
 from ._ast import CallVisitor, NodeReference, NodeReferenceType, normalize_indents
 from ._dsl import (
     DataAggregation,
     FunctionRef,
+    Import,
     Secret,
     TaskDef,
     UnknownPlaceholderInCustomNameWarning,
@@ -66,16 +69,22 @@ class WorkflowDef(Generic[_R]):
         name: str,
         workflow_fn: Callable[..., _R],
         fn_ref: FunctionRef,
+        resources: _dsl.Resources,
         data_aggregation: Optional[DataAggregation] = None,
         workflow_args: Optional[Tuple[Any, ...]] = None,
         workflow_kwargs: Optional[Dict[str, Any]] = None,
+        default_source_import: Optional[Import] = None,
+        default_dependency_imports: Optional[Iterable[Import]] = None,
     ):
         self._name = name
         self._fn = workflow_fn
         self._fn_ref = fn_ref
+        self._resources = resources
         self._data_aggregation = data_aggregation
         self._workflow_args = workflow_args or ()
         self._workflow_kwargs = workflow_kwargs or {}
+        self.default_source_import = default_source_import
+        self.default_dependency_imports = default_dependency_imports
 
     @property
     def name(self) -> str:
@@ -105,8 +114,16 @@ class WorkflowDef(Generic[_R]):
         """
         from orquestra.sdk._base import _traversal
 
-        futures = _traversal.extract_root_futures(self)
-        model = _traversal.flatten_graph(self, futures)
+        with _exec_ctx.workflow_build():
+            futures = self._fn(*self._workflow_args, **self._workflow_kwargs)
+
+        _futures: Sequence
+        if not isinstance(futures, Sequence) or isinstance(futures, str):
+            _futures = (futures,)
+        else:
+            _futures = futures
+
+        model = _traversal.flatten_graph(self, _futures)
 
         if len(model.task_invocations) < 1:
             helpstr = f"The workflow '{model.name}' "
@@ -241,6 +258,54 @@ class WorkflowDef(Generic[_R]):
         run.start()
         return run
 
+    def with_resources(
+        self,
+        *,
+        cpu: Optional[Union[str, _dsl.Sentinel]] = _dsl.Sentinel.NO_UPDATE,
+        memory: Optional[Union[str, _dsl.Sentinel]] = _dsl.Sentinel.NO_UPDATE,
+        disk: Optional[Union[str, _dsl.Sentinel]] = _dsl.Sentinel.NO_UPDATE,
+        gpu: Optional[Union[str, _dsl.Sentinel]] = _dsl.Sentinel.NO_UPDATE,
+        nodes: Optional[Union[int, _dsl.Sentinel]] = _dsl.Sentinel.NO_UPDATE,
+    ) -> "WorkflowDef":
+        """
+        Assigns optional metadata related to this workflow definition object.
+
+        Doesn't modify the existing workflow definition, returns a new one.
+
+        Example usage:
+            wf_run = my_workflow().with_resources(
+                cpu="10", memory="10Gi"
+            ).run("my_cluster")
+
+        Args:
+            cpu: amount of cpu requested for the workflow
+            memory: amount of memory requested for the workflow
+            disk: amount of disk requested for the workflow
+            gpu: amount of gpu requested for the workflow
+            nodes: the number of nodes requested for the workflow
+        """
+        # Only use the new properties if they have not been changed.
+        # None is a valid option, so we are using the Sentinel object pattern:
+        # https://python-patterns.guide/python/sentinel-object/
+
+        resources = self._resources
+        new_resources = _dsl.Resources(
+            cpu=resources.cpu if cpu is _dsl.Sentinel.NO_UPDATE else cpu,
+            gpu=resources.gpu if gpu is _dsl.Sentinel.NO_UPDATE else gpu,
+            memory=resources.memory if memory is _dsl.Sentinel.NO_UPDATE else memory,
+            disk=resources.disk if disk is _dsl.Sentinel.NO_UPDATE else disk,
+            nodes=resources.nodes if nodes is _dsl.Sentinel.NO_UPDATE else nodes,
+        )
+        return WorkflowDef(
+            name=self._name,
+            workflow_fn=self._fn,
+            fn_ref=self._fn_ref,
+            resources=new_resources,
+            data_aggregation=self._data_aggregation,
+            workflow_args=self._workflow_args,
+            workflow_kwargs=self._workflow_kwargs,
+        )
+
 
 class WorkflowTemplate(Generic[_P, _R]):
     """
@@ -253,13 +318,19 @@ class WorkflowTemplate(Generic[_P, _R]):
         workflow_fn: Callable[_P, _R],
         fn_ref: FunctionRef,
         is_parametrized: bool,
+        resources: _dsl.Resources,
         data_aggregation: Optional[Union[DataAggregation, bool]] = None,
+        default_source_import: Optional[Import] = None,
+        default_dependency_imports: Optional[Iterable[Import]] = None,
     ):
         self._custom_name = custom_name
         self._fn = workflow_fn
         self._fn_ref = fn_ref
-        self._data_aggregation = data_aggregation
         self._is_parametrized = is_parametrized
+        self._resources = resources
+        self._data_aggregation = data_aggregation
+        self._default_source_import = default_source_import
+        self._default_dependency_imports = default_dependency_imports
 
     def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> WorkflowDef[_R]:
         """
@@ -331,7 +402,17 @@ class WorkflowTemplate(Generic[_P, _R]):
                 raise WorkflowSyntaxError(
                     "Workflow arguments must be known at submission time. "
                 )
-        return WorkflowDef(name, self._fn, self._fn_ref, data_aggregation, args, kwargs)
+        return WorkflowDef(
+            name=name,
+            workflow_fn=self._fn,
+            fn_ref=self._fn_ref,
+            resources=self._resources,
+            data_aggregation=data_aggregation,
+            workflow_args=args,
+            workflow_kwargs=kwargs,
+            default_source_import=self._default_source_import,
+            default_dependency_imports=self._default_dependency_imports,
+        )
 
     @property
     def is_parametrized(self) -> bool:
@@ -503,8 +584,11 @@ def workflow(fn: Callable[_P, _R]) -> WorkflowTemplate[_P, _R]:
 @overload
 def workflow(
     *,
+    resources: Optional[_dsl.Resources] = None,
     data_aggregation: Optional[Union[DataAggregation, bool]] = None,
     custom_name: Optional[str] = None,
+    default_source_import: Optional[Import] = None,
+    default_dependency_imports: Optional[Iterable[Import]] = None,
 ) -> Callable[[Callable[_P, _R]], WorkflowTemplate[_P, _R]]:
     ...
 
@@ -512,8 +596,11 @@ def workflow(
 def workflow(
     fn: Optional[Callable[_P, _R]] = None,
     *,
+    resources: Optional[_dsl.Resources] = None,
     data_aggregation: Optional[Union[DataAggregation, bool]] = None,
     custom_name: Optional[str] = None,
+    default_source_import: Optional[Import] = None,
+    default_dependency_imports: Optional[Iterable[Import]] = None,
 ) -> Union[
     WorkflowTemplate[_P, _R],
     Callable[[Callable[_P, _R]], WorkflowTemplate[_P, _R]],
@@ -521,10 +608,25 @@ def workflow(
     """Decorator that produces a workflow definition.
 
     Args:
+        resources: !Unstable API! The resources that this workflow requires.
+            The exact behaviour depends on the runtime, based on a Compute Engine
+            workflow, you can set the cluster your workflow will use:
+            10 nodes with 20 CPUs and a GPU each would be:
+            resources=sdk.Resources(cpu="20", gpu="1", nodes=10)
+            If omitted, the cluster's default resources will be used.
         data_aggregation: Used to set up resources used during data step. If skipped,
             or assigned True default values will be used. If assigned False
             data aggregation step will not run.
         custom_name: custom name for the workflow
+        default_source_import: Set the default source import for all tasks inside
+           this workflow.
+           Important: if a task defines its own individual source import, the workflow
+           scoped default_source_import will be ignored.
+        default_dependency_imports: Set the default dependency imports for all tasks
+           inside this workflow.
+           Important: if a task defines its own individual dependency imports, the
+           workflow scoped default_dependency_imports will be ignored for that
+           particular task
 
     You can use the Python API to submit workflows for execution::
 
@@ -563,10 +665,13 @@ def workflow(
         fn_ref = get_fn_ref(fn)
         template = WorkflowTemplate(
             custom_name=name,
+            resources=resources or _dsl.Resources(),
             workflow_fn=fn,
             fn_ref=fn_ref,
             is_parametrized=len(signature.parameters) > 0,
             data_aggregation=data_aggregation,
+            default_source_import=default_source_import,
+            default_dependency_imports=default_dependency_imports,
         )
         functools.update_wrapper(template, fn)
         return template

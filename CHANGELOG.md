@@ -4,28 +4,26 @@
 
 🚨 *Breaking Changes*
 
-* Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a `WorkflowSyntaxError` if no tasks are required to be executed.
+- Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a WorkflowSyntaxError if no tasks are required to be executed.
+- Remove TaskDef.model and TaskDef.import_models interfaces
+- Public API classes `sdk.GitImport`, `sdk.GithubImport`, `sdk.LocalImport`, `sdk.InlineImport` now use `dataclasses.dataclass` instead of `typing.NamedTuple`.
 
 🔥 *Features*
 - Sort WF runs by start date in `list wf` command. Show start date as one of the columns
 - Sort WF runs by start date in all workflow commands in prompt selection. Show start date with WF id
+- Set resources for workflows on CE via `resources` keyword argument in the `@workflow` decorator or with `.with_resources()` on a `WorkflowDef`.
+- New parameters for `@workflow` decorator - `default_source_import` and `default_dependency_imports`.
+These parameters let you set the default imports for all tasks in given workflow.
+If a task defines its own imports (either source, dependencies, or both) - it will overwrite workflow defaults.
+- Allow single imports as `dependency_imports` in `@task` decorators.
 
 👩‍🔬 *Experimental*
 
 
 🐛 *Bug Fixes*
 * Stopping a QE workflow after it has already stopped will no longer raise an exception.
+* Attempting to use the "in-process" runtime on the CLI will no longer raise an exception. Instead, a message teeling you to use the Python API or Ray will be printed.
 * Fix dependency issues causing CE workflows to fail if WF constant was library-dependent object.
-* Attempting to use the "in-process" runtime on the CLI will no longer raise an exception. Instead, a message telling you to use the Python API or Ray will be printed.
-* Fixed returning intermediate workflow values (e.g. with `orq task results`) when the task has multiple outputs and only some of them were used in the rest of the workflow function. The following should work now as expected:
-```python
-@sdk.workflow
-def my_wf():
-    _, b = two_output_task()
-    all_outputs = two_output_task()
-    out1, out2 = all_outputs
-    return b, all_outputs, out1, out2
-```
 
 
 💅 *Improvements*
@@ -34,7 +32,6 @@ def my_wf():
 🥷 *Internal*
 * During YAML conversion, Workflow SDK repo matched on host and path, not full URL.
 * On QE, Github URLs will be converted to SSH URLs.
-* `TaskOutputMetadata` model was added to the workflow def IR schema.
 * Removed `corq` code.
 * Old `RuntimeInterface` methods have been removed.
 

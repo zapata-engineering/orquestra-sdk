@@ -11,6 +11,7 @@ import re
 import traceback
 import warnings
 from collections import OrderedDict
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from string import Formatter
@@ -39,8 +40,6 @@ if TYPE_CHECKING:
     import pip_api
 
 import wrapt  # type: ignore
-
-import orquestra.sdk.schema.ir as ir
 
 from ..exceptions import DirtyGitRepo, InvalidTaskDefinitionError, WorkflowSyntaxError
 from . import _ast
@@ -72,11 +71,7 @@ class UnknownPlaceholderInCustomNameWarning(Warning):
 
 # ----- data structures -----
 
-# Type alias used to mark variables expected to hold raw constant values.
 Constant = Any
-# Type alias used to mark variables that can be used as task arguments. These are the
-# graph nodes that can represent data (contrary to task invocations that represent
-# function calls).
 Argument = Union[Constant, "ArtifactFuture", "Secret"]
 
 
@@ -89,7 +84,8 @@ class Secret(NamedTuple):
     config_name: Optional[str] = None
 
 
-class GitImportWithAuth(NamedTuple):
+@dataclass(frozen=True, eq=True)
+class GitImportWithAuth:
     """
     A task import that uses a private Git repo
 
@@ -102,7 +98,8 @@ class GitImportWithAuth(NamedTuple):
     auth_secret: Optional[Secret]
 
 
-class GitImport(NamedTuple):
+@dataclass(frozen=True, eq=True)
+class GitImport:
     """A task import that uses a Git repository"""
 
     repo_url: str
@@ -203,11 +200,12 @@ class PythonImports:
         # Path to a `requirements.txt` file
         file: Optional[str] = None,
     ):
-        self.use_file_path = False
+        self._file: Optional[Path]
         if file is not None:
-            self.file = pathlib.Path(file)
-            self.use_file_path = True
-        self.packages = packages
+            self._file = pathlib.Path(file)
+        else:
+            self._file = None
+        self._packages = packages
 
     def resolved(self) -> List[pip_api.Requirement]:
         import pip_api
@@ -215,14 +213,14 @@ class PythonImports:
         # on Windows file cannot be reopened when it's opened with delete=True
         # So the temp file is closed first and then deleted manually.
         tmp_file = NamedTemporaryFile(mode="w+", delete=False)
-        if self.use_file_path:
+        if self._file is not None:
             # gather all requirements from file
-            with open(self.file) as file:
+            with open(self._file) as file:
                 lines = file.readlines()
             for line in lines:
                 tmp_file.write(line)
         # gather all requirements passed by the user
-        for package in self.packages:
+        for package in self._packages:
             tmp_file.write(f"{package}\n")
         tmp_file.flush()
         tmp_file.close()
@@ -239,8 +237,18 @@ class PythonImports:
             req for req in requirements.values() if isinstance(req, pip_api.Requirement)
         ]
 
+    def __eq__(self, other):
+        if not isinstance(other, PythonImports):
+            return False
 
-class LocalImport(NamedTuple):
+        return self._file == other._file and self._packages == other._packages
+
+    def __hash__(self):
+        return hash((self._file, self._packages))
+
+
+@dataclass(frozen=True, eq=True)
+class LocalImport:
     """Used to specify that the source code is only available locally.
     e.g. not committed to any git repo or in a Python package
     """
@@ -248,7 +256,8 @@ class LocalImport(NamedTuple):
     module: str
 
 
-class InlineImport(NamedTuple):
+@dataclass(frozen=True, eq=True)
+class InlineImport:
     """
     A task import that stores the function "inline" with the workflow definition.
     """
@@ -256,6 +265,17 @@ class InlineImport(NamedTuple):
     pass
 
 
+# If updating this list, you must also update the Import type.
+# These are both here to more easily support isinstance(obj, Import)
+# Python 3.10 fixes this by allowing Unions in isinstance checks
+ImportTypes = (
+    LocalImport,
+    GitImport,
+    GitImportWithAuth,
+    DeferredGitImport,
+    PythonImports,
+    InlineImport,
+)
 Import = Union[
     LocalImport,
     GitImport,
@@ -268,12 +288,32 @@ Import = Union[
 
 
 class Resources(NamedTuple):
-    """The computational resources a workflow task requires"""
+    """
+    The computational resources a workflow or task requires.
+
+    If any of these options are omitted, (or is None) the runtime's default value will
+    be used.
+
+    If a runtime doesn't support a particular value, it may be silently ignored.
+    Please check the documentation for each runtime!
+
+    Args:
+        cpu: The requested CPU in "CPU units".
+            e.g. for a single CPU core use "1" or "1000m"
+        memory: The requested memory in "bytes".
+            Binary or decimal suffixes are supported. e.g. "10G" for 10 gigabytes
+        disk: The requested disk space in "bytes".
+            Binary or decimal suffixes are supported. e.g. "10Gi" for 10 gibibytes
+        gpu: Either "0" or "1" to use a GPU or not.
+        nodes: The number of nodes requested. This option only applies to workflows.
+            This should be a positive integer.
+    """
 
     cpu: Optional[str] = None
     memory: Optional[str] = None
     disk: Optional[str] = None
     gpu: Optional[str] = None
+    nodes: Optional[int] = None
 
     def is_empty(self) -> bool:
         # find out if all the Resources are None
@@ -364,7 +404,7 @@ def parse_custom_name(
     format_dict = {}
     for ph in placeholders:
         if isinstance(signature.arguments[ph], ArtifactFuture):
-            fnc = signature.arguments[ph].invocation.task.fn_ref.function_name
+            fnc = signature.arguments[ph].invocation.task._fn_name
             format_dict[ph] = replacement_string.format(fnc)
             warnings.warn(
                 "Custom name contains placeholder with value"
@@ -393,33 +433,39 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
     def __init__(
         self,
         fn: Callable[_P, _R],
-        fn_ref: FunctionRef,
-        source_import: Import,
         output_metadata: TaskOutputMetadata,
+        source_import: Optional[Import] = None,
         parameters: Optional[OrderedDict] = None,
         dependency_imports: Optional[Tuple[Import, ...]] = None,
         resources: Resources = Resources(),
         custom_image: Optional[str] = None,
         custom_name: Optional[str] = None,
+        fn_ref: Optional[FunctionRef] = None,
     ):
         if isinstance(fn, BuiltinFunctionType):
             raise NotImplementedError("Built-in functions are not supported as Tasks")
         super(TaskDef, self).__init__(fn)
         self.__sdk_task_body = fn
-        self.fn_ref = fn_ref
-        self.source_import = source_import
-        self.output_metadata = output_metadata
-        self.parameters = parameters
-        self.dependency_imports = dependency_imports
-        self.resources = resources
-        self.custom_image = custom_image
-        self.custom_name = custom_name
+        self._fn_ref = fn_ref
+        self._fn_name = fn.__name__
+        self._output_metadata = output_metadata
+        self._parameters = parameters
+        self._resources = resources
+        self._custom_image = custom_image
+        self._custom_name = custom_name
+        self._dependency_imports = dependency_imports
+        self._use_default_dependency_imports = dependency_imports is None
+        self._source_import = source_import
+        self._use_default_source_import = source_import is None
 
-        if self.custom_image is None:
+        # task itself is not part of any workflow yet. Don't pass wf defaults
+        self._resolve_task_source_data()
+
+        if self._custom_image is None:
             if resources.gpu:
-                self.custom_image = GPU_IMAGE
+                self._custom_image = GPU_IMAGE
             else:
-                self.custom_image = DEFAULT_IMAGE
+                self._custom_image = DEFAULT_IMAGE
 
     @property
     def n_outputs(self):
@@ -427,24 +473,24 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
             '"n_outputs" is deprecated. Please use "output_metadata".',
             DeprecationWarning,
         )
-        return self.output_metadata.n_outputs
+        return self._output_metadata.n_outputs
 
     def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         # In case of local run the workflow is executed as a python script
         if DIRECT_EXECUTION:
             return self.__sdk_task_body(*args, **kwargs)
         if (
-            not isinstance(self.source_import, InlineImport)
-            and isinstance(self.fn_ref, ModuleFunctionRef)
-            and self.fn_ref.module == "__main__"
+            not isinstance(self._source_import, InlineImport)
+            and isinstance(self._fn_ref, ModuleFunctionRef)
+            and self._fn_ref.module == "__main__"
         ):
             err = (
-                f"function {self.fn_ref.function_name} is defined inside __main__ "
+                f"function {self._fn_name} is defined inside __main__ "
                 "module. Please move task function to different file and import, "
                 "it or mark this task function as inline import \n\n"
                 "example: \n"
                 "@sdk.task(source_import=sdk.InlineImport())\n"
-                f"def {self.fn_ref.function_name}(): ..."
+                f"def {self._fn_name}(): ..."
             )
             raise InvalidTaskDefinitionError(err)
         try:
@@ -465,7 +511,7 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
             missing_self_arg = r".*(missing a required argument:)[^a-zA-Z\d]*(self).*"
             if re.match(missing_self_arg, str(exc)):
                 error_message = (
-                    f"The task {self.fn_ref.function_name} seems to be a method, if so"
+                    f"The task {self._fn_name} seems to be a method, if so"
                     " modify it to not be a method.\n"
                 ) + error_message
             raise WorkflowSyntaxError(error_message) from exc
@@ -477,36 +523,49 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
                     self,
                     args=args,
                     kwargs=tuple(kwargs.items()),
-                    resources=self.resources,
-                    custom_name=parse_custom_name(self.custom_name, signature),
-                    custom_image=self.custom_image,
+                    resources=self._resources,
+                    custom_name=parse_custom_name(self._custom_name, signature),
+                    custom_image=self._custom_image,
                 )
             ),
         )
 
-    @property
-    def model(self) -> ir.TaskDef:
-        """Serializable form of the task def (intermediate representation).
+    def _resolve_task_source_data(
+        self, wf_default_source_import: Optional[Import] = None
+    ):
+        # if user set source import explicitly, we use that import
+        # else we either take wf default, or base on if the session is interactive
+        if self._use_default_source_import:
+            if wf_default_source_import:
+                self._source_import = wf_default_source_import
+            # Set the default Import based on if the session is interactive
+            elif _is_interactive():
+                self._source_import = InlineImport()
+            else:
+                self._source_import = LocalImport(
+                    module=self.__sdk_task_body.__module__
+                )
+        self._resolve_fn_ref()
 
-        returns:
-            Pydantic model.
-        """
-        # hack for circular imports
-        from orquestra.sdk._base import _traversal
+    def _resolve_fn_ref(self):
+        # resolve fn_ref is based on task source import. If user doesn't pass it,
+        # resolve_source_import should set it
+        assert self._source_import is not None
+        self._fn_ref = (
+            InlineFunctionRef(self.__sdk_task_body.__name__, self.__sdk_task_body)
+            if isinstance(self._source_import, InlineImport)
+            else get_fn_ref(self.__sdk_task_body)
+        )
 
-        return _traversal.get_model_from_task_def(self)
+    def _resolve_task_dependencies(
+        self, wf_default_dependency_imports: Optional[Tuple[Import, ...]] = None
+    ):
+        # if user set imports explicitly, do nothing
+        if not self._use_default_dependency_imports:
+            return
 
-    @property
-    def import_models(self) -> List[ir.Import]:
-        """All Orquestra Imports required by this task, in a serializable form.
-
-        returns:
-            Pydantic models.
-        """
-        # hack for circular imports
-        from orquestra.sdk._base import _traversal
-
-        return _traversal.get_model_imports_from_task_def(self)
+        if wf_default_dependency_imports:
+            self._dependency_imports = wf_default_dependency_imports
 
 
 # TaskInvocation is using a Plain Old Python Object on purpose:
@@ -576,15 +635,12 @@ class ArtifactFormat(Enum):
 
 
 class ArtifactFuture:
-    DEFAULT_CUSTOM_NAME = None
-    DEFAULT_SERIALIZATION_FORMAT = ArtifactFormat.AUTO
-
     def __init__(
         self,
         invocation: TaskInvocation,
         output_index: Optional[int] = None,
-        custom_name: Optional[str] = DEFAULT_CUSTOM_NAME,
-        serialization_format: ArtifactFormat = DEFAULT_SERIALIZATION_FORMAT,
+        custom_name: Optional[str] = None,
+        serialization_format: ArtifactFormat = ArtifactFormat.AUTO,
     ):
         self.invocation = invocation
         # if the invocation returns multiple values, this the index in the output
@@ -605,11 +661,11 @@ class ArtifactFuture:
         )
 
     def __getitem__(self, index):
-        if not self.invocation.task.output_metadata.is_subscriptable:
+        if not self.invocation.task._output_metadata.is_subscriptable:
             raise TypeError("This ArtifactFuture is not subscriptable")
         if not isinstance(index, int):
             raise TypeError("ArtifactFuture indices must be integers")
-        if index >= self.invocation.task.output_metadata.n_outputs:
+        if index >= self.invocation.task._output_metadata.n_outputs:
             raise IndexError("ArtifactFuture index out of range")
         return ArtifactFuture(
             invocation=self.invocation,
@@ -619,7 +675,7 @@ class ArtifactFuture:
         )
 
     def __iter__(self):
-        if not self.invocation.task.output_metadata.is_subscriptable:
+        if not self.invocation.task._output_metadata.is_subscriptable:
             raise TypeError("This ArtifactFuture is not iterable")
         futures = [
             ArtifactFuture(
@@ -628,7 +684,7 @@ class ArtifactFuture:
                 custom_name=self.custom_name,
                 serialization_format=self.serialization_format,
             )
-            for next_index in range(self.invocation.task.output_metadata.n_outputs)
+            for next_index in range(self.invocation.task._output_metadata.n_outputs)
         ]
         return iter(futures)
 
@@ -675,7 +731,7 @@ class ArtifactFuture:
             custom_image: docker image used to run the task invocation
         """
         self._check_if_destructured(
-            fn_name=self.invocation.task.fn_ref.function_name,
+            fn_name=self.invocation.task._fn_name,
             assign_type="invocation metadata",
         )
 
@@ -739,7 +795,7 @@ class ArtifactFuture:
             gpu: amount of gpu assigned to the task invocation
         """
         self._check_if_destructured(
-            fn_name=self.invocation.task.fn_ref.function_name,
+            fn_name=self.invocation.task._fn_name,
             assign_type="resources",
         )
 
@@ -763,7 +819,7 @@ class ArtifactFuture:
             custom_image: docker image used to run the task invocation
         """
         self._check_if_destructured(
-            fn_name=self.invocation.task.fn_ref.function_name,
+            fn_name=self.invocation.task._fn_name,
             assign_type="custom image",
         )
 
@@ -890,7 +946,7 @@ def task(fn: Callable[_P, _R]) -> TaskDef[_P, _R]:
 def task(
     *,
     source_import: Optional[Import] = None,
-    dependency_imports: Optional[Iterable[Import]] = None,
+    dependency_imports: Union[Iterable[Import], Import, None] = None,
     resources: Resources = Resources(),
     n_outputs: Optional[int] = None,
     custom_image: Optional[str] = None,
@@ -904,7 +960,7 @@ def task(
     fn: Callable[_P, _R],
     *,
     source_import: Optional[Import] = None,
-    dependency_imports: Optional[Iterable[Import]] = None,
+    dependency_imports: Union[Iterable[Import], Import, None] = None,
     resources: Resources = Resources(),
     n_outputs: Optional[int] = None,
     custom_image: Optional[str] = None,
@@ -917,7 +973,7 @@ def task(
     fn: Optional[Callable[_P, _R]] = None,
     *,
     source_import: Optional[Import] = None,
-    dependency_imports: Optional[Iterable[Import]] = None,
+    dependency_imports: Union[Iterable[Import], Import, None] = None,
     resources: Resources = Resources(),
     n_outputs: Optional[int] = None,
     custom_image: Optional[str] = None,
@@ -950,9 +1006,14 @@ def task(
             every char that is non-alphanumeric will be changed to dash ("-").
             Also only first 128 characters of the name will be used
     """
-    task_dependency_imports: Optional[Tuple[Import, ...]] = (
-        tuple(dependency_imports) if dependency_imports else None
-    )
+    task_dependency_imports: Optional[Tuple[Import, ...]]
+
+    if dependency_imports is None:
+        task_dependency_imports = None
+    elif isinstance(dependency_imports, ImportTypes):
+        task_dependency_imports = (dependency_imports,)
+    elif dependency_imports is not None:
+        task_dependency_imports = tuple(dependency_imports)
 
     if n_outputs is not None:
         if n_outputs <= 0:
@@ -969,27 +1030,9 @@ def task(
         else:
             output_metadata = _get_number_of_outputs(fn)
 
-        # Set the default Import based on if the session is interactive
-        task_source_import: Import
-        if source_import is not None:
-            task_source_import = source_import
-        elif _is_interactive():
-            task_source_import = InlineImport()
-        else:
-            task_source_import = LocalImport(module=fn.__module__)
-
-        # This is a little awkward
-        # but to avoid complexity in get_fn_ref, I kept the complexity here.
-        fn_ref = (
-            InlineFunctionRef(fn.__name__, fn)
-            if isinstance(task_source_import, InlineImport)
-            else get_fn_ref(fn)
-        )
-
         task_def = TaskDef(
             fn=fn,
-            fn_ref=fn_ref,
-            source_import=task_source_import,
+            source_import=source_import,
             dependency_imports=task_dependency_imports,
             resources=resources,
             parameters=_get_parameters(fn),
@@ -1004,3 +1047,102 @@ def task(
         return _inner
     else:
         return _inner(fn)
+
+
+# ----- utilities -----
+
+
+# NOTE: we have both `external_file_task` and `external_module_task` because they
+# refer to functions in different ways.
+#
+# - `external_file_task` - uses `FileFunctionRef`, exists for backwards compatibility
+#     with Orquestra v1. For details how Python functions are called there, see:
+#     https://github.com/zapatacomputing/python3-runtime/blob/af4cd913ba1f35db792c939f578bbb968364ede1/run#L319
+#
+# - `external_module_task` - uses `ModuleFunctionRef`, allows referring to functions by
+#     the "fully qualified name", like `numpy.testing.assert_array_equal`. It's more
+#     general than `FileFunctionRef`, as it allows to call a function that's a part of
+#     any module in a given Python process. It would be nice to encourage using this
+#     in the future (vs `FileFunctionRef`).
+
+
+def external_file_task(
+    file_path: str,
+    function: str,
+    repo_url: str,
+    git_ref: Optional[str] = None,
+    resources: Resources = Resources(),
+    n_outputs: Optional[int] = None,
+):
+    def _proxy(*args, **kwargs):
+        raise ValueError(
+            f"Attempted to execute a task that's only a proxy. Call "
+            f"{file_path}:{function} instead."
+        )
+
+    _proxy.__name__ = function
+
+    git_ref = git_ref or "main"
+
+    if n_outputs is None:
+        warnings.warn(
+            "External tasks cannot be inspected and default to 1 (one) output. "
+            "Explicitly pass the number of outputs to hide this warning."
+        )
+        output_metadata = TaskOutputMetadata(is_subscriptable=False, n_outputs=1)
+    else:
+        # Assume if a user has specified the number of outputs, then this output is
+        # subscriptable
+        output_metadata = TaskOutputMetadata(is_subscriptable=True, n_outputs=n_outputs)
+
+    return TaskDef(
+        fn=_proxy,
+        fn_ref=FileFunctionRef(
+            file_path=file_path,
+            function_name=function,
+        ),
+        source_import=GitImport(repo_url=repo_url, git_ref=git_ref),
+        resources=resources,
+        output_metadata=output_metadata,
+    )
+
+
+def external_module_task(
+    module: str,
+    function: str,
+    repo_url: str,
+    git_ref: Optional[str] = None,
+    resources: Resources = Resources(),
+    n_outputs: Optional[int] = None,
+):
+    def _proxy(*args, **kwargs):
+        raise ValueError(
+            f"Attempted to execute a task that's only a proxy. Call "
+            f"{module}.{function} instead."
+        )
+
+    _proxy.__name__ = function
+
+    git_ref = git_ref or "main"
+
+    if n_outputs is None:
+        warnings.warn(
+            "External tasks cannot be inspected and default to 1 (one) output. "
+            "Explicitly pass the number of outputs to hide this warning."
+        )
+        output_metadata = TaskOutputMetadata(is_subscriptable=False, n_outputs=1)
+    else:
+        # Assume if a user has specified the number of outputs, then this output is
+        # subscriptable
+        output_metadata = TaskOutputMetadata(is_subscriptable=True, n_outputs=n_outputs)
+
+    return TaskDef(
+        fn=_proxy,
+        fn_ref=ModuleFunctionRef(
+            module=module,
+            function_name=function,
+        ),
+        source_import=GitImport(repo_url=repo_url, git_ref=git_ref),
+        resources=resources,
+        output_metadata=output_metadata,
+    )

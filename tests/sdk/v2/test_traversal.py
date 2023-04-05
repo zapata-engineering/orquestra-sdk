@@ -14,9 +14,9 @@ from unittest.mock import Mock
 import git
 import pytest
 
-import orquestra.sdk.schema.ir as ir
+import orquestra.sdk.schema.ir as model
 from orquestra.sdk import exceptions, secrets
-from orquestra.sdk._base import _dsl, _traversal, _workflow, dispatch, serde
+from orquestra.sdk._base import _dsl, _traversal, _workflow, serde
 
 from .data.complex_serialization.workflow_defs import (
     generate_object_with_num,
@@ -136,13 +136,8 @@ def pickled(value):
 
 
 @_dsl.task(n_outputs=2)
-def two_outputs():
+def multi_output():
     pass
-
-
-@_dsl.task
-def three_outputs():
-    return "a", "b", "c"
 
 
 dupe_import = _dsl.GithubImport("zapatacomputing/test")
@@ -243,6 +238,32 @@ def no_tasks():
     return [first, last]
 
 
+# Exposing a function from PyPI-available library
+numpy_eye = _dsl.external_module_task(
+    module="numpy",
+    function="eye",
+    repo_url="git@github.com:numpy/numpy.git",
+    n_outputs=1,
+)
+
+
+# Exposing a function that's only available by git checkout
+generate_random_graph_erdos_renyi = _dsl.external_file_task(
+    file_path="src/python/zquantum/core/graph.py",
+    function="generate_random_graph_erdos_renyi",
+    repo_url="https://github.com/zapatacomputing/z-quantum-core",
+    git_ref="dev",
+    n_outputs=1,
+)
+
+
+@_workflow.workflow
+def external_task_usage():
+    graph = generate_random_graph_erdos_renyi(10, 0.2)
+    array = numpy_eye(2, 2)
+    return [graph, array]
+
+
 @_workflow.workflow
 def wf_with_git_deps():
     """Single task invocation. The task's source import is local, but it has a
@@ -281,34 +302,10 @@ def unhashable_constants():
 
 
 @_workflow.workflow
-def two_task_outputs():
-    a, b = two_outputs()
-    _, c = two_outputs()
+def multiple_task_outputs():
+    a, b = multi_output()
+    _, c = multi_output()
     return [a, b, c]
-
-
-@_workflow.workflow
-def two_task_outputs_all_used():
-    a, b = two_outputs()
-    return a, b
-
-
-@_workflow.workflow
-def two_task_outputs_packed_returned():
-    packed = two_outputs()
-    a, b = packed
-    return a, b, packed
-
-
-@_workflow.workflow
-def three_task_outputs():
-    foo1, bar1, baz1 = three_outputs()
-    _, bar2, baz2 = three_outputs()
-    foo3, bar3, _ = three_outputs()
-    _, bar4, _ = three_outputs()
-    foo5, _, baz5 = three_outputs()
-
-    return foo1, bar1, baz1, bar2, baz2, foo3, bar3, bar4, foo5, baz5
 
 
 @_workflow.workflow
@@ -373,7 +370,7 @@ def workflow_with_secret():
 
 
 def _id_from_wf(param):
-    if isinstance(param, (_workflow.WorkflowDef, ir.WorkflowDef)):
+    if isinstance(param, (_workflow.WorkflowDef, model.WorkflowDef)):
         return param.name
 
 
@@ -411,8 +408,8 @@ class TestFlattenGraph:
         dep_import = wf.imports[task.dependency_import_ids[0]]
 
         # main assertions
-        assert isinstance(source_import, ir.LocalImport)
-        assert isinstance(dep_import, ir.GitImport)
+        assert isinstance(source_import, model.LocalImport)
+        assert isinstance(dep_import, model.GitImport)
 
     def test_setting_invocation_metadata(self):
         # preconditions
@@ -425,13 +422,13 @@ class TestFlattenGraph:
         ]
 
         # main assertions
-        assert with_inv_meta.resources == ir.Resources(
+        assert with_inv_meta.resources == model.Resources(
             cpu="2000m",
             memory="10Gi",
             disk=None,
             gpu=None,
         )
-        assert with_task_meta.resources == ir.Resources(
+        assert with_task_meta.resources == model.Resources(
             cpu="1000m",
             memory=None,
             disk=None,
@@ -452,7 +449,7 @@ class TestFlattenGraph:
         wf = constant_collisions.model
         constant_nodes = []
         for constant_node in wf.constant_nodes.values():
-            assert isinstance(constant_node, ir.ConstantNodeJSON)
+            assert isinstance(constant_node, model.ConstantNodeJSON)
             constant_nodes.append(constant_node)
 
         serialised_constants = [con.value for con in constant_nodes]
@@ -501,7 +498,7 @@ class TestFlattenGraph:
 
         assert len(wf.imports) == 1
         (imp,) = wf.imports.values()
-        assert isinstance(imp, ir.InlineImport)
+        assert isinstance(imp, model.InlineImport)
 
         assert len(wf.tasks) == 1
         (task_def,) = wf.tasks.values()
@@ -560,13 +557,18 @@ class ContextManager(t.Protocol):
             ["Emiliano", "ZAPATA"],
             does_not_raise(),
         ),
+        (
+            external_task_usage,
+            [generate_random_graph_erdos_renyi, numpy_eye],
+            None,
+            does_not_raise(),
+        ),
         (daisy_chain, [increment], [44], does_not_raise()),
         (wf_with_git_deps, [generate_graph], None, does_not_raise()),
         (arg_test, [task_arg_test], None, does_not_raise()),
         (unhashable_constants, [join_strings], ["emilianozapata"], does_not_raise()),
         (resources_invocation, [capitalize_resourced], None, does_not_raise()),
-        (two_task_outputs, [two_outputs], None, does_not_raise()),
-        (three_task_outputs, [three_outputs], None, does_not_raise()),
+        (multiple_task_outputs, [multi_output], None, does_not_raise()),
         (wf_object_id, [get_object_id], None, does_not_raise()),
         (wf_objects_id, [get_objects_id], None, does_not_raise()),
         (wf_pass_callable, [invoke_callable], [43], does_not_raise()),
@@ -608,37 +610,13 @@ class ContextManager(t.Protocol):
     ids=_id_from_wf,
 )
 class TestWorkflowsTasksProperties:
-    """
-    Each test methods is a "property" that should hold true regardless of the workflow
-    or tasks used.
-    """
-
-    @staticmethod
-    def test_wf_contains_task_ids(
-        workflow_template: _workflow.WorkflowTemplate,
-        task_defs: t.Sequence[_dsl.TaskDef],
-        outputs: t.List,
-        expectation: ContextManager,
-    ):
-        """
-        Task defs in Workflow IR should match the expected task defs.
-        """
-        with expectation:
-            wf_model = workflow_template.model
-            for task_def in task_defs:
-                task_model = task_def.model
-                assert task_model.id in wf_model.tasks
-
-    @staticmethod
     def test_wf_imports_are_task_imports(
+        self,
         workflow_template: _workflow.WorkflowTemplate,
         task_defs: t.Sequence[_dsl.TaskDef],
         outputs: t.List,
         expectation: ContextManager,
     ):
-        """
-        Import IDs refered from task defs should be part of wf def IR.
-        """
         with expectation:
             wf = workflow_template.model
             wf_import_ids = set(wf.imports.keys())
@@ -653,104 +631,53 @@ class TestWorkflowsTasksProperties:
                 ]
             }
 
-            # refers to tasks passed to the test case manually
-            task_import_ids_manual = {
-                import_model.id
-                for task_def in task_defs
-                for import_model in task_def.import_models
+            assert task_import_ids_embedded == wf_import_ids
+
+    def test_task_ids_match_invocations(
+        self,
+        workflow_template: _workflow.WorkflowTemplate,
+        task_defs: t.Sequence[_dsl.TaskDef],
+        outputs: t.List,
+        expectation: ContextManager,
+    ):
+        with expectation:
+            wf = workflow_template.model
+            assert set(wf.tasks.keys()) == {
+                invocation.task_id for invocation in wf.task_invocations.values()
             }
 
-            assert task_import_ids_embedded == wf_import_ids
-            assert task_import_ids_manual == wf_import_ids
-
-    @staticmethod
-    def test_task_ids_match_invocations(
-        workflow_template: _workflow.WorkflowTemplate,
-        task_defs: t.Sequence[_dsl.TaskDef],
-        outputs: t.List,
-        expectation: ContextManager,
-    ):
-        """
-        Task def referenced from invocation should be part of the workflow def.
-        """
-        with expectation:
-            wf = workflow_template.model
-            task_def_ids = set(wf.tasks.keys())
-
-            for inv in wf.task_invocations.values():
-                assert inv.task_id in task_def_ids
-
-    @staticmethod
     def test_number_of_invocations(
+        self,
         workflow_template: _workflow.WorkflowTemplate,
         task_defs: t.Sequence[_dsl.TaskDef],
         outputs: t.List,
         expectation: ContextManager,
     ):
-        """
-        Number of task defs shouldn't exceed the number of invocations. Reasoning: each
-        task def should be invoked at least once.
-        """
         with expectation:
             wf = workflow_template.model
-            assert len(wf.tasks) <= len(wf.task_invocations)
+            assert len(wf.task_invocations) >= len(wf.tasks)
 
-    @staticmethod
     def test_invocation_outputs_are_unique(
+        self,
         workflow_template: _workflow.WorkflowTemplate,
         task_defs: t.Sequence[_dsl.TaskDef],
         outputs: t.List,
         expectation: ContextManager,
     ):
-        """
-        A given node ID should be only produced by a single task invocation.
-        """
         with expectation:
             wf = workflow_template.model
-            seen_ids: t.Set[ir.ArtifactNodeId] = set()
+            seen_ids: t.Set[model.ArtifactNodeId] = set()
             for invocation in wf.task_invocations.values():
                 assert set(invocation.output_ids).isdisjoint(seen_ids)
                 seen_ids.update(invocation.output_ids)
 
-    @staticmethod
-    def test_n_invocation_outputs_matches_task_def(
-        workflow_template: _workflow.WorkflowTemplate,
-        task_defs: t.Sequence[_dsl.TaskDef],
-        outputs: t.List,
-        expectation: ContextManager,
-    ):
-        """
-        Number of task invocation output IDs should correspond to task def's outputs.
-        """
-        with expectation:
-            wf_def = workflow_template.model
-            for inv in wf_def.task_invocations.values():
-                task_def_model = wf_def.tasks[inv.task_id]
-                task_def_obj = dispatch.locate_fn_ref(task_def_model.fn_ref)
-                # We assume that `fn_ref` points to a @task() decorated function.
-                assert isinstance(task_def_obj, _dsl.TaskDef)
-
-                if task_def_obj.output_metadata.is_subscriptable:
-                    # n + 1 artifacts for n-output task def:
-                    # - one artifact for each output to handle unpacking
-                    # - one artifact overall to handle using non-unpacked future
-                    assert (
-                        len(inv.output_ids)
-                        == task_def_obj.output_metadata.n_outputs + 1
-                    )
-                else:
-                    assert len(inv.output_ids) == 1
-
-    @staticmethod
     def test_no_hanging_inputs(
+        self,
         workflow_template: _workflow.WorkflowTemplate,
         task_defs: t.Sequence[_dsl.TaskDef],
         outputs: t.List,
         expectation: ContextManager,
     ):
-        """
-        Node IDs used as task inputs should point to constants or task outputs.
-        """
         with expectation:
             wf = workflow_template.model
             constant_ids = set(wf.constant_nodes.keys())
@@ -775,34 +702,26 @@ class TestWorkflowsTasksProperties:
             }
             assert kwarg_input_ids.issubset(filled_ids)
 
-    @staticmethod
     def test_constants_can_be_read(
+        self,
         workflow_template: _workflow.WorkflowTemplate,
         task_defs: t.Sequence[_dsl.TaskDef],
         outputs: t.List,
         expectation: ContextManager,
     ):
-        """
-        It should be possible to deserialize constant nodes embedded in the IR using
-        ``serde``.
-        """
         with expectation:
             wf = workflow_template.model
             for constant in wf.constant_nodes.values():
                 constant_dict = json.loads(constant.json())
                 _ = serde.value_from_result_dict(constant_dict)
 
-    @staticmethod
     def test_no_hanging_wf_outputs(
+        self,
         workflow_template: _workflow.WorkflowTemplate,
         task_defs: t.Sequence[_dsl.TaskDef],
         outputs: t.List,
         expectation: ContextManager,
     ):
-        """
-        IDs of the workflow output artifacts should be a subset of task invocation
-        output IDs.
-        """
         with expectation:
             wf = workflow_template.model
             task_output_ids = {
@@ -812,75 +731,68 @@ class TestWorkflowsTasksProperties:
             }
             assert set(wf.output_ids).issubset(task_output_ids)
 
-    @staticmethod
     def test_local_run(
+        self,
         workflow_template: _workflow.WorkflowTemplate,
         task_defs: t.Sequence[_dsl.TaskDef],
         outputs: t.List,
         expectation: ContextManager,
     ):
-        """
-        Running the workflow in-process should produce the expected outputs.
-        """
         wf = workflow_template
         if outputs:
             assert outputs == wf().local_run()
 
 
-CAPITALIZE_TASK_DEF = ir.TaskDef(
+CAPITALIZE_TASK_DEF = model.TaskDef(
     id=AnyMatchingStr(r"task-capitalize-\w{10}"),
-    fn_ref=ir.ModuleFunctionRef(
+    fn_ref=model.ModuleFunctionRef(
         module="tests.sdk.v2.test_traversal",
         function_name="capitalize",
         file_path="tests/sdk/v2/test_traversal.py",
         line_number=AnyPositiveInt(),
     ),
-    output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
     parameters=[
-        ir.TaskParameter(name="text", kind=ir.ParameterKind.POSITIONAL_OR_KEYWORD)
+        model.TaskParameter(name="text", kind=model.ParameterKind.POSITIONAL_OR_KEYWORD)
     ],
     source_import_id=AnyMatchingStr(r"local-\w{10}"),
     custom_image=_dsl.DEFAULT_IMAGE,
 )
 
-CAPITALIZE_INLINE_TASK_DEF = ir.TaskDef(
+CAPITALIZE_INLINE_TASK_DEF = model.TaskDef(
     id=AnyMatchingStr(r"task-capitalize-inline-\w{10}"),
-    fn_ref=ir.InlineFunctionRef(
+    fn_ref=model.InlineFunctionRef(
         function_name="capitalize_inline",
         encoded_function=[AnyMatchingStr(r".*")],  # dont test actual encoding here
     ),
-    output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
     parameters=[
-        ir.TaskParameter(name="text", kind=ir.ParameterKind.POSITIONAL_OR_KEYWORD)
+        model.TaskParameter(name="text", kind=model.ParameterKind.POSITIONAL_OR_KEYWORD)
     ],
     source_import_id=AnyMatchingStr(r"inline-import-\w{1}"),
     custom_image=_dsl.DEFAULT_IMAGE,
 )
 
-GIT_TASK_DEF = ir.TaskDef(
+GIT_TASK_DEF = model.TaskDef(
     id=AnyMatchingStr(r"task-git-task-\w{10}"),
-    fn_ref=ir.ModuleFunctionRef(
+    fn_ref=model.ModuleFunctionRef(
         module="tests.sdk.v2.test_traversal",
         function_name="git_task",
         file_path="tests/sdk/v2/test_traversal.py",
         line_number=AnyPositiveInt(),
     ),
-    output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
     parameters=[],
     source_import_id=AnyMatchingStr(r"git-\w{10}_hello"),
     custom_image=_dsl.DEFAULT_IMAGE,
 )
 
 
-GENERATE_GRAPH_TASK_DEF = ir.TaskDef(
+GENERATE_GRAPH_TASK_DEF = model.TaskDef(
     id=AnyMatchingStr(r"task-generate-graph-\w{10}"),
-    fn_ref=ir.ModuleFunctionRef(
+    fn_ref=model.ModuleFunctionRef(
         module="tests.sdk.v2.test_traversal",
         function_name="generate_graph",
         file_path="tests/sdk/v2/test_traversal.py",
         line_number=AnyPositiveInt(),
     ),
-    output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
     parameters=[],
     source_import_id=AnyMatchingStr(r"local-\w{10}"),
     dependency_import_ids=[
@@ -889,17 +801,16 @@ GENERATE_GRAPH_TASK_DEF = ir.TaskDef(
     custom_image=_dsl.DEFAULT_IMAGE,
 )
 
-PYTHON_IMPORTS_MANUAL_TASK_DEF = ir.TaskDef(
+PYTHON_IMPORTS_MANUAL_TASK_DEF = model.TaskDef(
     id=AnyMatchingStr(r"task-python-imports-manual-\w{10}"),
-    fn_ref=ir.ModuleFunctionRef(
+    fn_ref=model.ModuleFunctionRef(
         module="tests.sdk.v2.test_traversal",
         function_name="python_imports_manual",
         file_path="tests/sdk/v2/test_traversal.py",
         line_number=AnyPositiveInt(),
     ),
-    output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
     parameters=[
-        ir.TaskParameter(name="text", kind=ir.ParameterKind.POSITIONAL_OR_KEYWORD)
+        model.TaskParameter(name="text", kind=model.ParameterKind.POSITIONAL_OR_KEYWORD)
     ],
     source_import_id=AnyMatchingStr(r"local-\w{10}"),
     dependency_import_ids=[AnyMatchingStr(r"python-import-\w{10}")],
@@ -908,129 +819,27 @@ PYTHON_IMPORTS_MANUAL_TASK_DEF = ir.TaskDef(
 
 
 @pytest.mark.parametrize(
-    "task_def, expected_model",
+    "task_def, has_arg, expected_model",
     [
-        (capitalize, CAPITALIZE_TASK_DEF),
-        (git_task, GIT_TASK_DEF),
-        (generate_graph, GENERATE_GRAPH_TASK_DEF),
-        (capitalize_inline, CAPITALIZE_INLINE_TASK_DEF),
-        (python_imports_manual, PYTHON_IMPORTS_MANUAL_TASK_DEF),
+        (capitalize, True, CAPITALIZE_TASK_DEF),
+        (git_task, False, GIT_TASK_DEF),
+        (generate_graph, False, GENERATE_GRAPH_TASK_DEF),
+        (capitalize_inline, True, CAPITALIZE_INLINE_TASK_DEF),
+        (python_imports_manual, True, PYTHON_IMPORTS_MANUAL_TASK_DEF),
     ],
 )
-def test_get_model_from_task_def(task_def, expected_model):
-    assert _traversal.get_model_from_task_def(task_def).dict() == expected_model.dict()
+def test_individual_task_models(task_def, has_arg, expected_model):
+    @_workflow.workflow
+    def wf():
+        if has_arg:
+            return task_def("w/e")
+        else:
+            return task_def()
 
+    wf_model = wf.model
+    task_def = list(wf_model.tasks.values())[0]
 
-CAPITALIZE_IMPORTS = [
-    ir.LocalImport(id=AnyMatchingStr(r"local-\w{10}")),
-]
-
-
-GIT_TASK_IMPORTS = [
-    ir.GitImport(
-        id=AnyMatchingStr(r"git-\w{10}_hello"),
-        repo_url="hello",
-        git_ref="main",
-    ),
-]
-
-GENERATE_GRAPH_IMPORTS = [
-    ir.LocalImport(id=AnyMatchingStr(r"local-\w{10}")),
-    ir.GitImport(
-        id=AnyMatchingStr(
-            r"git-\w{10}_github_com_zapatacomputing_orquestra_workflow_sdk"
-        ),
-        repo_url="git@github.com:zapatacomputing/orquestra-workflow-sdk.git",
-        git_ref="main",
-    ),
-]
-
-CAPITALIZE_IMPORTS_INFER = [
-    ir.GitImport(
-        id=AnyMatchingStr(r"git-\w{10}_github_com_zapatacomputing_orquestra.*sdk"),
-        repo_url=ir.GitURL(
-            original_url=AnyMatchingStr(
-                r"git@github.com:zapatacomputing/orquestra.*sdk.*"
-            ),
-            protocol="ssh",
-            user="git",
-            password=None,
-            host="github.com",
-            port=None,
-            path=AnyMatchingStr(r"zapatacomputing/orquestra.*sdk.*"),
-            query=None,
-        ),
-        git_ref="main",
-    ),
-]
-
-
-CAPITALIZE_IMPORTS_INLINE = [
-    ir.InlineImport(
-        id=AnyMatchingStr(r".*"),
-    )
-]
-
-PYTHON_IMPORTS_MANUAL = [
-    ir.LocalImport(id=AnyMatchingStr(r"local-\w{10}")),
-    ir.PythonImports(
-        id=AnyMatchingStr(r"python-import-\w{10}"),
-        packages=[
-            {
-                "environment_markers": "",
-                "extras": [],
-                "name": "numpy",
-                "version_constraints": ["==1.21.5"],
-            }
-        ],
-        pip_options=[],
-    ),
-]
-
-PYTHON_IMPORTS_FROM_REQS = [
-    ir.LocalImport(id=AnyMatchingStr(r"local-\w{10}")),
-    ir.PythonImports(
-        id=AnyMatchingStr(r"python-import-\w{10}"),
-        packages=[
-            {
-                "environment_markers": 'python_version > "2.7"',
-                "extras": ["security", "tests"],
-                "name": "requests",
-                "version_constraints": ["==2.8.*", ">=2.8.1"],
-            },
-        ],
-        pip_options=[],
-    ),
-]
-
-
-@pytest.mark.parametrize(
-    "task_def, expected_imports",
-    [
-        (capitalize, CAPITALIZE_IMPORTS),
-        (git_task, GIT_TASK_IMPORTS),
-        (generate_graph, GENERATE_GRAPH_IMPORTS),
-        (capitalize_infer, CAPITALIZE_IMPORTS_INFER),
-        (capitalize_inline, CAPITALIZE_IMPORTS_INLINE),
-        (python_imports_manual, PYTHON_IMPORTS_MANUAL),
-        (python_imports_from_requirements, PYTHON_IMPORTS_FROM_REQS),
-    ],
-)
-def test_get_model_imports_from_task_def(monkeypatch, task_def, expected_imports):
-    # Dont fetch repo in unit tests
-    def fake_fetch(_):
-        pass
-
-    # Dont raise errors about dirty repo in unit tests
-    def fake_is_dirty(_):
-        return False
-
-    monkeypatch.setattr(git.remote.Remote, "fetch", fake_fetch)
-    monkeypatch.setattr(git.Repo, "is_dirty", fake_is_dirty)
-    imports = [
-        imp.dict() for imp in _traversal.get_model_imports_from_task_def(task_def)
-    ]
-    assert imports == [imp.dict() for imp in expected_imports]
+    assert task_def == expected_model.dict()
 
 
 @pytest.mark.parametrize(
@@ -1073,7 +882,7 @@ def test_make_import_model_git_import_with_auth():
         auth_secret=_dsl.Secret(secret_name),
     )
     imp_model = _traversal._make_import_model(imp)
-    assert isinstance(imp_model, ir.GitImport)
+    assert isinstance(imp_model, model.GitImport)
     assert imp_model.git_ref == git_ref
     assert imp_model.repo_url.original_url == original_url
     assert imp_model.repo_url.user == user
@@ -1329,82 +1138,62 @@ def test_metadata_on_dev(monkeypatch: pytest.MonkeyPatch):
     assert wf.metadata.sdk_version.is_prerelease
 
 
-class TestGraphTraversal:
-    """
-    Unit tests for GraphTraversal class. Contains edge cases identified while
-    integrating with other components.
-    """
+def test_warning_when_nodes_passed_to_task():
+    @_dsl.task(resources=_dsl.Resources(nodes=100))
+    def _task():
+        return
 
-    @staticmethod
-    def test_all_used():
-        """
-        In this case the artifact indices were funky.
-        """
-        # Given
-        graph = _traversal.GraphTraversal()
-        futures = _traversal.extract_root_futures(two_task_outputs_all_used())
+    @_workflow.workflow
+    def _wf():
+        return _task()
 
-        # When
-        graph.traverse(futures)
+    with pytest.warns(exceptions.NodesInTaskResourcesWarning):
+        _ = _wf().model
 
-        # Then
-        assert list(graph.artifacts) == [
-            ir.ArtifactNode(
-                id="artifact-0-two-outputs",
-                artifact_index=0,
-            ),
-            ir.ArtifactNode(
-                id="artifact-1-two-outputs",
-                artifact_index=1,
-            ),
-            # We expect a non-unpacked artifact node even though we instanteneously
-            # unpack it to other futures.
-            ir.ArtifactNode(
-                id="artifact-2-two-outputs",
-                artifact_index=None,
-            ),
-        ]
 
-    @staticmethod
-    def test_packed_and_unpacked():
-        # Given
-        graph = _traversal.GraphTraversal()
-        wf = two_task_outputs_packed_returned()
-        futures = _traversal.extract_root_futures(wf)
+class TestDefaultImports:
+    @_dsl.task
+    def no_overwrite_task(self):
+        return 21
 
-        # When
-        graph.traverse(futures)
+    @_dsl.task(
+        source_import=_dsl.GitImport(repo_url="overwrite_source", git_ref="source"),
+        dependency_imports=[_dsl.GitImport(repo_url="overwrite", git_ref="dep")],
+    )
+    def do_overwrite_task(self):
+        return 21
 
-        # Then
-        assert list(graph.artifacts) == [
-            ir.ArtifactNode(
-                id="artifact-0-two-outputs",
-                artifact_index=0,
-            ),
-            ir.ArtifactNode(
-                id="artifact-1-two-outputs",
-                artifact_index=1,
-            ),
-            ir.ArtifactNode(
-                id="artifact-2-two-outputs",
-                artifact_index=None,
-            ),
-        ]
+    @_dsl.task(source_import=_dsl.GitImport(repo_url="another", git_ref="source"))
+    def overwrite_source_only_task(self):
+        return 21
 
-    @staticmethod
-    def test_non_subscriptable_output():
-        # Given
-        graph = _traversal.GraphTraversal()
-        wf = single_invocation()
-        futures = _traversal.extract_root_futures(wf)
+    @pytest.mark.parametrize(
+        "task, expectation",
+        [
+            (no_overwrite_task, ("2", "1", "3", "6")),
+            (do_overwrite_task, ("dep", "overwrite", "source", "overwrite_source")),
+            (overwrite_source_only_task, ("2", "1", "source", "another")),
+        ],
+    )
+    def test_wf_default_imports(self, task, expectation):
+        @_workflow.workflow(
+            default_source_import=_dsl.GitImport(repo_url="6", git_ref="3"),
+            default_dependency_imports=[_dsl.GitImport(repo_url="1", git_ref="2")],
+        )
+        def wf_with_default_imports():
+            return [
+                task(None),
+            ]
 
-        # When
-        graph.traverse(futures)
+        wf_model = wf_with_default_imports.model
+        task_model = list(wf_model.tasks.values())[0]
+        assert task_model.dependency_import_ids
+        dep_import = wf_model.imports[task_model.dependency_import_ids[0]]
+        source_import = wf_model.imports[task_model.source_import_id]
 
-        # Then
-        assert list(graph.artifacts) == [
-            ir.ArtifactNode(
-                id="artifact-0-capitalize",
-                artifact_index=None,
-            ),
-        ]
+        assert isinstance(dep_import, model.GitImport)
+        assert isinstance(source_import, model.GitImport)
+        assert dep_import.git_ref == expectation[0]
+        assert dep_import.repo_url.original_url == expectation[1]
+        assert source_import.git_ref == expectation[2]
+        assert source_import.repo_url.original_url == expectation[3]

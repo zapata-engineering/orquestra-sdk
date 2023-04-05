@@ -28,7 +28,7 @@ from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig
-from ._task_run import TaskRun
+from ._task_run import TaskRun, unwrap_task_retvals
 
 COMPLETED_STATES = [State.FAILED, State.TERMINATED, State.SUCCEEDED]
 
@@ -359,8 +359,7 @@ class WorkflowRun:
         """
         Unstable: this API will change.
 
-        Returns values calculated by this workflow's tasks. If a given task hasn't
-        succeeded yet, the mapping won't contain the corresponding entry.
+        Returns all values returned by this workflow's tasks.
 
         Raises:
             WorkflowRunNotStarted: when the workflow has not started
@@ -384,12 +383,13 @@ class WorkflowRun:
 
         # NOTE: this is a possible place for improvement. If future runtime APIs support
         # getting a subset of artifacts, we should use them here.
-        inv_outputs = self._runtime.get_available_outputs(run_id)
+        workflow_artifacts = self._runtime.get_available_outputs(run_id)
 
-        # The output shape differs across runtimes when the workflow functions returns a
-        # single, packed future. See more in:
-        # https://zapatacomputing.atlassian.net/browse/ORQSDK-801
-        return inv_outputs
+        # The runtime always returns tuples, even of the task has n_outputs = 1. We
+        # need to unwrap it for user's convenience.
+        return unwrap_task_retvals(
+            artifacts=workflow_artifacts, task_invocations=self._wf_def.task_invocations
+        )
 
     def get_logs(self) -> t.Mapping[TaskInvocationId, t.List[str]]:
         """

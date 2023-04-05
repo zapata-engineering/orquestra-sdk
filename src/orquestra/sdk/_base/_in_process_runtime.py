@@ -6,7 +6,14 @@ from datetime import datetime, timedelta, timezone
 
 from orquestra.sdk._base import abc
 from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun, WorkflowRun
+from orquestra.sdk.schema.workflow_run import (
+    RunStatus,
+    State,
+    TaskRun,
+    TaskRunId,
+    WorkflowRun,
+    WorkflowRunId,
+)
 
 from .. import secrets
 from ..exceptions import WorkflowRunNotFoundError
@@ -145,21 +152,14 @@ class InProcessRuntime(abc.RuntimeInterface):
 
         inv_outputs: t.Dict[ir.TaskInvocationId, TaskOutputs] = {}
         for inv in wf_def.task_invocations.values():
-            # Assumption there's always a non-unpacked artifact. We want to return
-            # whatever shape was returned from the task function so we can use the
-            # "packed" artifact. For more info on artifact unpacking, see
-            # "orquestra.sdk._base._traversal".
+            output_vals = tuple(
+                [
+                    self._artifact_store[workflow_run_id][art_id]
+                    for art_id in inv.output_ids
+                ]
+            )
 
-            artifact_nodes = [wf_def.artifact_nodes[id] for id in inv.output_ids]
-            packed_nodes = [n for n in artifact_nodes if n.artifact_index is None]
-            assert (
-                len(packed_nodes) == 1
-            ), f"Task invocation should have exactly 1 packed output. {inv.id} has {len(packed_nodes)}: {packed_nodes}"  # noqa: E501
-            packed_artifact = packed_nodes[0]
-
-            task_result = self._artifact_store[workflow_run_id][packed_artifact.id]
-
-            inv_outputs[inv.id] = task_result
+            inv_outputs[inv.id] = output_vals
 
         return inv_outputs
 

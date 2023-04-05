@@ -10,6 +10,7 @@ import orquestra.sdk as sdk
 from orquestra.sdk._base import _workflow, loader
 from orquestra.sdk._base._dsl import InvalidPlaceholderInCustomTaskNameError
 from orquestra.sdk.exceptions import WorkflowSyntaxError
+from orquestra.sdk.schema import ir
 
 DEFAULT_LOCAL_REPO_PATH = Path(__file__).parent.resolve()
 
@@ -259,3 +260,112 @@ class TestGraph:
 
         # Then
         assert dot_path.exists()
+
+
+FULL_RESOURCES = {
+    "cpu": "2",
+    "memory": "32Gi",
+    "disk": "1Ti",
+    "gpu": "1",
+    "nodes": 10,
+}
+
+NONE_RESOURCES = {
+    "cpu": None,
+    "memory": None,
+    "gpu": None,
+    "disk": None,
+    "gpu": None,
+    "nodes": None,
+}
+
+
+class TestResources:
+    @pytest.fixture
+    def resourced_workflow(self):
+        def _fixture(**kwargs):
+            @sdk.workflow(resources=sdk.Resources(**kwargs))
+            def wf():
+                return _an_empty_task()
+
+            return wf()
+
+        return _fixture
+
+    @pytest.mark.parametrize(
+        "kwargs,expected",
+        [
+            # Single values
+            ({"cpu": "1000m"}, ir.Resources(cpu="1000m")),
+            ({"memory": "1000G"}, ir.Resources(memory="1000G")),
+            ({"disk": "512Mi"}, ir.Resources(disk="512Mi")),
+            ({"gpu": "1"}, ir.Resources(gpu="1")),
+            ({"nodes": 10}, ir.Resources(nodes=10)),
+            # Combination
+            (
+                FULL_RESOURCES,
+                ir.Resources(cpu="2", memory="32Gi", disk="1Ti", gpu="1", nodes=10),
+            ),
+            # Empty resources
+            ({}, None),
+            (NONE_RESOURCES, None),
+        ],
+    )
+    def test_resources_in_decorator(self, resourced_workflow, kwargs, expected):
+        wf = resourced_workflow(**kwargs).model
+        assert wf.resources == expected
+
+    @pytest.mark.parametrize(
+        "decorator_resources,override_resouces,expected_resources",
+        [
+            # Override
+            (
+                FULL_RESOURCES,
+                {"cpu": "10"},
+                ir.Resources(cpu="10", memory="32Gi", disk="1Ti", gpu="1", nodes=10),
+            ),
+            (
+                FULL_RESOURCES,
+                {"memory": "100Gi"},
+                ir.Resources(cpu="2", memory="100Gi", disk="1Ti", gpu="1", nodes=10),
+            ),
+            (
+                FULL_RESOURCES,
+                {"disk": "1Gi"},
+                ir.Resources(cpu="2", memory="32Gi", disk="1Gi", gpu="1", nodes=10),
+            ),
+            (
+                FULL_RESOURCES,
+                {"gpu": "0"},
+                ir.Resources(cpu="2", memory="32Gi", disk="1Ti", gpu="0", nodes=10),
+            ),
+            (
+                FULL_RESOURCES,
+                {"nodes": 5},
+                ir.Resources(cpu="2", memory="32Gi", disk="1Ti", gpu="1", nodes=5),
+            ),
+            # No kwargs means no-op
+            ({}, {}, None),
+            (
+                FULL_RESOURCES,
+                {},
+                ir.Resources(cpu="2", memory="32Gi", disk="1Ti", gpu="1", nodes=10),
+            ),
+            # Explicitly remove resources
+            (FULL_RESOURCES, NONE_RESOURCES, None),
+        ],
+    )
+    def test_with_resources_overrides(
+        self,
+        resourced_workflow,
+        decorator_resources,
+        override_resouces,
+        expected_resources,
+    ):
+        wf = (
+            resourced_workflow(**decorator_resources)
+            .with_resources(**override_resouces)
+            .model
+        )
+
+        assert wf.resources == expected_resources

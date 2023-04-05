@@ -160,6 +160,10 @@ class Resources(BaseModel):
     memory: t.Optional[str] = None
     disk: t.Optional[str] = None
     gpu: t.Optional[str] = None
+    # nodes should be a positive integer representing the number of nodes assigned
+    # to a workflow. If None, the runtime will choose.
+    # This only applies to workflows and not tasks.
+    nodes: t.Optional[int] = None
 
 
 class DataAggregation(BaseModel):
@@ -186,22 +190,6 @@ class TaskParameter(BaseModel):
     # it should be added here.
 
 
-class TaskOutputMetadata(BaseModel):
-    """
-    Information about the data shape returned by a task function.
-    """
-
-    # If yes, it's possible to unpack the output in the workflow like:
-    # foo, bar = my_task()
-    #
-    # Separate from `n_outputs` to handle cases like:
-    # foo, = my_task()
-    is_subscriptable: bool
-
-    # Number of artifacts we can populate with the task results.
-    n_outputs: int
-
-
 class TaskDef(BaseModel):
     # workflow-unique ID used to refer from task invocations
     id: TaskDefId
@@ -216,10 +204,6 @@ class TaskDef(BaseModel):
     # None means we do not know the parameters for this Task (e.g. an external task)
     # An empty list [] means a Task with no parameters
     parameters: t.Optional[t.List[TaskParameter]]
-
-    # Statically inferred from the task function. See also `TaskOutputMetadata`'s
-    # docstring.
-    output_metadata: TaskOutputMetadata
 
     # ID of the import that contains the callable function
     source_import_id: ImportId
@@ -258,8 +242,7 @@ ConstantNodeId = str
 
 
 class ArtifactNode(BaseModel):
-    # Workflow-scope unique ID used to refer from task invocations. If the task has
-    # multiple outputs they will have distinct `id`s.
+    # Workflow-scope unique ID used to refer from task invocations
     id: ArtifactNodeId
 
     # artifact metadata below
@@ -273,12 +256,12 @@ class ArtifactNode(BaseModel):
     # serialization will likely be needed somewhere.
     serialization_format: ArtifactFormat = ArtifactFormat.AUTO
 
-    # Index of the variable when destructuring task result in the workflow function. If
-    # the workflow contained `foo, bar = my_task()`, `foo`'s index is 0 and `bar`'s
-    # index is 1. This is used by some runtimes to extract the artifact value from the
-    # output tuple.
+    # Tells the runtime the index of the Artifact from the TaskInvocation
+    # If None, then the TaskInvocation's result is not split
     #
-    # `None` if the task result isn't destructured in the workflow function.
+    # We need this to support destructuring multi-output tasks when some
+    # of the output values are unused. For more info, see comments in:
+    # https://github.com/zapatacomputing/orquestra-workflow/pull/44
     artifact_index: t.Optional[int] = None
 
 
@@ -328,8 +311,6 @@ class ConstantNodePickle(BaseModel):
 
 # General ConstantNode that can hold constants that are not JSON-serializable
 ConstantNode = t.Union[ConstantNodeJSON, ConstantNodePickle]
-# ID of a node that can be a task argument. Multiple node types can be task inputs.
-# This is contrary to the outputs; only artifact nodes can be task outputs.
 ArgumentId = t.Union[ArtifactNodeId, ConstantNodeId, SecretNodeId]
 
 
@@ -406,3 +387,7 @@ class WorkflowDef(BaseModel):
 
     # Metadata defaults to None to allow older JSON to be loaded
     metadata: t.Optional[WorkflowMetadata] = None
+
+    # The resources that are available for the workflow to use.
+    # If none, the runtime will decide.
+    resources: t.Optional[Resources] = None

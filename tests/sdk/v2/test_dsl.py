@@ -103,7 +103,7 @@ class TestArtifactFuturePublicMethods:
             if attr != "custom_image":
                 if future.invocation.resources is None:
                     assert (
-                        new_future.invocation.resources == future.invocation.resources
+                        new_future.invocation.resources == future.invocation._resources
                     )
                 else:
                     assert getattr(new_future.invocation.resources, attr) == getattr(
@@ -132,7 +132,7 @@ class TestArtifactFuturePublicMethods:
             assert getattr(new_future.invocation.resources, attr) == expected_value
         else:
             if future.invocation.resources is None:
-                assert new_future.invocation.resources == future.invocation.resources
+                assert new_future.invocation.resources == future.invocation._resources
             else:
                 assert getattr(new_future.invocation.resources, attr) == getattr(
                     future.invocation.resources, attr
@@ -185,8 +185,30 @@ def task_no_source():
 def test_task_no_linenumber_if_source_inaccessible():
     task_no_source.__code__ = task_no_source.__code__.replace(co_filename="fake")
     local_task = _dsl.task(task_no_source)
-    assert isinstance(local_task.fn_ref, _dsl.ModuleFunctionRef)
-    assert local_task.fn_ref.line_number is None
+    assert isinstance(local_task._fn_ref, _dsl.ModuleFunctionRef)
+    assert local_task._fn_ref.line_number is None
+
+
+def test_external_file_task_calling():
+    external_task = _dsl.external_file_task(
+        file_path="hello/there.py",
+        function="general_kenobi",
+        repo_url="example.com/obi-wan",
+        n_outputs=1,
+    )
+    with pytest.raises(ValueError):
+        external_task._TaskDef__sdk_task_body()
+
+
+def test_external_module_task_calling():
+    external_task = _dsl.external_module_task(
+        module="orquestra.hello.there",
+        function="general_kenobi",
+        repo_url="example.com/obi-wan",
+        n_outputs=1,
+    )
+    with pytest.raises(ValueError):
+        external_task._TaskDef__sdk_task_body()
 
 
 @pytest.mark.parametrize("num_outputs", [1, 100, 2])
@@ -220,13 +242,25 @@ def test_task_n_outputs_non_positive(num_outputs):
             return "hello", "there"
 
 
+def test_external_tasks_warn_empty_n_outputs():
+    with pytest.warns(UserWarning):
+        _dsl.external_file_task(
+            file_path="./hello.py", repo_url="example.com", function="hello"
+        )
+
+    with pytest.warns(UserWarning):
+        _dsl.external_module_task(
+            module="orquestra.sdk", repo_url="example.com", function="hello"
+        )
+
+
 def test_accessing_deprecated_n_outputs():
     @sdk.task
     def _local_task():
         return 0, 1
 
     with pytest.warns(DeprecationWarning):
-        assert _local_task.n_outputs == _local_task.output_metadata.n_outputs == 2
+        assert _local_task.n_outputs == _local_task._output_metadata.n_outputs == 2
 
 
 def test_iter_artifact_future():
@@ -322,13 +356,13 @@ def test_resourced_task_with_custom_gpu_image():
         return "hello"
 
     hello = _local_task()
-    assert hello.invocation.task.custom_image == _dsl.GPU_IMAGE
+    assert hello.invocation.task._custom_image == _dsl.GPU_IMAGE
 
 
 def test_resourced_task_with_default_gpu_image():
     future = _resourced_task()
 
-    assert future.invocation.task.custom_image == _dsl.GPU_IMAGE
+    assert future.invocation.task._custom_image == _dsl.GPU_IMAGE
 
 
 def test_task_with_default_image():
@@ -337,19 +371,7 @@ def test_task_with_default_image():
         return "hello"
 
     hello = _local_task()
-    assert hello.invocation.task.custom_image == _dsl.DEFAULT_IMAGE
-
-
-class TestModelsSerializeProperly:
-    """The properties are Pydantic models. They would raise ValidationError if the
-    serialization went wrong.
-    """
-
-    def test_task_model(self):
-        _an_empty_task.model
-
-    def test_task_import_models(self):
-        _an_empty_task.import_models
+    assert hello.invocation.task._custom_image == _dsl.DEFAULT_IMAGE
 
 
 @pytest.fixture
@@ -538,7 +560,7 @@ def test_default_for_interactive_mode(monkeypatch):
         ...
 
     # type comparison to check if in interactive mode default is INLINE
-    assert type(task.import_models[0]) is type(inline_task.import_models[0])  # noqa
+    assert type(task._source_import) is type(inline_task._source_import)  # noqa
 
 
 def test_default_for_non_interactive_mode(monkeypatch):
@@ -553,7 +575,7 @@ def test_default_for_non_interactive_mode(monkeypatch):
         ...
 
     # type comparison to check if in  non-interactive mode default is INLINE
-    assert type(task.import_models[0]) is type(local_task.import_models[0])  # noqa
+    assert type(task._source_import) is type(local_task._source_import)  # noqa
 
 
 @pytest.mark.parametrize(
@@ -664,3 +686,49 @@ def test_python_310_importlib_abc_bug():
     command = f'{str(sys.executable)} -c "import orquestra.sdk as sdk"'
     proc = subprocess.run(command, shell=True, capture_output=True)
     assert proc.returncode == 0, proc.stderr.decode()
+
+
+@pytest.mark.parametrize(
+    "obj",
+    [
+        sdk.GitImport(
+            git_ref="https://github.com/zapatacomputing/orquestra-workflow-sdk.git",
+            repo_url="main",
+        ),
+        sdk.GithubImport("zapatacomputing/orquestra-workflow-sdk"),
+        sdk.PythonImports("numpy"),
+        sdk.LocalImport("module"),
+        sdk.InlineImport(),
+    ],
+)
+def test_dsl_imports_not_iterable(obj):
+    with pytest.raises(TypeError):
+        [a for a in obj]
+
+
+@pytest.mark.parametrize(
+    "dependency_imports, expected_imports",
+    [
+        (None, None),
+        (sdk.InlineImport(), (sdk.InlineImport(),)),
+        (sdk.LocalImport("mod"), (sdk.LocalImport("mod"),)),
+        (
+            sdk.GitImport(repo_url="abc", git_ref="xyz"),
+            (sdk.GitImport(repo_url="abc", git_ref="xyz"),),
+        ),
+        (
+            sdk.GithubImport("abc"),
+            (sdk.GithubImport("abc"),),
+        ),
+        (
+            sdk.PythonImports("abc"),
+            (sdk.PythonImports("abc"),),
+        ),
+    ],
+)
+def test_dependency_imports(dependency_imports, expected_imports):
+    @sdk.task(dependency_imports=dependency_imports)
+    def my_task():
+        pass
+
+    assert my_task._dependency_imports == expected_imports
