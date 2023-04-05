@@ -80,7 +80,9 @@ Resources can also be configured at the workflow definition level using the same
 .. note:: nodes
     Note that unlike the other parameters, ``nodes`` must be an integer rather than a string.
 
-In most cases, defining resources in this way will be unnecessary as Compute Engine can infer the overall resource requirements from the aggregated requirements of individual tasks. The primary use-cases for this facility is to provision additional resources that aren't covered by the task definitions, such as when tasks spawn additional actors or remote functions, or to specify a the number of nodes.
+Currently, the workflow resource request is only utilised by Compute Engine.
+If resources are not provided, Compute Engine will infer the overall resource requirements from the aggregated requirements of individual tasks.
+Tweaking the resource request may be required when your tasks spawn additional actors or remote functions to avoid deadlock, see below.
 
 
 Troubleshooting Common Resource Issues
