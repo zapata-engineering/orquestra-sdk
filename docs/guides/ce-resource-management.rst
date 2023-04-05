@@ -57,23 +57,21 @@ Convention is to use binary prefixes for memory resource requests (``disk`` and 
 .. note:: mixing unit prefixes
     Binary and decimal units can be used interchangeably, however this can occasionally cause confusion, and care must be taken when specifying these parameters. For example, a memory request of ``100m`` specifies not 100 megabytes, but 100 millibytes, or 0.1 bytes.
 
-.. TODO: uncomment and check this section when workflow resource management is implemented (https://zapatacomputing.atlassian.net/browse/ORQSDK-797?atlOrigin=eyJpIjoiNGU1MDU0NjFhNTMxNGUwN2IyZTQzODMxZTVhNjQwM2UiLCJwIjoiaiJ9)
+Setting Workflow Resources
+--------------------------
 
-    Setting Workflow Resources
-    --------------------------
+Resources can also be configured at the workflow definition level using the same syntax as with tasks:
 
-    Resources can also be configured at the workflow definition level using the same syntax as with tasks:
+.. code-block::
+    :caption: workflow resource request example
 
-    .. code-block::
-        :caption: workflow resource request example
+    @sdk.workflow(
+        resources=sdk.Resources(cpu="100m", memory="1Gi", disk="10Gi", gpu="1")
+    )
+    def my_workflow():
+        ...
 
-        @sdk.workflow(
-            resources=sdk.Resources(cpu="100m", memory="1Gi", disk="10Gi", gpu="1")
-        )
-        def my_workflow():
-            ...
-
-    In most cases, defining resources in this way will be unnecessary as Compute Engine can infer the overall resource requirements from the aggregated requirements of individual tasks. The primary use-case for this facility is to provision additional resources that aren't covered by the task definitions, such as when tasks spawn additional actors or remote functions.
+In most cases, defining resources in this way will be unnecessary as Compute Engine can infer the overall resource requirements from the aggregated requirements of individual tasks. The primary use-case for this facility is to provision additional resources that aren't covered by the task definitions, such as when tasks spawn additional actors or remote functions.
 
 
 Troubleshooting Common Resource Issues
@@ -81,22 +79,20 @@ Troubleshooting Common Resource Issues
 
 Due to the way Ray's RLLib works, a deadlock can be created on Compute Engine if a task attempts to spawn additional actors or remote functions via the DNQ ``rollouts`` facility. Resources requested in a task definition are bound to the task process, so additional actors can rapidly exhaust the provisioned resources.
 
-.. TODO: uncomment and check this section when workflow resource management is implemented (https://zapatacomputing.atlassian.net/browse/ORQSDK-797?atlOrigin=eyJpIjoiNGU1MDU0NjFhNTMxNGUwN2IyZTQzODMxZTVhNjQwM2UiLCJwIjoiaiJ9)
+In these cases, additional resources should be specified in the workflow decorator.
 
-    In these cases, additional resources should be specified in the workflow decorator.
+.. code-block::
+    :caption: Example: override workflow resources.
+    @sdk.task(resources=...)                    # task resources requested.
+    def task():
+        config = DQNConfig()
+        ...
+        config.rollouts(num_rollout_workers=2)  # additional actors do not have
+        ...                                     # access to task resources.
+        return results
 
-    .. code-block::
-        :caption: Example: override workflow resources.
-        @sdk.task(resources=...)                    # task resources requested.
-        def task():
-            config = DQNConfig()
-            ...
-            config.rollouts(num_rollout_workers=2)  # additional actors do not have
-            ...                                     # access to task resources.
-            return results
-
-        @sdk.workflow(resources=...)                # Override the aggregated task
-        def wf():                                   # resources to provision additional
-            results = []                            # resources for the additional
-            for _ in range(5):                      # actors.
-                results.append(task())
+    @sdk.workflow(resources=...)                # Override the aggregated task
+    def wf():                                   # resources to provision additional
+        results = []                            # resources for the additional
+        for _ in range(5):                      # actors.
+            results.append(task())
