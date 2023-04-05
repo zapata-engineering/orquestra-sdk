@@ -73,13 +73,13 @@ Convention is to use binary prefixes for memory resource requests (``disk`` and 
         def my_workflow():
             ...
 
-    In most cases, defining resources in this way will be unnecessary as Compute Engine can infer the overall resource requirements from the aggregated requirements of individual tasks. The primary use-case for this facility is to provision additional resources that aren't covered by the task definitions, such as when tasks spawn additional processes.
+    In most cases, defining resources in this way will be unnecessary as Compute Engine can infer the overall resource requirements from the aggregated requirements of individual tasks. The primary use-case for this facility is to provision additional resources that aren't covered by the task definitions, such as when tasks spawn additional actors or remote functions.
 
 
 Troubleshooting Common Resource Issues
 --------------------------------------
 
-Due to the way Ray's RLLib works, a deadlock can be created on Compute Engine if a task attempts to spawn additional processes, notably via the DNQ ``rollouts`` facility. Resources requested in a task definition are bound to the task process, so additional processes can rapidly exhaust the provisioned resources.
+Due to the way Ray's RLLib works, a deadlock can be created on Compute Engine if a task attempts to spawn additional actors or remote functions via the DNQ ``rollouts`` facility. Resources requested in a task definition are bound to the task process, so additional actors can rapidly exhaust the provisioned resources.
 
 .. TODO: uncomment and check this section when workflow resource management is implemented (https://zapatacomputing.atlassian.net/browse/ORQSDK-797?atlOrigin=eyJpIjoiNGU1MDU0NjFhNTMxNGUwN2IyZTQzODMxZTVhNjQwM2UiLCJwIjoiaiJ9)
 
@@ -91,12 +91,12 @@ Due to the way Ray's RLLib works, a deadlock can be created on Compute Engine if
         def task():
             config = DQNConfig()
             ...
-            config.rollouts(num_rollout_workers=2)  # additional processes do not have
+            config.rollouts(num_rollout_workers=2)  # additional actors do not have
             ...                                     # access to task resources.
             return results
 
         @sdk.workflow(resources=...)                # Override the aggregated task
         def wf():                                   # resources to provision additional
             results = []                            # resources for the additional
-            for _ in range(5):                      # processes.
+            for _ in range(5):                      # actors.
                 results.append(task())
