@@ -167,6 +167,8 @@ class WorkflowDef(Generic[_R]):
         self,
         config: Union[_api.RuntimeConfig, str],
         project_dir: Optional[Union[str, Path]] = None,
+        workspace_id: Optional[str] = None,
+        project_id: Optional[str] = None,
     ) -> _api.WorkflowRun:
         """
         "Prepares" workflow for running. Call ".start()" on the result to
@@ -220,13 +222,20 @@ class WorkflowDef(Generic[_R]):
         wf_def_model = self.model
 
         return _api.WorkflowRun(
-            run_id=None, wf_def=wf_def_model, runtime=runtime, config=_config
+            run_id=None,
+            wf_def=wf_def_model,
+            runtime=runtime,
+            config=_config,
+            workspace_id=workspace_id,
+            project_id=project_id,
         )
 
     def run(
         self,
         config: Optional[Union[_api.RuntimeConfig, str]] = None,
         project_dir: Optional[Union[str, Path]] = None,
+        workspace_id: Optional[str] = None,
+        project_id: Optional[str] = None,
     ) -> _api.WorkflowRun:
         """
         Schedules workflow for execution. Shorthand for
@@ -255,7 +264,12 @@ class WorkflowDef(Generic[_R]):
                 "under which they are saved, or passing in the RuntimeConfig object "
                 "directly. "
             )
-        run = self.prepare(config, project_dir=project_dir)
+        run = self.prepare(
+            config,
+            project_dir=project_dir,
+            workspace_id=workspace_id,
+            project_id=project_id,
+        )
         run.start()
         return run
 

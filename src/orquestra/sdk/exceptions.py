@@ -160,3 +160,12 @@ class LoginURLUnavailableError(BaseRuntimeError):
 
 class InProcessFromCLIError(NotFoundError):
     """Raised when the user requests the in-process runtime when using the CLI"""
+
+
+# Unsupported features
+class UnsupportedWorkspaceID(Warning):
+    pass
+
+
+class UnsupportedProjectID(Warning):
+    pass

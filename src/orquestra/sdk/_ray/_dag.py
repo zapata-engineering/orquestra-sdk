@@ -14,6 +14,7 @@ import os
 import re
 import traceback
 import typing as t
+import warnings
 from datetime import datetime, timedelta, timezone
 from functools import singledispatch
 from pathlib import Path
@@ -774,7 +775,25 @@ class RayRuntime(RuntimeInterface):
         client = RayClient()
         client.shutdown()
 
-    def create_workflow_run(self, workflow_def: ir.WorkflowDef) -> WorkflowRunId:
+    def create_workflow_run(
+        self,
+        workflow_def: ir.WorkflowDef,
+        workspace_id: t.Optional[str] = None,
+        project_id: t.Optional[str] = None,
+    ) -> WorkflowRunId:
+        if project_id:
+            warnings.warn(
+                "Ray doesn't support project-scoped workflows. Project ID"
+                " will be ignored.",
+                category=exceptions.UnsupportedProjectID,
+            )
+        if workspace_id:
+            warnings.warn(
+                "Ray doesn't support project-scoped workflows. Project ID"
+                " will be ignored.",
+                category=exceptions.UnsupportedWorkspaceID,
+            )
+
         global_run_id = os.getenv(RAY_GLOBAL_WF_RUN_ID_ENV)
         wf_run_id = global_run_id or _generate_wf_run_id(workflow_def)
 

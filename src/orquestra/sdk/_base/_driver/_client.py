@@ -143,11 +143,17 @@ class DriverClient:
 
         return response
 
-    def _post(self, endpoint: str, body_params: Optional[Mapping]) -> requests.Response:
+    def _post(
+        self,
+        endpoint: str,
+        body_params: Optional[Mapping],
+        query_params: Optional[Mapping] = None,
+    ) -> requests.Response:
         """Helper method for POST requests"""
         response = self._session.post(
             urljoin(self._base_uri, endpoint),
             json=body_params,
+            params=query_params,
         )
         return response
 
@@ -161,7 +167,12 @@ class DriverClient:
 
     # ---- Worklow Defs ----
 
-    def create_workflow_def(self, workflow_def: WorkflowDef) -> _models.WorkflowDefID:
+    def create_workflow_def(
+        self,
+        workflow_def: WorkflowDef,
+        workspace_id: Optional[str] = None,
+        project_id: Optional[str] = None,
+    ) -> _models.WorkflowDefID:
         """
         Stores a workflow definition for future submission
 
@@ -177,6 +188,10 @@ class DriverClient:
         resp = self._post(
             API_ACTIONS["create_workflow_def"],
             body_params=workflow_def.dict(),
+            query_params=_models.CreateWorkflowDefsRequest(
+                workspaceId=workspace_id,
+                projectId=project_id,
+            ).dict(),
         )
 
         if resp.status_code == codes.BAD_REQUEST:
@@ -272,6 +287,7 @@ class DriverClient:
             _models.GetWorkflowDefResponse, _models.MetaEmpty
         ].parse_obj(resp.json())
 
+        print(parsed_resp.data.workspaceId)
         return parsed_resp.data.workflow
 
     def delete_workflow_def(self, workflow_def_id: _models.WorkflowDefID):
