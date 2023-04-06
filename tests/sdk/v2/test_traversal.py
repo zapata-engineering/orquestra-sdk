@@ -17,6 +17,7 @@ import pytest
 import orquestra.sdk.schema.ir as ir
 from orquestra.sdk import exceptions, secrets
 from orquestra.sdk._base import _dsl, _traversal, _workflow, dispatch, serde
+from orquestra.sdk.packaging import _versions
 
 from .data.complex_serialization.workflow_defs import (
     generate_object_with_num,
@@ -1169,7 +1170,7 @@ def test_workflow_with_secret():
 def test_metadata_on_release(monkeypatch: pytest.MonkeyPatch):
     # Given
     mocked_installed_version = Mock(return_value="22.42.0")
-    monkeypatch.setattr(_traversal, "get_installed_version", mocked_installed_version)
+    monkeypatch.setattr(_versions, "get_installed_version", mocked_installed_version)
 
     # When
     wf = workflow().model
@@ -1185,7 +1186,7 @@ def test_metadata_on_release(monkeypatch: pytest.MonkeyPatch):
 def test_metadata_on_dev(monkeypatch: pytest.MonkeyPatch):
     # Given
     mocked_installed_version = Mock(return_value="22.42.0.dev1+gitAABBCC.20230101")
-    monkeypatch.setattr(_traversal, "get_installed_version", mocked_installed_version)
+    monkeypatch.setattr(_versions, "get_installed_version", mocked_installed_version)
 
     # When
     wf = workflow().model
