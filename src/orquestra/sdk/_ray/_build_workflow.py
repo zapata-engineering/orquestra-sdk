@@ -10,7 +10,7 @@ from .. import exceptions, secrets
 from .._base import _exec_ctx, _git_url_utils, _graphs, _log_adapter, dispatch, serde
 from .._base._env import RAY_DOWNLOAD_GIT_IMPORTS_ENV, RAY_SET_TASK_RESOURCES_ENV
 from ..kubernetes.quantity import parse_quantity
-from ..schema import ir, responses, workflow_run
+from ..schema import _compat, ir, responses, workflow_run
 from . import _client, _id_gen
 from ._client import RayClient
 from ._wf_metadata import InvUserMetadata, pydatic_to_json_dict
@@ -376,7 +376,7 @@ def make_ray_dag(
             ray_kwargs=kwargs,
             args_artifact_nodes=pos_args_artifact_nodes,
             kwargs_artifact_nodes=kwargs_artifact_nodes,
-            n_outputs=user_task.output_metadata.n_outputs,
+            n_outputs=_compat.n_outputs(task_def=user_task, task_inv=invocation),
             project_dir=project_dir,
             user_fn_ref=user_task.fn_ref,
         )

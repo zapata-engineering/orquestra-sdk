@@ -36,6 +36,7 @@ def my_wf():
 
 
 💅 *Improvements*
+* `VersionMismatch` warning will be presented if we detect accessing a workflow def IR generated with another SDK version.
 
 
 🥷 *Internal*

@@ -33,3 +33,30 @@ class TestWorkflowDef:
 
             # Then
             assert wf_def2 == wf_def
+
+    class TestRegression:
+        """
+        Validates we're able to deserialize workflow defs generated with old versions
+        of the SDK. We should be careful about the assertions; probably we should never
+        change them to test for regressions.
+        """
+
+        @staticmethod
+        def test_new_ir():
+            # Given
+            wf = unpacking.unpacking_wf()
+
+            # When
+            _ = wf.model
+
+            # Then
+            # No warning: we're good
+
+        @staticmethod
+        @pytest.mark.parametrize("snapshot_version", ["0.44.0", "0.45.1"])
+        def test_old_ir(snapshot_version: str):
+            path = DATA_PATH / f"unpacking_wf_{snapshot_version}.json"
+            # Then
+            with pytest.warns(exceptions.VersionMismatch):
+                # When
+                _ = ir.WorkflowDef.parse_file(path)

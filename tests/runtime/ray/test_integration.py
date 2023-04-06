@@ -595,6 +595,10 @@ def test_run_and_get_output(
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 class Test3rdPartyLibraries:
     @staticmethod
+    # We're reading a serialized workflow def. The SDK version inside that JSON is
+    # likely to be different from the one we're using for development. The SDK shows a
+    # warning when deserializing a workflow def like this.
+    @pytest.mark.filterwarnings("ignore::orquestra.sdk.exceptions.VersionMismatch")
     def test_constants_and_inline_imports(runtime: _dag.RayRuntime):
         """
         This test uses already generated workflow def from json file. If necessary, it

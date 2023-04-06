@@ -1017,6 +1017,7 @@ class TestWorkflowToYAML:
             (_make_python_requirements, DATA_PATH / "python_import.yml"),
         ],
     )
+    @pytest.mark.filterwarnings("ignore::orquestra.sdk.exceptions.VersionMismatch")
     def test_matches_ref_file(self, override_semver, workflow, ref_yaml_path):
         wf_model = workflow()
         with ref_yaml_path.open() as f:
@@ -1032,6 +1033,7 @@ class TestWorkflowToYAML:
             _make_workflow_with_pickled_args,
         ],
     )
+    @pytest.mark.filterwarnings("ignore::orquestra.sdk.exceptions.VersionMismatch")
     def test_for_pickled_constants(self, override_semver, workflow):
         """
         This method check if is possible to create the yaml representation of a workflow
@@ -1102,6 +1104,7 @@ def _make_override_workflow():
     )
 
 
+@pytest.mark.filterwarnings("ignore::orquestra.sdk.exceptions.VersionMismatch")
 def test_workflow_to_yaml_override_git_ref():
     workflow = _make_override_workflow()
     ref_yaml_path = DATA_PATH / "basics.yml"
@@ -1145,6 +1148,7 @@ def test_real_wf_to_yaml(monkeypatch, wf_def, yaml_path):
     assert _model_dict(yaml_converter.workflow_to_yaml(workflow)) == ref_yaml_contents
 
 
+@pytest.mark.filterwarnings("ignore::orquestra.sdk.exceptions.VersionMismatch")
 def test_main(override_semver, monkeypatch, capsys):
     with (DATA_PATH / "main_test.json").open() as json_f:
         monkeypatch.setattr("sys.stdin", json_f)
@@ -1212,6 +1216,7 @@ def _make_plain_workflow():
     )
 
 
+@pytest.mark.filterwarnings("ignore::orquestra.sdk.exceptions.VersionMismatch")
 def test_workflow_with_invalid_package_version(monkeypatch):
     wf_model = _make_plain_workflow()
     version_mock = Mock(side_effect=_imports.PackageVersionError("mock", "mocked"))
