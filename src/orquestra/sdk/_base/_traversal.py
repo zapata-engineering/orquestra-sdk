@@ -10,19 +10,17 @@ import collections.abc
 import hashlib
 import inspect
 import re
-import sys
 import typing as t
 import warnings
 from collections import OrderedDict
 from functools import singledispatch
 
-from packaging.version import parse as parse_version
 from pip_api import Requirement
 
 from orquestra.sdk.schema import ir, responses
 
 from .. import exceptions
-from ..packaging import get_installed_version
+from ..packaging._versions import get_current_python_version, get_current_sdk_version
 from . import _dsl, _exec_ctx, _git_url_utils, _workflow, serde
 
 N_BYTES_IN_HASH = 8
@@ -825,26 +823,13 @@ def flatten_graph(
         for dsl_invocation_i, dsl_invocation in enumerate(dsl_invocations)
     }
 
-    sdk_version_str = get_installed_version("orquestra-sdk")
-    parsed_sdk_version = parse_version(sdk_version_str)
-    sdk_version = ir.Version(
-        original=sdk_version_str,
-        major=parsed_sdk_version.major,
-        minor=parsed_sdk_version.minor,
-        patch=parsed_sdk_version.micro,
-        is_prerelease=parsed_sdk_version.is_prerelease,
-    )
+    sdk_version = get_current_sdk_version()
+    python_version = get_current_python_version()
 
     return ir.WorkflowDef(
         metadata=ir.WorkflowMetadata(
             sdk_version=sdk_version,
-            python_version=ir.Version(
-                original=sys.version,
-                major=sys.version_info.major,
-                minor=sys.version_info.minor,
-                patch=sys.version_info.micro,
-                is_prerelease=sys.version_info.releaselevel != "final",
-            ),
+            python_version=python_version,
         ),
         resources=_make_resources_model(workflow_def._resources, is_task=False),
         # At the moment 'orq submit workflow-def <name>' assumes that the <name> is
