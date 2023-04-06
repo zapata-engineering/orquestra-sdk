@@ -334,7 +334,7 @@ class CERuntime(RuntimeInterface):
         """
         try:
             # TODO(ORQSDK-684): driver client cannot do filtering via API yet
-            runs = self._client.list_workflow_runs()
+            runs = self._client.list_workflow_runs(limit=limit)
         except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
             raise exceptions.UnauthorizedError(
                 "Could not get list of workflow runs "

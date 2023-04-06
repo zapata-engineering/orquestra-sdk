@@ -872,8 +872,25 @@ class TestListWorkflowRuns:
         runs = runtime.list_workflow_runs()
 
         # Then
-        mocked_client.list_workflow_runs.assert_called_once_with()
+        mocked_client.list_workflow_runs.assert_called_once_with(limit=None)
         assert runs == wf_runs
+
+    @pytest.mark.parametrize("limit", [None, 0, 999])
+    def test_limit_arg_passed_to_client(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        limit,
+    ):
+        # TODO: Once max_age and state filtering is implemented, this case will be
+        # covered by TestListWorkflowRuns:test_filter_args_passed_to_client and this
+        # test may be removed.
+
+        # When
+        _ = runtime.list_workflow_runs(limit=limit)
+
+        # Then
+        mocked_client.list_workflow_runs.assert_called_once_with(limit=limit)
 
     @pytest.mark.xfail(reason="Filtering not available in CE runtime yet")
     def test_filter_args_passed_to_client(

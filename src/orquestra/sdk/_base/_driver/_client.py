@@ -336,6 +336,7 @@ class DriverClient:
         workflow_def_id: Optional[_models.WorkflowDefID] = None,
         page_size: Optional[int] = None,
         page_token: Optional[str] = None,
+        limit: Optional[int] = None,
     ) -> Paginated[WorkflowRunMinimal]:
         """
         List workflow runs with a specified workflow def ID from the workflow driver
@@ -369,6 +370,9 @@ class DriverClient:
         for r in parsed_response.data:
             workflow_def = self.get_workflow_def(r.definitionId)
             workflow_runs.append(r.to_ir(workflow_def))
+
+        if limit is not None:
+            workflow_runs = workflow_runs[-limit:]
 
         return Paginated(
             contents=workflow_runs,
