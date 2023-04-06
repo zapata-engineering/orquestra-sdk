@@ -4,12 +4,11 @@
 import warnings
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Union
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import serde
 from orquestra.sdk._base._db import WorkflowDB
-from orquestra.sdk._base.abc import ArtifactValue, RuntimeInterface
+from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.kubernetes.quantity import parse_quantity
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
@@ -216,11 +215,10 @@ class CERuntime(RuntimeInterface):
                 wf_run.status.state,
             )
 
+        assert len(result_ids) == 1, "Assuming a single output"
+
         try:
-            return tuple(
-                self._client.get_workflow_run_result(result_id)
-                for result_id in result_ids
-            )
+            return self._client.get_workflow_run_result(result_ids[0])
         except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
             raise exceptions.UnauthorizedError(
                 "Could not get the outputs for workflow run with id "
