@@ -45,16 +45,20 @@ def get_installed_version(package_name: str) -> str:
         raise PackagingError(f"Package not found: {package_name}") from e
 
 
-def get_installed_version_model(package_name: str) -> ir.Version:
-    sdk_version_str = get_installed_version(package_name)
-    parsed_sdk_version = packaging.version.parse(sdk_version_str)
+def parse_version_str(version_str: str) -> ir.Version:
+    parsed_sdk_version = packaging.version.parse(version_str)
     return ir.Version(
-        original=sdk_version_str,
+        original=version_str,
         major=parsed_sdk_version.major,
         minor=parsed_sdk_version.minor,
         patch=parsed_sdk_version.micro,
         is_prerelease=parsed_sdk_version.is_prerelease,
     )
+
+
+def get_installed_version_model(package_name: str) -> ir.Version:
+    sdk_version_str = get_installed_version(package_name)
+    return parse_version_str(sdk_version_str)
 
 
 def get_current_sdk_version() -> ir.Version:

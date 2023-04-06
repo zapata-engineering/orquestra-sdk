@@ -423,6 +423,7 @@ class WorkflowDef(BaseModel):
         # Workaround for circular imports
         from orquestra.sdk import exceptions
         from orquestra.sdk.packaging import _versions
+        from orquestra.sdk.schema import _compat
 
         current_version = _versions.get_current_sdk_version()
 
@@ -440,7 +441,9 @@ class WorkflowDef(BaseModel):
             )
             return v
 
-        if v.sdk_version != current_version:
+        if not _compat.versions_are_compatible(
+            generated_at=v.sdk_version, current=current_version
+        ):
             warnings.warn(
                 exceptions.VersionMismatch(
                     (

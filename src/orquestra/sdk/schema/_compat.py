@@ -34,3 +34,21 @@ def result_is_packed(task_def: ir.TaskDef) -> bool:
         # We can't be sure. It's safer to assume the output is a single value so we
         # don't attempt to subscript it.
         return False
+
+
+def versions_are_compatible(generated_at: ir.Version, current: ir.Version) -> bool:
+    """
+    Checks if we can assume that we're okay with consuming the given IR.
+
+    Args:
+        generated_at: version of the Workflow SDK used to generate the IR.
+        current: currently installed version of the Workflow SDK
+    """
+    if current.major == 0:
+        # For v0 we require exact match.
+        return generated_at == current
+
+    if generated_at.major != current.major:
+        return False
+
+    return generated_at.minor <= current.minor
