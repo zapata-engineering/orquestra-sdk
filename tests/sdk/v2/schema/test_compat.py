@@ -46,7 +46,7 @@ SNAPSHOT_VERSIONS = [
 
 
 class TestNOutputs:
-    class TestModernIR:
+    class TestCurrentIR:
         @staticmethod
         @pytest.fixture
         def wf_def():
@@ -106,7 +106,7 @@ class TestNOutputs:
 
 
 class TestResultIsPacked:
-    class TestModernIR:
+    class TestCurrentIR:
         @staticmethod
         def test_single_output_task():
             # Given

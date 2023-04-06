@@ -42,7 +42,7 @@ class TestWorkflowDef:
         """
 
         @staticmethod
-        def test_new_ir():
+        def test_current_ir():
             # Given
             wf = unpacking.unpacking_wf()
 
