@@ -287,7 +287,6 @@ class DriverClient:
             _models.GetWorkflowDefResponse, _models.MetaEmpty
         ].parse_obj(resp.json())
 
-        print(parsed_resp.data.workspaceId)
         return parsed_resp.data.workflow
 
     def delete_workflow_def(self, workflow_def_id: _models.WorkflowDefID):
