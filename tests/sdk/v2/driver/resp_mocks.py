@@ -240,7 +240,19 @@ def make_get_wf_run_results_response():
     }
 
 
-def make_get_wf_run_result_response(result_obj: Any):
+def make_get_wf_run_result_response(result_list: List[Any]):
+    """
+    Based on:
+        https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/run-result.yaml#L13
+    """
+
+    return [
+        result_from_artifact(result_obj, ArtifactFormat.AUTO).dict()
+        for result_obj in result_list
+    ]
+
+
+def make_get_wf_run_result_legacy_response(result_obj: Any):
     """
     Based on:
         https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/run-result.yaml#L13

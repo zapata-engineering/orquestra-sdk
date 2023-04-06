@@ -12,7 +12,7 @@ import io
 import json
 import zlib
 from tarfile import TarFile
-from typing import Generic, List, Mapping, Optional, TypeVar
+from typing import Generic, List, Mapping, Optional, Tuple, TypeVar
 from urllib.parse import urljoin
 
 import pydantic
@@ -557,7 +557,7 @@ class DriverClient:
 
     def get_workflow_run_result(
         self, result_id: _models.WorkflowRunResultID
-    ) -> WorkflowResult:
+    ) -> Tuple[WorkflowResult]:
         """
         Gets workflow run results from the workflow driver
 
@@ -580,11 +580,28 @@ class DriverClient:
 
         _handle_common_errors(resp)
 
+        # To ensure the correct ordering of results, we serialize the results on CE as:
+        # [
+        #    (JSONResult | PickleResult).json(),
+        #    (JSONResult | PickleResult).json(),
+        #    ...
+        # ]
+        # For older workflows, we respond with:
+        # (JSONResult | PickleResult).json()
+
+        json_response = resp.json()
         # Bug with mypy and Pydantic:
         #   Unions cannot be passed to parse_obj_as: pydantic/pydantic#1847
-        return pydantic.parse_obj_as(
-            WorkflowResult, resp.json()  # type: ignore[arg-type]
-        )
+        try:
+            # Try an older response
+            return (
+                pydantic.parse_obj_as(
+                    WorkflowResult, json_response  # type: ignore[arg-type]
+                ),
+            )
+        except pydantic.ValidationError:
+            # If we fail, try parsing each part of a list separately
+            return tuple(pydantic.parse_obj_as(WorkflowResult, r) for r in json_response)  # type: ignore[arg-type]
 
     # --- Workflow Logs ---
 

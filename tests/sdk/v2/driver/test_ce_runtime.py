@@ -424,7 +424,7 @@ class TestGetWorkflowRunResultsNonBlocking:
     ):
         # Given
         mocked_client.get_workflow_run_results.return_value = ["result_id"]
-        mocked_client.get_workflow_run_result.return_value = JSONResult(value="[1]")
+        mocked_client.get_workflow_run_result.return_value = (JSONResult(value="[1]"),)
 
         # When
         results = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
@@ -443,11 +443,10 @@ class TestGetWorkflowRunResultsNonBlocking:
         # Given
         mocked_client.get_workflow_run_results.return_value = [
             "result_id",
-            "result_id2",
         ]
         mocked_client.get_workflow_run_result.side_effect = [
-            JSONResult(value="1"),
-            JSONResult(value="2"),
+            (JSONResult(value="1"),
+            JSONResult(value="2"),)
         ]
 
         # When
