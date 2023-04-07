@@ -114,7 +114,9 @@ class TestCreateWorkflowRun:
         wf_run_id = runtime.create_workflow_run(my_workflow.model)
 
         # Then
-        mocked_client.create_workflow_def.assert_called_once_with(my_workflow.model)
+        mocked_client.create_workflow_def.assert_called_once_with(
+            my_workflow.model, None
+        )
         mocked_client.create_workflow_run.assert_called_once_with(
             workflow_def_id,
             _models.Resources(cpu=None, memory=None, gpu=None, nodes=None),
