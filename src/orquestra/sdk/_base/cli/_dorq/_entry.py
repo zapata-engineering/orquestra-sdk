@@ -12,7 +12,7 @@ from pathlib import Path
 import click
 import cloup
 
-from . import _logs
+from . import _cli_logs
 
 # Adds '-h' alias for '--help'
 CLICK_CTX_SETTINGS = {"help_option_names": ["-h", "--help"]}
@@ -45,7 +45,8 @@ def dorq():
     # in setup.cfg.
     #
     # This function's body is executed before any other, more specific command is run.
-    _logs.configure_verboseness_if_needed()
+
+    _cli_logs.configure_verboseness_if_needed()
 
 
 # ----------- 'orq workflow' commands ----------
