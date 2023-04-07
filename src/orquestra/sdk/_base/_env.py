@@ -1,3 +1,10 @@
+################################################################################
+# © Copyright 2023 Zapata Computing Inc.
+################################################################################
+import os
+import typing as t
+
+
 # --------------------------------- SDK --------------------------------------
 
 CONFIG_PATH_ENV = "ORQ_CONFIG_PATH"
@@ -67,3 +74,15 @@ RAY_GLOBAL_WF_RUN_ID_ENV = "GLOBAL_WF_RUN_ID"
 """
 Used to set the workflow run ID in a Ray workflow
 """
+
+
+# ------------------------------- utilities ----------------------------------
+
+
+def _is_truthy(env_var_value: t.Optional[str]):
+    return env_var_value in {"1", "true"}
+
+
+def flag_set(env_var_name: str) -> bool:
+    value = os.getenv(env_var_name)
+    return _is_truthy(value)
