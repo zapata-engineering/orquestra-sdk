@@ -19,6 +19,7 @@ from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import (
+    ProjectDef,
     State,
     WorkflowRun,
     WorkflowRunId,
@@ -81,8 +82,7 @@ class RuntimeInterface(ABC):
     def create_workflow_run(
         self,
         workflow_def: WorkflowDef,
-        workspace_id: t.Optional[str],
-        project: t.Optional[str],
+        project: t.Optional[ProjectDef],
     ) -> WorkflowRunId:
         """Schedules a workflow definition for execution"""
         raise NotImplementedError()

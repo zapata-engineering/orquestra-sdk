@@ -43,6 +43,7 @@ from ..schema import ir
 from ..schema.configs import RuntimeConfiguration
 from ..schema.local_database import StoredWorkflowRun
 from ..schema.workflow_run import (
+    ProjectDef,
     RunStatus,
     State,
     TaskInvocationId,
@@ -778,20 +779,13 @@ class RayRuntime(RuntimeInterface):
     def create_workflow_run(
         self,
         workflow_def: ir.WorkflowDef,
-        workspace_id: t.Optional[str] = None,
-        project_id: t.Optional[str] = None,
+        project: t.Optional[ProjectDef] = None,
     ) -> WorkflowRunId:
-        if project_id:
+        if project:
             warnings.warn(
-                "Ray doesn't support project-scoped workflows. Project ID"
-                " will be ignored.",
-                category=exceptions.UnsupportedProjectID,
-            )
-        if workspace_id:
-            warnings.warn(
-                "Ray doesn't support project-scoped workflows. Project ID"
-                " will be ignored.",
-                category=exceptions.UnsupportedWorkspaceID,
+                "Ray doesn't support project-scoped workflows. "
+                "Project and workspace IDs will be ignored.",
+                category=exceptions.UnsupportedRuntimeFeature,
             )
 
         global_run_id = os.getenv(RAY_GLOBAL_WF_RUN_ID_ENV)

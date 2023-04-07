@@ -14,6 +14,7 @@ from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import (
+    ProjectDef,
     State,
     TaskRunId,
     WorkflowRun,
@@ -89,8 +90,7 @@ class CERuntime(RuntimeInterface):
     def create_workflow_run(
         self,
         workflow_def: WorkflowDef,
-        workspace_id: Optional[str] = None,
-        project_id: Optional[str] = None,
+        project: Optional[ProjectDef],
     ) -> WorkflowRunId:
         """
         Schedules a workflow definition for execution
@@ -120,9 +120,7 @@ class CERuntime(RuntimeInterface):
             resources = _get_max_resources(workflow_def)
 
         try:
-            workflow_def_id = self._client.create_workflow_def(
-                workflow_def, workspace_id, project_id
-            )
+            workflow_def_id = self._client.create_workflow_def(workflow_def, project)
 
             workflow_run_id = self._client.create_workflow_run(
                 workflow_def_id, resources

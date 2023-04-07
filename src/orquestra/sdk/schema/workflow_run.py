@@ -17,6 +17,8 @@ from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 
 WorkflowRunId = str
 TaskRunId = str
+WorkspaceId = str
+ProjectId = str
 
 
 class State(enum.Enum):
@@ -64,3 +66,8 @@ class WorkflowRun(WorkflowRunMinimal):
 
     task_runs: t.List[TaskRun]
     status: RunStatus
+
+
+class ProjectDef(BaseModel):
+    workspace_id: WorkspaceId
+    project_id: ProjectId

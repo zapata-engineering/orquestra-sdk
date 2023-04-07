@@ -163,9 +163,9 @@ class InProcessFromCLIError(NotFoundError):
 
 
 # Unsupported features
-class UnsupportedWorkspaceID(Warning):
+class UnsupportedRuntimeFeature(Warning):
     pass
 
 
-class UnsupportedProjectID(Warning):
+class ProjectInvalidError(BaseRuntimeError):
     pass

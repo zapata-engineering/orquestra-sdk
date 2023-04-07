@@ -9,6 +9,7 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base import abc
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.workflow_run import (
+    ProjectDef,
     RunStatus,
     State,
     TaskRun,
@@ -90,21 +91,14 @@ class InProcessRuntime(abc.RuntimeInterface):
     def create_workflow_run(
         self,
         workflow_def: ir.WorkflowDef,
-        workspace_id: t.Optional[str] = None,
-        project_id: t.Optional[str] = None,
+        project: t.Optional[ProjectDef],
     ) -> WfRunId:
 
-        if project_id:
+        if project:
             warnings.warn(
                 "in_process runtime doesn't support project-scoped workflows. "
-                "Project ID will be ignored.",
-                category=exceptions.UnsupportedProjectID,
-            )
-        if workspace_id:
-            warnings.warn(
-                "in_process runtime doesn't support project-scoped workflows. "
-                "Project ID will be ignored.",
-                category=exceptions.UnsupportedWorkspaceID,
+                "Project and workspace IDs will be ignored.",
+                category=exceptions.UnsupportedRuntimeFeature,
             )
 
         run_id = self._gen_next_run_id(workflow_def)

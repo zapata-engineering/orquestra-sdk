@@ -29,6 +29,7 @@ from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocation, TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import (
+    ProjectDef,
     RunStatus,
     State,
     TaskRun,
@@ -469,8 +470,7 @@ class QERuntime(RuntimeInterface):
     def create_workflow_run(
         self,
         workflow_def: WorkflowDef,
-        workspace_id: Optional[str] = None,
-        project_id: Optional[str] = None,
+        project: Optional[ProjectDef],
     ) -> WorkflowRunId:
         """
         Submits a workflow to the Quantum Engine
@@ -486,17 +486,11 @@ class QERuntime(RuntimeInterface):
             orquestra.sdk.exceptions.InvalidWorkflowDefinitionError if the
                 workflow definition name does not conform to QE requirements.
         """
-        if project_id:
+        if project:
             warnings.warn(
-                "QERuntime doesn't support project-scoped workflows. Project ID"
-                " will be ignored.",
-                category=exceptions.UnsupportedProjectID,
-            )
-        if workspace_id:
-            warnings.warn(
-                "QERuntime doesn't support project-scoped workflows. Project ID"
-                " will be ignored.",
-                category=exceptions.UnsupportedWorkspaceID,
+                "QE runtime doesn't support project-scoped workflows. "
+                "Project and workspace IDs will be ignored.",
+                category=exceptions.UnsupportedRuntimeFeature,
             )
 
         if self._verbose:

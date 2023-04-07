@@ -27,7 +27,12 @@ from typing import (
 from typing_extensions import ParamSpec
 
 import orquestra.sdk.schema.ir as ir
-from orquestra.sdk.exceptions import ConfigNameNotFoundError, WorkflowSyntaxError
+from orquestra.sdk.exceptions import (
+    ConfigNameNotFoundError,
+    ProjectInvalidError,
+    WorkflowSyntaxError,
+)
+from orquestra.sdk.schema.workflow_run import ProjectDef, ProjectId, WorkspaceId
 
 from .. import secrets
 from . import _api, _dsl, _exec_ctx, loader
@@ -167,8 +172,8 @@ class WorkflowDef(Generic[_R]):
         self,
         config: Union[_api.RuntimeConfig, str],
         project_dir: Optional[Union[str, Path]] = None,
-        workspace_id: Optional[str] = None,
-        project_id: Optional[str] = None,
+        workspace_id: Optional[WorkspaceId] = None,
+        project_id: Optional[ProjectId] = None,
     ) -> _api.WorkflowRun:
         """
         "Prepares" workflow for running. Call ".start()" on the result to
@@ -218,6 +223,17 @@ class WorkflowDef(Generic[_R]):
         # logic, the runtime should always be resolved.
         assert runtime is not None
 
+        _project: Optional[ProjectDef]
+        if project_id is not None and workspace_id is not None:
+            _project = ProjectDef(project_id=project_id, workspace_id=workspace_id)
+        elif project_id is None and workspace_id is None:
+            _project = None
+        else:
+            raise ProjectInvalidError(
+                "Invalid project ID. Either explicitely pass workspace_id "
+                "and project_id, or omit both"
+            )
+
         # The DirtyGitRepo warning can be raised here.
         wf_def_model = self.model
 
@@ -226,16 +242,15 @@ class WorkflowDef(Generic[_R]):
             wf_def=wf_def_model,
             runtime=runtime,
             config=_config,
-            workspace_id=workspace_id,
-            project_id=project_id,
+            project=_project,
         )
 
     def run(
         self,
         config: Optional[Union[_api.RuntimeConfig, str]] = None,
         project_dir: Optional[Union[str, Path]] = None,
-        workspace_id: Optional[str] = None,
-        project_id: Optional[str] = None,
+        workspace_id: Optional[WorkspaceId] = None,
+        project_id: Optional[ProjectId] = None,
     ) -> _api.WorkflowRun:
         """
         Schedules workflow for execution. Shorthand for

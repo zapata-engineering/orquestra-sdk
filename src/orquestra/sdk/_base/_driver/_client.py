@@ -22,7 +22,11 @@ from requests import codes
 from orquestra.sdk._ray._ray_logs import WFLog
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import WorkflowResult
-from orquestra.sdk.schema.workflow_run import WorkflowRun, WorkflowRunMinimal
+from orquestra.sdk.schema.workflow_run import (
+    ProjectDef,
+    WorkflowRun,
+    WorkflowRunMinimal,
+)
 
 from . import _exceptions, _models
 
@@ -170,8 +174,7 @@ class DriverClient:
     def create_workflow_def(
         self,
         workflow_def: WorkflowDef,
-        workspace_id: Optional[str] = None,
-        project_id: Optional[str] = None,
+        project: Optional[ProjectDef],
     ) -> _models.WorkflowDefID:
         """
         Stores a workflow definition for future submission
@@ -189,8 +192,8 @@ class DriverClient:
             API_ACTIONS["create_workflow_def"],
             body_params=workflow_def.dict(),
             query_params=_models.CreateWorkflowDefsRequest(
-                workspaceId=workspace_id,
-                projectId=project_id,
+                workspaceId=project.workspace_id,
+                projectId=project.project_id,
             ).dict(),
         )
 
