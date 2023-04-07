@@ -18,6 +18,7 @@ If a task defines its own imports (either source, dependencies, or both) - it wi
 - Allow single imports as `dependency_imports` in `@task` decorators.
 
 👩‍🔬 *Experimental*
+- Setting workflow_id and project_id is now available on workflow Python API start() and prepare() functions
 
 
 🐛 *Bug Fixes*
