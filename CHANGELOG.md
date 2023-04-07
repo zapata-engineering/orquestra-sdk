@@ -7,6 +7,7 @@
 - Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a WorkflowSyntaxError if no tasks are required to be executed.
 - Remove TaskDef.model and TaskDef.import_models interfaces
 - Public API classes `sdk.GitImport`, `sdk.GithubImport`, `sdk.LocalImport`, `sdk.InlineImport` now use `dataclasses.dataclass` instead of `typing.NamedTuple`.
+- Local Ray will now always pass resources to underlying ray.remote functions. 
 
 🔥 *Features*
 - Sort WF runs by start date in `list wf` command. Show start date as one of the columns
