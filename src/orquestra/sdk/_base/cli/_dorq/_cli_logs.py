@@ -13,8 +13,7 @@ import logging
 from orquestra.sdk._base import _env
 
 
-def configure_verboseness_if_needed():
-    # pragma: no cover
+def configure_verboseness_if_needed():  # pragma: no cover
     # This function is tested via a subprocess so it's not captured by our coverage
     # metrics.
     if not _env.flag_set(_env.ORQ_VERBOSE):
