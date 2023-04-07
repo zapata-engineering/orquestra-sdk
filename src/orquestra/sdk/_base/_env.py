@@ -1,3 +1,5 @@
+# --------------------------------- SDK --------------------------------------
+
 CONFIG_PATH_ENV = "ORQ_CONFIG_PATH"
 """
 Used to configure the location of the `config.json`
@@ -11,6 +13,20 @@ Used to configure the location of the `workflows.db`
 Example:
     ORQ_DB_PATH=/tmp/workflows.db
 """
+
+
+PASSPORT_FILE_ENV = "ORQUESTRA_PASSPORT_FILE"
+"""
+Consumed by the Workflow SDK to set auth in remote contexts
+"""
+
+ORQ_VERBOSE = "ORQ_VERBOSE"
+"""
+If set to a truthy value, enables printing debug information when running the ``orq``
+CLI commands.
+"""
+
+# --------------------------------- Ray --------------------------------------
 
 RAY_TEMP_PATH_ENV = "ORQ_RAY_TEMP_PATH"
 """
@@ -45,11 +61,6 @@ RAY_SET_TASK_RESOURCES_ENV = "ORQ_RAY_SET_TASK_RESOURCES"
 Used to configure if Ray uses a task invocation's resources
 Example:
     ORQ_RAY_SET_TASK_RESOURCES=1
-"""
-
-PASSPORT_FILE_ENV = "ORQUESTRA_PASSPORT_FILE"
-"""
-Consumed by the Workflow SDK to set auth in remote contexts
 """
 
 RAY_GLOBAL_WF_RUN_ID_ENV = "GLOBAL_WF_RUN_ID"
