@@ -40,13 +40,6 @@ Example:
     ORQ_RAY_DOWNLOAD_GIT_IMPORTS=1
 """
 
-RAY_SET_TASK_RESOURCES_ENV = "ORQ_RAY_SET_TASK_RESOURCES"
-"""
-Used to configure if Ray uses a task invocation's resources
-Example:
-    ORQ_RAY_SET_TASK_RESOURCES=1
-"""
-
 PASSPORT_FILE_ENV = "ORQUESTRA_PASSPORT_FILE"
 """
 Consumed by the Workflow SDK to set auth in remote contexts
