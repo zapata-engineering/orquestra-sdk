@@ -174,7 +174,7 @@ class DriverClient:
     def create_workflow_def(
         self,
         workflow_def: WorkflowDef,
-        project: Optional[ProjectDef],
+        project: Optional[ProjectDef] = None,
     ) -> _models.WorkflowDefID:
         """
         Stores a workflow definition for future submission
@@ -188,13 +188,18 @@ class DriverClient:
         Returns:
             the WorkflowDefID associated with the stored definition
         """
+        query_params = (
+            _models.CreateWorkflowDefsRequest(
+                workspaceId=project.workspace_id,
+                projectId=project.project_id,
+            ).dict()
+            if project
+            else None
+        )
         resp = self._post(
             API_ACTIONS["create_workflow_def"],
             body_params=workflow_def.dict(),
-            query_params=_models.CreateWorkflowDefsRequest(
-                workspaceId=project.workspace_id,
-                projectId=project.project_id,
-            ).dict(),
+            query_params=query_params,
         )
 
         if resp.status_code == codes.BAD_REQUEST:

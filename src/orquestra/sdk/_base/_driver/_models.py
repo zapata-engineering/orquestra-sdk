@@ -89,7 +89,6 @@ class GetWorkflowDefResponse(pydantic.BaseModel):
     created: datetime
     owner: str
     workflow: WorkflowDef
-    workspaceId: str
 
 
 class ListWorkflowDefsRequest(pydantic.BaseModel):

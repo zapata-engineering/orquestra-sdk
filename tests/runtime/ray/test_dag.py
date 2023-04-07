@@ -13,14 +13,15 @@ from unittest.mock import ANY, Mock, PropertyMock, call, create_autospec
 import pytest
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import _services
 from orquestra.sdk._base._config import RuntimeConfiguration, RuntimeName
+from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
 )
 from orquestra.sdk._ray import _client, _dag, _ray_logs
 from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.workflow_run import State
+from orquestra.sdk.schema.local_database import StoredWorkflowRun
+from orquestra.sdk.schema.workflow_run import ProjectDef, State
 
 TEST_TIME = datetime.now(timezone.utc)
 
@@ -270,6 +271,26 @@ class TestRayRuntime:
                 # Then
                 assert result_list == logs_list
                 get_task_logs.assert_called_with(wf_run_id, task_inv_id)
+
+    class TestCreateWorkflowRun:
+        def test_project_raises_warning(
+            self, client, runtime_config, tmp_path, monkeypatch
+        ):
+            monkeypatch.setattr(_dag, "_make_ray_dag", Mock())
+            monkeypatch.setattr(_dag, "WfUserMetadata", Mock())
+            monkeypatch.setattr(_dag, "_pydatic_to_json_dict", Mock())
+            monkeypatch.setattr(StoredWorkflowRun, "__init__", lambda *_, **__: None)
+            monkeypatch.setattr(WorkflowDB, "save_workflow_run", Mock())
+
+            runtime = _dag.RayRuntime(
+                client=client,
+                config=runtime_config,
+                project_dir=tmp_path,
+            )
+            with pytest.warns(expected_warning=exceptions.UnsupportedRuntimeFeature):
+                runtime.create_workflow_run(
+                    Mock(), project=ProjectDef(workspace_id="", project_id="")
+                )
 
     class TestListWorkflowRuns:
         def test_happy_path(self, client, runtime_config, monkeypatch, tmp_path):

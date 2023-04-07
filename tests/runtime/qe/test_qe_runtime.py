@@ -25,7 +25,13 @@ from orquestra.sdk._base._conversions._yaml_exporter import (
 from orquestra.sdk._base._testing._example_wfs import my_workflow
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun, WorkflowRun
+from orquestra.sdk.schema.workflow_run import (
+    ProjectDef,
+    RunStatus,
+    State,
+    TaskRun,
+    WorkflowRun,
+)
 
 QE_MINIMAL_CURRENT_REPRESENTATION: t.Dict[str, t.Any] = {
     "status": {
@@ -466,6 +472,19 @@ class TestCreateWorkflowRun:
 
         _save_workflow_run.assert_called_once()
         assert result == "workflow-id"
+
+    def test_project_raises_warning(self, monkeypatch, runtime, mocked_responses):
+        _save_workflow_run = Mock()
+        monkeypatch.setattr(_db.WorkflowDB, "save_workflow_run", _save_workflow_run)
+        mocked_responses.add(
+            responses.POST,
+            "http://localhost/v1/workflows",
+            body=QE_RESPONSES["submit"],
+        )
+        with pytest.warns(expected_warning=exceptions.UnsupportedRuntimeFeature):
+            runtime.create_workflow_run(
+                TEST_WORKFLOW, project=ProjectDef(workspace_id="", project_id="")
+            )
 
     @staticmethod
     def test_exception_on_bad_request_too_large(monkeypatch, runtime, mocked_responses):

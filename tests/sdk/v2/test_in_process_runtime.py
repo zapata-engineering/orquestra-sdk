@@ -18,7 +18,7 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
 from orquestra.sdk._base._testing._example_wfs import wf_with_secrets
 from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
+from orquestra.sdk.schema.workflow_run import ProjectDef, State, WorkflowRunId
 from orquestra.sdk.secrets import _client, _models
 
 from .data.complex_serialization.workflow_defs import (
@@ -239,3 +239,11 @@ class TestUnsupportedMethods:
     def test_raises(runtime, method):
         with pytest.raises(NotImplementedError):
             method(runtime)
+
+
+def test_project_raises_warning(runtime, wf_def):
+    # Given
+    with pytest.warns(expected_warning=exceptions.UnsupportedRuntimeFeature):
+        _ = runtime.create_workflow_run(
+            wf_def, project=ProjectDef(workspace_id="", project_id="")
+        )

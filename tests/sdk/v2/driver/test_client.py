@@ -17,7 +17,7 @@ from orquestra.sdk._base._driver._client import DriverClient, Paginated
 from orquestra.sdk._base._driver._models import Resources
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import JSONResult, PickleResult
-from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun
+from orquestra.sdk.schema.workflow_run import ProjectDef, RunStatus, State, TaskRun
 
 from . import resp_mocks
 
@@ -379,24 +379,39 @@ class TestClient:
                 )
 
             @staticmethod
+            @pytest.mark.parametrize(
+                "project,params",
+                [
+                    (None, {}),
+                    (
+                        ProjectDef(workspace_id="a", project_id="b"),
+                        {"workspaceId": "a", "projectId": "b"},
+                    ),
+                ],
+            )
             def test_params_encoding(
                 endpoint_mocker,
                 client: DriverClient,
                 workflow_def_id,
                 workflow_def: WorkflowDef,
+                project,
+                params,
             ):
                 """
                 Verifies that params are correctly sent to the server.
                 """
                 endpoint_mocker(
                     json=resp_mocks.make_create_wf_def_response(id_=workflow_def_id),
-                    match=[responses.matchers.json_params_matcher(workflow_def.dict())],
+                    match=[
+                        responses.matchers.json_params_matcher(workflow_def.dict()),
+                        responses.matchers.query_param_matcher(params),
+                    ],
                     # Based on:
                     # https://github.com/zapatacomputing/workflow-driver/blob/2b353476d5b0161da31584533be208611a131bdc/openapi/src/resources/workflow-definitions.yaml#L42
                     status=201,
                 )
 
-                client.create_workflow_def(workflow_def)
+                client.create_workflow_def(workflow_def, project)
 
                 # The assertion is done by mocked_responses
 
