@@ -433,7 +433,8 @@ class WorkflowDef(BaseModel):
                     (
                         "Attempting to read a workflow definition generated with an "
                         "old version of Orquestra Workflow SDK. Please consider "
-                        "re-running your workflow or downgrading orquestra-sdk."
+                        "re-running your workflow or downgrading orquestra-sdk. "
+                        "For more information visit: https://docs.orquestra.io/docs/core/sdk/guides/version-compatibility.html"  # noqa: E501
                     ),
                     actual=current_version,
                     needed=None,
@@ -450,7 +451,8 @@ class WorkflowDef(BaseModel):
                         "Attempting to read a workflow definition generated with a "
                         "different version of Orquestra Workflow SDK. "
                         "Please consider re-running your workflow or installing "
-                        f"'orquestra-sdk=={v.sdk_version.original}'"
+                        f"'orquestra-sdk=={v.sdk_version.original}'. "
+                        "For more information visit: https://docs.orquestra.io/docs/core/sdk/guides/version-compatibility.html"  # noqa: E501
                     ),
                     actual=current_version,
                     needed=v.sdk_version,

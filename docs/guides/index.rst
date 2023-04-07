@@ -10,3 +10,4 @@ Guides
     runtime-configuration
     workflow-syntax
     dependency-installation
+    version-compatibility
