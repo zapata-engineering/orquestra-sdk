@@ -6,6 +6,7 @@ Tests for ``orquestra.sdk._base.cli._corq._cli_logs``.
 """
 import subprocess
 import sys
+import os
 from pathlib import Path
 
 import pytest
@@ -42,11 +43,16 @@ class TestConfigureVerbosenessIfNeeded:
 
         @staticmethod
         def test_verbose_flag(script_path: Path):
+            # Given
+            # We need to extend, not override the env variables collection. Otherwise we
+            # loose SYSTEMROOT that's required to boot Python processes on Windows.
+            env = {**os.environ, "ORQ_VERBOSE": "1"}
+
             # When
             proc_result = subprocess.run(
                 [sys.executable, str(script_path)],
                 capture_output=True,
-                env={"ORQ_VERBOSE": "1"},
+                env=env,
             )
 
             # Then
