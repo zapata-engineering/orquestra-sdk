@@ -468,15 +468,14 @@ class QERuntime(RuntimeInterface):
             )
 
     def create_workflow_run(
-        self,
-        workflow_def: WorkflowDef,
-        project: Optional[ProjectDef],
+        self, workflow_def: WorkflowDef, project: Optional[ProjectDef] = None
     ) -> WorkflowRunId:
         """
         Submits a workflow to the Quantum Engine
 
         Args:
             workflow_def: The workflow definition to submit
+            project: Unused on QE runtime
 
         Returns:
             A workflow run id, created by QE

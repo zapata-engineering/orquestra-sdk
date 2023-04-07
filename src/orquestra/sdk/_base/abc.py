@@ -82,7 +82,7 @@ class RuntimeInterface(ABC):
     def create_workflow_run(
         self,
         workflow_def: WorkflowDef,
-        project: t.Optional[ProjectDef],
+        project: t.Optional[ProjectDef] = None,
     ) -> WorkflowRunId:
         """Schedules a workflow definition for execution"""
         raise NotImplementedError()

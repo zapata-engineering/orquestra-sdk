@@ -88,16 +88,15 @@ class CERuntime(RuntimeInterface):
         return cls(config, verbose)
 
     def create_workflow_run(
-        self,
-        workflow_def: WorkflowDef,
-        project: Optional[ProjectDef],
+        self, workflow_def: WorkflowDef, project: Optional[ProjectDef] = None
     ) -> WorkflowRunId:
         """
         Schedules a workflow definition for execution
 
         Args:
             workflow_def: the IR of the workflow to run
-
+            project: Project dir (workspace and project ID) on which the workflow
+            will be run
         Raises:
             WorkflowSyntaxError: when the workflow definition was rejected by the remote
                 cluster

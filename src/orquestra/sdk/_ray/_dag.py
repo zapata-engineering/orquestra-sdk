@@ -777,9 +777,7 @@ class RayRuntime(RuntimeInterface):
         client.shutdown()
 
     def create_workflow_run(
-        self,
-        workflow_def: ir.WorkflowDef,
-        project: t.Optional[ProjectDef] = None,
+        self, workflow_def: ir.WorkflowDef, project: t.Optional[ProjectDef] = None
     ) -> WorkflowRunId:
         if project:
             warnings.warn(

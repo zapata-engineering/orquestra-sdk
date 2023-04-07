@@ -185,6 +185,8 @@ class WorkflowDef(Generic[_R]):
                 the name of a saved configuration.
             project_dir: the path to the project directory. If omitted, the current
                 working directory is used.
+            workspace_id: ID of the workspace for workflow - supported only on CE
+            project_id: ID of the project for workflow - supported only on CE
 
         Raises:
             ConfigNameNotFoundError: when the configuration has not been saved prior to
@@ -192,6 +194,7 @@ class WorkflowDef(Generic[_R]):
             orquestra.sdk.exceptions.DirtyGitRepo: (warning) when a task def used by
                 this workflow def has a "GitImport" and the git repo that contains it
                 has uncommitted changes.
+            ProjectInvalidError: when only 1 out of project and workspace is passed
         """
         _config: _api.RuntimeConfig
         if isinstance(config, _api.RuntimeConfig):
@@ -261,6 +264,8 @@ class WorkflowDef(Generic[_R]):
                 objects contains the required details.
             project_dir: the path to the project directory. If omitted, the current
                 working directory is used.
+            workspace_id: ID of the workspace for workflow - supported only on CE
+            project_id: ID of the project for workflow - supported only on CE
 
         Raises:
             orquestra.sdk.exceptions.DirtyGitRepo: (warning) when a task def used by
