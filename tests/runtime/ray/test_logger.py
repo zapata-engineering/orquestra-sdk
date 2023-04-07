@@ -40,10 +40,7 @@ _ = _dag.RayRuntime.startup(params)
 
         # Then
         result.check_returncode()
-        stdout = result.stderr.decode()
         stderr = result.stderr.decode()
-        print(stderr)
-        print(stdout)
         assert "Started a local Ray instance" in stderr
         # Seen when the Ray workflows is starting for the first time
         assert "Initializing workflow manager" in stderr
