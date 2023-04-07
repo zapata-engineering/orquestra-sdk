@@ -80,7 +80,10 @@ Used to set the workflow run ID in a Ray workflow
 
 
 def _is_truthy(env_var_value: t.Optional[str]):
-    return env_var_value in {"1", "true"}
+    if env_var_value is None:
+        return False
+
+    return env_var_value.lower() in {"1", "true"}
 
 
 def flag_set(env_var_name: str) -> bool:

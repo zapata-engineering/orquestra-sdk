@@ -17,6 +17,10 @@ class TestFlagSet:
             ("0", False),
             ("true", True),
             ("false", False),
+            ("True", True),
+            ("False", False),
+            ("TRUE", True),
+            ("FALSE", False),
             ("gibberish", False),
         ],
     )
