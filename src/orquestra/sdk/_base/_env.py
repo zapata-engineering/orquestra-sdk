@@ -4,7 +4,6 @@
 import os
 import typing as t
 
-
 # --------------------------------- SDK --------------------------------------
 
 CONFIG_PATH_ENV = "ORQ_CONFIG_PATH"
