@@ -17,6 +17,7 @@ These parameters let you set the default imports for all tasks in given workflow
 If a task defines its own imports (either source, dependencies, or both) - it will overwrite workflow defaults.
 - Allow single imports as `dependency_imports` in `@task` decorators.
 - Listing workflow runs from Compute Engine now allows an upper limit to the number of runs to be listed to be set via the `limit` keyword.
+- Print HTTP requests and other debug information from `orq` CLI if `ORQ_VERBOSE` env flag is set.
 
 👩‍🔬 *Experimental*
 
