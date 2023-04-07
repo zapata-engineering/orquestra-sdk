@@ -557,7 +557,7 @@ class DriverClient:
 
     def get_workflow_run_result(
         self, result_id: _models.WorkflowRunResultID
-    ) -> Tuple[WorkflowResult]:
+    ) -> Tuple[WorkflowResult, ...]:
         """
         Gets workflow run results from the workflow driver
 
@@ -601,7 +601,10 @@ class DriverClient:
             )
         except pydantic.ValidationError:
             # If we fail, try parsing each part of a list separately
-            return tuple(pydantic.parse_obj_as(WorkflowResult, r) for r in json_response)  # type: ignore[arg-type]
+            return tuple(
+                pydantic.parse_obj_as(WorkflowResult, r)  # type: ignore[arg-type]
+                for r in json_response
+            )
 
     # --- Workflow Logs ---
 

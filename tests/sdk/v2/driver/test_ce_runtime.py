@@ -445,8 +445,10 @@ class TestGetWorkflowRunResultsNonBlocking:
             "result_id",
         ]
         mocked_client.get_workflow_run_result.side_effect = [
-            (JSONResult(value="1"),
-            JSONResult(value="2"),)
+            (
+                JSONResult(value="1"),
+                JSONResult(value="2"),
+            )
         ]
 
         # When
