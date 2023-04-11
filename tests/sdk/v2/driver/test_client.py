@@ -809,54 +809,6 @@ class TestClient:
                     "00000000-0000-0000-0000-0000000000000"
                 )
 
-            @pytest.mark.usefixtures("mock_get_workflow_def")
-            class TestLimit:
-                @staticmethod
-                @pytest.mark.parametrize("limit", [1, 2, 3, 5, 8])
-                def test_limit_less_than_number_of_runs(
-                    endpoint_mocker,
-                    client: DriverClient,
-                    workflow_run_id: str,
-                    workflow_def_id: str,
-                    limit,
-                ):
-                    endpoint_mocker(
-                        # Specified in:
-                        # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/workflow-runs.yaml#L14
-                        json=resp_mocks.make_list_wf_run_paginated_response(
-                            ids=[workflow_run_id] * 10,
-                            workflow_def_ids=[workflow_def_id] * 10,
-                        )
-                    )
-
-                    runs = client.list_workflow_runs(limit=limit)
-
-                    assert isinstance(runs, Paginated)
-                    assert len(runs.contents) == limit
-
-                @staticmethod
-                @pytest.mark.parametrize("limit", [13, 21, 34, 55, 89])
-                def test_limit_greater_than_number_of_runs(
-                    endpoint_mocker,
-                    client: DriverClient,
-                    workflow_run_id: str,
-                    workflow_def_id: str,
-                    limit,
-                ):
-                    endpoint_mocker(
-                        # Specified in:
-                        # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/workflow-runs.yaml#L14
-                        json=resp_mocks.make_list_wf_run_paginated_response(
-                            ids=[workflow_run_id] * 10,
-                            workflow_def_ids=[workflow_def_id] * 10,
-                        )
-                    )
-
-                    runs = client.list_workflow_runs(limit=limit)
-
-                    assert isinstance(runs, Paginated)
-                    assert len(runs.contents) == 10
-
             @staticmethod
             @pytest.mark.parametrize(
                 "kwargs,params",

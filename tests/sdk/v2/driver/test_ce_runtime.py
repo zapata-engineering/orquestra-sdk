@@ -872,25 +872,93 @@ class TestListWorkflowRuns:
         runs = runtime.list_workflow_runs()
 
         # Then
-        mocked_client.list_workflow_runs.assert_called_once_with(limit=None)
+        mocked_client.list_workflow_runs.assert_called_once_with(
+            page_size=None, page_token=None
+        )
         assert runs == wf_runs
 
-    @pytest.mark.parametrize("limit", [None, 0, 999])
-    def test_limit_arg_passed_to_client(
+    @pytest.mark.parametrize(
+        "limit, expected_requests",
+        [
+            (89, [call(page_size=89, page_token=None)]),
+            (
+                144,
+                [
+                    call(page_size=100, page_token=None),
+                    call(page_size=44, page_token="<token sentinel 0>"),
+                ],
+            ),
+            (
+                233,
+                [
+                    call(page_size=100, page_token=None),
+                    call(page_size=100, page_token="<token sentinel 0>"),
+                    call(page_size=33, page_token="<token sentinel 1>"),
+                ],
+            ),
+            (
+                377,
+                [
+                    call(page_size=100, page_token=None),
+                    call(page_size=100, page_token="<token sentinel 0>"),
+                    call(page_size=100, page_token="<token sentinel 1>"),
+                    call(page_size=77, page_token="<token sentinel 2>"),
+                ],
+            ),
+        ],
+    )
+    def test_limit_applied_when_there_are_more_workflows(
         self,
         mocked_client: MagicMock,
         runtime: _ce_runtime.CERuntime,
-        limit,
+        limit: int,
+        expected_requests: list,
     ):
-        # TODO: Once max_age and state filtering is implemented, this case will be
-        # covered by TestListWorkflowRuns:test_filter_args_passed_to_client and this
-        # test may be removed.
+        # Given
+        mocked_client.list_workflow_runs.side_effect = [
+            _client.Paginated(
+                contents=[Mock() for _ in range(100)],
+                next_page_token=f"<token sentinel {i}>",
+            )
+            for i in range(4)
+        ]
 
         # When
         _ = runtime.list_workflow_runs(limit=limit)
 
         # Then
-        mocked_client.list_workflow_runs.assert_called_once_with(limit=limit)
+        mocked_client.list_workflow_runs.assert_has_calls(expected_requests)
+
+    @pytest.mark.parametrize(
+        "limit, expected_requests",
+        [
+            (89, [call(page_size=89, page_token=None)]),
+            (144, [call(page_size=100, page_token=None)]),
+            (233, [call(page_size=100, page_token=None)]),
+            (377, [call(page_size=100, page_token=None)]),
+        ],
+    )
+    def test_limit_applied_when_there_are_fewer_workflows(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        limit: int,
+        expected_requests: list,
+    ):
+        # Given
+        mocked_client.list_workflow_runs.side_effect = [
+            _client.Paginated(
+                contents=[Mock() for _ in range(88)],
+                next_page_token=f"<token sentinel {i}>",
+            )
+            for i in range(4)
+        ]
+
+        # When
+        _ = runtime.list_workflow_runs(limit=limit)
+
+        # Then
+        mocked_client.list_workflow_runs.assert_has_calls(expected_requests)
 
     @pytest.mark.xfail(reason="Filtering not available in CE runtime yet")
     def test_filter_args_passed_to_client(
