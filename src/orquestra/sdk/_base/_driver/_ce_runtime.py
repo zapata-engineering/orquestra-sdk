@@ -350,7 +350,9 @@ class CERuntime(RuntimeInterface):
             else:
                 page_sizes = [
                     max_page_size for _ in range(int(limit / max_page_size))
-                ] + [limit % max_page_size]
+                ] + [
+                    limit % max_page_size
+                ]  # type: ignore
 
         page_token: Optional[str] = None
         runs: List[WorkflowRunMinimal] = []
