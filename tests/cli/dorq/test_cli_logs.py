@@ -60,7 +60,7 @@ class TestConfigureVerbosenessIfNeeded:
             stdout = proc_result.stdout.decode()
             stderr = proc_result.stderr.decode()
             assert stdout == ""
-            assert stderr == (
-                "DEBUG:root:root logger debug message\n"
-                "DEBUG:__main__:module logger debug message\n"
-            )
+            assert stderr.splitlines() == [
+                "DEBUG:root:root logger debug message",
+                "DEBUG:__main__:module logger debug message",
+            ]
