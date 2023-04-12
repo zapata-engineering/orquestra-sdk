@@ -349,7 +349,7 @@ class CERuntime(RuntimeInterface):
                 page_sizes = [limit]
             else:
                 page_sizes = [
-                    max_page_size for _ in range(int(limit / max_page_size))
+                    max_page_size for _ in range(limit // max_page_size)
                 ] + [
                     limit % max_page_size
                 ]  # type: ignore
