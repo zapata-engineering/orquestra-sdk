@@ -4,10 +4,12 @@
 """
 Tests for ``orquestra.sdk._base.cli._corq._cli_logs``.
 """
+import logging
 import subprocess
 import sys
 import os
 from pathlib import Path
+from orquestra.sdk._base.cli._dorq import _cli_logs
 
 import pytest
 
@@ -64,3 +66,21 @@ class TestConfigureVerbosenessIfNeeded:
                 "DEBUG:root:root logger debug message\n"
                 "DEBUG:__main__:module logger debug message\n"
             )
+
+    class TestSameProcess:
+        @staticmethod
+        def test_verbose_flag(monkeypatch, capsys):
+            # Given
+            # monkeypatch.setenv("ORQ_VERBOSE", "1")
+
+            # When
+            # _cli_logs.configure_verboseness_if_needed()
+            logging.basicConfig(level=logging.DEBUG)
+
+            logging.debug("root logger debug message")
+            logging.getLogger(__name__).debug("module logger debug message")
+
+            # Then
+            out, err = capsys.readouterr()
+            # assert out != ""
+            assert err != ""
