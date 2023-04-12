@@ -62,12 +62,6 @@ Example:
     ORQ_RAY_DOWNLOAD_GIT_IMPORTS=1
 """
 
-
-PASSPORT_FILE_ENV = "ORQUESTRA_PASSPORT_FILE"
-"""
-Consumed by the Workflow SDK to set auth in remote contexts
-"""
-
 RAY_GLOBAL_WF_RUN_ID_ENV = "GLOBAL_WF_RUN_ID"
 """
 Used to set the workflow run ID in a Ray workflow
