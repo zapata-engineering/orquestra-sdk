@@ -62,13 +62,6 @@ Example:
     ORQ_RAY_DOWNLOAD_GIT_IMPORTS=1
 """
 
-RAY_SET_TASK_RESOURCES_ENV = "ORQ_RAY_SET_TASK_RESOURCES"
-"""
-Used to configure if Ray uses a task invocation's resources
-Example:
-    ORQ_RAY_SET_TASK_RESOURCES=1
-"""
-
 RAY_GLOBAL_WF_RUN_ID_ENV = "GLOBAL_WF_RUN_ID"
 """
 Used to set the workflow run ID in a Ray workflow

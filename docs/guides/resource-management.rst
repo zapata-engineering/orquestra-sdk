@@ -1,10 +1,10 @@
-Compute Engine Resource Management
+Resource Management
 =======================
 
-Workflows submitted to run on Compute Engine can specify the computational resources they require, enabling precise management of resources and costs.
+Workflows submitted to run on Compute Engine and Local Ray can specify the computational resources they require, enabling precise management of resources and costs.
 
 .. note::
-    Resource management is supported only when executing on Compute Engine runtimes. Tasks and workflows defined with these parameters may still be executed on other runtimes, however the resource specification will be ignored.
+    Resource management is supported only when executing on Compute Engine and Local Ray runtimes. Tasks and workflows defined with these parameters may still be executed on other runtimes, however the resource specification will be ignored.
 
 Setting Task Resources
 ----------------------
@@ -88,6 +88,9 @@ Tweaking the resource request may be required when your tasks spawn additional a
 Troubleshooting Common Resource Issues
 --------------------------------------
 
+My RLLib task fails
+^^^^^^^^^^^^^^^^^^^
+
 Due to the way Ray's RLLib works, a deadlock can be created on Compute Engine if a task attempts to spawn additional actors or remote functions via the DNQ ``rollouts`` facility. Resources requested in a task definition are bound to the task process, so additional actors can rapidly exhaust the provisioned resources.
 
 In these cases, additional resources should be specified in the workflow decorator.
@@ -107,3 +110,36 @@ In these cases, additional resources should be specified in the workflow decorat
         results = []                            # resources for the additional
         for _ in range(5):                      # actors.
             results.append(task())
+
+My Local Tasks Aren't Running
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Task resources are used to schedule tasks both locally and on remote runtimes.
+This might lead to issues when running tasks locally if they require resources that are unavailable.
+
+For example, you have a task that requires:
+
+1. a GPU but during development you run the workflow on your laptop without a GPU.
+2. 32GB of memory, but your Studio notebook only has 8GB available.
+3. 16 CPU cores but your desktop only has 8 available.
+
+In these examples, those tasks will not be scheduled by a local Ray instance due to the lack of resources.
+To workaround this problem, you should reduce the resources to match what is available. This can be done in the decorator:
+
+.. code-block:
+    @sdk.task(resources=sdk.Resources(gpu="0"))
+    def my_task():
+        ...
+
+or when the task is invoked, with the ``.with_resources()`` method:
+
+.. code-block:
+    # Usual request
+    @sdk.task(resources=sdk.Resources(gpu="1"))
+    def my_task():
+        ...
+
+    @sdk.workflow
+    def my_workflow():
+        # The resources are overridden for this one invocation
+        result = my_task().with_resources(gpu="0")
+        return result
