@@ -1,3 +1,11 @@
+################################################################################
+# © Copyright 2023 Zapata Computing Inc.
+################################################################################
+import os
+import typing as t
+
+# --------------------------------- SDK --------------------------------------
+
 CONFIG_PATH_ENV = "ORQ_CONFIG_PATH"
 """
 Used to configure the location of the `config.json`
@@ -11,6 +19,20 @@ Used to configure the location of the `workflows.db`
 Example:
     ORQ_DB_PATH=/tmp/workflows.db
 """
+
+
+PASSPORT_FILE_ENV = "ORQUESTRA_PASSPORT_FILE"
+"""
+Consumed by the Workflow SDK to set auth in remote contexts
+"""
+
+ORQ_VERBOSE = "ORQ_VERBOSE"
+"""
+If set to a truthy value, enables printing debug information when running the ``orq``
+CLI commands.
+"""
+
+# --------------------------------- Ray --------------------------------------
 
 RAY_TEMP_PATH_ENV = "ORQ_RAY_TEMP_PATH"
 """
@@ -47,12 +69,22 @@ Example:
     ORQ_RAY_SET_TASK_RESOURCES=1
 """
 
-PASSPORT_FILE_ENV = "ORQUESTRA_PASSPORT_FILE"
-"""
-Consumed by the Workflow SDK to set auth in remote contexts
-"""
-
 RAY_GLOBAL_WF_RUN_ID_ENV = "GLOBAL_WF_RUN_ID"
 """
 Used to set the workflow run ID in a Ray workflow
 """
+
+
+# ------------------------------- utilities ----------------------------------
+
+
+def _is_truthy(env_var_value: t.Optional[str]):
+    if env_var_value is None:
+        return False
+
+    return env_var_value.lower() in {"1", "true"}
+
+
+def flag_set(env_var_name: str) -> bool:
+    value = os.getenv(env_var_name)
+    return _is_truthy(value)
