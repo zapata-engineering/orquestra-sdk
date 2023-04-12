@@ -17,7 +17,7 @@ from orquestra.sdk._base._driver._client import DriverClient, Paginated
 from orquestra.sdk._base._driver._models import Resources
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import JSONResult, PickleResult
-from orquestra.sdk.schema.workflow_run import ProjectDef, RunStatus, State, TaskRun
+from orquestra.sdk.schema.workflow_run import ProjectRef, RunStatus, State, TaskRun
 
 from . import resp_mocks
 
@@ -384,8 +384,8 @@ class TestClient:
                 [
                     (None, {}),
                     (
-                        ProjectDef(workspace_id="a", project_id="b"),
-                        {"workspaceId": "a", "projectId": "b"},
+                            ProjectRef(workspace_id="a", project_id="b"),
+                            {"workspaceId": "a", "projectId": "b"},
                     ),
                 ],
             )

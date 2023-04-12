@@ -26,7 +26,7 @@ from orquestra.sdk._base._testing._example_wfs import my_workflow
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import (
-    ProjectDef,
+    ProjectRef,
     RunStatus,
     State,
     TaskRun,
@@ -483,7 +483,7 @@ class TestCreateWorkflowRun:
         )
         with pytest.warns(expected_warning=exceptions.UnsupportedRuntimeFeature):
             runtime.create_workflow_run(
-                TEST_WORKFLOW, project=ProjectDef(workspace_id="", project_id="")
+                TEST_WORKFLOW, project=ProjectRef(workspace_id="", project_id="")
             )
 
     @staticmethod

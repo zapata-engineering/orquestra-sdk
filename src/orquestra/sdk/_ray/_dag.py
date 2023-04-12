@@ -43,7 +43,7 @@ from ..schema import ir
 from ..schema.configs import RuntimeConfiguration
 from ..schema.local_database import StoredWorkflowRun
 from ..schema.workflow_run import (
-    ProjectDef,
+    ProjectRef,
     RunStatus,
     State,
     TaskInvocationId,
@@ -777,7 +777,7 @@ class RayRuntime(RuntimeInterface):
         client.shutdown()
 
     def create_workflow_run(
-        self, workflow_def: ir.WorkflowDef, project: t.Optional[ProjectDef] = None
+        self, workflow_def: ir.WorkflowDef, project: t.Optional[ProjectRef] = None
     ) -> WorkflowRunId:
         if project:
             warnings.warn(

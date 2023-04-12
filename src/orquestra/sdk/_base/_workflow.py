@@ -32,7 +32,7 @@ from orquestra.sdk.exceptions import (
     ProjectInvalidError,
     WorkflowSyntaxError,
 )
-from orquestra.sdk.schema.workflow_run import ProjectDef, ProjectId, WorkspaceId
+from orquestra.sdk.schema.workflow_run import ProjectRef, ProjectId, WorkspaceId
 
 from .. import secrets
 from . import _api, _dsl, _exec_ctx, loader
@@ -226,9 +226,9 @@ class WorkflowDef(Generic[_R]):
         # logic, the runtime should always be resolved.
         assert runtime is not None
 
-        _project: Optional[ProjectDef]
+        _project: Optional[ProjectRef]
         if project_id is not None and workspace_id is not None:
-            _project = ProjectDef(project_id=project_id, workspace_id=workspace_id)
+            _project = ProjectRef(project_id=project_id, workspace_id=workspace_id)
         elif project_id is None and workspace_id is None:
             _project = None
         else:

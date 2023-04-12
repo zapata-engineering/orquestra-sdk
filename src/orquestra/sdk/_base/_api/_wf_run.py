@@ -23,7 +23,7 @@ from ...exceptions import (
 from ...schema import ir
 from ...schema.configs import ConfigName
 from ...schema.local_database import StoredWorkflowRun
-from ...schema.workflow_run import ProjectDef, State, TaskInvocationId
+from ...schema.workflow_run import ProjectRef, State, TaskInvocationId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId
 from ..abc import RuntimeInterface
@@ -129,7 +129,7 @@ class WorkflowRun:
         wf_def: ir.WorkflowDef,
         runtime: RuntimeInterface,
         config: t.Optional["RuntimeConfig"] = None,
-        project: t.Optional[ProjectDef] = None,
+        project: t.Optional[ProjectRef] = None,
     ):
         """
         Users aren't expected to use __init__() directly. Please use

@@ -23,7 +23,7 @@ from orquestra.sdk._ray._ray_logs import WFLog
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
-    ProjectDef,
+    ProjectRef,
     WorkflowRun,
     WorkflowRunMinimal,
 )
@@ -174,7 +174,7 @@ class DriverClient:
     def create_workflow_def(
         self,
         workflow_def: WorkflowDef,
-        project: Optional[ProjectDef] = None,
+        project: Optional[ProjectRef],
     ) -> _models.WorkflowDefID:
         """
         Stores a workflow definition for future submission

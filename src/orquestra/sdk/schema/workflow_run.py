@@ -68,6 +68,6 @@ class WorkflowRun(WorkflowRunMinimal):
     status: RunStatus
 
 
-class ProjectDef(BaseModel):
+class ProjectRef(BaseModel):
     workspace_id: WorkspaceId
     project_id: ProjectId

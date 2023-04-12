@@ -28,7 +28,7 @@ from orquestra.sdk.exceptions import (
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeName
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.workflow_run import ProjectDef, RunStatus, State
+from orquestra.sdk.schema.workflow_run import ProjectRef, RunStatus, State
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
 
 from ..data.complex_serialization.workflow_defs import (
@@ -764,7 +764,7 @@ class TestListWorkflows:
 @pytest.mark.parametrize(
     "workspace_id, project_id, raises, expected",
     [
-        ("a", "b", do_not_raise(), ProjectDef(workspace_id="a", project_id="b")),
+        ("a", "b", do_not_raise(), ProjectRef(workspace_id="a", project_id="b")),
         ("a", None, pytest.raises(ProjectInvalidError), None),
         (None, "b", pytest.raises(ProjectInvalidError), None),
         (None, None, do_not_raise(), None),

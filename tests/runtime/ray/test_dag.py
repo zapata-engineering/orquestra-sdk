@@ -21,7 +21,7 @@ from orquestra.sdk._base._testing._example_wfs import (
 from orquestra.sdk._ray import _client, _dag, _ray_logs
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.workflow_run import ProjectDef, State
+from orquestra.sdk.schema.workflow_run import ProjectRef, State
 
 TEST_TIME = datetime.now(timezone.utc)
 
@@ -289,7 +289,7 @@ class TestRayRuntime:
             )
             with pytest.warns(expected_warning=exceptions.UnsupportedRuntimeFeature):
                 runtime.create_workflow_run(
-                    Mock(), project=ProjectDef(workspace_id="", project_id="")
+                    Mock(), project=ProjectRef(workspace_id="", project_id="")
                 )
 
     class TestListWorkflowRuns:

@@ -14,7 +14,7 @@ from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import (
-    ProjectDef,
+    ProjectRef,
     State,
     TaskRunId,
     WorkflowRun,
@@ -88,7 +88,7 @@ class CERuntime(RuntimeInterface):
         return cls(config, verbose)
 
     def create_workflow_run(
-        self, workflow_def: WorkflowDef, project: Optional[ProjectDef] = None
+        self, workflow_def: WorkflowDef, project: Optional[ProjectRef] = None
     ) -> WorkflowRunId:
         """
         Schedules a workflow definition for execution

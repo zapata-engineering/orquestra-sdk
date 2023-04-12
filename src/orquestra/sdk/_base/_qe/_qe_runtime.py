@@ -29,7 +29,7 @@ from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocation, TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import (
-    ProjectDef,
+    ProjectRef,
     RunStatus,
     State,
     TaskRun,
@@ -468,7 +468,7 @@ class QERuntime(RuntimeInterface):
             )
 
     def create_workflow_run(
-        self, workflow_def: WorkflowDef, project: Optional[ProjectDef] = None
+        self, workflow_def: WorkflowDef, project: Optional[ProjectRef] = None
     ) -> WorkflowRunId:
         """
         Submits a workflow to the Quantum Engine

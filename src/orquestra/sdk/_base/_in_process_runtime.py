@@ -9,7 +9,7 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base import abc
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.workflow_run import (
-    ProjectDef,
+    ProjectRef,
     RunStatus,
     State,
     TaskRun,
@@ -89,7 +89,7 @@ class InProcessRuntime(abc.RuntimeInterface):
         return f"{wf_def.name}-{len(self._output_store) + 1}"
 
     def create_workflow_run(
-        self, workflow_def: ir.WorkflowDef, project: t.Optional[ProjectDef] = None
+        self, workflow_def: ir.WorkflowDef, project: t.Optional[ProjectRef] = None
     ) -> WfRunId:
 
         if project:
