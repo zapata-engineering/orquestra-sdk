@@ -23,6 +23,7 @@ class TestFlagSet:
             ("TRUE", True),
             ("FALSE", False),
             ("gibberish", False),
+            ("", False),
         ],
     )
     def test_values(monkeypatch, value, expected):
