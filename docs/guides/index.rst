@@ -10,4 +10,4 @@ Guides
     runtime-configuration
     workflow-syntax
     dependency-installation
-    ce-resource-management
+    resource-management

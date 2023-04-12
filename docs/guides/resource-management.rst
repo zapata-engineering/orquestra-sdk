@@ -1,10 +1,10 @@
-Compute Engine Resource Management
+Resource Management
 =======================
 
-Workflows submitted to run on Compute Engine can specify the computational resources they require, enabling precise management of resources and costs.
+Workflows submitted to run on Compute Engine and Local Ray can specify the computational resources they require, enabling precise management of resources and costs.
 
 .. note::
-    Resource management is supported only when executing on Compute Engine runtimes. Tasks and workflows defined with these parameters may still be executed on other runtimes, however the resource specification will be ignored.
+    Resource management is supported only when executing on Compute Engine and local-ray runtimes. Tasks and workflows defined with these parameters may still be executed on other runtimes, however the resource specification will be ignored.
 
 Setting Task Resources
 ----------------------
@@ -107,3 +107,10 @@ In these cases, additional resources should be specified in the workflow decorat
         results = []                            # resources for the additional
         for _ in range(5):                      # actors.
             results.append(task())
+
+Local vs remote resource management
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Resources are specified for a given task regardless of runtime.
+This might lead up to the issue, that tasks with large resources declared are run locally, where such resources are not available.
+In such case those tasks will not be scheduled by a local Ray instance due to the lack of resources.
+To work-around this problem, please lower the resources to the numbers available for the local node.
