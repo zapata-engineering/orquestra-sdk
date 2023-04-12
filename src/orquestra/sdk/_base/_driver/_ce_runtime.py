@@ -343,16 +343,14 @@ class CERuntime(RuntimeInterface):
         # The max_page_size should be the same as the maximum defined in
         # https://github.com/zapatacomputing/workflow-driver/blob/fc3964d37e05d9421029fe28fa844699e2f99a52/openapi/src/parameters/query/pageSize.yaml#L10 # noqa: E501
         max_page_size: int = 100
-        page_sizes: List[Optional[int]] = [None]
+        page_sizes: Sequence[Optional[int]] = [None]
         if limit is not None:
             if limit < max_page_size:
                 page_sizes = [limit]
             else:
                 page_sizes = [
                     max_page_size for _ in range(limit // max_page_size)
-                ] + [
-                    limit % max_page_size
-                ]  # type: ignore
+                ] + [limit % max_page_size]
 
         page_token: Optional[str] = None
         runs: List[WorkflowRunMinimal] = []
