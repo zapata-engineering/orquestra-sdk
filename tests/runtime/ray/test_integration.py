@@ -79,8 +79,8 @@ class TestRayRuntimeMethods:
         @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_running_same_workflow_def_twice(self, runtime: _dag.RayRuntime):
             wf_def = _example_wfs.multioutput_wf.model
-            run_id1 = runtime.create_workflow_run(wf_def)
-            run_id2 = runtime.create_workflow_run(wf_def)
+            run_id1 = runtime.create_workflow_run(wf_def, None)
+            run_id2 = runtime.create_workflow_run(wf_def, None)
 
             assert run_id1 != run_id2
 
@@ -95,7 +95,7 @@ class TestRayRuntimeMethods:
             wf_def = _example_wfs.wf_with_exec_ctx().model
 
             # when
-            run_id = runtime.create_workflow_run(wf_def)
+            run_id = runtime.create_workflow_run(wf_def, None)
 
             # then
             _wait_to_finish_wf(run_id, runtime)
@@ -110,7 +110,7 @@ class TestRayRuntimeMethods:
             global_wf_run_id = "run_id_from_env" + _dag._generate_wf_run_id(wf_def)
             monkeypatch.setenv("GLOBAL_WF_RUN_ID", global_wf_run_id)
 
-            run_id = runtime.create_workflow_run(wf_def)
+            run_id = runtime.create_workflow_run(wf_def, None)
 
             runtime.stop_workflow_run(run_id)
             assert run_id == global_wf_run_id
@@ -129,7 +129,7 @@ class TestRayRuntimeMethods:
             """
             # Given
             wf_def = _example_wfs.greet_wf.model
-            run_id = runtime.create_workflow_run(wf_def)
+            run_id = runtime.create_workflow_run(wf_def, None)
 
             # When
             run = runtime.get_workflow_run_status(run_id)
@@ -178,7 +178,7 @@ class TestRayRuntimeMethods:
             """
             # Given
             wf_def = _example_wfs.greet_wf.model
-            run_id = runtime.create_workflow_run(wf_def)
+            run_id = runtime.create_workflow_run(wf_def, None)
 
             # Block until wf completes
             _wait_to_finish_wf(run_id, runtime)
@@ -227,7 +227,7 @@ class TestRayRuntimeMethods:
             [return]
             """
             wf_def = _example_wfs.exception_wf_with_multiple_values.model
-            run_id = runtime.create_workflow_run(wf_def)
+            run_id = runtime.create_workflow_run(wf_def, None)
 
             _wait_to_finish_wf(run_id, runtime)
 
@@ -246,8 +246,8 @@ class TestRayRuntimeMethods:
         def test_two_runs(self, runtime: _dag.RayRuntime):
             # Given
             wf_def = _example_wfs.greet_wf.model
-            run_id1 = runtime.create_workflow_run(wf_def)
-            run_id2 = runtime.create_workflow_run(wf_def)
+            run_id1 = runtime.create_workflow_run(wf_def, None)
+            run_id2 = runtime.create_workflow_run(wf_def, None)
 
             # When
             wf_runs = runtime.list_workflow_runs()
@@ -280,7 +280,7 @@ class TestRayRuntimeMethods:
             wf = _example_wfs.serial_wf_with_file_triggers(
                 triggers, task_timeout=2.0
             ).model
-            wf_run_id = runtime.create_workflow_run(wf)
+            wf_run_id = runtime.create_workflow_run(wf, None)
             wf_run = runtime.get_workflow_run_status(wf_run_id)
             assert wf_run.status.state == State.RUNNING
 
@@ -292,7 +292,7 @@ class TestRayRuntimeMethods:
         def test_on_finished_workflow(self, runtime: _dag.RayRuntime, tmp_path):
 
             wf = _example_wfs.multioutput_task_wf.model
-            wf_run_id = runtime.create_workflow_run(wf)
+            wf_run_id = runtime.create_workflow_run(wf, None)
             _wait_to_finish_wf(wf_run_id, runtime)
             # ensure wf has finished
             status = runtime.get_workflow_run_status(wf_run_id)
@@ -310,7 +310,7 @@ class TestRayRuntimeMethods:
 
         def test_happy_path(self, runtime: _dag.RayRuntime):
             wf_def = _example_wfs.greet_wf.model
-            run_id = runtime.create_workflow_run(wf_def)
+            run_id = runtime.create_workflow_run(wf_def, None)
 
             _wait_to_finish_wf(run_id, runtime)
 
@@ -320,7 +320,7 @@ class TestRayRuntimeMethods:
 
         def test_failed_workflow(self, runtime: _dag.RayRuntime):
             wf_def = _example_wfs.exception_wf_with_multiple_values().model
-            run_id = runtime.create_workflow_run(wf_def)
+            run_id = runtime.create_workflow_run(wf_def, None)
 
             _wait_to_finish_wf(run_id, runtime)
 
@@ -344,7 +344,7 @@ class TestRayRuntimeMethods:
             wf = _example_wfs.serial_wf_with_file_triggers(
                 triggers, task_timeout=2.0
             ).model
-            run_id = runtime.create_workflow_run(wf)
+            run_id = runtime.create_workflow_run(wf, None)
 
             assert runtime.get_workflow_run_status(run_id).status.state == State.RUNNING
             with pytest.raises(exceptions.WorkflowRunNotSucceeded):
@@ -375,7 +375,7 @@ class TestRayRuntimeMethods:
             [return]
             """
             wf_def = _example_wfs.exception_wf_with_multiple_values().model
-            run_id = runtime.create_workflow_run(wf_def)
+            run_id = runtime.create_workflow_run(wf_def, None)
 
             _wait_to_finish_wf(run_id, runtime)
 
@@ -420,7 +420,7 @@ class TestRayRuntimeMethods:
             wf = _example_wfs.serial_wf_with_file_triggers(
                 triggers, task_timeout=2.0
             ).model
-            wf_run_id = runtime.create_workflow_run(wf)
+            wf_run_id = runtime.create_workflow_run(wf, None)
 
             # Await completion of the first task
             loop_start = time.time()
@@ -530,7 +530,7 @@ def test_run_and_get_output(
     Verifies methods for getting outputs, both the "final" and "intermediate".
     """
     # Given
-    run_id = runtime.create_workflow_run(wf.model)
+    run_id = runtime.create_workflow_run(wf.model, None)
     _wait_to_finish_wf(run_id, runtime)
 
     # When
@@ -581,7 +581,7 @@ class Test3rdPartyLibraries:
         wf = ir.WorkflowDef.parse_file(path_to_json)
 
         # When
-        run_id = runtime.create_workflow_run(wf)
+        run_id = runtime.create_workflow_run(wf, None)
         # This test is notoriously slow to run, especially on local machines.
         _wait_to_finish_wf(run_id, runtime, timeout=10 * 60.0)
         wf_result = runtime.get_workflow_run_outputs_non_blocking(run_id)
@@ -603,7 +603,9 @@ class Test3rdPartyLibraries:
         monkeypatch.setenv(name="ORQ_RAY_DOWNLOAD_GIT_IMPORTS", value="1")
 
         # When
-        run_id = runtime.create_workflow_run(_example_wfs.wf_using_git_imports.model)
+        run_id = runtime.create_workflow_run(
+            _example_wfs.wf_using_git_imports.model, None
+        )
         # This test is notoriously slow to run, especially on local machines.
         _wait_to_finish_wf(run_id, runtime, timeout=10 * 60.0)
         wf_result = runtime.get_workflow_run_outputs_non_blocking(run_id)
@@ -658,7 +660,7 @@ class TestDirectRayReader:
     def run_and_await_wf(
         runtime: RuntimeInterface, wf: ir.WorkflowDef
     ) -> WorkflowRunId:
-        run_id = runtime.create_workflow_run(wf)
+        run_id = runtime.create_workflow_run(wf, None)
         _wait_to_finish_wf(run_id, runtime)
 
         return run_id
@@ -728,7 +730,7 @@ def test_ray_direct_reader_no_duplicate_lines(
     ray_params = shared_ray_conn
     reader = _ray_logs.DirectRayReader(Path(ray_params._temp_dir))
 
-    run_id = runtime.create_workflow_run(wf)
+    run_id = runtime.create_workflow_run(wf, None)
     _wait_to_finish_wf(run_id, runtime)
 
     # When
@@ -767,7 +769,7 @@ def test_task_code_unavailable_at_building_dag(runtime: _dag.RayRuntime):
     wf_def.tasks[task_id].fn_ref.module = "nope"  # type: ignore
 
     # when
-    wf_id = runtime.create_workflow_run(wf_def)
+    wf_id = runtime.create_workflow_run(wf_def, None)
     _wait_to_finish_wf(wf_id, runtime)
 
     # then
@@ -815,7 +817,7 @@ class TestGetCurrentIDs:
 
         # When
         # The function-under-test is called inside the workflow.
-        wf_run_id = runtime.create_workflow_run(wf_model)
+        wf_run_id = runtime.create_workflow_run(wf_model, None)
         _wait_to_finish_wf(wf_run_id, runtime)
 
         # Precondition

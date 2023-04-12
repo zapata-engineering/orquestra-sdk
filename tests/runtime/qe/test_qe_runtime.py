@@ -468,7 +468,7 @@ class TestCreateWorkflowRun:
             body=QE_RESPONSES["submit"],
         )
 
-        result = runtime.create_workflow_run(TEST_WORKFLOW)
+        result = runtime.create_workflow_run(TEST_WORKFLOW, None)
 
         _save_workflow_run.assert_called_once()
         assert result == "workflow-id"
@@ -498,7 +498,7 @@ class TestCreateWorkflowRun:
         )
 
         with pytest.raises(exceptions.WorkflowTooLargeError) as exc_info:
-            _ = runtime.create_workflow_run(TEST_WORKFLOW)
+            _ = runtime.create_workflow_run(TEST_WORKFLOW, None)
 
         _save_workflow_run.assert_not_called()
         assert "The submitted workflow is too large to be run on this cluster." in str(
@@ -519,7 +519,7 @@ class TestCreateWorkflowRun:
         )
 
         with pytest.raises(exceptions.WorkflowSyntaxError) as exc_info:
-            _ = runtime.create_workflow_run(TEST_WORKFLOW)
+            _ = runtime.create_workflow_run(TEST_WORKFLOW, None)
 
         _save_workflow_run.assert_not_called()
         assert "some other submission failure" in str(exc_info)
@@ -548,7 +548,7 @@ class TestCreateWorkflowRun:
         workflow = BadNameWorkflow.model
 
         with pytest.raises(exceptions.InvalidWorkflowDefinitionError) as exc_info:
-            runtime.create_workflow_run(workflow)
+            runtime.create_workflow_run(workflow, None)
 
         assert f'Workflow name "{workflow_name}" is invalid' in str(exc_info)
 
@@ -562,9 +562,9 @@ class TestCreateWorkflowRun:
             "http://localhost/v1/workflows",
             body=QE_RESPONSES["submit"],
         )
-        _ = runtime.create_workflow_run(TEST_WORKFLOW)
+        _ = runtime.create_workflow_run(TEST_WORKFLOW, None)
         captured_without_yaml = capsys.readouterr()
-        _ = runtime_verbose.create_workflow_run(TEST_WORKFLOW)
+        _ = runtime_verbose.create_workflow_run(TEST_WORKFLOW, None)
         captured_with_yaml = capsys.readouterr()
         yaml_wf = pydantic_to_yaml(workflow_to_yaml(TEST_WORKFLOW))
         assert yaml_wf in captured_with_yaml.err
@@ -1370,7 +1370,7 @@ class TestHTTPErrors:
             status=error_code,
         )
         with pytest.raises(expected_exception) as exc_info:
-            runtime.create_workflow_run(TEST_WORKFLOW)
+            runtime.create_workflow_run(TEST_WORKFLOW, None)
         for telltale in telltales:
             assert telltale in str(exc_info)
         _save_workflow_run.assert_not_called()

@@ -32,7 +32,7 @@ from orquestra.sdk.exceptions import (
     ProjectInvalidError,
     WorkflowSyntaxError,
 )
-from orquestra.sdk.schema.workflow_run import ProjectRef, ProjectId, WorkspaceId
+from orquestra.sdk.schema.workflow_run import ProjectId, ProjectRef, WorkspaceId
 
 from .. import secrets
 from . import _api, _dsl, _exec_ctx, loader

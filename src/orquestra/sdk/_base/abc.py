@@ -80,9 +80,7 @@ class RuntimeInterface(ABC):
 
     @abstractmethod
     def create_workflow_run(
-        self,
-        workflow_def: WorkflowDef,
-        project: t.Optional[ProjectRef] = None,
+        self, workflow_def: WorkflowDef, project: t.Optional[ProjectRef]
     ) -> WorkflowRunId:
         """Schedules a workflow definition for execution
 

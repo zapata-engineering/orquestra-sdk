@@ -89,7 +89,7 @@ class InProcessRuntime(abc.RuntimeInterface):
         return f"{wf_def.name}-{len(self._output_store) + 1}"
 
     def create_workflow_run(
-        self, workflow_def: ir.WorkflowDef, project: t.Optional[ProjectRef] = None
+        self, workflow_def: ir.WorkflowDef, project: t.Optional[ProjectRef]
     ) -> WfRunId:
 
         if project:

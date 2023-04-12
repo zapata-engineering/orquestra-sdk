@@ -88,7 +88,7 @@ class CERuntime(RuntimeInterface):
         return cls(config, verbose)
 
     def create_workflow_run(
-        self, workflow_def: WorkflowDef, project: Optional[ProjectRef] = None
+        self, workflow_def: WorkflowDef, project: Optional[ProjectRef]
     ) -> WorkflowRunId:
         """
         Schedules a workflow definition for execution

@@ -384,8 +384,8 @@ class TestClient:
                 [
                     (None, {}),
                     (
-                            ProjectRef(workspace_id="a", project_id="b"),
-                            {"workspaceId": "a", "projectId": "b"},
+                        ProjectRef(workspace_id="a", project_id="b"),
+                        {"workspaceId": "a", "projectId": "b"},
                     ),
                 ],
             )
@@ -435,7 +435,7 @@ class TestClient:
                     json=resp_mocks.make_create_wf_def_response(id_=workflow_def_id),
                 )
 
-                client.create_workflow_def(workflow_def)
+                client.create_workflow_def(workflow_def, None)
 
                 # The assertion is done by mocked_responses
 
@@ -453,7 +453,7 @@ class TestClient:
                 )
 
                 with pytest.raises(_exceptions.InvalidWorkflowDef):
-                    client.create_workflow_def(workflow_def)
+                    client.create_workflow_def(workflow_def, None)
 
             @staticmethod
             def test_unauthorized(
@@ -465,7 +465,7 @@ class TestClient:
                 )
 
                 with pytest.raises(_exceptions.InvalidTokenError):
-                    client.create_workflow_def(workflow_def)
+                    client.create_workflow_def(workflow_def, None)
 
             @staticmethod
             def test_forbidden(
@@ -478,7 +478,7 @@ class TestClient:
                 )
 
                 with pytest.raises(_exceptions.ForbiddenError):
-                    _ = client.create_workflow_def(workflow_def)
+                    _ = client.create_workflow_def(workflow_def, None)
 
             @staticmethod
             def test_unknown_error(
@@ -491,7 +491,7 @@ class TestClient:
                 )
 
                 with pytest.raises(_exceptions.UnknownHTTPError):
-                    _ = client.create_workflow_def(workflow_def)
+                    _ = client.create_workflow_def(workflow_def, None)
 
         class TestDelete:
             @staticmethod
