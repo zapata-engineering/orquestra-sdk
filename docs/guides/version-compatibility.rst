@@ -7,17 +7,18 @@ This guide covers the details behind the warning::
     VersionMismatch: Attempting to read a workflow definition generated with a different version of Orquestra Workflow SDK. Please consider re-running your workflow or installing 'orquestra-sdk==...'.
 
 
-Client-Server Coupling
-======================
+Workflow Version Coupling
+=========================
 
-When you're running workflows remotely, you have a local version of Orquestra Workflow SDK on your local machine or the Jupyter environment in Orquestra Portal.
-An Intermediate Representation (IR) is generated from your ``@workflow``-decorated function and sent over the wire to the remote runtime.
+When you write a workflow, the Orquestra Workflow SDK generates an Intermediate Representation (IR) from your ``@workflow``-decorated function.
+When you "run" the workflow, this IR is sent to a runtime for execution.
+Inside the IR, we store the version of the Workflow SDK that generated it.
 
-The remote runtime also comes with its own installation of the Workflow SDK to interpret the workflow IR, execute tasks, and store results.
-The Workflow SDK version installed on the server side is selected to match the client's one.
+When executing the workflow remotely, the remote runtime reads the Workflow SDK version from the IR and uses the same version to interpret the IR, execute tasks, and store results.
+Once a workflow run has been started, you will query its status, peek into its graph of task runs, or access the data it produced.
 
-Finally, you're likely to interact with the workflow run to query its status, peek into the graph of task runs, or access the data they produced.
-This interaction can happen a long time after the workflow was originally executed; the workflow data lives longer than the Workflow SDK code that produced it.
+Sometimes these interactions can happen a long time after the workflow was originally executed; the workflow data lives longer than the Workflow SDK version that produced it.
+In the meantime, the internals of the Workflow SDK may have changed resulting in unexpected behavior.
 
 Recommended Usage
 =================
