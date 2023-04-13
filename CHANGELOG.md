@@ -7,6 +7,7 @@
 - Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a WorkflowSyntaxError if no tasks are required to be executed.
 - Remove TaskDef.model and TaskDef.import_models interfaces
 - Public API classes `sdk.GitImport`, `sdk.GithubImport`, `sdk.LocalImport`, `sdk.InlineImport` now use `dataclasses.dataclass` instead of `typing.NamedTuple`.
+- Local Ray will now always pass resources to underlying ray.remote functions. 
 
 🔥 *Features*
 - Sort WF runs by start date in `list wf` command. Show start date as one of the columns
@@ -16,6 +17,8 @@
 These parameters let you set the default imports for all tasks in given workflow.
 If a task defines its own imports (either source, dependencies, or both) - it will overwrite workflow defaults.
 - Allow single imports as `dependency_imports` in `@task` decorators.
+- Listing workflow runs from Compute Engine now allows an upper limit to the number of runs to be listed to be set via the `limit` keyword.
+- Print HTTP requests and other debug information from `orq` CLI if `ORQ_VERBOSE` env flag is set.
 
 👩‍🔬 *Experimental*
 * Setting workflow_id and project_id is now available on workflow Python API start() and prepare() functions

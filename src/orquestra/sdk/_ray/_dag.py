@@ -32,11 +32,7 @@ from .._base import (
     serde,
 )
 from .._base._db import WorkflowDB
-from .._base._env import (
-    RAY_DOWNLOAD_GIT_IMPORTS_ENV,
-    RAY_GLOBAL_WF_RUN_ID_ENV,
-    RAY_SET_TASK_RESOURCES_ENV,
-)
+from .._base._env import RAY_DOWNLOAD_GIT_IMPORTS_ENV, RAY_GLOBAL_WF_RUN_ID_ENV
 from .._base.abc import ArtifactValue, LogReader, RuntimeInterface
 from ..kubernetes.quantity import parse_quantity
 from ..schema import ir
@@ -395,10 +391,6 @@ def _make_ray_dag(
     # a mapping of "artifact ID" <-> "the ray Future needed to get the value"
     ray_futures: t.Dict[ir.ArtifactNodeId, t.Any] = {}
 
-    # Environment variable is used to configure if we apply task invocation resources
-    # to a Ray remote's options
-    add_resources = os.getenv(RAY_SET_TASK_RESOURCES_ENV) == "1"
-
     for ir_invocation in _graphs.iter_invocations_topologically(wf):
         # Prep args, kwargs, and the specs required to unpack tuples
         ray_args, pos_unpack_specs, pos_arg_indices_to_deserialize = _gather_args(
@@ -437,7 +429,7 @@ def _make_ray_dag(
         }
 
         # Task resources
-        if add_resources and ir_invocation.resources is not None:
+        if ir_invocation.resources is not None:
             if ir_invocation.resources.cpu is not None:
                 cpu = parse_quantity(ir_invocation.resources.cpu)
                 cpu_int = cpu.to_integral_value()
