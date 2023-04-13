@@ -316,7 +316,7 @@ class WorkflowRun:
         A workflow function is expected to return task outputs
         (ArtifactFutures) or constants (10, "hello", etc.). This method returns values
         of these. The order is dictated by the return statement in the workflow
-        function, for example `return a, b, c` means this function returns (a, b, c).
+        function, for example `return a, b, c` means this function returns [a, b, c].
         See also:
         https://refactored-disco-d576cb73.pages.github.io/docs/runtime/guides/workflow-syntax.html
 
@@ -352,12 +352,10 @@ class WorkflowRun:
                 state,
             )
         try:
-            return (
-                *(
-                    serde.deserialize(o)
-                    for o in self._runtime.get_workflow_run_outputs_non_blocking(run_id)
-                ),
-            )
+            return [
+                serde.deserialize(o)
+                for o in self._runtime.get_workflow_run_outputs_non_blocking(run_id)
+            ]
         except WorkflowRunNotSucceeded:
             raise
 
