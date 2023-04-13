@@ -136,7 +136,7 @@ class InProcessRuntime(abc.RuntimeInterface):
 
     def get_workflow_run_outputs_non_blocking(
         self, workflow_run_id: WfRunId
-    ) -> t.Tuple[WorkflowResult, ...]:
+    ) -> t.Sequence[WorkflowResult]:
         return (
             *(
                 serde.result_from_artifact(output, ir.ArtifactFormat.AUTO)
