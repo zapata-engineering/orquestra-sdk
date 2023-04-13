@@ -210,7 +210,7 @@ class WorkflowRun:
         successfully, fails, or is terminated for any other reason.
 
         Args:
-            frequency: The frequence in Hz at which the status should be checked.
+            frequency: The frequency in Hz at which the status should be checked.
             verbose: If ``True``, each iteration of the polling loop will print to
                 stderr.
 
@@ -410,7 +410,7 @@ class WorkflowRun:
             WorkflowRunNotStarted: when the workflow has not started
 
         Returns:
-            A dictionary where each key-value entry correponds to a single task run.
+            A dictionary where each key-value entry corresponds to a single task run.
             The key identifies a task invocation, a single node in the workflow graph.
             The value is a list of log lines produced by the corresponding task
             invocation while running this workflow.
