@@ -112,4 +112,4 @@ class TestSnippets:
         # Then
         proc.check_returncode()
         std_out = str(proc.stdout, "utf-8")
-        assert std_out == "['Hello Orquestra!']\n"
+        assert std_out == "Hello Orquestra!\n"

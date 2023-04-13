@@ -351,13 +351,21 @@ class WorkflowRun:
                 f"Current state: {state}",
                 state,
             )
+
         try:
-            return [
-                serde.deserialize(o)
-                for o in self._runtime.get_workflow_run_outputs_non_blocking(run_id)
-            ]
+            returns = (
+                *(
+                    serde.deserialize(o)
+                    for o in self._runtime.get_workflow_run_outputs_non_blocking(run_id)
+                ),
+            )
         except WorkflowRunNotSucceeded:
             raise
+
+        if len(returns) == 1:
+            return returns[0]
+
+        return returns
 
     def get_artifacts(self) -> t.Mapping[ir.TaskInvocationId, t.Any]:
         """

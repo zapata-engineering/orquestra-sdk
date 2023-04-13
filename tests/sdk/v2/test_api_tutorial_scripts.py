@@ -92,8 +92,7 @@ def test_quickstart(capsys, _examples_dir):
     command = f"{PYTHON_EXECUTABLE} {_examples_dir}/quickstart.py"
     result_status = run_command(command, shell=True, stdout=True)
     captured = capsys.readouterr()
-    print(command)
-    expected_output = "['Hello Orquestra!']"
+    expected_output = "Hello Orquestra!"
 
     assert result_status, (
         f"Process {command} did not complete successfully."

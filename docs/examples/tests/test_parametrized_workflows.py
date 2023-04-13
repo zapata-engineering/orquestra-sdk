@@ -129,7 +129,7 @@ class TestSnippets:
         # Then
         proc.check_returncode()
         std_out = str(proc.stdout, "utf-8")
-        assert std_out == "[3]\n"
+        assert std_out == "3\n"
 
     @staticmethod
     # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
@@ -155,4 +155,4 @@ class TestSnippets:
         proc.check_returncode()
         std_out = str(proc.stdout, "utf-8")
         for i in range(5):
-            assert f"[{i*2+1}]\n" in std_out
+            assert f"{i*2+1}\n" in std_out
