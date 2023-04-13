@@ -5,7 +5,6 @@
 Snippets and tests used in the "Parametrized Workflows" tutorial.
 """
 
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -75,7 +74,7 @@ class Snippets:
         # wait for every workflow to be finished
         [workflow_run.wait_until_finished() for workflow_run in workflow_runs]
 
-        # print the result for each of the worklfow run
+        # print the result for each of the workflow runs
         for workflow_run in workflow_runs:
             print(workflow_run.get_results())
         # </snippet>
@@ -130,7 +129,7 @@ class TestSnippets:
         # Then
         proc.check_returncode()
         std_out = str(proc.stdout, "utf-8")
-        assert "(3,)" in std_out
+        assert std_out == "[3]\n"
 
     @staticmethod
     # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
@@ -156,4 +155,4 @@ class TestSnippets:
         proc.check_returncode()
         std_out = str(proc.stdout, "utf-8")
         for i in range(5):
-            assert f"({i*2+1},)" in std_out
+            assert f"[{i*2+1}]\n" in std_out
