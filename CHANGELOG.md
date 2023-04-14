@@ -35,6 +35,7 @@ If a task defines its own imports (either source, dependencies, or both) - it wi
 * Allow single imports as `dependency_imports` in `@task` decorators.
 * Listing workflow runs from Compute Engine now allows an upper limit to the number of runs to be listed to be set via the `limit` keyword.
 * Print HTTP requests and other debug information from `orq` CLI if `ORQ_VERBOSE` env flag is set.
+* CE runtime now supports getting logs from remote Ray runtimes.
 
 🐛 *Bug Fixes*
 * Stopping a QE workflow after it has already stopped will no longer raise an exception.
@@ -63,7 +64,6 @@ If a task defines its own imports (either source, dependencies, or both) - it wi
 
 🔥 *Features*
 * Use the requested resources from a workflow's tasks when submitting to CE
-* CE runtime now supports getting logs from remote Ray runtimes.
 
 
 🥷 *Internal*
