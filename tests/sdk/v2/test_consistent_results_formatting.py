@@ -192,6 +192,38 @@ def change_test_dir(tmp_path_factory, request):
     os.chdir(request.config.invocation_dir)
 
 
+@pytest.fixture(scope="module")
+def orq_project_dir_single():
+    tmp_path = Path(tempfile.mkdtemp())
+    tmp_path.joinpath("workflow_defs.py").write_text(WORKFLOW_DEF_SINGLE)
+    cwd = Path.cwd()
+    os.chdir(tmp_path)
+    try:
+        yield str(tmp_path)
+    finally:
+        os.chdir(cwd)
+        shutil.rmtree(tmp_path)
+
+
+@pytest.fixture(scope="module")
+def orq_project_dir_multiple():
+    tmp_path = Path(tempfile.mkdtemp())
+    tmp_path.joinpath("workflow_defs.py").write_text(WORKFLOW_DEF_MULTIPLE)
+    cwd = Path.cwd()
+    os.chdir(tmp_path)
+    try:
+        yield str(tmp_path)
+    finally:
+        os.chdir(cwd)
+        shutil.rmtree(tmp_path)
+
+
+@pytest.fixture
+def mock_settings_env_vars(tmp_path):
+    with mock.patch.dict(os.environ, {"ORQ_DB_PATH": str(tmp_path / "workflows.db")}):
+        yield
+
+
 # endregion
 
 
@@ -290,38 +322,6 @@ class TestAPI:
         assert results_in_process == ([1, 2, 3], [1, 2, 3])
 
 
-@pytest.fixture(scope="module")
-def orq_project_dir_single():
-    tmp_path = Path(tempfile.mkdtemp())
-    tmp_path.joinpath("workflow_defs.py").write_text(WORKFLOW_DEF_SINGLE)
-    cwd = Path.cwd()
-    os.chdir(tmp_path)
-    try:
-        yield str(tmp_path)
-    finally:
-        os.chdir(cwd)
-        shutil.rmtree(tmp_path)
-
-
-@pytest.fixture(scope="module")
-def orq_project_dir_multiple():
-    tmp_path = Path(tempfile.mkdtemp())
-    tmp_path.joinpath("workflow_defs.py").write_text(WORKFLOW_DEF_MULTIPLE)
-    cwd = Path.cwd()
-    os.chdir(tmp_path)
-    try:
-        yield str(tmp_path)
-    finally:
-        os.chdir(cwd)
-        shutil.rmtree(tmp_path)
-
-
-@pytest.fixture
-def mock_settings_env_vars(tmp_path):
-    with mock.patch.dict(os.environ, {"ORQ_DB_PATH": str(tmp_path / "workflows.db")}):
-        yield
-
-
 @pytest.mark.usefixtures(
     "patch_config_location",
     "ray",
@@ -392,19 +392,11 @@ class TestCLI:
 
         # THEN
         assert results_qe == [
-            "Workflow run wf_id_sentinel has 3 outputs.",
+            "Workflow run wf_id_sentinel has 1 outputs.",
             "",
-            "Output 0. Object type: <class 'int'>",
+            "Output 0. Object type: <class 'list'>",
             "Pretty printed value:",
-            "1",
-            "",
-            "Output 1. Object type: <class 'int'>",
-            "Pretty printed value:",
-            "2",
-            "",
-            "Output 2. Object type: <class 'int'>",
-            "Pretty printed value:",
-            "3",
+            "[1, 2, 3]",
             "",
         ]
         assert results_ray[1:] == results_qe[1:]
@@ -491,7 +483,7 @@ class TestCLI:
 @pytest.mark.slow
 class TestCLIDownloadDir:
     @staticmethod
-    def test_consistent_returns_for_single_value(
+    def test_consistent_downloads_for_single_value(
         monkeypatch,
         tmp_path,
         httpserver: pytest_httpserver.HTTPServer,
@@ -502,15 +494,15 @@ class TestCLIDownloadDir:
         # # Mocking for Ray
         # monkeypatch.setattr(Path, "cwd", Mock(return_value=tmp_path))
         # Mocking for QE
-        httpserver.expect_request("/v1/workflows").respond_with_data("wf_id_sentinel")
+        run_id_qe = "wf_id_sentinel_99"
+        httpserver.expect_request("/v1/workflows").respond_with_data(run_id_qe)
         httpserver.expect_request("/v1/workflow").respond_with_json(QE_STATUS_RESPONSE)
         httpserver.expect_request(
-            "/v2/workflows/wf_id_sentinel/result"
+            f"/v2/workflows/{run_id_qe}/result"
         ).respond_with_data(
             _make_result_bytes(QE_WORKFLOW_RESULT_JSON_DICT_SINGLE),
             content_type="application/x-gtar-compressed",
         )
-        run_id_qe = "wf_id_sentinel"
 
         # Run Workflows
         run_ray = subprocess.run(
@@ -520,9 +512,12 @@ class TestCLIDownloadDir:
         )
         run_qe = subprocess.run(
             ["orq", "wf", "submit", "-c", "127", "workflow_defs"],
-            check=True,
             capture_output=True,
         )
+
+        assert (
+            run_qe.returncode == 0
+        ), f"STDOUT: {run_qe.stdout.decode()},\n\nSTDOERR: {run_qe.stderr.decode()}"
 
         run_id_ray = re.match(
             r"Workflow submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
@@ -544,7 +539,7 @@ class TestCLIDownloadDir:
             check=True,
             capture_output=True,
         )
-        subprocess.run(
+        p2 = subprocess.run(
             [
                 "orq",
                 "wf",
@@ -555,9 +550,11 @@ class TestCLIDownloadDir:
                 "127",
                 run_id_qe,
             ],
-            check=True,
             capture_output=True,
         )
+        assert (
+            p2.returncode == 0
+        ), f"STDOUT: {p2.stdout.decode()},\n\nSTDOERR: {p2.stderr.decode()}"
 
         # THEN
         with open(tmp_path / f"{run_id_ray}/wf_results/0.json", "r") as f:
@@ -566,10 +563,10 @@ class TestCLIDownloadDir:
             qe_contents = json.load(f)
 
         assert ray_contents == qe_contents
-        assert ray_contents == 1
+        assert ray_contents == [1, 2, 3]
 
     @staticmethod
-    def test_consistent_returns_for_multiple_values(
+    def test_consistent_downloads_for_multiple_values(
         monkeypatch,
         tmp_path,
         httpserver: pytest_httpserver.HTTPServer,
