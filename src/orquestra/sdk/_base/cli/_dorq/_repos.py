@@ -483,7 +483,7 @@ class RuntimeRepo:
     def get_login_url(self, uri: str, ce: bool, redirect_port: int):
         client: typing.Union[DriverClient, _client.QEClient]
         session = requests.Session()
-        session.headers["X-ORQ-SDK-VERSION"] = get_installed_version("orquestra-sdk")
+        session.headers["X-Orq-Sdk-Version"] = get_installed_version("orquestra-sdk")
         if ce:
             client = DriverClient(base_uri=uri, session=session)
         else:

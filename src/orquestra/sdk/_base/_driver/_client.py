@@ -125,7 +125,7 @@ class DriverClient:
         session = requests.Session()
         session.headers["Content-Type"] = "application/json"
         session.headers["Authorization"] = f"Bearer {token}"
-        session.headers["X-ORQ-SDK-VERSION"] = get_installed_version("orquestra-sdk")
+        session.headers["X-Orq-Sdk-Version"] = get_installed_version("orquestra-sdk")
         return cls(base_uri=base_uri, session=session)
 
     # --- helpers ---
