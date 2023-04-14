@@ -20,6 +20,7 @@ import requests
 from requests import codes
 
 from orquestra.sdk._ray._ray_logs import WFLog
+from orquestra.sdk.packaging import get_installed_version
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import WorkflowRun, WorkflowRunMinimal
@@ -124,6 +125,7 @@ class DriverClient:
         session = requests.Session()
         session.headers["Content-Type"] = "application/json"
         session.headers["Authorization"] = f"Bearer {token}"
+        session.headers["X-ORQ-SDK-VERSION"] = get_installed_version("orquestra-sdk")
         return cls(base_uri=base_uri, session=session)
 
     # --- helpers ---

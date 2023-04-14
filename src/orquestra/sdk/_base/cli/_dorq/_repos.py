@@ -23,6 +23,7 @@ from orquestra.sdk._base import _config, _db, loader
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe import _client
 from orquestra.sdk._base.abc import ArtifactValue
+from orquestra.sdk.packaging import get_installed_version
 from orquestra.sdk.schema.configs import ConfigName, RuntimeName
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.workflow_run import (
@@ -481,10 +482,12 @@ class RuntimeRepo:
 
     def get_login_url(self, uri: str, ce: bool, redirect_port: int):
         client: typing.Union[DriverClient, _client.QEClient]
+        session = requests.Session()
+        session.headers["X-ORQ-SDK-VERSION"] = get_installed_version("orquestra-sdk")
         if ce:
-            client = DriverClient(base_uri=uri, session=requests.Session())
+            client = DriverClient(base_uri=uri, session=session)
         else:
-            client = _client.QEClient(session=requests.Session(), base_uri=uri)
+            client = _client.QEClient(session=session, base_uri=uri)
             # Ask QE for the login url to log in to the platform
         try:
             target_url = client.get_login_url(redirect_port)
