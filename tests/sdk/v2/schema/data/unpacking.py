@@ -1,6 +1,15 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
+"""
+This script dumps a workflow IR for regression tests. To regenerate the IR:
+1. Pick the SDK version you want to validate. ``pip install orquestra-sdk==<version>``.
+2. Run this file: ``python tests/sdk/v2/schema/data/unpacking.py``.
+3. Commit in the changes in ``unpacking_wf.json``.
+
+Note: the whole purpose of this fixture is to record old IRs. It probably shouldn't be
+regenerated often.
+"""
 from pathlib import Path
 
 from orquestra import sdk
@@ -27,3 +36,14 @@ def unpacking_wf():
     a3, _ = packed3
 
     return b1, packed1, a3
+
+
+def main():
+    wf_def_model = unpacking_wf().model
+
+    target_path = Path(__file__).parent / "unpacking_wf.json"
+    target_path.write_text(wf_def_model.json(indent=2))
+
+
+if __name__ == "__main__":
+    main()

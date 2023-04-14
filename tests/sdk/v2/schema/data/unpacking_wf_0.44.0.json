@@ -1,0 +1,153 @@
+{
+  "name": "unpacking_wf",
+  "fn_ref": {
+    "module": "__main__",
+    "function_name": "unpacking_wf",
+    "file_path": "tests/sdk/v2/schema/data/unpacking.py",
+    "line_number": 28,
+    "type": "MODULE_FUNCTION_REF"
+  },
+  "imports": {
+    "inline-import-1": {
+      "id": "inline-import-1",
+      "type": "INLINE_IMPORT"
+    }
+  },
+  "tasks": {
+    "task-two-outputs-7048e77dbb": {
+      "id": "task-two-outputs-7048e77dbb",
+      "fn_ref": {
+        "function_name": "two_outputs",
+        "encoded_function": [
+          "gANjZGlsbC5fZGlsbApfY3JlYXRlX2Z1bmN0aW9uCnEAKGNkaWxsLl9kaWxsCl9jcmVhdGVfY29k\nZQpxAShDAgACcQJLAksASwBLAksDS0NDEHwAZAEXAHwBZAIXAGYCUwBxA05LAUsCh3EEKVgBAAAA\nYXEFWAEAAABicQaGcQdYcAAAAC9Vc2Vycy9hbGV4L0NvZGUvemFwYXRhL2V2YW5nZWxpc20td29y\na2Zsb3dzL3ZlbmRvci9vcnF1ZXN0cmEtd29ya2Zsb3ctc2RrL3Rlc3RzL3Nkay92Mi9zY2hlbWEv\nZGF0YS91bnBhY2tpbmcucHlxCFgLAAAAdHdvX291dHB1dHNxCUsSQwIQAnEKKSl0cQtScQx9cQ1Y\nCAAAAF9fbmFtZV9fcQ5YCAAAAF9fbWFpbl9fcQ9zaAlOTnRxEFJxEX1xEihYFwAAAF9UYXNrRGVm\nX19zZGtfdGFza19ib2R5cRNoEVgGAAAAZm5fcmVmcRRjZGlsbC5fZGlsbApfY3JlYXRlX25hbWVk\ndHVwbGUKcRVYEQAAAElubGluZUZ1bmN0aW9uUmVmcRZYDQAAAGZ1bmN0aW9uX25hbWVxF1gCAAAA\nZm5xGIZxGVgYAAAAb3JxdWVzdHJhLnNkay5fYmFzZS5fZHNscRqHcRtScRxoCWgRhnEdgXEeWA0A\nAABzb3VyY2VfaW1wb3J0cR9oFVgMAAAASW5saW5lSW1wb3J0cSApaBqHcSFScSIpgXEjWA8AAABv\ndXRwdXRfbWV0YWRhdGFxJGgVWBIAAABUYXNrT3V0cHV0TWV0YWRhdGFxJVgQAAAAaXNfc3Vic2Ny\naXB0YWJsZXEmWAkAAABuX291dHB1dHNxJ4ZxKGgah3EpUnEqiEsChnErgXEsWAoAAABwYXJhbWV0\nZXJzcS1jY29sbGVjdGlvbnMKT3JkZXJlZERpY3QKcS4pUnEvKGgFaBVYDQAAAFRhc2tQYXJhbWV0\nZXJxMFgEAAAAbmFtZXExWAQAAABraW5kcTKGcTNoGodxNFJxNWgFY29ycXVlc3RyYS5zZGsuX2Jh\nc2UuX2RzbApQYXJhbWV0ZXJLaW5kCnE2WBUAAABQT1NJVElPTkFMX09SX0tFWVdPUkRxN4VxOFJx\nOYZxOoFxO2gGaDVoBmg5hnE8gXE9dVgSAAAAZGVwZW5kZW5jeV9pbXBvcnRzcT5OWAkAAAByZXNv\ndXJjZXNxP2gVKFgJAAAAUmVzb3VyY2VzcUAoWAMAAABjcHVxQVgGAAAAbWVtb3J5cUJYBAAAAGRp\nc2txQ1gDAAAAZ3B1cUR0cUVoGl1xRihOTk5OZXRxR1JxSChOTk5OdHFJgXFKWAwAAABjdXN0b21f\naW1hZ2VxS1goAAAAemFwYXRhY29tcHV0aW5nL29ycXVlc3RyYS1kZWZhdWx0OnYwLjAuMHFMWAsA\nAABjdXN0b21fbmFtZXFNTnV9cU5YDwAAAF9fYW5ub3RhdGlvbnNfX3FPfXFQc4ZxUWIu\n"
+        ],
+        "type": "INLINE_FUNCTION_REF"
+      },
+      "parameters": [
+        {
+          "name": "a",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        },
+        {
+          "name": "b",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ],
+      "source_import_id": "inline-import-1",
+      "dependency_import_ids": null,
+      "resources": null,
+      "custom_image": "zapatacomputing/orquestra-default:v0.0.0"
+    },
+    "task-single-output-5e628fa21b": {
+      "id": "task-single-output-5e628fa21b",
+      "fn_ref": {
+        "function_name": "single_output",
+        "encoded_function": [
+          "gANjZGlsbC5fZGlsbApfY3JlYXRlX2Z1bmN0aW9uCnEAKGNkaWxsLl9kaWxsCl9jcmVhdGVfY29k\nZQpxAShDAgACcQJLAUsASwBLAUsCS0NDCHwAZAEXAFMAcQNOSwOGcQQpWAEAAABhcQWFcQZYcAAA\nAC9Vc2Vycy9hbGV4L0NvZGUvemFwYXRhL2V2YW5nZWxpc20td29ya2Zsb3dzL3ZlbmRvci9vcnF1\nZXN0cmEtd29ya2Zsb3ctc2RrL3Rlc3RzL3Nkay92Mi9zY2hlbWEvZGF0YS91bnBhY2tpbmcucHlx\nB1gNAAAAc2luZ2xlX291dHB1dHEISxdDAggCcQkpKXRxClJxC31xDFgIAAAAX19uYW1lX19xDVgI\nAAAAX19tYWluX19xDnNoCE5OdHEPUnEQfXERKFgXAAAAX1Rhc2tEZWZfX3Nka190YXNrX2JvZHlx\nEmgQWAYAAABmbl9yZWZxE2NkaWxsLl9kaWxsCl9jcmVhdGVfbmFtZWR0dXBsZQpxFFgRAAAASW5s\naW5lRnVuY3Rpb25SZWZxFVgNAAAAZnVuY3Rpb25fbmFtZXEWWAIAAABmbnEXhnEYWBgAAABvcnF1\nZXN0cmEuc2RrLl9iYXNlLl9kc2xxGYdxGlJxG2gIaBCGcRyBcR1YDQAAAHNvdXJjZV9pbXBvcnRx\nHmgUWAwAAABJbmxpbmVJbXBvcnRxHyloGYdxIFJxISmBcSJYDwAAAG91dHB1dF9tZXRhZGF0YXEj\naBRYEgAAAFRhc2tPdXRwdXRNZXRhZGF0YXEkWBAAAABpc19zdWJzY3JpcHRhYmxlcSVYCQAAAG5f\nb3V0cHV0c3EmhnEnaBmHcShScSmJSwGGcSqBcStYCgAAAHBhcmFtZXRlcnNxLGNjb2xsZWN0aW9u\ncwpPcmRlcmVkRGljdApxLSlScS5oBWgUWA0AAABUYXNrUGFyYW1ldGVycS9YBAAAAG5hbWVxMFgE\nAAAAa2luZHExhnEyaBmHcTNScTRoBWNvcnF1ZXN0cmEuc2RrLl9iYXNlLl9kc2wKUGFyYW1ldGVy\nS2luZApxNVgVAAAAUE9TSVRJT05BTF9PUl9LRVlXT1JEcTaFcTdScTiGcTmBcTpzWBIAAABkZXBl\nbmRlbmN5X2ltcG9ydHNxO05YCQAAAHJlc291cmNlc3E8aBQoWAkAAABSZXNvdXJjZXNxPShYAwAA\nAGNwdXE+WAYAAABtZW1vcnlxP1gEAAAAZGlza3FAWAMAAABncHVxQXRxQmgZXXFDKE5OTk5ldHFE\nUnFFKE5OTk50cUaBcUdYDAAAAGN1c3RvbV9pbWFnZXFIWCgAAAB6YXBhdGFjb21wdXRpbmcvb3Jx\ndWVzdHJhLWRlZmF1bHQ6djAuMC4wcUlYCwAAAGN1c3RvbV9uYW1lcUpOdX1xS1gPAAAAX19hbm5v\ndGF0aW9uc19fcUx9cU1zhnFOYi4=\n"
+        ],
+        "type": "INLINE_FUNCTION_REF"
+      },
+      "parameters": [
+        {
+          "name": "a",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ],
+      "source_import_id": "inline-import-1",
+      "dependency_import_ids": null,
+      "resources": null,
+      "custom_image": "zapatacomputing/orquestra-default:v0.0.0"
+    }
+  },
+  "artifact_nodes": {
+    "artifact-0-two-outputs": {
+      "id": "artifact-0-two-outputs",
+      "custom_name": null,
+      "serialization_format": "AUTO",
+      "artifact_index": 0
+    },
+    "artifact-1-single-output": {
+      "id": "artifact-1-single-output",
+      "custom_name": null,
+      "serialization_format": "AUTO",
+      "artifact_index": null
+    },
+    "artifact-5-two-outputs": {
+      "id": "artifact-5-two-outputs",
+      "custom_name": null,
+      "serialization_format": "AUTO",
+      "artifact_index": 1
+    },
+    "artifact-4-two-outputs": {
+      "id": "artifact-4-two-outputs",
+      "custom_name": null,
+      "serialization_format": "AUTO",
+      "artifact_index": null
+    }
+  },
+  "constant_nodes": {
+    "constant-0": {
+      "id": "constant-0",
+      "value": "12",
+      "serialization_format": "JSON",
+      "value_preview": "12"
+    },
+    "constant-1": {
+      "id": "constant-1",
+      "value": "11",
+      "serialization_format": "JSON",
+      "value_preview": "11"
+    }
+  },
+  "secret_nodes": {},
+  "task_invocations": {
+    "invocation-0-task-two-outputs": {
+      "id": "invocation-0-task-two-outputs",
+      "task_id": "task-two-outputs-7048e77dbb",
+      "args_ids": [
+        "artifact-4-two-outputs",
+        "artifact-1-single-output"
+      ],
+      "kwargs_ids": {},
+      "output_ids": [
+        "artifact-0-two-outputs"
+      ],
+      "resources": null,
+      "custom_image": "zapatacomputing/orquestra-default:v0.0.0"
+    },
+    "invocation-1-task-single-output": {
+      "id": "invocation-1-task-single-output",
+      "task_id": "task-single-output-5e628fa21b",
+      "args_ids": [
+        "artifact-5-two-outputs"
+      ],
+      "kwargs_ids": {},
+      "output_ids": [
+        "artifact-1-single-output"
+      ],
+      "resources": null,
+      "custom_image": "zapatacomputing/orquestra-default:v0.0.0"
+    },
+    "invocation-2-task-two-outputs": {
+      "id": "invocation-2-task-two-outputs",
+      "task_id": "task-two-outputs-7048e77dbb",
+      "args_ids": [
+        "constant-1",
+        "constant-0"
+      ],
+      "kwargs_ids": {},
+      "output_ids": [
+        "artifact-4-two-outputs",
+        "artifact-5-two-outputs"
+      ],
+      "resources": null,
+      "custom_image": "zapatacomputing/orquestra-default:v0.0.0"
+    }
+  },
+  "output_ids": [
+    "artifact-5-two-outputs",
+    "artifact-4-two-outputs",
+    "artifact-0-two-outputs"
+  ],
+  "data_aggregation": null
+}
