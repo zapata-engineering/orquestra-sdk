@@ -23,6 +23,7 @@ def my_wf():
 * Pickled workflow/task results should no longer cause workflows to fail inside the SDK machinery. Note: when passing a Python object between your tasks, you **must** ensure the Python dependencies are installed.
 
 💅 *Improvements*
+* `VersionMismatch` warning will be presented if we detect accessing a workflow def IR generated with another SDK version.
 
 🥷 *Internal*
 * `TaskOutputMetadata` model was added to the workflow def IR schema.
