@@ -2,11 +2,14 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 import typing as t
+import warnings
 from datetime import datetime, timedelta, timezone
 
+from orquestra.sdk import exceptions
 from orquestra.sdk._base import abc
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.workflow_run import (
+    ProjectRef,
     RunStatus,
     State,
     TaskRun,
@@ -16,7 +19,6 @@ from orquestra.sdk.schema.workflow_run import (
 )
 
 from .. import secrets
-from ..exceptions import WorkflowRunNotFoundError
 from ._graphs import iter_invocations_topologically
 from .dispatch import locate_fn_ref
 from .serde import deserialize_constant
@@ -86,7 +88,17 @@ class InProcessRuntime(abc.RuntimeInterface):
     def _gen_next_run_id(self, wf_def: ir.WorkflowDef):
         return f"{wf_def.name}-{len(self._output_store) + 1}"
 
-    def create_workflow_run(self, workflow_def: ir.WorkflowDef) -> WfRunId:
+    def create_workflow_run(
+        self, workflow_def: ir.WorkflowDef, project: t.Optional[ProjectRef]
+    ) -> WfRunId:
+
+        if project:
+            warnings.warn(
+                "in_process runtime doesn't support project-scoped workflows. "
+                "Project and workspace IDs will be ignored.",
+                category=exceptions.UnsupportedRuntimeFeature,
+            )
+
         run_id = self._gen_next_run_id(workflow_def)
 
         self._start_time_store[run_id] = datetime.now(timezone.utc)
@@ -165,7 +177,7 @@ class InProcessRuntime(abc.RuntimeInterface):
 
     def get_workflow_run_status(self, workflow_run_id: WfRunId) -> WorkflowRun:
         if workflow_run_id not in self._output_store:
-            raise WorkflowRunNotFoundError(
+            raise exceptions.WorkflowRunNotFoundError(
                 f"Workflow with id {workflow_run_id} not found"
             )
         workflow_def = self._workflow_def_store[workflow_run_id]
@@ -197,7 +209,7 @@ class InProcessRuntime(abc.RuntimeInterface):
             pass
         else:
             # We didn't see this workflow run.
-            raise WorkflowRunNotFoundError(
+            raise exceptions.WorkflowRunNotFoundError(
                 f"Workflow with id {workflow_run_id} not found"
             )
 

@@ -101,6 +101,16 @@ class ListWorkflowDefsRequest(pydantic.BaseModel):
     pageToken: Optional[str]
 
 
+class CreateWorkflowDefsRequest(pydantic.BaseModel):
+    """
+    Implements:
+        https://github.com/zapatacomputing/workflow-driver/blob/dc8a2a37d92324f099afefc048f6486a5061850f/openapi/src/resources/workflow-definitions.yaml#L39
+    """
+
+    workspaceId: Optional[str]
+    projectId: Optional[str]
+
+
 ListWorkflowDefsResponse = List[GetWorkflowDefResponse]
 
 # --- Workflow Runs ---

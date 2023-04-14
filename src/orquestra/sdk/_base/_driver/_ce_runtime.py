@@ -15,6 +15,7 @@ from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import (
+    ProjectRef,
     State,
     TaskRunId,
     WorkflowRun,
@@ -88,15 +89,15 @@ class CERuntime(RuntimeInterface):
         return cls(config, verbose)
 
     def create_workflow_run(
-        self,
-        workflow_def: WorkflowDef,
+        self, workflow_def: WorkflowDef, project: Optional[ProjectRef]
     ) -> WorkflowRunId:
         """
         Schedules a workflow definition for execution
 
         Args:
             workflow_def: the IR of the workflow to run
-
+            project: Project dir (workspace and project ID) on which the workflow
+            will be run
         Raises:
             WorkflowSyntaxError: when the workflow definition was rejected by the remote
                 cluster
@@ -119,7 +120,8 @@ class CERuntime(RuntimeInterface):
             resources = _get_max_resources(workflow_def)
 
         try:
-            workflow_def_id = self._client.create_workflow_def(workflow_def)
+            workflow_def_id = self._client.create_workflow_def(workflow_def, project)
+
             workflow_run_id = self._client.create_workflow_run(
                 workflow_def_id, resources
             )

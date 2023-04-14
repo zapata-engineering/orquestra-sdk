@@ -18,7 +18,7 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
 from orquestra.sdk._base._testing._example_wfs import wf_with_secrets
 from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
+from orquestra.sdk.schema.workflow_run import ProjectRef, State, WorkflowRunId
 from orquestra.sdk.secrets import _client, _models
 
 from .data.complex_serialization.workflow_defs import (
@@ -72,7 +72,7 @@ def test_secret_inside_ir(
     get_secret.return_value = mocked_secret
     monkeypatch.setattr(_client.SecretsClient, "get_secret", get_secret)
 
-    run_id = runtime.create_workflow_run(wf_with_secrets().model)
+    run_id = runtime.create_workflow_run(wf_with_secrets().model, None)
     result = runtime.get_workflow_run_outputs_non_blocking(run_id)
 
     assert result == "Mocked"
@@ -86,7 +86,7 @@ class TestQueriesAfterRunning:
     @staticmethod
     @pytest.fixture
     def run_id(runtime: InProcessRuntime, wf_def) -> WorkflowRunId:
-        run_id = runtime.create_workflow_run(wf_def)
+        run_id = runtime.create_workflow_run(wf_def, None)
         return run_id
 
     class TestGetWorkflowRunOutputs:
@@ -99,8 +99,8 @@ class TestQueriesAfterRunning:
             wf_def1 = wf_pass_tuple().model
             wf_def2 = wf_pass_callables_from_task().model
 
-            run_id1 = runtime.create_workflow_run(wf_def1)
-            run_id2 = runtime.create_workflow_run(wf_def2)
+            run_id1 = runtime.create_workflow_run(wf_def1, None)
+            run_id2 = runtime.create_workflow_run(wf_def2, None)
 
             outputs1 = runtime.get_workflow_run_outputs_non_blocking(run_id1)
             outputs2 = runtime.get_workflow_run_outputs_non_blocking(run_id2)
@@ -124,7 +124,7 @@ class TestQueriesAfterRunning:
             # See ticket: https://zapatacomputing.atlassian.net/browse/ORQSDK-695
             @pytest.mark.xfail(reason="Some artifact IDs are missing for TaskInvoation")
             def test_some_unused(runtime, wf_def_unused_outputs):
-                run_id = runtime.create_workflow_run(wf_def_unused_outputs)
+                run_id = runtime.create_workflow_run(wf_def_unused_outputs, None)
 
                 assert runtime.get_available_outputs(run_id) == {
                     "invocation-0-task-two-outputs": (6, 4)
@@ -132,7 +132,7 @@ class TestQueriesAfterRunning:
 
             @staticmethod
             def test_all_used(runtime, wf_def_all_used):
-                run_id = runtime.create_workflow_run(wf_def_all_used)
+                run_id = runtime.create_workflow_run(wf_def_all_used, None)
 
                 assert runtime.get_available_outputs(run_id) == {
                     "invocation-0-task-two-outputs": (6, 4)
@@ -143,7 +143,7 @@ class TestStop:
     @staticmethod
     def test_existing_run(runtime, wf_def):
         # Given
-        run_id = runtime.create_workflow_run(wf_def)
+        run_id = runtime.create_workflow_run(wf_def, None)
 
         # When
         runtime.stop_workflow_run(run_id)
@@ -166,8 +166,8 @@ class TestListWorkflowRuns:
     @staticmethod
     def test_happy_path(runtime, wf_def):
         # Given
-        _ = runtime.create_workflow_run(wf_def)
-        _ = runtime.create_workflow_run(wf_def)
+        _ = runtime.create_workflow_run(wf_def, None)
+        _ = runtime.create_workflow_run(wf_def, None)
 
         # When
         wf_runs = runtime.list_workflow_runs()
@@ -178,8 +178,8 @@ class TestListWorkflowRuns:
     @staticmethod
     def test_limit(runtime, wf_def):
         # Given
-        _ = runtime.create_workflow_run(wf_def)
-        _ = runtime.create_workflow_run(wf_def)
+        _ = runtime.create_workflow_run(wf_def, None)
+        _ = runtime.create_workflow_run(wf_def, None)
 
         # When
         wf_runs = runtime.list_workflow_runs(limit=1)
@@ -190,7 +190,7 @@ class TestListWorkflowRuns:
     @staticmethod
     def test_state_running(runtime, wf_def):
         # Given
-        _ = runtime.create_workflow_run(wf_def)
+        _ = runtime.create_workflow_run(wf_def, None)
 
         # When
         wf_runs = runtime.list_workflow_runs(state=State.RUNNING)
@@ -202,7 +202,7 @@ class TestListWorkflowRuns:
     @staticmethod
     def test_state_succeeded(runtime, wf_def):
         # Given
-        _ = runtime.create_workflow_run(wf_def)
+        _ = runtime.create_workflow_run(wf_def, None)
 
         # When
         wf_runs = runtime.list_workflow_runs(state=State.SUCCEEDED)
@@ -214,8 +214,8 @@ class TestListWorkflowRuns:
     @staticmethod
     def test_max_age(runtime, wf_def):
         # Given
-        run_id = runtime.create_workflow_run(wf_def)
-        _ = runtime.create_workflow_run(wf_def)
+        run_id = runtime.create_workflow_run(wf_def, None)
+        _ = runtime.create_workflow_run(wf_def, None)
         runtime._start_time_store[run_id] = datetime.now(timezone.utc) - timedelta(
             days=1
         )
@@ -239,3 +239,11 @@ class TestUnsupportedMethods:
     def test_raises(runtime, method):
         with pytest.raises(NotImplementedError):
             method(runtime)
+
+
+def test_project_raises_warning(runtime, wf_def):
+    # Given
+    with pytest.warns(expected_warning=exceptions.UnsupportedRuntimeFeature):
+        _ = runtime.create_workflow_run(
+            wf_def, project=ProjectRef(workspace_id="", project_id="")
+        )

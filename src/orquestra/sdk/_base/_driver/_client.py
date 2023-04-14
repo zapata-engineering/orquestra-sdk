@@ -22,7 +22,11 @@ from requests import codes
 from orquestra.sdk._ray._ray_logs import WFLog
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import WorkflowResult
-from orquestra.sdk.schema.workflow_run import WorkflowRun, WorkflowRunMinimal
+from orquestra.sdk.schema.workflow_run import (
+    ProjectRef,
+    WorkflowRun,
+    WorkflowRunMinimal,
+)
 
 from . import _exceptions, _models
 
@@ -143,11 +147,17 @@ class DriverClient:
 
         return response
 
-    def _post(self, endpoint: str, body_params: Optional[Mapping]) -> requests.Response:
+    def _post(
+        self,
+        endpoint: str,
+        body_params: Optional[Mapping],
+        query_params: Optional[Mapping] = None,
+    ) -> requests.Response:
         """Helper method for POST requests"""
         response = self._session.post(
             urljoin(self._base_uri, endpoint),
             json=body_params,
+            params=query_params,
         )
         return response
 
@@ -161,7 +171,11 @@ class DriverClient:
 
     # ---- Worklow Defs ----
 
-    def create_workflow_def(self, workflow_def: WorkflowDef) -> _models.WorkflowDefID:
+    def create_workflow_def(
+        self,
+        workflow_def: WorkflowDef,
+        project: Optional[ProjectRef],
+    ) -> _models.WorkflowDefID:
         """
         Stores a workflow definition for future submission
 
@@ -174,9 +188,18 @@ class DriverClient:
         Returns:
             the WorkflowDefID associated with the stored definition
         """
+        query_params = (
+            _models.CreateWorkflowDefsRequest(
+                workspaceId=project.workspace_id,
+                projectId=project.project_id,
+            ).dict()
+            if project
+            else None
+        )
         resp = self._post(
             API_ACTIONS["create_workflow_def"],
             body_params=workflow_def.dict(),
+            query_params=query_params,
         )
 
         if resp.status_code == codes.BAD_REQUEST:
