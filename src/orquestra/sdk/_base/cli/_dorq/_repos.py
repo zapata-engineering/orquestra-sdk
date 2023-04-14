@@ -23,6 +23,7 @@ from orquestra.sdk._base import _config, _db, loader
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe import _client
 from orquestra.sdk._base.abc import ArtifactValue
+from orquestra.sdk.schema import _compat
 from orquestra.sdk.schema.configs import ConfigName, RuntimeName
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.workflow_run import (
@@ -245,7 +246,7 @@ class WorkflowRunRepo:
         invocation = wf_def.task_invocations[task_inv_id]
         task_def = wf_def.tasks[invocation.task_id]
 
-        if task_def.output_metadata.is_subscriptable:
+        if _compat.result_is_packed(task_def=task_def):
             # We expect ``task_outputs`` to be an iterable already.
             outputs_tuple = tuple(task_outputs)
         else:
