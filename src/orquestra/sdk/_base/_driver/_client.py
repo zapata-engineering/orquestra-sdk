@@ -115,7 +115,7 @@ class DriverClient:
     """
 
     def __init__(self, base_uri: str, session: requests.Session):
-        self._base_uri = "http://workflow-driver.workflow-driver"#base_uri
+        self._base_uri = base_uri
         self._session = session
 
     @classmethod

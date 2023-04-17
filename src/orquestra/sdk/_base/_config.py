@@ -6,6 +6,7 @@ This is the internal module for saving and loading runtime configurations.
 See docs/runtime_configurations.rst for more information.
 """
 import os
+import pathlib
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Tuple, Union
 from urllib.parse import urlparse
@@ -59,11 +60,13 @@ SAME_CLUSTER_RUNTIME_CONFIGURATION = RuntimeConfiguration(
     runtime_name=RuntimeName.CE_REMOTE,
     runtime_options={}
 )
+SAME_CLUSTER_URL = "http://workflow-driver.workflow-driver"
 
 SPECIAL_CONFIG_NAME_DICT = {
     IN_PROCESS_CONFIG_NAME: IN_PROCESS_RUNTIME_CONFIGURATION,
     BUILT_IN_CONFIG_NAME: LOCAL_RUNTIME_CONFIGURATION,
     RAY_CONFIG_NAME_ALIAS: LOCAL_RUNTIME_CONFIGURATION,
+    SAME_CLUSTER_CONFIG_NAME: SAME_CLUSTER_RUNTIME_CONFIGURATION
 }
 # Unique config list to prompt to the users. Separate from SPECIAL_CONFIG_NAME_DICT
 # as SPECIAL_CONFIG_NAME_DICT might have duplicate names which could be confusing for
@@ -193,11 +196,34 @@ def _resolve_new_config_file(
     return new_config_file
 
 
+def _handle_same_cluster_config_case(config_name) -> RuntimeConfiguration:
+    if PASSPORT_FILE_ENV not in os.environ:
+        raise NotImplementedError(
+            f"Config name {config_name} is reserved to be used from within"
+            f"a cluster only. Please login to portal to use it"
+        )
+    passport_file = pathlib.Path(os.environ[PASSPORT_FILE_ENV])
+    if not passport_file.exists():
+        raise FileNotFoundError(
+            f"Environmental variable {PASSPORT_FILE_ENV} was set, but no file was found"
+            "under its value"
+        )
+
+    passport_token = Path(passport_file).read_text()
+    runtime_config = SPECIAL_CONFIG_NAME_DICT[config_name]
+    runtime_config.runtime_options = {"uri": SAME_CLUSTER_URL,
+                                      "token": passport_token,}
+    return runtime_config
+
+
 def _handle_config_name_special_cases(config_name: str) -> RuntimeConfiguration:
     # special cases: the built-in config ('local') and in process config have
     # hardcoded runtime options.
     if config_name in SPECIAL_CONFIG_NAME_DICT:
-        return SPECIAL_CONFIG_NAME_DICT[config_name]
+        if config_name == SAME_CLUSTER_CONFIG_NAME:
+            return _handle_same_cluster_config_case(config_name)
+        else:
+            return SPECIAL_CONFIG_NAME_DICT[config_name]
     else:
         raise NotImplementedError(
             f"Config name '{config_name}' is reserved, but we don't have a config "
