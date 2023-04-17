@@ -125,14 +125,16 @@ For example, you have a task that requires:
 In these examples, those tasks will not be scheduled by a local Ray instance due to the lack of resources.
 To workaround this problem, you should reduce the resources to match what is available. This can be done in the decorator:
 
-.. code-block:
+.. code-block::
+
     @sdk.task(resources=sdk.Resources(gpu="0"))
     def my_task():
         ...
 
 or when the task is invoked, with the ``.with_resources()`` method:
 
-.. code-block:
+.. code-block::
+
     # Usual request
     @sdk.task(resources=sdk.Resources(gpu="1"))
     def my_task():
