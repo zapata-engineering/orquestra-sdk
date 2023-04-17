@@ -27,7 +27,7 @@ Required hardware resources are configured on a per-task basis by setting the ``
 * ``disk``: disk space (bytes).
 * ``gpu``: whether access to a gpu unit is required (``1`` if a GPU is required, ``0`` otherwise).
 
-Amounts of cpu and memory resources are specified by a string comprising a floating point value, and, optionally, a modifier to the base unit ('byte' in the case of ``memory`` and ``disk`` requests, 'cores' in the case of ``cpu`` requests). The modifier can be a SI (metric), or IEC (binary) multiplier as detailed in the table below. So ``disk="10k"`` will be interpreted as '10 kilobytes', while ``cpu="10k"`` would request 10^7 cores.
+Amounts of CPU and memory resources are specified by a string comprising a floating point value, and, optionally, a modifier to the base unit ('byte' in the case of ``memory`` and ``disk`` requests, 'cores' in the case of ``cpu`` requests). The modifier can be a SI (metric), or IEC (binary) multiplier as detailed in the table below. So ``disk="10k"`` will be interpreted as '10 kilobytes', while ``cpu="10k"`` would request 10^7 cores.
 
 .. table:: Unit multipliers
     :widths: auto
@@ -53,7 +53,7 @@ Amounts of cpu and memory resources are specified by a string comprising a float
     |         | exa   | E      | 10^18 |
     +---------+-------+--------+-------+
 
-Convention is to use binary prefixes for memory resource requests (``disk`` and ``memory``), and decimal prefixes to specify the number of cores. The task resource request example above specifies a task that requires 100 milicores (or 0.1 cores), 1 gibibyte of RAM (2^30 bytes), 10 gibibytes of disk space(1.25*2^33 bytes), and access to a GPU.
+Convention is to use binary prefixes for memory resource requests (``disk`` and ``memory``), and decimal prefixes to specify the number of cores. The task resource request example above specifies a task that requires 100 millicores (or 0.1 cores), 1 gibibyte of RAM (2^30 bytes), 10 gibibytes of disk space(1.25*2^33 bytes), and access to a GPU.
 
 .. note::
 
@@ -122,12 +122,12 @@ This might lead to issues when running tasks locally if they require resources t
 
 For example, you have a task that requires:
 
-1. a GPU but during development you run the workflow on your laptop without a GPU.
-2. 32GB of memory, but your Studio notebook only has 8GB available.
+1. A GPU but during development you run the workflow on your laptop without a GPU.
+2. 32 GB of memory, but your Studio notebook only has 8 GB available.
 3. 16 CPU cores but your desktop only has 8 available.
 
 In these examples, those tasks will not be scheduled by a local Ray instance due to the lack of resources.
-To workaround this problem, you should reduce the resources to match what is available. This can be done in the decorator:
+To work around this problem, you should reduce the resources to match what is available. This can be done in the decorator:
 
 .. code-block::
 
