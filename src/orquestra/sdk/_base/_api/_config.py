@@ -323,7 +323,10 @@ class RuntimeConfig:
         Returns:
             list: list of configurations within the save file.
         """
-        return _config.read_config_names() + list(_config.UNIQUE_CONFIGS)
+        configs = _config.read_config_names() + list(_config.UNIQUE_CONFIGS)
+        if _config.is_self_config_available():
+            configs += _config.SAME_CLUSTER_CONFIG_NAME
+        return configs
 
     @classmethod
     def load(

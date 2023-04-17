@@ -22,7 +22,7 @@ from orquestra.sdk.schema.configs import (
     RuntimeName,
 )
 
-from ._env import CONFIG_PATH_ENV
+from ._env import CONFIG_PATH_ENV, PASSPORT_FILE_ENV
 
 # Why JSON?
 #  The Python TOML package is unmaintained as of 2022-02-18.
@@ -35,6 +35,7 @@ LOCK_FILE_NAME = "config.json.lock"
 BUILT_IN_CONFIG_NAME = "local"
 RAY_CONFIG_NAME_ALIAS = "ray"
 IN_PROCESS_CONFIG_NAME = "in_process"
+SAME_CLUSTER_CONFIG_NAME = "self"
 
 LOCAL_RUNTIME_CONFIGURATION = RuntimeConfiguration(
     config_name=BUILT_IN_CONFIG_NAME,
@@ -51,6 +52,12 @@ IN_PROCESS_RUNTIME_CONFIGURATION = RuntimeConfiguration(
     config_name=IN_PROCESS_CONFIG_NAME,
     runtime_name=RuntimeName.IN_PROCESS,
     runtime_options={},
+)
+# this runtime config is not ready-to-be-used without runtime options
+SAME_CLUSTER_RUNTIME_CONFIGURATION = RuntimeConfiguration(
+    config_name=SAME_CLUSTER_CONFIG_NAME,
+    runtime_name=RuntimeName.CE_REMOTE,
+    runtime_options={}
 )
 
 SPECIAL_CONFIG_NAME_DICT = {
@@ -109,6 +116,10 @@ def _get_config_file_path() -> Path:
         _config_file_path = Path.home() / ".orquestra" / CONFIG_FILE_NAME
     _ensure_directory(_config_file_path.parent)
     return _config_file_path
+
+
+def is_self_config_available() -> bool:
+    return PASSPORT_FILE_ENV in os.environ
 
 
 def _get_config_directory() -> Path:
