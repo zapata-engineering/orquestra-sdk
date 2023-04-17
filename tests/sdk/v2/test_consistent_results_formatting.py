@@ -365,9 +365,11 @@ class TestCLI:
             capture_output=True,
         )
 
-        run_id_ray = re.match(
+        m = re.match(
             r"Workflow submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
-        ).group("run_id")
+        )
+        assert m is not None
+        run_id_ray = m.group("run_id")
         assert "wf_id_sentinel" in run_qe.stdout.decode()
 
         # WHEN
@@ -431,9 +433,11 @@ class TestCLI:
             capture_output=True,
         )
 
-        run_id_ray = re.match(
+        m = re.match(
             r"Workflow submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
-        ).group("run_id")
+        )
+        assert m is not None
+        run_id_ray = m.group("run_id")
         assert qe_id in run_qe.stdout.decode()
 
         # WHEN
@@ -519,9 +523,11 @@ class TestCLIDownloadDir:
             run_qe.returncode == 0
         ), f"STDOUT: {run_qe.stdout.decode()},\n\nSTDOERR: {run_qe.stderr.decode()}"
 
-        run_id_ray = re.match(
+        m = re.match(
             r"Workflow submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
-        ).group("run_id")
+        )
+        assert m is not None
+        run_id_ray = m.group("run_id")
         assert run_id_qe in run_qe.stdout.decode()
 
         # WHEN
@@ -599,9 +605,11 @@ class TestCLIDownloadDir:
             capture_output=True,
         )
 
-        run_id_ray = re.match(
+        m = re.match(
             r"Workflow submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
-        ).group("run_id")
+        )
+        assert m is not None
+        run_id_ray = m.group("run_id")
         assert run_id_qe in run_qe.stdout.decode()
 
         # WHEN
