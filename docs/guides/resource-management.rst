@@ -1,9 +1,10 @@
 Resource Management
-=======================
+===================
 
 Workflows submitted to run on Compute Engine and Local Ray can specify the computational resources they require, enabling precise management of resources and costs.
 
 .. note::
+
     Resource management is supported only when executing on Compute Engine and Local Ray runtimes. Tasks and workflows defined with these parameters may still be executed on other runtimes, however the resource specification will be ignored.
 
 Setting Task Resources
@@ -12,7 +13,7 @@ Setting Task Resources
 Required hardware resources are configured on a per-task basis by setting the ``resources`` field of the task decorator:
 
 .. code-block::
-   :caption: task resource request example
+    :caption: Task resource request example
 
     @sdk.task(
         resources=sdk.Resources(cpu="100m", memory="1Gi", disk="10Gi", gpu="1")
@@ -28,7 +29,7 @@ Required hardware resources are configured on a per-task basis by setting the ``
 
 Amounts of cpu and memory resources are specified by a string comprising a floating point value, and, optionally, a modifier to the base unit ('byte' in the case of ``memory`` and ``disk`` requests, 'cores' in the case of ``cpu`` requests). The modifier can be a SI (metric), or IEC (binary) multiplier as detailed in the table below. So ``disk="10k"`` will be interpreted as '10 kilobytes', while ``cpu="10k"`` would request 10^7 cores.
 
-.. table:: unit multipliers
+.. table:: Unit multipliers
     :widths: auto
 
     +---------+-------+--------+-------+
@@ -54,7 +55,8 @@ Amounts of cpu and memory resources are specified by a string comprising a float
 
 Convention is to use binary prefixes for memory resource requests (``disk`` and ``memory``), and decimal prefixes to specify the number of cores. The task resource request example above specifies a task that requires 100 milicores (or 0.1 cores), 1 gibibyte of RAM (2^30 bytes), 10 gibibytes of disk space(1.25*2^33 bytes), and access to a GPU.
 
-.. note:: mixing unit prefixes
+.. note::
+
     Binary and decimal units can be used interchangeably, however this can occasionally cause confusion, and care must be taken when specifying these parameters. For example, a memory request of ``100m`` specifies not 100 megabytes, but 100 millibytes, or 0.1 bytes.
 
 Setting Workflow Resources
@@ -68,7 +70,7 @@ Resources can also be configured at the workflow definition level using the same
 * ``nodes``: the number of nodes requested.
 
 .. code-block::
-    :caption: workflow resource request example
+    :caption: Workflow resource request example
 
     @sdk.workflow(
         resources=sdk.Resources(cpu="100m", memory="1Gi", disk="10Gi", gpu="1", nodes=5)
@@ -77,7 +79,8 @@ Resources can also be configured at the workflow definition level using the same
         ...
 
 
-.. note:: nodes
+.. note::
+
     Note that unlike the other parameters, ``nodes`` must be an integer rather than a string.
 
 Currently, the workflow resource request is only utilised by Compute Engine.
@@ -96,12 +99,13 @@ Due to the way Ray's RLLib works, a deadlock can be created on Compute Engine if
 In these cases, additional resources should be specified in the workflow decorator.
 
 .. code-block::
-    :caption: Example: override workflow resources.
-    @sdk.task(resources=...)                    # task resources requested.
+    :caption: Example: override workflow resources
+
+    @sdk.task(resources=...)                    # Task resources requested.
     def task():
         config = DQNConfig()
         ...
-        config.rollouts(num_rollout_workers=2)  # additional actors do not have
+        config.rollouts(num_rollout_workers=2)  # Additional actors do not have
         ...                                     # access to task resources.
         return results
 
