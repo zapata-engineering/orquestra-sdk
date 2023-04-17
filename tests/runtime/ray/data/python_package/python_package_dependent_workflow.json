@@ -12,13 +12,15 @@
       "id": "inline-import-1",
       "type": "INLINE_IMPORT"
     },
-    "python-import-e0459ec73a": {
-      "id": "python-import-e0459ec73a",
+    "python-import-4b988e935a": {
+      "id": "python-import-4b988e935a",
       "packages": [
         {
           "name": "polars",
           "extras": [],
-          "version_constraints": [],
+          "version_constraints": [
+            "==0.17.3"
+          ],
           "environment_markers": ""
         }
       ],
@@ -27,12 +29,12 @@
     }
   },
   "tasks": {
-    "task-my-fn-d3914c5e63": {
-      "id": "task-my-fn-d3914c5e63",
+    "task-my-fn-55d017d1e7": {
+      "id": "task-my-fn-55d017d1e7",
       "fn_ref": {
         "function_name": "my_fn",
         "encoded_function": [
-          "gASVtAMAAAAAAACMF2Nsb3VkcGlja2xlLmNsb3VkcGlja2xllIwOX21ha2VfZnVuY3Rpb26Uk5Qo\naACMDV9idWlsdGluX3R5cGWUk5SMCENvZGVUeXBllIWUUpQoSwFLAEsASwFLAktDQwh8AKAAoQBT\nAJROhZSMBGl0ZW2UhZSMAmRmlIWUjARhLnB5lIwFbXlfZm6USwRDAgAFlCkpdJRSlH2UKIwLX19w\nYWNrYWdlX1+UTowIX19uYW1lX1+UjAhfX21haW5fX5SMCF9fZmlsZV9flGgOdU5OTnSUUpSMHGNs\nb3VkcGlja2xlLmNsb3VkcGlja2xlX2Zhc3SUjBJfZnVuY3Rpb25fc2V0c3RhdGWUk5RoGX2UKIwX\nX1Rhc2tEZWZfX3Nka190YXNrX2JvZHmUaBmMBmZuX3JlZpSMGG9ycXVlc3RyYS5zZGsuX2Jhc2Uu\nX2RzbJSMEUlubGluZUZ1bmN0aW9uUmVmlJOUaA9oGYaUgZSMDXNvdXJjZV9pbXBvcnSUaCCMDElu\nbGluZUltcG9ydJSTlCmBlIwPb3V0cHV0X21ldGFkYXRhlGggjBJUYXNrT3V0cHV0TWV0YWRhdGGU\nk5SJSwGGlIGUjApwYXJhbWV0ZXJzlIwLY29sbGVjdGlvbnOUjAtPcmRlcmVkRGljdJSTlClSlGgM\naCCMDVRhc2tQYXJhbWV0ZXKUk5RoDGggjA1QYXJhbWV0ZXJLaW5klJOUjBVQT1NJVElPTkFMX09S\nX0tFWVdPUkSUhZRSlIaUgZRzjBJkZXBlbmRlbmN5X2ltcG9ydHOUaCCMDVB5dGhvbkltcG9ydHOU\nk5QpgZR9lCiMDXVzZV9maWxlX3BhdGiUiYwIcGFja2FnZXOUjAZwb2xhcnOUhZR1YoWUjAlyZXNv\ndXJjZXOUaCCMCVJlc291cmNlc5STlChOTk5OdJSBlIwMY3VzdG9tX2ltYWdllIwoemFwYXRhY29t\ncHV0aW5nL29ycXVlc3RyYS1kZWZhdWx0OnYwLjAuMJSMC2N1c3RvbV9uYW1llE51fZQoaBVoD4wM\nX19xdWFsbmFtZV9flGgPjA9fX2Fubm90YXRpb25zX1+UfZSMDl9fa3dkZWZhdWx0c19flE6MDF9f\nZGVmYXVsdHNfX5ROjApfX21vZHVsZV9flGgWjAdfX2RvY19flE6MC19fY2xvc3VyZV9flE6MF19j\nbG91ZHBpY2tsZV9zdWJtb2R1bGVzlF2UjAtfX2dsb2JhbHNfX5R9lHWGlIZSMC4=\n"
+          "gASVQgQAAAAAAACMF2Nsb3VkcGlja2xlLmNsb3VkcGlja2xllIwOX21ha2VfZnVuY3Rpb26Uk5Qo\naACMDV9idWlsdGluX3R5cGWUk5SMCENvZGVUeXBllIWUUpQoSwFLAEsASwFLAktDQwh8AKAAoQBT\nAJROhZSMBGl0ZW2UhZSMAmRmlIWUjDp0ZXN0cy9ydW50aW1lL3JheS9kYXRhL3B5dGhvbl9wYWNr\nYWdlL29yaWdpbmFsX3dvcmtmbG93LnB5lIwFbXlfZm6USwZDAgAFlCkpdJRSlH2UKIwLX19wYWNr\nYWdlX1+UTowIX19uYW1lX1+UjAhfX21haW5fX5SMCF9fZmlsZV9flGgOdU5OTnSUUpSMHGNsb3Vk\ncGlja2xlLmNsb3VkcGlja2xlX2Zhc3SUjBJfZnVuY3Rpb25fc2V0c3RhdGWUk5RoGX2UKIwXX1Rh\nc2tEZWZfX3Nka190YXNrX2JvZHmUaBmMB19mbl9yZWaUjBhvcnF1ZXN0cmEuc2RrLl9iYXNlLl9k\nc2yUjBFJbmxpbmVGdW5jdGlvblJlZpSTlGgPaBmGlIGUjAhfZm5fbmFtZZRoD4wQX291dHB1dF9t\nZXRhZGF0YZRoIIwSVGFza091dHB1dE1ldGFkYXRhlJOUiUsBhpSBlIwLX3BhcmFtZXRlcnOUjAtj\nb2xsZWN0aW9uc5SMC09yZGVyZWREaWN0lJOUKVKUaAxoIIwNVGFza1BhcmFtZXRlcpSTlGgMaCCM\nDVBhcmFtZXRlcktpbmSUk5SMFVBPU0lUSU9OQUxfT1JfS0VZV09SRJSFlFKUhpSBlHOMCl9yZXNv\ndXJjZXOUaCCMCVJlc291cmNlc5STlChOTk5OTnSUgZSMDV9jdXN0b21faW1hZ2WUjCh6YXBhdGFj\nb21wdXRpbmcvb3JxdWVzdHJhLWRlZmF1bHQ6djAuMC4wlIwMX2N1c3RvbV9uYW1llE6ME19kZXBl\nbmRlbmN5X2ltcG9ydHOUaCCMDVB5dGhvbkltcG9ydHOUk5QpgZR9lCiMBV9maWxllE6MCV9wYWNr\nYWdlc5SMDnBvbGFycz09MC4xNy4zlIWUdWKFlIwfX3VzZV9kZWZhdWx0X2RlcGVuZGVuY3lfaW1w\nb3J0c5SJjA5fc291cmNlX2ltcG9ydJRoIIwMSW5saW5lSW1wb3J0lJOUKYGUjBpfdXNlX2RlZmF1\nbHRfc291cmNlX2ltcG9ydJSJdX2UKGgVaA+MDF9fcXVhbG5hbWVfX5RoD4wPX19hbm5vdGF0aW9u\nc19flH2UjA5fX2t3ZGVmYXVsdHNfX5ROjAxfX2RlZmF1bHRzX1+UTowKX19tb2R1bGVfX5RoFowH\nX19kb2NfX5ROjAtfX2Nsb3N1cmVfX5ROjBdfY2xvdWRwaWNrbGVfc3VibW9kdWxlc5RdlIwLX19n\nbG9iYWxzX1+UfZR1hpSGUjAu\n"
         ],
         "type": "INLINE_FUNCTION_REF"
       },
@@ -44,7 +46,7 @@
       ],
       "source_import_id": "inline-import-1",
       "dependency_import_ids": [
-        "python-import-e0459ec73a"
+        "python-import-4b988e935a"
       ],
       "resources": null,
       "custom_image": "zapatacomputing/orquestra-default:v0.0.0"
@@ -62,7 +64,7 @@
     "constant-0": {
       "id": "constant-0",
       "chunks": [
-        "gASVqAAAAAAAAACMFnBvbGFycy5kYXRhZnJhbWUuZnJhbWWUjAlEYXRhRnJhbWWUk5QpgZRdlIwU\ncG9sYXJzLnNlcmllcy5zZXJpZXOUjAZTZXJpZXOUk5QpgZRDUAMAAAAAAAAABAAAAAAAAABuYW1l\nAQAAAAAAAABhCAAAAAAAAABkYXRhdHlwZQgAAAAGAAAAAAAAAHZhbHVlcwEAAAAAAAAAARUAAAAA\nAAAAlGJhYi4=\n"
+        "gASVeAAAAAAAAACMFnBvbGFycy5kYXRhZnJhbWUuZnJhbWWUjAlEYXRhRnJhbWWUk5QpgZRdlIwU\ncG9sYXJzLnNlcmllcy5zZXJpZXOUjAZTZXJpZXOUk5QpgZRDIKNkbmFtZWFhaGRhdGF0eXBlZUlu\ndDY0ZnZhbHVlc4EVlGJhYi4=\n"
       ],
       "serialization_format": "ENCODED_PICKLE",
       "value_preview": "shape: (1, 1"
@@ -72,7 +74,7 @@
   "task_invocations": {
     "invocation-0-task-my-fn": {
       "id": "invocation-0-task-my-fn",
-      "task_id": "task-my-fn-d3914c5e63",
+      "task_id": "task-my-fn-55d017d1e7",
       "args_ids": [
         "constant-0"
       ],
@@ -90,7 +92,7 @@
   "data_aggregation": null,
   "metadata": {
     "sdk_version": {
-      "original": "0.45.2.dev11+gf708e3b",
+      "original": "0.45.2.dev18+ga73915e.d20230405",
       "major": 0,
       "minor": 45,
       "patch": 2,
@@ -103,5 +105,6 @@
       "patch": 12,
       "is_prerelease": false
     }
-  }
+  },
+  "resources": null
 }
