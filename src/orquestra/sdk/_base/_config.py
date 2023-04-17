@@ -58,7 +58,7 @@ IN_PROCESS_RUNTIME_CONFIGURATION = RuntimeConfiguration(
 SAME_CLUSTER_RUNTIME_CONFIGURATION = RuntimeConfiguration(
     config_name=SAME_CLUSTER_CONFIG_NAME,
     runtime_name=RuntimeName.CE_REMOTE,
-    runtime_options={}
+    runtime_options={},
 )
 SAME_CLUSTER_URL = "http://workflow-driver.workflow-driver"
 
@@ -66,7 +66,7 @@ SPECIAL_CONFIG_NAME_DICT = {
     IN_PROCESS_CONFIG_NAME: IN_PROCESS_RUNTIME_CONFIGURATION,
     BUILT_IN_CONFIG_NAME: LOCAL_RUNTIME_CONFIGURATION,
     RAY_CONFIG_NAME_ALIAS: LOCAL_RUNTIME_CONFIGURATION,
-    SAME_CLUSTER_CONFIG_NAME: SAME_CLUSTER_RUNTIME_CONFIGURATION
+    SAME_CLUSTER_CONFIG_NAME: SAME_CLUSTER_RUNTIME_CONFIGURATION,
 }
 # Unique config list to prompt to the users. Separate from SPECIAL_CONFIG_NAME_DICT
 # as SPECIAL_CONFIG_NAME_DICT might have duplicate names which could be confusing for
@@ -211,8 +211,10 @@ def _handle_same_cluster_config_case(config_name) -> RuntimeConfiguration:
 
     passport_token = Path(passport_file).read_text()
     runtime_config = SPECIAL_CONFIG_NAME_DICT[config_name]
-    runtime_config.runtime_options = {"uri": SAME_CLUSTER_URL,
-                                      "token": passport_token,}
+    runtime_config.runtime_options = {
+        "uri": SAME_CLUSTER_URL,
+        "token": passport_token,
+    }
     return runtime_config
 
 
