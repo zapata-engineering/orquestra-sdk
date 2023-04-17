@@ -14,13 +14,15 @@ import tempfile
 import typing as t
 from pathlib import Path
 from unittest import mock
-from unittest.mock import Mock
 
 import pytest
 import pytest_httpserver
 
 import orquestra.sdk as sdk
 from orquestra.sdk._base._testing import _connections
+from orquestra.sdk.schema.workflow_run import RunStatus
+
+from .driver import resp_mocks
 
 
 # region: workflow definition
@@ -91,13 +93,25 @@ def wf_return_multiple_packed_values():
 
 # endregion
 
-# region: HTTP mocking
+# region: QE mocking
 QE_MINIMAL_CURRENT_REPRESENTATION: t.Dict[str, t.Any] = {
     "status": {
         "phase": "Succeeded",
         "startedAt": "1989-12-13T09:03:49Z",
         "finishedAt": "1989-12-13T09:05:14Z",
-        "nodes": {},
+        "nodes": {
+            "foo": {
+                "id": "wf-id-sentinel",
+                "name": "bar",
+                "displayName": "foobar",
+                "type": "boo",
+                "templateName": "invocation-0-task-get-list",
+                "phase": "Succeeded",
+                "boundaryID": "far",
+                "startedAt": "1989-12-13T09:05:09Z",
+                "finishedAt": "1989-12-13T09:05:14Z",
+            }
+        },
     },
 }
 QE_STATUS_RESPONSE = {
@@ -178,22 +192,108 @@ def mock_config_env_var(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    from orquestra import sdk
-
-    monkeypatch.setenv("ORQ_CONFIG_PATH", str(tmp_path / "config.json"))
-    sdk.RuntimeConfig.qe(uri=f"http://127.0.0.1:{httpserver.port}", token="nice")
+    config_path = tmp_path / "config.json"
+    monkeypatch.setenv("ORQ_CONFIG_PATH", str(config_path))
+    with open(config_path, "x") as f:
+        f.write(
+            "{\n"
+            '  "version": "0.0.2",\n'
+            '  "configs": {\n'
+            '    "CE": {\n'
+            '    "config_name": "CE",\n'
+            '    "runtime_name": "CE_REMOTE",\n'
+            '    "runtime_options": {\n'
+            '      "token": "nice",\n'
+            f'      "uri": "http://127.0.0.1:{httpserver.port}"\n'
+            "  }\n"
+            "  },\n"
+            '    "QE": {\n'
+            '    "config_name": "QE",\n'
+            '    "runtime_name": "QE_REMOTE",\n'
+            '    "runtime_options": {\n'
+            '      "token": "nice",\n'
+            f'      "uri": "http://127.0.0.1:{httpserver.port}"\n'
+            "    }\n"
+            "  }\n"
+            "},\n"
+            '  "default_config_name": "local"\n'
+            "}\n"
+        )
 
 
 @pytest.fixture
 def mock_qe_run_single(httpserver: pytest_httpserver.HTTPServer) -> str:
-    wf_id: str = "wf_id_sentinel_single"
+    wf_id: str = "wf_id_sentinel_qe_single"
+
     httpserver.expect_request("/v1/workflows").respond_with_data(wf_id)
     httpserver.expect_request("/v1/workflow").respond_with_json(QE_STATUS_RESPONSE)
     httpserver.expect_request(f"/v2/workflows/{wf_id}/result").respond_with_data(
         _make_result_bytes(QE_WORKFLOW_RESULT_JSON_DICT_SINGLE),
         content_type="application/x-gtar-compressed",
     )
+    httpserver.expect_request(
+        f"/v2/workflows/{wf_id}/step/invocation-0-task-get-list/artifact/artifact-3-get-list"  # noqa: E501
+    ).respond_with_data(
+        _make_result_bytes(
+            QE_WORKFLOW_RESULT_JSON_DICT_SINGLE["wf-id-sentinel-foobar"][
+                "artifact-3-get-list"
+            ]
+        ),
+        content_type="application/x-gtar-compressed",
+    )
     return wf_id
+
+
+@pytest.fixture
+def mock_ce_run_single(httpserver: pytest_httpserver.HTTPServer) -> str:
+    wf_id: str = "wf_id_sentinel_ce_single"
+    wf_def_id: str = "wf_def_ce_sentinel"
+    result_ids = ["result_id_sentinel_0"]
+
+    # Start workflow
+    httpserver.expect_request("/api/workflow-definitions").respond_with_json(
+        resp_mocks.make_get_wf_def_response(
+            id_=wf_def_id, wf_def=wf_return_single_packed_value().model
+        )
+    )
+    httpserver.expect_request("/api/workflow-runs").respond_with_json(
+        resp_mocks.make_list_wf_run_response(
+            ids=[wf_id],
+            workflow_def_ids=[wf_def_id],
+        )
+    )
+    httpserver.expect_request("/api/workflow-runs/definitionId").respond_with_json(
+        resp_mocks.make_get_wf_run_response(
+            id_=wf_id,
+            workflow_def_id=wf_def_id,
+            status=RunStatus(state="SUCCEEDED"),
+            task_runs=[],
+        )
+    )
+    httpserver.expect_request(
+        f"/api/workflow-definitions/{wf_def_id}"
+    ).respond_with_json(
+        resp_mocks.make_get_wf_def_response(
+            id_=wf_def_id, wf_def=wf_return_single_packed_value().model
+        )
+    )
+
+    # Get results
+    httpserver.expect_request("/api/run-results").respond_with_json(
+        {"data": result_ids}
+    )
+    for result_id in result_ids:
+        httpserver.expect_request(f"/api/run-results/{result_id}").respond_with_json(
+            resp_mocks.make_get_wf_run_result_response([1, 2, 3])
+        )
+
+    # Get artefacts
+    httpserver.expect_request("/api/artifacts").respond_with_json(
+        {"data": {"task-0": ["artifact-0"]}}
+    )
+    httpserver.expect_request("/api/artifacts/artifact-0").respond_with_data(
+        resp_mocks.make_get_wf_run_artifact_response([1, 2, 3])
+    )
 
 
 @pytest.fixture
@@ -205,6 +305,17 @@ def mock_qe_run_multiple(httpserver: pytest_httpserver.HTTPServer) -> str:
         _make_result_bytes(QE_WORKFLOW_RESULT_JSON_DICT_MULTIPLE),
         content_type="application/x-gtar-compressed",
     )
+    for task_inv, artifact_no, inv_id in zip([0, 1], [3, 7], ["foo", "bar"]):
+        httpserver.expect_request(
+            f"/v2/workflows/{wf_id}/step/invocation-{task_inv}-task-get-list/artifact/artifact-{artifact_no}-get-list"  # noqa: E501
+        ).respond_with_data(
+            _make_result_bytes(
+                QE_WORKFLOW_RESULT_JSON_DICT_MULTIPLE[f"wf-id-sentinel-{inv_id}"][
+                    f"artifact-{artifact_no}-get-list"
+                ]
+            ),
+            content_type="application/x-gtar-compressed",
+        )
     return wf_id
 
 
@@ -248,92 +359,110 @@ def mock_db_env_var(tmp_path):
     "mock_config_env_var",
     "mock_db_env_var",
 )
+@pytest.mark.filterwarnings("ignore::FutureWarning")
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.slow
 class TestAPI:
     @staticmethod
     def test_consistent_returns_for_single_value(
-        monkeypatch,
-        tmp_path,
-        httpserver: pytest_httpserver.HTTPServer,
+        mock_qe_run_single,
+        mock_ce_run_single,
+        orq_project_dir_single,
     ):
         # GIVEN
-        # Mocking for Ray
-        monkeypatch.setattr(Path, "cwd", Mock(return_value=tmp_path))
-        # Mocking for QE
-        httpserver.expect_request("/v1/workflows").respond_with_data("wf_id_sentinel_2")
-        httpserver.expect_request("/v1/workflow").respond_with_json(QE_STATUS_RESPONSE)
-        httpserver.expect_request(
-            "/v2/workflows/wf_id_sentinel_2/result"
-        ).respond_with_data(
-            _make_result_bytes(QE_WORKFLOW_RESULT_JSON_DICT_SINGLE),
-            content_type="application/x-gtar-compressed",
-        )
+        ip_run = wf_return_single_packed_value().run(sdk.RuntimeConfig.in_process())
+        ray_run = wf_return_single_packed_value().run(sdk.RuntimeConfig.ray())
+        qe_run = wf_return_single_packed_value().run(sdk.RuntimeConfig.load("QE"))
+        ce_run = wf_return_single_packed_value().run(sdk.RuntimeConfig.load("CE"))
+        for run in [ip_run, ray_run, qe_run]:
+            run.wait_until_finished()
 
         # WHEN
-        results_in_process = (
-            wf_return_single_packed_value()
-            .run(sdk.RuntimeConfig.in_process())
-            .get_results(wait=True)
-        )
-        results_ray = (
-            wf_return_single_packed_value()
-            .run(sdk.RuntimeConfig.ray())
-            .get_results(wait=True)
-        )
-        results_remote = (
-            wf_return_single_packed_value()
-            .run(sdk.RuntimeConfig.load("127"))
-            .get_results(wait=True)
-        )
+        results_ip = ip_run.get_results()
+        results_ray = ray_run.get_results()
+        results_qe = qe_run.get_results()
+        results_ce = ce_run.get_results()
+
+        artifacts_ip = ip_run.get_artifacts()
+        artifacts_ray = ray_run.get_artifacts()
+        artifacts_qe = qe_run.get_artifacts()
+        ce_run.get_artifacts()
+
+        task_outputs_ip = [t.get_outputs() for t in ip_run.get_tasks()]
+        task_outputs_ray = [t.get_outputs() for t in ray_run.get_tasks()]
+        task_outputs_qe = [t.get_outputs() for t in qe_run.get_tasks()]
+        [t.get_outputs() for t in ce_run.get_tasks()]
 
         # THEN
-        assert results_in_process == results_ray
-        assert results_in_process == results_remote
-        assert isinstance(results_in_process, list)
-        assert results_in_process == [1, 2, 3]
+        assert results_ip == results_ray
+        assert results_ip == results_qe
+        assert results_ip == results_ce
+        assert isinstance(results_ip, list)
+        assert results_ip == [1, 2, 3]
+
+        assert artifacts_ip == artifacts_ray
+        assert artifacts_ip == artifacts_qe
+        # assert artifacts_ip == artifacts_ce
+        assert isinstance(artifacts_ip, dict)
+        assert artifacts_ip == {"invocation-0-task-get-list": [1, 2, 3]}
+
+        assert task_outputs_ip == task_outputs_ray
+        assert task_outputs_ip == task_outputs_qe
+        # assert task_outputs_ip == task_outputs_ce
+        assert isinstance(task_outputs_ip, list)
+        assert task_outputs_ip == [[1, 2, 3]]
 
     @staticmethod
     def test_consistent_returns_for_multiple_values(
-        monkeypatch,
-        tmp_path,
-        httpserver: pytest_httpserver.HTTPServer,
+        mock_qe_run_multiple,
+        orq_project_dir_multiple,
     ):
         # GIVEN
-        # Mocking for Ray
-        monkeypatch.setattr(Path, "cwd", Mock(return_value=tmp_path))
-        # Mocking for QE
-        httpserver.expect_request("/v1/workflows").respond_with_data("wf_id_sentinel")
-        httpserver.expect_request("/v1/workflow").respond_with_json(QE_STATUS_RESPONSE)
-        httpserver.expect_request(
-            "/v2/workflows/wf_id_sentinel/result"
-        ).respond_with_data(
-            _make_result_bytes(QE_WORKFLOW_RESULT_JSON_DICT_MULTIPLE),
-            content_type="application/x-gtar-compressed",
-        )
+        ip_run = wf_return_multiple_packed_values().run(sdk.RuntimeConfig.in_process())
+        ray_run = wf_return_multiple_packed_values().run(sdk.RuntimeConfig.ray())
+        qe_run = wf_return_multiple_packed_values().run(sdk.RuntimeConfig.load("QE"))
+        # ce_run = wf_return_single_packed_value().run(sdk.RuntimeConfig.ce())
+
+        for run in [ip_run, ray_run, qe_run]:
+            run.wait_until_finished()
 
         # WHEN
-        results_in_process = (
-            wf_return_multiple_packed_values()
-            .run(sdk.RuntimeConfig.in_process())
-            .get_results(wait=True)
-        )
-        results_ray = (
-            wf_return_multiple_packed_values()
-            .run(sdk.RuntimeConfig.ray())
-            .get_results(wait=True)
-        )
-        results_remote = (
-            wf_return_multiple_packed_values()
-            .run(sdk.RuntimeConfig.load("127"))
-            .get_results(wait=True)
-        )
+        results_ip = ip_run.get_results()
+        results_ray = ray_run.get_results()
+        results_qe = qe_run.get_results()
+        # results_ce = ce_run.get_results()
+
+        artifacts_ip = ip_run.get_artifacts()
+        artifacts_ray = ray_run.get_artifacts()
+        artifacts_qe = qe_run.get_artifacts()
+        # artifacts_ce = ce_run.get_artifacts()
+
+        task_outputs_ip = [t.get_outputs() for t in ip_run.get_tasks()]
+        task_outputs_ray = [t.get_outputs() for t in ray_run.get_tasks()]
+        [t.get_outputs() for t in qe_run.get_tasks()]
+        # task_outputs_ce = [t.get_outputs() for t in ce_run.get_tasks()]
 
         # THEN
-        assert results_in_process == results_ray
-        assert results_in_process == results_remote
-        assert isinstance(results_in_process, tuple)
-        assert results_in_process == ([1, 2, 3], [1, 2, 3])
+        assert results_ip == results_ray
+        assert results_ip == results_qe
+        # assert results_ip == results_ce
+        assert isinstance(results_ip, tuple)
+        assert results_ip == ([1, 2, 3], [1, 2, 3])
+
+        assert artifacts_ip == artifacts_ray
+        assert artifacts_ip == artifacts_qe
+        # assert artifacts_ip == artifacts_ce
+        assert isinstance(artifacts_ip, dict)
+        assert artifacts_ip == {
+            "invocation-0-task-get-list": [1, 2, 3],
+            "invocation-1-task-get-list": [1, 2, 3],
+        }
+
+        assert task_outputs_ip == task_outputs_ray
+        # assert task_outputs_ip == task_outputs_qe
+        # assert task_outputs_ip == task_outputs_ce
+        assert isinstance(task_outputs_ip, list)
+        assert task_outputs_ip == [[1, 2, 3], [1, 2, 3]]
 
 
 @pytest.mark.usefixtures(
@@ -356,7 +485,7 @@ class TestCLI:
             capture_output=True,
         )
         run_qe = subprocess.run(
-            ["orq", "wf", "submit", "-c", "127", "workflow_defs"],
+            ["orq", "wf", "submit", "-c", "QE", "workflow_defs"],
             check=True,
             capture_output=True,
         )
@@ -380,7 +509,7 @@ class TestCLI:
         )
         results_qe = (
             subprocess.run(
-                ["orq", "wf", "results", "-c", "127", mock_qe_run_single],
+                ["orq", "wf", "results", "-c", "QE", mock_qe_run_single],
                 check=True,
                 capture_output=True,
             )
@@ -417,7 +546,7 @@ class TestCLI:
             capture_output=True,
         )
         run_qe = subprocess.run(
-            ["orq", "wf", "submit", "-c", "127", "workflow_defs"],
+            ["orq", "wf", "submit", "-c", "QE", "workflow_defs"],
             check=True,
             capture_output=True,
         )
@@ -441,7 +570,7 @@ class TestCLI:
         )
         results_qe = (
             subprocess.run(
-                ["orq", "wf", "results", "-c", "127", mock_qe_run_multiple],
+                ["orq", "wf", "results", "-c", "QE", mock_qe_run_multiple],
                 check=True,
                 capture_output=True,
             )
@@ -489,7 +618,7 @@ class TestCLIDownloadDir:
             capture_output=True,
         )
         run_qe = subprocess.run(
-            ["orq", "wf", "submit", "-c", "127", "workflow_defs"],
+            ["orq", "wf", "submit", "-c", "QE", "workflow_defs"],
             capture_output=True,
         )
 
@@ -527,7 +656,7 @@ class TestCLIDownloadDir:
                 "--download-dir",
                 orq_project_dir_single,
                 "-c",
-                "127",
+                "QE",
                 mock_qe_run_single,
             ],
             capture_output=True,
@@ -565,7 +694,7 @@ class TestCLIDownloadDir:
             capture_output=True,
         )
         run_qe = subprocess.run(
-            ["orq", "wf", "submit", "-c", "127", "workflow_defs"],
+            ["orq", "wf", "submit", "-c", "QE", "workflow_defs"],
             check=True,
             capture_output=True,
         )
@@ -600,7 +729,7 @@ class TestCLIDownloadDir:
                 "--download-dir",
                 orq_project_dir_multiple,
                 "-c",
-                "127",
+                "QE",
                 mock_qe_run_multiple,
             ],
             check=True,
