@@ -19,6 +19,7 @@
 🥷 *Internal*
 
 📃 *Docs*
+* _Resource Management_ guide should render properly now.
 
 ## v0.46.0
 
