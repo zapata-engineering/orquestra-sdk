@@ -137,6 +137,10 @@ class TestWorkflowRun:
         )
         # for simulating a workflow running
         succeeded_run_model = Mock(name="succeeded wf run model")
+        succeeded_run_model.workflow_def.output_ids = ["<output id sentinel>"]
+        # note: `get_results`` calls `len` on the output IDs to figure out if it
+        # should be returning a non-sequence value, so we need to give it something
+        # with a length. The actual value here shouldn't matter as it is not used.
 
         # Default value is "SUCCEEDED"
         succeeded_run_model.status.state = State.SUCCEEDED
@@ -493,7 +497,7 @@ class TestWorkflowRun:
             # Then
             assert results is not None
             assert results == "woohoo!"
-            assert mock_runtime.get_workflow_run_status.call_count == 1
+            assert mock_runtime.get_workflow_run_status.call_count == 2
 
     class TestGetArtifacts:
         @staticmethod
