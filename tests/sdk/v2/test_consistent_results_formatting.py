@@ -94,7 +94,7 @@ def wf_return_multiple_packed_values():
 # endregion
 
 # region: QE mocking
-QE_MINIMAL_CURRENT_REPRESENTATION: t.Dict[str, t.Any] = {
+QE_MINIMAL_CURRENT_REPRESENTATION_SINGLE: t.Dict[str, t.Any] = {
     "status": {
         "phase": "Succeeded",
         "startedAt": "1989-12-13T09:03:49Z",
@@ -114,17 +114,63 @@ QE_MINIMAL_CURRENT_REPRESENTATION: t.Dict[str, t.Any] = {
         },
     },
 }
-QE_STATUS_RESPONSE = {
+QE_MINIMAL_CURRENT_REPRESENTATION_MULTIPLE: t.Dict[str, t.Any] = {
+    "status": {
+        "phase": "Succeeded",
+        "startedAt": "1989-12-13T09:03:49Z",
+        "finishedAt": "1989-12-13T09:05:14Z",
+        "nodes": {
+            "foo": {
+                "id": "wf-id-sentinel",
+                "name": "bar",
+                "displayName": "foobar",
+                "type": "boo",
+                "templateName": "invocation-0-task-get-list",
+                "phase": "Succeeded",
+                "boundaryID": "far",
+                "startedAt": "1989-12-13T09:05:09Z",
+                "finishedAt": "1989-12-13T09:05:14Z",
+            },
+            "boofar": {
+                "id": "wf-id-sentinel",
+                "name": "bar",
+                "displayName": "foobar",
+                "type": "boo",
+                "templateName": "invocation-1-task-get-list",
+                "phase": "Succeeded",
+                "boundaryID": "far",
+                "startedAt": "1989-12-13T09:05:09Z",
+                "finishedAt": "1989-12-13T09:05:14Z",
+            },
+        },
+    },
+}
+
+
+QE_STATUS_RESPONSE_SINGLE = {
     "id": "wf-id-sentinel",
     "status": "Succeeded",
     "currentRepresentation": base64.standard_b64encode(
-        json.dumps(QE_MINIMAL_CURRENT_REPRESENTATION).encode()
+        json.dumps(QE_MINIMAL_CURRENT_REPRESENTATION_SINGLE).encode()
     ).decode(),
     "completed": True,
     "retry": "",
     "lastModified": "1989-12-13T09:10:04.14422796Z",
     "created": "1989-12-13T09:03:49.39478764Z",
 }
+
+QE_STATUS_RESPONSE_MULTIPLE = {
+    "id": "wf-id-sentinel",
+    "status": "Succeeded",
+    "currentRepresentation": base64.standard_b64encode(
+        json.dumps(QE_MINIMAL_CURRENT_REPRESENTATION_MULTIPLE).encode()
+    ).decode(),
+    "completed": True,
+    "retry": "",
+    "lastModified": "1989-12-13T09:10:04.14422796Z",
+    "created": "1989-12-13T09:03:49.39478764Z",
+}
+
 QE_WORKFLOW_RESULT_JSON_DICT_SINGLE = {
     "wf-id-sentinel-foobar": {
         "artifact-3-get-list": {
@@ -226,7 +272,9 @@ def mock_qe_run_single(httpserver: pytest_httpserver.HTTPServer) -> str:
     wf_id: str = "wf_id_sentinel_qe_single"
 
     httpserver.expect_request("/v1/workflows").respond_with_data(wf_id)
-    httpserver.expect_request("/v1/workflow").respond_with_json(QE_STATUS_RESPONSE)
+    httpserver.expect_request("/v1/workflow").respond_with_json(
+        QE_STATUS_RESPONSE_SINGLE
+    )
     httpserver.expect_request(f"/v2/workflows/{wf_id}/result").respond_with_data(
         _make_result_bytes(QE_WORKFLOW_RESULT_JSON_DICT_SINGLE),
         content_type="application/x-gtar-compressed",
@@ -241,6 +289,31 @@ def mock_qe_run_single(httpserver: pytest_httpserver.HTTPServer) -> str:
         ),
         content_type="application/x-gtar-compressed",
     )
+    return wf_id
+
+
+@pytest.fixture
+def mock_qe_run_multiple(httpserver: pytest_httpserver.HTTPServer) -> str:
+    wf_id: str = "wf_id_sentinel_multiple"
+    httpserver.expect_request("/v1/workflows").respond_with_data(wf_id)
+    httpserver.expect_request("/v1/workflow").respond_with_json(
+        QE_STATUS_RESPONSE_MULTIPLE
+    )
+    httpserver.expect_request(f"/v2/workflows/{wf_id}/result").respond_with_data(
+        _make_result_bytes(QE_WORKFLOW_RESULT_JSON_DICT_MULTIPLE),
+        content_type="application/x-gtar-compressed",
+    )
+    for task_inv, artifact_no, inv_id in zip([0, 1], [3, 7], ["foo", "bar"]):
+        httpserver.expect_request(
+            f"/v2/workflows/{wf_id}/step/invocation-{task_inv}-task-get-list/artifact/artifact-{artifact_no}-get-list"  # noqa: E501
+        ).respond_with_data(
+            _make_result_bytes(
+                QE_WORKFLOW_RESULT_JSON_DICT_MULTIPLE[f"wf-id-sentinel-{inv_id}"][
+                    f"artifact-{artifact_no}-get-list"
+                ]
+            ),
+            content_type="application/x-gtar-compressed",
+        )
     return wf_id
 
 
@@ -297,26 +370,58 @@ def mock_ce_run_single(httpserver: pytest_httpserver.HTTPServer) -> str:
 
 
 @pytest.fixture
-def mock_qe_run_multiple(httpserver: pytest_httpserver.HTTPServer) -> str:
-    wf_id: str = "wf_id_sentinel_multiple"
-    httpserver.expect_request("/v1/workflows").respond_with_data(wf_id)
-    httpserver.expect_request("/v1/workflow").respond_with_json(QE_STATUS_RESPONSE)
-    httpserver.expect_request(f"/v2/workflows/{wf_id}/result").respond_with_data(
-        _make_result_bytes(QE_WORKFLOW_RESULT_JSON_DICT_MULTIPLE),
-        content_type="application/x-gtar-compressed",
-    )
-    for task_inv, artifact_no, inv_id in zip([0, 1], [3, 7], ["foo", "bar"]):
-        httpserver.expect_request(
-            f"/v2/workflows/{wf_id}/step/invocation-{task_inv}-task-get-list/artifact/artifact-{artifact_no}-get-list"  # noqa: E501
-        ).respond_with_data(
-            _make_result_bytes(
-                QE_WORKFLOW_RESULT_JSON_DICT_MULTIPLE[f"wf-id-sentinel-{inv_id}"][
-                    f"artifact-{artifact_no}-get-list"
-                ]
-            ),
-            content_type="application/x-gtar-compressed",
+def mock_ce_run_multiple(httpserver: pytest_httpserver.HTTPServer) -> str:
+    wf_id: str = "wf_id_sentinel_ce_multiple"
+    wf_def_id: str = "wf_def_ce_sentinel"
+    result_ids = ["result_id_sentinel_0"]
+
+    # Start workflow
+    httpserver.expect_request("/api/workflow-definitions").respond_with_json(
+        resp_mocks.make_get_wf_def_response(
+            id_=wf_def_id, wf_def=wf_return_multiple_packed_values().model
         )
-    return wf_id
+    )
+    httpserver.expect_request("/api/workflow-runs").respond_with_json(
+        resp_mocks.make_list_wf_run_response(
+            ids=[wf_id],
+            workflow_def_ids=[wf_def_id],
+        )
+    )
+    httpserver.expect_request("/api/workflow-runs/definitionId").respond_with_json(
+        resp_mocks.make_get_wf_run_response(
+            id_=wf_id,
+            workflow_def_id=wf_def_id,
+            status=RunStatus(state="SUCCEEDED"),
+            task_runs=[],
+        )
+    )
+    httpserver.expect_request(
+        f"/api/workflow-definitions/{wf_def_id}"
+    ).respond_with_json(
+        resp_mocks.make_get_wf_def_response(
+            id_=wf_def_id, wf_def=wf_return_single_packed_value().model
+        )
+    )
+
+    # Get results
+    httpserver.expect_request("/api/run-results").respond_with_json(
+        {"data": result_ids}
+    )
+    for result_id in result_ids:
+        httpserver.expect_request(f"/api/run-results/{result_id}").respond_with_json(
+            resp_mocks.make_get_wf_run_result_response(([1, 2, 3], [1, 2, 3]))
+        )
+
+    # Get artefacts
+    httpserver.expect_request("/api/artifacts").respond_with_json(
+        {"data": {"task-0": ["artifact-0"], "task-1": ["artifact-1"]}}
+    )
+    httpserver.expect_request("/api/artifacts/artifact-0").respond_with_data(
+        resp_mocks.make_get_wf_run_artifact_response([1, 2, 3])
+    )
+    httpserver.expect_request("/api/artifacts/artifact-1").respond_with_data(
+        resp_mocks.make_get_wf_run_artifact_response([1, 2, 3])
+    )
 
 
 @pytest.fixture
@@ -415,13 +520,14 @@ class TestAPI:
     @staticmethod
     def test_consistent_returns_for_multiple_values(
         mock_qe_run_multiple,
+        mock_ce_run_multiple,
         orq_project_dir_multiple,
     ):
         # GIVEN
         ip_run = wf_return_multiple_packed_values().run(sdk.RuntimeConfig.in_process())
         ray_run = wf_return_multiple_packed_values().run(sdk.RuntimeConfig.ray())
         qe_run = wf_return_multiple_packed_values().run(sdk.RuntimeConfig.load("QE"))
-        # ce_run = wf_return_single_packed_value().run(sdk.RuntimeConfig.ce())
+        ce_run = wf_return_single_packed_value().run(sdk.RuntimeConfig.load("CE"))
 
         for run in [ip_run, ray_run, qe_run]:
             run.wait_until_finished()
@@ -430,22 +536,22 @@ class TestAPI:
         results_ip = ip_run.get_results()
         results_ray = ray_run.get_results()
         results_qe = qe_run.get_results()
-        # results_ce = ce_run.get_results()
+        results_ce = ce_run.get_results()
 
         artifacts_ip = ip_run.get_artifacts()
         artifacts_ray = ray_run.get_artifacts()
         artifacts_qe = qe_run.get_artifacts()
-        # artifacts_ce = ce_run.get_artifacts()
+        ce_run.get_artifacts()
 
         task_outputs_ip = [t.get_outputs() for t in ip_run.get_tasks()]
         task_outputs_ray = [t.get_outputs() for t in ray_run.get_tasks()]
-        [t.get_outputs() for t in qe_run.get_tasks()]
-        # task_outputs_ce = [t.get_outputs() for t in ce_run.get_tasks()]
+        task_outputs_qe = [t.get_outputs() for t in qe_run.get_tasks()]
+        [t.get_outputs() for t in ce_run.get_tasks()]
 
         # THEN
         assert results_ip == results_ray
         assert results_ip == results_qe
-        # assert results_ip == results_ce
+        assert results_ip == results_ce
         assert isinstance(results_ip, tuple)
         assert results_ip == ([1, 2, 3], [1, 2, 3])
 
@@ -459,7 +565,7 @@ class TestAPI:
         }
 
         assert task_outputs_ip == task_outputs_ray
-        # assert task_outputs_ip == task_outputs_qe
+        assert task_outputs_ip == task_outputs_qe
         # assert task_outputs_ip == task_outputs_ce
         assert isinstance(task_outputs_ip, list)
         assert task_outputs_ip == [[1, 2, 3], [1, 2, 3]]
