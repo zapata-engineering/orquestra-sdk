@@ -325,7 +325,7 @@ class RuntimeConfig:
         """
         configs = _config.read_config_names() + list(_config.UNIQUE_CONFIGS)
         if _config.is_self_config_available():
-            configs += _config.SAME_CLUSTER_CONFIG_NAME
+            configs.append(_config.SAME_CLUSTER_CONFIG_NAME)
         return configs
 
     @classmethod
