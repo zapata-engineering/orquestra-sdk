@@ -176,7 +176,9 @@ class WorkflowRunRepo:
             # Other exception types aren't expected to be raised here.
             raise
 
-    def get_wf_outputs(self, wf_run_id: WorkflowRunId, config_name: ConfigName):
+    def get_wf_outputs(
+        self, wf_run_id: WorkflowRunId, config_name: ConfigName
+    ) -> t.Tuple[t.Any, int]:
         """
         Asks the runtime for workflow output values.
 
@@ -197,7 +199,7 @@ class WorkflowRunRepo:
             raise
 
         try:
-            outputs = wf_run.get_results(wait=False)
+            outputs = wf_run.get_results(wait=False, force_as_sequence=True)
         except (exceptions.WorkflowRunNotFinished, exceptions.WorkflowRunNotSucceeded):
             raise
 
@@ -453,7 +455,6 @@ class SummaryRepo:
         )
 
     def wf_list_summary(self, wf_runs: t.List[WorkflowRun]) -> ui_models.WFList:
-
         wf_runs.sort(
             key=lambda wf_run: wf_run.status.start_time
             if wf_run.status.start_time
@@ -507,7 +508,7 @@ class RuntimeRepo:
             # Ask QE for the login url to log in to the platform
         try:
             target_url = client.get_login_url(redirect_port)
-        except (requests.RequestException) as e:
+        except requests.RequestException as e:
             raise exceptions.LoginURLUnavailableError(uri) from e
         return target_url
 

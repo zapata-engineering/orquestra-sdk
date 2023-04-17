@@ -309,14 +309,14 @@ class WorkflowRun:
             raise WorkflowRunNotStarted(message) from e
         return self._runtime.get_workflow_run_status(run_id)
 
-    def get_results(self, wait: bool = False) -> t.Sequence[t.Any]:
+    def get_results(self, wait: bool = False, force_as_sequence: bool = False) -> t.Any:
         """
         Retrieves workflow results, as returned by the workflow function.
 
         A workflow function is expected to return task outputs
         (ArtifactFutures) or constants (10, "hello", etc.). This method returns values
         of these. The order is dictated by the return statement in the workflow
-        function, for example `return a, b, c` means this function returns [a, b, c].
+        function, for example `return a, b, c` means this function returns (a, b, c).
         See also:
         https://refactored-disco-d576cb73.pages.github.io/docs/runtime/guides/workflow-syntax.html
 
@@ -324,6 +324,13 @@ class WorkflowRun:
             wait:  whether or not to wait for workflow run completion.
                    Uses the default options for waiting, use `wait_until_finished()` for
                    more control.
+            force_as_sequence: If True, always returns a sequence where each element of
+                the sequence is one return value from the workflow. If false, where a
+                workflow returns a single value this will be returned as-is. For
+                example, `return [a,b,c]` means this function returns `[a,b,c]` if
+                force_as_sequence is False, and `([a,b,c],)` if force_as_sequence is
+                true. Results from workflows that return multiple values will always be
+                returned as a sequence. Defaults to False.
 
         Raises:
             WorkflowRunNotStarted: when the workflow run has not started
@@ -362,7 +369,15 @@ class WorkflowRun:
         except WorkflowRunNotSucceeded:
             raise
 
-        if len(returns) == 1:
+        # Returning as a sequence is really helful for any context where we need to
+        # infer the total number of results, for example when writing them to separate
+        # files from the CLI. Returning single values on their own is more intuitive
+        # for standard python, but could create confusion if the returned value is
+        # itself a sequence. Therefore we provide a utility to control this behaviour.
+        if (
+            not force_as_sequence
+            and len(self.get_status_model().workflow_def.output_ids) == 1
+        ):
             return returns[0]
 
         return returns
