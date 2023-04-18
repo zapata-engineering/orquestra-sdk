@@ -7,7 +7,7 @@ Code for 'orq workflow list'.
 import typing as t
 
 from orquestra.sdk.schema.configs import ConfigName
-from orquestra.sdk.schema.workflow_run import State, WorkflowRun, WorkflowRunId
+from orquestra.sdk.schema.workflow_run import WorkflowRun
 
 from .. import _arg_resolvers, _repos
 from .._ui import _presenters

@@ -6,7 +6,6 @@ Unit tests for orquestra.sdk._base._services.
 """
 
 import builtins
-import subprocess
 import sys
 import typing as t
 from contextlib import contextmanager

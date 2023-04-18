@@ -13,7 +13,7 @@ import re
 import sys
 import typing as t
 import warnings
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 from functools import singledispatch
 
 from packaging.version import parse as parse_version

@@ -5,7 +5,6 @@
 Snippets and tests used in the "Parametrized Workflows" tutorial.
 """
 
-import os
 import subprocess
 import sys
 from pathlib import Path
