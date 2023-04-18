@@ -399,7 +399,7 @@ class TestRuntimeConfiguration:
                 assert cfg.token == token
 
             def test_no_env_variable(self):
-                with pytest.raises(NotImplementedError):
+                with pytest.raises(ValueError):
                     api_cfg.RuntimeConfig.load(
                         "self",
                     )

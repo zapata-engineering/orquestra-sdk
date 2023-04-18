@@ -60,6 +60,9 @@ SAME_CLUSTER_RUNTIME_CONFIGURATION = RuntimeConfiguration(
     runtime_name=RuntimeName.CE_REMOTE,
     runtime_options={},
 )
+# We assume that we can access the workflow API under a well-known URI if the passport
+# auth is being used. This relies on the DNS configuration on the remote cluster.
+# Works from CE and jupiter-notebook inside Studio
 SAME_CLUSTER_URL = "http://workflow-driver.workflow-driver"
 
 SPECIAL_CONFIG_NAME_DICT = {
@@ -198,18 +201,20 @@ def _resolve_new_config_file(
 
 def _handle_same_cluster_config_case(config_name) -> RuntimeConfiguration:
     if PASSPORT_FILE_ENV not in os.environ:
-        raise NotImplementedError(
+        raise ValueError(
             f"Config name {config_name} is reserved to be used from within"
             f"a cluster only. Please login to portal to use it"
         )
     passport_file = pathlib.Path(os.environ[PASSPORT_FILE_ENV])
-    if not passport_file.exists():
+
+    try:
+        passport_token = Path(passport_file).read_text()
+    except FileNotFoundError as e:
         raise FileNotFoundError(
             f"Environmental variable {PASSPORT_FILE_ENV} was set, but no file was found"
             "under its value"
-        )
+        ) from e
 
-    passport_token = Path(passport_file).read_text()
     runtime_config = SPECIAL_CONFIG_NAME_DICT[config_name]
     runtime_config.runtime_options = {
         "uri": SAME_CLUSTER_URL,
