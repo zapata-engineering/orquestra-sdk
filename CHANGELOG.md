@@ -5,6 +5,7 @@
 🚨 *Breaking Changes*
 
 🔥 *Features*
+* New built-in config name - "self" - used to submit workflows to CE instance present on the cluster in which Jupiter Notebook is running on
 
 👩‍🔬 *Experimental*
 * Setting workflow_id and project_id is now available on workflow Python API start() and prepare() functions

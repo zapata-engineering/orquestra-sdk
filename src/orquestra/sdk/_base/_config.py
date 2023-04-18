@@ -6,6 +6,7 @@ This is the internal module for saving and loading runtime configurations.
 See docs/runtime_configurations.rst for more information.
 """
 import os
+import pathlib
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Tuple, Union
 from urllib.parse import urlparse
@@ -22,7 +23,7 @@ from orquestra.sdk.schema.configs import (
     RuntimeName,
 )
 
-from ._env import CONFIG_PATH_ENV
+from ._env import CONFIG_PATH_ENV, PASSPORT_FILE_ENV
 
 # Why JSON?
 #  The Python TOML package is unmaintained as of 2022-02-18.
@@ -35,6 +36,7 @@ LOCK_FILE_NAME = "config.json.lock"
 BUILT_IN_CONFIG_NAME = "local"
 RAY_CONFIG_NAME_ALIAS = "ray"
 IN_PROCESS_CONFIG_NAME = "in_process"
+SAME_CLUSTER_CONFIG_NAME = "self"
 
 LOCAL_RUNTIME_CONFIGURATION = RuntimeConfiguration(
     config_name=BUILT_IN_CONFIG_NAME,
@@ -52,11 +54,22 @@ IN_PROCESS_RUNTIME_CONFIGURATION = RuntimeConfiguration(
     runtime_name=RuntimeName.IN_PROCESS,
     runtime_options={},
 )
+# this runtime config is not ready-to-be-used without runtime options
+SAME_CLUSTER_RUNTIME_CONFIGURATION = RuntimeConfiguration(
+    config_name=SAME_CLUSTER_CONFIG_NAME,
+    runtime_name=RuntimeName.CE_REMOTE,
+    runtime_options={},
+)
+# We assume that we can access the workflow API under a well-known URI if the passport
+# auth is being used. This relies on the DNS configuration on the remote cluster.
+# Works from CE and jupiter-notebook inside Studio
+SAME_CLUSTER_URL = "http://workflow-driver.workflow-driver"
 
 SPECIAL_CONFIG_NAME_DICT = {
     IN_PROCESS_CONFIG_NAME: IN_PROCESS_RUNTIME_CONFIGURATION,
     BUILT_IN_CONFIG_NAME: LOCAL_RUNTIME_CONFIGURATION,
     RAY_CONFIG_NAME_ALIAS: LOCAL_RUNTIME_CONFIGURATION,
+    SAME_CLUSTER_CONFIG_NAME: SAME_CLUSTER_RUNTIME_CONFIGURATION,
 }
 # Unique config list to prompt to the users. Separate from SPECIAL_CONFIG_NAME_DICT
 # as SPECIAL_CONFIG_NAME_DICT might have duplicate names which could be confusing for
@@ -109,6 +122,10 @@ def _get_config_file_path() -> Path:
         _config_file_path = Path.home() / ".orquestra" / CONFIG_FILE_NAME
     _ensure_directory(_config_file_path.parent)
     return _config_file_path
+
+
+def is_self_config_available() -> bool:
+    return PASSPORT_FILE_ENV in os.environ
 
 
 def _get_config_directory() -> Path:
@@ -182,11 +199,38 @@ def _resolve_new_config_file(
     return new_config_file
 
 
+def _handle_same_cluster_config_case(config_name) -> RuntimeConfiguration:
+    if PASSPORT_FILE_ENV not in os.environ:
+        raise ValueError(
+            f"Config name {config_name} is reserved to be used from within"
+            f"a cluster only. Please login to portal to use it"
+        )
+    passport_file = pathlib.Path(os.environ[PASSPORT_FILE_ENV])
+
+    try:
+        passport_token = Path(passport_file).read_text()
+    except FileNotFoundError as e:
+        raise FileNotFoundError(
+            f"Environmental variable {PASSPORT_FILE_ENV} was set, but no file was found"
+            "under its value"
+        ) from e
+
+    runtime_config = SPECIAL_CONFIG_NAME_DICT[config_name]
+    runtime_config.runtime_options = {
+        "uri": SAME_CLUSTER_URL,
+        "token": passport_token,
+    }
+    return runtime_config
+
+
 def _handle_config_name_special_cases(config_name: str) -> RuntimeConfiguration:
     # special cases: the built-in config ('local') and in process config have
     # hardcoded runtime options.
     if config_name in SPECIAL_CONFIG_NAME_DICT:
-        return SPECIAL_CONFIG_NAME_DICT[config_name]
+        if config_name == SAME_CLUSTER_CONFIG_NAME:
+            return _handle_same_cluster_config_case(config_name)
+        else:
+            return SPECIAL_CONFIG_NAME_DICT[config_name]
     else:
         raise NotImplementedError(
             f"Config name '{config_name}' is reserved, but we don't have a config "

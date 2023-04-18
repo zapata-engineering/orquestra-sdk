@@ -307,6 +307,8 @@ class TestRuntimeConfiguration:
             assert config_names == [name for name in TEST_CONFIGS_DICT] + list(
                 _config.UNIQUE_CONFIGS
             )
+            # this config name should appear only when proper env var is set
+            assert _config.SAME_CLUSTER_CONFIG_NAME not in config_names
 
         @staticmethod
         def test_custom_file_location(
@@ -337,6 +339,13 @@ class TestRuntimeConfiguration:
             config_names = api_cfg.RuntimeConfig.list_configs()
 
             assert config_names == list(_config.UNIQUE_CONFIGS)
+
+        @staticmethod
+        def test_self_config_name(monkeypatch, tmp_config_json):
+            monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", "some_file_path")
+            config_names = api_cfg.RuntimeConfig.list_configs()
+
+            assert _config.SAME_CLUSTER_CONFIG_NAME in config_names
 
     class TestLoad:
         @pytest.mark.parametrize("config_name", [name for name in TEST_CONFIGS_DICT])
@@ -375,6 +384,32 @@ class TestRuntimeConfiguration:
                 api_cfg.RuntimeConfig.load(
                     "non-existing",
                 )
+
+        class TestLoadOnSameCluster:
+            def test_happy_path(self, monkeypatch, tmp_path):
+                token = "the best token you have ever seen"
+                pass_file = tmp_path / "pass.port"
+                pass_file.write_text(token)
+                monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", str(pass_file))
+
+                cfg = api_cfg.RuntimeConfig.load(
+                    "self",
+                )
+
+                assert cfg.token == token
+
+            def test_no_env_variable(self):
+                with pytest.raises(ValueError):
+                    api_cfg.RuntimeConfig.load(
+                        "self",
+                    )
+
+            def test_no_file(self, monkeypatch):
+                monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", "non-existing-path")
+                with pytest.raises(FileNotFoundError):
+                    api_cfg.RuntimeConfig.load(
+                        "self",
+                    )
 
     class TestLoadDefault:
         @staticmethod
