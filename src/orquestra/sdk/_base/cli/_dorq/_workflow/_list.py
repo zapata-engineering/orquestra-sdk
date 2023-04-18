@@ -73,7 +73,6 @@ class Action:
         state: t.Optional[t.List[str]],
         interactive: t.Optional[bool] = False,
     ):
-
         # Resolve Arguments
         resolved_configs: t.Sequence[
             ConfigName

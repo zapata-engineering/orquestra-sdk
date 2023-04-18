@@ -434,7 +434,6 @@ class SummaryRepo:
         )
 
     def wf_list_summary(self, wf_runs: t.List[WorkflowRun]) -> ui_models.WFList:
-
         wf_runs.sort(
             key=lambda wf_run: wf_run.status.start_time
             if wf_run.status.start_time

@@ -303,7 +303,6 @@ def _resolve_config_name_for_writing(
     config_name: Optional[str],
     prev_config_file: Optional[RuntimeConfigurationFile] = None,
 ) -> str:
-
     resolved_config_name = _resolve_config_name(config_name, prev_config_file)
 
     if resolved_config_name in SPECIAL_CONFIG_NAME_DICT:

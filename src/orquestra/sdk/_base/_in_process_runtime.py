@@ -91,7 +91,6 @@ class InProcessRuntime(abc.RuntimeInterface):
     def create_workflow_run(
         self, workflow_def: ir.WorkflowDef, project: t.Optional[ProjectRef]
     ) -> WfRunId:
-
         if project:
             warnings.warn(
                 "in_process runtime doesn't support project-scoped workflows. "

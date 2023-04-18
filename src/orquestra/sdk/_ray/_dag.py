@@ -321,7 +321,6 @@ def _gather_args(
     ray_futures: t.Mapping[ir.ArtifactNodeId, t.Any],
     artifact_nodes: t.Mapping[ir.ArtifactNodeId, ir.ArtifactNode],
 ) -> t.Tuple[t.Sequence[t.Any], t.Sequence[PosArgUnpackSpec], t.List[int]]:
-
     ray_args = []
     pos_unpack_specs: t.List[PosArgUnpackSpec] = []
     pos_deserialize_specs: t.List[int] = []
