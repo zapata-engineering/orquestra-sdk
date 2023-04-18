@@ -9,6 +9,7 @@ import re
 import sqlite3
 import sys
 import tarfile
+import warnings
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -35,6 +36,7 @@ from orquestra.sdk.schema.ir import (
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
+    ProjectRef,
     RunStatus,
     State,
     TaskRun,
@@ -485,12 +487,15 @@ class QERuntime(RuntimeInterface):
                 "https://regex101.com/r/CxEZKW/1"
             )
 
-    def create_workflow_run(self, workflow_def: WorkflowDef) -> WorkflowRunId:
+    def create_workflow_run(
+        self, workflow_def: WorkflowDef, project: Optional[ProjectRef]
+    ) -> WorkflowRunId:
         """
         Submits a workflow to the Quantum Engine
 
         Args:
             workflow_def: The workflow definition to submit
+            project: Unused on QE runtime
 
         Returns:
             A workflow run id, created by QE
@@ -500,6 +505,13 @@ class QERuntime(RuntimeInterface):
             orquestra.sdk.exceptions.InvalidWorkflowDefinitionError if the
                 workflow definition name does not conform to QE requirements.
         """
+        if project:
+            warnings.warn(
+                "QE runtime doesn't support project-scoped workflows. "
+                "Project and workspace IDs will be ignored.",
+                category=exceptions.UnsupportedRuntimeFeature,
+            )
+
         if self._verbose:
             print_yaml_of_workflow(workflow_def)
 

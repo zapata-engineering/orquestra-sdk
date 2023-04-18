@@ -599,22 +599,33 @@ def test_python_imports_deps(python_imports, expected_req, raises):
         assert list(parsed) == expected_req
 
 
-def test_ref_to_main_in_task_error():
-    path_to_workflows = (
-        os.path.dirname(os.path.abspath(__file__)) + "/data/sample_project/"
+class TestRefToMain:
+    @pytest.mark.parametrize(
+        "workflow_defs_file, raises",
+        [
+            (
+                "workflow_defs.py",
+                pytest.raises(sdk.exceptions.InvalidTaskDefinitionError),
+            ),
+            ("workflow_defs_no_raise.py", do_not_raise()),
+        ],
     )
-    # add path to locate helper imports
-    sys.path.append(path_to_workflows)
-    # prepare file to be executed as __main__
-    loader = importlib.machinery.SourceFileLoader(
-        "__main__", path_to_workflows + "workflow_defs.py"
-    )
-    spec = importlib.util.spec_from_loader(loader.name, loader)
-    assert spec is not None
-    mod = importlib.util.module_from_spec(spec)
+    def test_ref_to_main_in_task(self, workflow_defs_file, raises):
+        path_to_workflows = (
+            os.path.dirname(os.path.abspath(__file__)) + "/data/sample_project/"
+        )
+        # add path to locate helper imports
+        sys.path.append(path_to_workflows)
+        # prepare file to be executed as __main__
+        loader = importlib.machinery.SourceFileLoader(
+            "__main__", path_to_workflows + workflow_defs_file
+        )
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        assert spec is not None
+        mod = importlib.util.module_from_spec(spec)
 
-    with pytest.raises(sdk.exceptions.InvalidTaskDefinitionError):
-        loader.exec_module(mod)
+        with raises:
+            loader.exec_module(mod)
 
 
 def test_python_310_importlib_abc_bug():
@@ -652,3 +663,49 @@ def test_python_310_importlib_abc_bug():
     command = f'{str(sys.executable)} -c "import orquestra.sdk as sdk"'
     proc = subprocess.run(command, shell=True, capture_output=True)
     assert proc.returncode == 0, proc.stderr.decode()
+
+
+@pytest.mark.parametrize(
+    "obj",
+    [
+        sdk.GitImport(
+            git_ref="https://github.com/zapatacomputing/orquestra-workflow-sdk.git",
+            repo_url="main",
+        ),
+        sdk.GithubImport("zapatacomputing/orquestra-workflow-sdk"),
+        sdk.PythonImports("numpy"),
+        sdk.LocalImport("module"),
+        sdk.InlineImport(),
+    ],
+)
+def test_dsl_imports_not_iterable(obj):
+    with pytest.raises(TypeError):
+        [a for a in obj]
+
+
+@pytest.mark.parametrize(
+    "dependency_imports, expected_imports",
+    [
+        (None, None),
+        (sdk.InlineImport(), (sdk.InlineImport(),)),
+        (sdk.LocalImport("mod"), (sdk.LocalImport("mod"),)),
+        (
+            sdk.GitImport(repo_url="abc", git_ref="xyz"),
+            (sdk.GitImport(repo_url="abc", git_ref="xyz"),),
+        ),
+        (
+            sdk.GithubImport("abc"),
+            (sdk.GithubImport("abc"),),
+        ),
+        (
+            sdk.PythonImports("abc"),
+            (sdk.PythonImports("abc"),),
+        ),
+    ],
+)
+def test_dependency_imports(dependency_imports, expected_imports):
+    @sdk.task(dependency_imports=dependency_imports)
+    def my_task():
+        pass
+
+    assert my_task._dependency_imports == expected_imports

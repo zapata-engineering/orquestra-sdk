@@ -28,6 +28,7 @@ from orquestra.sdk.schema.ir import ArtifactFormat, ArtifactNodeId, TaskInvocati
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import JSONResult, PickleResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
+    ProjectRef,
     RunStatus,
     State,
     TaskRun,
@@ -470,10 +471,23 @@ class TestCreateWorkflowRun:
             body=QE_RESPONSES["submit"],
         )
 
-        result = runtime.create_workflow_run(TEST_WORKFLOW)
+        result = runtime.create_workflow_run(TEST_WORKFLOW, None)
 
         _save_workflow_run.assert_called_once()
         assert result == "workflow-id"
+
+    def test_project_raises_warning(self, monkeypatch, runtime, mocked_responses):
+        _save_workflow_run = Mock()
+        monkeypatch.setattr(_db.WorkflowDB, "save_workflow_run", _save_workflow_run)
+        mocked_responses.add(
+            responses.POST,
+            "http://localhost/v1/workflows",
+            body=QE_RESPONSES["submit"],
+        )
+        with pytest.warns(expected_warning=exceptions.UnsupportedRuntimeFeature):
+            runtime.create_workflow_run(
+                TEST_WORKFLOW, project=ProjectRef(workspace_id="", project_id="")
+            )
 
     @staticmethod
     def test_exception_on_bad_request_too_large(monkeypatch, runtime, mocked_responses):
@@ -487,7 +501,7 @@ class TestCreateWorkflowRun:
         )
 
         with pytest.raises(exceptions.WorkflowTooLargeError) as exc_info:
-            _ = runtime.create_workflow_run(TEST_WORKFLOW)
+            _ = runtime.create_workflow_run(TEST_WORKFLOW, None)
 
         _save_workflow_run.assert_not_called()
         assert "The submitted workflow is too large to be run on this cluster." in str(
@@ -508,7 +522,7 @@ class TestCreateWorkflowRun:
         )
 
         with pytest.raises(exceptions.WorkflowSyntaxError) as exc_info:
-            _ = runtime.create_workflow_run(TEST_WORKFLOW)
+            _ = runtime.create_workflow_run(TEST_WORKFLOW, None)
 
         _save_workflow_run.assert_not_called()
         assert "some other submission failure" in str(exc_info)
@@ -537,7 +551,7 @@ class TestCreateWorkflowRun:
         workflow = BadNameWorkflow.model
 
         with pytest.raises(exceptions.InvalidWorkflowDefinitionError) as exc_info:
-            runtime.create_workflow_run(workflow)
+            runtime.create_workflow_run(workflow, None)
 
         assert f'Workflow name "{workflow_name}" is invalid' in str(exc_info)
 
@@ -551,9 +565,9 @@ class TestCreateWorkflowRun:
             "http://localhost/v1/workflows",
             body=QE_RESPONSES["submit"],
         )
-        _ = runtime.create_workflow_run(TEST_WORKFLOW)
+        _ = runtime.create_workflow_run(TEST_WORKFLOW, None)
         captured_without_yaml = capsys.readouterr()
-        _ = runtime_verbose.create_workflow_run(TEST_WORKFLOW)
+        _ = runtime_verbose.create_workflow_run(TEST_WORKFLOW, None)
         captured_with_yaml = capsys.readouterr()
         yaml_wf = pydantic_to_yaml(workflow_to_yaml(TEST_WORKFLOW))
         assert yaml_wf in captured_with_yaml.err
@@ -1383,7 +1397,7 @@ class TestHTTPErrors:
             status=error_code,
         )
         with pytest.raises(expected_exception) as exc_info:
-            runtime.create_workflow_run(TEST_WORKFLOW)
+            runtime.create_workflow_run(TEST_WORKFLOW, None)
         for telltale in telltales:
             assert telltale in str(exc_info)
         _save_workflow_run.assert_not_called()

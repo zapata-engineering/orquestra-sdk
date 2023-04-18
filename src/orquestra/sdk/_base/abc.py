@@ -20,6 +20,7 @@ from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
+    ProjectRef,
     State,
     WorkflowRun,
     WorkflowRunId,
@@ -80,10 +81,16 @@ class RuntimeInterface(ABC):
 
     @abstractmethod
     def create_workflow_run(
-        self,
-        workflow_def: WorkflowDef,
+        self, workflow_def: WorkflowDef, project: t.Optional[ProjectRef]
     ) -> WorkflowRunId:
-        """Schedules a workflow definition for execution"""
+        """Schedules a workflow definition for execution
+
+        Args:
+            workflow_def: IR definition of workflow to be executed
+            project: project in which workflow is going to be executed
+                used currently only on CE runtime.
+                When omitted, WF will be scheduled at default project
+        """
         raise NotImplementedError()
 
     @abstractmethod

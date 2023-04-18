@@ -55,7 +55,7 @@ class Snippets:
         # This blocks the process until the workflow is completed.
         wf_run.wait_until_finished()
 
-        # Should print (3,)
+        # Should print 3
         print(wf_run.get_results())
         # </snippet>
 

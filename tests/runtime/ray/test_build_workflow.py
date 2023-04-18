@@ -1,9 +1,12 @@
+################################################################################
+# © Copyright 2023 Zapata Computing Inc.
+################################################################################
+
 from typing import Dict, Union
 from unittest.mock import ANY, Mock, call, create_autospec
 
 import pytest
 
-from orquestra.sdk._base import serde
 from orquestra.sdk._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
 )
@@ -123,43 +126,6 @@ class TestResourcesInMakeDag:
     def client(self):
         return create_autospec(_build_workflow.RayClient)
 
-    @pytest.fixture
-    def patch_env(self, monkeypatch: pytest.MonkeyPatch):
-        monkeypatch.setenv("ORQ_RAY_SET_TASK_RESOURCES", "1")
-
-    @pytest.mark.parametrize(
-        "resources, expected",
-        [
-            ({}, {}),
-            ({"cpu": "1000m"}, {}),
-            ({"memory": "1Gi"}, {}),
-            ({"gpu": "1"}, {}),
-            ({"cpu": "2", "memory": "10G", "gpu": "1"}, {}),
-        ],
-    )
-    def test_without_env_variable(
-        self,
-        client: Mock,
-        wf_run_id: str,
-        resources: Dict[str, str],
-        expected: Dict[str, Union[int, float]],
-    ):
-        workflow = workflow_parametrised_with_resources(**resources).model
-        _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, None)
-        calls = client.add_options.call_args_list
-
-        # We should only have two calls: our invocation and the aggregation step
-        assert len(calls) == 2
-        # Checking our call did not have any resources included
-        assert calls[0] == call(
-            ANY,
-            name=ANY,
-            metadata=ANY,
-            runtime_env=ANY,
-            catch_exceptions=ANY,
-            **expected
-        )
-
     @pytest.mark.parametrize(
         "resources, expected, types",
         [
@@ -174,9 +140,8 @@ class TestResourcesInMakeDag:
             ),
         ],
     )
-    def test_with_env_variable(
+    def test_setting_resources(
         self,
-        patch_env,
         client: Mock,
         wf_run_id: str,
         resources: Dict[str, str],

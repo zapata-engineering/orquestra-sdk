@@ -1,3 +1,7 @@
+################################################################################
+# © Copyright 2023 Zapata Computing Inc.
+################################################################################
+
 import os
 import traceback
 import typing as t
@@ -8,9 +12,9 @@ from typing_extensions import assert_never
 
 from .. import exceptions, secrets
 from .._base import _exec_ctx, _git_url_utils, _graphs, _log_adapter, dispatch, serde
-from .._base._env import RAY_DOWNLOAD_GIT_IMPORTS_ENV, RAY_SET_TASK_RESOURCES_ENV
+from .._base._env import RAY_DOWNLOAD_GIT_IMPORTS_ENV
 from ..kubernetes.quantity import parse_quantity
-from ..schema import ir, responses, workflow_run
+from ..schema import _compat, ir, responses, workflow_run
 from . import _client, _id_gen
 from ._client import RayClient
 from ._wf_metadata import InvUserMetadata, pydatic_to_json_dict
@@ -317,10 +321,6 @@ def make_ray_dag(
     # a mapping of "artifact ID" <-> "the ray Future needed to get the value"
     ray_futures: t.Dict[ir.ArtifactNodeId, t.Any] = {}
 
-    # Environment variable is used to configure if we apply task invocation resources
-    # to a Ray remote's options
-    add_resources = os.getenv(RAY_SET_TASK_RESOURCES_ENV) == "1"
-
     for invocation in _graphs.iter_invocations_topologically(workflow_def):
         user_task = workflow_def.tasks[invocation.task_id]
         pos_args, pos_args_artifact_nodes = _gather_args(
@@ -353,7 +353,7 @@ def make_ray_dag(
         }
 
         # Task resources
-        if add_resources and invocation.resources is not None:
+        if invocation.resources is not None:
             if invocation.resources.cpu is not None:
                 cpu = parse_quantity(invocation.resources.cpu)
                 cpu_int = cpu.to_integral_value()
@@ -376,7 +376,7 @@ def make_ray_dag(
             ray_kwargs=kwargs,
             args_artifact_nodes=pos_args_artifact_nodes,
             kwargs_artifact_nodes=kwargs_artifact_nodes,
-            n_outputs=user_task.output_metadata.n_outputs,
+            n_outputs=_compat.n_outputs(task_def=user_task, task_inv=invocation),
             project_dir=project_dir,
             user_fn_ref=user_task.fn_ref,
         )

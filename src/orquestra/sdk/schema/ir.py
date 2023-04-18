@@ -9,6 +9,7 @@ structure here is JSON-serializable.
 
 import enum
 import typing as t
+import warnings
 
 import pydantic
 from pydantic import BaseModel
@@ -223,7 +224,9 @@ class TaskDef(BaseModel):
 
     # Statically inferred from the task function. See also `TaskOutputMetadata`'s
     # docstring.
-    output_metadata: TaskOutputMetadata
+    # 'None' for IRs generated with orquestra-sdk<=0.45.1. Not empty for newer SDK
+    # versions.
+    output_metadata: t.Optional[TaskOutputMetadata] = None
 
     # ID of the import that contains the callable function
     source_import_id: ImportId
@@ -414,3 +417,46 @@ class WorkflowDef(BaseModel):
     # The resources that are available for the workflow to use.
     # If none, the runtime will decide.
     resources: t.Optional[Resources] = None
+
+    @pydantic.validator("metadata", always=True)
+    def sdk_version_up_to_date(cls, v: t.Optional[WorkflowMetadata]):
+        # Workaround for circular imports
+        from orquestra.sdk import exceptions
+        from orquestra.sdk.packaging import _versions
+        from orquestra.sdk.schema import _compat
+
+        current_version = _versions.get_current_sdk_version()
+
+        if v is None:
+            warnings.warn(
+                exceptions.VersionMismatch(
+                    (
+                        "Attempting to read a workflow definition generated with an "
+                        "old version of Orquestra Workflow SDK. Please consider "
+                        "re-running your workflow or downgrading orquestra-sdk. "
+                        "For more information visit: https://docs.orquestra.io/docs/core/sdk/guides/version-compatibility.html"  # noqa: E501
+                    ),
+                    actual=current_version,
+                    needed=None,
+                )
+            )
+            return v
+
+        if not _compat.versions_are_compatible(
+            generated_at=v.sdk_version, current=current_version
+        ):
+            warnings.warn(
+                exceptions.VersionMismatch(
+                    (
+                        "Attempting to read a workflow definition generated with a "
+                        "different version of Orquestra Workflow SDK. "
+                        "Please consider re-running your workflow or installing "
+                        f"'orquestra-sdk=={v.sdk_version.original}'. "
+                        "For more information visit: https://docs.orquestra.io/docs/core/sdk/guides/version-compatibility.html"  # noqa: E501
+                    ),
+                    actual=current_version,
+                    needed=v.sdk_version,
+                )
+            )
+
+        return v

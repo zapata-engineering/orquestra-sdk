@@ -3,26 +3,14 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
-
-* Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a `WorkflowSyntaxError` if no tasks are required to be executed.
 * Workflow and task results on CE have changed shape. This may cause some oddness when downloading older workflow results.
-* Remove TaskDef.model and TaskDef.import_models interfaces
 
 🔥 *Features*
-- Sort WF runs by start date in `list wf` command. Show start date as one of the columns
-- Sort WF runs by start date in all workflow commands in prompt selection. Show start date with WF id
-- Set resources for workflows on CE via `resources` keyword argument in the `@workflow` decorator or with `.with_resources()` on a `WorkflowDef`.
-- New parameters for `@workflow` decorator - `default_source_import` and `default_dependency_imports`.
-These parameters let you set the default imports for all tasks in given workflow.
-If a task defines its own imports (either source, dependencies, or both) - it will overwrite workflow defaults.
 
 👩‍🔬 *Experimental*
-
+* Setting workflow_id and project_id is now available on workflow Python API start() and prepare() functions
 
 🐛 *Bug Fixes*
-* Stopping a QE workflow after it has already stopped will no longer raise an exception.
-* Fix dependency issues causing CE workflows to fail if WF constant was library-dependent object.
-* Attempting to use the "in-process" runtime on the CLI will no longer raise an exception. Instead, a message telling you to use the Python API or Ray will be printed.
 * Fixed returning intermediate workflow values (e.g. with `orq task results`) when the task has multiple outputs and only some of them were used in the rest of the workflow function. The following should work now as expected:
 ```python
 @sdk.workflow
@@ -34,9 +22,38 @@ def my_wf():
 ```
 * Pickled workflow/task results should no longer cause workflows to fail inside the SDK machinery. Note: when passing a Python object between your tasks, you **must** ensure the Python dependencies are installed.
 
-
 💅 *Improvements*
+* `VersionMismatch` warning will be presented if we detect accessing a workflow def IR generated with another SDK version.
 
+🥷 *Internal*
+* `TaskOutputMetadata` model was added to the workflow def IR schema.
+
+📃 *Docs*
+
+## v0.46.0
+
+🚨 *Breaking Changes*
+* Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a `WorkflowSyntaxError` if no tasks are required to be executed.
+* Remove `TaskDef.model` and `TaskDef.import_models` interfaces
+* Public API classes `sdk.GitImport`, `sdk.GithubImport`, `sdk.LocalImport`, `sdk.InlineImport` now use `dataclasses.dataclass` instead of `typing.NamedTuple`.
+* Local Ray will now always pass resources to underlying ray.remote functions.
+
+🔥 *Features*
+* Sort WF runs by start date in `list wf` command. Show start date as one of the columns
+* Sort WF runs by start date in all workflow commands in prompt selection. Show start date with WF id
+* Set resources for workflows on CE via `resources` keyword argument in the `@workflow` decorator or with `.with_resources()` on a `WorkflowDef`.
+* New parameters for `@workflow` decorator - `default_source_import` and `default_dependency_imports`.
+These parameters let you set the default imports for all tasks in given workflow.
+If a task defines its own imports (either source, dependencies, or both) - it will overwrite workflow defaults.
+* Allow single imports as `dependency_imports` in `@task` decorators.
+* Listing workflow runs from Compute Engine now allows an upper limit to the number of runs to be listed to be set via the `limit` keyword.
+* Print HTTP requests and other debug information from `orq` CLI if `ORQ_VERBOSE` env flag is set.
+* CE runtime now supports getting logs from remote Ray runtimes.
+
+🐛 *Bug Fixes*
+* Stopping a QE workflow after it has already stopped will no longer raise an exception.
+* Fix dependency issues causing CE workflows to fail if WF constant was library-dependent object.
+* Attempting to use the "in-process" runtime on the CLI will no longer raise an exception. Instead, a message telling you to use the Python API or Ray will be printed.
 
 🥷 *Internal*
 * During YAML conversion, Workflow SDK repo matched on host and path, not full URL.
@@ -45,8 +62,8 @@ def my_wf():
 * Removed `corq` code.
 * Old `RuntimeInterface` methods have been removed.
 
-
 📃 *Docs*
+* Guide: CE Resource Management
 
 ## v0.45.1
 
@@ -61,7 +78,6 @@ def my_wf():
 
 🔥 *Features*
 * Use the requested resources from a workflow's tasks when submitting to CE
-* CE runtime now supports getting logs from remote Ray runtimes.
 
 
 🥷 *Internal*

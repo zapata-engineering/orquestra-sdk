@@ -10,3 +10,5 @@ Guides
     runtime-configuration
     workflow-syntax
     dependency-installation
+    resource-management
+    version-compatibility

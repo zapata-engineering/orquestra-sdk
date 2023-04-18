@@ -5,7 +5,7 @@ import orquestra.sdk as sdk
 
 @sdk.task(
     source_import=sdk.InlineImport(),
-    dependency_imports=[sdk.PythonImports("polars")],
+    dependency_imports=[sdk.PythonImports("polars==0.17.3")],
 )
 def my_fn(df):
     return df.item()

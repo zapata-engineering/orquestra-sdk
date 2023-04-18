@@ -3,7 +3,7 @@
 ################################################################################
 import typing as t
 
-from orquestra.sdk.schema.ir import TaskInvocationId
+from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.workflow_run import State
 
 
@@ -11,6 +11,13 @@ class WorkflowSyntaxError(Exception):
     def __init__(self, msg: str):
         super().__init__(msg)
         self.msg = msg
+
+
+class VersionMismatch(Warning):
+    def __init__(self, msg: str, actual: ir.Version, needed: t.Optional[ir.Version]):
+        super().__init__(msg)
+        self.actual = actual
+        self.needed = needed
 
 
 class DirtyGitRepo(Warning):
@@ -133,7 +140,7 @@ class TaskInvocationNotFoundError(NotFoundError):
     Raised when we can't find a Task Invocation that matches the provided ID.
     """
 
-    def __init__(self, invocation_id: TaskInvocationId):
+    def __init__(self, invocation_id: ir.TaskInvocationId):
         super().__init__()
         self.invocation_id = invocation_id
 
@@ -160,3 +167,12 @@ class LoginURLUnavailableError(BaseRuntimeError):
 
 class InProcessFromCLIError(NotFoundError):
     """Raised when the user requests the in-process runtime when using the CLI"""
+
+
+# Unsupported features
+class UnsupportedRuntimeFeature(Warning):
+    pass
+
+
+class ProjectInvalidError(BaseRuntimeError):
+    pass

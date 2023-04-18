@@ -9,6 +9,7 @@ import itertools
 import json
 import time
 import typing as t
+from contextlib import suppress as do_not_raise
 from datetime import timedelta
 from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospec
 
@@ -17,6 +18,7 @@ import pytest
 from orquestra.sdk._base import _api, _workflow, serde
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import (
+    ProjectInvalidError,
     UnauthorizedError,
     WorkflowRunCanNotBeTerminated,
     WorkflowRunNotFinished,
@@ -26,7 +28,7 @@ from orquestra.sdk.exceptions import (
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeName
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.workflow_run import RunStatus, State
+from orquestra.sdk.schema.workflow_run import ProjectRef, RunStatus, State
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
 
 from ..data.complex_serialization.workflow_defs import (
@@ -763,3 +765,29 @@ class TestListWorkflows:
         mock_config_runtime.list_workflow_runs.assert_called_with(
             limit=None, max_age=None, state=State.SUCCEEDED
         )
+
+
+@pytest.mark.parametrize(
+    "workspace_id, project_id, raises, expected",
+    [
+        ("a", "b", do_not_raise(), ProjectRef(workspace_id="a", project_id="b")),
+        ("a", None, pytest.raises(ProjectInvalidError), None),
+        (None, "b", pytest.raises(ProjectInvalidError), None),
+        (None, None, do_not_raise(), None),
+    ],
+)
+class TestProjectId:
+    def test_prepare(self, workspace_id, project_id, raises, expected):
+        with raises:
+            wf = wf_pass_tuple().prepare(
+                "in_process", workspace_id=workspace_id, project_id=project_id
+            )
+            assert wf._project == expected
+
+    def test_run(self, workspace_id, project_id, raises, expected, monkeypatch):
+        monkeypatch.setattr(_api._wf_run.WorkflowRun, "start", Mock())
+        with raises:
+            wf = wf_pass_tuple().run(
+                "in_process", workspace_id=workspace_id, project_id=project_id
+            )
+            assert wf._project == expected
