@@ -1003,9 +1003,11 @@ class RayRuntime(RuntimeInterface):
         return wf_runs
 
 
-def get_current_ids() -> t.Tuple[
-    t.Optional[WorkflowRunId], t.Optional[TaskInvocationId], t.Optional[TaskRunId]
-]:
+def get_current_ids() -> (
+    t.Tuple[
+        t.Optional[WorkflowRunId], t.Optional[TaskInvocationId], t.Optional[TaskRunId]
+    ]
+):
     """
     Uses Ray context to figure out what are the IDs of the currently running workflow
     and task.

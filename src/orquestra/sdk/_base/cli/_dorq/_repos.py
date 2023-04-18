@@ -487,7 +487,7 @@ class RuntimeRepo:
             # Ask QE for the login url to log in to the platform
         try:
             target_url = client.get_login_url(redirect_port)
-        except (requests.RequestException) as e:
+        except requests.RequestException as e:
             raise exceptions.LoginURLUnavailableError(uri) from e
         return target_url
 
