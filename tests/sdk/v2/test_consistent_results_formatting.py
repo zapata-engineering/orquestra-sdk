@@ -586,14 +586,13 @@ class TestAPI:
 
         assert artifacts_ip == artifacts_ray
         assert artifacts_ip == artifacts_qe
-        assert artifacts_ip != artifacts_ce  # TODO
-        assert artifacts_ce == {"invocation-0-task-get-list": ([1, 2, 3],)}
+        assert artifacts_ip == artifacts_ce
         assert isinstance(artifacts_ip, dict)
         assert artifacts_ip == {"invocation-0-task-get-list": [1, 2, 3]}
 
         assert task_outputs_ip == task_outputs_ray
         assert task_outputs_ip == task_outputs_qe
-        assert task_outputs_ip != task_outputs_ce  # TODO
+        assert task_outputs_ip == task_outputs_ce
         assert isinstance(task_outputs_ip, list)
         assert task_outputs_ip == [[1, 2, 3]]
 
@@ -637,7 +636,7 @@ class TestAPI:
 
         assert artifacts_ip == artifacts_ray
         assert artifacts_ip == artifacts_qe
-        assert artifacts_ip != artifacts_ce  # TODO
+        assert artifacts_ip == artifacts_ce
         assert isinstance(artifacts_ip, dict)
         assert artifacts_ip == {
             "invocation-0-task-get-list": [1, 2, 3],
@@ -646,7 +645,7 @@ class TestAPI:
 
         assert task_outputs_ip == task_outputs_ray
         assert task_outputs_ip == task_outputs_qe
-        assert task_outputs_ip != task_outputs_ce  # TODO
+        assert task_outputs_ip == task_outputs_ce
         assert isinstance(task_outputs_ip, list)
         assert task_outputs_ip == [[1, 2, 3], [1, 2, 3]]
 

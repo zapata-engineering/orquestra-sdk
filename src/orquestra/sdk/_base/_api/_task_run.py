@@ -131,7 +131,9 @@ class TaskRun:
                 "It may have failed or not be completed yet."
             ) from e
 
-        return serde.deserialize(task_outputs)
+        return (
+            lambda val: val if not isinstance(val, tuple) or len(val) > 1 else val[0]
+        )(serde.deserialize(task_outputs))
 
     def _find_invocation_by_output_id(self, output: ir.ArgumentId) -> ir.TaskInvocation:
         """

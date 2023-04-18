@@ -414,8 +414,13 @@ class WorkflowRun:
         # The output shape differs across runtimes when the workflow functions returns a
         # single, packed future. See more in:
         # https://zapatacomputing.atlassian.net/browse/ORQSDK-801
+
         return {
-            inv_id: serde.deserialize(inv_output)
+            inv_id: (
+                lambda val: val
+                if not isinstance(val, tuple) or len(val) > 1
+                else val[0]
+            )(serde.deserialize(inv_output))
             for inv_id, inv_output in inv_outputs.items()
         }
 
