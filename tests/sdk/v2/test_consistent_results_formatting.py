@@ -20,7 +20,7 @@ import pytest_httpserver
 
 import orquestra.sdk as sdk
 from orquestra.sdk._base._testing import _connections
-from orquestra.sdk.schema.workflow_run import RunStatus
+from orquestra.sdk.schema.workflow_run import RunStatus, TaskRun
 
 from .driver import resp_mocks
 
@@ -323,6 +323,16 @@ def mock_qe_run_multiple(httpserver: pytest_httpserver.HTTPServer) -> str:
         ),
         content_type="application/x-gtar-compressed",
     )
+    httpserver.expect_request(
+        f"/v2/workflows/{wf_id}/step/invocation-1-task-get-list/artifact/artifact-7-get-list"  # noqa: E501
+    ).respond_with_data(
+        _make_result_bytes(
+            QE_WORKFLOW_RESULT_JSON_DICT_MULTIPLE["wf-id-sentinel-bar"][
+                "artifact-7-get-list"
+            ]
+        ),
+        content_type="application/x-gtar-compressed",
+    )
 
     return wf_id
 
@@ -350,7 +360,13 @@ def mock_ce_run_single(httpserver: pytest_httpserver.HTTPServer) -> str:
             id_=wf_id,
             workflow_def_id=wf_def_id,
             status=RunStatus(state="SUCCEEDED"),
-            task_runs=[],
+            task_runs=[
+                TaskRun(
+                    id="foo",
+                    invocation_id="invocation-0-task-get-list",
+                    status=RunStatus(state="SUCCEEDED"),
+                )
+            ],
         )
     )
     httpserver.expect_request(f"/api/workflow-runs/{wf_id}").respond_with_json(
@@ -358,7 +374,13 @@ def mock_ce_run_single(httpserver: pytest_httpserver.HTTPServer) -> str:
             id_=wf_id,
             workflow_def_id=wf_def_id,
             status=RunStatus(state="SUCCEEDED"),
-            task_runs=[],
+            task_runs=[
+                TaskRun(
+                    id="foo",
+                    invocation_id="invocation-0-task-get-list",
+                    status=RunStatus(state="SUCCEEDED"),
+                )
+            ],
         )
     )
     httpserver.expect_request(
@@ -378,12 +400,12 @@ def mock_ce_run_single(httpserver: pytest_httpserver.HTTPServer) -> str:
             resp_mocks.make_get_wf_run_result_response([1, 2, 3])
         )
 
-    # Get artefacts
+    # Get artifacts
     httpserver.expect_request("/api/artifacts").respond_with_json(
-        {"data": {"task-0": ["artifact-0"]}}
+        {"data": {"invocation-0-task-get-list": ["artifact-3-get-list"]}}
     )
-    httpserver.expect_request("/api/artifacts/artifact-0").respond_with_data(
-        resp_mocks.make_get_wf_run_artifact_response([1, 2, 3])
+    httpserver.expect_request("/api/artifacts/artifact-3-get-list").respond_with_json(
+        resp_mocks.make_get_wf_run_artifact_response(([1, 2, 3],))
     )
 
     return wf_id
@@ -412,7 +434,18 @@ def mock_ce_run_multiple(httpserver: pytest_httpserver.HTTPServer) -> str:
             id_=wf_id,
             workflow_def_id=wf_def_id,
             status=RunStatus(state="SUCCEEDED"),
-            task_runs=[],
+            task_runs=[
+                TaskRun(
+                    id="foo",
+                    invocation_id="invocation-0-task-get-list",
+                    status=RunStatus(state="SUCCEEDED"),
+                ),
+                TaskRun(
+                    id="foo",
+                    invocation_id="invocation-1-task-get-list",
+                    status=RunStatus(state="SUCCEEDED"),
+                ),
+            ],
         )
     )
     httpserver.expect_request(f"/api/workflow-runs/{wf_id}").respond_with_json(
@@ -420,7 +453,18 @@ def mock_ce_run_multiple(httpserver: pytest_httpserver.HTTPServer) -> str:
             id_=wf_id,
             workflow_def_id=wf_def_id,
             status=RunStatus(state="SUCCEEDED"),
-            task_runs=[],
+            task_runs=[
+                TaskRun(
+                    id="foo",
+                    invocation_id="invocation-0-task-get-list",
+                    status=RunStatus(state="SUCCEEDED"),
+                ),
+                TaskRun(
+                    id="foo",
+                    invocation_id="invocation-1-task-get-list",
+                    status=RunStatus(state="SUCCEEDED"),
+                ),
+            ],
         )
     )
     httpserver.expect_request(
@@ -442,13 +486,18 @@ def mock_ce_run_multiple(httpserver: pytest_httpserver.HTTPServer) -> str:
 
     # Get artefacts
     httpserver.expect_request("/api/artifacts").respond_with_json(
-        {"data": {"task-0": ["artifact-0"], "task-1": ["artifact-1"]}}
+        {
+            "data": {
+                "invocation-0-task-get-list": ["artifact-3-get-list"],
+                "invocation-1-task-get-list": ["artifact-7-get-list"],
+            }
+        }
     )
-    httpserver.expect_request("/api/artifacts/artifact-0").respond_with_data(
-        resp_mocks.make_get_wf_run_artifact_response([1, 2, 3])
+    httpserver.expect_request("/api/artifacts/artifact-3-get-list").respond_with_json(
+        resp_mocks.make_get_wf_run_artifact_response(([1, 2, 3],))
     )
-    httpserver.expect_request("/api/artifacts/artifact-1").respond_with_data(
-        resp_mocks.make_get_wf_run_artifact_response([1, 2, 3])
+    httpserver.expect_request("/api/artifacts/artifact-7-get-list").respond_with_json(
+        resp_mocks.make_get_wf_run_artifact_response(([1, 2, 3],))
     )
 
     return wf_id
@@ -518,15 +567,15 @@ class TestAPI:
         results_qe = qe_run.get_results()
         results_ce = ce_run.get_results()
 
-        ip_run.get_artifacts()
-        ray_run.get_artifacts()
-        qe_run.get_artifacts()
-        ce_run.get_artifacts()
+        artifacts_ip = ip_run.get_artifacts()
+        artifacts_ray = ray_run.get_artifacts()
+        artifacts_qe = qe_run.get_artifacts()
+        artifacts_ce = ce_run.get_artifacts()
 
-        [t.get_outputs() for t in ip_run.get_tasks()]
-        [t.get_outputs() for t in ray_run.get_tasks()]
-        [t.get_outputs() for t in qe_run.get_tasks()]
-        [t.get_outputs() for t in ce_run.get_tasks()]
+        task_outputs_ip = [t.get_outputs() for t in ip_run.get_tasks()]
+        task_outputs_ray = [t.get_outputs() for t in ray_run.get_tasks()]
+        task_outputs_qe = [t.get_outputs() for t in qe_run.get_tasks()]
+        task_outputs_ce = [t.get_outputs() for t in ce_run.get_tasks()]
 
         # THEN
         assert results_ip == results_ray
@@ -535,17 +584,18 @@ class TestAPI:
         assert isinstance(results_ip, list)
         assert results_ip == [1, 2, 3]
 
-        # assert artifacts_ip == artifacts_ray
-        # assert artifacts_ip == artifacts_qe
-        # # assert artifacts_ip == artifacts_ce
-        # assert isinstance(artifacts_ip, dict)
-        # assert artifacts_ip == {"invocation-0-task-get-list": [1, 2, 3]}
+        assert artifacts_ip == artifacts_ray
+        assert artifacts_ip == artifacts_qe
+        assert artifacts_ip != artifacts_ce  # TODO
+        assert artifacts_ce == {"invocation-0-task-get-list": ([1, 2, 3],)}
+        assert isinstance(artifacts_ip, dict)
+        assert artifacts_ip == {"invocation-0-task-get-list": [1, 2, 3]}
 
-        # assert task_outputs_ip == task_outputs_ray
-        # assert task_outputs_ip == task_outputs_qe
-        # # assert task_outputs_ip == task_outputs_ce
-        # assert isinstance(task_outputs_ip, list)
-        # assert task_outputs_ip == [[1, 2, 3]]
+        assert task_outputs_ip == task_outputs_ray
+        assert task_outputs_ip == task_outputs_qe
+        assert task_outputs_ip != task_outputs_ce  # TODO
+        assert isinstance(task_outputs_ip, list)
+        assert task_outputs_ip == [[1, 2, 3]]
 
     @staticmethod
     def test_consistent_returns_for_multiple_values(
@@ -568,15 +618,15 @@ class TestAPI:
         results_qe = qe_run.get_results()
         results_ce = ce_run.get_results()
 
-        ip_run.get_artifacts()
-        ray_run.get_artifacts()
-        # artifacts_qe = qe_run.get_artifacts()
-        ce_run.get_artifacts()
+        artifacts_ip = ip_run.get_artifacts()
+        artifacts_ray = ray_run.get_artifacts()
+        artifacts_qe = qe_run.get_artifacts()
+        artifacts_ce = ce_run.get_artifacts()
 
-        [t.get_outputs() for t in ip_run.get_tasks()]
-        [t.get_outputs() for t in ray_run.get_tasks()]
-        # task_outputs_qe = [t.get_outputs() for t in qe_run.get_tasks()]
-        [t.get_outputs() for t in ce_run.get_tasks()]
+        task_outputs_ip = [t.get_outputs() for t in ip_run.get_tasks()]
+        task_outputs_ray = [t.get_outputs() for t in ray_run.get_tasks()]
+        task_outputs_qe = [t.get_outputs() for t in qe_run.get_tasks()]
+        task_outputs_ce = [t.get_outputs() for t in ce_run.get_tasks()]
 
         # THEN
         assert results_ip == results_ray
@@ -585,20 +635,20 @@ class TestAPI:
         assert isinstance(results_ip, tuple)
         assert results_ip == ([1, 2, 3], [1, 2, 3])
 
-        # assert artifacts_ip == artifacts_ray
-        # # assert artifacts_ip == artifacts_qe
-        # # assert artifacts_ip == artifacts_ce
-        # assert isinstance(artifacts_ip, dict)
-        # assert artifacts_ip == {
-        #     "invocation-0-task-get-list": [1, 2, 3],
-        #     "invocation-1-task-get-list": [1, 2, 3],
-        # }
+        assert artifacts_ip == artifacts_ray
+        assert artifacts_ip == artifacts_qe
+        assert artifacts_ip != artifacts_ce  # TODO
+        assert isinstance(artifacts_ip, dict)
+        assert artifacts_ip == {
+            "invocation-0-task-get-list": [1, 2, 3],
+            "invocation-1-task-get-list": [1, 2, 3],
+        }
 
-        # assert task_outputs_ip == task_outputs_ray
-        # # assert task_outputs_ip == task_outputs_qe
-        # # assert task_outputs_ip == task_outputs_ce
-        # assert isinstance(task_outputs_ip, list)
-        # assert task_outputs_ip == [[1, 2, 3], [1, 2, 3]]
+        assert task_outputs_ip == task_outputs_ray
+        assert task_outputs_ip == task_outputs_qe
+        assert task_outputs_ip != task_outputs_ce  # TODO
+        assert isinstance(task_outputs_ip, list)
+        assert task_outputs_ip == [[1, 2, 3], [1, 2, 3]]
 
 
 @pytest.mark.usefixtures(
