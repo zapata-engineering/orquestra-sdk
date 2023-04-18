@@ -82,10 +82,11 @@ class InlineImport(BaseModel):
 
 
 class PackageSpec(BaseModel):
+    # noqa E51
     """Representation of single package import
 
     The fields in this class are based on:
-    https://packaging.pypa.io/en/latest/requirements.html#packaging.requirements.Requirement   # noqa
+    https://packaging.pypa.io/en/latest/requirements.html#packaging.requirements.Requirement
 
     Look there for more information about valid string values.
     """
