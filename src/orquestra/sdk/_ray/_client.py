@@ -13,8 +13,8 @@ try:
     import ray._private.utils
     import ray.runtime_env
     import ray.workflow
-    from ray import exceptions
-    from ray.workflow import exceptions as workflow_exceptions
+    from ray import exceptions  # noqa: F401
+    from ray.workflow import exceptions as workflow_exceptions  # noqa: F401
 except ModuleNotFoundError:
     if not t.TYPE_CHECKING:
         WorkflowStatus = None
