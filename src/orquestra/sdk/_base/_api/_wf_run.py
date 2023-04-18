@@ -368,17 +368,15 @@ class WorkflowRun:
             )
         except WorkflowRunNotSucceeded:
             raise
-
         # Returning as a sequence is really helful for any context where we need to
         # infer the total number of results, for example when writing them to separate
         # files from the CLI. Returning single values on their own is more intuitive
         # for standard python, but could create confusion if the returned value is
         # itself a sequence. Therefore we provide a utility to control this behaviour.
-        if (
-            not force_as_sequence
-            and len(self.get_status_model().workflow_def.output_ids) == 1
-        ):
-            return returns[0]
+        if not force_as_sequence:
+            expected_outputs = self.get_status_model().workflow_def.output_ids
+            if len(expected_outputs) == 1 and len(returns) == 1:
+                return returns[0]
 
         return returns
 
