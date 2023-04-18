@@ -274,8 +274,7 @@ NONE_RESOURCES = {
     "cpu": None,
     "memory": None,
     "gpu": None,
-    "disk": None,
-    "gpu": None,
+    "disk": None,  # noqa: F841
     "nodes": None,
 }
 

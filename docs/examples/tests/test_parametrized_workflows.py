@@ -33,7 +33,7 @@ class Snippets:
     def execute_single_workflow():
         from parametrized_workflow import parametrized_workflow
 
-        import orquestra.sdk as sdk
+        import orquestra.sdk as sdk  # noqa: F401
 
         wf = parametrized_workflow(1, 2)
 
@@ -63,7 +63,7 @@ class Snippets:
     def execute_multiple_workflows():
         from parametrized_workflow import parametrized_workflow
 
-        import orquestra.sdk as sdk
+        import orquestra.sdk as sdk  # noqa: F401
 
         # creating 5 workflows
         workflows = [parametrized_workflow(a, a + 1) for a in range(5)]
