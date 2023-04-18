@@ -74,7 +74,7 @@ class Snippets:
         # wait for every workflow to be finished
         [workflow_run.wait_until_finished() for workflow_run in workflow_runs]
 
-        # print the result for each of the worklfow run
+        # print the result for each of the workflow run
         for workflow_run in workflow_runs:
             print(workflow_run.get_results())
         # </snippet>

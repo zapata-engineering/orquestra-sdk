@@ -731,7 +731,7 @@ class RayRuntime(RuntimeInterface):
         """
 
         # Turn off internal Ray logs, unless there is an error
-        # If Ray is set to configure logging, this will be overriden
+        # If Ray is set to configure logging, this will be overridden
         logger = logging.getLogger("ray")
         logger.setLevel(logging.ERROR)
 

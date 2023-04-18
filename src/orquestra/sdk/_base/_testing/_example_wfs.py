@@ -53,7 +53,7 @@ def multioutput_task():
 def task_with_git_import():
     import piccup  # type: ignore # noqa
 
-    # return whatever - make sure it just doesnt assert on import
+    # return whatever - make sure it just doesn't assert on import
     return 2
 
 
