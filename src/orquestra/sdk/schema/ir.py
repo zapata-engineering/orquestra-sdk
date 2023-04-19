@@ -82,7 +82,7 @@ class InlineImport(BaseModel):
 
 
 class PackageSpec(BaseModel):
-    # noqa E51
+    # noqa E501
     """Representation of single package import
 
     The fields in this class are based on:
