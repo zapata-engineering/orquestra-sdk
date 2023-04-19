@@ -210,10 +210,19 @@ class CERuntime(RuntimeInterface):
 
         if len(result_ids) == 0:
             wf_run = self.get_workflow_run_status(workflow_run_id)
-            raise exceptions.WorkflowRunNotSucceeded(
-                f"Workflow run `{workflow_run_id}` is in state {wf_run.status.state}",
-                wf_run.status.state,
-            )
+            if wf_run.status.state == State.SUCCEEDED:
+                raise exceptions.WorkflowResultsNotReadyError(
+                    f"Workflow run `{workflow_run_id}` has succeded, but the results "
+                    "are not ready yet.\n"
+                    "After a workflow completes, there may be a short delay before the "
+                    "results are ready to download. Please try again!"
+                )
+            else:
+                raise exceptions.WorkflowRunNotSucceeded(
+                    f"Workflow run `{workflow_run_id}` is in state "
+                    f"{wf_run.status.state}",
+                    wf_run.status.state,
+                )
 
         assert len(result_ids) == 1, "We're currently expecting a single result."
 
