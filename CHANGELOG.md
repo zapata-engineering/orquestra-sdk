@@ -11,7 +11,7 @@
 * Setting workflow_id and project_id is now available on workflow Python API start() and prepare() functions
 
 🐛 *Bug Fixes*
-* Add a better error message when attempting to get the results of a succeeded workflow, before the results are available from Compute Engine.
+* Retry getting results from CE if the results were not ready but the workflow succeeded.
 
 💅 *Improvements*
 
