@@ -25,6 +25,7 @@ def retry(
             All other exceptions will not cause the function to be retried.
         delay: if set, there will be a short pause (sleep) before retrying
     """
+
     def _inner(fn):
         def _retried(*args, **kwargs):
             for i in range(attempts):
