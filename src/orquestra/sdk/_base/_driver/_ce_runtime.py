@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import serde
+from orquestra.sdk._base import _retry, serde
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base.abc import ArtifactValue, RuntimeInterface
 from orquestra.sdk.kubernetes.quantity import parse_quantity
@@ -177,6 +177,11 @@ class CERuntime(RuntimeInterface):
                 "- the authorization token was rejected by the remote cluster."
             ) from e
 
+    @_retry.retry(
+        attempts=5,
+        delay=0.2,
+        allowed_exceptions=(exceptions.WorkflowResultsNotReadyError,),
+    )
     def get_workflow_run_outputs_non_blocking(
         self, workflow_run_id: WorkflowRunId
     ) -> Sequence[Any]:
@@ -195,9 +200,13 @@ class CERuntime(RuntimeInterface):
         Returns:
             the outputs associated with the workflow run
         """
+
         try:
             result_ids = self._client.get_workflow_run_results(workflow_run_id)
-        except (_exceptions.InvalidWorkflowRunID, _exceptions.WorkflowRunNotFound) as e:
+        except (
+            _exceptions.InvalidWorkflowRunID,
+            _exceptions.WorkflowRunNotFound,
+        ) as e:
             raise exceptions.WorkflowRunNotFoundError(
                 f"Workflow run with id `{workflow_run_id}` not found"
             ) from e
@@ -210,10 +219,19 @@ class CERuntime(RuntimeInterface):
 
         if len(result_ids) == 0:
             wf_run = self.get_workflow_run_status(workflow_run_id)
-            raise exceptions.WorkflowRunNotSucceeded(
-                f"Workflow run `{workflow_run_id}` is in state {wf_run.status.state}",
-                wf_run.status.state,
-            )
+            if wf_run.status.state == State.SUCCEEDED:
+                raise exceptions.WorkflowResultsNotReadyError(
+                    f"Workflow run `{workflow_run_id}` has succeded, but the results "
+                    "are not ready yet.\n"
+                    "After a workflow completes, there may be a short delay before the "
+                    "results are ready to download. Please try again!"
+                )
+            else:
+                raise exceptions.WorkflowRunNotSucceeded(
+                    f"Workflow run `{workflow_run_id}` is in state "
+                    f"{wf_run.status.state}",
+                    wf_run.status.state,
+                )
 
         assert len(result_ids) == 1, "We're currently expecting a single result."
 

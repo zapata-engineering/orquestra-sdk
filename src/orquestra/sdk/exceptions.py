@@ -138,6 +138,12 @@ class TaskInvocationNotFoundError(NotFoundError):
         self.invocation_id = invocation_id
 
 
+class WorkflowResultsNotReadyError(NotFoundError):
+    """
+    Raised when a workflow has succeeded, but the results are not ready yet
+    """
+
+
 # Auth Errors
 class UnauthorizedError(BaseRuntimeError):
     pass
