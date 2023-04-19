@@ -2,14 +2,14 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 import time
-from typing import Optional, Sequence
+from typing import Optional, Tuple, Type
 
 
 def retry(
     *,
     attempts: int,
+    allowed_exceptions: Tuple[Type[Exception]],
     delay: Optional[float] = None,
-    allowed_exceptions: Sequence[Exception]
 ):
     def _inner(fn):
         def _retried(*args, **kwargs):
