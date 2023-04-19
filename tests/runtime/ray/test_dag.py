@@ -5,6 +5,7 @@
 Unit tests for orquestra.sdk._ray._dag. If you need a test against a live
 Ray connection, see tests/ray/test_integration.py instead.
 """
+import copy
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, Union
@@ -16,6 +17,7 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base._config import RuntimeConfiguration, RuntimeName
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base._testing._example_wfs import (
+    wf_with_secrets,
     workflow_parametrised_with_resources,
 )
 from orquestra.sdk._ray import _client, _dag, _ray_logs
@@ -24,6 +26,16 @@ from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import ProjectRef, State
 
 TEST_TIME = datetime.now(timezone.utc)
+
+
+@pytest.fixture
+def wf_run_id():
+    return "mocked_wf_run_id"
+
+
+@pytest.fixture
+def client():
+    return create_autospec(_dag.RayClient)
 
 
 @pytest.mark.parametrize(
@@ -188,12 +200,6 @@ class TestRayRuntime:
             config_name="TestRayRuntime",
             runtime_name=RuntimeName.RAY_LOCAL,
         )
-
-    @staticmethod
-    @pytest.fixture
-    def client():
-        client = Mock()
-        return client
 
     class TestReadingLogs:
         """
@@ -616,14 +622,6 @@ class TestPipString:
 
 
 class TestResourcesInMakeDag:
-    @pytest.fixture
-    def wf_run_id(self):
-        return "mocked_wf_run_id"
-
-    @pytest.fixture
-    def client(self):
-        return create_autospec(_dag.RayClient)
-
     @pytest.mark.parametrize(
         "resources, expected, types",
         [
@@ -663,3 +661,19 @@ class TestResourcesInMakeDag:
         )
         for kwarg_name, type_ in types.items():
             assert isinstance(calls[0].kwargs[kwarg_name], type_)
+
+
+def test_make_ray_dag_dont_modify_args(
+    monkeypatch: pytest.MonkeyPatch, client: Mock, wf_run_id: str
+):
+    # Given
+    workflow = wf_with_secrets().model
+    original_workflow = copy.deepcopy(workflow)
+    secrets_get = create_autospec(_dag.secrets.get)
+    secrets_get.return_value = "mocked"
+    monkeypatch.setattr(_dag.secrets, "get", secrets_get)
+    # When
+    _ = _dag._make_ray_dag(client, workflow, wf_run_id, None)
+    # Then
+    # The workflow arg should not be modified, matching the original model
+    assert workflow == original_workflow

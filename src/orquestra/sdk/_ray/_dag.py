@@ -382,7 +382,9 @@ def _gather_kwargs(
 def _make_ray_dag(
     client: RayClient, wf: ir.WorkflowDef, wf_run_id: str, project_dir: t.Optional[Path]
 ):
-    ray_consts: t.Dict[ir.ConstantNodeId, t.Any] = wf.constant_nodes
+    # We need to modify the dictionary, by adding new key-values.
+    # A shallow copy is OK, as long as we don't modify the _values_ in the dict.
+    ray_consts: t.Dict[ir.ConstantNodeId, t.Any] = wf.constant_nodes.copy()
 
     for id, secret in wf.secret_nodes.items():
         ray_consts[id] = secrets.get(
