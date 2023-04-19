@@ -383,7 +383,11 @@ def _make_ray_dag(
     client: RayClient, wf: ir.WorkflowDef, wf_run_id: str, project_dir: t.Optional[Path]
 ):
     # We need to modify the dictionary, by adding new key-values.
-    # A shallow copy is OK, as long as we don't modify the _values_ in the dict.
+    # We will need to make a copy to prevent mutating the argument.
+    # Note: this is a *shallow copy* and the values in the dict are not copied but still
+    #       reference the original values. This only works with the assumption that we
+    #       DO NOT MUTATE values in the dictionary.
+    #       When this was implemented, we did not mutate values and only added new keys.
     ray_consts: t.Dict[ir.ConstantNodeId, t.Any] = wf.constant_nodes.copy()
 
     for id, secret in wf.secret_nodes.items():
