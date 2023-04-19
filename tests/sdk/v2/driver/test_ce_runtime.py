@@ -523,6 +523,7 @@ class TestGetWorkflowRunResultsNonBlocking:
 
         def test_no_results_succeeded(
             self,
+            monkeypatch: pytest.MonkeyPatch,
             mocked_client: MagicMock,
             runtime: _ce_runtime.CERuntime,
             workflow_run_id: str,
@@ -533,9 +534,34 @@ class TestGetWorkflowRunResultsNonBlocking:
             mocked_client.get_workflow_run.return_value = workflow_run_status(
                 State.SUCCEEDED
             )
+            monkeypatch.setattr(_ce_runtime._retry.time, "sleep", Mock())
             # When
             with pytest.raises(exceptions.WorkflowResultsNotReadyError):
                 _ = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
+
+            # We should try a few times if the results were not ready
+            assert mocked_client.get_workflow_run_results.call_count == 5
+
+        def test_eventually_get_results(
+            self,
+            monkeypatch: pytest.MonkeyPatch,
+            mocked_client: MagicMock,
+            runtime: _ce_runtime.CERuntime,
+            workflow_run_id: str,
+            workflow_run_status,
+        ):
+            # Given
+            mocked_client.get_workflow_run_results.side_effect = [[], [], [Mock()]]
+            mocked_client.get_workflow_run.return_value = workflow_run_status(
+                State.SUCCEEDED
+            )
+            monkeypatch.setattr(_ce_runtime.serde, "deserialize", lambda x: x)
+            monkeypatch.setattr(_ce_runtime._retry.time, "sleep", Mock())
+            # When
+            _ = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
+
+            # We should have the results after 3 attempts
+            assert mocked_client.get_workflow_run_results.call_count == 3
 
         def test_unknown_http(
             self,
