@@ -12,6 +12,7 @@
 
 🐛 *Bug Fixes*
 * Retry getting results from CE if the results were not ready but the workflow succeeded.
+* Using secrets inside the workflow function will now work correctly on Ray
 
 💅 *Improvements*
 
