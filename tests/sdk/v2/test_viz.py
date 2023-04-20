@@ -49,7 +49,7 @@ class TestWfDefGraph:
             _viz.Node(id="constant-0", caption=["3"]),
             _viz.Node(id="constant-1", caption=["123"]),
             _viz.Node(id="constant-2", caption=["6"]),
-            _viz.Node(id=aggregate_step_name, caption=["outputs"])
+            _viz.Node(id=aggregate_step_name, caption=["outputs"]),
         ]
         assert graph.edges == [
             ("artifact-1-inc-2", "invocation-0-task-inc"),
