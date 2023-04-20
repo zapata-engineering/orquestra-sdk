@@ -5,6 +5,7 @@
 Workflow visualization using graphviz.
 """
 
+import itertools
 import typing as t
 from dataclasses import dataclass
 
@@ -87,7 +88,7 @@ def wf_def_graph(wf_def: ir.WorkflowDef) -> BiGraph:
         )
 
         # 2. Connect task with arguments
-        for arg_id in task_inv.args_ids:
+        for arg_id in itertools.chain(task_inv.args_ids, task_inv.kwargs_ids.values()):
             # We don't define a node here, because artifacts are declared with the
             # tasks that produce them (below), and workflow constants are defined
             # totally separately.
@@ -101,6 +102,11 @@ def wf_def_graph(wf_def: ir.WorkflowDef) -> BiGraph:
     # 4. Add workflow constants
     for constant in wf_def.constant_nodes.values():
         artifact_nodes.append(Node(id=constant.id, caption=[constant.value_preview]))
+
+    aggregation_step_id = "aggregation_step"
+    artifact_nodes.append(Node(id=aggregation_step_id, caption=["outputs"]))
+    for wf_output in wf_def.output_ids:
+        edges.append((wf_output, aggregation_step_id))
 
     return BiGraph(nodes1=task_nodes, nodes2=artifact_nodes, edges=edges)
 

@@ -32,7 +32,7 @@ def integer_division(a, b):
 @sdk.workflow
 def wf(param: int):
     floor, remainder = integer_division(param, 3)
-    floor_plus_6 = add(floor, 6)
+    floor_plus_6 = add(a=floor, b=6)
     remainder_plus_3 = inc(inc_2(remainder))
 
     return floor_plus_6, remainder_plus_3
