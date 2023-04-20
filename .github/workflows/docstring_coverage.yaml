@@ -60,10 +60,13 @@ jobs:
           git checkout $HEAD
           docstr-coverage --fail-under=$BASE_COV
       - name: Blame
-        run: |
-          git diff --name-only $(git merge-base $BASE $HEAD) | \
-          xargs docstr-coverage --accept-empty
-        if: failure()
+        uses: zapatacomputing/command-pr-comment@baca4fb9246eaaee3e47f35f296764acc394fae7
+        with:
+          command: |
+            git diff --name-only $(git merge-base $BASE $HEAD) | \
+            xargs docstr-coverage --accept-empty
+          template: "🚀 Docstring Coverage\n```%command%```"
+          update-text: "🚀 Docstring Coverage"
 
       - name: Get new coverage
         run: echo "NEW_COV=$(printf "%.f" $(docstr-coverage -p))" >> $GITHUB_ENV
