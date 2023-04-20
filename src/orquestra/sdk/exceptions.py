@@ -1,6 +1,11 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
+
+"""
+Custom exceptions for the SDK.
+"""
+
 import typing as t
 
 from orquestra.sdk.schema import ir
@@ -221,7 +226,7 @@ class UserCancelledPrompt(BaseRuntimeError):
 
 
 class LoginURLUnavailableError(BaseRuntimeError):
-    """Raised when the logun URL for is unavailable."""
+    """Raised when the login URL for is unavailable."""
 
     def __init__(self, base_uri: str):
         self.base_uri = base_uri
@@ -233,8 +238,12 @@ class InProcessFromCLIError(NotFoundError):
 
 # Unsupported features
 class UnsupportedRuntimeFeature(Warning):
+    """Raised when a requested feature is not supported on the selected runtime."""
+
     pass
 
 
 class ProjectInvalidError(BaseRuntimeError):
+    """When there is insufficient information provided to identify a unique project."""
+
     pass
