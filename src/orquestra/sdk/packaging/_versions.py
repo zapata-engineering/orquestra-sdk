@@ -1,6 +1,11 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
+
+"""
+Utilities for handling pip packages.
+"""
+
 import re
 import sys
 from typing import Any, Optional
@@ -17,12 +22,12 @@ from orquestra.sdk.schema import ir
 
 
 class PackagingError(exceptions.BaseRuntimeError):
-    """Base error for any packaging errors"""
+    """Base error for any packaging errors."""
 
 
 def get_installed_version(package_name: str) -> str:
     """
-    Gets the installed version of a specific package
+    Gets the installed version of a specific package.
 
     A package is what you use when you `pip install` something, not the module:
 
@@ -82,22 +87,22 @@ def InstalledImport(
     fallback: Optional[Import] = None,
 ) -> Import:
     """
-    Returns PythonImports for a task for the installed version of a package
+    Returns PythonImports for a task for the installed version of a package.
 
-    On an error, if a fallback is provided, the fallback is returned instead
+    On an error, if a fallback is provided, the fallback is returned instead.
 
     Args:
-        package_name: the package to use as the import
-        version_match: a regex string to match the installed version
+        package_name: the package to use as the import.
+        version_match: a regex string to match the installed version.
         fallback: a fallback import to return if there are any issues
-            in finding the package version
+            in finding the package version.
 
     Raises:
         PackagingError: If there are any issues finding an installed package and no
             fallback is provided.
 
     Returns:
-        Either a PythonImports for package_name at the installed version or `fallback`
+        Either a PythonImports for package_name at the installed version or `fallback`.
 
     """
     try:
@@ -119,16 +124,16 @@ def InstalledImport(
 
 def execute_task(task: TaskDef, args, kwargs) -> Any:
     """
-    A helper method for testing tasks by executing them outside of the workflow graph
+    A helper method for testing tasks by executing them outside of the workflow graph.
 
     Use only for unittesting code.
 
     Args:
-        task: the task you want to execute
-        args: the positional arguments to pass to the task
-        kwargs: the keyword arguments to pass to the task
+        task: the task you want to execute.
+        args: the positional arguments to pass to the task.
+        kwargs: the keyword arguments to pass to the task.
 
     Returns:
-        the result of executing a task
+        the result of executing a task.
     """
     return task._TaskDef__sdk_task_body(*args, **kwargs)
