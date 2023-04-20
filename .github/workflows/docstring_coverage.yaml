@@ -37,5 +37,5 @@ jobs:
         run: |
           changed_files=$(git diff --diff-filter=d --name-only $(git merge-base HEAD origin/main) HEAD | grep .py)
           if [ ! -z "$changed_files" ];
-            then interrogate $(git diff --diff-filter=d --name-only $(git merge-base HEAD origin/master) HEAD | grep .py);
+            then python -m interrogate $(git diff --diff-filter=d --name-only $(git merge-base HEAD origin/master) HEAD | grep .py);
           fi

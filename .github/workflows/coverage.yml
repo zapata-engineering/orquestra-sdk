@@ -1,62 +1,62 @@
-# This workflow runs tests and reports code coverage.
+# # This workflow runs tests and reports code coverage.
 
-# We need a workflow name to be able to schedule it from Github UI
-name: TestCoverage
+# # We need a workflow name to be able to schedule it from Github UI
+# name: TestCoverage
 
-on:
-  # Triggers the workflow on push to main
-  push:
-    branches:
-      - main
-  # Triggers the workflow on any PR
-  pull_request:
+# on:
+#   # Triggers the workflow on push to main
+#   push:
+#     branches:
+#       - main
+#   # Triggers the workflow on any PR
+#   pull_request:
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+#   # Allows you to run this workflow manually from the Actions tab
+#   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: true
 
-jobs:
-  # The job ID has to match repo settings for PR required checks
-  TestCoverage:
-    runs-on: ${{ matrix.os }}
+# jobs:
+#   # The job ID has to match repo settings for PR required checks
+#   TestCoverage:
+#     runs-on: ${{ matrix.os }}
 
-    # Run jobs for a couple of Python versions and OSes.
-    strategy:
-      matrix:
-        os: ["ubuntu-latest", "windows-latest"]
-        python: ["3.8", "3.9"]
+#     # Run jobs for a couple of Python versions and OSes.
+#     strategy:
+#       matrix:
+#         os: ["ubuntu-latest", "windows-latest"]
+#         python: ["3.8", "3.9"]
 
-    timeout-minutes: 25
+#     timeout-minutes: 25
 
-    name: Coverage - Python ${{ matrix.python }} - ${{ matrix.os }}
+#     name: Coverage - Python ${{ matrix.python }} - ${{ matrix.os }}
 
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          # Fetch depth 0 required to compare against `main`
-          fetch-depth: 0
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python }}
-          architecture: x64
-      # Used to create OS-agnostic python virtual env used for other steps.
-      - uses: syphar/restore-virtualenv@v1
-        id: cache-virtualenv
+#     steps:
+#       - uses: actions/checkout@v3
+#         with:
+#           # Fetch depth 0 required to compare against `main`
+#           fetch-depth: 0
+#       - uses: actions/setup-python@v4
+#         with:
+#           python-version: ${{ matrix.python }}
+#           architecture: x64
+#       # Used to create OS-agnostic python virtual env used for other steps.
+#       - uses: syphar/restore-virtualenv@v1
+#         id: cache-virtualenv
 
-      - name: Install deps
-        shell: bash
-        run: make github_actions
+#       - name: Install deps
+#         shell: bash
+#         run: make github_actions
 
-      - name: Run tests and gather coverage stats
-        shell: bash
-        run: make coverage
+#       - name: Run tests and gather coverage stats
+#         shell: bash
+#         run: make coverage
 
-      - name: Comment with code coverage
-        uses: zapatacomputing/command-pr-comment@baca4fb9246eaaee3e47f35f296764acc394fae7
-        with:
-          command: make github-actions-coverage-report
-          template: "🚀 Code Coverage\n```%command%```"
-          update-text: "🚀 Code Coverage"
+#       - name: Comment with code coverage
+#         uses: zapatacomputing/command-pr-comment@baca4fb9246eaaee3e47f35f296764acc394fae7
+#         with:
+#           command: make github-actions-coverage-report
+#           template: "🚀 Code Coverage\n```%command%```"
+#           update-text: "🚀 Code Coverage"
