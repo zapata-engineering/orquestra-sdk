@@ -116,3 +116,15 @@ test-fast:
 		--durations=10 \
 		docs/examples/tests \
 		tests
+
+# Get docstring coverage
+# By default, `make docstring-cov` gives the coverage report for everything in the src
+# dir. Anything set as the `args` variable will be passed down to interrogate, so to
+# target specific files use: `make docstring-cov args="path/to/files"`. Similarly, to
+# write the results out to a file: `make docstring-cov args="-o docstring-coverage.txt"`
+docstring-cov:
+ifdef paths
+	PYTHONPATH="." $(PYTHON) -m interrogate $(args)
+else
+	PYTHONPATH="." $(PYTHON) -m interrogate src $(args)
+endif
