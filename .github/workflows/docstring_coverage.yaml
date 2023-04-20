@@ -26,9 +26,9 @@ jobs:
     steps:
       - name: Git Checkout
         uses: actions/checkout@v3
-        with:
-          # Fetch depth 0 required to compare against `main`
-          fetch-depth: 0
+        # with:
+        #   # Fetch depth 0 required to compare against `main`
+        #   fetch-depth: 0
 
       # - name: Gather coverage stats
       #   shell: bash
