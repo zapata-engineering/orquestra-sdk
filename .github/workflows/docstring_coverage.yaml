@@ -29,13 +29,27 @@ jobs:
         with:
           # Fetch depth 0 required to compare against `main`
           fetch-depth: 0
+      - uses: actions/setup-python@v4
+        with
+          python-version: ${{ matrix.python }}
+          architecture: x64
+      # Used to create OS-agnostic python virtual env used for other steps.
+      - uses: syphar/restore-virtualenv@v1
+        id: cache-virtualenv
 
-
-
-      - name: Gather coverage stats
+      - name: Install deps
         shell: bash
-        run: |
-          changed_files=$(git diff --diff-filter=d --name-only $(git merge-base HEAD origin/main) HEAD | grep .py)
-          if [ ! -z "$changed_files" ];
-            then python -m interrogate $(git diff --diff-filter=d --name-only $(git merge-base HEAD origin/master) HEAD | grep .py);
-          fi
+        run: make github_actions
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v35
+        with:
+          files: **/*.py
+
+      - name: Comment with docstring coverage
+        uses: zapatacomputing/command-pr-comment@baca4fb9246eaaee3e47f35f296764acc394fae7
+        with:
+          command: make docstring-cov args="${{ steps.changed-files.outputs.all_changed_files }} -o .docstring-cov"
+          template: "🚀 Code Coverage\n```%command%```"
+          update-text: "🚀 Code Coverage"
