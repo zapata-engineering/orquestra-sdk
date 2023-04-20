@@ -1,7 +1,7 @@
 # This workflow scans changed files and reports how much is covered by docstrings.
 
 # We need a workflow name to be able to schedule it from Github UI
-name: Type Checking
+name: DocstringCoverage
 on:
   # Triggers the workflow on push to main
   push:
