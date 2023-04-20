@@ -17,6 +17,9 @@ test:
 		tests
 
 
+docstring-cov:
+	PYTHONPATH="." $(PYTHON) -m interrogate src
+
 # Option explanation:
 # - '--cov=src' - turn on measuring code coverage. It outputs the results in a
 #    '.coverage' binary file. We're not using it, but it can be input to other

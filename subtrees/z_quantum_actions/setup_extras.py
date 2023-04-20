@@ -12,5 +12,6 @@ extras = {
         "mypy~=0.910",
         "pytest~=6.2.5",
         "pytest-cov>=2.12",
+        "interrogate>=1.5.0",
     ],
 }
