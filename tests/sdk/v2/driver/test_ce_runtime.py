@@ -20,31 +20,6 @@ from orquestra.sdk.schema.responses import JSONResult
 from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
 
 
-@pytest.fixture
-def runtime(mock_workflow_db_location):
-    # Fake CE configuration
-    config = RuntimeConfiguration(
-        config_name="hello",
-        runtime_name=RuntimeName.QE_REMOTE,
-        runtime_options={"uri": "http://localhost", "token": "blah"},
-    )
-    # Return a runtime object
-    return _ce_runtime.CERuntime(config)
-
-
-@pytest.fixture
-def runtime_verbose(tmp_path):
-    (tmp_path / ".orquestra").mkdir(exist_ok=True)
-    # Fake QE configuration
-    config = RuntimeConfiguration(
-        config_name="hello",
-        runtime_name=RuntimeName.QE_REMOTE,
-        runtime_options={"uri": "http://localhost", "token": "blah"},
-    )
-    # Return a runtime object
-    return _ce_runtime.CERuntime(config, True)
-
-
 class TestInitialization:
     @pytest.mark.parametrize("proj_dir", [".", Path(".")])
     @pytest.mark.parametrize("verbose", [True, False])
@@ -78,26 +53,6 @@ class TestInitialization:
         )
         with pytest.raises(exceptions.RuntimeConfigError):
             _ce_runtime.CERuntime(config)
-
-
-@pytest.fixture
-def mocked_client(monkeypatch: pytest.MonkeyPatch):
-    mocked_client = MagicMock(spec=_client.DriverClient)
-    mocked_client.from_token.return_value = mocked_client
-    monkeypatch.setattr(
-        "orquestra.sdk._base._driver._client.DriverClient", mocked_client
-    )
-    return mocked_client
-
-
-@pytest.fixture
-def workflow_def_id():
-    return "00000000-0000-0000-0000-000000000000"
-
-
-@pytest.fixture
-def workflow_run_id():
-    return "00000000-0000-0000-0000-000000000000"
 
 
 class TestCreateWorkflowRun:
