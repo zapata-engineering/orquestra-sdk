@@ -67,7 +67,8 @@ class TestWorkflowResults:
                 ),
             ),
             ("v0.46.0", "pickle-single", ("pickled_string",)),
-            ("v0.47.0", None, (100, 100)),
+            ("v0.47.0", "mixed", (100, "pickled_string")),
+            ("v0.47.0", "single", ("pickled_string",)),
         ],
     )
     def test_multi_workflow_outputs(
