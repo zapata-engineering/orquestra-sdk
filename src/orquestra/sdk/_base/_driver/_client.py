@@ -581,11 +581,13 @@ class DriverClient:
         _handle_common_errors(resp)
 
         # To ensure the correct ordering of results, we serialize the results on CE as:
-        # [
-        #    (JSONResult | PickleResult).json(),
-        #    (JSONResult | PickleResult).json(),
-        #    ...
-        # ] aka a ComputeEngineWorkflowResult
+        # {
+        #   "results": [
+        #       (JSONResult | PickleResult).json(),
+        #       (JSONResult | PickleResult).json(),
+        #       ...
+        #   ]
+        # } aka a ComputeEngineWorkflowResult.json()
         # For older workflows, we respond with:
         # (JSONResult | PickleResult).json()
 
