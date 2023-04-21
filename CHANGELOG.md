@@ -3,7 +3,7 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
-* Workflow and task results on CE have changed shape. This may cause some oddness when downloading older workflow results.
+* Task results on CE have changed shape. This may cause some oddness when downloading older task artifacts.
 
 🔥 *Features*
 
@@ -27,6 +27,7 @@ def my_wf():
 
 🥷 *Internal*
 * `TaskOutputMetadata` model was added to the workflow def IR schema.
+* Workflows from CE return a new shape for workflow results.
 
 📃 *Docs*
 
