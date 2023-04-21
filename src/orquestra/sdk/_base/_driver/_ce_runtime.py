@@ -228,14 +228,20 @@ class CERuntime(RuntimeInterface):
             ) from e
 
         if not isinstance(result, ComputeEngineWorkflowResult):
-            # It's a WorkflowResult
-            a = serde.deserialize(result)
-            # a would be [100, "json_string"]
-            return tuple(serde.result_from_artifact(v, ArtifactFormat.AUTO) for v in a)
-            # (JSONReuslt(100), JSONReuslt("json_string"))
+            # It's a WorkflowResult.
+            # We need to match the old way of storing results into the new way
+            # this is done by unpacking the deserialised values and re-serialising.
+            # This is unfortunate, but should only happen for <0.47.0 workflow runs.
+            # Example:
+            #   We get JSONResult([100, "json_string"]) from the API
+            #   We need (JSONResult(100), JSONResult("json_string"))
+            deserialised_results = serde.deserialize(result)
+            return tuple(
+                serde.result_from_artifact(unpacked, ArtifactFormat.AUTO)
+                for unpacked in deserialised_results
+            )
         else:
-            # it's a ComputeEngineWorkflowResult
-            return tuple(result.results)
+            return result.results
 
     def get_available_outputs(
         self, workflow_run_id: WorkflowRunId
