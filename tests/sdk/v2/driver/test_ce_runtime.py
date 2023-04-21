@@ -16,7 +16,7 @@ from orquestra.sdk._base._testing._example_wfs import (
 )
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.ir import ArtifactFormat
-from orquestra.sdk.schema.responses import JSONResult
+from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, JSONResult
 from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
 
 
@@ -379,7 +379,9 @@ class TestGetWorkflowRunResultsNonBlocking:
     ):
         # Given
         mocked_client.get_workflow_run_results.return_value = ["result_id"]
-        mocked_client.get_workflow_run_result.return_value = (JSONResult(value="[1]"),)
+        mocked_client.get_workflow_run_result.return_value = (
+            ComputeEngineWorkflowResult(results=[JSONResult(value="[1]")])
+        )
 
         # When
         results = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
@@ -400,9 +402,8 @@ class TestGetWorkflowRunResultsNonBlocking:
             "result_id",
         ]
         mocked_client.get_workflow_run_result.side_effect = [
-            (
-                JSONResult(value="1"),
-                JSONResult(value="2"),
+            ComputeEngineWorkflowResult(
+                results=[JSONResult(value="1"), JSONResult(value="2")],
             )
         ]
 

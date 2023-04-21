@@ -168,6 +168,7 @@ WorkflowResult = Annotated[
 
 class ComputeEngineWorkflowResult(BaseModel):
     results: t.List[WorkflowResult]
+    type: t.Literal["ComputeEngineWorkflowResult"] = "ComputeEngineWorkflowResult"
 
 
 class GetWorkflowRunResultsResponse(BaseModel):

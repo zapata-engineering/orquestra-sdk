@@ -7,13 +7,14 @@ from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Union
 
 from orquestra.sdk import exceptions
+from orquestra.sdk._base import serde
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.kubernetes.quantity import parse_quantity
 from orquestra.sdk.schema.configs import RuntimeConfiguration
-from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
+from orquestra.sdk.schema.ir import ArtifactFormat, TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.responses import WorkflowResult
+from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
     ProjectRef,
     State,
@@ -218,13 +219,23 @@ class CERuntime(RuntimeInterface):
         assert len(result_ids) == 1, "Assuming a single output"
 
         try:
-            return self._client.get_workflow_run_result(result_ids[0])
+            result = self._client.get_workflow_run_result(result_ids[0])
         except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
             raise exceptions.UnauthorizedError(
                 "Could not get the outputs for workflow run with id "
                 f"`{workflow_run_id}` "
                 "- the authorization token was rejected by the remote cluster."
             ) from e
+
+        if not isinstance(result, ComputeEngineWorkflowResult):
+            # It's a WorkflowResult
+            a = serde.deserialize(result)
+            # a would be [100, "json_string"]
+            return tuple(serde.result_from_artifact(v, ArtifactFormat.AUTO) for v in a)
+            # (JSONReuslt(100), JSONReuslt("json_string"))
+        else:
+            # it's a ComputeEngineWorkflowResult
+            return tuple(result.results)
 
     def get_available_outputs(
         self, workflow_run_id: WorkflowRunId

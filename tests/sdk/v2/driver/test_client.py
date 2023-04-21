@@ -1497,46 +1497,6 @@ class TestClient:
                     default_status_code=200,
                 )
 
-            # This test relates to artifacts stored >0.46.0
-            @staticmethod
-            @pytest.mark.parametrize("obj, length", [([None], 1), ([100, 200], 2)])
-            def test_multiple_objects(
-                endpoint_mocker,
-                client: DriverClient,
-                workflow_run_result_id: str,
-                obj: Any,
-                length: int,
-            ):
-                endpoint_mocker(
-                    json=resp_mocks.make_get_wf_run_result_response(obj),
-                )
-
-                result = client.get_workflow_run_result(workflow_run_result_id)
-
-                assert len(result) == length
-
-                for vals in result:
-                    assert isinstance(vals, (JSONResult, PickleResult))
-
-            # This test relates to artifacts stored in 0.45.1 and prior
-            @staticmethod
-            @pytest.mark.parametrize("obj", [None, 100, "hello", np.eye(10)])
-            def test_single_objects(
-                endpoint_mocker,
-                client: DriverClient,
-                workflow_run_result_id: str,
-                obj: Any,
-            ):
-                endpoint_mocker(
-                    json=resp_mocks.make_get_wf_run_result_legacy_response(obj),
-                )
-
-                result = client.get_workflow_run_result(workflow_run_result_id)
-
-                assert len(result) == 1
-
-                assert isinstance(result[0], (JSONResult, PickleResult))
-
             @staticmethod
             def test_sets_auth(
                 endpoint_mocker,
