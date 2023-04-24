@@ -4,17 +4,17 @@
 import warnings
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Union
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import serde
 from orquestra.sdk._base._db import WorkflowDB
-from orquestra.sdk._base.abc import ArtifactValue, RuntimeInterface
+from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.kubernetes.quantity import parse_quantity
 from orquestra.sdk.schema.configs import RuntimeConfiguration
-from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
+from orquestra.sdk.schema.ir import ArtifactFormat, TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.responses import WorkflowResult
+from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
     ProjectRef,
     State,
@@ -216,17 +216,32 @@ class CERuntime(RuntimeInterface):
                 wf_run.status.state,
             )
 
+        assert len(result_ids) == 1, "Assuming a single output"
+
         try:
-            return tuple(
-                self._client.get_workflow_run_result(result_id)
-                for result_id in result_ids
-            )
+            result = self._client.get_workflow_run_result(result_ids[0])
         except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
             raise exceptions.UnauthorizedError(
                 "Could not get the outputs for workflow run with id "
                 f"`{workflow_run_id}` "
                 "- the authorization token was rejected by the remote cluster."
             ) from e
+
+        if not isinstance(result, ComputeEngineWorkflowResult):
+            # It's a WorkflowResult.
+            # We need to match the old way of storing results into the new way
+            # this is done by unpacking the deserialised values and re-serialising.
+            # This is unfortunate, but should only happen for <0.47.0 workflow runs.
+            # Example:
+            #   We get JSONResult([100, "json_string"]) from the API
+            #   We need (JSONResult(100), JSONResult("json_string"))
+            deserialised_results = serde.deserialize(result)
+            return tuple(
+                serde.result_from_artifact(unpacked, ArtifactFormat.AUTO)
+                for unpacked in deserialised_results
+            )
+        else:
+            return result.results
 
     def get_available_outputs(
         self, workflow_run_id: WorkflowRunId

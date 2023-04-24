@@ -16,33 +16,8 @@ from orquestra.sdk._base._testing._example_wfs import (
 )
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.ir import ArtifactFormat
-from orquestra.sdk.schema.responses import JSONResult
+from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, JSONResult
 from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
-
-
-@pytest.fixture
-def runtime(mock_workflow_db_location):
-    # Fake CE configuration
-    config = RuntimeConfiguration(
-        config_name="hello",
-        runtime_name=RuntimeName.QE_REMOTE,
-        runtime_options={"uri": "http://localhost", "token": "blah"},
-    )
-    # Return a runtime object
-    return _ce_runtime.CERuntime(config)
-
-
-@pytest.fixture
-def runtime_verbose(tmp_path):
-    (tmp_path / ".orquestra").mkdir(exist_ok=True)
-    # Fake QE configuration
-    config = RuntimeConfiguration(
-        config_name="hello",
-        runtime_name=RuntimeName.QE_REMOTE,
-        runtime_options={"uri": "http://localhost", "token": "blah"},
-    )
-    # Return a runtime object
-    return _ce_runtime.CERuntime(config, True)
 
 
 class TestInitialization:
@@ -78,26 +53,6 @@ class TestInitialization:
         )
         with pytest.raises(exceptions.RuntimeConfigError):
             _ce_runtime.CERuntime(config)
-
-
-@pytest.fixture
-def mocked_client(monkeypatch: pytest.MonkeyPatch):
-    mocked_client = MagicMock(spec=_client.DriverClient)
-    mocked_client.from_token.return_value = mocked_client
-    monkeypatch.setattr(
-        "orquestra.sdk._base._driver._client.DriverClient", mocked_client
-    )
-    return mocked_client
-
-
-@pytest.fixture
-def workflow_def_id():
-    return "00000000-0000-0000-0000-000000000000"
-
-
-@pytest.fixture
-def workflow_run_id():
-    return "00000000-0000-0000-0000-000000000000"
 
 
 class TestCreateWorkflowRun:
@@ -424,7 +379,9 @@ class TestGetWorkflowRunResultsNonBlocking:
     ):
         # Given
         mocked_client.get_workflow_run_results.return_value = ["result_id"]
-        mocked_client.get_workflow_run_result.return_value = JSONResult(value="[1]")
+        mocked_client.get_workflow_run_result.return_value = (
+            ComputeEngineWorkflowResult(results=[JSONResult(value="[1]")])
+        )
 
         # When
         results = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
@@ -443,11 +400,11 @@ class TestGetWorkflowRunResultsNonBlocking:
         # Given
         mocked_client.get_workflow_run_results.return_value = [
             "result_id",
-            "result_id2",
         ]
         mocked_client.get_workflow_run_result.side_effect = [
-            JSONResult(value="1"),
-            JSONResult(value="2"),
+            ComputeEngineWorkflowResult(
+                results=[JSONResult(value="1"), JSONResult(value="2")],
+            )
         ]
 
         # When

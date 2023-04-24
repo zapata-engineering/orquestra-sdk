@@ -166,6 +166,11 @@ WorkflowResult = Annotated[
 ]
 
 
+class ComputeEngineWorkflowResult(BaseModel):
+    results: t.Tuple[WorkflowResult, ...]
+    type: t.Literal["ComputeEngineWorkflowResult"] = "ComputeEngineWorkflowResult"
+
+
 class GetWorkflowRunResultsResponse(BaseModel):
     meta: ResponseMetadata
     workflow_run_id: str
