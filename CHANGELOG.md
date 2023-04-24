@@ -28,6 +28,7 @@ def my_wf():
 🥷 *Internal*
 * `TaskOutputMetadata` model was added to the workflow def IR schema.
 * Workflows from CE return a new shape for workflow results.
+* Workflows from Ray return a new shape for workflow and task results.
 
 📃 *Docs*
 
