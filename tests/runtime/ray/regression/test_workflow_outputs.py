@@ -39,7 +39,7 @@ class TestOutputs:
         # We need to setup a Ray cluster for each producing SDK version
         storage_path = str(BASE_PATH / request.param)
         with _connections.make_ray_conn(storage_path) as ray_params:
-            yield
+            yield ray_params
 
     @pytest.mark.parametrize(
         "workflow_run_id, expected_result",
