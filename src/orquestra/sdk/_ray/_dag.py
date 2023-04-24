@@ -21,7 +21,7 @@ import pydantic
 from orquestra.sdk.schema.responses import WorkflowResult
 
 from .. import exceptions
-from .._base import _services
+from .._base import _services, serde
 from .._base._db import WorkflowDB
 from .._base._env import RAY_GLOBAL_WF_RUN_ID_ENV
 from .._base.abc import ArtifactValue, LogReader, RuntimeInterface
@@ -39,7 +39,7 @@ from ..schema.workflow_run import (
     WorkflowRunId,
 )
 from . import _client, _id_gen, _ray_logs
-from ._build_workflow import make_ray_dag
+from ._build_workflow import TaskResult, make_ray_dag
 from ._client import RayClient
 from ._wf_metadata import InvUserMetadata, WfUserMetadata, pydatic_to_json_dict
 
@@ -374,7 +374,23 @@ class RayRuntime(RuntimeInterface):
 
         # By this line we're assuming the workflow run exists, otherwise we wouldn't get
         # its status. If the following line raises errors we treat them as unexpected.
-        return self._client.get_workflow_output(workflow_run_id).packed
+        ray_result = self._client.get_workflow_output(workflow_run_id)
+
+        if isinstance(ray_result, TaskResult):
+            # If we have a TaskResult, we're a >=0.47.0 result
+            # We can assume this is pre-seralised in the form:
+            # tuple(WorkflowResult, ...)
+            return ray_result.unpacked
+        else:
+            # If we have anything else, this should be a tuple of objects
+            # These are returned values from workflow tasks
+            assert isinstance(ray_result, tuple)
+            # In >=0.47.0, the values are serialised.
+            # So, we have to serialise them here.
+            return tuple(
+                serde.result_from_artifact(r, ir.ArtifactFormat.AUTO)
+                for r in ray_result
+            )
 
     def get_available_outputs(
         self, workflow_run_id: WorkflowRunId
@@ -422,7 +438,24 @@ class RayRuntime(RuntimeInterface):
             succeeded_obj_refs, timeout=JUST_IN_CASE_TIMEOUT
         )
 
-        return dict(zip(succeeded_inv_ids, [v.packed for v in succeeded_values]))
+        # We need to check if the task output was a TaskResult or any other value.
+        # A TaskResult means this is a >=0.47.0 workflow and there is a serialized
+        # value (WorkflowResult) in TaskResult.packed
+        # Anything else is a <0.47.0 workflow and the value should be serialized
+
+        serialized_succeeded_values = [
+            v.packed
+            if isinstance(v, TaskResult)
+            else serde.result_from_artifact(v, ir.ArtifactFormat.AUTO)
+            for v in succeeded_values
+        ]
+
+        return dict(
+            zip(
+                succeeded_inv_ids,
+                serialized_succeeded_values,
+            )
+        )
 
     def stop_workflow_run(self, workflow_run_id: WorkflowRunId) -> None:
         # cancel doesn't throw exceptions on non-existing runs... using this as
