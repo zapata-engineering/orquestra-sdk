@@ -3,7 +3,7 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
-* Workflow and task results on CE have changed shape. This may cause some oddness when downloading older workflow results.
+* Task results on CE have changed shape. This may cause some oddness when downloading older task artifacts.
 
 🔥 *Features*
 * New built-in config name - "auto" - used to submit workflows to a remote cluster when used inside Orquestra Studio.
@@ -32,6 +32,7 @@ def my_wf():
 
 🥷 *Internal*
 * `TaskOutputMetadata` model was added to the workflow def IR schema.
+* Workflows from CE return a new shape for workflow results.
 
 📃 *Docs*
 * _Resource Management_ guide should render properly now.
