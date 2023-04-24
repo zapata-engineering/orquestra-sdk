@@ -288,7 +288,7 @@ class TestArgumentUnwrapper:
 
         @pytest.fixture
         def task_result(self, packed, unpacked):
-            return _build_workflow._TaskResult(
+            return _build_workflow.TaskResult(
                 packed=packed,
                 unpacked=unpacked,
             )
