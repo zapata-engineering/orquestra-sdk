@@ -36,7 +36,7 @@ LOCK_FILE_NAME = "config.json.lock"
 BUILT_IN_CONFIG_NAME = "local"
 RAY_CONFIG_NAME_ALIAS = "ray"
 IN_PROCESS_CONFIG_NAME = "in_process"
-SAME_CLUSTER_CONFIG_NAME = "self"
+AUTO_CONFIG_NAME = "auto"
 
 LOCAL_RUNTIME_CONFIGURATION = RuntimeConfiguration(
     config_name=BUILT_IN_CONFIG_NAME,
@@ -56,7 +56,7 @@ IN_PROCESS_RUNTIME_CONFIGURATION = RuntimeConfiguration(
 )
 # this runtime config is not ready-to-be-used without runtime options
 SAME_CLUSTER_RUNTIME_CONFIGURATION = RuntimeConfiguration(
-    config_name=SAME_CLUSTER_CONFIG_NAME,
+    config_name=AUTO_CONFIG_NAME,
     runtime_name=RuntimeName.CE_REMOTE,
     runtime_options={},
 )
@@ -69,7 +69,7 @@ SPECIAL_CONFIG_NAME_DICT = {
     IN_PROCESS_CONFIG_NAME: IN_PROCESS_RUNTIME_CONFIGURATION,
     BUILT_IN_CONFIG_NAME: LOCAL_RUNTIME_CONFIGURATION,
     RAY_CONFIG_NAME_ALIAS: LOCAL_RUNTIME_CONFIGURATION,
-    SAME_CLUSTER_CONFIG_NAME: SAME_CLUSTER_RUNTIME_CONFIGURATION,
+    AUTO_CONFIG_NAME: SAME_CLUSTER_RUNTIME_CONFIGURATION,
 }
 # Unique config list to prompt to the users. Separate from SPECIAL_CONFIG_NAME_DICT
 # as SPECIAL_CONFIG_NAME_DICT might have duplicate names which could be confusing for
@@ -124,7 +124,7 @@ def _get_config_file_path() -> Path:
     return _config_file_path
 
 
-def is_self_config_available() -> bool:
+def is_passport_file_available() -> bool:
     return PASSPORT_FILE_ENV in os.environ
 
 
@@ -199,12 +199,10 @@ def _resolve_new_config_file(
     return new_config_file
 
 
-def _handle_same_cluster_config_case(config_name) -> RuntimeConfiguration:
+def _resolve_auto_config(config_name) -> RuntimeConfiguration:
+    # if not on the studio environment, return local-ray as autoconfiguration
     if PASSPORT_FILE_ENV not in os.environ:
-        raise ValueError(
-            f"Config name {config_name} is reserved to be used from within"
-            f"a cluster only. Please login to portal to use it"
-        )
+        return LOCAL_RUNTIME_CONFIGURATION
     passport_file = pathlib.Path(os.environ[PASSPORT_FILE_ENV])
 
     try:
@@ -227,8 +225,8 @@ def _handle_config_name_special_cases(config_name: str) -> RuntimeConfiguration:
     # special cases: the built-in config ('local') and in process config have
     # hardcoded runtime options.
     if config_name in SPECIAL_CONFIG_NAME_DICT:
-        if config_name == SAME_CLUSTER_CONFIG_NAME:
-            return _handle_same_cluster_config_case(config_name)
+        if config_name == AUTO_CONFIG_NAME:
+            return _resolve_auto_config(config_name)
         else:
             return SPECIAL_CONFIG_NAME_DICT[config_name]
     else:
