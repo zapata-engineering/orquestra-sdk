@@ -56,7 +56,7 @@ def ray_suitable_temp_dir():
 
 
 @contextmanager
-def make_ray_conn(storage_path=None) -> t.Iterator[_dag.RayParams]:
+def make_ray_conn(storage_path: t.Optional[str] = None) -> t.Iterator[_dag.RayParams]:
     """
     Initializes ray connection. By default, starts a linked cluster on its
     own.
