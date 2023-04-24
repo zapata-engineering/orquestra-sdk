@@ -601,8 +601,7 @@ class DriverClient:
             )
         except pydantic.ValidationError:
             # If we fail, try parsing each part of a list separately
-            result_list = ComputeEngineWorkflowResult.parse_obj(json_response)
-            return result_list
+            return ComputeEngineWorkflowResult.parse_obj(json_response)
 
     # --- Workflow Logs ---
 
