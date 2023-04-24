@@ -48,10 +48,12 @@ def _locate_user_fn(fn_ref: ir.FunctionRef):
 
 
 def _aggregate_outputs(*args):
+    if len(args) == 1:
+        return args[0]
     return args
 
 
-class _TaskResult(t.NamedTuple):
+class TaskResult(t.NamedTuple):
     packed: responses.WorkflowResult
     unpacked: t.Tuple[responses.WorkflowResult, ...]
 
@@ -98,7 +100,7 @@ class ArgumentUnwrapper:
 
     def _unpack_argument(
         self,
-        arg: t.Union[ir.ConstantNode, ir.SecretNode, _TaskResult],
+        arg: t.Union[ir.ConstantNode, ir.SecretNode, TaskResult],
         meta_key: t.Union[int, str],
     ):
         if isinstance(arg, (ir.ConstantNodeJSON, ir.ConstantNodePickle)):
@@ -109,7 +111,7 @@ class ArgumentUnwrapper:
                 if self._deserialize
                 else arg
             )
-        elif isinstance(arg, _TaskResult):
+        elif isinstance(arg, TaskResult):
             meta = self._get_metadata(meta_key)
             if meta is None or meta.artifact_index is None:
                 return (
@@ -210,7 +212,7 @@ def _make_ray_dag_node(
                 else:
                     unpacked = (packed,)
 
-                return _TaskResult(
+                return TaskResult(
                     packed=packed,
                     unpacked=unpacked,
                 )
