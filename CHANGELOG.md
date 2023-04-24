@@ -5,8 +5,8 @@
 🚨 *Breaking Changes*
 
 🔥 *Features*
-* New built-in config name - "auto" - used to submit workflows to CE instance present on the cluster in which Jupiter Notebook is running on.
-* "auto" built-in config name becomes alias to "local" if not on studio environment
+* New built-in config name - "auto" - used to submit workflows to a remote cluster when used inside Orquestra Studio.
+* "auto" built-in config name becomes alias to "local" if not in a Studio environment
 
 👩‍🔬 *Experimental*
 * Setting workflow_id and project_id is now available on workflow Python API start() and prepare() functions
