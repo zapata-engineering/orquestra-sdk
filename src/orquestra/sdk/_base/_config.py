@@ -200,7 +200,7 @@ def _resolve_new_config_file(
 
 
 def _resolve_auto_config(config_name) -> RuntimeConfiguration:
-    # if not on the studio environment, return local-ray as autoconfiguration
+    # if not in the Studio environment, return local Ray as auto configuration
     if PASSPORT_FILE_ENV not in os.environ:
         return LOCAL_RUNTIME_CONFIGURATION
     passport_file = pathlib.Path(os.environ[PASSPORT_FILE_ENV])
