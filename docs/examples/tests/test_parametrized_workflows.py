@@ -56,7 +56,7 @@ class Snippets:
         # This blocks the process until the workflow is completed.
         wf_run.wait_until_finished()
 
-        # Should print (3,)
+        # Should print 3
         print(wf_run.get_results())
         # </snippet>
 
@@ -130,7 +130,7 @@ class TestSnippets:
         # Then
         proc.check_returncode()
         std_out = str(proc.stdout, "utf-8")
-        assert "(3,)" in std_out
+        assert std_out == "3\n"
 
     @staticmethod
     # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
@@ -156,4 +156,4 @@ class TestSnippets:
         proc.check_returncode()
         std_out = str(proc.stdout, "utf-8")
         for i in range(5):
-            assert f"({i*2+1},)" in std_out
+            assert f"{i*2+1}\n" in std_out

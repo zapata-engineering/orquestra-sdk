@@ -70,21 +70,21 @@ class TestRunningInProcess:
             run = wf_pass_tuple().run("in_process")
             results = run.get_results()
 
-            assert results == (3,)
+            assert results == 3
 
         @staticmethod
         def test_pass_builtin_config_name_with_file(tmp_default_config_json):
             run = wf_pass_tuple().run("in_process")
             results = run.get_results()
 
-            assert results == (3,)
+            assert results == 3
 
         def test_single_run(self):
             run = wf_pass_tuple().prepare("in_process")
             run.start()
             results = run.get_results()
 
-            assert results == (3,)
+            assert results == 3
 
         def test_multiple_starts(self):
             run = wf_pass_tuple().prepare("in_process")
@@ -102,7 +102,7 @@ class TestRunningInProcess:
             run = wf_pass_tuple().run("in_process")
             results = run.get_results()
 
-            assert results == (3,)
+            assert results == 3
 
     class TestWithConfig:
         @staticmethod
@@ -111,7 +111,7 @@ class TestRunningInProcess:
             run = wf_pass_tuple().run(config)
             results = run.get_results()
 
-            assert results == (3,)
+            assert results == 3
 
 
 class TestWorkflowRun:
