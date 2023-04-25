@@ -140,6 +140,10 @@ class TestWorkflowRun:
         # for simulating a workflow running
         succeeded_run_model = Mock(name="succeeded wf run model")
 
+        # We need the output ids to have a len as we use this to determine how many
+        # results we expect.
+        succeeded_run_model.workflow_def.output_ids = ["shouldn't matter"]
+
         # Default value is "SUCCEEDED"
         succeeded_run_model.status.state = State.SUCCEEDED
         runtime.get_workflow_run_status.return_value = succeeded_run_model
@@ -482,7 +486,7 @@ class TestWorkflowRun:
             # Then
             assert mock_runtime.get_workflow_run_status.call_count >= 1
             assert results is not None
-            assert results == ("woohoo!",)
+            assert results == "woohoo!"
 
         @staticmethod
         def test_waits_when_wait_is_explicitly_false(run, mock_runtime):
@@ -494,7 +498,7 @@ class TestWorkflowRun:
             results = run.get_results(wait=False)
             # Then
             assert results is not None
-            assert results == ("woohoo!",)
+            assert results == "woohoo!"
             assert mock_runtime.get_workflow_run_status.call_count == 1
 
     class TestGetArtifacts:
