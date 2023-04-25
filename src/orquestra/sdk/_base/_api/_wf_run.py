@@ -212,7 +212,7 @@ class WorkflowRun:
         successfully, fails, or is terminated for any other reason.
 
         Args:
-            frequency: The frequence in Hz at which the status should be checked.
+            frequency: The frequency in Hz at which the status should be checked.
             verbose: If ``True``, each iteration of the polling loop will print to
                 stderr.
 
@@ -311,7 +311,7 @@ class WorkflowRun:
             raise WorkflowRunNotStarted(message) from e
         return self._runtime.get_workflow_run_status(run_id)
 
-    def get_results(self, wait: bool = False) -> t.Sequence[t.Any]:
+    def get_results(self, wait: bool = False, force_as_sequence: bool = False) -> t.Any:
         """
         Retrieves workflow results, as returned by the workflow function.
 
@@ -326,6 +326,13 @@ class WorkflowRun:
             wait:  whether or not to wait for workflow run completion.
                    Uses the default options for waiting, use `wait_until_finished()` for
                    more control.
+            force_as_sequence: If True, always returns a sequence where each element of
+                the sequence is one return value from the workflow. If false, where a
+                workflow returns a single value this will be returned as-is. For
+                example, `return [a,b,c]` means this function returns `[a,b,c]` if
+                force_as_sequence is False, and `([a,b,c],)` if force_as_sequence is
+                true. Results from workflows that return multiple values will always be
+                returned as a sequence. Defaults to False.
 
         Raises:
             WorkflowRunNotStarted: when the workflow run has not started
@@ -347,14 +354,16 @@ class WorkflowRun:
         if wait:
             self.wait_until_finished()
 
-        if (state := self.get_status()) not in COMPLETED_STATES:
+        status_model = self.get_status_model()
+
+        if (state := status_model.status.state) not in COMPLETED_STATES:
             raise WorkflowRunNotFinished(
                 f"Workflow run with id {run_id} has not finished. "
                 f"Current state: {state}",
                 state,
             )
         try:
-            return (
+            results = (
                 *(
                     serde.deserialize(o)
                     for o in self._runtime.get_workflow_run_outputs_non_blocking(run_id)
@@ -362,6 +371,19 @@ class WorkflowRun:
             )
         except WorkflowRunNotSucceeded:
             raise
+
+        # Returning as a sequence is really helful for any context where we need to
+        # infer the total number of results, for example when writing them to separate
+        # files from the CLI. Returning single values on their own is more intuitive
+        # for standard python, but could create confusion if the returned value is
+        # itself a sequence. Therefore we provide a utility to control this behaviour.
+
+        if not force_as_sequence:
+            expected_outputs = status_model.workflow_def.output_ids
+            if len(expected_outputs) == 1 and len(results) == 1:
+                return results[0]
+
+        return results
 
     def get_artifacts(self) -> t.Mapping[ir.TaskInvocationId, t.Any]:
         """
@@ -398,7 +420,11 @@ class WorkflowRun:
         # single, packed future. See more in:
         # https://zapatacomputing.atlassian.net/browse/ORQSDK-801
         return {
-            inv_id: serde.deserialize(inv_output)
+            inv_id: (
+                lambda val: val
+                if not isinstance(val, tuple) or len(val) > 1
+                else val[0]
+            )(serde.deserialize(inv_output))
             for inv_id, inv_output in inv_outputs.items()
         }
 
@@ -414,7 +440,7 @@ class WorkflowRun:
             WorkflowRunNotStarted: when the workflow has not started
 
         Returns:
-            A dictionary where each key-value entry correponds to a single task run.
+            A dictionary where each key-value entry corresponds to a single task run.
             The key identifies a task invocation, a single node in the workflow graph.
             The value is a list of log lines produced by the corresponding task
             invocation while running this workflow.
