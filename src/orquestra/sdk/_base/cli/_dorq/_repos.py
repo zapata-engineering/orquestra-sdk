@@ -467,8 +467,8 @@ class ConfigRepo:
             name=config_name,
             bypass_factory_methods=True,
         )
-        setattr(config, "uri", uri)
-        setattr(config, "token", token)
+        setattr(config, "_uri", uri)
+        setattr(config, "_token", token)
         _config.save_or_update(config_name, runtime_name, config._get_runtime_options())
 
         return config_name

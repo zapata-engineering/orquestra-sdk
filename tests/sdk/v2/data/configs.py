@@ -10,8 +10,8 @@ TEST_CONFIGS_DICT: t.Mapping[str, t.Mapping[str, t.Any]] = {
         "config_name": "test_config_default",
         "runtime_name": "QE_REMOTE",
         "runtime_options": {
-            "uri": "test_config_default_uri",
-            "token": "test_config_default_token",
+            "_uri": "test_config_default_uri",
+            "_token": "test_config_default_token",
         },
     },
     "test_config_no_runtime_options": {
@@ -23,16 +23,16 @@ TEST_CONFIGS_DICT: t.Mapping[str, t.Mapping[str, t.Any]] = {
         "config_name": "test_config_qe",
         "runtime_name": "QE_REMOTE",
         "runtime_options": {
-            "uri": "test_uri",
-            "token": "test_token",
+            "_uri": "test_uri",
+            "_token": "test_token",
         },
     },
     "actual_name": {
         "config_name": "actual_name",
         "runtime_name": "QE_REMOTE",
         "runtime_options": {
-            "uri": "http://actual_name.domain",
-            "token": "this_token_best_token",
+            "_uri": "http://actual_name.domain",
+            "_token": "this_token_best_token",
         },
     },
 }

@@ -93,7 +93,7 @@ class TestSecrets:
                 return_value=configs.RuntimeConfiguration(
                     config_name="mocked",
                     runtime_name=configs.RuntimeName.QE_REMOTE,
-                    runtime_options={"uri": base_uri, "token": "mocked_token"},
+                    runtime_options={"_uri": base_uri, "_token": "mocked_token"},
                 )
             ),
         )

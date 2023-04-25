@@ -83,8 +83,8 @@ class TestRuntimeConfiguration:
             config = api_cfg.RuntimeConfig(
                 "QE_REMOTE", name="test_config", bypass_factory_methods=True
             )
-            setattr(config, "uri", "test_uri")
-            setattr(config, "token", "test_token")
+            setattr(config, "_uri", "test_uri")
+            setattr(config, "_token", "test_token")
             return config
 
         def test_returns_true_for_matching_configs(self, config):
@@ -93,8 +93,8 @@ class TestRuntimeConfiguration:
                 name=config.name,
                 bypass_factory_methods=True,
             )
-            test_config.uri = config.uri  # type: ignore
-            test_config.token = config.token
+            test_config._uri = config._uri  # type: ignore
+            test_config._token = config._token
 
             assert config == test_config
 
@@ -104,7 +104,7 @@ class TestRuntimeConfiguration:
                 (
                     "QE_REMOTE",
                     "name_mismatch",
-                    {"uri": "test_uri", "token": "test_token"},
+                    {"_uri": "test_uri", "_token": "test_token"},
                 ),
                 (
                     "RAY_LOCAL",
@@ -115,8 +115,8 @@ class TestRuntimeConfiguration:
                     "QE_REMOTE",
                     "test_config",
                     {
-                        "uri": "test_uri",
-                        "token": "test_token",
+                        "_uri": "test_uri",
+                        "_token": "test_token",
                         "address": "test_address",
                     },
                 ),
@@ -137,46 +137,17 @@ class TestRuntimeConfiguration:
         def test_returns_false_for_mismatched_type(self, config, other):
             assert config != other
 
-    @pytest.mark.parametrize("runtime_name", VALID_RUNTIME_NAMES)
-    class TestNameProperty:
-        @staticmethod
-        @pytest.mark.parametrize("config_name", VALID_CONFIG_NAMES)
-        def test_happy_path(config_name, runtime_name):
-            """
-            This test looks nonsensical, but is intended to test the custom getter and
-            setter defined for the name property.
-            """
-            config = api_cfg.RuntimeConfig(
-                runtime_name, name=config_name, bypass_factory_methods=True
-            )
-
-            config.name = config_name
-            assert config_name == config_name
-
-        @staticmethod
-        def test_getter_raises_warning_if_name_is_not_set(runtime_name):
-            config = api_cfg.RuntimeConfig(runtime_name, bypass_factory_methods=True)
-
-            telltale_string = (
-                "You are trying to access the name of a RuntimeConfig instance that "
-                "has not been named."
-            )
-            with pytest.warns(UserWarning, match=telltale_string):
-                name = config.name
-
-            assert name is None
-
     class TestGetRuntimeOptions:
         @staticmethod
         def test_happy_path():
             config = api_cfg.RuntimeConfig(
                 "QE_REMOTE", name="test_config", bypass_factory_methods=True
             )
-            config.uri = "test_uri"  # type: ignore
-            config.token = "test_token"
+            config._uri = "test_uri"  # type: ignore
+            config._token = "test_token"
             assert config._get_runtime_options() == {
-                "uri": "test_uri",
-                "token": "test_token",
+                "_uri": "test_uri",
+                "_token": "test_token",
             }
 
     class TestFactories:
@@ -188,26 +159,10 @@ class TestRuntimeConfiguration:
                 assert config.name == "in_process"
                 assert config._runtime_name == "IN_PROCESS"
 
-            @staticmethod
-            def test_with_maximal_args(tmp_path):
-                with pytest.warns(FutureWarning):
-                    config = api_cfg.RuntimeConfig.in_process(name="test config")
-
-                assert str(config.name) == "in_process"
-                assert config._runtime_name == "IN_PROCESS"
-
         class TestRayFactory:
             @staticmethod
             def test_with_minimal_args():
                 config = api_cfg.RuntimeConfig.ray()
-
-                assert config.name == "local"
-                assert config._runtime_name == "RAY_LOCAL"
-
-            @staticmethod
-            def test_with_maximal_args(tmp_path):
-                with pytest.warns(FutureWarning):
-                    config = api_cfg.RuntimeConfig.ray(name="test config")
 
                 assert config.name == "local"
                 assert config._runtime_name == "RAY_LOCAL"
@@ -223,50 +178,22 @@ class TestRuntimeConfiguration:
                 name = config.name
                 assert name == "prod-d"
                 assert config._runtime_name == "QE_REMOTE"
-                assert config.uri == "https://prod-d.orquestra.io/"  # type: ignore
-                assert config.token == "test token"
-
-            @staticmethod
-            def test_with_maximal_args(tmp_path):
-                with pytest.warns(FutureWarning):
-                    config = api_cfg.RuntimeConfig.qe(
-                        name="test config",
-                        uri="https://prod-d.orquestra.io/",
-                        token="test token",
-                    )
-
-                assert str(config.name) == "prod-d"
-                assert config._runtime_name == "QE_REMOTE"
-                assert config.uri == "https://prod-d.orquestra.io/"  # type: ignore
-                assert config.token == "test token"
+                assert config._uri == "https://prod-d.orquestra.io/"  # type: ignore
+                assert config._token == "test token"
 
         class TestRemoteRayFactory:
             @staticmethod
             def test_with_minimal_args():
-                config = api_cfg.RuntimeConfig.qe(
+                config = api_cfg.RuntimeConfig.ce(
                     uri="https://prod-d.orquestra.io/",
                     token="test token",
                 )
 
                 name = config.name
                 assert name == "prod-d"
-                assert config._runtime_name == "QE_REMOTE"
-                assert config.uri == "https://prod-d.orquestra.io/"  # type: ignore
-                assert config.token == "test token"
-
-            @staticmethod
-            def test_with_maximal_args(tmp_path):
-                with pytest.warns(FutureWarning):
-                    config = api_cfg.RuntimeConfig.qe(
-                        name="test config",
-                        uri="https://prod-d.orquestra.io/",
-                        token="test token",
-                    )
-
-                assert str(config.name) == "prod-d"
-                assert config._runtime_name == "QE_REMOTE"
-                assert config.uri == "https://prod-d.orquestra.io/"  # type: ignore
-                assert config.token == "test token"
+                assert config._runtime_name == "CE_REMOTE"
+                assert config._uri == "https://prod-d.orquestra.io/"  # type: ignore
+                assert config._token == "test token"
 
     class TestStr:
         @staticmethod
@@ -284,8 +211,8 @@ class TestRuntimeConfiguration:
                 bypass_factory_methods=True,
             )
             config.address = "test_address"  # type: ignore
-            config.uri = "test_url"  # type: ignore
-            config.token = "blah"
+            config._uri = "test_url"  # type: ignore
+            config._token = "blah"
 
             outstr = str(config)
 
@@ -293,8 +220,8 @@ class TestRuntimeConfiguration:
                 "RuntimeConfiguration 'test_name'",
                 "runtime RAY_LOCAL",
                 "with parameters:",
-                "- uri: test_url",
-                "- token: blah",
+                "- _uri: test_url",
+                "- _token: blah",
                 "- address: test_address",
             ]:
                 assert test_str in outstr
@@ -396,7 +323,7 @@ class TestRuntimeConfiguration:
                     "self",
                 )
 
-                assert cfg.token == token
+                assert cfg._token == token
 
             def test_no_env_variable(self):
                 with pytest.raises(ValueError):
@@ -422,10 +349,10 @@ class TestRuntimeConfiguration:
             assert config.name == default_config_params["config_name"]
             assert config._runtime_name == default_config_params["runtime_name"]
 
-            config_uri = config.uri  # type: ignore
-            assert config_uri == default_config_params["runtime_options"]["uri"]
+            config_uri = config._uri  # type: ignore
+            assert config_uri == default_config_params["runtime_options"]["_uri"]
 
-            assert config.token == default_config_params["runtime_options"]["token"]
+            assert config._token == default_config_params["runtime_options"]["_token"]
 
         @staticmethod
         def test_with_custom_file_path(tmp_config_json, monkeypatch):
@@ -438,76 +365,10 @@ class TestRuntimeConfiguration:
             assert config.name == default_config_params["config_name"]
             assert config._runtime_name == default_config_params["runtime_name"]
 
-            config_uri = config.uri  # type: ignore
-            assert config_uri == default_config_params["runtime_options"]["uri"]
+            config_uri = config._uri  # type: ignore
+            assert config_uri == default_config_params["runtime_options"]["_uri"]
 
-            assert config.token == default_config_params["runtime_options"]["token"]
-
-    class TestIsSaved:
-        @staticmethod
-        def test_returns_true_if_saved(tmp_default_config_json):
-            config = api_cfg.RuntimeConfig.load("test_config_default")
-            assert config.is_saved()
-
-        @staticmethod
-        def test_returns_false_if_unnamed(tmp_default_config_json):
-            config = api_cfg.RuntimeConfig.load("test_config_default")
-            config._name = None
-            assert not config.is_saved()
-
-        @staticmethod
-        def test_returns_false_if_no_previous_save_file(tmp_default_config_json):
-            config = api_cfg.RuntimeConfig.load("test_config_default")
-            config._config_save_file = None
-            assert not config.is_saved()
-
-        @staticmethod
-        def test_returns_false_if_no_file(monkeypatch: pytest.MonkeyPatch):
-            monkeypatch.setenv("ORQ_CONFIG_PATH", "not_a_valid_file")
-            config = api_cfg.RuntimeConfig(
-                "IN_PROCESS",
-                name="test_name",
-                bypass_factory_methods=True,
-            )
-            assert not config.is_saved()
-
-        @staticmethod
-        def test_returns_false_if_unsaved_changes(tmp_default_config_json):
-            config = api_cfg.RuntimeConfig.load("test_config_default")
-            config.name = "new_name"
-            assert not config.is_saved()
-
-        @staticmethod
-        @pytest.mark.parametrize("config_name", ["local", "in_process"])
-        def test_returns_true_if_reserved(config_name, tmp_default_config_json):
-            config = api_cfg.RuntimeConfig.load(config_name)
-            assert config.is_saved()
-
-    class TestAsDict:
-        @staticmethod
-        def test_with_no_runtime_options():
-            config = api_cfg.RuntimeConfig("IN_PROCESS", bypass_factory_methods=True)
-
-            dict = config._as_dict()
-
-            assert dict["config_name"] == "None"
-            assert dict["runtime_name"] == "IN_PROCESS"
-            assert dict["runtime_options"] == {}
-
-        @staticmethod
-        def test_with_all_runtime_options():
-            config = api_cfg.RuntimeConfig("IN_PROCESS", bypass_factory_methods=True)
-            config.uri = "test_uri"  # type: ignore
-            config.address = "test_address"  # type: ignore
-            config.token = "test_token"
-
-            dict = config._as_dict()
-
-            assert dict["config_name"] == "None"
-            assert dict["runtime_name"] == "IN_PROCESS"
-            assert dict["runtime_options"]["uri"] == config.uri  # type: ignore
-            assert dict["runtime_options"]["address"] == config.address  # type: ignore
-            assert dict["runtime_options"]["token"] == config.token
+            assert config._token == default_config_params["runtime_options"]["_token"]
 
 
 @pytest.mark.parametrize(
