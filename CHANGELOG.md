@@ -43,7 +43,8 @@ def my_wf():
 * Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a `WorkflowSyntaxError` if no tasks are required to be executed.
 * Remove `TaskDef.model` and `TaskDef.import_models` interfaces
 * Public API classes `sdk.GitImport`, `sdk.GithubImport`, `sdk.LocalImport`, `sdk.InlineImport` now use `dataclasses.dataclass` instead of `typing.NamedTuple`.
-* Local Ray will now always pass resources to underlying ray.remote functions. 
+* Local Ray will now always pass resources to underlying ray.remote functions.
+* Workflows that return single packed futures will now have that value unpacked. Previously if a workflow's result was `[1,2,3]`, this would be returned as by most runtimes `([1,2,3],)`. Henceforth it will be returned as `[1,2,3]` by all runtimes, or as `([1,2,3],)` if the `force_as_sequence` argument to `get_results` is True.
 
 🔥 *Features*
 * Sort WF runs by start date in `list wf` command. Show start date as one of the columns
