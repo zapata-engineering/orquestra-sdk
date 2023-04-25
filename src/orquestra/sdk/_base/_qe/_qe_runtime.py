@@ -372,8 +372,8 @@ class QERuntime(RuntimeInterface):
         # We're using a reusable session to allow shared headers
         # In the future we can store cookies, etc too.
         try:
-            base_uri = self._config.runtime_options["_uri"]
-            token = self._config.runtime_options["_token"]
+            base_uri = self._config.runtime_options["uri"]
+            token = self._config.runtime_options["token"]
         except KeyError:
             raise exceptions.RuntimeConfigError(
                 "Invalid QE configuration. Did you login first?"

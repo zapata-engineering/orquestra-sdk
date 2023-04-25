@@ -131,8 +131,8 @@ def test_config_management(capsys, _examples_dir):
 
     expected_outputs = [
         "RuntimeConfiguration 'prod-d' for runtime QE_REMOTE  with parameters:",
-        "- _uri: https://prod-d.orquestra.io",
-        "- _token: my_token",
+        "- uri: https://prod-d.orquestra.io",
+        "- token: my_token",
     ]
     for output in expected_outputs:
         assert captured.out.count(output) == 2, (

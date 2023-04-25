@@ -108,7 +108,7 @@ def mocked_responses():
 
 @pytest.fixture()
 def remote_config(patch_config_location):
-    resolved_runtime_options = {"_uri": "http://localhost", "_token": "BLAH"}
+    resolved_runtime_options = {"uri": "http://localhost", "token": "BLAH"}
     config = sdk._base._config.write_config(
         "QE test config",
         RuntimeName.QE_REMOTE,

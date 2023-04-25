@@ -83,8 +83,8 @@ class TestRuntimeConfiguration:
             config = api_cfg.RuntimeConfig(
                 "QE_REMOTE", name="test_config", bypass_factory_methods=True
             )
-            setattr(config, "_uri", "test_uri")
-            setattr(config, "_token", "test_token")
+            setattr(config, "uri", "test_uri")
+            setattr(config, "token", "test_token")
             return config
 
         def test_returns_true_for_matching_configs(self, config):
@@ -93,8 +93,8 @@ class TestRuntimeConfiguration:
                 name=config.name,
                 bypass_factory_methods=True,
             )
-            test_config._uri = config._uri  # type: ignore
-            test_config._token = config._token
+            test_config.uri = config.uri  # type: ignore
+            test_config.token = config.token
 
             assert config == test_config
 
@@ -104,7 +104,7 @@ class TestRuntimeConfiguration:
                 (
                     "QE_REMOTE",
                     "name_mismatch",
-                    {"_uri": "test_uri", "_token": "test_token"},
+                    {"uri": "test_uri", "token": "test_token"},
                 ),
                 (
                     "RAY_LOCAL",
@@ -115,8 +115,8 @@ class TestRuntimeConfiguration:
                     "QE_REMOTE",
                     "test_config",
                     {
-                        "_uri": "test_uri",
-                        "_token": "test_token",
+                        "uri": "test_uri",
+                        "token": "test_token",
                         "address": "test_address",
                     },
                 ),
@@ -143,11 +143,11 @@ class TestRuntimeConfiguration:
             config = api_cfg.RuntimeConfig(
                 "QE_REMOTE", name="test_config", bypass_factory_methods=True
             )
-            config._uri = "test_uri"  # type: ignore
-            config._token = "test_token"
+            config.uri = "test_uri"  # type: ignore
+            config.token = "test_token"
             assert config._get_runtime_options() == {
-                "_uri": "test_uri",
-                "_token": "test_token",
+                "uri": "test_uri",
+                "token": "test_token",
             }
 
     class TestFactories:
@@ -178,8 +178,8 @@ class TestRuntimeConfiguration:
                 name = config.name
                 assert name == "prod-d"
                 assert config._runtime_name == "QE_REMOTE"
-                assert config._uri == "https://prod-d.orquestra.io/"  # type: ignore
-                assert config._token == "test token"
+                assert config.uri == "https://prod-d.orquestra.io/"  # type: ignore
+                assert config.token == "test token"
 
         class TestRemoteRayFactory:
             @staticmethod
@@ -192,8 +192,8 @@ class TestRuntimeConfiguration:
                 name = config.name
                 assert name == "prod-d"
                 assert config._runtime_name == "CE_REMOTE"
-                assert config._uri == "https://prod-d.orquestra.io/"  # type: ignore
-                assert config._token == "test token"
+                assert config.uri == "https://prod-d.orquestra.io/"  # type: ignore
+                assert config.token == "test token"
 
     class TestStr:
         @staticmethod
@@ -211,8 +211,8 @@ class TestRuntimeConfiguration:
                 bypass_factory_methods=True,
             )
             config.address = "test_address"  # type: ignore
-            config._uri = "test_url"  # type: ignore
-            config._token = "blah"
+            config.uri = "test_url"  # type: ignore
+            config.token = "blah"
 
             outstr = str(config)
 
@@ -220,8 +220,8 @@ class TestRuntimeConfiguration:
                 "RuntimeConfiguration 'test_name'",
                 "runtime RAY_LOCAL",
                 "with parameters:",
-                "- _uri: test_url",
-                "- _token: blah",
+                "- uri: test_url",
+                "- token: blah",
                 "- address: test_address",
             ]:
                 assert test_str in outstr
@@ -323,7 +323,7 @@ class TestRuntimeConfiguration:
                     "auto",
                 )
 
-                assert cfg._token == token
+                assert cfg.token == token
 
             def test_on_local_env(self):
                 assert api_cfg.RuntimeConfig.load("auto") == api_cfg.RuntimeConfig.load(
@@ -348,10 +348,10 @@ class TestRuntimeConfiguration:
             assert config.name == default_config_params["config_name"]
             assert config._runtime_name == default_config_params["runtime_name"]
 
-            config_uri = config._uri  # type: ignore
-            assert config_uri == default_config_params["runtime_options"]["_uri"]
+            config_uri = config.uri  # type: ignore
+            assert config_uri == default_config_params["runtime_options"]["uri"]
 
-            assert config._token == default_config_params["runtime_options"]["_token"]
+            assert config.token == default_config_params["runtime_options"]["token"]
 
         @staticmethod
         def test_with_custom_file_path(tmp_config_json, monkeypatch):
@@ -364,10 +364,10 @@ class TestRuntimeConfiguration:
             assert config.name == default_config_params["config_name"]
             assert config._runtime_name == default_config_params["runtime_name"]
 
-            config_uri = config._uri  # type: ignore
-            assert config_uri == default_config_params["runtime_options"]["_uri"]
+            config_uri = config.uri  # type: ignore
+            assert config_uri == default_config_params["runtime_options"]["uri"]
 
-            assert config._token == default_config_params["runtime_options"]["_token"]
+            assert config.token == default_config_params["runtime_options"]["token"]
 
 
 @pytest.mark.parametrize(
@@ -643,8 +643,8 @@ class TestUpdateSavedToken:
         cfg.update_saved_token(new_token)
 
         # then
-        assert cfg._token == new_token
-        assert api_cfg.RuntimeConfig.load(cfg.name)._token == new_token
+        assert cfg.token == new_token
+        assert api_cfg.RuntimeConfig.load(cfg.name).token == new_token
 
     @pytest.mark.parametrize(
         "runtime_factory", [api_cfg.RuntimeConfig.ce, api_cfg.RuntimeConfig.qe]
@@ -657,5 +657,5 @@ class TestUpdateSavedToken:
         cfg.update_saved_token(token)
 
         # then
-        assert cfg._token == token
-        assert api_cfg.RuntimeConfig.load(cfg.name)._token == token
+        assert cfg.token == token
+        assert api_cfg.RuntimeConfig.load(cfg.name).token == token

@@ -225,11 +225,11 @@ class TestValidateRuntimeOptions:
             "runtime_options",
             [
                 {},
-                {"_uri": "foo"},
-                {"_token": "foo"},
+                {"uri": "foo"},
+                {"token": "foo"},
                 {
-                    "_uri": "foo",
-                    "_token": "foo",
+                    "uri": "foo",
+                    "token": "foo",
                 },
             ],
         )
@@ -261,11 +261,11 @@ class TestValidateRuntimeOptions:
             "runtime_options",
             [
                 {},
-                {"_uri": "foo"},
-                {"_token": "foo"},
+                {"uri": "foo"},
+                {"token": "foo"},
                 {
-                    "_uri": "foo",
-                    "_token": "foo",
+                    "uri": "foo",
+                    "token": "foo",
                 },
             ],
         )
@@ -322,8 +322,8 @@ class TestValidateRuntimeOptions:
                 {"bar": "foo"},
                 {
                     "bar": "foo",
-                    "_uri": "foo",
-                    "_token": "foo",
+                    "uri": "foo",
+                    "token": "foo",
                 },
             ],
         )
@@ -344,8 +344,8 @@ class TestValidateRuntimeOptions:
                 {"bar": "foo"},
                 {
                     "bar": "foo",
-                    "_uri": "foo",
-                    "_token": "foo",
+                    "uri": "foo",
+                    "token": "foo",
                 },
             ],
         )
@@ -392,8 +392,8 @@ class TestValidateRuntimeOptions:
                 "log_to_driver": "foo",
                 "storage": "foo",
                 "temp_dir": "foo",
-                "_uri": "foo",
-                "_token": "foo",
+                "uri": "foo",
+                "token": "foo",
             }
             with pytest.raises(exceptions.RuntimeConfigError) as exc_info:
                 _config._validate_runtime_options(runtime_name, runtime_options)

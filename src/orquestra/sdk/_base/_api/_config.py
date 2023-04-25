@@ -175,8 +175,8 @@ class RuntimeConfig:
             name=config_name,
             bypass_factory_methods=True,
         )
-        setattr(config, "_uri", uri)
-        setattr(config, "_token", token)
+        setattr(config, "uri", uri)
+        setattr(config, "token", token)
         _config.save_or_update(config_name, runtime_name, config._get_runtime_options())
 
         return config
@@ -202,8 +202,8 @@ class RuntimeConfig:
             name=config_name,
             bypass_factory_methods=True,
         )
-        setattr(config, "_uri", uri)
-        setattr(config, "_token", token)
+        setattr(config, "uri", uri)
+        setattr(config, "token", token)
         _config.save_or_update(config_name, runtime_name, config._get_runtime_options())
 
         return config
@@ -411,12 +411,12 @@ class RuntimeConfig:
             )
 
         new_runtime_options: dict = old_config._get_runtime_options()
-        new_runtime_options["_token"] = token
+        new_runtime_options["token"] = token
 
-        if token != getattr(self, "_token"):
+        if token != getattr(self, "token"):
             # This is the most expected scenario - the RuntimeConfig matches the
             # file, and the user has provided a new token.
-            self._token = token
+            self.token = token
             _config.update_config(
                 config_name=self._name, new_runtime_options=new_runtime_options
             )

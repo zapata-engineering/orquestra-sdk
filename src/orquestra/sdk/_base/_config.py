@@ -87,12 +87,12 @@ RAY_RUNTIME_OPTIONS: List[str] = [
     "configure_logging",
 ]
 QE_RUNTIME_OPTIONS: List[str] = [
-    "_uri",
-    "_token",
+    "uri",
+    "token",
 ]
 CE_RUNTIME_OPTIONS: List[str] = [
-    "_uri",
-    "_token",
+    "uri",
+    "token",
 ]
 IN_PROCESS_RUNTIME_OPTIONS: List[str] = []
 RUNTIME_OPTION_NAMES: List[str] = list(
@@ -215,8 +215,8 @@ def _resolve_auto_config(config_name) -> RuntimeConfiguration:
 
     runtime_config = SPECIAL_CONFIG_NAME_DICT[config_name]
     runtime_config.runtime_options = {
-        "_uri": SAME_CLUSTER_URL,
-        "_token": passport_token,
+        "uri": SAME_CLUSTER_URL,
+        "token": passport_token,
     }
     return runtime_config
 

@@ -42,7 +42,7 @@ def _authorize_with_config(
     except exceptions.ConfigNameNotFoundError:
         raise
 
-    return SecretsClient.from_token(base_uri=opts["_uri"], token=opts["_token"])
+    return SecretsClient.from_token(base_uri=opts["uri"], token=opts["token"])
 
 
 def authorized_client(config_name: t.Optional[ConfigName]) -> SecretsClient:

@@ -1125,8 +1125,8 @@ class TestConfigRepo:
                 if ce
                 else RuntimeName.QE_REMOTE
             )
-            assert options_parameter["_uri"] == uri
-            assert options_parameter["_token"] == token
+            assert options_parameter["uri"] == uri
+            assert options_parameter["token"] == token
             assert config_name == generated_name
 
     class TestIntegration:
@@ -1214,7 +1214,7 @@ class TestConfigRepo:
             # this assert stands to protect the json content. For this test to work
             # it assumes that such config exist, and it matches parametrized values.
             assert (
-                config_content["configs"]["actual_name"]["runtime_options"]["_uri"]
+                config_content["configs"]["actual_name"]["runtime_options"]["uri"]
                 == "http://actual_name.domain"
             )
 
@@ -1224,10 +1224,9 @@ class TestConfigRepo:
             # Then
             with open(config_path) as f:
                 content = json.load(f)
-                assert content["configs"][config_name]["runtime_options"]["_uri"] == uri
+                assert content["configs"][config_name]["runtime_options"]["uri"] == uri
                 assert (
-                    content["configs"][config_name]["runtime_options"]["_token"]
-                    == token
+                    content["configs"][config_name]["runtime_options"]["token"] == token
                 )
                 assert content["configs"][config_name]["runtime_name"] == runtime_name
 

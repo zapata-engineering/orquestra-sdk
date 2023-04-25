@@ -392,7 +392,7 @@ def runtime(tmp_path, mock_workflow_db_location):
     config = RuntimeConfiguration(
         config_name="hello",
         runtime_name=RuntimeName.QE_REMOTE,
-        runtime_options={"_uri": "http://localhost", "_token": "blah"},
+        runtime_options={"uri": "http://localhost", "token": "blah"},
     )
     # Return a runtime object
     return _qe_runtime.QERuntime(config, tmp_path)
@@ -405,7 +405,7 @@ def runtime_verbose(tmp_path):
     config = RuntimeConfiguration(
         config_name="hello",
         runtime_name=RuntimeName.QE_REMOTE,
-        runtime_options={"_uri": "http://localhost", "_token": "blah"},
+        runtime_options={"uri": "http://localhost", "token": "blah"},
     )
     # Return a runtime object
     return _qe_runtime.QERuntime(config, tmp_path, True)
@@ -425,7 +425,7 @@ class TestInitialization:
         config = RuntimeConfiguration(
             config_name="hello",
             runtime_name=RuntimeName.QE_REMOTE,
-            runtime_options={"_uri": "http://localhost", "_token": "blah"},
+            runtime_options={"uri": "http://localhost", "token": "blah"},
         )
 
         # when
@@ -443,7 +443,7 @@ class TestInitialization:
 HELLO_CONFIG = RuntimeConfiguration(
     config_name="hello",
     runtime_name=RuntimeName.QE_REMOTE,
-    runtime_options={"_uri": "http://localhost", "_token": "blah"},
+    runtime_options={"uri": "http://localhost", "token": "blah"},
 )
 
 
@@ -706,7 +706,7 @@ class TestGetWorkflowRunStatus:
         config = RuntimeConfiguration(
             config_name="hello",
             runtime_name=RuntimeName.QE_REMOTE,
-            runtime_options={"_uri": "http://localhost", "_token": "blah"},
+            runtime_options={"uri": "http://localhost", "token": "blah"},
         )
         # Return a runtime object
         runtime = _qe_runtime.QERuntime(config, Path("Nothing"))
@@ -891,7 +891,7 @@ class TestGetWorkflowRunOutputsNonBlocking:
         config = RuntimeConfiguration(
             config_name="hello",
             runtime_name=RuntimeName.QE_REMOTE,
-            runtime_options={"_uri": "http://localhost", "_token": "blah"},
+            runtime_options={"uri": "http://localhost", "token": "blah"},
         )
         # Return a runtime object
         runtime = _qe_runtime.QERuntime(config, Path("Nothing"))
