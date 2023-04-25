@@ -19,6 +19,7 @@
 💅 *Improvements*
 
 🥷 *Internal*
+* Custom images will default to `None`, unless using Quantum Engine where the defaults stay the same.
 
 📃 *Docs*
 * _Resource Management_ guide should render properly now.

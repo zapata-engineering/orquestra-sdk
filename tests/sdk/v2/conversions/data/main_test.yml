@@ -9,6 +9,7 @@ name: small
 steps:
 - config:
     runtime:
+      customImage: zapatacomputing/orquestra-default:v0.0.0
       imports:
       - orq-wor-sdk
       language: python3

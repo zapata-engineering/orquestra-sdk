@@ -755,7 +755,7 @@ CAPITALIZE_TASK_DEF = model.TaskDef(
         model.TaskParameter(name="text", kind=model.ParameterKind.POSITIONAL_OR_KEYWORD)
     ],
     source_import_id=AnyMatchingStr(r"local-\w{10}"),
-    custom_image=_dsl.DEFAULT_IMAGE,
+    custom_image=None,
 )
 
 CAPITALIZE_INLINE_TASK_DEF = model.TaskDef(
@@ -768,7 +768,7 @@ CAPITALIZE_INLINE_TASK_DEF = model.TaskDef(
         model.TaskParameter(name="text", kind=model.ParameterKind.POSITIONAL_OR_KEYWORD)
     ],
     source_import_id=AnyMatchingStr(r"inline-import-\w{1}"),
-    custom_image=_dsl.DEFAULT_IMAGE,
+    custom_image=None,
 )
 
 GIT_TASK_DEF = model.TaskDef(
@@ -781,7 +781,7 @@ GIT_TASK_DEF = model.TaskDef(
     ),
     parameters=[],
     source_import_id=AnyMatchingStr(r"git-\w{10}_hello"),
-    custom_image=_dsl.DEFAULT_IMAGE,
+    custom_image=None,
 )
 
 
@@ -798,7 +798,7 @@ GENERATE_GRAPH_TASK_DEF = model.TaskDef(
     dependency_import_ids=[
         AnyMatchingStr(r"git-\w{10}_github_com_zapatacomputing_orquestra_workflow_sdk")
     ],
-    custom_image=_dsl.DEFAULT_IMAGE,
+    custom_image=None,
 )
 
 PYTHON_IMPORTS_MANUAL_TASK_DEF = model.TaskDef(
@@ -814,7 +814,7 @@ PYTHON_IMPORTS_MANUAL_TASK_DEF = model.TaskDef(
     ],
     source_import_id=AnyMatchingStr(r"local-\w{10}"),
     dependency_import_ids=[AnyMatchingStr(r"python-import-\w{10}")],
-    custom_image=_dsl.DEFAULT_IMAGE,
+    custom_image=None,
 )
 
 

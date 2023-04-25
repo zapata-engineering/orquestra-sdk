@@ -10,7 +10,7 @@ import pytest
 import orquestra.sdk as sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _workflow
-from orquestra.sdk._base._dsl import DEFAULT_IMAGE, ArtifactFuture
+from orquestra.sdk._base._dsl import ArtifactFuture
 
 _TaskResourcesArgs = t.TypedDict(
     "_TaskResourcesArgs",
@@ -322,7 +322,7 @@ class TestArifactFutureMethodsCalls:
         assert invocations[0].custom_image == CUSTOM_IMAGE_NOT_DEFAULT["custom_image"]
 
         assert invocations[1].resources is None
-        assert invocations[1].custom_image is DEFAULT_IMAGE
+        assert invocations[1].custom_image is None
 
     @staticmethod
     def test_artifact_with_resources_workflow_model():
@@ -359,7 +359,7 @@ class TestArifactFutureMethodsCalls:
         assert invocations[0].custom_image == CUSTOM_IMAGE_NOT_DEFAULT["custom_image"]
 
         assert invocations[1].resources == invocations[0].resources
-        assert invocations[1].custom_image == DEFAULT_IMAGE
+        assert invocations[1].custom_image is None
 
     @staticmethod
     def test_artifact_with_resources_and_custom_image_workflow_model():
@@ -379,4 +379,4 @@ class TestArifactFutureMethodsCalls:
         assert invocations[0].custom_image == CUSTOM_IMAGE_NOT_DEFAULT["custom_image"]
 
         assert invocations[1].resources is None
-        assert invocations[1].custom_image is DEFAULT_IMAGE
+        assert invocations[1].custom_image is None

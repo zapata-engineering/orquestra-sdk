@@ -14,6 +14,7 @@ imports:
 steps:
 - config:
     runtime:
+      customImage: zapatacomputing/orquestra-default:v0.0.0
       language: python3
       customImage: "zapatacomputing/orquestra-default:v0.0.0"
       imports: [orq-wor-sdk]
@@ -56,6 +57,7 @@ steps:
   - invocation-1-task-multi-output-test
 - config:
     runtime:
+      customImage: zapatacomputing/orquestra-default:v0.0.0
       language: python3
       customImage: "zapatacomputing/orquestra-default:v0.0.0"
       imports: [orq-wor-sdk]
