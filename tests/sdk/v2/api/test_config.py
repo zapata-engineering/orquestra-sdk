@@ -621,3 +621,41 @@ class TestMigrateConfigFile:
         captured = capsys.readouterr()
         for string in expected_stdout:
             assert string in captured.out
+
+
+class TestUpdateSavedToken:
+    @pytest.mark.parametrize(
+        "runtime_factory", [api_cfg.RuntimeConfig.ray, api_cfg.RuntimeConfig.in_process]
+    )
+    def test_unsupported_runtimes(self, runtime_factory):
+        with pytest.raises(SyntaxError):
+            cfg = runtime_factory()
+            cfg.update_saved_token("new token")
+
+    @pytest.mark.parametrize(
+        "runtime_factory", [api_cfg.RuntimeConfig.ce, api_cfg.RuntimeConfig.qe]
+    )
+    def test_happy_path(self, runtime_factory):
+        new_token = "Hi, hello"
+        cfg = runtime_factory(uri="https://prod-d.orquestra.io/", token="test token")
+
+        # when
+        cfg.update_saved_token(new_token)
+
+        # then
+        assert cfg._token == new_token
+        assert api_cfg.RuntimeConfig.load(cfg.name)._token == new_token
+
+    @pytest.mark.parametrize(
+        "runtime_factory", [api_cfg.RuntimeConfig.ce, api_cfg.RuntimeConfig.qe]
+    )
+    def test_same_token(self, runtime_factory):
+        token = "Hi, hello"
+        cfg = runtime_factory(uri="https://prod-d.orquestra.io/", token=token)
+
+        # when
+        cfg.update_saved_token(token)
+
+        # then
+        assert cfg._token == token
+        assert api_cfg.RuntimeConfig.load(cfg.name)._token == token
