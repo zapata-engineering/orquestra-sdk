@@ -403,8 +403,8 @@ class RuntimeConfig:
         )
         if self._runtime_name != old_config._runtime_name:
             raise ConfigNameNotFoundError(
-                f"A runtime configuration with name {self._name} exists, but relates to "
-                "a different runtime ("
+                f"A runtime configuration with name {self._name} exists, but relates to"
+                " a different runtime ("
                 f"this config: {self._runtime_name}, "
                 f"saved config: {old_config._runtime_name}"
                 "). Nothing has been saved. Please check the config name and try again."
