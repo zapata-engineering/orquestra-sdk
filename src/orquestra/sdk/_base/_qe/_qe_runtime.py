@@ -28,6 +28,7 @@ from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import (
+    ArtifactFormat,
     ArtifactNodeId,
     TaskInvocation,
     TaskInvocationId,
@@ -210,7 +211,14 @@ def _get_task_invocations(wf_def: WorkflowDef) -> Dict[str, TaskInvocation]:
     }
 
 
-def _parse_workflow_result(result_bytes: bytes) -> Dict[str, Dict]:
+def _extract_results(result_bytes: bytes) -> Dict[str, Any]:
+    try:
+        return extract_result_json(result_bytes)
+    except IndexError as e:
+        raise exceptions.NotFoundError("Invalid archive") from e
+
+
+def _parse_workflow_result(result_bytes: bytes) -> WorkflowResult:
     """Parse a workflow run result
 
     Args:
@@ -227,10 +235,10 @@ def _parse_workflow_result(result_bytes: bytes) -> Dict[str, Dict]:
         IndexError: when the `result_bytes` is not a archive we expect.
     """
 
-    try:
-        return extract_result_json(result_bytes)
-    except IndexError as e:
-        raise exceptions.NotFoundError("Invalid archive") from e
+    result_json = _extract_results(result_bytes)
+    # Bug with mypy and Pydantic:
+    #   Unions cannot be passed to parse_obj_as: pydantic/pydantic#1847
+    return pydantic.parse_obj_as(WorkflowResult, result_json)  # type: ignore[arg-type] # noqa: E501
 
 
 def extract_result_json(tgz_bytes: bytes) -> Dict:
@@ -353,13 +361,17 @@ def _http_error_handling():
 
 def _find_packed_artifact_id(
     wf_def: WorkflowDef, inv_id: TaskInvocationId
-) -> ArtifactNodeId:
+) -> Optional[ArtifactNodeId]:
     output_ids = wf_def.task_invocations[inv_id].output_ids
     artifact_nodes = (wf_def.artifact_nodes[id] for id in output_ids)
     packed_nodes = [n for n in artifact_nodes if n.artifact_index is None]
+
+    if (n_packed := len(packed_nodes)) == 0:
+        return None
+
     assert (
-        len(packed_nodes) == 1
-    ), f"Task invocation should have exactly 1 packed output. {inv_id} has {len(packed_nodes)}: {packed_nodes}"  # noqa: E501
+        n_packed == 1
+    ), f"Task invocation should have no more than 1 packed output. {inv_id} has {n_packed}: {packed_nodes}"  # noqa: E501
 
     return packed_nodes[0].id
 
@@ -486,6 +498,31 @@ class QERuntime(RuntimeInterface):
                 "Potential workflow names can be checked here: "
                 "https://regex101.com/r/CxEZKW/1"
             )
+
+    def _handle_legacy_qe_result(
+        self, workflow_run_id: WorkflowRunId, task_invocation: TaskInvocation
+    ) -> WorkflowResult:
+        task_results = []
+        for artifact_id in task_invocation.output_ids:
+            # Let http errors bubble up to caller
+            result = self._client.get_artifact(
+                workflow_run_id, task_invocation.id, artifact_id
+            )
+            # QERuntime.get_available_outputs is expected to return a WorkflowResult
+            # We need to deserialize the unpacked values, pack them, then serialize
+            parsed_output = serde.deserialize(_parse_workflow_result(result))
+            # This is where we pack the deserialized values
+            task_results.append(parsed_output)
+        # Finally, we serialize the packed values, mimicking how Python functions work
+        if len(task_results) == 0:
+            # No outputs mean we return `None`
+            return serde.result_from_artifact(None, ArtifactFormat.AUTO)
+        elif len(task_results) == 1:
+            # A single output means we return the value
+            return serde.result_from_artifact(task_results[0], ArtifactFormat.AUTO)
+        else:
+            # Multiple outputs mean we return a tuple
+            return serde.result_from_artifact(tuple(task_results), ArtifactFormat.AUTO)
 
     def create_workflow_run(
         self, workflow_def: WorkflowDef, project: Optional[ProjectRef]
@@ -617,7 +654,7 @@ class QERuntime(RuntimeInterface):
 
         with _http_error_handling():
             result_bytes = self._client.get_workflow_result(workflow_run_id)
-        result_dict = _parse_workflow_result(result_bytes)
+        result_dict = _extract_results(result_bytes)
         task_invocations = _get_task_invocations(wf_def)
         artifacts = _get_artifacts(task_invocations, result_dict)
 
@@ -665,14 +702,22 @@ class QERuntime(RuntimeInterface):
             # We want to fetch whatever object was returned from the task function, so
             # we only need the "packed" artifact. For more info on artifact unpacking,
             # see "orquestra.sdk._base._traversal".
+            # If we don't have a packed artifact, then this is an older QE result that
+            # was unpacked. In this case, we'll just return what we have.
             for inv in wf_def.task_invocations.values():
                 packed_id = _find_packed_artifact_id(wf_def, inv.id)
                 try:
-                    artifact_bytes = self._client.get_artifact(
-                        workflow_id=workflow_run_id,
-                        step_name=inv.id,
-                        artifact_name=packed_id,
-                    )
+                    if packed_id is None:
+                        artifact_value = self._handle_legacy_qe_result(
+                            workflow_run_id, inv
+                        )
+                    else:
+                        artifact_bytes = self._client.get_artifact(
+                            workflow_id=workflow_run_id,
+                            step_name=inv.id,
+                            artifact_name=packed_id,
+                        )
+                        artifact_value = _parse_workflow_result(artifact_bytes)
                 except requests.exceptions.HTTPError as e:
                     # 404 error happens when task is not finished yet.
                     # 500 error is thrown by QE in case of failed task.
@@ -681,11 +726,7 @@ class QERuntime(RuntimeInterface):
                     else:
                         raise e
 
-                artifact_value = _parse_workflow_result(artifact_bytes)
-
-                # Bug with mypy and Pydantic:
-                #   Unions cannot be passed to parse_obj_as: pydantic/pydantic#1847
-                return_dict[inv.id] = pydantic.parse_obj_as(WorkflowResult, artifact_value)  # type: ignore[arg-type] # noqa: E501
+                return_dict[inv.id] = artifact_value
 
         return return_dict
 
