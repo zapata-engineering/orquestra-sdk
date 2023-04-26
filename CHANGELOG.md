@@ -10,6 +10,7 @@
 
 👩‍🔬 *Experimental*
 * Setting workflow_id and project_id is now available on workflow Python API start() and prepare() functions
+* Setting workflow_id and project_id is now available using "orq wf submit" command
 
 🐛 *Bug Fixes*
 * Retry getting results from CE if the results were not ready but the workflow succeeded.
