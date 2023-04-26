@@ -46,9 +46,6 @@ from . import _ast
 
 DIRECT_EXECUTION = False
 
-DEFAULT_IMAGE = "zapatacomputing/orquestra-default:v0.0.0"
-GPU_IMAGE = "zapatacomputing/orquestra-nvidia:v0.0.0"
-
 
 # ----- SDK exceptions  -----
 
@@ -464,12 +461,6 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
 
         # task itself is not part of any workflow yet. Don't pass wf defaults
         self._resolve_task_source_data()
-
-        if self._custom_image is None:
-            if resources.gpu:
-                self._custom_image = GPU_IMAGE
-            else:
-                self._custom_image = DEFAULT_IMAGE
 
     @property
     def n_outputs(self):

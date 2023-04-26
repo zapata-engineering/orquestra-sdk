@@ -316,19 +316,15 @@ def test_subscript_artifact_future_with_non_int(index):
 def test_resourced_task_with_custom_gpu_image():
     @sdk.task(
         resources=_dsl.Resources("1000m", "1Gi", "10Gi", "1"),
-        custom_image=_dsl.GPU_IMAGE,
+        custom_image="zapatacomputing/custom_image_not_real",
     )
     def _local_task():
         return "hello"
 
     hello = _local_task()
-    assert hello.invocation.task._custom_image == _dsl.GPU_IMAGE
-
-
-def test_resourced_task_with_default_gpu_image():
-    future = _resourced_task()
-
-    assert future.invocation.task._custom_image == _dsl.GPU_IMAGE
+    assert (
+        hello.invocation.task._custom_image == "zapatacomputing/custom_image_not_real"
+    )
 
 
 def test_task_with_default_image():
@@ -337,7 +333,7 @@ def test_task_with_default_image():
         return "hello"
 
     hello = _local_task()
-    assert hello.invocation.task._custom_image == _dsl.DEFAULT_IMAGE
+    assert hello.invocation.task._custom_image is None
 
 
 @pytest.fixture

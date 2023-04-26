@@ -812,7 +812,7 @@ CAPITALIZE_TASK_DEF = ir.TaskDef(
         ir.TaskParameter(name="text", kind=ir.ParameterKind.POSITIONAL_OR_KEYWORD)
     ],
     source_import_id=AnyMatchingStr(r"local-\w{10}"),
-    custom_image=_dsl.DEFAULT_IMAGE,
+    custom_image=None,
 )
 
 CAPITALIZE_INLINE_TASK_DEF = ir.TaskDef(
@@ -826,7 +826,7 @@ CAPITALIZE_INLINE_TASK_DEF = ir.TaskDef(
         ir.TaskParameter(name="text", kind=ir.ParameterKind.POSITIONAL_OR_KEYWORD)
     ],
     source_import_id=AnyMatchingStr(r"inline-import-\w{1}"),
-    custom_image=_dsl.DEFAULT_IMAGE,
+    custom_image=None,
 )
 
 GIT_TASK_DEF = ir.TaskDef(
@@ -840,7 +840,7 @@ GIT_TASK_DEF = ir.TaskDef(
     output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
     parameters=[],
     source_import_id=AnyMatchingStr(r"git-\w{10}_hello"),
-    custom_image=_dsl.DEFAULT_IMAGE,
+    custom_image=None,
 )
 
 
@@ -858,7 +858,7 @@ GENERATE_GRAPH_TASK_DEF = ir.TaskDef(
     dependency_import_ids=[
         AnyMatchingStr(r"git-\w{10}_github_com_zapatacomputing_orquestra_workflow_sdk")
     ],
-    custom_image=_dsl.DEFAULT_IMAGE,
+    custom_image=None,
 )
 
 PYTHON_IMPORTS_MANUAL_TASK_DEF = ir.TaskDef(
@@ -875,7 +875,7 @@ PYTHON_IMPORTS_MANUAL_TASK_DEF = ir.TaskDef(
     ],
     source_import_id=AnyMatchingStr(r"local-\w{10}"),
     dependency_import_ids=[AnyMatchingStr(r"python-import-\w{10}")],
-    custom_image=_dsl.DEFAULT_IMAGE,
+    custom_image=None,
 )
 
 

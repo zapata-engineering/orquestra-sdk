@@ -35,6 +35,7 @@ def my_wf():
 * Workflows from CE return a new shape for workflow results and task results.
 * Workflows from Ray return a new shape for workflow and task results.
 * Workflows from QE return a new shape for task results.
+* Custom images will default to `None`, unless using Quantum Engine where the defaults stay the same.
 
 📃 *Docs*
 * _Resource Management_ guide should render properly now.
