@@ -70,19 +70,21 @@ def workflow_run_id():
         (
             "0.46.0",
             {
-                "invocation-0-task-dual": set(),
-                "invocation-1-task-task3": set(),
-                "invocation-2-task-task2": 200,
-                "invocation-3-task-task1": 100,
+                "invocation-0-task-dual": (0, set()),
+                "invocation-1-task-dual": set(),
+                "invocation-2-task-task3": set(),
+                "invocation-3-task-task2": 200,
+                "invocation-4-task-task1": 100,
             },
         ),
         (
             "0.47.0",
             {
                 "invocation-0-task-dual": (0, set()),
-                "invocation-1-task-task3": set(),
-                "invocation-2-task-task2": 200,
-                "invocation-3-task-task1": 100,
+                "invocation-1-task-dual": (0, set()),
+                "invocation-2-task-task3": set(),
+                "invocation-3-task-task2": 200,
+                "invocation-4-task-task1": 100,
             },
         ),
     ],

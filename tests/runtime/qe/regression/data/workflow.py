@@ -27,4 +27,5 @@ def artifacts_not_ok():
     b = task2(a)
     c = task3(b)
     _, d = dual()
-    return a, c, d
+    e = dual()
+    return a, c, d, e
