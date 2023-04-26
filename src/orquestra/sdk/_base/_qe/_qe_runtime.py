@@ -212,6 +212,19 @@ def _get_task_invocations(wf_def: WorkflowDef) -> Dict[str, TaskInvocation]:
 
 
 def _extract_results(result_bytes: bytes) -> Dict[str, Any]:
+    """
+    Extract the raw bytes we get from QE
+
+    Args:
+        result_bytes: bytes received from QE, either a result or an artifact
+
+    Returns:
+        A dictionary loaded by the JSON we extract.
+        This JSON is context dependent.
+
+    Raises:
+        NotFoundError: when the `result_bytes` is not a archive we expect.
+    """
     try:
         return extract_result_json(result_bytes)
     except IndexError as e:
@@ -219,20 +232,18 @@ def _extract_results(result_bytes: bytes) -> Dict[str, Any]:
 
 
 def _parse_workflow_result(result_bytes: bytes) -> WorkflowResult:
-    """Parse a workflow run result
+    """
+    Parse bytes to a WorkflowResult
 
     Args:
-        result_bytes: bytes received from QE from '/v2/workflows/{id}/result'
+        result_bytes: bytes received from QE
 
     Returns:
-        A nested dictionary. Level 1 keys are QE step IDs. The level 2 keys
-            are QE artifact names as well as:
-            - 'inputs'
-            - 'stepID'
-            - 'stepName'
-            - 'workflowId'
+        A parsed WorkflowResult
+
     Raises:
-        IndexError: when the `result_bytes` is not a archive we expect.
+        NotFoundError: when the `result_bytes` is not a archive we expect.
+            From _extract_results
     """
 
     result_json = _extract_results(result_bytes)
