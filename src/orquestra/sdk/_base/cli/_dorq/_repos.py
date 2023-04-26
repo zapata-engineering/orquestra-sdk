@@ -23,6 +23,7 @@ from orquestra.sdk._base import _config, _db, loader
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe import _client
 from orquestra.sdk._base.abc import ArtifactValue
+from orquestra.sdk.schema import _compat
 from orquestra.sdk.schema.configs import ConfigName, RuntimeName
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.workflow_run import (
@@ -208,9 +209,10 @@ class WorkflowRunRepo:
         wf_run_id: WorkflowRunId,
         task_inv_id: TaskInvocationId,
         config_name: ConfigName,
-    ) -> t.Tuple[ArtifactValue]:
+    ) -> t.Tuple[ArtifactValue, ...]:
         """
-        Asks the runtime for task output values. This includes
+        Asks the runtime for task output values. The output is always a n-tuple where n
+        is the number of outputs in the task def metadata.
 
         Raises:
             orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match a
@@ -225,15 +227,33 @@ class WorkflowRunRepo:
         except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
             raise
 
-        artifacts = wf_run.get_artifacts()
         try:
-            task_outputs = artifacts[task_inv_id]
-        except KeyError as e:
+            task_run: sdk.TaskRun = _find_first(
+                lambda task: task.task_invocation_id == task_inv_id, wf_run.get_tasks()
+            )
+        except StopIteration as e:
             raise exceptions.TaskInvocationNotFoundError(
                 invocation_id=task_inv_id
             ) from e
 
-        return task_outputs
+        # TaskRun.get_outputs() returns whatever the task function returned, regardless
+        # of the number of ``@task(n_outputs=...)``. For presentation we need to somehow
+        # decide if we need to iterate over ``task_outputs`` or not. We base this logic
+        # on the IR.
+        task_outputs = task_run.get_outputs()
+
+        wf_def = wf_run.get_status_model().workflow_def
+        invocation = wf_def.task_invocations[task_inv_id]
+        task_def = wf_def.tasks[invocation.task_id]
+
+        if _compat.result_is_packed(task_def=task_def):
+            # We expect ``task_outputs`` to be an iterable already.
+            outputs_tuple = tuple(task_outputs)
+        else:
+            # ``task_outputs`` is likely to be a single object. We need to wrap it.
+            outputs_tuple = (task_outputs,)
+
+        return outputs_tuple
 
     def _get_wf_def_model(
         self, wf_run_id: WorkflowRunId, config_name: ConfigName
