@@ -392,7 +392,7 @@ dorq.section(
     help="User Token to given server. To generate token, use this command without -t"
     "option first",
 )
-@cloup.option("--ce", is_flag=True, default=False, help="Start a Ray cluster")
+@cloup.option("--ce", is_flag=True, default=False, help="Login to Compute Engine")
 def login(server: str, token: t.Optional[str], ce: bool):
     """
     Login in to remote cluster
