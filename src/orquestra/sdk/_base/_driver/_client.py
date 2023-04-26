@@ -52,6 +52,9 @@ API_ACTIONS = {
     "get_task_run_logs": "/api/task-run-logs",
     # Login
     "get_login_url": "v1/login",
+    # Workspaces
+    "list_workspaces": "/api/catalog/workspaces",
+    "list_projects": "/api/catalog/workspaces/{}/projects",
 }
 
 

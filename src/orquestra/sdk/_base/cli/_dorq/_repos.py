@@ -139,7 +139,12 @@ class WorkflowRunRepo:
         return task_run.id
 
     def submit(
-        self, wf_def: sdk.WorkflowDef, config: ConfigName, ignore_dirty_repo: bool
+        self,
+        wf_def: sdk.WorkflowDef,
+        config: ConfigName,
+        ignore_dirty_repo: bool,
+        workspace_id: t.Optional[str],
+        project_id: t.Optional[str],
     ) -> WorkflowRunId:
         """
         Args:
@@ -156,7 +161,9 @@ class WorkflowRunRepo:
             if not ignore_dirty_repo:
                 warnings.filterwarnings("error", category=exceptions.DirtyGitRepo)
 
-            wf_run = wf_def.run(config)
+            wf_run = wf_def.run(
+                config, workspace_id=workspace_id, project_id=project_id
+            )
 
         return wf_run.run_id
 

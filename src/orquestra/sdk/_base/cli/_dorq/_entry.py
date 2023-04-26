@@ -37,6 +37,24 @@ To get config name for remote runtime, use orq login -s <uri> first
 """,
 )
 
+WORKSPACE_OPTION = cloup.option(
+    "-w",
+    "--workspace",
+    required=False,
+    help="""
+ID of the workspace used to submit workflow.
+""",
+)
+
+PROJECT_OPTION = cloup.option(
+    "-p",
+    "--project",
+    required=False,
+    help="""
+ID of the project used to submit workflow.
+""",
+)
+
 
 @cloup.group(context_settings=CLICK_CTX_SETTINGS)
 def dorq():
@@ -81,6 +99,8 @@ selecting a function from the ones available in 'module'.
 """,
 )
 @CONFIG_OPTION
+@WORKSPACE_OPTION
+@PROJECT_OPTION
 @cloup.option(
     "--force",
     is_flag=True,
@@ -90,7 +110,14 @@ selecting a function from the ones available in 'module'.
         "uncommitted changes."
     ),
 )
-def submit(module: str, name: t.Optional[str], config: t.Optional[str], force: bool):
+def submit(
+    module: str,
+    name: t.Optional[str],
+    config: t.Optional[str],
+    workspace: t.Optional[str],
+    project: t.Optional[str],
+    force: bool,
+):
     """
     Submits a workflow for execution.
 
@@ -104,7 +131,7 @@ def submit(module: str, name: t.Optional[str], config: t.Optional[str], force: b
     from ._workflow._submit import Action
 
     action = Action()
-    action.on_cmd_call(module, name, config, force)
+    action.on_cmd_call(module, name, config, workspace, project, force)
 
 
 @workflow.command()
