@@ -3,6 +3,9 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+* Removed deprecated "name" parameter for RuntimeConfig factory methods, like qe() or ray()
+* Removed deprecated save() method from RuntimeConfig class
+* Removed is_saved() method and "name" setter from RuntimeConfig class
 
 🔥 *Features*
 * New built-in config name - "auto" - used to submit workflows to a remote cluster when used inside Orquestra Studio.
