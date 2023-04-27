@@ -20,7 +20,7 @@ prompter = Prompter()
 class TestChoice:
     class TestWithSingleOption:
         @staticmethod
-        def test_user_accepts_selection(monkeypatch):
+        def test_user_accepts_selection_single_values(monkeypatch):
             mock_confirm = Mock()
             mock_list = Mock()
             mock_confirm.return_value = True
@@ -32,6 +32,23 @@ class TestChoice:
             assert chosen == "A"
             mock_confirm.assert_called_once_with(
                 "<message sentinel> - only one option is available. Proceed with A?",
+                default=True,
+            )
+            mock_list.assert_not_called()
+
+        @staticmethod
+        def test_user_accepts_selection_tuples(monkeypatch):
+            mock_confirm = Mock()
+            mock_list = Mock()
+            mock_confirm.return_value = True
+            monkeypatch.setattr(Prompter, "confirm", mock_confirm)
+            monkeypatch.setattr(inquirer, "List", mock_list)
+
+            chosen = prompter.choice([("name", "value")], "<message sentinel>")
+
+            assert chosen == "value"
+            mock_confirm.assert_called_once_with(
+                "<message sentinel> - only one option is available. Proceed with name?",
                 default=True,
             )
             mock_list.assert_not_called()
