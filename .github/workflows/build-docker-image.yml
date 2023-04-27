@@ -49,7 +49,7 @@ jobs:
           ref: ${{ github.ref }}
           path_to_dockerfile: './Dockerfile'
           docker_context_path: '.'
-          target_docker_repository: 'zapatacomputing/orquestra-sdk'
+          target_docker_repository: 'zapatacomputing/orquestra-sdk-base'
           github_sha: ${{ github.sha }}
           # Add any desired additional tags for the image. When this action is
           # triggered by a new semver-compliant tag, the image will be tagged
