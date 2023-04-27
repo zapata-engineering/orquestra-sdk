@@ -80,13 +80,19 @@ class Prompter:
         # If there's only one choice, select it automatically and confirm with the user
         # that that's what they want to do.
         if len(choices) == 1:
-            if self.confirm(
-                f"{message} - only one option is available. Proceed with {choices[0]}?",
+            name: str
+            value: T
+            if isinstance(choices, tuple):
+                name, value = choices[0]
+            else:
+                name, value = choices[0], choices[0]
+
+            if not self.confirm(
+                f"{message} - only one option is available. Proceed with {name}?",
                 default=True,
             ):
-                return choices[0]
-            else:
                 raise exceptions.UserCancelledPrompt(f"User cancelled {message} prompt")
+            return value
 
         question = inquirer.List(
             SINGLE_INPUT,
