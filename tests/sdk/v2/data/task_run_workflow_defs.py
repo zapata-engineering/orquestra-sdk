@@ -43,6 +43,11 @@ def wf_single_task_with_const_parent():
 
 
 @sdk.workflow
+def wf_single_task_with_secret_parent():
+    return [return_num(sdk.secrets.get("test"))]
+
+
+@sdk.workflow
 def wf_single_task_with_const_parent_kwargs():
     return [args_kwargs(**{"kwargs": 36})]
 

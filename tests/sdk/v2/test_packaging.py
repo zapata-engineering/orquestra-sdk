@@ -5,16 +5,21 @@ from unittest.mock import Mock
 
 import pytest
 
-import orquestra.sdk as sdk
-import orquestra.sdk.packaging as packaging
+from orquestra import sdk
+from orquestra.sdk import packaging
+from orquestra.sdk.packaging import _versions
+
+try:
+    import importlib.metadata as metadata  # type: ignore
+except ModuleNotFoundError:
+    import importlib_metadata as metadata  # type: ignore
 
 
 class TestGetInstalledVersion:
     @staticmethod
     def test_successful_call(monkeypatch):
         # Given
-        metadata_version = Mock(return_value="1.2.3")
-        monkeypatch.setattr(packaging.metadata, "version", metadata_version)
+        monkeypatch.setattr(metadata, "version", Mock(return_value="1.2.3"))
         # When
         version = packaging.get_installed_version("some-package")
         # Then
@@ -23,8 +28,9 @@ class TestGetInstalledVersion:
     @staticmethod
     def test_package_not_found(monkeypatch):
         # Given
-        metadata_version = Mock(side_effect=packaging.metadata.PackageNotFoundError)
-        monkeypatch.setattr(packaging.metadata, "version", metadata_version)
+        monkeypatch.setattr(
+            metadata, "version", Mock(side_effect=metadata.PackageNotFoundError)
+        )
         # When
         with pytest.raises(packaging.PackagingError) as exc_info:
             _ = packaging.get_installed_version("some-package")
@@ -36,8 +42,9 @@ class TestInstalledImport:
     @staticmethod
     def test_package_found(monkeypatch):
         # Given
-        get_version = Mock(return_value="1.2.3")
-        monkeypatch.setattr(packaging, "get_installed_version", get_version)
+        monkeypatch.setattr(
+            _versions, "get_installed_version", Mock(return_value="1.2.3")
+        )
         # When
         imp = packaging.InstalledImport(package_name="some-package")
         # Then
@@ -48,8 +55,11 @@ class TestInstalledImport:
     @staticmethod
     def test_package_not_found(monkeypatch):
         # Given
-        get_version = Mock(side_effect=packaging.PackagingError("Package not found:"))
-        monkeypatch.setattr(packaging, "get_installed_version", get_version)
+        monkeypatch.setattr(
+            _versions,
+            "get_installed_version",
+            Mock(side_effect=packaging.PackagingError("Package not found:")),
+        )
         # When
         with pytest.raises(packaging.PackagingError) as exc_info:
             _ = packaging.InstalledImport(package_name="some-package")
@@ -59,8 +69,11 @@ class TestInstalledImport:
     @staticmethod
     def test_package_not_found_fallback(monkeypatch):
         # Given
-        get_version = Mock(side_effect=packaging.PackagingError("Package not found:"))
-        monkeypatch.setattr(packaging, "get_installed_version", get_version)
+        monkeypatch.setattr(
+            _versions,
+            "get_installed_version",
+            Mock(side_effect=packaging.PackagingError("Package not found:")),
+        )
         fallback = sdk.GithubImport("zapatacomputing/orquestra-workflow-sdk")
         # When
         imp = packaging.InstalledImport(package_name="some-package", fallback=fallback)
@@ -70,8 +83,9 @@ class TestInstalledImport:
     @staticmethod
     def test_package_version_matches(monkeypatch):
         # Given
-        get_version = Mock(return_value="1.2.3")
-        monkeypatch.setattr(packaging, "get_installed_version", get_version)
+        monkeypatch.setattr(
+            _versions, "get_installed_version", Mock(return_value="1.2.3")
+        )
         # When
         imp = packaging.InstalledImport(
             package_name="some-package", version_match="[0-9].[0-9].[0-9]"
@@ -84,8 +98,9 @@ class TestInstalledImport:
     @staticmethod
     def test_package_version_does_not_match(monkeypatch):
         # Given
-        get_version = Mock(return_value="1.2.3")
-        monkeypatch.setattr(packaging, "get_installed_version", get_version)
+        monkeypatch.setattr(
+            _versions, "get_installed_version", Mock(return_value="1.2.3")
+        )
         # When
         with pytest.raises(packaging.PackagingError) as exc_info:
             _ = packaging.InstalledImport(
@@ -100,8 +115,9 @@ class TestInstalledImport:
     @staticmethod
     def test_package_version_does_not_match_fallback(monkeypatch):
         # Given
-        get_version = Mock(return_value="1.2.3")
-        monkeypatch.setattr(packaging, "get_installed_version", get_version)
+        monkeypatch.setattr(
+            _versions, "get_installed_version", Mock(return_value="1.2.3")
+        )
         fallback = sdk.GithubImport("zapatacomputing/orquestra-workflow-sdk")
         # When
         imp = packaging.InstalledImport(
