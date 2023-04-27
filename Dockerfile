@@ -5,9 +5,9 @@ ARG SDK_VERSION
 RUN <<EOF
 apt update --yes
 apt upgrade --yes
-apt install -y --no-install-recommends git
-pip install -U pip wheel
-pip install orquestra-sdk[ray]==${SDK_VERSION}
+apt install --yes --no-install-recommends git
+python -m pip install -U pip wheel
+python -m pip install orquestra-sdk[ray]==${SDK_VERSION}
 EOF
 
 RUN useradd -ms /bin/bash -d /home/orquestra orquestra --uid 1000 --gid 100
