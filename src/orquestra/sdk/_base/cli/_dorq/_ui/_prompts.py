@@ -80,9 +80,9 @@ class Prompter:
         # If there's only one choice, select it automatically and confirm with the user
         # that that's what they want to do.
         if len(choices) == 1:
-            name: str
-            value: T
-            if isinstance(choices, tuple):
+            name: ChoiceID
+            value: t.Union[ChoiceID, T]
+            if isinstance(choices[0], tuple):
                 name, value = choices[0]
             else:
                 name, value = choices[0], choices[0]
