@@ -1906,3 +1906,104 @@ class TestClient:
 
                 with pytest.raises(_exceptions.UnknownHTTPError):
                     _ = client.get_task_run_logs(task_run_id)
+
+    class TestWorkspaces:
+        class TestListWorkspaces:
+            @staticmethod
+            @pytest.fixture
+            def endpoint_mocker(endpoint_mocker_base, base_uri: str):
+                """
+                Returns a helper for mocking requests. Assumes that most of the tests
+                inside this class contain a very similar set up.
+                """
+
+                return endpoint_mocker_base(
+                    responses.GET,
+                    f"{base_uri}/api/catalog/workspaces",
+                    default_status_code=200,
+                )
+
+            @staticmethod
+            def test_params_encoding(endpoint_mocker, client: DriverClient):
+                """
+                Verifies that params are correctly sent to the server.
+                """
+                endpoint_mocker(
+                    json=resp_mocks.make_list_workspaces_repsonse(),
+                )
+
+                _ = client.list_workspaces()
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "status, exception",
+                [
+                    (401, _exceptions.InvalidTokenError),
+                    (403, _exceptions.ForbiddenError),
+                    (500, _exceptions.UnknownHTTPError),
+                ],
+            )
+            def test_error_codes(
+                endpoint_mocker, client: DriverClient, status, exception
+            ):
+                endpoint_mocker(
+                    status=status,
+                )
+
+                with pytest.raises(exception):
+                    _ = client.list_workspaces()
+
+    class TestProjects:
+        class TestListProjects:
+            @staticmethod
+            @pytest.fixture
+            def workspace_id():
+                return "cool"
+
+            @staticmethod
+            @pytest.fixture
+            def endpoint_mocker(endpoint_mocker_base, workspace_id, base_uri: str):
+                """
+                Returns a helper for mocking requests. Assumes that most of the tests
+                inside this class contain a very similar set up.
+                """
+                workspace_zri = f"zri:v1::0:system:resource_group:{workspace_id}"
+
+                return endpoint_mocker_base(
+                    responses.GET,
+                    f"{base_uri}/api/catalog/workspaces/{workspace_zri}/projects",
+                    default_status_code=200,
+                )
+
+            @staticmethod
+            def test_params_encoding(
+                endpoint_mocker, client: DriverClient, workspace_id
+            ):
+                """
+                Verifies that params are correctly sent to the server.
+                """
+                endpoint_mocker(
+                    json=resp_mocks.make_list_projects_repsonse(),
+                )
+
+                _ = client.list_projects(workspace_id)
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "status, exception",
+                [
+                    (400, _exceptions.InvalidWorkspaceZRI),
+                    (401, _exceptions.InvalidTokenError),
+                    (403, _exceptions.ForbiddenError),
+                    (500, _exceptions.UnknownHTTPError),
+                ],
+            )
+            def test_error_codes(
+                endpoint_mocker, client: DriverClient, workspace_id, status, exception
+            ):
+                endpoint_mocker(
+                    status=status,
+                )
+
+                with pytest.raises(exception):
+                    _ = client.list_projects(workspace_id)

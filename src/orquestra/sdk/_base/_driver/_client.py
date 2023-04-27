@@ -52,6 +52,9 @@ API_ACTIONS = {
     "get_task_run_logs": "/api/task-run-logs",
     # Login
     "get_login_url": "v1/login",
+    # Workspaces
+    "list_workspaces": "/api/catalog/workspaces",
+    "list_projects": "/api/catalog/workspaces/{}/projects",
 }
 
 
@@ -665,3 +668,51 @@ class DriverClient:
 
         # TODO: unzip, get logs (ORQSDK-654)
         return resp.content
+
+    def list_workspaces(self):
+        """
+        Gets the list of all workspaces
+        """
+
+        resp = self._get(
+            API_ACTIONS["list_workspaces"],
+            query_params=None,
+        )
+
+        _handle_common_errors(resp)
+
+        parsed_response = pydantic.parse_obj_as(
+            _models.ListWorkspacesResponse, resp.json()
+        )
+
+        return parsed_response
+
+    def list_projects(self, workspace_id):
+        """
+        Gets the list of all projects in given workspace
+        """
+        default_tenant_id = 0
+        special_workspace = "system"
+        zri_type = "resource_group"
+
+        # we have to build project ZRI from some hardcoded values + workspaceId
+        workspace_zri = (
+            f"zri:v1::{default_tenant_id}:"
+            f"{special_workspace}:{zri_type}:{workspace_id}"
+        )
+
+        resp = self._get(
+            API_ACTIONS["list_projects"].format(workspace_zri),
+            query_params=None,
+        )
+
+        if resp.status_code == codes.BAD_REQUEST:
+            raise _exceptions.InvalidWorkspaceZRI(workspace_zri)
+
+        _handle_common_errors(resp)
+
+        parsed_response = pydantic.parse_obj_as(
+            _models.ListProjectResponse, resp.json()
+        )
+
+        return parsed_response

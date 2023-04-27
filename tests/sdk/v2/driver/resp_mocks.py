@@ -269,3 +269,52 @@ def make_get_task_run_logs_response():
     """
 
     return "bytes"
+
+
+def _make_fake_workspace_data():
+    return {
+        "type": "str",
+        "displayName": "str",
+        "description": "str",
+        "owner": "str",
+        "createdBy": "str",
+        "createdAt": "str",
+        "lastAccessed": "str",
+        "lastUpdated": "str",
+        "tags": [],
+        "status": "str",
+        "tenantId": "str",
+        "resourceGroupId": "str",
+        "id": "str",
+        "logo": "str",
+        "namespace": "str",
+    }
+
+
+def make_list_workspaces_repsonse():
+    return [_make_fake_workspace_data(), _make_fake_workspace_data()]
+
+
+def _make_fake_project_data():
+    return {
+        "type": "str",
+        "displayName": "str",
+        "description": "str",
+        "owner": "str",
+        "createdBy": "str",
+        "createdAt": "str",
+        "lastAccessed": "str",
+        "lastUpdated": "str",
+        "tags": [],
+        "status": "str",
+        "tenantId": "str",
+        "resourceGroupId": "str",
+        "id": "str",
+        "logo": "str",
+        "image": "str",
+        "profileName": "str",
+    }
+
+
+def make_list_projects_repsonse():
+    return [_make_fake_project_data(), _make_fake_project_data()]
