@@ -22,6 +22,12 @@ from orquestra.sdk.schema import configs, ir
 from orquestra.sdk.schema.responses import JSONResult
 from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
 
+# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
+# unraisable exceptions. Last tested with Ray 2.4.0.
+pytestmark = pytest.mark.filterwarnings(
+    "ignore::pytest.PytestUnraisableExceptionWarning"
+)
+
 
 @pytest.fixture(scope="module")
 def runtime(
@@ -75,9 +81,6 @@ class TestRayRuntimeMethods:
         Tests that validate .create_workflow_run().
         """
 
-        # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
-        # unraisable exceptions. Last tested with Ray 2.2.0.
-        @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_running_same_workflow_def_twice(self, runtime: _dag.RayRuntime):
             wf_def = _example_wfs.multioutput_wf.model
             run_id1 = runtime.create_workflow_run(wf_def, None)
@@ -459,9 +462,6 @@ class TestRayRuntimeMethods:
 
 
 @pytest.mark.slow
-# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
-# unraisable exceptions. Last tested with Ray 2.3.0.
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.parametrize(
     "wf,expected_outputs,expected_intermediate",
     [
@@ -590,9 +590,6 @@ def test_run_and_get_output(
 # - Installing packages on company machines is very slow because of the antivirus
 #   scanning.
 @pytest.mark.slow
-# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
-# unraisable exceptions. Last tested with Ray 2.3.0.
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 class Test3rdPartyLibraries:
     @staticmethod
     # We're reading a serialized workflow def. The SDK version inside that JSON is
@@ -682,9 +679,6 @@ class TestRayRuntimeErrors:
 
 
 @pytest.mark.slow
-# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
-# unraisable exceptions. Last tested with Ray 2.2.0.
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.parametrize(
     "wf,tell_tale",
     [
@@ -756,9 +750,6 @@ class TestDirectRayReader:
 
 
 @pytest.mark.slow
-# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
-# unraisable exceptions. Last tested with Ray 2.2.0.
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 def test_ray_direct_reader_no_duplicate_lines(
     shared_ray_conn,
     runtime,
@@ -794,9 +785,6 @@ def test_ray_direct_reader_no_duplicate_lines(
 
 
 @pytest.mark.slow
-# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
-# unraisable exceptions. Last tested with Ray 2.2.0.
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 def test_task_code_unavailable_at_building_dag(runtime: _dag.RayRuntime):
     """
     Verifies that the task code is required only at the task-execution time, and it is
@@ -825,9 +813,6 @@ def test_task_code_unavailable_at_building_dag(runtime: _dag.RayRuntime):
 
 
 @pytest.mark.slow
-# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
-# unraisable exceptions. Last tested with Ray 2.0.1.
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 class TestGetCurrentIDs:
     def test_during_running_workflow(self, runtime: _dag.RayRuntime, tmp_path: Path):
         # Given
