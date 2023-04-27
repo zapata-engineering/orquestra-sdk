@@ -57,7 +57,9 @@ class Prompter:
         default: t.Optional[str] = None,
     ) -> t.Union[ChoiceID, T]:
         """
-        Presents the user a choice and returns what they selected
+        Presents the user a choice and returns what they selected.
+
+        If only one option is available, that option is selected automatically.
 
         Args:
             choices: The list of choices to present to the user. If this is of the shape
@@ -74,6 +76,17 @@ class Prompter:
         Raises:
             UserCancelledPrompt if the user cancels the prompt
         """
+
+        # If there's only one choice, select it automatically and confirm with the user
+        # that that's what they want to do.
+        if len(choices) == 1:
+            if self.confirm(
+                f"{message} - only one option is available. Proceed with {choices[0]}?",
+                default=True,
+            ):
+                return choices[0]
+            else:
+                raise exceptions.UserCancelledPrompt(f"User cancelled {message} prompt")
 
         question = inquirer.List(
             SINGLE_INPUT,
