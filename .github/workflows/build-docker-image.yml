@@ -1,4 +1,4 @@
-name: Publish orquestra-sdk Docker Image
+name: Publish orquestra-sdk-base Docker Image
 
 on:
   push:
