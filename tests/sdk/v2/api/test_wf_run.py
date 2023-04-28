@@ -820,6 +820,7 @@ class TestListWorkspaces:
         assert len(runs) == 2
         assert runs[0].workspace_id == "ws1"
         assert runs[1].workspace_id == "ws2"
+        mock_config_runtime.list_workspaces.assert_called_once()
 
 
 class TestListProjects:
