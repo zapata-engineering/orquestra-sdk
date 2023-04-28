@@ -3,6 +3,22 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+
+🔥 *Features*
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+## 0.47.0
+
+🚨 *Breaking Changes*
 * Task results on QE have changed shape. This may cause some oddness when downloading older task artifacts.
 
 🔥 *Features*
