@@ -48,6 +48,7 @@ from ._dsl import (
     parse_custom_name,
 )
 from ._in_process_runtime import InProcessRuntime
+from .abc import RuntimeInterface
 
 
 # ----- Workflow exceptions  -----
@@ -196,6 +197,7 @@ class WorkflowDef(Generic[_R]):
             raise TypeError(
                 f"'config' argument to `prepare()` has unsupported type {type(config)}."
             )
+        runtime: RuntimeInterface
         if _config._runtime_name == "IN_PROCESS":
             runtime = InProcessRuntime()
         else:

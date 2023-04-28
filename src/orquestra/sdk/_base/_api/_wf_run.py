@@ -25,7 +25,12 @@ from ...schema.configs import ConfigName
 from ...schema.local_database import StoredWorkflowRun
 from ...schema.workflow_run import ProjectDef, ProjectRef, State, TaskInvocationId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
-from ...schema.workflow_run import WorkflowRunId, WorkspaceDef, WorkspaceId
+from ...schema.workflow_run import (
+    WorkflowRunId,
+    WorkflowRunMinimal,
+    WorkspaceDef,
+    WorkspaceId,
+)
 from .. import serde
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig
@@ -493,7 +498,7 @@ def list_workflow_runs(
     # Grab the "workflow runs" from the runtime.
     # Note: WorkflowRun means something else in runtime land. To avoid overloading, this
     #       import is aliased to WorkflowRunStatus in here.
-    run_statuses: t.List[WorkflowRunModel] = runtime.list_workflow_runs(
+    run_statuses: t.Sequence[WorkflowRunMinimal] = runtime.list_workflow_runs(
         limit=limit, max_age=_parse_max_age(max_age), state=state
     )
 
