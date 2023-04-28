@@ -5,6 +5,7 @@
 🚨 *Breaking Changes*
 
 🔥 *Features*
+* Setting workflow_id and project_id is now available using "orq wf submit" command
 
 👩‍🔬 *Experimental*
 
