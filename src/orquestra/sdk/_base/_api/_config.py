@@ -324,8 +324,8 @@ class RuntimeConfig:
             list: list of configurations within the save file.
         """
         configs = _config.read_config_names() + list(_config.UNIQUE_CONFIGS)
-        if _config.is_self_config_available():
-            configs.append(_config.SAME_CLUSTER_CONFIG_NAME)
+        if _config.is_passport_file_available():
+            configs.append(_config.AUTO_CONFIG_NAME)
         return configs
 
     @classmethod

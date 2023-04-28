@@ -9,6 +9,7 @@ structure here is JSON-serializable.
 
 import enum
 import typing as t
+import warnings
 
 import pydantic
 from pydantic import BaseModel
@@ -191,6 +192,22 @@ class TaskParameter(BaseModel):
     # it should be added here.
 
 
+class TaskOutputMetadata(BaseModel):
+    """
+    Information about the data shape returned by a task function.
+    """
+
+    # If yes, it's possible to unpack the output in the workflow like:
+    # foo, bar = my_task()
+    #
+    # Separate from `n_outputs` to handle cases like:
+    # foo, = my_task()
+    is_subscriptable: bool
+
+    # Number of artifacts we can populate with the task results.
+    n_outputs: int
+
+
 class TaskDef(BaseModel):
     # workflow-unique ID used to refer from task invocations
     id: TaskDefId
@@ -205,6 +222,12 @@ class TaskDef(BaseModel):
     # None means we do not know the parameters for this Task (e.g. an external task)
     # An empty list [] means a Task with no parameters
     parameters: t.Optional[t.List[TaskParameter]]
+
+    # Statically inferred from the task function. See also `TaskOutputMetadata`'s
+    # docstring.
+    # 'None' for IRs generated with orquestra-sdk<=0.45.1. Not empty for newer SDK
+    # versions.
+    output_metadata: t.Optional[TaskOutputMetadata] = None
 
     # ID of the import that contains the callable function
     source_import_id: ImportId
@@ -243,7 +266,8 @@ ConstantNodeId = str
 
 
 class ArtifactNode(BaseModel):
-    # Workflow-scope unique ID used to refer from task invocations
+    # Workflow-scope unique ID used to refer from task invocations. If the task has
+    # multiple outputs they will have distinct `id`s.
     id: ArtifactNodeId
 
     # artifact metadata below
@@ -257,12 +281,12 @@ class ArtifactNode(BaseModel):
     # serialization will likely be needed somewhere.
     serialization_format: ArtifactFormat = ArtifactFormat.AUTO
 
-    # Tells the runtime the index of the Artifact from the TaskInvocation
-    # If None, then the TaskInvocation's result is not split
+    # Index of the variable when destructuring task result in the workflow function. If
+    # the workflow contained `foo, bar = my_task()`, `foo`'s index is 0 and `bar`'s
+    # index is 1. This is used by some runtimes to extract the artifact value from the
+    # output tuple.
     #
-    # We need this to support destructuring multi-output tasks when some
-    # of the output values are unused. For more info, see comments in:
-    # https://github.com/zapatacomputing/orquestra-workflow/pull/44
+    # `None` if the task result isn't destructured in the workflow function.
     artifact_index: t.Optional[int] = None
 
 
@@ -312,6 +336,8 @@ class ConstantNodePickle(BaseModel):
 
 # General ConstantNode that can hold constants that are not JSON-serializable
 ConstantNode = t.Union[ConstantNodeJSON, ConstantNodePickle]
+# ID of a node that can be a task argument. Multiple node types can be task inputs.
+# This is contrary to the outputs; only artifact nodes can be task outputs.
 ArgumentId = t.Union[ArtifactNodeId, ConstantNodeId, SecretNodeId]
 
 
@@ -392,3 +418,46 @@ class WorkflowDef(BaseModel):
     # The resources that are available for the workflow to use.
     # If none, the runtime will decide.
     resources: t.Optional[Resources] = None
+
+    @pydantic.validator("metadata", always=True)
+    def sdk_version_up_to_date(cls, v: t.Optional[WorkflowMetadata]):
+        # Workaround for circular imports
+        from orquestra.sdk import exceptions
+        from orquestra.sdk.packaging import _versions
+        from orquestra.sdk.schema import _compat
+
+        current_version = _versions.get_current_sdk_version()
+
+        if v is None:
+            warnings.warn(
+                exceptions.VersionMismatch(
+                    (
+                        "Attempting to read a workflow definition generated with an "
+                        "old version of Orquestra Workflow SDK. Please consider "
+                        "re-running your workflow or downgrading orquestra-sdk. "
+                        "For more information visit: https://docs.orquestra.io/docs/core/sdk/guides/version-compatibility.html"  # noqa: E501
+                    ),
+                    actual=current_version,
+                    needed=None,
+                )
+            )
+            return v
+
+        if not _compat.versions_are_compatible(
+            generated_at=v.sdk_version, current=current_version
+        ):
+            warnings.warn(
+                exceptions.VersionMismatch(
+                    (
+                        "Attempting to read a workflow definition generated with a "
+                        "different version of Orquestra Workflow SDK. "
+                        "Please consider re-running your workflow or installing "
+                        f"'orquestra-sdk=={v.sdk_version.original}'. "
+                        "For more information visit: https://docs.orquestra.io/docs/core/sdk/guides/version-compatibility.html"  # noqa: E501
+                    ),
+                    actual=current_version,
+                    needed=v.sdk_version,
+                )
+            )
+
+        return v

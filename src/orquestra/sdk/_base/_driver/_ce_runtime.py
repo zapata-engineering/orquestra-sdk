@@ -4,16 +4,17 @@
 import warnings
 from datetime import timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Union
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import serde
+from orquestra.sdk._base import _retry, serde
 from orquestra.sdk._base._db import WorkflowDB
-from orquestra.sdk._base.abc import ArtifactValue, RuntimeInterface
+from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.kubernetes.quantity import parse_quantity
 from orquestra.sdk.schema.configs import RuntimeConfiguration
-from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
+from orquestra.sdk.schema.ir import ArtifactFormat, TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
+from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
     ProjectRef,
     State,
@@ -177,9 +178,14 @@ class CERuntime(RuntimeInterface):
                 "- the authorization token was rejected by the remote cluster."
             ) from e
 
+    @_retry.retry(
+        attempts=5,
+        delay=0.2,
+        allowed_exceptions=(exceptions.WorkflowResultsNotReadyError,),
+    )
     def get_workflow_run_outputs_non_blocking(
         self, workflow_run_id: WorkflowRunId
-    ) -> Sequence[Any]:
+    ) -> Sequence[WorkflowResult]:
         """Non-blocking version of get_workflow_run_outputs.
 
         This method raises exceptions if the workflow output artifacts are not available
@@ -195,9 +201,13 @@ class CERuntime(RuntimeInterface):
         Returns:
             the outputs associated with the workflow run
         """
+
         try:
             result_ids = self._client.get_workflow_run_results(workflow_run_id)
-        except (_exceptions.InvalidWorkflowRunID, _exceptions.WorkflowRunNotFound) as e:
+        except (
+            _exceptions.InvalidWorkflowRunID,
+            _exceptions.WorkflowRunNotFound,
+        ) as e:
             raise exceptions.WorkflowRunNotFoundError(
                 f"Workflow run with id `{workflow_run_id}` not found"
             ) from e
@@ -210,16 +220,24 @@ class CERuntime(RuntimeInterface):
 
         if len(result_ids) == 0:
             wf_run = self.get_workflow_run_status(workflow_run_id)
-            raise exceptions.WorkflowRunNotSucceeded(
-                f"Workflow run `{workflow_run_id}` is in state {wf_run.status.state}",
-                wf_run.status.state,
-            )
+            if wf_run.status.state == State.SUCCEEDED:
+                raise exceptions.WorkflowResultsNotReadyError(
+                    f"Workflow run `{workflow_run_id}` has succeded, but the results "
+                    "are not ready yet.\n"
+                    "After a workflow completes, there may be a short delay before the "
+                    "results are ready to download. Please try again!"
+                )
+            else:
+                raise exceptions.WorkflowRunNotSucceeded(
+                    f"Workflow run `{workflow_run_id}` is in state "
+                    f"{wf_run.status.state}",
+                    wf_run.status.state,
+                )
 
-        assert len(result_ids) == 1, "We're currently expecting a single result."
+        assert len(result_ids) == 1, "Assuming a single output"
 
         try:
-            wf_result = self._client.get_workflow_run_result(result_ids[0])
-            return tuple(serde.deserialize(wf_result))
+            result = self._client.get_workflow_run_result(result_ids[0])
         except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
             raise exceptions.UnauthorizedError(
                 "Could not get the outputs for workflow run with id "
@@ -227,9 +245,25 @@ class CERuntime(RuntimeInterface):
                 "- the authorization token was rejected by the remote cluster."
             ) from e
 
+        if not isinstance(result, ComputeEngineWorkflowResult):
+            # It's a WorkflowResult.
+            # We need to match the old way of storing results into the new way
+            # this is done by unpacking the deserialised values and re-serialising.
+            # This is unfortunate, but should only happen for <0.47.0 workflow runs.
+            # Example:
+            #   We get JSONResult([100, "json_string"]) from the API
+            #   We need (JSONResult(100), JSONResult("json_string"))
+            deserialised_results = serde.deserialize(result)
+            return tuple(
+                serde.result_from_artifact(unpacked, ArtifactFormat.AUTO)
+                for unpacked in deserialised_results
+            )
+        else:
+            return result.results
+
     def get_available_outputs(
         self, workflow_run_id: WorkflowRunId
-    ) -> Dict[TaskInvocationId, Union[ArtifactValue, Tuple[ArtifactValue, ...]]]:
+    ) -> Dict[TaskInvocationId, WorkflowResult]:
         """Returns all available outputs for a workflow
 
         This method returns all available artifacts. When the workflow fails
@@ -265,26 +299,20 @@ class CERuntime(RuntimeInterface):
                 "- the authorization token was rejected by the remote cluster."
             ) from e
 
-        artifact_vals: Dict[
-            TaskInvocationId, Union[ArtifactValue, Tuple[ArtifactValue]]
-        ] = {}
+        artifact_vals: Dict[TaskInvocationId, WorkflowResult] = {}
 
         for task_run_id, artifact_ids in artifact_map.items():
             inv_id = self._invocation_id_by_task_run_id(workflow_run_id, task_run_id)
-            outputs = []
-            for artifact_id in artifact_ids:
-                try:
-                    output = serde.deserialize(
-                        self._client.get_workflow_run_artifact(artifact_id)
-                    )
-                except Exception:
-                    # If we fail for any reason, this artifact wasn't available yet
-                    continue
-                outputs.append(output)
-
-            if len(outputs) > 0:
-                # We don't want to litter the dictionary with empty containers.
-                artifact_vals[inv_id] = tuple(outputs)
+            assert (
+                len(artifact_ids) == 1
+            ), "Expecting a single artifact containing the packed values from the task"
+            try:
+                artifact_vals[inv_id] = self._client.get_workflow_run_artifact(
+                    artifact_ids[0]
+                )
+            except Exception:
+                # If we fail for any reason, this artifact wasn't available yet
+                continue
 
         return artifact_vals
 

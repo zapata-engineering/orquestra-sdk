@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import abc
 from orquestra.sdk.schema import ir
+from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
     ProjectRef,
     RunStatus,
@@ -17,9 +18,10 @@ from orquestra.sdk.schema.workflow_run import (
 )
 
 from .. import secrets
+from ..exceptions import WorkflowRunNotFoundError
+from . import serde
 from ._graphs import iter_invocations_topologically
 from .dispatch import locate_fn_ref
-from .serde import deserialize_constant
 
 WfRunId = str
 ArtifactValue = t.Any
@@ -102,7 +104,7 @@ class InProcessRuntime(abc.RuntimeInterface):
 
         # We deserialize the constants in one go, instead of as needed
         consts: t.Dict[ir.ConstantNodeId, t.Any] = {
-            id: deserialize_constant(node)
+            id: serde.deserialize(node)
             for id, node in workflow_def.constant_nodes.items()
         }
         for id, secret in workflow_def.secret_nodes.items():
@@ -143,7 +145,7 @@ class InProcessRuntime(abc.RuntimeInterface):
         outputs = tuple(
             _get_args(consts, self._artifact_store[run_id], workflow_def.output_ids)
         )
-        self._output_store[run_id] = outputs[0] if len(outputs) == 1 else outputs
+        self._output_store[run_id] = outputs
 
         self._end_time_store[run_id] = datetime.now(timezone.utc)
         self._workflow_def_store[run_id] = workflow_def
@@ -151,24 +153,38 @@ class InProcessRuntime(abc.RuntimeInterface):
 
     def get_workflow_run_outputs_non_blocking(
         self, workflow_run_id: WfRunId
-    ) -> t.Sequence[t.Any]:
-        return self._output_store[workflow_run_id]
+    ) -> t.Tuple[WorkflowResult, ...]:
+        return (
+            *(
+                serde.result_from_artifact(output, ir.ArtifactFormat.AUTO)
+                for output in self._output_store[workflow_run_id]
+            ),
+        )
 
     def get_available_outputs(
         self, workflow_run_id: WfRunId
-    ) -> t.Dict[ir.TaskInvocationId, TaskOutputs]:
+    ) -> t.Dict[ir.TaskInvocationId, WorkflowResult]:
         wf_def = self._workflow_def_store[workflow_run_id]
 
-        inv_outputs: t.Dict[ir.TaskInvocationId, TaskOutputs] = {}
+        inv_outputs: t.Dict[ir.TaskInvocationId, WorkflowResult] = {}
         for inv in wf_def.task_invocations.values():
-            output_vals = tuple(
-                [
-                    self._artifact_store[workflow_run_id][art_id]
-                    for art_id in inv.output_ids
-                ]
-            )
+            # Assumption there's always a non-unpacked artifact. We want to return
+            # whatever shape was returned from the task function so we can use the
+            # "packed" artifact. For more info on artifact unpacking, see
+            # "orquestra.sdk._base._traversal".
 
-            inv_outputs[inv.id] = output_vals
+            artifact_nodes = [wf_def.artifact_nodes[id] for id in inv.output_ids]
+            packed_nodes = [n for n in artifact_nodes if n.artifact_index is None]
+            assert (
+                len(packed_nodes) == 1
+            ), f"Task invocation should have exactly 1 packed output. {inv.id} has {len(packed_nodes)}: {packed_nodes}"  # noqa: E501
+            packed_artifact = packed_nodes[0]
+
+            task_result = self._artifact_store[workflow_run_id][packed_artifact.id]
+
+            inv_outputs[inv.id] = serde.result_from_artifact(
+                task_result, ir.ArtifactFormat.AUTO
+            )
 
         return inv_outputs
 

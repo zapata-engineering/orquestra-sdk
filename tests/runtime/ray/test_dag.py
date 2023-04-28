@@ -5,6 +5,7 @@
 Unit tests for orquestra.sdk._ray._dag. If you need a test against a live
 Ray connection, see tests/ray/test_integration.py instead.
 """
+import copy
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, Union
@@ -16,6 +17,7 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base._config import RuntimeConfiguration, RuntimeName
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base._testing._example_wfs import (
+    wf_with_secrets,
     workflow_parametrised_with_resources,
 )
 from orquestra.sdk._ray import _client, _dag, _ray_logs
@@ -24,6 +26,16 @@ from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import ProjectRef, State
 
 TEST_TIME = datetime.now(timezone.utc)
+
+
+@pytest.fixture
+def wf_run_id():
+    return "mocked_wf_run_id"
+
+
+@pytest.fixture
+def client():
+    return create_autospec(_dag.RayClient)
 
 
 @pytest.mark.parametrize(
@@ -106,75 +118,6 @@ def test_task_state_from_ray_meta(
     )
 
 
-class TestTupleUnwrapper:
-    def test_unwraps_positional(self):
-        """
-        Verifies that TupleUnwrapper.call() unwraps a tuple passed as a
-        positional argument.
-        """
-        # Given
-        fn = Mock()
-        unwrapper = _dag.TupleUnwrapper(
-            fn=fn,
-            pos_specs=[_dag.PosArgUnpackSpec(param_index=0, unpack_index=0)],
-            kw_specs=[],
-        )
-
-        # When
-        unwrapper(("foo", "bar"))
-
-        # Then
-        fn.assert_called_with("foo")
-
-    def test_unwraps_keyword(self):
-        """
-        Verifies that TupleUnwrapper.call() unwraps a tuple passed as a
-        positional argument.
-        """
-        # Given
-        fn = Mock()
-        unwrapper = _dag.TupleUnwrapper(
-            fn=fn,
-            pos_specs=[],
-            kw_specs=[_dag.KwArgUnpackSpec(param_name="qux", unpack_index=1)],
-        )
-
-        # When
-        unwrapper(qux=("foo", "bar"))
-
-        # Then
-        fn.assert_called_with(qux="bar")
-
-    def test_leaves_unspecified_values(self):
-        """
-        Verifies that TupleUnwrapper.call() doesn't change arguments that
-        aren't mentioned in pos_specs or kw_specs.
-        """
-        # Given
-        fn = Mock()
-        unwrapper = _dag.TupleUnwrapper(
-            fn=fn,
-            pos_specs=[_dag.PosArgUnpackSpec(param_index=0, unpack_index=0)],
-            kw_specs=[_dag.KwArgUnpackSpec(param_name="qux", unpack_index=1)],
-        )
-
-        # When
-        unwrapper(
-            ("foo1", "bar1"),
-            ("foo2", "bar2"),
-            baz=("foo3", "bar3"),
-            qux=("foo4", "bar4"),
-        )
-
-        # Then
-        fn.assert_called_with(
-            "foo1",
-            ("foo2", "bar2"),
-            baz=("foo3", "bar3"),
-            qux="bar4",
-        )
-
-
 class TestRayRuntime:
     """
     Unit tests for RayRuntime class. Shouldn't use a real Ray connection nor other
@@ -188,12 +131,6 @@ class TestRayRuntime:
             config_name="TestRayRuntime",
             runtime_name=RuntimeName.RAY_LOCAL,
         )
-
-    @staticmethod
-    @pytest.fixture
-    def client():
-        client = Mock()
-        return client
 
     class TestReadingLogs:
         """
@@ -276,9 +213,9 @@ class TestRayRuntime:
         def test_project_raises_warning(
             self, client, runtime_config, tmp_path, monkeypatch
         ):
-            monkeypatch.setattr(_dag, "_make_ray_dag", Mock())
+            monkeypatch.setattr(_dag, "make_ray_dag", Mock())
             monkeypatch.setattr(_dag, "WfUserMetadata", Mock())
-            monkeypatch.setattr(_dag, "_pydatic_to_json_dict", Mock())
+            monkeypatch.setattr(_dag, "pydatic_to_json_dict", Mock())
             monkeypatch.setattr(StoredWorkflowRun, "__init__", lambda *_, **__: None)
             monkeypatch.setattr(WorkflowDB, "save_workflow_run", Mock())
 
@@ -432,234 +369,3 @@ class TestRayRuntime:
             runs = runtime.list_workflow_runs(limit=2)
             # Then
             assert len(runs) == 2
-
-
-class TestWrapSingleOutputs:
-    @staticmethod
-    @pytest.mark.parametrize(
-        "values,invocations,expected_wrapped",
-        [
-            pytest.param(
-                [],
-                [],
-                [],
-                id="empty",
-            ),
-            pytest.param(
-                [42],
-                [
-                    ir.TaskInvocation(
-                        id="inv1",
-                        task_id="task1",
-                        args_ids=[],
-                        kwargs_ids=[],
-                        output_ids=["art1"],
-                        resources=None,
-                        custom_image=None,
-                    ),
-                ],
-                [(42,)],
-                id="single_task_single_output",
-            ),
-            pytest.param(
-                [(21, 38)],
-                [
-                    ir.TaskInvocation(
-                        id="inv1",
-                        task_id="task1",
-                        args_ids=[],
-                        kwargs_ids=[],
-                        output_ids=["art1", "art2"],
-                        resources=None,
-                        custom_image=None,
-                    ),
-                ],
-                [(21, 38)],
-                id="single_task_multi_output",
-            ),
-            pytest.param(
-                [
-                    (21, 38),
-                    42,
-                ],
-                [
-                    ir.TaskInvocation(
-                        id="inv1",
-                        task_id="task1",
-                        args_ids=[],
-                        kwargs_ids=[],
-                        output_ids=["art1", "art2"],
-                        resources=None,
-                        custom_image=None,
-                    ),
-                    ir.TaskInvocation(
-                        id="inv2",
-                        task_id="task2",
-                        args_ids=[],
-                        kwargs_ids=[],
-                        output_ids=["art3"],
-                        resources=None,
-                        custom_image=None,
-                    ),
-                ],
-                [
-                    (21, 38),
-                    (42,),
-                ],
-                id="many_tasks",
-            ),
-        ],
-    )
-    def test_foo(values, invocations, expected_wrapped):
-        # When
-        wrapped = _dag._wrap_single_outputs(values, invocations)
-        # Then
-        assert wrapped == expected_wrapped
-
-
-class TestPipString:
-    class TestPythonImports:
-        def test_empty(self):
-            imp = ir.PythonImports(id="mock-import", packages=[], pip_options=[])
-            pip = _dag._pip_string(imp)
-            assert pip == []
-
-        def test_with_package(self, monkeypatch: pytest.MonkeyPatch):
-            # We're not testing the serde package, so we're mocking it
-            monkeypatch.setattr(
-                _dag.serde, "stringify_package_spec", Mock(return_value="mocked")
-            )
-            imp = ir.PythonImports(
-                id="mock-import",
-                packages=[
-                    ir.PackageSpec(
-                        name="one",
-                        extras=[],
-                        version_constraints=[],
-                        environment_markers="",
-                    )
-                ],
-                pip_options=[],
-            )
-            pip = _dag._pip_string(imp)
-            assert pip == ["mocked"]
-
-        def test_with_two_packages(self, monkeypatch: pytest.MonkeyPatch):
-            # We're not testing the serde package, so we're mocking it
-            monkeypatch.setattr(
-                _dag.serde, "stringify_package_spec", Mock(return_value="mocked")
-            )
-            imp = ir.PythonImports(
-                id="mock-import",
-                packages=[
-                    ir.PackageSpec(
-                        name="one",
-                        extras=[],
-                        version_constraints=[],
-                        environment_markers="",
-                    ),
-                    ir.PackageSpec(
-                        name="one",
-                        extras=["extra"],
-                        version_constraints=["version"],
-                        environment_markers="env marker",
-                    ),
-                ],
-                pip_options=[],
-            )
-            pip = _dag._pip_string(imp)
-            assert pip == ["mocked", "mocked"]
-
-    class TestGitImports:
-        @pytest.fixture
-        def patch_env(self, monkeypatch: pytest.MonkeyPatch):
-            monkeypatch.setenv("ORQ_RAY_DOWNLOAD_GIT_IMPORTS", "1")
-
-        def test_http(self, patch_env):
-            imp = ir.GitImport(
-                id="mock-import", repo_url="https://mock/mock/mock", git_ref="mock"
-            )
-            pip = _dag._pip_string(imp)
-            assert pip == ["git+https://mock/mock/mock@mock"]
-
-        def test_pip_ssh_format(self, patch_env):
-            imp = ir.GitImport(
-                id="mock-import", repo_url="ssh://git@mock/mock/mock", git_ref="mock"
-            )
-            pip = _dag._pip_string(imp)
-            assert pip == ["git+ssh://git@mock/mock/mock@mock"]
-
-        def test_usual_ssh_format(self, patch_env):
-            imp = ir.GitImport(
-                id="mock-import", repo_url="git@mock:mock/mock", git_ref="mock"
-            )
-            pip = _dag._pip_string(imp)
-            assert pip == ["git+ssh://git@mock/mock/mock@mock"]
-
-        def test_no_env_set(self):
-            imp = ir.GitImport(
-                id="mock-import", repo_url="git@mock:mock/mock", git_ref="mock"
-            )
-            pip = _dag._pip_string(imp)
-            assert pip == []
-
-    class TestOtherImports:
-        def test_local_import(self):
-            imp = ir.LocalImport(id="mock-import")
-            pip = _dag._pip_string(imp)
-            assert pip == []
-
-        def test_inline_import(self):
-            imp = ir.InlineImport(id="mock-import")
-            pip = _dag._pip_string(imp)
-            assert pip == []
-
-
-class TestResourcesInMakeDag:
-    @pytest.fixture
-    def wf_run_id(self):
-        return "mocked_wf_run_id"
-
-    @pytest.fixture
-    def client(self):
-        return create_autospec(_dag.RayClient)
-
-    @pytest.mark.parametrize(
-        "resources, expected, types",
-        [
-            ({}, {}, {}),
-            ({"cpu": "1000m"}, {"num_cpus": 1.0}, {"num_cpus": int}),
-            ({"memory": "1Gi"}, {"memory": 1073741824}, {"memory": int}),
-            ({"gpu": "1"}, {"num_gpus": 1}, {"num_gpus": int}),
-            (
-                {"cpu": "2500m", "memory": "10G", "gpu": "1"},
-                {"num_cpus": 2.5, "memory": 10000000000, "num_gpus": 1},
-                {"num_cpus": float, "memory": int, "num_gpus": int},
-            ),
-        ],
-    )
-    def test_setting_resources(
-        self,
-        client: Mock,
-        wf_run_id: str,
-        resources: Dict[str, str],
-        expected: Dict[str, Union[int, float]],
-        types: Dict[str, type],
-    ):
-        workflow = workflow_parametrised_with_resources(**resources).model
-        _ = _dag._make_ray_dag(client, workflow, wf_run_id, None)
-        calls = client.add_options.call_args_list
-
-        # We should only have two calls: our invocation and the aggregation step
-        assert len(calls) == 2
-        # Checking our call did not have any resources included
-        assert calls[0] == call(
-            ANY,
-            name=ANY,
-            metadata=ANY,
-            runtime_env=ANY,
-            catch_exceptions=ANY,
-            **expected
-        )
-        for kwarg_name, type_ in types.items():
-            assert isinstance(calls[0].kwargs[kwarg_name], type_)

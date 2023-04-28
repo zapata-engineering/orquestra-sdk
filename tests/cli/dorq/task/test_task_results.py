@@ -57,7 +57,7 @@ class TestAction:
             dumper = create_autospec(TaskOutputDumper)
             wf_run_repo = create_autospec(WorkflowRunRepo)
 
-            fake_outputs = ["my_log_1", "my_log_2"]
+            fake_outputs = ["output val 1", "output val 2"]
             wf_run_repo.get_task_outputs.return_value = fake_outputs
 
             config_resolver = create_autospec(WFConfigResolver)
@@ -145,7 +145,7 @@ class TestAction:
 
             wf_run_repo = create_autospec(WorkflowRunRepo)
 
-            fake_outputs = ["my_log_1", "my_log_2"]
+            fake_outputs = ["output val 1", "output val 2"]
             wf_run_repo.get_task_outputs.return_value = fake_outputs
 
             config_resolver = create_autospec(WFConfigResolver)

@@ -14,6 +14,7 @@ class TestWfDefGraph:
     @staticmethod
     def test_example_nodes_edges():
         """ """
+        aggregate_step_name = "aggregation_step"
         wf_def = sample_wfs.wf(123).model
         graph = _viz.wf_def_graph(wf_def)
 
@@ -38,26 +39,32 @@ class TestWfDefGraph:
                 caption=["tests.sdk.v2.sample_wfs.add():12", "invocation-3-task-add"],
             ),
         ]
+
         assert graph.nodes2 == [
             _viz.Node(id="artifact-0-inc", caption=[]),
             _viz.Node(id="artifact-1-inc-2", caption=[]),
-            _viz.Node(id="artifact-4-integer-division", caption=[]),
             _viz.Node(id="artifact-2-integer-division", caption=[]),
-            _viz.Node(id="artifact-3-add", caption=[]),
+            _viz.Node(id="artifact-3-integer-division", caption=[]),
+            _viz.Node(id="artifact-4-integer-division", caption=[]),
+            _viz.Node(id="artifact-5-add", caption=[]),
             _viz.Node(id="constant-0", caption=["3"]),
             _viz.Node(id="constant-1", caption=["123"]),
             _viz.Node(id="constant-2", caption=["6"]),
+            _viz.Node(id=aggregate_step_name, caption=["outputs"]),
         ]
         assert graph.edges == [
             ("artifact-1-inc-2", "invocation-0-task-inc"),
             ("invocation-0-task-inc", "artifact-0-inc"),
-            ("artifact-2-integer-division", "invocation-1-task-inc-2"),
+            ("artifact-3-integer-division", "invocation-1-task-inc-2"),
             ("invocation-1-task-inc-2", "artifact-1-inc-2"),
             ("constant-1", "invocation-2-task-integer-division"),
             ("constant-0", "invocation-2-task-integer-division"),
-            ("invocation-2-task-integer-division", "artifact-4-integer-division"),
             ("invocation-2-task-integer-division", "artifact-2-integer-division"),
-            ("artifact-4-integer-division", "invocation-3-task-add"),
+            ("invocation-2-task-integer-division", "artifact-3-integer-division"),
+            ("invocation-2-task-integer-division", "artifact-4-integer-division"),
+            ("artifact-2-integer-division", "invocation-3-task-add"),
             ("constant-2", "invocation-3-task-add"),
-            ("invocation-3-task-add", "artifact-3-add"),
+            ("invocation-3-task-add", "artifact-5-add"),
+            ("artifact-5-add", aggregate_step_name),
+            ("artifact-0-inc", aggregate_step_name),
         ]

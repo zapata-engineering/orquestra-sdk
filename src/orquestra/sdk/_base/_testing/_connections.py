@@ -56,7 +56,7 @@ def ray_suitable_temp_dir():
 
 
 @contextmanager
-def make_ray_conn() -> t.Iterator[_dag.RayParams]:
+def make_ray_conn(storage_path: t.Optional[str] = None) -> t.Iterator[_dag.RayParams]:
     """
     Initializes ray connection. By default, starts a linked cluster on its
     own.
@@ -85,13 +85,13 @@ def make_ray_conn() -> t.Iterator[_dag.RayParams]:
             # - Need to pass storage path (workflow data)
             # - Need to pass temp dir (Ray log files location).
             address = "local"
-            storage_path = tmp_path / "ray" / "storage"
-            ray_temp_dir = tmp_path / "ray" / "tmp"
+            storage_path = storage_path or str(tmp_path / "ray" / "storage")
+            ray_temp_dir = str(tmp_path / "ray" / "tmp")
         params = _dag.RayParams(
             address=address,
             log_to_driver=False,
-            storage=str(storage_path),
-            _temp_dir=str(ray_temp_dir),
+            storage=storage_path,
+            _temp_dir=ray_temp_dir,
         )
 
         # Ray plugs in its own breakpoint entrypoint during 'ray.init()', but

@@ -1498,22 +1498,6 @@ class TestClient:
                 )
 
             @staticmethod
-            @pytest.mark.parametrize("obj", [None, 100, "hello", np.eye(10)])
-            def test_objects(
-                endpoint_mocker,
-                client: DriverClient,
-                workflow_run_result_id: str,
-                obj: Any,
-            ):
-                endpoint_mocker(
-                    json=resp_mocks.make_get_wf_run_result_response(obj),
-                )
-
-                result = client.get_workflow_run_result(workflow_run_result_id)
-
-                assert isinstance(result, (JSONResult, PickleResult))
-
-            @staticmethod
             def test_sets_auth(
                 endpoint_mocker,
                 client: DriverClient,
@@ -1521,7 +1505,7 @@ class TestClient:
                 workflow_run_result_id: str,
             ):
                 endpoint_mocker(
-                    json=resp_mocks.make_get_wf_run_result_response(None),
+                    json=resp_mocks.make_get_wf_run_result_legacy_response(None),
                     match=[
                         responses.matchers.header_matcher(
                             {"Authorization": f"Bearer {token}"}

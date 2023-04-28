@@ -8,33 +8,23 @@ RuntimeInterface implementation that uses Ray DAG/Ray Core API.
 from __future__ import annotations
 
 import dataclasses
-import json
 import logging
 import os
 import re
-import traceback
 import typing as t
 import warnings
 from datetime import datetime, timedelta, timezone
-from functools import singledispatch
 from pathlib import Path
 
 import pydantic
 
-from .. import exceptions, secrets
-from .._base import (
-    _exec_ctx,
-    _git_url_utils,
-    _graphs,
-    _log_adapter,
-    _services,
-    dispatch,
-    serde,
-)
+from orquestra.sdk.schema.responses import WorkflowResult
+
+from .. import exceptions
+from .._base import _services, serde
 from .._base._db import WorkflowDB
-from .._base._env import RAY_DOWNLOAD_GIT_IMPORTS_ENV, RAY_GLOBAL_WF_RUN_ID_ENV
+from .._base._env import RAY_GLOBAL_WF_RUN_ID_ENV
 from .._base.abc import ArtifactValue, LogReader, RuntimeInterface
-from ..kubernetes.quantity import parse_quantity
 from ..schema import ir
 from ..schema.configs import RuntimeConfiguration
 from ..schema.local_database import StoredWorkflowRun
@@ -49,195 +39,9 @@ from ..schema.workflow_run import (
     WorkflowRunId,
 )
 from . import _client, _id_gen, _ray_logs
+from ._build_workflow import TaskResult, make_ray_dag
 from ._client import RayClient
-
-
-def _locate_user_fn(fn_ref: ir.FunctionRef):
-    """
-    Dereferences 'fn_ref', loads the module attribute, and extracts the
-    underlying user function if it was a TaskDef.
-    """
-    obj: t.Any = dispatch.locate_fn_ref(fn_ref)
-
-    # dsl.task() wraps a callable in a TaskDef object. We need to locate the
-    # underlying user function, not the Task object.
-    try:
-        return obj._TaskDef__sdk_task_body
-    except AttributeError:
-        return obj
-
-
-@dataclasses.dataclass(frozen=True)
-class PosArgUnpackSpec:
-    """
-    Specifies that a given positional argument passed by Ray to a task is a
-    tuple and needs to be unwrapped.
-
-    For example, if the workflow contained this:
-        foo, bar = my_task1()
-        baz = my_task2("a", "b", foo)
-
-    the corresponding spec would be:
-        PosArgUnpackSpec(param_index=2, unpack_index=0)
-    """
-
-    # Index of the param in the function's parameter list.
-    param_index: int
-
-    # Index of the value returned from the previous task.
-    unpack_index: int
-
-
-@dataclasses.dataclass(frozen=True)
-class KwArgUnpackSpec:
-    """
-    Specifies that a given positional argument passed by Ray to a task is a
-    tuple and needs to be unwrapped.
-
-    For example, if the workflow contained this:
-        foo, bar = my_task1()
-        baz = my_task2(a="a", b="b", c=foo)
-
-    the corresponding spec would be:
-        KwArgUnpackSpec(param_name="c", unpack_index=0)
-    """
-
-    # Name the keyword param in the function's signature.
-    param_name: str
-
-    # Index of the value returned from the previous task.
-    unpack_index: int
-
-
-class TupleUnwrapper:
-    """
-    Adds a preprocessing step to a user function. Before args and kwargs are
-    passed to the function, `TupleUnwrapper` looks into `pos_specs` and
-    `kw_specs` to unwrap tuples.
-    """
-
-    def __init__(
-        self,
-        fn,
-        pos_specs: t.Sequence[PosArgUnpackSpec],
-        kw_specs: t.Sequence[KwArgUnpackSpec],
-    ):
-        """
-        Args:
-            fn: user function to apply the preprocessing to.
-            pos_specs: for every item in this list, a corresponding positional
-                argument will be unwrapped.
-            kw_specs: for every item in this list, a corresponding keyword
-                argument will be unwrapped.
-        """
-        self._fn = fn
-        self._pos_specs = pos_specs
-        self._kw_specs = kw_specs
-
-    def __call__(self, *args, **kwargs):
-        """
-        'args' and 'kwargs' are what Ray passes to functions. Some of these
-        might be tuples that we need to unpack.
-
-        More more info and the motivation for tuple unwrapping, see:
-        https://zapatacomputing.atlassian.net/browse/ORQSDK-490
-        """
-        # This approach is mutation-based (copy fn_args + change by index),
-        # because that's the easiest way for us not to rely on
-        # `pos_specs`'s element order.
-        unpacked_args = list(args)
-        for pos_spec in self._pos_specs:
-            arg_val = args[pos_spec.param_index]
-            unpacked_val = arg_val[pos_spec.unpack_index]
-            unpacked_args[pos_spec.param_index] = unpacked_val
-
-        unpacked_kwargs = dict(kwargs)
-        for kw_spec in self._kw_specs:
-            arg_val = kwargs[kw_spec.param_name]
-            unpacked_val = arg_val[kw_spec.unpack_index]
-            unpacked_kwargs[kw_spec.param_name] = unpacked_val
-
-        return self._fn(*unpacked_args, **unpacked_kwargs)
-
-
-# fake Ray DAG node that aggregates IR workflow's outputs
-def _aggregate_outputs(*regular_wf_outputs):
-    return regular_wf_outputs
-
-
-def _make_ray_dag_node(
-    client: RayClient,
-    ray_options: t.Mapping,
-    ray_args: t.Iterable[t.Any],
-    ray_kwargs: t.Mapping[str, t.Any],
-    pos_unpack_specs: t.Sequence[PosArgUnpackSpec],
-    kw_unpack_specs: t.Sequence[KwArgUnpackSpec],
-    pos_arg_indices_to_deserialize: t.Sequence[int],
-    kw_arg_keys_to_deserialize: t.Sequence[str],
-    project_dir: t.Optional[Path],
-    user_fn_ref: t.Optional[ir.FunctionRef] = None,
-) -> _client.FunctionNode:
-    """
-    Prepares a Ray task that fits a single ir.TaskInvocation. The result is a
-    node in a Ray DAG.
-
-    Args:
-        client: Ray API facade
-        ray_options: dict passed to RayClient.add_options()
-        ray_args: constants or futures required to build the DAG
-        ray_kwargs: constants or futures required to build the DAG
-        pos_unpack_specs: determines if the task will need to unwrap a
-            positional argument value at execution time.
-        kw_unpack_specs: determines if the task will need to unwrap a
-            keyword argument value at execution time.
-        pos_arg_indices_to_deserialize: determines which positional args of the task
-            will get deserialized - i.e. which are constants
-        kw_arg_keys_to_deserialize: determines which kw args of the task
-            will get deserialized - i.e. which are constants
-        user_fn_ref: function reference for a function to be executed by Ray.
-            if None - executes data aggregation step
-    """
-
-    @client.remote
-    def _ray_remote(*inner_args, **inner_kwargs):
-        if project_dir is not None:
-            dispatch.ensure_sys_paths([str(project_dir)])
-        inner_args = (
-            *(
-                serde.deserialize_constant(arg)
-                if arg_index in pos_arg_indices_to_deserialize
-                else arg
-                for arg_index, arg in enumerate(inner_args)
-            ),
-        )
-        inner_kwargs = {
-            key: serde.deserialize_constant(value)
-            if key in kw_arg_keys_to_deserialize
-            else value
-            for key, value in inner_kwargs.items()
-        }
-        user_fn = _locate_user_fn(user_fn_ref) if user_fn_ref else _aggregate_outputs
-        wrapped = TupleUnwrapper(
-            fn=user_fn,
-            pos_specs=pos_unpack_specs,
-            kw_specs=kw_unpack_specs,
-        )
-        logger = _log_adapter.workflow_logger()
-        try:
-            with _exec_ctx.ray():
-                return wrapped(*inner_args, **inner_kwargs)
-        except Exception as e:
-            # Log the stacktrace as a single log line.
-            logger.exception(traceback.format_exc())
-
-            # We need to stop further execution of this workflow. If we don't raise, Ray
-            # will think the task succeeded with a return value `None`.
-            raise e
-
-    named_remote = client.add_options(_ray_remote, **ray_options)
-    dag_node = named_remote.bind(*ray_args, **ray_kwargs)
-
-    return dag_node
+from ._wf_metadata import InvUserMetadata, WfUserMetadata, pydatic_to_json_dict
 
 
 def _instant_from_timestamp(unix_timestamp: t.Optional[float]) -> t.Optional[datetime]:
@@ -248,273 +52,6 @@ def _instant_from_timestamp(unix_timestamp: t.Optional[float]) -> t.Optional[dat
     if unix_timestamp is None:
         return None
     return datetime.fromtimestamp(unix_timestamp, timezone.utc)
-
-
-class InvUserMetadata(pydantic.BaseModel):
-    """
-    Information about a task invocation we store as a Ray metadata dict.
-
-    Pydantic helps us check that the thing we read from Ray is indeed a dictionary we
-    set (i.e. it has proper fields).
-    """
-
-    # Invocation ID. Scoped to a single workflow def. Allows to distinguish
-    # between multiple calls of as single task def inside a workflow.
-    # Duplicated across workflow runs.
-    task_invocation_id: ir.TaskInvocationId
-
-    # (Hopefully) globally unique identifier of as single task execution. Allows
-    # to distinguish invocations of the same task across workflow runs.
-    task_run_id: TaskRunId
-
-
-class WfUserMetadata(pydantic.BaseModel):
-    """
-    Information about a workflow run we store as a Ray metadata dict.
-
-    Pydantic helps us check that the thing we read from Ray is indeed a dictionary we
-    set (i.e. it has proper fields).
-    """
-
-    # Full definition of the workflow that's being run.
-    workflow_def: ir.WorkflowDef
-
-
-@singledispatch
-def _pip_string(_: ir.Import) -> t.List[str]:
-    return []
-
-
-@_pip_string.register
-def _(imp: ir.PythonImports):
-    return [serde.stringify_package_spec(package) for package in imp.packages]
-
-
-@_pip_string.register
-def _(imp: ir.GitImport):
-    # Only download Git imports if a specific environment variable is set
-    # Short circuit the Git import otherwise
-    if os.getenv(RAY_DOWNLOAD_GIT_IMPORTS_ENV) != "1":
-        return []
-    protocol = imp.repo_url.protocol
-    if not protocol.startswith("git+"):
-        protocol = f"git+{protocol}"
-    url = _git_url_utils.build_git_url(imp.repo_url, protocol)
-    return [f"{url}@{imp.git_ref}"]
-
-
-def _import_pip_env(ir_invocation: ir.TaskInvocation, wf: ir.WorkflowDef):
-    task_def = wf.tasks[ir_invocation.task_id]
-    imports = [
-        wf.imports[id_]
-        for id_ in (
-            task_def.source_import_id,
-            *(task_def.dependency_import_ids or []),
-        )
-    ]
-    return [chunk for imp in imports for chunk in _pip_string(imp)]
-
-
-def _gather_args(
-    arg_ids: t.Sequence[ir.ArgumentId],
-    ray_consts: t.Mapping[ir.ConstantNodeId, t.Any],
-    ray_futures: t.Mapping[ir.ArtifactNodeId, t.Any],
-    artifact_nodes: t.Mapping[ir.ArtifactNodeId, ir.ArtifactNode],
-) -> t.Tuple[t.Sequence[t.Any], t.Sequence[PosArgUnpackSpec], t.List[int]]:
-    ray_args = []
-    pos_unpack_specs: t.List[PosArgUnpackSpec] = []
-    pos_deserialize_specs: t.List[int] = []
-
-    for param_i, arg_id in enumerate(arg_ids):
-        try:
-            arg_val = ray_consts[arg_id]
-            ray_args.append(arg_val)
-            pos_deserialize_specs.append(param_i)
-        except KeyError:
-            # 'arg_id' isn't in 'ray_consts' -> it's an artifact, a result of
-            # calling another task.
-
-            # if the Workflow.steps are sorted in a topological order we should be
-            # able to access the argument future
-            arg_future = ray_futures[arg_id]
-            ray_args.append(arg_future)
-
-            if (unpack_index := artifact_nodes[arg_id].artifact_index) is not None:
-                pos_unpack_specs.append(
-                    PosArgUnpackSpec(param_index=param_i, unpack_index=unpack_index)
-                )
-
-    return ray_args, pos_unpack_specs, pos_deserialize_specs
-
-
-def _gather_kwargs(
-    kwarg_ids: t.Mapping[ir.ParameterName, ir.ArgumentId],
-    ray_consts: t.Mapping[ir.ConstantNodeId, t.Any],
-    ray_futures: t.Mapping[ir.ArtifactNodeId, t.Any],
-    artifact_nodes: t.Mapping[ir.ArtifactNodeId, ir.ArtifactNode],
-) -> t.Tuple[t.Mapping[str, t.Any], t.Sequence[KwArgUnpackSpec], t.List[str]]:
-    ray_kwargs = {}
-    kw_unpack_specs: t.List[KwArgUnpackSpec] = []
-    kw_deserialize_specs: t.List[str] = []
-
-    for param_name, arg_id in kwarg_ids.items():
-        try:
-            arg_val = ray_consts[arg_id]
-            ray_kwargs[param_name] = arg_val
-            kw_deserialize_specs.append(param_name)
-        except KeyError:
-            # 'arg_id' isn't in 'ray_consts' -> it's an artifact, a result of
-            # calling another task.
-
-            # if the Workflow.steps are sorted in a topological order we should
-            # be able to access the argument future
-            arg_future = ray_futures[arg_id]
-            ray_kwargs[param_name] = arg_future
-
-            if (unpack_index := artifact_nodes[arg_id].artifact_index) is not None:
-                kw_unpack_specs.append(
-                    KwArgUnpackSpec(param_name=param_name, unpack_index=unpack_index)
-                )
-    return ray_kwargs, kw_unpack_specs, kw_deserialize_specs
-
-
-def _make_ray_dag(
-    client: RayClient, wf: ir.WorkflowDef, wf_run_id: str, project_dir: t.Optional[Path]
-):
-    ray_consts: t.Dict[ir.ConstantNodeId, t.Any] = wf.constant_nodes
-
-    for id, secret in wf.secret_nodes.items():
-        ray_consts[id] = secrets.get(
-            secret.secret_name, config_name=secret.secret_config
-        )
-    # a mapping of "artifact ID" <-> "the ray Future needed to get the value"
-    ray_futures: t.Dict[ir.ArtifactNodeId, t.Any] = {}
-
-    for ir_invocation in _graphs.iter_invocations_topologically(wf):
-        # Prep args, kwargs, and the specs required to unpack tuples
-        ray_args, pos_unpack_specs, pos_arg_indices_to_deserialize = _gather_args(
-            arg_ids=ir_invocation.args_ids,
-            ray_consts=ray_consts,
-            ray_futures=ray_futures,
-            artifact_nodes=wf.artifact_nodes,
-        )
-
-        ray_kwargs, kw_unpack_specs, kw_arg_keys_to_deserialize = _gather_kwargs(
-            kwarg_ids=ir_invocation.kwargs_ids,
-            ray_consts=ray_consts,
-            ray_futures=ray_futures,
-            artifact_nodes=wf.artifact_nodes,
-        )
-
-        # We want to store both the TaskInvocation.id and TaskRun.id. We use
-        # TaskInvocation.id to refer to Ray tasks later. Solution: Ray task
-        # name for identification and Ray metadata for anything else.
-        inv_metadata = InvUserMetadata(
-            task_run_id=_gen_task_run_id(wf_run_id=wf_run_id, invocation=ir_invocation),
-            task_invocation_id=ir_invocation.id,
-        )
-
-        pip = _import_pip_env(ir_invocation, wf)
-
-        ray_options = {
-            # We're using task invocation ID as the Ray "task ID" instead of task run ID
-            # because it's easier to query this way. Use the "user_metadata" to get both
-            # identifiers.
-            "name": ir_invocation.id,
-            "metadata": _pydatic_to_json_dict(inv_metadata),
-            # If there are any python packages to install for step - set runtime env
-            "runtime_env": (_client.RuntimeEnv(pip=pip) if len(pip) > 0 else None),
-            "catch_exceptions": False,
-        }
-
-        # Task resources
-        if ir_invocation.resources is not None:
-            if ir_invocation.resources.cpu is not None:
-                cpu = parse_quantity(ir_invocation.resources.cpu)
-                cpu_int = cpu.to_integral_value()
-                ray_options["num_cpus"] = int(cpu_int) if cpu == cpu_int else float(cpu)
-            if ir_invocation.resources.memory is not None:
-                memory = parse_quantity(ir_invocation.resources.memory)
-                memory_int = memory.to_integral_value()
-                ray_options["memory"] = (
-                    int(memory_int) if memory == memory_int else float(memory)
-                )
-            if ir_invocation.resources.gpu is not None:
-                # Fractional GPUs not supported currently
-                gpu = int(ir_invocation.resources.gpu)
-                ray_options["num_gpus"] = gpu
-
-        ray_future = _make_ray_dag_node(
-            client=client,
-            user_fn_ref=wf.tasks[ir_invocation.task_id].fn_ref,
-            ray_options=ray_options,
-            ray_args=ray_args,
-            ray_kwargs=ray_kwargs,
-            pos_unpack_specs=pos_unpack_specs,
-            kw_unpack_specs=kw_unpack_specs,
-            pos_arg_indices_to_deserialize=pos_arg_indices_to_deserialize,
-            kw_arg_keys_to_deserialize=kw_arg_keys_to_deserialize,
-            project_dir=project_dir,
-        )
-
-        for output_id in ir_invocation.output_ids:
-            ray_futures[output_id] = ray_future
-
-    # Gather futures for the last, fake task, and decide what args we need to unwrap.
-    aggr_task_args, aggr_task_specs, pos_arg_indices_to_deserialize = _gather_args(
-        arg_ids=wf.output_ids,
-        ray_consts=ray_consts,
-        ray_futures=ray_futures,
-        artifact_nodes=wf.artifact_nodes,
-    )
-
-    last_future = _make_ray_dag_node(
-        client=client,
-        # The last step is implicit; it doesn't map to any user-defined Task
-        # Invocation. We don't need to assign any metadata to it.
-        ray_options={
-            "name": None,
-            "metadata": None,
-            "runtime_env": None,
-            "catch_exceptions": True,
-        },
-        ray_args=aggr_task_args,
-        ray_kwargs={},
-        pos_unpack_specs=aggr_task_specs,
-        kw_unpack_specs=[],
-        pos_arg_indices_to_deserialize=pos_arg_indices_to_deserialize,
-        kw_arg_keys_to_deserialize=[],
-        project_dir=None,
-    )
-
-    # Data aggregation step is run with catch_exceptions=True - so it returns tuple of
-    # return value and Exception. Here the exception is caught and rethrown in more
-    # user-friendly fashion
-    @client.remote
-    def handle_data_aggregation_error(result: t.Tuple[t.Any, Exception]):
-        # The exception field will be None on success.
-        err = result[1]
-        if err is not None:
-            if isinstance(err, _client.TaskError):
-                raise exceptions.InvalidWorkflowDefinitionError(
-                    "Data Aggregation step failed. It might be caused by the return "
-                    "object being dependent on task-scope installed library. Please "
-                    "return objects that are available for the interpreter. "
-                    f"Original exception: {err}"
-                )
-            else:
-                raise err
-        else:
-            return result[0]
-
-    return handle_data_aggregation_error.bind(last_future)
-
-
-def _pydatic_to_json_dict(pydantic_obj) -> t.Mapping[str, t.Any]:
-    """
-    Produces a JSON-serializable dict.
-    """
-    return json.loads(pydantic_obj.json())
 
 
 def _generate_wf_run_id(wf_def: ir.WorkflowDef):
@@ -530,21 +67,6 @@ def _generate_wf_run_id(wf_def: ir.WorkflowDef):
     hex_str = _id_gen.gen_short_uid(char_length=7)
 
     return f"wf.{wf_name}.{hex_str}"
-
-
-def _gen_task_run_id(wf_run_id: str, invocation: ir.TaskInvocation):
-    """
-    Loosely corresponds to the "unified ID" in the tagging design doc:
-    https://zapatacomputing.atlassian.net/wiki/spaces/ORQSRUN/pages/479920161/Logging+Tagging
-
-    Assumed to be globally unique.
-
-    Example value: "wf.multioutput_wf.91aa7aa@invocation-3-task-make-company-name.91e4b"
-    """
-    inv_id = invocation.id
-    hex_str = _id_gen.gen_short_uid(char_length=5)
-
-    return f"{wf_run_id}@{inv_id}.{hex_str}"
 
 
 if _client.WorkflowStatus is not None:
@@ -639,24 +161,6 @@ def _workflow_status_from_ray_meta(
         start_time=_instant_from_timestamp(start_time),
         end_time=_instant_from_timestamp(end_time),
     )
-
-
-def _wrap_single_outputs(
-    values: t.Sequence[t.Union[ArtifactValue, t.Tuple[ArtifactValue, ...]]],
-    invocations: t.Sequence[ir.TaskInvocation],
-) -> t.Sequence[t.Tuple[ArtifactValue, ...]]:
-    """
-    Ensures all values are tuples. This data shape is required by
-    ``RuntimeInterface.get_available_outputs()``.
-    """
-    wrapped: t.MutableSequence = []
-    for task_output, inv in zip(values, invocations):
-        if len(inv.output_ids) == 1:
-            wrapped.append((task_output,))
-        else:
-            wrapped.append(task_output)
-
-    return wrapped
 
 
 @dataclasses.dataclass(frozen=True)
@@ -780,7 +284,8 @@ class RayRuntime(RuntimeInterface):
         global_run_id = os.getenv(RAY_GLOBAL_WF_RUN_ID_ENV)
         wf_run_id = global_run_id or _generate_wf_run_id(workflow_def)
 
-        dag = _make_ray_dag(self._client, workflow_def, wf_run_id, self._project_dir)
+        # dag = make_ray_dag(self._client, workflow_def, wf_run_id, self._project_dir)
+        dag = make_ray_dag(self._client, workflow_def, wf_run_id)
         wf_user_metadata = WfUserMetadata(workflow_def=workflow_def)
 
         # Unfortunately, Ray doesn't validate uniqueness of workflow IDs. Let's
@@ -788,7 +293,7 @@ class RayRuntime(RuntimeInterface):
         _ = self._client.run_dag_async(
             dag,
             workflow_id=wf_run_id,
-            metadata=_pydatic_to_json_dict(wf_user_metadata),
+            metadata=pydatic_to_json_dict(wf_user_metadata),
         )
 
         config_name: str
@@ -869,11 +374,27 @@ class RayRuntime(RuntimeInterface):
 
         # By this line we're assuming the workflow run exists, otherwise we wouldn't get
         # its status. If the following line raises errors we treat them as unexpected.
-        return self._client.get_workflow_output(workflow_run_id)
+        ray_result = self._client.get_workflow_output(workflow_run_id)
+
+        if isinstance(ray_result, TaskResult):
+            # If we have a TaskResult, we're a >=0.47.0 result
+            # We can assume this is pre-seralised in the form:
+            # tuple(WorkflowResult, ...)
+            return ray_result.unpacked
+        else:
+            # If we have anything else, this should be a tuple of objects
+            # These are returned values from workflow tasks
+            assert isinstance(ray_result, tuple)
+            # In >=0.47.0, the values are serialised.
+            # So, we have to serialise them here.
+            return tuple(
+                serde.result_from_artifact(r, ir.ArtifactFormat.AUTO)
+                for r in ray_result
+            )
 
     def get_available_outputs(
         self, workflow_run_id: WorkflowRunId
-    ) -> t.Dict[ir.TaskInvocationId, t.Tuple[ArtifactValue, ...]]:
+    ) -> t.Dict[ir.TaskInvocationId, WorkflowResult]:
         """
         Raises:
             orquestra.sdk.exceptions.WorkflowRunNotFoundError: if no run
@@ -917,18 +438,24 @@ class RayRuntime(RuntimeInterface):
             succeeded_obj_refs, timeout=JUST_IN_CASE_TIMEOUT
         )
 
-        # Ray returns a plain value instead of 1-element tuple for 1-output tasks.
-        # We need to wrap such outputs in tuples to maintain the same data shape across
-        # RuntimeInterface implementations.
-        wrapped_values = _wrap_single_outputs(
-            values=succeeded_values,
-            invocations=[
-                wf_run.workflow_def.task_invocations[inv_id]
-                for inv_id in succeeded_inv_ids
-            ],
-        )
+        # We need to check if the task output was a TaskResult or any other value.
+        # A TaskResult means this is a >=0.47.0 workflow and there is a serialized
+        # value (WorkflowResult) in TaskResult.packed
+        # Anything else is a <0.47.0 workflow and the value should be serialized
 
-        return dict(zip(succeeded_inv_ids, wrapped_values))
+        serialized_succeeded_values = [
+            v.packed
+            if isinstance(v, TaskResult)
+            else serde.result_from_artifact(v, ir.ArtifactFormat.AUTO)
+            for v in succeeded_values
+        ]
+
+        return dict(
+            zip(
+                succeeded_inv_ids,
+                serialized_succeeded_values,
+            )
+        )
 
     def stop_workflow_run(self, workflow_run_id: WorkflowRunId) -> None:
         # cancel doesn't throw exceptions on non-existing runs... using this as
