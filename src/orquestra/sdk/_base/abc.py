@@ -188,6 +188,12 @@ class RuntimeInterface(ABC):
         """
         raise NotImplementedError()
 
+    def list_projects(self, workspace_id: str) -> t.Sequence[ProjectDef]:
+        """
+        List workspaces available to a user. Works only on CE
+        """
+        raise NotImplementedError()
+
 
 class WorkflowRepo(ABC):
     """

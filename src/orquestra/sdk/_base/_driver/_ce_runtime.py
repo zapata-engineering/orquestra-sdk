@@ -448,6 +448,27 @@ class CERuntime(RuntimeInterface):
             ]
         except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
             raise exceptions.UnauthorizedError(
-                f"Could not workspace list "
+                "Could not workspace list "
                 "- the authorization token was rejected by the remote cluster."
+            ) from e
+
+    def list_projects(self, workspace_id: str):
+        try:
+            projects = self._client.list_projects(workspace_id)
+            return [
+                ProjectDef(
+                    project_id=project.id,
+                    workspace_id=project.resourceGroupId,
+                    name=project.displayName,
+                )
+                for project in projects
+            ]
+        except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
+            raise exceptions.UnauthorizedError(
+                f"Could not list workspaces "
+                "- the authorization token was rejected by the remote cluster."
+            ) from e
+        except _exceptions.InvalidWorkspaceZRI as e:
+            raise exceptions.NotFoundError(
+                f"Could not find workspace with id: {workspace_id}."
             ) from e

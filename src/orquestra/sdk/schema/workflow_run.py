@@ -79,6 +79,6 @@ class WorkspaceDef(BaseModel):
 
 
 class ProjectDef(BaseModel):
-    Project_id: ProjectId
+    project_id: ProjectId
     workspace_id: WorkspaceId
     name: str

@@ -25,7 +25,7 @@ from ...schema.configs import ConfigName
 from ...schema.local_database import StoredWorkflowRun
 from ...schema.workflow_run import ProjectDef, ProjectRef, State, TaskInvocationId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
-from ...schema.workflow_run import WorkflowRunId, WorkspaceDef
+from ...schema.workflow_run import WorkflowRunId, WorkspaceDef, WorkspaceId
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig
 from ._task_run import TaskRun, unwrap_task_retvals
@@ -520,6 +520,34 @@ def list_workspaces(
     runtime = resolved_config._get_runtime()
 
     return runtime.list_workspaces()
+
+
+def list_projects(
+    config: t.Union[ConfigName, "RuntimeConfig"],
+    workspace_id: t.Union[WorkspaceId, WorkspaceDef],
+) -> t.Sequence[ProjectDef]:
+    """Get the list of all workspaces available to a user.
+    Warning: works only on CE runtimes
+
+    Args:
+        config: The name of the configuration to use.
+        workspace_id: ID of the workspace to use
+    Raises:
+        ConfigNameNotFoundError: when the named config is not found in the file.
+    """
+    # Resolve config
+    resolved_config = _resolve_config(config)
+    workspace_id_resolved: str
+
+    workspace_id_resolved = (
+        workspace_id.workspace_id
+        if isinstance(workspace_id, WorkspaceDef)
+        else workspace_id
+    )
+
+    runtime = resolved_config._get_runtime()
+
+    return runtime.list_projects(workspace_id_resolved)
 
 
 def _parse_max_age(age: t.Optional[str]) -> t.Optional[timedelta]:
