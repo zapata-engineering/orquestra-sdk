@@ -8,7 +8,7 @@ Tests for CLI prompters.
 
 from unittest.mock import Mock
 
-import inquirer
+import inquirer  # type: ignore # noqa
 import pytest
 
 from orquestra.sdk._base.cli._dorq._ui._prompts import SINGLE_INPUT, Prompter
