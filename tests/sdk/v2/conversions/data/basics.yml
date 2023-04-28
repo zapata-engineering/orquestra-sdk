@@ -22,6 +22,7 @@ steps:
   passed: []
   config:
     runtime:
+      customImage: zapatacomputing/orquestra-default:v0.0.0
       language: python3
       imports: [orq-wor-sdk, tut-0-wel]
       parameters:

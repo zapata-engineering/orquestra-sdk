@@ -17,6 +17,7 @@ steps:
   passed: []
   config:
     runtime:
+      customImage: zapatacomputing/orquestra-default:v0.0.0
       language: python3
       imports: [orq-wor-sdk]
       parameters:
@@ -56,6 +57,7 @@ steps:
   passed: ["invocation-0-task-0-capitalize"]
   config:
     runtime:
+      customImage: zapatacomputing/orquestra-default:v0.0.0
       language: python3
       imports: [orq-wor-sdk]
       parameters:

@@ -6,7 +6,9 @@ import typing as t
 from collections import namedtuple
 from itertools import chain
 
+from orquestra.sdk._base import serde
 from orquestra.sdk.schema import ir
+from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import State, TaskInvocationId
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
 from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRunId
@@ -110,6 +112,9 @@ class TaskRun:
         """
         Get values calculated by this task run.
 
+        Returns whatever the task function returned, regardless of
+        ``@task(n_outputs=...)``.
+
         Raises:
             TaskRunNotFound: if the task wasn't completed yet, or the ID is invalid.
         """
@@ -118,9 +123,7 @@ class TaskRun:
         workflow_artifacts = self._runtime.get_available_outputs(self.workflow_run_id)
 
         try:
-            filtered_artifacts = {
-                self.task_invocation_id: workflow_artifacts[self.task_invocation_id]
-            }
+            task_outputs = workflow_artifacts[self.task_invocation_id]
         except KeyError as e:
             raise TaskRunNotFound(
                 f"Output for task `{self.task_invocation_id}` in "
@@ -128,12 +131,7 @@ class TaskRun:
                 "It may have failed or not be completed yet."
             ) from e
 
-        # The runtime always returns tuples, even of the task has n_outputs = 1. We
-        # need to unwrap it for user's convenience.
-        return unwrap_task_retvals(
-            artifacts=filtered_artifacts,
-            task_invocations=self._wf_def.task_invocations,
-        )[self.task_invocation_id]
+        return serde.deserialize(task_outputs)
 
     def _find_invocation_by_output_id(self, output: ir.ArgumentId) -> ir.TaskInvocation:
         """
@@ -152,7 +150,7 @@ class TaskRun:
     def _find_value_by_id(
         self,
         arg_id: ir.ArgumentId,
-        available_outputs: t.Mapping[TaskInvocationId, t.Tuple[ArtifactValue, ...]],
+        available_outputs: t.Mapping[TaskInvocationId, WorkflowResult],
     ) -> ArtifactValue:
         """
         Helper method that finds and deserializes input artifact value based on the
@@ -162,15 +160,19 @@ class TaskRun:
         if arg_id in self._wf_def.constant_nodes:
             value = deserialize_constant(self._wf_def.constant_nodes[arg_id])
             return value
+        elif arg_id in self._wf_def.secret_nodes:
+            return self._wf_def.secret_nodes[arg_id]
 
         producer_inv = self._find_invocation_by_output_id(arg_id)
-        output_index = producer_inv.output_ids.index(arg_id)
+        output_index = self._wf_def.artifact_nodes[arg_id].artifact_index
         try:
-            parent_output_vals = available_outputs[producer_inv.id]
+            artifact_node = available_outputs[producer_inv.id]
         except KeyError:
             # Parent invocation ID not in available outputs => parent invocation
             # wasn't completed yet.
             return self.INPUT_UNAVAILABLE
+
+        parent_output_vals = serde.deserialize(artifact_node)
 
         # A task function can return multiple values. We're only interested in one
         # of them.
@@ -182,7 +184,10 @@ class TaskRun:
         # outputs (handled above) or we have access to all outputs of this task.
         # There shouldn't be a situation where we have access to a subset of a given
         # task's outputs.
-        return parent_output_vals[output_index]
+        if output_index is None:
+            return parent_output_vals
+        else:
+            return parent_output_vals[output_index]
 
     def get_inputs(self) -> Inputs:
         """
@@ -252,19 +257,3 @@ class TaskRun:
         ]
 
         return set(parents)
-
-
-def unwrap_task_retvals(
-    artifacts: t.Mapping[ir.TaskInvocationId, ArtifactValue],
-    task_invocations: t.Mapping[TaskInvocationId, ir.TaskInvocation],
-) -> t.Mapping[ir.TaskInvocationId, t.Union[ArtifactValue, t.Tuple[ArtifactValue]]]:
-    unwrapped_dict = {}
-    for inv_id, outputs in artifacts.items():
-        inv = task_invocations[inv_id]
-        if len(inv.output_ids) == 1:
-            unwrapped = outputs[0]
-        else:
-            unwrapped = outputs
-
-        unwrapped_dict[inv_id] = unwrapped
-    return unwrapped_dict

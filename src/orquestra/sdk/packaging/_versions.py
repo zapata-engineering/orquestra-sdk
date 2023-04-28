@@ -1,7 +1,8 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 import re
+import sys
 from typing import Any, Optional
 
 try:
@@ -9,7 +10,10 @@ try:
 except ModuleNotFoundError:  # pragma: no cover
     import importlib_metadata as metadata  # type: ignore  # pragma: no cover
 
+import packaging.version
+
 from orquestra.sdk import Import, PythonImports, TaskDef, exceptions
+from orquestra.sdk.schema import ir
 
 
 class PackagingError(exceptions.BaseRuntimeError):
@@ -39,6 +43,36 @@ def get_installed_version(package_name: str) -> str:
         return metadata.version(package_name)
     except metadata.PackageNotFoundError as e:
         raise PackagingError(f"Package not found: {package_name}") from e
+
+
+def parse_version_str(version_str: str) -> ir.Version:
+    parsed_sdk_version = packaging.version.parse(version_str)
+    return ir.Version(
+        original=version_str,
+        major=parsed_sdk_version.major,
+        minor=parsed_sdk_version.minor,
+        patch=parsed_sdk_version.micro,
+        is_prerelease=parsed_sdk_version.is_prerelease,
+    )
+
+
+def get_installed_version_model(package_name: str) -> ir.Version:
+    sdk_version_str = get_installed_version(package_name)
+    return parse_version_str(sdk_version_str)
+
+
+def get_current_sdk_version() -> ir.Version:
+    return get_installed_version_model("orquestra-sdk")
+
+
+def get_current_python_version() -> ir.Version:
+    return ir.Version(
+        original=sys.version,
+        major=sys.version_info.major,
+        minor=sys.version_info.minor,
+        patch=sys.version_info.micro,
+        is_prerelease=sys.version_info.releaselevel != "final",
+    )
 
 
 def InstalledImport(
