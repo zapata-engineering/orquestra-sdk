@@ -21,6 +21,7 @@ Outputs tested:
 """
 
 import base64
+import inspect
 import io
 import json
 import os
@@ -72,44 +73,14 @@ def wf_return_multiple_packed_values():
     return a, b
 
 
-WORKFLOW_DEF_SINGLE = """
-import orquestra.sdk as sdk
-@sdk.task(
-    source_import=sdk.InlineImport(),
-    dependency_imports=[
-        sdk.GitImport(
-            repo_url="git@github.com:zapatacomputing/orquestra-workflow-sdk.git",
-            git_ref="main",
-        ),
-    ],
+ORQUESTRA_IMPORT = "import orquestra.sdk as sdk"
+TASK_DEF = inspect.getsource(get_list)
+WORKFLOW_DEF_SINGLE = "\n".join(
+    [ORQUESTRA_IMPORT, TASK_DEF, inspect.getsource(wf_return_single_packed_value)]
 )
-def get_list():
-    return [1, 2, 3]
-@sdk.workflow
-def wf_return_single_packed_value():
-    a = get_list()
-    return a
-"""
-
-WORKFLOW_DEF_MULTIPLE = """
-import orquestra.sdk as sdk
-@sdk.task(
-    source_import=sdk.InlineImport(),
-    dependency_imports=[
-        sdk.GitImport(
-            repo_url="git@github.com:zapatacomputing/orquestra-workflow-sdk.git",
-            git_ref="main",
-        ),
-    ],
+WORKFLOW_DEF_MULTIPLE = "\n".join(
+    [ORQUESTRA_IMPORT, TASK_DEF, inspect.getsource(wf_return_multiple_packed_values)]
 )
-def get_list():
-    return [1, 2, 3]
-@sdk.workflow
-def wf_return_multiple_packed_values():
-    a = get_list()
-    b = get_list()
-    return a, b
-"""
 
 # endregion
 
