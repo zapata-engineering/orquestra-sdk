@@ -475,7 +475,7 @@ class CERuntime(RuntimeInterface):
             ]
         except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
             raise exceptions.UnauthorizedError(
-                f"Could not list workspaces "
+                "Could not list projects "
                 "- the authorization token was rejected by the remote cluster."
             ) from e
         except _exceptions.InvalidWorkspaceZRI as e:
