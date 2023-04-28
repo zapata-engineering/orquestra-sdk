@@ -70,21 +70,21 @@ class TestRunningInProcess:
             run = wf_pass_tuple().run("in_process")
             results = run.get_results()
 
-            assert results == (3,)
+            assert results == 3
 
         @staticmethod
         def test_pass_builtin_config_name_with_file(tmp_default_config_json):
             run = wf_pass_tuple().run("in_process")
             results = run.get_results()
 
-            assert results == (3,)
+            assert results == 3
 
         def test_single_run(self):
             run = wf_pass_tuple().prepare("in_process")
             run.start()
             results = run.get_results()
 
-            assert results == (3,)
+            assert results == 3
 
         def test_multiple_starts(self):
             run = wf_pass_tuple().prepare("in_process")
@@ -102,7 +102,7 @@ class TestRunningInProcess:
             run = wf_pass_tuple().run("in_process")
             results = run.get_results()
 
-            assert results == (3,)
+            assert results == 3
 
     class TestWithConfig:
         @staticmethod
@@ -111,7 +111,7 @@ class TestRunningInProcess:
             run = wf_pass_tuple().run(config)
             results = run.get_results()
 
-            assert results == (3,)
+            assert results == 3
 
 
 class TestWorkflowRun:
@@ -139,6 +139,11 @@ class TestWorkflowRun:
         )
         # for simulating a workflow running
         succeeded_run_model = Mock(name="succeeded wf run model")
+
+        # We need the output ids to have a length as we use this to determine how many
+        # results we expect. We set this to 2 to avoid the special case where single
+        # return values are unpacked.
+        succeeded_run_model.workflow_def.output_ids.__len__ = Mock(return_value=2)
 
         # Default value is "SUCCEEDED"
         succeeded_run_model.status.state = State.SUCCEEDED
