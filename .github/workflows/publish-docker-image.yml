@@ -72,6 +72,7 @@ jobs:
           # as on the command line `--build-arg`, one to a line:
           # docker_build_args: BUILD_ARG_ONE=value1\nBUILD_ARG_TWO=value2
           # DUE TO JSON LIMITATIONS, NEWLINES MUST BE EXPLICITLY ADDED AS \n
-          docker_build_args: SDK_VERSION=${{ inputs.sdk_version }}
+          docker_build_args: |
+            SDK_VERSION=${{ inputs.sdk_version }}
           # leave blank for linux/amd64 (recommended)
           target_platforms: ''
