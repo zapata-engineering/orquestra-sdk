@@ -348,6 +348,13 @@ def make_ray_dag(
             # If there are any python packages to install for step - set runtime env
             "runtime_env": (_client.RuntimeEnv(pip=pip) if len(pip) > 0 else None),
             "catch_exceptions": False,
+            # We only want to execute workflow tasks once. This is so there is only one
+            # task run ID per task, for scenarios where this is used (like in MLFlow).
+            # By default, Ray will only retry tasks that fail due to a "system error".
+            # For example, if the worker process crashes or exits early.
+            # Normal Python exceptions are NOT retried.
+            # So, we turn max_retries down to 0.
+            "max_retries": 0,
         }
 
         # Task resources
@@ -395,6 +402,7 @@ def make_ray_dag(
             "metadata": None,
             "runtime_env": None,
             "catch_exceptions": True,
+            "max_retries": 0,
         },
         ray_args=pos_args,
         ray_kwargs={},
