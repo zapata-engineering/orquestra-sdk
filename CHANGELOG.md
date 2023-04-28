@@ -5,6 +5,7 @@
 🚨 *Breaking Changes*
 
 🔥 *Features*
+New API functions: list_workspaces() and list_projects(). Usable only on CE runtime
 
 👩‍🔬 *Experimental*
 
