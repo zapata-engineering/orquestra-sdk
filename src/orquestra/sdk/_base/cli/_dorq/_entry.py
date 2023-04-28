@@ -114,8 +114,8 @@ def submit(
     module: str,
     name: t.Optional[str],
     config: t.Optional[str],
-    workspace: t.Optional[str],
-    project: t.Optional[str],
+    workspace_id: t.Optional[str],
+    project_id: t.Optional[str],
     force: bool,
 ):
     """
@@ -131,7 +131,7 @@ def submit(
     from ._workflow._submit import Action
 
     action = Action()
-    action.on_cmd_call(module, name, config, workspace, project, force)
+    action.on_cmd_call(module, name, config, workspace_id, project_id, force)
 
 
 @workflow.command()
