@@ -15,12 +15,14 @@ from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import (
+    ProjectDef,
     ProjectRef,
     State,
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
     WorkflowRunMinimal,
+    WorkspaceDef,
 )
 
 from . import _client, _exceptions, _models
@@ -436,3 +438,16 @@ class CERuntime(RuntimeInterface):
 
     def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
         raise NotImplementedError()
+
+    def list_workspaces(self):
+        try:
+            workspaces = self._client.list_workspaces()
+            return [
+                WorkspaceDef(workspace_id=ws.id, name=ws.displayName)
+                for ws in workspaces
+            ]
+        except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
+            raise exceptions.UnauthorizedError(
+                f"Could not workspace list "
+                "- the authorization token was rejected by the remote cluster."
+            ) from e

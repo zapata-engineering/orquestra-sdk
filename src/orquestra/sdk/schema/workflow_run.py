@@ -71,3 +71,14 @@ class WorkflowRun(WorkflowRunMinimal):
 class ProjectRef(BaseModel):
     workspace_id: WorkspaceId
     project_id: ProjectId
+
+
+class WorkspaceDef(BaseModel):
+    workspace_id: WorkspaceId
+    name: str
+
+
+class ProjectDef(BaseModel):
+    Project_id: ProjectId
+    workspace_id: WorkspaceId
+    name: str

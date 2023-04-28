@@ -278,7 +278,9 @@ class RuntimeConfig:
         return config
 
     # endregion factories
-    def _get_runtime(self, project_dir: t.Optional[t.Union[str, Path]] = None):
+    def _get_runtime(
+        self, project_dir: t.Optional[t.Union[str, Path]] = None
+    ) -> RuntimeInterface:
         """Build the run
 
         Args:

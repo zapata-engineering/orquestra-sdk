@@ -23,9 +23,9 @@ from ...exceptions import (
 from ...schema import ir
 from ...schema.configs import ConfigName
 from ...schema.local_database import StoredWorkflowRun
-from ...schema.workflow_run import ProjectRef, State, TaskInvocationId
+from ...schema.workflow_run import ProjectDef, ProjectRef, State, TaskInvocationId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
-from ...schema.workflow_run import WorkflowRunId
+from ...schema.workflow_run import WorkflowRunId, WorkspaceDef
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig
 from ._task_run import TaskRun, unwrap_task_retvals
@@ -459,16 +459,14 @@ def list_workflow_runs(
     """Get the WorkflowRun corresponding to a previous workflow run.
 
     Args:
-        config_name: The name of the configuration to use.
+        config: The name of the configuration to use.
         limit: Restrict the number of runs to return, prioritising the most recent.
         prefix: Only return runs that start with the specified string.
         max_age: Only return runs younger than the specified maximum age.
-        status: Only return runs of runs with the specified status.
+        state: Only return runs of runs with the specified status.
         project_dir: The location of the project directory. This directory must
             contain the workflows database to which this run was saved. If omitted,
             the current working directory is assumed to be the project directory.
-        config_save_file: The location to which the associated configuration was
-            saved. If omitted, the default config file path is used.
 
     Raises:
         ConfigNameNotFoundError: when the named config is not found in the file.
@@ -502,6 +500,26 @@ def list_workflow_runs(
         )
         runs.append(workflow_run)
     return runs
+
+
+def list_workspaces(
+    config: t.Union[ConfigName, "RuntimeConfig"],
+) -> t.Sequence[WorkspaceDef]:
+    """Get the list of all workspaces available to a user.
+    Warning: works only on CE runtimes
+
+    Args:
+        config: The name of the configuration to use.
+
+    Raises:
+        ConfigNameNotFoundError: when the named config is not found in the file.
+    """
+    # Resolve config
+    resolved_config = _resolve_config(config)
+
+    runtime = resolved_config._get_runtime()
+
+    return runtime.list_workspaces()
 
 
 def _parse_max_age(age: t.Optional[str]) -> t.Optional[timedelta]:
