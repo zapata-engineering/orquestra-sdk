@@ -27,11 +27,13 @@ from orquestra.sdk.schema import _compat
 from orquestra.sdk.schema.configs import ConfigName, RuntimeName
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.workflow_run import (
+    ProjectId,
     State,
     TaskRun,
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
+    WorkspaceId,
 )
 
 from ._ui import _models as ui_models
@@ -144,8 +146,8 @@ class WorkflowRunRepo:
         wf_def: sdk.WorkflowDef,
         config: ConfigName,
         ignore_dirty_repo: bool,
-        workspace_id: t.Optional[str],
-        project_id: t.Optional[str],
+        workspace_id: t.Optional[WorkspaceId],
+        project_id: t.Optional[ProjectId],
     ) -> WorkflowRunId:
         """
         Args:

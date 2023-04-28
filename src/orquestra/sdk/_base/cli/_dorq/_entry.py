@@ -39,19 +39,19 @@ To get config name for remote runtime, use orq login -s <uri> first
 
 WORKSPACE_OPTION = cloup.option(
     "-w",
-    "--workspace",
+    "--workspace-id",
     required=False,
     help="""
-ID of the workspace used to submit workflow.
+ID of the workspace used to submit workflow. Used only on CE runtime
 """,
 )
 
 PROJECT_OPTION = cloup.option(
     "-p",
-    "--project",
+    "--project-id",
     required=False,
     help="""
-ID of the project used to submit workflow.
+ID of the project used to submit workflow. Used only on CE runtime
 """,
 )
 
@@ -392,7 +392,12 @@ dorq.section(
     help="User Token to given server. To generate token, use this command without -t"
     "option first",
 )
-@cloup.option("--ce", is_flag=True, default=False, help="Login to Compute Engine")
+@cloup.option(
+    "--ce",
+    is_flag=True,
+    default=False,
+    help="Log in to Compute Engine. If not passed, will log in to Quantum Engine",
+)
 def login(server: str, token: t.Optional[str], ce: bool):
     """
     Login in to remote cluster
