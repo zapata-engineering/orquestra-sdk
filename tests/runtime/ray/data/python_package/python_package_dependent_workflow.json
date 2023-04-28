@@ -3,8 +3,8 @@
   "fn_ref": {
     "module": "__main__",
     "function_name": "wf",
-    "file_path": "a.py",
-    "line_number": 11,
+    "file_path": "tests/runtime/ray/data/python_package/original_workflow.py",
+    "line_number": 14,
     "type": "MODULE_FUNCTION_REF"
   },
   "imports": {
@@ -44,6 +44,10 @@
           "kind": "POSITIONAL_OR_KEYWORD"
         }
       ],
+      "output_metadata": {
+        "is_subscriptable": false,
+        "n_outputs": 1
+      },
       "source_import_id": "inline-import-1",
       "dependency_import_ids": [
         "python-import-4b988e935a"
@@ -99,7 +103,7 @@
       "is_prerelease": true
     },
     "python_version": {
-      "original": "3.8.12 (default, Jun 28 2022, 14:32:09) \n[Clang 13.1.6 (clang-1316.0.21.2.5)]",
+      "original": "3.8.12 (default, Apr 28 2022, 11:46:59) \n[Clang 12.0.5 (clang-1205.0.22.9)]",
       "major": 3,
       "minor": 8,
       "patch": 12,

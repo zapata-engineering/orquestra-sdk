@@ -258,22 +258,32 @@ class TestWorkflowRunRepo:
 
         class TestSubmit:
             @staticmethod
-            def test_passes_config_and_id():
+            def test_passes_parameters():
                 # Given
                 repo = _repos.WorkflowRunRepo()
 
                 config = "test_cfg"
-
                 run_id = "wf.2"
+                project_id = "my_project"
+                workspace_id = "my_workspace"
+
                 wf_def = Mock()
                 wf_def.run().run_id = run_id
 
                 # When
-                result_id = repo.submit(wf_def, config, ignore_dirty_repo=True)
+                result_id = repo.submit(
+                    wf_def,
+                    config,
+                    workspace_id=workspace_id,
+                    project_id=project_id,
+                    ignore_dirty_repo=True,
+                )
 
                 # Then
                 assert result_id == run_id
-                wf_def.run.assert_called_with(config)
+                wf_def.run.assert_called_with(
+                    config, workspace_id=workspace_id, project_id=project_id
+                )
 
             class TestWithDirtyRepo:
                 @staticmethod
@@ -303,7 +313,13 @@ class TestWorkflowRunRepo:
 
                     # When + Then
                     with pytest.raises(exceptions.DirtyGitRepo):
-                        _ = repo.submit(wf_def, config, ignore_dirty_repo=False)
+                        _ = repo.submit(
+                            wf_def,
+                            config,
+                            ignore_dirty_repo=False,
+                            workspace_id="ws",
+                            project_id="project",
+                        )
 
                 @staticmethod
                 def test_warns(wf_def):
@@ -313,7 +329,13 @@ class TestWorkflowRunRepo:
 
                     # When + Then
                     with pytest.warns(exceptions.DirtyGitRepo):
-                        _ = repo.submit(wf_def, config, ignore_dirty_repo=True)
+                        _ = repo.submit(
+                            wf_def,
+                            config,
+                            ignore_dirty_repo=True,
+                            workspace_id="ws",
+                            project_id="project",
+                        )
 
         class TestStop:
             @staticmethod
@@ -419,6 +441,9 @@ class TestWorkflowRunRepo:
                                 function_name="task_in_another_module",
                             ),
                             parameters=[],
+                            output_metadata=ir.TaskOutputMetadata(
+                                is_subscriptable=False, n_outputs=1
+                            ),
                             source_import_id="imp1",
                         ),
                         ir.TaskDef(
@@ -428,6 +453,9 @@ class TestWorkflowRunRepo:
                                 function_name="task_in_another_file",
                             ),
                             parameters=[],
+                            output_metadata=ir.TaskOutputMetadata(
+                                is_subscriptable=False, n_outputs=1
+                            ),
                             source_import_id="imp1",
                         ),
                         ir.TaskDef(
@@ -436,6 +464,9 @@ class TestWorkflowRunRepo:
                                 function_name="inlined_task", encoded_function=[]
                             ),
                             parameters=[],
+                            output_metadata=ir.TaskOutputMetadata(
+                                is_subscriptable=False, n_outputs=1
+                            ),
                             source_import_id="imp1",
                         ),
                     ]
@@ -470,6 +501,9 @@ class TestWorkflowRunRepo:
                                 module="tasks1", function_name=fn_name
                             ),
                             parameters=[],
+                            output_metadata=ir.TaskOutputMetadata(
+                                is_subscriptable=False, n_outputs=1
+                            ),
                             source_import_id="imp1",
                         ),
                         ir.TaskDef(
@@ -478,6 +512,9 @@ class TestWorkflowRunRepo:
                                 module="tasks2", function_name=fn_name
                             ),
                             parameters=[],
+                            output_metadata=ir.TaskOutputMetadata(
+                                is_subscriptable=False, n_outputs=1
+                            ),
                             source_import_id="imp1",
                         ),
                     ]
@@ -539,30 +576,91 @@ class TestWorkflowRunRepo:
                     _ = repo.get_task_inv_ids(wf_run_id, config_name, task_fn_name)
 
         class TestGetTaskOutputs:
-            @staticmethod
-            def test_passing_data(monkeypatch):
-                run_id = "wf.1"
-                inv_id = "inv1"
-                config_name = "<config sentinel>"
+            class TestHappyPath:
+                @staticmethod
+                def _make_wf_run(
+                    monkeypatch,
+                    inv_id: str,
+                    fake_task_run_outputs,
+                    task_meta: ir.TaskOutputMetadata,
+                ) -> sdk.WorkflowRun:
+                    task_run = create_autospec(sdk.TaskRun)
+                    task_run.task_invocation_id = inv_id
+                    task_run.get_outputs.return_value = fake_task_run_outputs
 
-                wf_run = Mock()
-                fake_outputs = ("<output sentinel 0>", "<output sentinel 1>")
-                wf_run.get_artifacts.return_value = {
-                    inv_id: fake_outputs,
-                }
+                    task_def = create_autospec(ir.TaskDef)
+                    task_def_id = "task_def_1"
+                    task_def.output_metadata = task_meta
 
-                by_id = Mock(return_value=wf_run)
-                monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+                    inv = create_autospec(ir.TaskInvocation)
+                    inv.task_id = task_def_id
 
-                repo = _repos.WorkflowRunRepo()
+                    wf_def = create_autospec(ir.WorkflowDef)
+                    wf_def.task_invocations = {inv_id: inv}
+                    wf_def.tasks = {task_def_id: task_def}
 
-                # When
-                outputs = repo.get_task_outputs(
-                    wf_run_id=run_id, task_inv_id=inv_id, config_name=config_name
-                )
+                    wf_run = create_autospec(sdk.WorkflowRun)
+                    wf_run.get_tasks.return_value = {task_run}
+                    wf_run.get_status_model().workflow_def = wf_def
 
-                # Then
-                assert outputs == fake_outputs
+                    by_id = Mock(return_value=wf_run)
+                    monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)
+
+                    return wf_run
+
+                def test_single_output(self, monkeypatch):
+                    # Given
+                    run_id = "wf.1"
+                    inv_id = "inv1"
+                    config_name = "<config sentinel>"
+                    fake_output = "<task output sentinel>"
+
+                    self._make_wf_run(
+                        monkeypatch,
+                        inv_id=inv_id,
+                        fake_task_run_outputs=fake_output,
+                        task_meta=ir.TaskOutputMetadata(
+                            n_outputs=1,
+                            is_subscriptable=False,
+                        ),
+                    )
+
+                    repo = _repos.WorkflowRunRepo()
+
+                    # When
+                    outputs = repo.get_task_outputs(
+                        wf_run_id=run_id, task_inv_id=inv_id, config_name=config_name
+                    )
+
+                    # Then
+                    assert outputs == (fake_output,)
+
+                def test_multiple_outputs(self, monkeypatch):
+                    # Given
+                    run_id = "wf.1"
+                    inv_id = "inv1"
+                    config_name = "<config sentinel>"
+                    fake_outputs = ("<out1>", "<out2>")
+
+                    self._make_wf_run(
+                        monkeypatch,
+                        inv_id=inv_id,
+                        fake_task_run_outputs=fake_outputs,
+                        task_meta=ir.TaskOutputMetadata(
+                            n_outputs=2,
+                            is_subscriptable=True,
+                        ),
+                    )
+
+                    repo = _repos.WorkflowRunRepo()
+
+                    # When
+                    outputs = repo.get_task_outputs(
+                        wf_run_id=run_id, task_inv_id=inv_id, config_name=config_name
+                    )
+
+                    # Then
+                    assert outputs == fake_outputs
 
             @staticmethod
             def test_invalid_inv_id(monkeypatch):
@@ -570,11 +668,11 @@ class TestWorkflowRunRepo:
                 inv_id = "inv1"
                 config_name = "<config sentinel>"
 
-                wf_run = Mock()
-                fake_outputs = ("<output sentinel 0>", "<output sentinel 1>")
-                wf_run.get_artifacts.return_value = {
-                    "non-existing-inv-id": fake_outputs,
-                }
+                task_run = create_autospec(sdk.TaskRun)
+                task_run.task_invocation_id = "<invalid inv ID>"
+
+                wf_run = create_autospec(sdk.WorkflowRun)
+                wf_run.get_tasks.return_value = {task_run}
 
                 by_id = Mock(return_value=wf_run)
                 monkeypatch.setattr(sdk.WorkflowRun, "by_id", by_id)

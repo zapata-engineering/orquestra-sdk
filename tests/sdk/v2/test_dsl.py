@@ -189,28 +189,6 @@ def test_task_no_linenumber_if_source_inaccessible():
     assert local_task._fn_ref.line_number is None
 
 
-def test_external_file_task_calling():
-    external_task = _dsl.external_file_task(
-        file_path="hello/there.py",
-        function="general_kenobi",
-        repo_url="example.com/obi-wan",
-        n_outputs=1,
-    )
-    with pytest.raises(ValueError):
-        external_task._TaskDef__sdk_task_body()
-
-
-def test_external_module_task_calling():
-    external_task = _dsl.external_module_task(
-        module="orquestra.hello.there",
-        function="general_kenobi",
-        repo_url="example.com/obi-wan",
-        n_outputs=1,
-    )
-    with pytest.raises(ValueError):
-        external_task._TaskDef__sdk_task_body()
-
-
 @pytest.mark.parametrize("num_outputs", [1, 100, 2])
 def test_returning_multiple_outputs_from_tasks(num_outputs):
     @sdk.task(n_outputs=num_outputs)
@@ -240,18 +218,6 @@ def test_task_n_outputs_non_positive(num_outputs):
         @sdk.task(n_outputs=num_outputs)
         def _local_task():
             return "hello", "there"
-
-
-def test_external_tasks_warn_empty_n_outputs():
-    with pytest.warns(UserWarning):
-        _dsl.external_file_task(
-            file_path="./hello.py", repo_url="example.com", function="hello"
-        )
-
-    with pytest.warns(UserWarning):
-        _dsl.external_module_task(
-            module="orquestra.sdk", repo_url="example.com", function="hello"
-        )
 
 
 def test_accessing_deprecated_n_outputs():
@@ -350,19 +316,15 @@ def test_subscript_artifact_future_with_non_int(index):
 def test_resourced_task_with_custom_gpu_image():
     @sdk.task(
         resources=_dsl.Resources("1000m", "1Gi", "10Gi", "1"),
-        custom_image=_dsl.GPU_IMAGE,
+        custom_image="zapatacomputing/custom_image_not_real",
     )
     def _local_task():
         return "hello"
 
     hello = _local_task()
-    assert hello.invocation.task._custom_image == _dsl.GPU_IMAGE
-
-
-def test_resourced_task_with_default_gpu_image():
-    future = _resourced_task()
-
-    assert future.invocation.task._custom_image == _dsl.GPU_IMAGE
+    assert (
+        hello.invocation.task._custom_image == "zapatacomputing/custom_image_not_real"
+    )
 
 
 def test_task_with_default_image():
@@ -371,7 +333,7 @@ def test_task_with_default_image():
         return "hello"
 
     hello = _local_task()
-    assert hello.invocation.task._custom_image == _dsl.DEFAULT_IMAGE
+    assert hello.invocation.task._custom_image is None
 
 
 @pytest.fixture

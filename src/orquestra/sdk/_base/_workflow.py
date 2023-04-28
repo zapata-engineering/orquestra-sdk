@@ -5,7 +5,6 @@ import ast
 import functools
 import inspect
 import warnings
-from collections.abc import Sequence
 from enum import Enum
 from pathlib import Path
 from types import FunctionType
@@ -35,7 +34,7 @@ from orquestra.sdk.exceptions import (
 from orquestra.sdk.schema.workflow_run import ProjectId, ProjectRef, WorkspaceId
 
 from .. import secrets
-from . import _api, _dsl, _exec_ctx, loader
+from . import _api, _dsl, loader
 from ._ast import CallVisitor, NodeReference, NodeReferenceType, normalize_indents
 from ._dsl import (
     DataAggregation,
@@ -120,16 +119,8 @@ class WorkflowDef(Generic[_R]):
         """
         from orquestra.sdk._base import _traversal
 
-        with _exec_ctx.workflow_build():
-            futures = self._fn(*self._workflow_args, **self._workflow_kwargs)
-
-        _futures: Sequence
-        if not isinstance(futures, Sequence) or isinstance(futures, str):
-            _futures = (futures,)
-        else:
-            _futures = futures
-
-        model = _traversal.flatten_graph(self, _futures)
+        futures = _traversal.extract_root_futures(self)
+        model = _traversal.flatten_graph(self, futures)
 
         if len(model.task_invocations) < 1:
             helpstr = f"The workflow '{model.name}' "
