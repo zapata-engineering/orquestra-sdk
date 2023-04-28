@@ -11,3 +11,4 @@ Guides
     workflow-syntax
     dependency-installation
     resource-management
+    version-compatibility

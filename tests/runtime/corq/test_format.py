@@ -136,6 +136,7 @@ class TestPrettyPrintResponse:
                 ),
             ],
         )
+        @pytest.mark.filterwarnings("ignore::orquestra.sdk.exceptions.VersionMismatch")
         def test_matches_recorded_output(
             capsys, resp_cls, resp_path: Path, recorded_output_path: Path
         ):

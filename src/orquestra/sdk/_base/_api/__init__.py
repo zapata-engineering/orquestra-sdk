@@ -10,7 +10,7 @@ We re-export symbols here for grouping concepts under the "api" umbrella, e.g.
 
 from ._config import RuntimeConfig, migrate_config_file
 from ._task_run import TaskRun
-from ._wf_run import WorkflowRun, list_workflow_runs, list_projects, list_workspaces
+from ._wf_run import WorkflowRun, list_projects, list_workflow_runs, list_workspaces
 
 __all__ = [
     "RuntimeConfig",

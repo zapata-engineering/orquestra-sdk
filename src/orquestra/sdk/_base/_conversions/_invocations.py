@@ -12,6 +12,8 @@ from orquestra.sdk.schema import ir, responses, yaml_model
 RESULT_DICT_TYPE_NAME = "workflow-result-dict"
 SECRET_DICT_TYPE_NAME = "workflow-secret-dict"
 SDK_METADATA_TYPE_NAME = "sdk-metadata"
+QE_DEFAULT_IMAGE = "zapatacomputing/orquestra-default:v0.0.0"
+QE_GPU_IMAGE = "zapatacomputing/orquestra-nvidia:v0.0.0"
 
 
 def _json_dict_from_pydantic(model):
@@ -99,6 +101,14 @@ class InvocationTranslator:
                 gpu=task_resources.gpu,
             )
 
+        custom_image = inv.custom_image or task.custom_image
+
+        if custom_image is None:
+            if step_resources is not None and step_resources.gpu:
+                custom_image = QE_GPU_IMAGE
+            else:
+                custom_image = QE_DEFAULT_IMAGE
+
         dependency_ids = task.dependency_import_ids or []
 
         ir_import_ids = [task.source_import_id, *dependency_ids]
@@ -117,7 +127,7 @@ class InvocationTranslator:
             config=yaml_model.StepConfig(
                 runtime=yaml_model.Runtime(
                     language=yaml_model.RuntimeLanguage.PYTHON3,
-                    customImage=inv.custom_image or task.custom_image,
+                    customImage=custom_image,
                     imports=step_import_names,
                     parameters=yaml_model.RuntimeParameters(
                         # Hardcoded reference of the single entrypoint "dispatcher" in

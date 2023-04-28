@@ -26,9 +26,10 @@ from ...schema.local_database import StoredWorkflowRun
 from ...schema.workflow_run import ProjectDef, ProjectRef, State, TaskInvocationId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId, WorkspaceDef, WorkspaceId
+from .. import serde
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig
-from ._task_run import TaskRun, unwrap_task_retvals
+from ._task_run import TaskRun
 
 COMPLETED_STATES = [State.FAILED, State.TERMINATED, State.SUCCEEDED]
 
@@ -353,7 +354,12 @@ class WorkflowRun:
                 state,
             )
         try:
-            return self._runtime.get_workflow_run_outputs_non_blocking(run_id)
+            return (
+                *(
+                    serde.deserialize(o)
+                    for o in self._runtime.get_workflow_run_outputs_non_blocking(run_id)
+                ),
+            )
         except WorkflowRunNotSucceeded:
             raise
 
@@ -361,7 +367,8 @@ class WorkflowRun:
         """
         Unstable: this API will change.
 
-        Returns all values returned by this workflow's tasks.
+        Returns values calculated by this workflow's tasks. If a given task hasn't
+        succeeded yet, the mapping won't contain the corresponding entry.
 
         Raises:
             WorkflowRunNotStarted: when the workflow has not started
@@ -385,13 +392,15 @@ class WorkflowRun:
 
         # NOTE: this is a possible place for improvement. If future runtime APIs support
         # getting a subset of artifacts, we should use them here.
-        workflow_artifacts = self._runtime.get_available_outputs(run_id)
+        inv_outputs = self._runtime.get_available_outputs(run_id)
 
-        # The runtime always returns tuples, even of the task has n_outputs = 1. We
-        # need to unwrap it for user's convenience.
-        return unwrap_task_retvals(
-            artifacts=workflow_artifacts, task_invocations=self._wf_def.task_invocations
-        )
+        # The output shape differs across runtimes when the workflow functions returns a
+        # single, packed future. See more in:
+        # https://zapatacomputing.atlassian.net/browse/ORQSDK-801
+        return {
+            inv_id: serde.deserialize(inv_output)
+            for inv_id, inv_output in inv_outputs.items()
+        }
 
     def get_logs(self) -> t.Mapping[TaskInvocationId, t.List[str]]:
         """
