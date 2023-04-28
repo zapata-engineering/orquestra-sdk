@@ -9,6 +9,8 @@ from ._base._api import (
     TaskRun,
     WorkflowRun,
     list_workflow_runs,
+    list_projects,
+    list_workspaces,
     migrate_config_file,
 )
 from ._base._dsl import (
@@ -47,6 +49,8 @@ __all__ = [
     "WorkflowRun",
     "WorkflowTemplate",
     "list_workflow_runs",
+    "list_workspaces",
+    "list_projects",
     "migrate_config_file",
     "secrets",
     "task",
