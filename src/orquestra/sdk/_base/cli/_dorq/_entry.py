@@ -37,6 +37,24 @@ To get config name for remote runtime, use orq login -s <uri> first
 """,
 )
 
+WORKSPACE_OPTION = cloup.option(
+    "-w",
+    "--workspace-id",
+    required=False,
+    help="""
+ID of the workspace used to submit workflow. Used only on CE runtime
+""",
+)
+
+PROJECT_OPTION = cloup.option(
+    "-p",
+    "--project-id",
+    required=False,
+    help="""
+ID of the project used to submit workflow. Used only on CE runtime
+""",
+)
+
 
 @cloup.group(context_settings=CLICK_CTX_SETTINGS)
 def dorq():
@@ -81,6 +99,8 @@ selecting a function from the ones available in 'module'.
 """,
 )
 @CONFIG_OPTION
+@WORKSPACE_OPTION
+@PROJECT_OPTION
 @cloup.option(
     "--force",
     is_flag=True,
@@ -90,7 +110,14 @@ selecting a function from the ones available in 'module'.
         "uncommitted changes."
     ),
 )
-def submit(module: str, name: t.Optional[str], config: t.Optional[str], force: bool):
+def submit(
+    module: str,
+    name: t.Optional[str],
+    config: t.Optional[str],
+    workspace_id: t.Optional[str],
+    project_id: t.Optional[str],
+    force: bool,
+):
     """
     Submits a workflow for execution.
 
@@ -104,7 +131,7 @@ def submit(module: str, name: t.Optional[str], config: t.Optional[str], force: b
     from ._workflow._submit import Action
 
     action = Action()
-    action.on_cmd_call(module, name, config, force)
+    action.on_cmd_call(module, name, config, workspace_id, project_id, force)
 
 
 @workflow.command()
@@ -365,7 +392,12 @@ dorq.section(
     help="User Token to given server. To generate token, use this command without -t"
     "option first",
 )
-@cloup.option("--ce", is_flag=True, default=False, help="Start a Ray cluster")
+@cloup.option(
+    "--ce",
+    is_flag=True,
+    default=False,
+    help="Log in to Compute Engine. If not passed, will log in to Quantum Engine",
+)
 def login(server: str, token: t.Optional[str], ce: bool):
     """
     Login in to remote cluster
