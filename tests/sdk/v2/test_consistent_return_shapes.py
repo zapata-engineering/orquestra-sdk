@@ -43,8 +43,6 @@ from orquestra.sdk.schema.workflow_run import RunStatus, TaskRun
 
 from .driver import resp_mocks
 
-# TODO: unify wf definitions.
-
 
 # region: workflow definition
 @sdk.task(
