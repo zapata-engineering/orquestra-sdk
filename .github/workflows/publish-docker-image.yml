@@ -1,0 +1,72 @@
+name: Publish orquestra-sdk-base Docker Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      sdk_version:
+        type: string
+        description: Orquestra SDK version to build the image with
+jobs:
+  trigger-build-and-push:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Trigger cicd-actions repository workflow over Github API
+        run: |
+          curl \
+          "https://api.github.com/repos/zapatacomputing/cicd-actions/dispatches" \
+          -H "Authorization: token "$USER_TOKEN \
+          -H 'Accept: application/vnd.github.everest-preview+json' \
+          --data-raw '
+          {
+            "event_type":  "'"$repository"' | '"$ref"'", 
+            "client_payload": 
+                {
+                  "repository": "'"$repository"'", 
+                  "ref": "'"$ref"'", 
+                  "path_to_dockerfile": "'"$path_to_dockerfile"'", 
+                  "docker_context_path": "'"$docker_context_path"'",
+                  "target_docker_repository": "'"$target_docker_repository"'",
+                  "github_sha": "'"$github_sha"'",
+                  "build_number": "",
+                  "additional_docker_build_properties": {
+                    "additional_image_tags": "'"$additional_image_tags"'",
+                    "image_tag_flavor": "'"$image_tag_flavor"'",
+                    "image_labels": "'"$image_labels"'",
+                    "docker_build_args": "'"$docker_build_args"'",
+                    "target_platforms": "'"$target_platforms"'"
+                  }
+                }
+            }
+          '
+        env:
+          USER_TOKEN: ${{ secrets.PAGES_TOKEN }}
+          repository: ${{github.repository}}
+          ref: ${{ github.ref }}
+          path_to_dockerfile: './Dockerfile'
+          docker_context_path: '.'
+          target_docker_repository: 'zapatacomputing/orquestra-sdk-base'
+          github_sha: ${{ github.sha }}
+          # Add any desired additional tags for the image. When this action is
+          # triggered by a new semver-compliant tag, the image will be tagged
+          # with that semver by default. Otherwise, the default tag is
+          # `dev-build_${build_number}-${github_sha}-${branch name}`
+          # See https://github.com/docker/metadata-action#tags-input for the
+          # format this should take.
+          # DUE TO JSON LIMITATIONS, NEWLINES MUST BE EXPLICITLY ADDED AS \n
+          additional_image_tags: ''
+          # For changing `latest` tag behavior, as well as global prefix/suffixes
+          # See https://github.com/docker/metadata-action#flavor-input
+          # for details on how to use the `flavor` input.
+          # DUE TO JSON LIMITATIONS, NEWLINES MUST BE EXPLICITLY ADDED AS \n
+          image_tag_flavor: ''
+          # pass any OCI labels you want to add to the final image
+          # https://github.com/opencontainers/image-spec/blob/main/annotations.md
+          # DUE TO JSON LIMITATIONS, NEWLINES MUST BE EXPLICITLY ADDED AS \n
+          image_labels: ''
+          # pass any build args necessary for your Dockerfile in the same format
+          # as on the command line `--build-arg`, one to a line:
+          # docker_build_args: BUILD_ARG_ONE=value1\nBUILD_ARG_TWO=value2
+          # DUE TO JSON LIMITATIONS, NEWLINES MUST BE EXPLICITLY ADDED AS \n
+          docker_build_args: 'SDK_VERSION=${{ inputs.sdk_version }}'
+          # leave blank for linux/amd64 (recommended)
+          target_platforms: ''
