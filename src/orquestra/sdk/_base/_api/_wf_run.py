@@ -311,7 +311,7 @@ class WorkflowRun:
             raise WorkflowRunNotStarted(message) from e
         return self._runtime.get_workflow_run_status(run_id)
 
-    def get_results(self, wait: bool = False, force_as_sequence: bool = False) -> t.Any:
+    def get_results(self, wait: bool = False) -> t.Any:
         """
         Retrieves workflow results, as returned by the workflow function.
 
@@ -326,13 +326,6 @@ class WorkflowRun:
             wait:  whether or not to wait for workflow run completion.
                    Uses the default options for waiting, use `wait_until_finished()` for
                    more control.
-            force_as_sequence: If True, always returns a sequence where each element of
-                the sequence is one return value from the workflow. If false, where a
-                workflow returns a single value this will be returned as-is. For
-                example, `return [a,b,c]` means this function returns `[a,b,c]` if
-                force_as_sequence is False, and `([a,b,c],)` if force_as_sequence is
-                true. Results from workflows that return multiple values will always be
-                returned as a sequence. Defaults to False.
 
         Raises:
             WorkflowRunNotStarted: when the workflow run has not started
@@ -371,10 +364,9 @@ class WorkflowRun:
         except WorkflowRunNotSucceeded:
             raise
 
-        if not force_as_sequence:
-            expected_outputs = status_model.workflow_def.output_ids
-            if len(expected_outputs) == 1 and len(results) == 1:
-                return results[0]
+        # If we only get one result back, return it directly rather than as a sequence
+        if len(results) == 1:
+            return results[0]
 
         return results
 

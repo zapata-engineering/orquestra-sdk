@@ -354,10 +354,10 @@ class TestWorkflowRunRepo:
                 config_name = "<config sentinel>"
 
                 wf_run = Mock()
-                fake_outputs = [
+                fake_outputs = (
                     "<output sentinel 0>",
                     "<output sentinel 1>",
-                ]
+                )
                 wf_run.get_results.return_value = fake_outputs
 
                 by_id = Mock(return_value=wf_run)

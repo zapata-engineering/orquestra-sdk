@@ -487,7 +487,7 @@ class TestWorkflowRun:
             # Then
             assert mock_runtime.get_workflow_run_status.call_count >= 1
             assert results is not None
-            assert results == ("woohoo!",)
+            assert results == "woohoo!"
 
         @staticmethod
         def test_waits_when_wait_is_explicitly_false(run, mock_runtime):
@@ -499,7 +499,7 @@ class TestWorkflowRun:
             results = run.get_results(wait=False)
             # Then
             assert results is not None
-            assert results == ("woohoo!",)
+            assert results == "woohoo!"
             assert mock_runtime.get_workflow_run_status.call_count == 1
 
     class TestGetArtifacts:
