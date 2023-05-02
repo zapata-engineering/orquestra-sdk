@@ -45,6 +45,24 @@ from .driver import resp_mocks
 
 
 # region: workflow definition
+# Vanilla python versions of the workflow for comparison.
+# These should be an undecorated version of the task and workflow definitions below.
+def get_list_vanilla():
+    return [1, 2, 3]
+
+
+def wf_return_single_packed_value_vanilla():
+    a = get_list_vanilla()
+    return a
+
+
+def wf_return_multiple_packed_values_vanilla():
+    a = get_list_vanilla()
+    b = get_list_vanilla()
+    return a, b
+
+
+# SDK versions to be run.
 @sdk.task(
     source_import=sdk.InlineImport(),
     dependency_imports=[
@@ -164,7 +182,7 @@ QE_WORKFLOW_RESULT_JSON_DICT_SINGLE = {
     "wf-id-sentinel-foobar": {
         "artifact-3-get-list": {
             "serialization_format": "JSON",
-            "value": "[1,2,3]",
+            "value": f"{wf_return_single_packed_value_vanilla()}",
         },
         "inputs": {},
         "stepID": "wf-id-sentinel-foobar",
@@ -176,7 +194,7 @@ QE_WORKFLOW_RESULT_JSON_DICT_MULTIPLE = {
     "wf-id-sentinel-foo": {
         "artifact-3-get-list": {
             "serialization_format": "JSON",
-            "value": "[1,2,3]",
+            "value": f"{wf_return_single_packed_value_vanilla()}",
         },
         "inputs": {},
         "stepID": "wf-id-sentinel-foo",
@@ -186,7 +204,7 @@ QE_WORKFLOW_RESULT_JSON_DICT_MULTIPLE = {
     "wf-id-sentinel-bar": {
         "artifact-7-get-list": {
             "serialization_format": "JSON",
-            "value": "[1,2,3]",
+            "value": f"{wf_return_single_packed_value_vanilla()}",
         },
         "inputs": {},
         "stepID": "wf-id-sentinel-bar",
@@ -535,6 +553,16 @@ def mock_db_env_var(tmp_path):
         yield
 
 
+@pytest.fixture(scope="module")
+def single_result_vanilla():
+    return wf_return_single_packed_value_vanilla()
+
+
+@pytest.fixture(scope="module")
+def multiple_result_vanilla():
+    return wf_return_multiple_packed_values_vanilla()
+
+
 # endregion
 
 
@@ -552,6 +580,7 @@ class TestAPI:
         mock_qe_run_single,
         mock_ce_run_single,
         orq_project_dir_single,
+        single_result_vanilla,
     ):
         # GIVEN
         ip_run = wf_return_single_packed_value().run(sdk.RuntimeConfig.in_process())
@@ -581,23 +610,24 @@ class TestAPI:
         assert results_ip == results_ray
         assert results_ip == results_qe
         assert results_ip == results_ce
-        assert results_ip == [1, 2, 3]
+        assert results_ip == single_result_vanilla
 
         assert artifacts_ip == artifacts_ray
         assert artifacts_ip == artifacts_qe
         assert artifacts_ip == artifacts_ce
-        assert artifacts_ip == {"invocation-0-task-get-list": [1, 2, 3]}
+        assert artifacts_ip == {"invocation-0-task-get-list": single_result_vanilla}
 
         assert task_outputs_ip == task_outputs_ray
         assert task_outputs_ip == task_outputs_qe
         assert task_outputs_ip == task_outputs_ce
-        assert task_outputs_ip == [[1, 2, 3]]
+        assert task_outputs_ip == [single_result_vanilla]
 
     @staticmethod
     def test_consistent_returns_for_multiple_values(
         mock_qe_run_multiple,
         mock_ce_run_multiple,
         orq_project_dir_multiple,
+        multiple_result_vanilla,
     ):
         # GIVEN
         ip_run = wf_return_multiple_packed_values().run(sdk.RuntimeConfig.in_process())
@@ -628,20 +658,20 @@ class TestAPI:
         assert results_ip == results_ray
         assert results_ip == results_qe
         assert results_ip == results_ce
-        assert results_ip == ([1, 2, 3], [1, 2, 3])
+        assert results_ip == multiple_result_vanilla
 
         assert artifacts_ip == artifacts_ray
         assert artifacts_ip == artifacts_qe
         assert artifacts_ip == artifacts_ce
         assert artifacts_ip == {
-            "invocation-0-task-get-list": [1, 2, 3],
-            "invocation-1-task-get-list": [1, 2, 3],
+            "invocation-0-task-get-list": multiple_result_vanilla[0],
+            "invocation-1-task-get-list": multiple_result_vanilla[1],
         }
 
         assert task_outputs_ip == task_outputs_ray
         assert task_outputs_ip == task_outputs_qe
         assert task_outputs_ip == task_outputs_ce
-        assert task_outputs_ip == [[1, 2, 3], [1, 2, 3]]
+        assert task_outputs_ip == [*multiple_result_vanilla]
 
 
 @pytest.mark.usefixtures(
@@ -657,6 +687,7 @@ class TestCLI:
         mock_qe_run_single,
         mock_ce_run_single,
         orq_project_dir_single,
+        single_result_vanilla,
     ):
         # GIVEN
         run_ray = subprocess.run(
@@ -720,7 +751,7 @@ class TestCLI:
             "",
             "Output 0. Object type: <class 'list'>",
             "Pretty printed value:",
-            "[1, 2, 3]",
+            f"{single_result_vanilla}",
             "",
         ]
 
@@ -729,6 +760,7 @@ class TestCLI:
         mock_qe_run_multiple,
         mock_ce_run_multiple,
         orq_project_dir_multiple,
+        multiple_result_vanilla,
     ):
         # GIVEN
         # Mocking for QE
@@ -795,11 +827,11 @@ class TestCLI:
             "",
             "Output 0. Object type: <class 'list'>",
             "Pretty printed value:",
-            "[1, 2, 3]",
+            f"{multiple_result_vanilla[0]}",
             "",
             "Output 1. Object type: <class 'list'>",
             "Pretty printed value:",
-            "[1, 2, 3]",
+            f"{multiple_result_vanilla[1]}",
             "",
         ]
 
@@ -817,6 +849,7 @@ class TestCLIDownloadDir:
         mock_qe_run_single,
         mock_ce_run_single,
         orq_project_dir_single,
+        single_result_vanilla,
     ):
         # GIVEN
         # # Mocking for Ray
@@ -904,13 +937,14 @@ class TestCLIDownloadDir:
 
         assert ray_contents == qe_contents
         assert ray_contents == ce_contents
-        assert ray_contents == [1, 2, 3]
+        assert ray_contents == single_result_vanilla
 
     @staticmethod
     def test_consistent_downloads_for_multiple_values(
         mock_qe_run_multiple,
         mock_ce_run_multiple,
         orq_project_dir_multiple,
+        multiple_result_vanilla,
     ):
         # GIVEN
         # # Mocking for Ray
@@ -1006,4 +1040,4 @@ class TestCLIDownloadDir:
 
             assert ray_contents == qe_contents
             assert ray_contents == ce_contents
-            assert ray_contents == [1, 2, 3]
+            assert ray_contents == multiple_result_vanilla[result]
