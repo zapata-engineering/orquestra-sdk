@@ -27,11 +27,13 @@ from orquestra.sdk.schema import _compat
 from orquestra.sdk.schema.configs import ConfigName, RuntimeName
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.workflow_run import (
+    ProjectId,
     State,
     TaskRun,
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
+    WorkspaceId,
 )
 
 from ._ui import _models as ui_models
@@ -140,7 +142,12 @@ class WorkflowRunRepo:
         return task_run.id
 
     def submit(
-        self, wf_def: sdk.WorkflowDef, config: ConfigName, ignore_dirty_repo: bool
+        self,
+        wf_def: sdk.WorkflowDef,
+        config: ConfigName,
+        ignore_dirty_repo: bool,
+        workspace_id: t.Optional[WorkspaceId],
+        project_id: t.Optional[ProjectId],
     ) -> WorkflowRunId:
         """
         Args:
@@ -157,7 +164,9 @@ class WorkflowRunRepo:
             if not ignore_dirty_repo:
                 warnings.filterwarnings("error", category=exceptions.DirtyGitRepo)
 
-            wf_run = wf_def.run(config)
+            wf_run = wf_def.run(
+                config, workspace_id=workspace_id, project_id=project_id
+            )
 
         return wf_run.run_id
 

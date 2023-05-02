@@ -3,6 +3,26 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+* Removed deprecated "name" parameter for RuntimeConfig factory methods, like qe() or ray()
+* Removed deprecated save() method from RuntimeConfig class
+* Removed is_saved() method and "name" setter from RuntimeConfig class
+
+🔥 *Features*
+* Setting workflow_id and project_id is now available using "orq wf submit" command
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+## 0.47.0
+
+🚨 *Breaking Changes*
 * Task results on QE have changed shape. This may cause some oddness when downloading older task artifacts.
 
 🔥 *Features*
