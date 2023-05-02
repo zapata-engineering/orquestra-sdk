@@ -82,6 +82,11 @@ class Prompter:
         if len(choices) == 1:
             name: ChoiceID
             value: t.Union[ChoiceID, T]
+            # When the choice is a tuple, we unpack the display
+            # name and the returned value.
+            # Otherwise, the choice is a ChoiceID and should be
+            # used as both the display name and the returned 
+            # value.
             if isinstance(choices[0], tuple):
                 name, value = choices[0]
             else:
