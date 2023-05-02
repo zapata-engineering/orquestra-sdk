@@ -15,7 +15,7 @@ from abc import ABC, abstractmethod
 from datetime import timedelta
 from pathlib import Path
 
-from orquestra.sdk import Project, ProjectRef, Workspace
+from orquestra.sdk._base._spaces._structs import Project, ProjectRef, Workspace
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun

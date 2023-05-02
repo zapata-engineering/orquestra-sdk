@@ -19,14 +19,11 @@ import pydantic
 import requests
 from requests import codes
 
+from orquestra.sdk import ProjectRef
 from orquestra.sdk._ray._ray_logs import WFLog
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
-from orquestra.sdk.schema.workflow_run import (
-    ProjectRef,
-    WorkflowRun,
-    WorkflowRunMinimal,
-)
+from orquestra.sdk.schema.workflow_run import WorkflowRun, WorkflowRunMinimal
 
 from . import _exceptions, _models
 

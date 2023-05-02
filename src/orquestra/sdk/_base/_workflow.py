@@ -31,7 +31,7 @@ from orquestra.sdk.exceptions import (
     ProjectInvalidError,
     WorkflowSyntaxError,
 )
-from orquestra.sdk.schema.workflow_run import ProjectId, ProjectRef, WorkspaceId
+from orquestra.sdk.schema.workflow_run import ProjectId, WorkspaceId
 
 from .. import secrets
 from . import _api, _dsl, loader
@@ -48,6 +48,7 @@ from ._dsl import (
     parse_custom_name,
 )
 from ._in_process_runtime import InProcessRuntime
+from ._spaces._structs import ProjectRef
 from .abc import RuntimeInterface
 
 

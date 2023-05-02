@@ -26,13 +26,8 @@ from ._base._dsl import (
     task,
 )
 from ._base._log_adapter import wfprint, workflow_logger
-from ._base._spaces import (
-    Project,
-    ProjectRef,
-    Workspace,
-    list_projects,
-    list_workspaces,
-)
+from ._base._spaces._api import list_projects, list_workspaces
+from ._base._spaces._structs import Project, ProjectRef, Workspace
 from ._base._workflow import NotATaskWarning, WorkflowDef, WorkflowTemplate, workflow
 
 __all__ = [

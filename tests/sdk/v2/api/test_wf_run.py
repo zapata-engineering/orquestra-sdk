@@ -16,6 +16,8 @@ from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospe
 import pytest
 
 from orquestra.sdk._base import _api, _workflow, serde
+from orquestra.sdk._base._spaces._api import list_projects, list_workspaces
+from orquestra.sdk._base._spaces._structs import ProjectRef, Workspace
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import (
     ProjectInvalidError,
@@ -28,9 +30,8 @@ from orquestra.sdk.exceptions import (
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeName
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.workflow_run import ProjectRef, RunStatus, State
+from orquestra.sdk.schema.workflow_run import RunStatus, State
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
-from orquestra.sdk.schema.workflow_run import WorkspaceDef
 
 from ..data.complex_serialization.workflow_defs import (
     capitalize,
@@ -815,7 +816,7 @@ class TestListWorkspaces:
     def test_list_workspaces(self, mock_config_runtime):
         # Given
         # When
-        runs = _api.list_workspaces("mocked_config")
+        runs = list_workspaces("mocked_config")
         # Then
         assert len(runs) == 2
         assert runs[0].workspace_id == "ws1"
@@ -849,13 +850,13 @@ class TestListProjects:
         "workspace, expected_argument",
         [
             ("string_workspace_id", "string_workspace_id"),
-            (WorkspaceDef(workspace_id="id", name="name"), "id"),
+            (Workspace(workspace_id="id", name="name"), "id"),
         ],
     )
     def test_list_projects(self, mock_config_runtime, workspace, expected_argument):
         # Given
         # When
-        runs = _api.list_projects("mocked_config", workspace)
+        runs = list_projects("mocked_config", workspace)
         # Then
         assert len(runs) == 2
         assert runs[0].project_id == "p1"

@@ -15,9 +15,10 @@ import orquestra.sdk as sdk
 from orquestra.sdk._base._driver import _exceptions
 from orquestra.sdk._base._driver._client import DriverClient, Paginated
 from orquestra.sdk._base._driver._models import Resources
+from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import JSONResult, PickleResult
-from orquestra.sdk.schema.workflow_run import ProjectRef, RunStatus, State, TaskRun
+from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun
 
 from . import resp_mocks
 

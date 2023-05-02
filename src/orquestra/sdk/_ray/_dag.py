@@ -24,12 +24,12 @@ from .. import exceptions
 from .._base import _services, serde
 from .._base._db import WorkflowDB
 from .._base._env import RAY_GLOBAL_WF_RUN_ID_ENV
+from .._base._spaces._structs import ProjectRef
 from .._base.abc import ArtifactValue, LogReader, RuntimeInterface
 from ..schema import ir
 from ..schema.configs import RuntimeConfiguration
 from ..schema.local_database import StoredWorkflowRun
 from ..schema.workflow_run import (
-    ProjectRef,
     RunStatus,
     State,
     TaskInvocationId,
