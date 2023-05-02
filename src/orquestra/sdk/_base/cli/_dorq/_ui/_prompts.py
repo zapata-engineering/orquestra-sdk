@@ -59,7 +59,8 @@ class Prompter:
         """
         Presents the user a choice and returns what they selected.
 
-        If only one option is available, that option is selected automatically.
+        If only one option is available, the user is prompted to confirm that this is
+        the intended outcome and, if so, that option is selected automatically.
 
         Args:
             choices: The list of choices to present to the user. If this is of the shape
@@ -85,7 +86,7 @@ class Prompter:
             # When the choice is a tuple, we unpack the display
             # name and the returned value.
             # Otherwise, the choice is a ChoiceID and should be
-            # used as both the display name and the returned 
+            # used as both the display name and the returned
             # value.
             if isinstance(choices[0], tuple):
                 name, value = choices[0]
