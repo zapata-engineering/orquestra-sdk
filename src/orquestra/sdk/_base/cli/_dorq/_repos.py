@@ -202,8 +202,8 @@ class WorkflowRunRepo:
         except (exceptions.WorkflowRunNotFinished, exceptions.WorkflowRunNotSucceeded):
             raise
 
-        # In the context of the CLI, we want the results to be a n-tuple where n is the 
-        # number of results. This allows us to use the len of outputs to determine the 
+        # In the context of the CLI, we want the results to be a n-tuple where n is the
+        # number of results. This allows us to use the len of outputs to determine the
         # n_results, and iterate over the outputs in a consistent way.
         if not isinstance(outputs, tuple):
             return (outputs,)
