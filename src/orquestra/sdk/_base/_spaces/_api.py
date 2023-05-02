@@ -41,9 +41,9 @@ def list_projects(
     """
     # Resolve config
     resolved_config = _resolve_config(config)
-    workspace_id_resolved: str
+    resolved_workspace_id: str
 
-    workspace_id_resolved = (
+    resolved_workspace_id = (
         workspace_id.workspace_id
         if isinstance(workspace_id, Workspace)
         else workspace_id
@@ -51,4 +51,4 @@ def list_projects(
 
     runtime = resolved_config._get_runtime()
 
-    return runtime.list_projects(workspace_id_resolved)
+    return runtime.list_projects(resolved_workspace_id)

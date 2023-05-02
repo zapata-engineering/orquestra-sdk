@@ -710,6 +710,7 @@ class DriverClient:
         zri_type = "resource_group"
 
         # we have to build project ZRI from some hardcoded values + workspaceId
+        # based on https://zapatacomputing.atlassian.net/wiki/spaces/Platform/pages/512787664/2022-09-26+Zapata+Resource+Identifiers+ZRIs  # noqa
         workspace_zri = (
             f"zri:v1::{default_tenant_id}:"
             f"{special_workspace}:{zri_type}:{workspace_id}"
