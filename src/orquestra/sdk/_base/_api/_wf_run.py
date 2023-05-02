@@ -347,8 +347,7 @@ class WorkflowRun:
         if wait:
             self.wait_until_finished()
 
-        status_model = self.get_status_model()
-        if (state := status_model.status.state) not in COMPLETED_STATES:
+        if (state := self.get_status()) not in COMPLETED_STATES:
             raise WorkflowRunNotFinished(
                 f"Workflow run with id {run_id} has not finished. "
                 f"Current state: {state}",
