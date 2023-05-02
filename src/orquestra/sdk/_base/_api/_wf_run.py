@@ -311,7 +311,7 @@ class WorkflowRun:
             raise WorkflowRunNotStarted(message) from e
         return self._runtime.get_workflow_run_status(run_id)
 
-    def get_results(self, wait: bool = False) -> t.Any:
+    def get_results(self, wait: bool = False) -> t.Sequence[t.Any]:
         """
         Retrieves workflow results, as returned by the workflow function.
 
