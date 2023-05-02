@@ -1,3 +1,6 @@
+################################################################################
+# © Copyright 2023 Zapata Computing Inc.
+################################################################################
 from dataclasses import dataclass
 
 from orquestra.sdk.schema.workflow_run import ProjectId, WorkspaceId
