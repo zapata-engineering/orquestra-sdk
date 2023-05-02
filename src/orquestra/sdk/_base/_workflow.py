@@ -202,17 +202,6 @@ class WorkflowDef(Generic[_R]):
         if _config._runtime_name == "IN_PROCESS":
             runtime = InProcessRuntime()
         else:
-            # If we have a config, we need to make sure that it's written to a file so
-            # that we can renconstruct the WorkflowRun object after the fact.
-            # Save() needs to be called _before_ the WorkflowRun is constructed as it
-            # will change the name of the configuration if it has not previously been
-            # named.
-            if not _config.is_saved():
-                raise ConfigNameNotFoundError(
-                    "Your runtime condiguration must be saved before running the "
-                    "workflow. Please save your configuration and try again."
-                )
-
             runtime = _config._get_runtime(project_dir=project_dir)
 
         # In close future there will be multiple ways of figuring out the
