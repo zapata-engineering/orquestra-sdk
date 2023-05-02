@@ -6,7 +6,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Union
 
-from orquestra.sdk import exceptions
+from orquestra.sdk import Project, ProjectRef, Workspace, exceptions
 from orquestra.sdk._base import _retry, serde
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base.abc import RuntimeInterface
@@ -16,14 +16,11 @@ from orquestra.sdk.schema.ir import ArtifactFormat, TaskInvocationId, WorkflowDe
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
-    ProjectDef,
-    ProjectRef,
     State,
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
     WorkflowRunMinimal,
-    WorkspaceDef,
 )
 
 from . import _client, _exceptions, _models
@@ -453,8 +450,7 @@ class CERuntime(RuntimeInterface):
         try:
             workspaces = self._client.list_workspaces()
             return [
-                WorkspaceDef(workspace_id=ws.id, name=ws.displayName)
-                for ws in workspaces
+                Workspace(workspace_id=ws.id, name=ws.displayName) for ws in workspaces
             ]
         except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
             raise exceptions.UnauthorizedError(
@@ -466,7 +462,7 @@ class CERuntime(RuntimeInterface):
         try:
             projects = self._client.list_projects(workspace_id)
             return [
-                ProjectDef(
+                Project(
                     project_id=project.id,
                     workspace_id=project.resourceGroupId,
                     name=project.displayName,

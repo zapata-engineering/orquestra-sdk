@@ -23,17 +23,13 @@ from ...exceptions import (
 from ...schema import ir
 from ...schema.configs import ConfigName
 from ...schema.local_database import StoredWorkflowRun
-from ...schema.workflow_run import ProjectDef, ProjectRef, State, TaskInvocationId
+from ...schema.workflow_run import State, TaskInvocationId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
-from ...schema.workflow_run import (
-    WorkflowRunId,
-    WorkflowRunMinimal,
-    WorkspaceDef,
-    WorkspaceId,
-)
+from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal
 from .. import serde
+from .._spaces._structs import ProjectRef
 from ..abc import RuntimeInterface
-from ._config import RuntimeConfig
+from ._config import RuntimeConfig, _resolve_config
 from ._task_run import TaskRun
 
 COMPLETED_STATES = [State.FAILED, State.TERMINATED, State.SUCCEEDED]
@@ -516,54 +512,6 @@ def list_workflow_runs(
     return runs
 
 
-def list_workspaces(
-    config: t.Union[ConfigName, "RuntimeConfig"],
-) -> t.Sequence[WorkspaceDef]:
-    """Get the list of all workspaces available to a user.
-    Warning: works only on CE runtimes
-
-    Args:
-        config: The name of the configuration to use.
-
-    Raises:
-        ConfigNameNotFoundError: when the named config is not found in the file.
-    """
-    # Resolve config
-    resolved_config = _resolve_config(config)
-
-    runtime = resolved_config._get_runtime()
-
-    return runtime.list_workspaces()
-
-
-def list_projects(
-    config: t.Union[ConfigName, "RuntimeConfig"],
-    workspace_id: t.Union[WorkspaceId, WorkspaceDef],
-) -> t.Sequence[ProjectDef]:
-    """Get the list of all workspaces available to a user.
-    Warning: works only on CE runtimes
-
-    Args:
-        config: The name of the configuration to use.
-        workspace_id: ID of the workspace to use
-    Raises:
-        ConfigNameNotFoundError: when the named config is not found in the file.
-    """
-    # Resolve config
-    resolved_config = _resolve_config(config)
-    workspace_id_resolved: str
-
-    workspace_id_resolved = (
-        workspace_id.workspace_id
-        if isinstance(workspace_id, WorkspaceDef)
-        else workspace_id
-    )
-
-    runtime = resolved_config._get_runtime()
-
-    return runtime.list_projects(workspace_id_resolved)
-
-
 def _parse_max_age(age: t.Optional[str]) -> t.Optional[timedelta]:
     """Parse a string specifying an age into a timedelta object.
     If the string cannot be parsed, an exception is raises.
@@ -619,18 +567,3 @@ def _parse_max_age(age: t.Optional[str]) -> t.Optional[timedelta]:
         '- "10m" = 10 minutes,\n'
         '- "3D6h8M13s" = 3 days, 6 hours, 8 minutes and 13 seconds.'
     )
-
-
-def _resolve_config(
-    config: t.Union[ConfigName, "RuntimeConfig"],
-) -> "RuntimeConfig":
-    if isinstance(config, RuntimeConfig):
-        # EZ. Passed-in explicitly.
-        resolved_config = config
-    elif isinstance(config, str):
-        # Shorthand: just the config name.
-        resolved_config = RuntimeConfig.load(config)
-    else:
-        raise TypeError(f"'config' is of unsupported type {type(config)}.")
-
-    return resolved_config

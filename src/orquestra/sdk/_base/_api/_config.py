@@ -18,6 +18,7 @@ from ...exceptions import (
 )
 from ...schema.configs import (
     CONFIG_FILE_CURRENT_VERSION,
+    ConfigName,
     RuntimeConfiguration,
     RuntimeName,
 )
@@ -677,3 +678,18 @@ def _build_runtime(
                 "`sdk.migrate_config_file()`"
             )
         raise RuntimeConfigError(outstr) from e
+
+
+def _resolve_config(
+    config: t.Union[ConfigName, "RuntimeConfig"],
+) -> "RuntimeConfig":
+    if isinstance(config, RuntimeConfig):
+        # EZ. Passed-in explicitly.
+        resolved_config = config
+    elif isinstance(config, str):
+        # Shorthand: just the config name.
+        resolved_config = RuntimeConfig.load(config)
+    else:
+        raise TypeError(f"'config' is of unsupported type {type(config)}.")
+
+    return resolved_config

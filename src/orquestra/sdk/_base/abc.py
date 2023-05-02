@@ -15,18 +15,16 @@ from abc import ABC, abstractmethod
 from datetime import timedelta
 from pathlib import Path
 
+from orquestra.sdk import Project, ProjectRef, Workspace
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
-    ProjectDef,
-    ProjectRef,
     State,
     WorkflowRun,
     WorkflowRunId,
     WorkflowRunMinimal,
-    WorkspaceDef,
 )
 
 
@@ -189,13 +187,13 @@ class RuntimeInterface(ABC):
         """
         raise NotImplementedError()
 
-    def list_workspaces(self) -> t.Sequence[WorkspaceDef]:
+    def list_workspaces(self) -> t.Sequence[Workspace]:
         """
         List workspaces available to a user. Works only on CE
         """
         raise NotImplementedError()
 
-    def list_projects(self, workspace_id: str) -> t.Sequence[ProjectDef]:
+    def list_projects(self, workspace_id: str) -> t.Sequence[Project]:
         """
         List workspaces available to a user. Works only on CE
         """

@@ -8,9 +8,7 @@ from ._base._api import (
     RuntimeConfig,
     TaskRun,
     WorkflowRun,
-    list_projects,
     list_workflow_runs,
-    list_workspaces,
     migrate_config_file,
 )
 from ._base._dsl import (
@@ -28,6 +26,13 @@ from ._base._dsl import (
     task,
 )
 from ._base._log_adapter import wfprint, workflow_logger
+from ._base._spaces import (
+    Project,
+    ProjectRef,
+    Workspace,
+    list_projects,
+    list_workspaces,
+)
 from ._base._workflow import NotATaskWarning, WorkflowDef, WorkflowTemplate, workflow
 
 __all__ = [
@@ -57,4 +62,7 @@ __all__ = [
     "workflow",
     "workflow_logger",
     "wfprint",
+    "Project",
+    "ProjectRef",
+    "Workspace",
 ]

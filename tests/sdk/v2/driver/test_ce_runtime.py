@@ -6,7 +6,7 @@ from unittest.mock import DEFAULT, MagicMock, Mock, call, create_autospec
 
 import pytest
 
-from orquestra.sdk import exceptions
+from orquestra.sdk import Project, Workspace, exceptions
 from orquestra.sdk._base import serde
 from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _models
 from orquestra.sdk._base._testing._example_wfs import (
@@ -18,12 +18,10 @@ from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.ir import ArtifactFormat, WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, JSONResult
 from orquestra.sdk.schema.workflow_run import (
-    ProjectDef,
     RunStatus,
     State,
     WorkflowRun,
     WorkflowRunId,
-    WorkspaceDef,
 )
 
 
@@ -1179,12 +1177,8 @@ class TestListWorkspaces:
 
         assert len(workspace_defs) == 2
         assert workspace_defs == [
-            WorkspaceDef(
-                workspace_id="<id sentinel 1>", name="<displayName sentinel 1>"
-            ),
-            WorkspaceDef(
-                workspace_id="<id sentinel 2>", name="<displayName sentinel 2>"
-            ),
+            Workspace(workspace_id="<id sentinel 1>", name="<displayName sentinel 1>"),
+            Workspace(workspace_id="<id sentinel 2>", name="<displayName sentinel 2>"),
         ]
 
     @pytest.mark.parametrize(
@@ -1236,12 +1230,12 @@ class TestListProjects:
 
         assert len(workspace_defs) == 2
         assert workspace_defs == [
-            ProjectDef(
+            Project(
                 project_id="<id sentinel 1>",
                 workspace_id="<rgID1>",
                 name="<displayName sentinel 1>",
             ),
-            ProjectDef(
+            Project(
                 project_id="<id sentinel 2>",
                 workspace_id="<rgID2>",
                 name="<displayName sentinel 2>",
