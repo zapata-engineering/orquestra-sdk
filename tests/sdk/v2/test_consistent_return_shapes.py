@@ -710,7 +710,7 @@ class TestCLI:
             r"Workflow submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
         )
         assert m is not None
-        run_id_ray = m.group("run_id")
+        run_id_ray = m.group("run_id").strip()
         assert "Workflow submitted!" in run_qe.stdout.decode()
         assert "Workflow submitted!" in run_ce.stdout.decode()
 
@@ -786,7 +786,7 @@ class TestCLI:
             r"Workflow submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
         )
         assert m is not None
-        run_id_ray = m.group("run_id")
+        run_id_ray = m.group("run_id").strip()
         assert "Workflow submitted!" in run_qe.stdout.decode()
         assert "Workflow submitted!" in run_ce.stdout.decode()
 
@@ -874,7 +874,7 @@ class TestCLIDownloadDir:
             r"Workflow submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
         )
         assert m is not None
-        run_id_ray = m.group("run_id")
+        run_id_ray = m.group("run_id").strip()
         assert mock_qe_run_single in run_qe.stdout.decode()
 
         # WHEN
@@ -971,7 +971,7 @@ class TestCLIDownloadDir:
             r"Workflow submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
         )
         assert m is not None
-        run_id_ray = m.group("run_id")
+        run_id_ray = m.group("run_id").strip()
         assert mock_qe_run_multiple in run_qe.stdout.decode()
 
         # WHEN
