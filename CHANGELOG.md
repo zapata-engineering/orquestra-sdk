@@ -12,6 +12,7 @@
 🐛 *Bug Fixes*
 
 💅 *Improvements*
+* In the CLI, where the user would be prompted with a choice but only one option is available, we now prompt for confirmation instead.
 
 🥷 *Internal*
 
@@ -45,7 +46,6 @@ def my_wf():
 * Pickled workflow/task results should no longer cause workflows to fail inside the SDK machinery. Note: when passing a Python object between your tasks, you **must** ensure the Python dependencies are installed.
 
 💅 *Improvements*
-* In the CLI, where the user would be prompted with a choice but only one option is available, we now prompt for confirmation instead.
 * `VersionMismatch` warning will be presented if we detect accessing a workflow def IR generated with another SDK version.
 
 🥷 *Internal*
