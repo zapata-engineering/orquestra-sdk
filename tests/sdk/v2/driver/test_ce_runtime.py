@@ -6,7 +6,7 @@ from unittest.mock import DEFAULT, MagicMock, Mock, call, create_autospec
 
 import pytest
 
-from orquestra.sdk import exceptions
+from orquestra.sdk import Project, Workspace, exceptions
 from orquestra.sdk._base import serde
 from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _models
 from orquestra.sdk._base._testing._example_wfs import (
@@ -1151,3 +1151,116 @@ class TestGetWorkflowLogs:
         # When
         with pytest.raises(expected_exception):
             runtime.get_workflow_logs(workflow_run_id)
+
+
+class TestListWorkspaces:
+    def test_happy_path(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+    ):
+        workspaces = [
+            Mock(
+                id="<id sentinel 1>",
+                displayName="<displayName sentinel 1>",
+                some_other_parameter="w/e",
+            ),
+            Mock(
+                id="<id sentinel 2>",
+                displayName="<displayName sentinel 2>",
+                some_other_parameter="w/e",
+            ),
+        ]
+        mocked_client.list_workspaces.return_value = workspaces
+
+        workspace_defs = runtime.list_workspaces()
+
+        assert len(workspace_defs) == 2
+        assert workspace_defs == [
+            Workspace(workspace_id="<id sentinel 1>", name="<displayName sentinel 1>"),
+            Workspace(workspace_id="<id sentinel 2>", name="<displayName sentinel 2>"),
+        ]
+
+    @pytest.mark.parametrize(
+        "exception, expected_exception",
+        [
+            (_exceptions.InvalidTokenError, exceptions.UnauthorizedError),
+            (_exceptions.ForbiddenError, exceptions.UnauthorizedError),
+        ],
+    )
+    def test_exception_handling(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        exception,
+        expected_exception,
+    ):
+        # Given
+        mocked_client.list_workspaces.side_effect = exception(MagicMock())
+
+        # When
+        with pytest.raises(expected_exception):
+            runtime.list_workspaces()
+
+
+class TestListProjects:
+    def test_happy_path(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+    ):
+        projects = [
+            Mock(
+                id="<id sentinel 1>",
+                displayName="<displayName sentinel 1>",
+                resourceGroupId="<rgID1>",
+                some_other_parameter="w/e",
+            ),
+            Mock(
+                id="<id sentinel 2>",
+                displayName="<displayName sentinel 2>",
+                resourceGroupId="<rgID2>",
+                some_other_parameter="w/e",
+            ),
+        ]
+        mocked_client.list_projects.return_value = projects
+        workspace_id = "id"
+
+        workspace_defs = runtime.list_projects(workspace_id)
+
+        assert len(workspace_defs) == 2
+        assert workspace_defs == [
+            Project(
+                project_id="<id sentinel 1>",
+                workspace_id="<rgID1>",
+                name="<displayName sentinel 1>",
+            ),
+            Project(
+                project_id="<id sentinel 2>",
+                workspace_id="<rgID2>",
+                name="<displayName sentinel 2>",
+            ),
+        ]
+
+    @pytest.mark.parametrize(
+        "exception, expected_exception",
+        [
+            (_exceptions.InvalidTokenError, exceptions.UnauthorizedError),
+            (_exceptions.ForbiddenError, exceptions.UnauthorizedError),
+            (_exceptions.InvalidWorkspaceZRI, exceptions.NotFoundError),
+        ],
+    )
+    def test_exception_handling(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        exception,
+        expected_exception,
+    ):
+        # Given
+        mocked_client.list_projects.side_effect = exception(MagicMock())
+        workspace_id = "id"
+
+        # When
+        with pytest.raises(expected_exception):
+            runtime.list_projects(workspace_id)

@@ -19,14 +19,11 @@ import pydantic
 import requests
 from requests import codes
 
+from orquestra.sdk import ProjectRef
 from orquestra.sdk._ray._ray_logs import WFLog
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
-from orquestra.sdk.schema.workflow_run import (
-    ProjectRef,
-    WorkflowRun,
-    WorkflowRunMinimal,
-)
+from orquestra.sdk.schema.workflow_run import WorkflowRun, WorkflowRunMinimal
 
 from . import _exceptions, _models
 
@@ -685,3 +682,52 @@ class DriverClient:
 
         # TODO: unzip, get logs (ORQSDK-654)
         return resp.content
+
+    def list_workspaces(self):
+        """
+        Gets the list of all workspaces
+        """
+
+        resp = self._get(
+            API_ACTIONS["list_workspaces"],
+            query_params=None,
+        )
+
+        _handle_common_errors(resp)
+
+        parsed_response = pydantic.parse_obj_as(
+            _models.ListWorkspacesResponse, resp.json()
+        )
+
+        return parsed_response
+
+    def list_projects(self, workspace_id):
+        """
+        Gets the list of all projects in given workspace
+        """
+        default_tenant_id = 0
+        special_workspace = "system"
+        zri_type = "resource_group"
+
+        # we have to build project ZRI from some hardcoded values + workspaceId
+        # based on https://zapatacomputing.atlassian.net/wiki/spaces/Platform/pages/512787664/2022-09-26+Zapata+Resource+Identifiers+ZRIs  # noqa
+        workspace_zri = (
+            f"zri:v1::{default_tenant_id}:"
+            f"{special_workspace}:{zri_type}:{workspace_id}"
+        )
+
+        resp = self._get(
+            API_ACTIONS["list_projects"].format(workspace_zri),
+            query_params=None,
+        )
+
+        if resp.status_code == codes.BAD_REQUEST:
+            raise _exceptions.InvalidWorkspaceZRI(workspace_zri)
+
+        _handle_common_errors(resp)
+
+        parsed_response = pydantic.parse_obj_as(
+            _models.ListProjectResponse, resp.json()
+        )
+
+        return parsed_response

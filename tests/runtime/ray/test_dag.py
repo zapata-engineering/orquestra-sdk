@@ -16,14 +16,14 @@ import pytest
 from orquestra.sdk import exceptions
 from orquestra.sdk._base._config import RuntimeConfiguration, RuntimeName
 from orquestra.sdk._base._db import WorkflowDB
+from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing._example_wfs import (
     wf_with_secrets,
     workflow_parametrised_with_resources,
 )
 from orquestra.sdk._ray import _client, _dag, _ray_logs
-from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.workflow_run import ProjectRef, State
+from orquestra.sdk.schema.workflow_run import State
 
 TEST_TIME = datetime.now(timezone.utc)
 
