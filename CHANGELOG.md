@@ -9,6 +9,7 @@
 * WorkflowRun.get_results() returns values consistent with vanilla python - single results are returned as-as, multiple results are returned as a tuple.
 
 🔥 *Features*
+* New API functions: list_workspaces() and list_projects(). Usable only on CE runtime
 * Setting workflow_id and project_id is now available using "orq wf submit" command
 
 👩‍🔬 *Experimental*
