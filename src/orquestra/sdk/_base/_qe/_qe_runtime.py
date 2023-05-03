@@ -25,6 +25,7 @@ from orquestra.sdk._base._conversions._yaml_exporter import (
     workflow_to_yaml,
 )
 from orquestra.sdk._base._db import WorkflowDB
+from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import (
@@ -37,7 +38,6 @@ from orquestra.sdk.schema.ir import (
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
-    ProjectRef,
     RunStatus,
     State,
     TaskRun,

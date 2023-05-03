@@ -6,7 +6,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Union
 
-from orquestra.sdk import exceptions
+from orquestra.sdk import Project, ProjectRef, Workspace, exceptions
 from orquestra.sdk._base import _retry, serde
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base.abc import RuntimeInterface
@@ -16,7 +16,6 @@ from orquestra.sdk.schema.ir import ArtifactFormat, TaskInvocationId, WorkflowDe
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
-    ProjectRef,
     State,
     TaskRunId,
     WorkflowRun,
@@ -446,3 +445,36 @@ class CERuntime(RuntimeInterface):
 
     def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
         raise NotImplementedError()
+
+    def list_workspaces(self):
+        try:
+            workspaces = self._client.list_workspaces()
+            return [
+                Workspace(workspace_id=ws.id, name=ws.displayName) for ws in workspaces
+            ]
+        except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
+            raise exceptions.UnauthorizedError(
+                "Could not list workspaces "
+                "- the authorization token was rejected by the remote cluster."
+            ) from e
+
+    def list_projects(self, workspace_id: str):
+        try:
+            projects = self._client.list_projects(workspace_id)
+            return [
+                Project(
+                    project_id=project.id,
+                    workspace_id=project.resourceGroupId,
+                    name=project.displayName,
+                )
+                for project in projects
+            ]
+        except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
+            raise exceptions.UnauthorizedError(
+                "Could not list projects "
+                "- the authorization token was rejected by the remote cluster."
+            ) from e
+        except _exceptions.InvalidWorkspaceZRI as e:
+            raise exceptions.NotFoundError(
+                f"Could not find workspace with id: {workspace_id}."
+            ) from e

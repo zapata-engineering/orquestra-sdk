@@ -8,6 +8,7 @@
 * Removed is_saved() method and "name" setter from RuntimeConfig class
 
 🔥 *Features*
+* New API functions: list_workspaces() and list_projects(). Usable only on CE runtime
 * Setting workflow_id and project_id is now available using "orq wf submit" command
 
 👩‍🔬 *Experimental*
