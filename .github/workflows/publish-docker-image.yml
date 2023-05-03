@@ -30,7 +30,7 @@ jobs:
                   "docker_context_path": "'"$docker_context_path"'",
                   "target_docker_repository": "'"$target_docker_repository"'",
                   "github_sha": "'"$github_sha"'",
-                  "'"$build_number"'",
+                  "build_number": "'"$build_number"'",
                   "additional_docker_build_properties": {
                     "additional_image_tags": "'"$additional_image_tags"'",
                     "image_tag_flavor": "'"$image_tag_flavor"'",
