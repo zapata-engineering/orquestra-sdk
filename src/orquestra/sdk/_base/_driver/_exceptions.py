@@ -159,3 +159,13 @@ class WorkflowRunResultNotFound(Exception):
     def __init__(self, workflow_run_result_id: str):
         self.workflow_run_result_id = workflow_run_result_id
         super().__init__(workflow_run_result_id)
+
+
+class InvalidWorkspaceZRI(Exception):
+    """
+    Raised when workspace ZRI is invalid
+    """
+
+    def __init__(self, zri: str):
+        self.zri = zri
+        super().__init__(zri)

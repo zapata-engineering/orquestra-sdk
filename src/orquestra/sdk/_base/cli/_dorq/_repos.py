@@ -27,11 +27,13 @@ from orquestra.sdk.schema import _compat
 from orquestra.sdk.schema.configs import ConfigName, RuntimeName
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.workflow_run import (
+    ProjectId,
     State,
     TaskRun,
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
+    WorkspaceId,
 )
 
 from ._ui import _models as ui_models
@@ -140,7 +142,12 @@ class WorkflowRunRepo:
         return task_run.id
 
     def submit(
-        self, wf_def: sdk.WorkflowDef, config: ConfigName, ignore_dirty_repo: bool
+        self,
+        wf_def: sdk.WorkflowDef,
+        config: ConfigName,
+        ignore_dirty_repo: bool,
+        workspace_id: t.Optional[WorkspaceId],
+        project_id: t.Optional[ProjectId],
     ) -> WorkflowRunId:
         """
         Args:
@@ -157,7 +164,9 @@ class WorkflowRunRepo:
             if not ignore_dirty_repo:
                 warnings.filterwarnings("error", category=exceptions.DirtyGitRepo)
 
-            wf_run = wf_def.run(config)
+            wf_run = wf_def.run(
+                config, workspace_id=workspace_id, project_id=project_id
+            )
 
         return wf_run.run_id
 
@@ -201,6 +210,12 @@ class WorkflowRunRepo:
             outputs = wf_run.get_results(wait=False)
         except (exceptions.WorkflowRunNotFinished, exceptions.WorkflowRunNotSucceeded):
             raise
+
+        # In the context of the CLI, we want the results to be a n-tuple where n is the
+        # number of results. This allows us to use the len of outputs to determine the
+        # n_results, and iterate over the outputs in a consistent way.
+        if not isinstance(outputs, tuple):
+            return (outputs,)
 
         return outputs
 
@@ -454,7 +469,6 @@ class SummaryRepo:
         )
 
     def wf_list_summary(self, wf_runs: t.List[WorkflowRun]) -> ui_models.WFList:
-
         wf_runs.sort(
             key=lambda wf_run: wf_run.status.start_time
             if wf_run.status.start_time
@@ -508,7 +522,7 @@ class RuntimeRepo:
             # Ask QE for the login url to log in to the platform
         try:
             target_url = client.get_login_url(redirect_port)
-        except (requests.RequestException) as e:
+        except requests.RequestException as e:
             raise exceptions.LoginURLUnavailableError(uri) from e
         return target_url
 

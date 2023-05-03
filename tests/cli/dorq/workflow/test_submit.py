@@ -44,6 +44,8 @@ class TestAction:
             module = "my_wfs"
             name = "sample_wf"
             config = "cluster_z"
+            workspace = "ws"
+            project = "project'"
 
             prompter = Mock()
             presenter = Mock()
@@ -66,7 +68,7 @@ class TestAction:
             )
 
             # When
-            action.on_cmd_call(module, name, config, force)
+            action.on_cmd_call(module, name, config, workspace, project, force)
 
             # Then
             # We don't expect prompts.
@@ -77,7 +79,11 @@ class TestAction:
 
             # We expect submitting the retrieved wf def to the passed config cluster.
             wf_run_repo.submit.assert_called_with(
-                wf_def_sentinel, config, ignore_dirty_repo=force
+                wf_def_sentinel,
+                config,
+                ignore_dirty_repo=force,
+                workspace_id=workspace,
+                project_id=project,
             )
 
             # We expect telling the user the wf run ID.
@@ -91,6 +97,8 @@ class TestAction:
             module = "my_wfs"
             name = None
             config = "cluster_z"
+            workspace = "workspace"
+            project = "project"
 
             wf_names = ["my_wf1", "my_wf2"]
             selected_name = wf_names[1]
@@ -120,7 +128,7 @@ class TestAction:
             )
 
             # When
-            action.on_cmd_call(module, name, config, force)
+            action.on_cmd_call(module, name, config, workspace, project, force)
 
             # Then
             # We expect prompting for selection of the workflow name.
@@ -132,7 +140,11 @@ class TestAction:
 
             # We expect submitting the retrieved wf def to the passed config cluster.
             wf_run_repo.submit.assert_called_with(
-                wf_def_sentinel, config, ignore_dirty_repo=force
+                wf_def_sentinel,
+                config,
+                ignore_dirty_repo=force,
+                workspace_id=workspace,
+                project_id=project,
             )
 
             # We expect telling the user the wf run ID.
@@ -145,6 +157,8 @@ class TestAction:
             module = "my_wfs"
             name = None
             config = "cluster_z"
+            workspace = "workspace"
+            project = "project"
 
             wf_names = ["my_wf1"]
 
@@ -172,7 +186,7 @@ class TestAction:
             )
 
             # When
-            action.on_cmd_call(module, name, config, force)
+            action.on_cmd_call(module, name, config, workspace, project, force)
 
             # Then
             # We don't expect prompts.
@@ -184,7 +198,11 @@ class TestAction:
 
             # We expect submitting the retrieved wf def to the passed config cluster.
             wf_run_repo.submit.assert_called_with(
-                wf_def_sentinel, config, ignore_dirty_repo=force
+                wf_def_sentinel,
+                config,
+                ignore_dirty_repo=force,
+                workspace_id=workspace,
+                project_id=project,
             )
 
             # We expect telling the user the wf run ID.
@@ -197,6 +215,8 @@ class TestAction:
             module = "my_wfs"
             name = None
             config = "cluster_z"
+            workspace = "workspace"
+            project = "project"
 
             prompter = Mock()
             presenter = Mock()
@@ -214,7 +234,7 @@ class TestAction:
             )
 
             # When
-            action.on_cmd_call(module, name, config, force)
+            action.on_cmd_call(module, name, config, workspace, project, force)
 
             # Then
             # We don't expect prompts.
@@ -237,6 +257,8 @@ class TestAction:
             module = "doesnt_exist"
             name = None
             config = "cluster_z"
+            workspace = "workspace"
+            project = "project"
 
             prompter = Mock()
             presenter = Mock()
@@ -258,7 +280,7 @@ class TestAction:
             )
 
             # When
-            action.on_cmd_call(module, name, config, force)
+            action.on_cmd_call(module, name, config, workspace, project, force)
 
             # Then
             # We don't expect prompts.
@@ -287,6 +309,9 @@ class TestAction:
             module = "my_wfs"
             name = "sample_wf"
             config = "cluster_z"
+            workspace = "workspace"
+            project = "project"
+
             force = False
 
             prompter = Mock()
@@ -325,7 +350,7 @@ class TestAction:
             # We expect a warning being presented.
             with pytest.warns(exceptions.DirtyGitRepo):
                 # When
-                action.on_cmd_call(module, name, config, force)
+                action.on_cmd_call(module, name, config, workspace, project, force)
 
             # We expect getting workflow def from the module.
             wf_def_repo.get_workflow_def.assert_called_with(module, name)
@@ -342,6 +367,8 @@ class TestAction:
             module = "my_wfs"
             name = "sample_wf"
             config = "cluster_z"
+            workspace = "workspace"
+            project = "project"
             force = True
 
             prompter = Mock()
@@ -377,7 +404,7 @@ class TestAction:
             # We expect a warning being presented.
             with pytest.warns(exceptions.DirtyGitRepo):
                 # When
-                action.on_cmd_call(module, name, config, force)
+                action.on_cmd_call(module, name, config, workspace, project, force)
 
             # We expect getting workflow def from the module.
             wf_def_repo.get_workflow_def.assert_called_with(module, name)

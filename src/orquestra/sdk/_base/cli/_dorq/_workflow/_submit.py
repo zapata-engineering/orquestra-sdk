@@ -40,10 +40,18 @@ class Action:
         )
 
     def on_cmd_call(
-        self, module: str, name: t.Optional[str], config: t.Optional[str], force: bool
+        self,
+        module: str,
+        name: t.Optional[str],
+        config: t.Optional[str],
+        workspace_id: t.Optional[str],
+        project_id: t.Optional[str],
+        force: bool,
     ):
         try:
-            self._on_cmd_call_with_exceptions(module, name, config, force)
+            self._on_cmd_call_with_exceptions(
+                module, name, config, workspace_id, project_id, force
+            )
         except Exception as e:
             self._presenter.show_error(e)
 
@@ -52,6 +60,8 @@ class Action:
         module: str,
         name: t.Optional[str],
         config: t.Optional[str],
+        workspace_id: t.Optional[str],
+        project_id: t.Optional[str],
         force: bool,
     ):
         """
@@ -98,6 +108,8 @@ class Action:
                 resolved_wf_def,
                 resolved_config,
                 ignore_dirty_repo=force,
+                workspace_id=workspace_id,
+                project_id=project_id,
             )
         except exceptions.DirtyGitRepo:
             # Ask the user for the decision.

@@ -7,9 +7,7 @@ from unittest.mock import Mock
 import pytest
 
 import orquestra.sdk as sdk
-from orquestra.sdk._base import _api
 from orquestra.sdk._base._testing import _connections
-from orquestra.sdk._ray import _dag
 
 
 @sdk.task
@@ -55,7 +53,7 @@ class TestRunningLocalInBackground:
             run.wait_until_finished()
             results = run.get_results()
 
-            assert results == (3,)
+            assert results == 3
 
         @staticmethod
         def test_multiple_starts(
@@ -86,7 +84,7 @@ class TestRunningLocalInBackground:
             run.wait_until_finished()
             results = run.get_results()
 
-            assert results == (3,)
+            assert results == 3
 
     class TestReconnectToPreviousRun:
         @staticmethod
@@ -117,4 +115,4 @@ class TestRunningLocalInBackground:
             results = run_reconnect.get_results()
 
             # THEN
-            assert results == (3,)
+            assert results == 3

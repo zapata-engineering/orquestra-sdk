@@ -16,6 +16,8 @@ from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospe
 import pytest
 
 from orquestra.sdk._base import _api, _workflow, serde
+from orquestra.sdk._base._spaces._api import list_projects, list_workspaces
+from orquestra.sdk._base._spaces._structs import ProjectRef, Workspace
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import (
     ProjectInvalidError,
@@ -28,7 +30,7 @@ from orquestra.sdk.exceptions import (
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeName
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.workflow_run import ProjectRef, RunStatus, State
+from orquestra.sdk.schema.workflow_run import RunStatus, State
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
 
 from ..data.complex_serialization.workflow_defs import (
@@ -70,21 +72,21 @@ class TestRunningInProcess:
             run = wf_pass_tuple().run("in_process")
             results = run.get_results()
 
-            assert results == (3,)
+            assert results == 3
 
         @staticmethod
         def test_pass_builtin_config_name_with_file(tmp_default_config_json):
             run = wf_pass_tuple().run("in_process")
             results = run.get_results()
 
-            assert results == (3,)
+            assert results == 3
 
         def test_single_run(self):
             run = wf_pass_tuple().prepare("in_process")
             run.start()
             results = run.get_results()
 
-            assert results == (3,)
+            assert results == 3
 
         def test_multiple_starts(self):
             run = wf_pass_tuple().prepare("in_process")
@@ -102,7 +104,7 @@ class TestRunningInProcess:
             run = wf_pass_tuple().run("in_process")
             results = run.get_results()
 
-            assert results == (3,)
+            assert results == 3
 
     class TestWithConfig:
         @staticmethod
@@ -111,7 +113,7 @@ class TestRunningInProcess:
             run = wf_pass_tuple().run(config)
             results = run.get_results()
 
-            assert results == (3,)
+            assert results == 3
 
 
 class TestWorkflowRun:
@@ -139,6 +141,11 @@ class TestWorkflowRun:
         )
         # for simulating a workflow running
         succeeded_run_model = Mock(name="succeeded wf run model")
+
+        # We need the output ids to have a length as we use this to determine how many
+        # results we expect. We set this to 2 to avoid the special case where single
+        # return values are unpacked.
+        succeeded_run_model.workflow_def.output_ids.__len__ = Mock(return_value=2)
 
         # Default value is "SUCCEEDED"
         succeeded_run_model.status.state = State.SUCCEEDED
@@ -482,7 +489,7 @@ class TestWorkflowRun:
             # Then
             assert mock_runtime.get_workflow_run_status.call_count >= 1
             assert results is not None
-            assert results == ("woohoo!",)
+            assert results == "woohoo!"
 
         @staticmethod
         def test_waits_when_wait_is_explicitly_false(run, mock_runtime):
@@ -494,7 +501,7 @@ class TestWorkflowRun:
             results = run.get_results(wait=False)
             # Then
             assert results is not None
-            assert results == ("woohoo!",)
+            assert results == "woohoo!"
             assert mock_runtime.get_workflow_run_status.call_count == 1
 
     class TestGetArtifacts:
@@ -787,3 +794,76 @@ class TestProjectId:
                 "in_process", workspace_id=workspace_id, project_id=project_id
             )
             assert wf._project == expected
+
+
+class TestListWorkspaces:
+    @staticmethod
+    @pytest.fixture
+    def mock_config_runtime(monkeypatch):
+        ws = MagicMock()
+        type(ws).workspace_id = PropertyMock(
+            side_effect=[
+                "ws1",
+                "ws2",
+            ]
+        )
+        runtime = Mock(RuntimeInterface)
+        # For getting workflow ID
+        runtime.list_workspaces.return_value = [ws, ws]
+        mock_config = MagicMock(_api.RuntimeConfig)
+        mock_config._get_runtime.return_value = runtime
+        monkeypatch.setattr(
+            _api.RuntimeConfig, "load", MagicMock(return_value=mock_config)
+        )
+
+        return runtime
+
+    def test_list_workspaces(self, mock_config_runtime):
+        # Given
+        # When
+        runs = list_workspaces("mocked_config")
+        # Then
+        assert len(runs) == 2
+        assert runs[0].workspace_id == "ws1"
+        assert runs[1].workspace_id == "ws2"
+        mock_config_runtime.list_workspaces.assert_called_once()
+
+
+class TestListProjects:
+    @staticmethod
+    @pytest.fixture
+    def mock_config_runtime(monkeypatch):
+        ws = MagicMock()
+        type(ws).project_id = PropertyMock(
+            side_effect=[
+                "p1",
+                "p2",
+            ]
+        )
+        runtime = Mock(RuntimeInterface)
+        # For getting workflow ID
+        runtime.list_projects.return_value = [ws, ws]
+        mock_config = MagicMock(_api.RuntimeConfig)
+        mock_config._get_runtime.return_value = runtime
+        monkeypatch.setattr(
+            _api.RuntimeConfig, "load", MagicMock(return_value=mock_config)
+        )
+
+        return runtime
+
+    @pytest.mark.parametrize(
+        "workspace, expected_argument",
+        [
+            ("string_workspace_id", "string_workspace_id"),
+            (Workspace(workspace_id="id", name="name"), "id"),
+        ],
+    )
+    def test_list_projects(self, mock_config_runtime, workspace, expected_argument):
+        # Given
+        # When
+        runs = list_projects("mocked_config", workspace)
+        # Then
+        assert len(runs) == 2
+        assert runs[0].project_id == "p1"
+        assert runs[1].project_id == "p2"
+        mock_config_runtime.list_projects.assert_called_with(expected_argument)

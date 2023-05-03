@@ -46,7 +46,7 @@ class TaggedWorkflowTaskLogger(logging.LoggerAdapter):
         for key in ["wf_run_id", "task_inv_id", "task_run_id"]:
             new_extra[key] = json.dumps(old_extra[key])
 
-        # Mimick default behavior of logging.LoggerAdapter. Note we keep run IDs as
+        # Mimic default behavior of logging.LoggerAdapter. Note we keep run IDs as
         # extras.
         new_kwargs = {**kwargs, "extra": new_extra}
         return new_msg, new_kwargs
@@ -76,9 +76,11 @@ def get_argo_backend_ids() -> t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunId
     return wf_run_id, task_inv_id, task_run_id
 
 
-def get_ray_backend_ids() -> t.Tuple[
-    t.Optional[WorkflowRunId], t.Optional[TaskInvocationId], t.Optional[TaskRunId]
-]:
+def get_ray_backend_ids() -> (
+    t.Tuple[
+        t.Optional[WorkflowRunId], t.Optional[TaskInvocationId], t.Optional[TaskRunId]
+    ]
+):
     try:
         # Deferred import because Ray isn't installed when running on QE.
         import orquestra.sdk._ray._dag
@@ -92,7 +94,7 @@ def get_ray_backend_ids() -> t.Tuple[
 
 class ISOFormatter(logging.Formatter):
     """
-    Overrides the default date formating to produce ISO 8601 strings.
+    Overrides the default date formatting to produce ISO 8601 strings.
     """
 
     def formatTime(self, record, datefmt=None) -> str:

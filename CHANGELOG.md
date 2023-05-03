@@ -3,6 +3,29 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+* Removed deprecated "name" parameter for RuntimeConfig factory methods, like qe() or ray()
+* Removed deprecated save() method from RuntimeConfig class
+* Removed is_saved() method and "name" setter from RuntimeConfig class
+* WorkflowRun.get_results() returns values consistent with vanilla python - single results are returned as-as, multiple results are returned as a tuple.
+
+🔥 *Features*
+* New API functions: list_workspaces() and list_projects(). Usable only on CE runtime
+* Setting workflow_id and project_id is now available using "orq wf submit" command
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+* Tasks will no longer be retried on Ray and Compute Engine when the process crashes, preventing duplicated MLflow errors.
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+## 0.47.0
+
+🚨 *Breaking Changes*
 * Task results on QE have changed shape. This may cause some oddness when downloading older task artifacts.
 
 🔥 *Features*
@@ -46,7 +69,7 @@ def my_wf():
 * Workflow definitions now require at least one task in order to be submitted. This check is performed during traversal, and raises a `WorkflowSyntaxError` if no tasks are required to be executed.
 * Remove `TaskDef.model` and `TaskDef.import_models` interfaces
 * Public API classes `sdk.GitImport`, `sdk.GithubImport`, `sdk.LocalImport`, `sdk.InlineImport` now use `dataclasses.dataclass` instead of `typing.NamedTuple`.
-* Local Ray will now always pass resources to underlying ray.remote functions. 
+* Local Ray will now always pass resources to underlying ray.remote functions.
 
 🔥 *Features*
 * Sort WF runs by start date in `list wf` command. Show start date as one of the columns

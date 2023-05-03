@@ -146,7 +146,6 @@ class QEClient:
         return response.json()
 
     def get_workflow_result(self, wf_id: str) -> bytes:
-
         response = self._get(
             API_ACTION["get_workflow_result"].format(wf_id),
             allowed_error_codes=[404],

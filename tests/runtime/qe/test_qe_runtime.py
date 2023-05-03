@@ -22,13 +22,13 @@ from orquestra.sdk._base._conversions._yaml_exporter import (
     workflow_to_yaml,
 )
 from orquestra.sdk._base._qe import _qe_runtime
+from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing._example_wfs import my_workflow
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.ir import ArtifactFormat, ArtifactNodeId, TaskInvocationId
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import JSONResult, PickleResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
-    ProjectRef,
     RunStatus,
     State,
     TaskRun,

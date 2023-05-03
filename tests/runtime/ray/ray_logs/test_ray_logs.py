@@ -283,7 +283,7 @@ class TestDirectRayReader:
         )
         def test_examples(monkeypatch, wf_run_id, task_inv_id, parsed_logs, expected):
             # Given
-            ray_temp = Path("shouldnt/matter")
+            ray_temp = Path("should.not/matter")
             reader = _ray_logs.DirectRayReader(ray_temp=ray_temp)
             monkeypatch.setattr(
                 reader, "_get_parsed_logs", Mock(return_value=parsed_logs)
@@ -386,7 +386,7 @@ class TestDirectRayReader:
         )
         def test_examples(monkeypatch, wf_run_id, parsed_logs, expected):
             # Given
-            ray_temp = Path("shouldnt/matter")
+            ray_temp = Path("shouldn't/matter")
             reader = _ray_logs.DirectRayReader(ray_temp=ray_temp)
             monkeypatch.setattr(
                 reader, "_get_parsed_logs", Mock(return_value=parsed_logs)

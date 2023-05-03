@@ -23,12 +23,13 @@ from ...exceptions import (
 from ...schema import ir
 from ...schema.configs import ConfigName
 from ...schema.local_database import StoredWorkflowRun
-from ...schema.workflow_run import ProjectRef, State, TaskInvocationId
+from ...schema.workflow_run import State, TaskInvocationId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
-from ...schema.workflow_run import WorkflowRunId
+from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal
 from .. import serde
+from .._spaces._structs import ProjectRef
 from ..abc import RuntimeInterface
-from ._config import RuntimeConfig
+from ._config import RuntimeConfig, _resolve_config
 from ._task_run import TaskRun
 
 COMPLETED_STATES = [State.FAILED, State.TERMINATED, State.SUCCEEDED]
@@ -212,7 +213,7 @@ class WorkflowRun:
         successfully, fails, or is terminated for any other reason.
 
         Args:
-            frequency: The frequence in Hz at which the status should be checked.
+            frequency: The frequency in Hz at which the status should be checked.
             verbose: If ``True``, each iteration of the polling loop will print to
                 stderr.
 
@@ -354,7 +355,7 @@ class WorkflowRun:
                 state,
             )
         try:
-            return (
+            results = (
                 *(
                     serde.deserialize(o)
                     for o in self._runtime.get_workflow_run_outputs_non_blocking(run_id)
@@ -362,6 +363,12 @@ class WorkflowRun:
             )
         except WorkflowRunNotSucceeded:
             raise
+
+        # If we only get one result back, return it directly rather than as a sequence
+        if len(results) == 1:
+            return results[0]
+
+        return results
 
     def get_artifacts(self) -> t.Mapping[ir.TaskInvocationId, t.Any]:
         """
@@ -414,7 +421,7 @@ class WorkflowRun:
             WorkflowRunNotStarted: when the workflow has not started
 
         Returns:
-            A dictionary where each key-value entry correponds to a single task run.
+            A dictionary where each key-value entry corresponds to a single task run.
             The key identifies a task invocation, a single node in the workflow graph.
             The value is a list of log lines produced by the corresponding task
             invocation while running this workflow.
@@ -468,16 +475,14 @@ def list_workflow_runs(
     """Get the WorkflowRun corresponding to a previous workflow run.
 
     Args:
-        config_name: The name of the configuration to use.
+        config: The name of the configuration to use.
         limit: Restrict the number of runs to return, prioritising the most recent.
         prefix: Only return runs that start with the specified string.
         max_age: Only return runs younger than the specified maximum age.
-        status: Only return runs of runs with the specified status.
+        state: Only return runs of runs with the specified status.
         project_dir: The location of the project directory. This directory must
             contain the workflows database to which this run was saved. If omitted,
             the current working directory is assumed to be the project directory.
-        config_save_file: The location to which the associated configuration was
-            saved. If omitted, the default config file path is used.
 
     Raises:
         ConfigNameNotFoundError: when the named config is not found in the file.
@@ -495,7 +500,7 @@ def list_workflow_runs(
     # Grab the "workflow runs" from the runtime.
     # Note: WorkflowRun means something else in runtime land. To avoid overloading, this
     #       import is aliased to WorkflowRunStatus in here.
-    run_statuses: t.List[WorkflowRunModel] = runtime.list_workflow_runs(
+    run_statuses: t.Sequence[WorkflowRunMinimal] = runtime.list_workflow_runs(
         limit=limit, max_age=_parse_max_age(max_age), state=state
     )
 
@@ -568,18 +573,3 @@ def _parse_max_age(age: t.Optional[str]) -> t.Optional[timedelta]:
         '- "10m" = 10 minutes,\n'
         '- "3D6h8M13s" = 3 days, 6 hours, 8 minutes and 13 seconds.'
     )
-
-
-def _resolve_config(
-    config: t.Union[ConfigName, "RuntimeConfig"],
-) -> "RuntimeConfig":
-    if isinstance(config, RuntimeConfig):
-        # EZ. Passed-in explicitly.
-        resolved_config = config
-    elif isinstance(config, str):
-        # Shorthand: just the config name.
-        resolved_config = RuntimeConfig.load(config)
-    else:
-        raise TypeError(f"'config' is of unsupported type {type(config)}.")
-
-    return resolved_config

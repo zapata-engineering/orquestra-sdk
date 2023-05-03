@@ -268,7 +268,6 @@ class ServiceResolver:
         manage_ray: t.Optional[bool],
         manage_all: t.Optional[bool],
     ) -> t.List[_services.Service]:
-
         ray = _services.RayManager()
 
         if all(s is None for s in (manage_ray, manage_all)):

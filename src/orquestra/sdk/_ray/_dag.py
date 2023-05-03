@@ -24,12 +24,12 @@ from .. import exceptions
 from .._base import _services, serde
 from .._base._db import WorkflowDB
 from .._base._env import RAY_GLOBAL_WF_RUN_ID_ENV
+from .._base._spaces._structs import ProjectRef
 from .._base.abc import ArtifactValue, LogReader, RuntimeInterface
 from ..schema import ir
 from ..schema.configs import RuntimeConfiguration
 from ..schema.local_database import StoredWorkflowRun
 from ..schema.workflow_run import (
-    ProjectRef,
     RunStatus,
     State,
     TaskInvocationId,
@@ -235,7 +235,7 @@ class RayRuntime(RuntimeInterface):
         """
 
         # Turn off internal Ray logs, unless there is an error
-        # If Ray is set to configure logging, this will be overriden
+        # If Ray is set to configure logging, this will be overridden
         logger = logging.getLogger("ray")
         logger.setLevel(logging.ERROR)
 
@@ -487,7 +487,7 @@ class RayRuntime(RuntimeInterface):
         Args:
             limit: Restrict the number of runs to return, prioritising the most recent.
             max_age: Only return runs younger than the specified maximum age.
-            status: Only return runs of runs with the specified status.
+            state: Only return runs of runs with the specified status.
 
         Returns:
                 A list of the workflow runs
@@ -530,9 +530,11 @@ class RayRuntime(RuntimeInterface):
         return wf_runs
 
 
-def get_current_ids() -> t.Tuple[
-    t.Optional[WorkflowRunId], t.Optional[TaskInvocationId], t.Optional[TaskRunId]
-]:
+def get_current_ids() -> (
+    t.Tuple[
+        t.Optional[WorkflowRunId], t.Optional[TaskInvocationId], t.Optional[TaskRunId]
+    ]
+):
     """
     Uses Ray context to figure out what are the IDs of the currently running workflow
     and task.

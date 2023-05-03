@@ -5,7 +5,6 @@
 Snippets and tests used in the "Parametrized Workflows" tutorial.
 """
 
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -34,7 +33,7 @@ class Snippets:
     def execute_single_workflow():
         from parametrized_workflow import parametrized_workflow
 
-        import orquestra.sdk as sdk
+        import orquestra.sdk as sdk  # noqa: F401
 
         wf = parametrized_workflow(1, 2)
 
@@ -56,7 +55,7 @@ class Snippets:
         # This blocks the process until the workflow is completed.
         wf_run.wait_until_finished()
 
-        # Should print (3,)
+        # Should print 3
         print(wf_run.get_results())
         # </snippet>
 
@@ -64,7 +63,7 @@ class Snippets:
     def execute_multiple_workflows():
         from parametrized_workflow import parametrized_workflow
 
-        import orquestra.sdk as sdk
+        import orquestra.sdk as sdk  # noqa: F401
 
         # creating 5 workflows
         workflows = [parametrized_workflow(a, a + 1) for a in range(5)]
@@ -75,7 +74,7 @@ class Snippets:
         # wait for every workflow to be finished
         [workflow_run.wait_until_finished() for workflow_run in workflow_runs]
 
-        # print the result for each of the worklfow run
+        # print the result for each of the workflow run
         for workflow_run in workflow_runs:
             print(workflow_run.get_results())
         # </snippet>
@@ -130,7 +129,7 @@ class TestSnippets:
         # Then
         proc.check_returncode()
         std_out = str(proc.stdout, "utf-8")
-        assert "(3,)" in std_out
+        assert "3" in std_out
 
     @staticmethod
     # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
@@ -156,4 +155,4 @@ class TestSnippets:
         proc.check_returncode()
         std_out = str(proc.stdout, "utf-8")
         for i in range(5):
-            assert f"({i*2+1},)" in std_out
+            assert f"{i*2+1}" in std_out

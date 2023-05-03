@@ -258,22 +258,32 @@ class TestWorkflowRunRepo:
 
         class TestSubmit:
             @staticmethod
-            def test_passes_config_and_id():
+            def test_passes_parameters():
                 # Given
                 repo = _repos.WorkflowRunRepo()
 
                 config = "test_cfg"
-
                 run_id = "wf.2"
+                project_id = "my_project"
+                workspace_id = "my_workspace"
+
                 wf_def = Mock()
                 wf_def.run().run_id = run_id
 
                 # When
-                result_id = repo.submit(wf_def, config, ignore_dirty_repo=True)
+                result_id = repo.submit(
+                    wf_def,
+                    config,
+                    workspace_id=workspace_id,
+                    project_id=project_id,
+                    ignore_dirty_repo=True,
+                )
 
                 # Then
                 assert result_id == run_id
-                wf_def.run.assert_called_with(config)
+                wf_def.run.assert_called_with(
+                    config, workspace_id=workspace_id, project_id=project_id
+                )
 
             class TestWithDirtyRepo:
                 @staticmethod
@@ -303,7 +313,13 @@ class TestWorkflowRunRepo:
 
                     # When + Then
                     with pytest.raises(exceptions.DirtyGitRepo):
-                        _ = repo.submit(wf_def, config, ignore_dirty_repo=False)
+                        _ = repo.submit(
+                            wf_def,
+                            config,
+                            ignore_dirty_repo=False,
+                            workspace_id="ws",
+                            project_id="project",
+                        )
 
                 @staticmethod
                 def test_warns(wf_def):
@@ -313,7 +329,13 @@ class TestWorkflowRunRepo:
 
                     # When + Then
                     with pytest.warns(exceptions.DirtyGitRepo):
-                        _ = repo.submit(wf_def, config, ignore_dirty_repo=True)
+                        _ = repo.submit(
+                            wf_def,
+                            config,
+                            ignore_dirty_repo=True,
+                            workspace_id="ws",
+                            project_id="project",
+                        )
 
         class TestStop:
             @staticmethod
@@ -354,10 +376,10 @@ class TestWorkflowRunRepo:
                 config_name = "<config sentinel>"
 
                 wf_run = Mock()
-                fake_outputs = [
+                fake_outputs = (
                     "<output sentinel 0>",
                     "<output sentinel 1>",
-                ]
+                )
                 wf_run.get_results.return_value = fake_outputs
 
                 by_id = Mock(return_value=wf_run)
@@ -1168,7 +1190,6 @@ class TestConfigRepo:
 
         @pytest.mark.parametrize("ce", [True, False])
         def test_store_token(self, monkeypatch, ce):
-
             repo = _repos.ConfigRepo()
             uri = "funny_uri"
             token = "even_funnier_token"

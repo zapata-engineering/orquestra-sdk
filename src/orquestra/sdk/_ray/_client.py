@@ -13,8 +13,8 @@ try:
     import ray._private.utils
     import ray.runtime_env
     import ray.workflow
-    from ray import exceptions
-    from ray.workflow import exceptions as workflow_exceptions
+    from ray import exceptions  # noqa: F401
+    from ray.workflow import exceptions as workflow_exceptions  # noqa: F401
 except ModuleNotFoundError:
     if not t.TYPE_CHECKING:
         WorkflowStatus = None
@@ -85,10 +85,12 @@ else:
         def add_options(
             self,
             ray_remote_fn,
+            *,
             name: str,
             metadata: t.Dict[str, t.Any],
             runtime_env: t.Optional[RuntimeEnv],
             catch_exceptions: t.Optional[bool],
+            max_retries: int,
             num_cpus: t.Optional[t.Union[int, float]] = None,
             num_gpus: t.Optional[t.Union[int, float]] = None,
             memory: t.Optional[t.Union[int, float]] = None,
@@ -110,6 +112,7 @@ else:
             return ray_remote_fn.options(
                 **ray.workflow.options(**workflow_opts),
                 runtime_env=runtime_env,
+                max_retries=max_retries,
                 **ray_optional_opts,
             )
 

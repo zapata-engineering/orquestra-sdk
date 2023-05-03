@@ -1,3 +1,7 @@
+################################################################################
+# © Copyright 2023 Zapata Computing Inc.
+################################################################################
+
 from unittest.mock import Mock
 
 import pytest
@@ -22,6 +26,7 @@ class TestClient:
                 "metadata": {},
                 "catch_exceptions": False,
                 "runtime_env": None,
+                "max_retries": 0,
             }
 
         def test_required_args(self, client: RayClient, remote_fn, required_kwargs):
@@ -35,6 +40,7 @@ class TestClient:
                     }
                 },
                 runtime_env=required_kwargs["runtime_env"],
+                max_retries=required_kwargs["max_retries"],
             )
 
         @pytest.mark.parametrize(
@@ -61,5 +67,6 @@ class TestClient:
                     }
                 },
                 runtime_env=required_kwargs["runtime_env"],
+                max_retries=required_kwargs["max_retries"],
                 **expected,
             )
