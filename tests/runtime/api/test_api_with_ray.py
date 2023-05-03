@@ -7,9 +7,7 @@ from unittest.mock import Mock
 import pytest
 
 import orquestra.sdk as sdk
-from orquestra.sdk._base import _api
 from orquestra.sdk._base._testing import _connections
-from orquestra.sdk._ray import _dag
 
 
 @sdk.task

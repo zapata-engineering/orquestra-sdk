@@ -2,14 +2,14 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 import typing as t
-from datetime import datetime, timedelta, timezone
-from unittest.mock import Mock, create_autospec
+from datetime import datetime, timedelta
+from unittest.mock import Mock
 
 import pytest
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base.cli._dorq import _arg_resolvers, _repos
-from orquestra.sdk.schema.workflow_run import RunStatus, State, WorkflowRun
+from orquestra.sdk.schema.workflow_run import RunStatus, State
 
 
 class TestConfigResolver:

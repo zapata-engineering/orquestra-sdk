@@ -2,7 +2,7 @@
 
 🎶 Thanks so much for your interest in contributing to Orquestra! 🎶
 
-We at Zapata's quantum software team value contributions to Orquestra, so we created this document to guide you from planning your code all the way to making a PR. But if you have more questions, please feel free to email our engineers [Alex](mailto:alexander.juda@zapatacomputing.com) or [James](mailto:james.clark@zapatacomputing.com) for some guidance. 
+We at Zapata's quantum software team value contributions to Orquestra, so we created this document to guide you from planning your code all the way to making a PR. But if you have more questions, please feel free to email our engineers [Alex](mailto:alexander.juda@zapatacomputing.com) or [James](mailto:james.clark@zapatacomputing.com) for some guidance.
 
 ## Code of Conduct
 
