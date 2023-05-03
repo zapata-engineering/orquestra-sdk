@@ -49,6 +49,7 @@ jobs:
           docker_context_path: '.'
           target_docker_repository: 'hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base'
           github_sha: ${{ github.sha }}
+          build_number: ${{ github.run_number }}
           # Add any desired additional tags for the image. When this action is
           # triggered by a new semver-compliant tag, the image will be tagged
           # with that semver by default. Otherwise, the default tag is
