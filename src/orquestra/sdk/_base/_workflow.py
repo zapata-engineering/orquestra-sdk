@@ -216,7 +216,7 @@ class WorkflowDef(Generic[_R]):
             _project = None
         else:
             raise ProjectInvalidError(
-                "Invalid project ID. Either explicitely pass workspace_id "
+                "Invalid project ID. Either explicitly pass workspace_id "
                 "and project_id, or omit both"
             )
 

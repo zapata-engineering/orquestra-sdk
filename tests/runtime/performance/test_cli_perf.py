@@ -4,7 +4,7 @@
 """
 Checks if something terribly wrong is happening with the CLI latency.
 
-Temporarily, CLI latency is embarrasingly high and we don't have time to fix it.
+Temporarily, CLI latency is embarrassingly high and we don't have time to fix it.
 It's good enough to implement and release new features, though.
 
 See this ticket for more investigation:

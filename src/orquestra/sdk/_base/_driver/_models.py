@@ -119,7 +119,7 @@ ListWorkflowDefsResponse = List[GetWorkflowDefResponse]
 class StateResponse(str, Enum):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/schemas/RunStatus.yaml#L7
+        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/RunStatus.yaml#L7
     """
 
     WAITING = "WAITING"
@@ -132,7 +132,7 @@ class StateResponse(str, Enum):
 class RunStatusResponse(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/schemas/RunStatus.yaml#L1
+        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/RunStatus.yaml#L1
     """
 
     state: StateResponse
@@ -150,7 +150,7 @@ class RunStatusResponse(pydantic.BaseModel):
 class TaskRunResponse(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/schemas/WorkflowRun.yaml#L17
+        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml#L17
     """
 
     id: TaskRunID
@@ -176,7 +176,7 @@ class TaskRunResponse(pydantic.BaseModel):
 class MinimalWorkflowRunResponse(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/schemas/WorkflowRun.yaml#L1
+        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml#L1
     """
 
     id: WorkflowRunID
@@ -192,7 +192,7 @@ class MinimalWorkflowRunResponse(pydantic.BaseModel):
 class WorkflowRunResponse(MinimalWorkflowRunResponse):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/schemas/WorkflowRun.yaml#L1
+        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml#L1
     """
 
     owner: str
@@ -211,7 +211,7 @@ class WorkflowRunResponse(MinimalWorkflowRunResponse):
 class Resources(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/580c8d8/openapi/src/schemas/Resources.yaml
+        https://github.com/zapatacomputing/workflow-driver/blob/580c8d8835b1cccd085ea716c514038e85eb28d7/openapi/src/schemas/Resources.yaml
     """
 
     # If this schema is changed, the documentation in
@@ -230,7 +230,7 @@ class Resources(pydantic.BaseModel):
 class CreateWorkflowRunRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/2b3534/openapi/src/schemas/CreateWorkflowRunRequest.yaml
+        https://github.com/zapatacomputing/workflow-driver/blob/2b353476d5b0161da31584533be208611a131bdc/openapi/src/schemas/CreateWorkflowRunRequest.yaml
     """
 
     workflowDefinitionID: WorkflowDefID
@@ -249,7 +249,7 @@ class CreateWorkflowRunResponse(pydantic.BaseModel):
 class ListWorkflowRunsRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-runs.yaml#L9
+        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-runs.yaml#L9
     """
 
     workflowDefinitionID: Optional[WorkflowDefID]
@@ -263,7 +263,7 @@ ListWorkflowRunsResponse = List[MinimalWorkflowRunResponse]
 class GetWorkflowRunResponse(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-run.yaml#L17
+        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-run.yaml#L17
     """
 
     data: WorkflowRunResponse
@@ -275,7 +275,7 @@ class GetWorkflowRunResponse(pydantic.BaseModel):
 class GetWorkflowRunArtifactsRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/artifacts.yaml#L10
+        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/artifacts.yaml#L10
     """
 
     workflowRunId: WorkflowRunID
@@ -289,7 +289,7 @@ GetWorkflowRunArtifactsResponse = Mapping[TaskRunID, List[WorkflowRunArtifactID]
 class GetWorkflowRunResultsRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/run-results.yaml#L10
+        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/run-results.yaml#L10
     """
 
     workflowRunId: WorkflowRunID
@@ -304,7 +304,7 @@ GetWorkflowRunResultsResponse = List[WorkflowRunResultID]
 class GetWorkflowRunLogsRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/workflow-run-logs.yaml
+        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-run-logs.yaml
     """
 
     workflowRunId: WorkflowRunID
@@ -313,7 +313,7 @@ class GetWorkflowRunLogsRequest(pydantic.BaseModel):
 class GetTaskRunLogsRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/task-run-logs.yaml#L8
+        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/task-run-logs.yaml#L8
     """
 
     taskRunId: TaskRunID

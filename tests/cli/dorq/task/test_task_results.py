@@ -8,8 +8,6 @@ Unit tests for 'orq task results' glue code.
 from pathlib import Path
 from unittest.mock import create_autospec
 
-import pytest
-
 from orquestra.sdk._base.cli._dorq._arg_resolvers import (
     TaskInvIDResolver,
     WFConfigResolver,

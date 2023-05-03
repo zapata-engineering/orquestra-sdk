@@ -119,7 +119,6 @@ class DirectRayReader:
     def get_task_logs(
         self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
     ) -> t.List[str]:
-
         parsed_logs = self._get_parsed_logs()
 
         task_logs = [
@@ -132,7 +131,6 @@ class DirectRayReader:
     def get_workflow_logs(
         self, wf_run_id: WorkflowRunId
     ) -> t.Dict[TaskInvocationId, t.List[str]]:
-
         parsed_logs = self._get_parsed_logs()
 
         logs_dict: t.Dict[TaskInvocationId, t.List[str]] = {}

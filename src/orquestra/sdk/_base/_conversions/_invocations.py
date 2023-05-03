@@ -307,7 +307,6 @@ def _fn_ref_dict(fn_ref: ir.FunctionRef, source_import_name: yaml_model.ImportNa
 def _make_constant_input(
     arg_name: str, constant: ir.ConstantNode
 ) -> yaml_model.StepInput:
-
     result: responses.WorkflowResult
 
     if isinstance(constant, ir.ConstantNodeJSON):
