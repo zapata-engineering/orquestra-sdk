@@ -504,5 +504,4 @@ class TestNameGeneration:
             [("IN_PROCESS", "in_process"), ("RAY_LOCAL", "local")],
         )
         def test_generate_name(runtime_name, expected_name):
-
             assert _config.generate_config_name(runtime_name, "") == expected_name

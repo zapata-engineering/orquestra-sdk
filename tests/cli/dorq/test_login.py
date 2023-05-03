@@ -1,3 +1,7 @@
+################################################################################
+# © Copyright 2023 Zapata Computing Inc.
+################################################################################
+
 import asyncio
 from unittest.mock import Mock, PropertyMock, create_autospec
 

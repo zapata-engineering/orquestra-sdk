@@ -4,7 +4,6 @@
 """Pytest's requirement to share fixtures across test files.
 """
 import json
-from unittest.mock import Mock
 
 import pytest
 

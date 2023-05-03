@@ -24,7 +24,7 @@ def mocked_responses():
 class TestClient:
     @pytest.fixture
     def base_uri(self):
-        return "https://shouldnt.matter.example.com"
+        return "https://should.not.matter.example.com"
 
     @pytest.fixture
     def token(self):

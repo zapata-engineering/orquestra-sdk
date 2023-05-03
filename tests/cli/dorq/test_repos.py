@@ -1190,7 +1190,6 @@ class TestConfigRepo:
 
         @pytest.mark.parametrize("ce", [True, False])
         def test_store_token(self, monkeypatch, ce):
-
             repo = _repos.ConfigRepo()
             uri = "funny_uri"
             token = "even_funnier_token"
