@@ -402,6 +402,8 @@ def make_ray_dag(
             "metadata": None,
             "runtime_env": None,
             "catch_exceptions": True,
+            # Set to avoid retrying when the worker crashes.
+            # See the comment with the invocation's options for more details.
             "max_retries": 0,
         },
         ray_args=pos_args,
