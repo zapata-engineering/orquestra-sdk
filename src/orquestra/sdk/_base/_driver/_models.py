@@ -317,3 +317,37 @@ class GetTaskRunLogsRequest(pydantic.BaseModel):
     """
 
     taskRunId: TaskRunID
+
+
+class CommonResourceMeta(pydantic.BaseModel):
+    type: str
+    displayName: str
+    description: str
+    owner: str
+    createdBy: str
+    createdAt: str
+    lastAccessed: str
+    lastUpdated: str
+    tags: List[str]
+    status: str
+
+
+class ResourceIdentifier(pydantic.BaseModel):
+    tenantId: str
+    resourceGroupId: str
+    id: str
+
+
+class WorkspaceDetail(CommonResourceMeta, ResourceIdentifier):
+    logo: str
+    namespace: str
+
+
+class ProjectDetail(CommonResourceMeta, ResourceIdentifier):
+    logo: str
+    image: str
+    profileName: str
+
+
+ListWorkspacesResponse = List[WorkspaceDetail]
+ListProjectResponse = List[ProjectDetail]

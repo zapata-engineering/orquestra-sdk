@@ -15,12 +15,12 @@ from abc import ABC, abstractmethod
 from datetime import timedelta
 from pathlib import Path
 
+from orquestra.sdk._base._spaces._structs import Project, ProjectRef, Workspace
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
-    ProjectRef,
     State,
     WorkflowRun,
     WorkflowRunId,
@@ -165,7 +165,7 @@ class RuntimeInterface(ABC):
         Args:
             limit: Restrict the number of runs to return, prioritising the most recent.
             max_age: Only return runs younger than the specified maximum age.
-            status: Only return runs of runs with the specified status.
+            state: Only return runs of runs with the specified status.
         Returns:
                 A list of the workflow runs
         """
@@ -184,6 +184,18 @@ class RuntimeInterface(ABC):
     ) -> t.Dict[TaskInvocationId, t.List[str]]:
         """
         See LogReader.get_task_logs()
+        """
+        raise NotImplementedError()
+
+    def list_workspaces(self) -> t.Sequence[Workspace]:
+        """
+        List workspaces available to a user. Works only on CE
+        """
+        raise NotImplementedError()
+
+    def list_projects(self, workspace_id: str) -> t.Sequence[Project]:
+        """
+        List workspaces available to a user. Works only on CE
         """
         raise NotImplementedError()
 

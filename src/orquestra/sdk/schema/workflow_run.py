@@ -66,8 +66,3 @@ class WorkflowRun(WorkflowRunMinimal):
 
     task_runs: t.List[TaskRun]
     status: RunStatus
-
-
-class ProjectRef(BaseModel):
-    workspace_id: WorkspaceId
-    project_id: ProjectId

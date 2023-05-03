@@ -17,9 +17,10 @@ from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import serde
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
+from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing._example_wfs import wf_with_secrets
 from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.workflow_run import ProjectRef, State, WorkflowRunId
+from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
 from orquestra.sdk.secrets import _client, _models
 
 from .data.complex_serialization.workflow_defs import (
