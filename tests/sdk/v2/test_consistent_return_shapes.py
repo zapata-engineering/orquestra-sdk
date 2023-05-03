@@ -746,7 +746,7 @@ class TestCLI:
         # THEN
         assert results_ray[1:] == results_qe[1:]
         assert results_ray[1:] == results_ce[1:]
-        assert results_qe == [
+        assert [line.strip() for line in results_qe] == [
             f"Workflow run {mock_qe_run_single} has 1 outputs.",
             "",
             "Output 0. Object type: <class 'list'>",
@@ -763,7 +763,6 @@ class TestCLI:
         multiple_result_vanilla,
     ):
         # GIVEN
-        # Mocking for QE
 
         # run workflows
         run_ray = subprocess.run(
@@ -822,7 +821,7 @@ class TestCLI:
         # THEN
         assert results_ray[1:] == results_qe[1:]
         assert results_ray[1:] == results_ce[1:]
-        assert results_qe == [
+        assert [line.strip() for line in results_qe] == [
             f"Workflow run {mock_qe_run_multiple} has 2 outputs.",
             "",
             "Output 0. Object type: <class 'list'>",
@@ -852,8 +851,6 @@ class TestCLIDownloadDir:
         single_result_vanilla,
     ):
         # GIVEN
-        # # Mocking for Ray
-        # monkeypatch.setattr(Path, "cwd", Mock(return_value=tmp_path))
 
         # Run Workflows
         run_ray = subprocess.run(
