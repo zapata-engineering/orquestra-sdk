@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - '*'
-    branches:
-      - 'main'
   workflow_dispatch:
     inputs:
       sdk_version:
@@ -32,7 +30,7 @@ jobs:
                   "docker_context_path": "'"$docker_context_path"'",
                   "target_docker_repository": "'"$target_docker_repository"'",
                   "github_sha": "'"$github_sha"'",
-                  "build_number": "",
+                  "'"$build_number"'",
                   "additional_docker_build_properties": {
                     "additional_image_tags": "'"$additional_image_tags"'",
                     "image_tag_flavor": "'"$image_tag_flavor"'",
@@ -72,6 +70,6 @@ jobs:
           # as on the command line `--build-arg`, one to a line:
           # docker_build_args: BUILD_ARG_ONE=value1\nBUILD_ARG_TWO=value2
           # DUE TO JSON LIMITATIONS, NEWLINES MUST BE EXPLICITLY ADDED AS \n
-          docker_build_args: SDK_VERSION=${{ inputs.sdk_version }}
+          docker_build_args: SDK_VERSION=${{ github.ref_type == 'tag' && github.ref_name || inputs.sdk_version }}
           # leave blank for linux/amd64 (recommended)
           target_platforms: ''
