@@ -15,6 +15,7 @@
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
+* Tasks will no longer be retried on Ray and Compute Engine when the process crashes, preventing duplicated MLflow errors.
 
 💅 *Improvements*
 
