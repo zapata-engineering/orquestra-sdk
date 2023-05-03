@@ -6,6 +6,7 @@
 * Removed deprecated "name" parameter for RuntimeConfig factory methods, like qe() or ray()
 * Removed deprecated save() method from RuntimeConfig class
 * Removed is_saved() method and "name" setter from RuntimeConfig class
+* WorkflowRun.get_results() returns values consistent with vanilla python - single results are returned as-as, multiple results are returned as a tuple.
 
 🔥 *Features*
 * New API functions: list_workspaces() and list_projects(). Usable only on CE runtime

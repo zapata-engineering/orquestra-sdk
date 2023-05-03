@@ -355,7 +355,7 @@ class WorkflowRun:
                 state,
             )
         try:
-            return (
+            results = (
                 *(
                     serde.deserialize(o)
                     for o in self._runtime.get_workflow_run_outputs_non_blocking(run_id)
@@ -363,6 +363,12 @@ class WorkflowRun:
             )
         except WorkflowRunNotSucceeded:
             raise
+
+        # If we only get one result back, return it directly rather than as a sequence
+        if len(results) == 1:
+            return results[0]
+
+        return results
 
     def get_artifacts(self) -> t.Mapping[ir.TaskInvocationId, t.Any]:
         """
