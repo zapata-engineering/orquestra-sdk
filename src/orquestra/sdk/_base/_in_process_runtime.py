@@ -9,15 +9,9 @@ from orquestra.sdk import ProjectRef, exceptions
 from orquestra.sdk._base import abc
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.responses import WorkflowResult
-from orquestra.sdk.schema.workflow_run import (
-    RunStatus,
-    State,
-    TaskRun,
-    WorkflowRun,
-)
+from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun, WorkflowRun
 
 from .. import secrets
-from ..exceptions import WorkflowRunNotFoundError
 from . import serde
 from ._graphs import iter_invocations_topologically
 from .dispatch import locate_fn_ref
