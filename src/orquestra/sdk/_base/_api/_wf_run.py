@@ -471,18 +471,20 @@ def list_workflow_runs(
     max_age: t.Optional[str] = None,
     state: t.Optional[t.Union[State, t.List[State]]] = None,
     project_dir: t.Optional[t.Union[Path, str]] = None,
+    project: t.Optional[ProjectRef] = None,
 ) -> t.List[WorkflowRun]:
     """Get the WorkflowRun corresponding to a previous workflow run.
 
     Args:
         config: The name of the configuration to use.
         limit: Restrict the number of runs to return, prioritising the most recent.
-        prefix: Only return runs that start with the specified string.
         max_age: Only return runs younger than the specified maximum age.
         state: Only return runs of runs with the specified status.
         project_dir: The location of the project directory. This directory must
             contain the workflows database to which this run was saved. If omitted,
             the current working directory is assumed to be the project directory.
+        project: will be used to list workflows from specific workspace and project
+        when using CE. Currently unused
 
     Raises:
         ConfigNameNotFoundError: when the named config is not found in the file.

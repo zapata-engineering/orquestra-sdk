@@ -52,6 +52,8 @@ class Action:
         limit: t.Optional[int],
         max_age: t.Optional[str],
         state: t.Optional[t.List[str]],
+        workspace_id: t.Optional[str],
+        project_id: t.Optional[str],
         interactive: t.Optional[bool] = False,
     ):
         try:
@@ -71,6 +73,8 @@ class Action:
         limit: t.Optional[int],
         max_age: t.Optional[str],
         state: t.Optional[t.List[str]],
+        workspace_id: t.Optional[str],
+        project_id: t.Optional[str],
         interactive: t.Optional[bool] = False,
     ):
         # Resolve Arguments

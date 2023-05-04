@@ -236,12 +236,16 @@ def stop(wf_run_id: t.Optional[str], config: t.Optional[str]):
     multiple=True,
     help="State of workflow runs to display. Max be specified multiple times.",
 )
+@WORKSPACE_OPTION
+@PROJECT_OPTION
 def list(
     config: t.Optional[str],
     interactive: t.Optional[bool] = False,
     limit: t.Optional[int] = None,
     max_age: t.Optional[str] = None,
     state: t.Optional[t.List[str]] = None,
+    workspace_id: t.Optional[str] = None,
+    project_id: t.Optional[str] = None,
 ):
     """
     Lists the available workflows
@@ -250,7 +254,9 @@ def list(
     from ._workflow._list import Action
 
     action = Action()
-    action.on_cmd_call(config, limit, max_age, state, interactive)
+    action.on_cmd_call(
+        config, limit, max_age, state, interactive, workspace_id, project_id
+    )
 
 
 # ----------- 'orq task' commands ----------

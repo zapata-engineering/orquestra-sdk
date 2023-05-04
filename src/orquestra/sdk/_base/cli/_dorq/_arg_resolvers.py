@@ -14,10 +14,12 @@ from orquestra.sdk._base._config import IN_PROCESS_CONFIG_NAME
 from orquestra.sdk.schema.configs import ConfigName
 from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import (
+    ProjectId,
     State,
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
+    WorkspaceId,
 )
 
 from . import _repos
@@ -109,6 +111,43 @@ class WFConfigResolver:
 
         # 1.2. Prompt the user
         return ConfigResolver(self._config_repo, self._prompter).resolve(config)
+
+
+class SpacesResolver:
+    def __init__(
+        self,
+        spaces=_repos.SpacesRepo(),
+        prompter=_prompts.Prompter(),
+        presenter=_presenters.PromptPresenter(),
+    ):
+        self._spaces_repo = spaces
+        self._prompter = prompter
+        self._presenter = presenter
+
+    def resolve_workspace_id(
+        self, workspace_id: t.Optional[WorkspaceId], config: ConfigName
+    ):
+        if workspace_id is not None:
+            return workspace_id
+
+        workspaces = self._spaces_repo.list_workspaces(config)
+        selected_id = self._prompter.choice(workspaces, message="Workspace ID")
+
+        return selected_id
+
+    def resolve_project_id(
+        self,
+        project_id: t.Optional[ProjectId],
+        workspace_id: WorkspaceId,
+        config: ConfigName,
+    ):
+        if project_id is not None:
+            return project_id
+
+        workspaces = self._spaces_repo.list_projects(config, workspace_id)
+        selected_id = self._prompter.choice(workspaces, message="Project ID")
+
+        return selected_id
 
 
 class WFRunResolver:

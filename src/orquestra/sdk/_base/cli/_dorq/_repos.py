@@ -508,6 +508,21 @@ class ConfigRepo:
         return config_name
 
 
+class SpacesRepo:
+    """
+    Wraps access to workspaces and projects
+    """
+
+    def list_workspaces(
+        self,
+        config: ConfigName,
+    ):
+        return sdk.list_workspaces(config)
+
+    def list_projects(self, config: ConfigName, workspace_id):
+        return sdk.list_projects(config, workspace_id)
+
+
 class RuntimeRepo:
     """
     Wraps access to QE/CE clients
