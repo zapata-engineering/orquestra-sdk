@@ -1,0 +1,15 @@
+# Ignore everything. We install the image contents separately from the repo the
+# Dockerfile is contained in. This lets us use a single Dockerfile with
+# different versions of Orquestra Workflow SDK.
+*
+
+# Allow files and directories
+!/Dockerfile
+!/cuda.Dockerfile
+
+# Ignore unnecessary files inside allowed directories
+# This should go after the allowed directories
+**/*~
+**/*.log
+**/.DS_Store
+**/Thumbs.db
