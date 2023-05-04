@@ -35,8 +35,6 @@ else:
     Storage = ray.workflow.storage.Storage
     RuntimeEnv = ray.runtime_env.RuntimeEnv
     FunctionNode = ray.dag.FunctionNode
-    SessionLatest = ray._private.node.SESSION_LATEST
-    TempDir = ray._private.utils.get_ray_temp_dir()
     LogPrefixActorName = ray._private.ray_constants.LOG_PREFIX_ACTOR_NAME
     LogPrefixTaskName = ray._private.ray_constants.LOG_PREFIX_TASK_NAME
 
