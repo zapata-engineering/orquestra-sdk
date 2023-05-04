@@ -21,6 +21,7 @@
 * In the CLI, where the user would be prompted with a choice but only one option is available, we now prompt for confirmation instead.
 
 🥷 *Internal*
+* Allow using Ray 2.4.0.
 
 📃 *Docs*
 
