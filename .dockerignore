@@ -1,4 +1,6 @@
-# Ignore everything
+# Ignore everything. We install the image contents separately from the repo the
+# Dockerfile is contained in. This lets us use a single Dockerfile with
+# different versions of Orquestra Workflow SDK.
 *
 
 # Allow files and directories
