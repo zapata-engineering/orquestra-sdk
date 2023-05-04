@@ -19,6 +19,3 @@ ENV RAY_STORAGE=/tmp
 # This environment variable configures the Ray runtime to download Git imports.
 # Without this set, Git imports are ignored
 ENV ORQ_RAY_DOWNLOAD_GIT_IMPORTS=1
-# This environment variable configures the Ray runtime to apply task resources to Ray functions
-# Without this set, task resources are ignored and not taken into account when scheduling.
-ENV ORQ_RAY_SET_TASK_RESOURCES=1
