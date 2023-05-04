@@ -47,7 +47,7 @@ jobs:
           USER_TOKEN: ${{ secrets.PAGES_TOKEN }}
           repository: ${{github.repository}}
           ref: ${{ github.ref }}
-          path_to_dockerfile: './Dockerfile'
+          path_to_dockerfile: 'docker/Dockerfile'
           docker_context_path: 'docker'
           target_docker_repository: 'hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base'
           github_sha: ${{ github.sha }}
