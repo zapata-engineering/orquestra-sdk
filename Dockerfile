@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:1.5
+# Base image for running Orquestra tasks with custom environment.
 FROM python:3.9-slim-bullseye
 ARG SDK_VERSION
 
