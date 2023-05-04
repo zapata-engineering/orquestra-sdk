@@ -2,7 +2,7 @@
 # Base image for running Orquestra tasks that require a GPU.
 # Mounted gpu has cuda v11.5
 FROM nvcr.io/nvidia/cuquantum-appliance:22.03-cirq
-ARG SDK_VERSION
+ARG SDK_REQUIREMENT
 
 WORKDIR /app
 
@@ -46,7 +46,7 @@ cd qsim
 make clean
 make
 python -m pip install .
-python -m pip install orquestra-sdk[ray]==${SDK_VERSION}
+python -m pip install "${SDK_REQUIREMENT}"
 EOF
 
 RUN useradd -ms /bin/bash -d /home/orquestra orquestra --uid 1000 --gid 100

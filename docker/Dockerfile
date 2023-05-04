@@ -1,14 +1,14 @@
 # syntax=docker/dockerfile:1.5
 # Base image for running Orquestra tasks.
 FROM python:3.9-slim-bullseye
-ARG SDK_VERSION
+ARG SDK_REQUIREMENT
 
 RUN <<EOF
 apt update --yes
 apt upgrade --yes
 apt install --yes --no-install-recommends git
 python -m pip install -U pip wheel
-python -m pip install orquestra-sdk[ray]==${SDK_VERSION}
+python -m pip install "${SDK_REQUIREMENT}"
 EOF
 
 RUN useradd -ms /bin/bash -d /home/orquestra orquestra --uid 1000 --gid 100

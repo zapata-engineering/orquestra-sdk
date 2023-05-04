@@ -1,14 +1,16 @@
 name: Publish orquestra-sdk-base Docker Image with CUDA support
 
 on:
-  push:
-    tags:
-      - '*'
   workflow_dispatch:
     inputs:
-      sdk_version:
+      sdk_requirement:
         type: string
-        description: Orquestra SDK version to build the image with
+        description: |
+          Orquestra SDK requirement to build the image with. 
+          Example of using a published version of the SDK:
+          orquestra-sdk[ray]==0.47.0 
+          Example of using an unpublished version:
+          orquestra-sdk[ray] @ git+https://github.com/zapatacomputing/orquestra-workflow-sdk.git@v0.47.0
 jobs:
   trigger-build-and-push:
     runs-on: ubuntu-20.04
@@ -71,6 +73,6 @@ jobs:
           # as on the command line `--build-arg`, one to a line:
           # docker_build_args: BUILD_ARG_ONE=value1\nBUILD_ARG_TWO=value2
           # DUE TO JSON LIMITATIONS, NEWLINES MUST BE EXPLICITLY ADDED AS \n
-          docker_build_args: SDK_VERSION=${{ github.ref_type == 'tag' && github.ref_name || inputs.sdk_version }}
+          docker_build_args: SDK_REQUIREMENT=${{ inputs.sdk_requirement }}
           # leave blank for linux/amd64 (recommended)
           target_platforms: ''
