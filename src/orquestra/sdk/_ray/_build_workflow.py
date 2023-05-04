@@ -148,7 +148,7 @@ def _make_ray_dag_node(
     kwargs_artifact_nodes: t.Mapping,
     n_outputs: t.Optional[int],
     project_dir: t.Optional[Path],
-    user_fn_ref: t.Optional[ir.FunctionRef] = None,
+    user_fn_ref: t.Optional[ir.FunctionRef],
 ) -> _client.FunctionNode:
     """
     Prepares a Ray task that fits a single ir.TaskInvocation. The result is a
@@ -310,6 +310,16 @@ def _gather_kwargs(kwargs, workflow_def, ray_futures):
     return ray_kwargs, ray_kwargs_artifact_nodes
 
 
+def _ray_resources_for_custom_image(
+    image_name: t.Optional[str],
+) -> t.Mapping[str, float]:
+    if image_name is not None:
+        # TODO: link the ADR where the Ray resource name syntax is specified.
+        return {f"image:{image_name}": 1}
+    else:
+        return {}
+
+
 def make_ray_dag(
     client: RayClient,
     workflow_def: ir.WorkflowDef,
@@ -339,6 +349,8 @@ def make_ray_dag(
 
         pip = _import_pip_env(invocation, workflow_def)
 
+        custom_image = invocation.custom_image or user_task.custom_image
+
         ray_options = {
             # We're using task invocation ID as the Ray "task ID" instead of task run ID
             # because it's easier to query this way. Use the "user_metadata" to get both
@@ -355,6 +367,9 @@ def make_ray_dag(
             # Normal Python exceptions are NOT retried.
             # So, we turn max_retries down to 0.
             "max_retries": 0,
+            "resources": {
+                **_ray_resources_for_custom_image(custom_image),
+            },
         }
 
         # Task resources
@@ -412,6 +427,7 @@ def make_ray_dag(
         kwargs_artifact_nodes={},
         n_outputs=len(pos_args),
         project_dir=None,
+        user_fn_ref=None,
     )
 
     # Data aggregation step is run with catch_exceptions=True - so it returns tuple of

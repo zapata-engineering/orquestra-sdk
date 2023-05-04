@@ -91,6 +91,7 @@ else:
             runtime_env: t.Optional[RuntimeEnv],
             catch_exceptions: t.Optional[bool],
             max_retries: int,
+            resources: t.Optional[t.Mapping[str, float]],
             num_cpus: t.Optional[t.Union[int, float]] = None,
             num_gpus: t.Optional[t.Union[int, float]] = None,
             memory: t.Optional[t.Union[int, float]] = None,
@@ -102,18 +103,22 @@ else:
                 "metadata": metadata,
                 "catch_exceptions": catch_exceptions,
             }
-            ray_optional_opts = {}
+
+            ray_optional_kwargs = {}
             if num_cpus is not None:
-                ray_optional_opts["num_cpus"] = num_cpus
+                ray_optional_kwargs["num_cpus"] = num_cpus
             if num_gpus is not None:
-                ray_optional_opts["num_gpus"] = num_gpus
+                ray_optional_kwargs["num_gpus"] = num_gpus
             if memory is not None:
-                ray_optional_opts["memory"] = memory
+                ray_optional_kwargs["memory"] = memory
+            if resources is not None:
+                ray_optional_kwargs["resources"] = resources
+
             return ray_remote_fn.options(
                 **ray.workflow.options(**workflow_opts),
                 runtime_env=runtime_env,
                 max_retries=max_retries,
-                **ray_optional_opts,
+                **ray_optional_kwargs,
             )
 
         # ----- Ray Workflow -----
