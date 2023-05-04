@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:1.5
+# Base image for running Orquestra tasks that require a GPU.
 # Mounted gpu has cuda v11.5
 FROM nvcr.io/nvidia/cuquantum-appliance:22.03-cirq
 ARG SDK_VERSION
