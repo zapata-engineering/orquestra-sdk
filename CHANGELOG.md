@@ -18,6 +18,7 @@
 * Tasks will no longer be retried on Ray and Compute Engine when the process crashes, preventing duplicated MLflow errors.
 
 💅 *Improvements*
+* In the CLI, where the user would be prompted with a choice but only one option is available, we now prompt for confirmation instead.
 
 🥷 *Internal*
 
