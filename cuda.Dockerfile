@@ -44,7 +44,7 @@ git clone https://github.com/quantumlib/qsim.git
 cd qsim
 make clean
 make
-python -m pip install -e .
+python -m pip install .
 python -m pip install orquestra-sdk[ray]==${SDK_VERSION}
 EOF
 
