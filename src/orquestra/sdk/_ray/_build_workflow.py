@@ -1,3 +1,9 @@
+################################################################################
+# © Copyright 2023 Zapata Computing Inc.
+################################################################################
+"""
+Translates IR workflow def into a Ray workflow.
+"""
 import os
 import traceback
 import typing as t
