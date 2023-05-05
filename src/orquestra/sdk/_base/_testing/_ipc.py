@@ -1,7 +1,7 @@
-import socket
 import select
-import typing as t
+import socket
 import time
+import typing as t
 
 TRIGGER_MSG = "t".encode()
 

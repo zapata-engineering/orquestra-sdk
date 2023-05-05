@@ -8,6 +8,7 @@ from typing import Optional, Sequence
 import orquestra.sdk as sdk
 import orquestra.sdk._base._testing._ipc as ipc
 
+
 @sdk.task
 def make_greeting(name, company_name):
     return f"yooooo {name} from {company_name}"
