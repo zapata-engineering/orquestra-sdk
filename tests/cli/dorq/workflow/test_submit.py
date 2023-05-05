@@ -5,12 +5,14 @@
 Unit tests for 'orq wf submit' glue code.
 """
 import warnings
-from unittest.mock import Mock
+from unittest.mock import create_autospec, Mock
 
 import pytest
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base.cli._dorq._workflow import _submit
+from orquestra.sdk._base.cli._dorq._ui import _presenters, _prompts
+from orquestra.sdk._base.cli._dorq import _repos
 
 
 def _assert_called_with_type(mock: Mock, *args_types, **kwargs_types):
@@ -47,15 +49,15 @@ class TestAction:
             workspace = "ws"
             project = "project'"
 
-            prompter = Mock()
-            presenter = Mock()
+            prompter = create_autospec(_prompts.Prompter)
+            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
 
             wf_run_id = "wf.test"
-            wf_run_repo = Mock()
+            wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
             # submit() doesn't raise = no effect of the "--force" flag
             wf_run_repo.submit.return_value = wf_run_id
 
-            wf_def_repo = Mock()
+            wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
             wf_def_repo.get_module_from_spec.return_value = module
             wf_def_sentinel = "<wf def sentinel>"
             wf_def_repo.get_workflow_def.return_value = wf_def_sentinel
@@ -103,17 +105,17 @@ class TestAction:
             wf_names = ["my_wf1", "my_wf2"]
             selected_name = wf_names[1]
 
-            prompter = Mock()
+            prompter = create_autospec(_prompts.Prompter)
             prompter.choice.return_value = selected_name
 
-            presenter = Mock()
+            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
 
             wf_run_id = "wf.test"
-            wf_run_repo = Mock()
+            wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
             # submit() doesn't raise = no effect of the "--force" flag
             wf_run_repo.submit.return_value = wf_run_id
 
-            wf_def_repo = Mock()
+            wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
             wf_def_repo.get_module_from_spec.return_value = module
             wf_def_repo.get_worklow_names.return_value = wf_names
 
@@ -162,16 +164,17 @@ class TestAction:
 
             wf_names = ["my_wf1"]
 
-            prompter = Mock()
+            prompter = create_autospec(_prompts.Prompter)
 
-            presenter = Mock()
+            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
+            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
 
             wf_run_id = "wf.test"
-            wf_run_repo = Mock()
+            wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
             # submit() doesn't raise = no effect of the "--force" flag
             wf_run_repo.submit.return_value = wf_run_id
 
-            wf_def_repo = Mock()
+            wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
             wf_def_repo.get_module_from_spec.return_value = module
             wf_def_repo.get_worklow_names.return_value = wf_names
 
@@ -218,10 +221,11 @@ class TestAction:
             workspace = "workspace"
             project = "project"
 
-            prompter = Mock()
-            presenter = Mock()
-            wf_run_repo = Mock()
-            wf_def_repo = Mock()
+            prompter = create_autospec(_prompts.Prompter)
+            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
+            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
+            wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
+            wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
             wf_def_repo.get_worklow_names.side_effect = (
                 exceptions.NoWorkflowDefinitionsFound(module_name=module)
             )
@@ -260,12 +264,12 @@ class TestAction:
             workspace = "workspace"
             project = "project"
 
-            prompter = Mock()
-            presenter = Mock()
-            wf_run_repo = Mock()
+            prompter = create_autospec(_prompts.Prompter)
+            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
+            wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
 
             sys_path = [module, "foo", "bar"]
-            wf_def_repo = Mock()
+            wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
             wf_def_repo.get_module_from_spec.side_effect = (
                 exceptions.WorkflowDefinitionModuleNotFound(
                     module_name=module, sys_path=sys_path
@@ -314,14 +318,14 @@ class TestAction:
 
             force = False
 
-            prompter = Mock()
+            prompter = create_autospec(_prompts.Prompter)
             # Simulate a user saying "yes"
             prompter.confirm.return_value = True
 
-            presenter = Mock()
+            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
 
             wf_run_id = "wf.test"
-            wf_run_repo = Mock()
+            wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
 
             def _fake_submit_method(*args, ignore_dirty_repo, **kwargs):
                 if ignore_dirty_repo:
@@ -332,9 +336,9 @@ class TestAction:
                 else:
                     raise exceptions.DirtyGitRepo()
 
-            wf_run_repo.submit = _fake_submit_method
+            wf_run_repo.submit.side_effect = _fake_submit_method
 
-            wf_def_repo = Mock()
+            wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
             wf_def_repo.get_module_from_spec.return_value = module
             wf_def_sentinel = "<wf def sentinel>"
             wf_def_repo.get_workflow_def.return_value = wf_def_sentinel
@@ -371,11 +375,11 @@ class TestAction:
             project = "project"
             force = True
 
-            prompter = Mock()
-            presenter = Mock()
+            prompter = create_autospec(_prompts.Prompter)
+            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
 
             wf_run_id = "wf.test"
-            wf_run_repo = Mock()
+            wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
 
             def _fake_submit_method(*args, ignore_dirty_repo, **kwargs):
                 if ignore_dirty_repo:
@@ -386,9 +390,9 @@ class TestAction:
                 else:
                     raise exceptions.DirtyGitRepo()
 
-            wf_run_repo.submit = _fake_submit_method
+            wf_run_repo.submit.side_effect = _fake_submit_method
 
-            wf_def_repo = Mock()
+            wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
             wf_def_repo.get_module_from_spec.return_value = module
             wf_def_sentinel = "<wf def sentinel>"
             wf_def_repo.get_workflow_def.return_value = wf_def_sentinel
