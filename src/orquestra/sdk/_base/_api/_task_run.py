@@ -2,6 +2,9 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 
+import inspect
+import json
+import os
 import typing as t
 from collections import namedtuple
 from itertools import chain
@@ -257,3 +260,93 @@ class TaskRun:
         ]
 
         return set(parents)
+
+
+def _is_argo_backend():
+    """
+    Quantum Engine backend test.
+
+    Argo Workflows are executed in pods, where ARGO_NODE_ID corresponds
+    to the workflow step ID.
+    """
+    return "ARGO_NODE_ID" in os.environ
+
+
+def _is_ray_backend():
+    """
+    Ray backend test.
+
+    Checks the call stack for `_ray_remote`.
+    """
+    return "function='_ray_remote'" in str(inspect.stack())
+
+
+def _get_argo_backend_ids() -> t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunId]:
+    """
+    Get the workflow run, task invocation, and task run IDs from Argo.
+    """
+    node_id = os.environ["ARGO_NODE_ID"]
+    # Argo Workflow ID is the left part of the step ID
+    # [wf-id]-[retry-number]-[step-number]
+    wf_run_id = "-".join(node_id.split("-")[:-2])
+    task_run_id = node_id
+
+    argo_template = json.loads(os.environ["ARGO_TEMPLATE"])
+    # Looks like the template name on Argo matches our task invocation ID. Not sure how
+    # good this assumption is.
+    task_inv_id = argo_template["name"]
+
+    return wf_run_id, task_inv_id, task_run_id
+
+
+def _get_ray_backend_ids() -> t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunId]:
+    """
+    Get the workflow run, task invocation, and task run IDs from Ray.
+
+    Raises:
+        ModuleNotFoundError: when Ray isn't installed.
+    """
+    # Deferred import because Ray isn't installed when running on QE.
+    import orquestra.sdk._ray._dag
+
+    return orquestra.sdk._ray._dag.get_current_ids()
+
+
+def _get_in_process_backend_ids() -> (
+    t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunId]
+):
+    """
+    Get the workflow run, task invocation, and task run IDs from the In-process runtime.
+    """
+
+    from orquestra.sdk._base._in_process_runtime import IDS
+
+    assert IDS is not None, (
+        "IDS global was imported with value None. "
+        "This is likely due to the backend architecture being misidentified. "
+        "Please report this as a bug!"
+    )
+    return IDS
+
+
+def get_backend_ids() -> t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunId]:
+    """
+    _summary_
+
+    Returns:
+        _description_
+    """
+
+    if _is_argo_backend():
+        # Workflow is running in the Orquestra QE environment
+        assert (
+            not _is_ray_backend()
+        ), "Mismatch in backend detection. Please report this as a bug."
+        return _get_argo_backend_ids()
+    elif _is_ray_backend():
+        # Workflow is running on Ray
+        return _get_ray_backend_ids()
+    else:
+        # We assume that if we're not running on Argo or Ray, we must be running on the
+        # in-process runtime.
+        return _get_in_process_backend_ids()
