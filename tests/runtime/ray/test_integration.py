@@ -322,6 +322,7 @@ class TestRayRuntimeMethods:
                 JSONResult(value='"yooooo emiliano from zapata computing"'),
             )
 
+        @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_failed_workflow(self, runtime: _dag.RayRuntime):
             wf_def = _example_wfs.exception_wf_with_multiple_values().model
             run_id = runtime.create_workflow_run(wf_def, None)
