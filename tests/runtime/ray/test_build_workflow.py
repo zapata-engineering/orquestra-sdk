@@ -163,6 +163,7 @@ class TestResourcesInMakeDag:
             runtime_env=ANY,
             catch_exceptions=ANY,
             max_retries=ANY,
+            resources=ANY,
             **expected
         )
         for kwarg_name, type_ in types.items():

@@ -316,14 +316,13 @@ def _gather_kwargs(kwargs, workflow_def, ray_futures):
     return ray_kwargs, ray_kwargs_artifact_nodes
 
 
-def _ray_resources_for_custom_image(
-    image_name: t.Optional[str],
-) -> t.Mapping[str, float]:
-    if image_name is not None:
-        # TODO: link the ADR where the Ray resource name syntax is specified.
-        return {f"image:{image_name}": 1}
-    else:
-        return {}
+def _ray_resources_for_custom_image(image_name: str) -> t.Mapping[str, float]:
+    """
+    Custom Ray resources we set to power running Orquestra tasks on custom Docker
+    images. The values are coupled with Compute Engine server-side set up.
+    """
+    # TODO: link the ADR where the Ray resource name syntax is specified.
+    return {f"image:{image_name}": 1}
 
 
 def make_ray_dag(
@@ -355,8 +354,6 @@ def make_ray_dag(
 
         pip = _import_pip_env(invocation, workflow_def)
 
-        custom_image = invocation.custom_image or user_task.custom_image
-
         ray_options = {
             # We're using task invocation ID as the Ray "task ID" instead of task run ID
             # because it's easier to query this way. Use the "user_metadata" to get both
@@ -373,12 +370,18 @@ def make_ray_dag(
             # Normal Python exceptions are NOT retried.
             # So, we turn max_retries down to 0.
             "max_retries": 0,
-            "resources": {
-                **_ray_resources_for_custom_image(custom_image),
-            },
+            # Custom "Ray resources" request. The entries need to correspond to the ones
+            # used when starting the Ray cluster. See also:
+            # https://docs.ray.io/en/latest/ray-core/scheduling/resources.html#custom-resources
+            "resources": (
+                _ray_resources_for_custom_image(custom_image)
+                if (custom_image := invocation.custom_image or user_task.custom_image)
+                is not None
+                else None
+            ),
         }
 
-        # Task resources
+        # Non-custom task resources
         if invocation.resources is not None:
             if invocation.resources.cpu is not None:
                 cpu = parse_quantity(invocation.resources.cpu)
@@ -426,6 +429,9 @@ def make_ray_dag(
             # Set to avoid retrying when the worker crashes.
             # See the comment with the invocation's options for more details.
             "max_retries": 0,
+            # Custom "Ray resources" request. We don't need any for the aggregation
+            # step.
+            "resources": None,
         },
         ray_args=pos_args,
         ray_kwargs={},
