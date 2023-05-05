@@ -32,6 +32,8 @@ class TriggerServer:
         client_socket.send(self._trigger_msg)
 
     def close(self):
+        assert self._socket is not None
+
         self._socket.close()
 
 
