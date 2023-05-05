@@ -5,14 +5,14 @@
 Unit tests for 'orq wf submit' glue code.
 """
 import warnings
-from unittest.mock import create_autospec, Mock
+from unittest.mock import Mock, create_autospec
 
 import pytest
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._base.cli._dorq._workflow import _submit
-from orquestra.sdk._base.cli._dorq._ui import _presenters, _prompts
 from orquestra.sdk._base.cli._dorq import _repos
+from orquestra.sdk._base.cli._dorq._ui import _presenters, _prompts
+from orquestra.sdk._base.cli._dorq._workflow import _submit
 
 
 def _assert_called_with_type(mock: Mock, *args_types, **kwargs_types):
