@@ -291,6 +291,7 @@ class TestRayRuntimeMethods:
             wf_run = runtime.get_workflow_run_status(wf_run_id)
             assert wf_run.status.state == State.TERMINATED
 
+        @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_on_finished_workflow(self, runtime: _dag.RayRuntime, tmp_path):
             wf = _example_wfs.multioutput_task_wf.model
             wf_run_id = runtime.create_workflow_run(wf, None)
