@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Optional, Sequence
 
 import orquestra.sdk as sdk
-
+import orquestra.sdk._base._testing._ipc as ipc
 
 @sdk.task
 def make_greeting(name, company_name):
@@ -183,36 +183,29 @@ def serial_wf_with_slow_middle_task():
 
 
 @sdk.task
-def add_with_trigger(a, b, path: Path, timeout: float):
+def add_with_trigger(a, b, port, timeout: float):
     """
-    Simulates a task that takes some time to run. Waits until a file exists
-    under `path` or for `timeout` seconds.
+    Simulates a task that takes some time to run. Waits until a message
+    in given socket appears
     """
-    start_time = time.time()
-    while not path.exists():
-        ts = time.time()
-        if ts - start_time > timeout:
-            raise TimeoutError()
-
-        time.sleep(0.01)
+    ipc.TriggerClient(port).wait_on_trigger(timeout)
 
     return a + b
 
 
 @sdk.workflow
-def serial_wf_with_file_triggers(trigger_paths: Sequence[Path], task_timeout: float):
+def serial_wf_with_file_triggers(ports: Sequence[int], task_timeout: float):
     """
     Allows reproducing scenario where tasks take some time to run. Uses
-    FS-based process coordination.
+    socket-based coordination.
 
-    There are as many workflow graph nodes as there are `trigger_paths`. Each
-    task in the series waits for file to be present at a corresponding path.
+    There are as many workflow graph nodes as there are `ports`. Each
+    task in the series waits for message to be present at a corresponding port.
     """
-    first_future = add_with_trigger(21, 37, trigger_paths[0], timeout=task_timeout)
+    first_future = add_with_trigger(21, 37, ports[0], timeout=task_timeout)
     future = first_future
-    for trigger_path in trigger_paths[1:]:
-        # Like a 'reduce(); over 'trigger_output_paths'
-        future = add_with_trigger(future, future, trigger_path, timeout=task_timeout)
+    for port in ports[1:]:
+        future = add_with_trigger(future, future, port, timeout=task_timeout)
 
     return [future]
 
