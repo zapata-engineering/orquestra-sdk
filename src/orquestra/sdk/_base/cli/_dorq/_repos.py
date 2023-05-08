@@ -63,7 +63,7 @@ class WorkflowRunRepo:
     def list_wf_runs(
         self,
         config: ConfigName,
-        project: ProjectRef,
+        project: t.Optional[ProjectRef],
         limit: t.Optional[int] = None,
         max_age: t.Optional[str] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,

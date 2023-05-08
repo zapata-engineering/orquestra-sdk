@@ -176,16 +176,19 @@ class WFRunResolver:
         if wf_run_id is not None:
             return wf_run_id
 
-        resolved_workspace_id = self._spaces_resolver.resolve_workspace_id(config)
-        resolved_project_id = self._spaces_resolver.resolve_project_id(
-            config, workspace_id=resolved_workspace_id
-        )
-        wfs = self._wf_run_repo.list_wf_runs(
-            config,
-            project=ProjectRef(
+        try:
+            resolved_workspace_id = self._spaces_resolver.resolve_workspace_id(config)
+            resolved_project_id = self._spaces_resolver.resolve_project_id(
+                config, workspace_id=resolved_workspace_id
+            )
+            project = ProjectRef(
                 workspace_id=resolved_workspace_id, project_id=resolved_project_id
-            ),
-        )
+            )
+
+        except NotImplementedError:
+            project = None
+
+        wfs = self._wf_run_repo.list_wf_runs(config, project=project)
 
         wfs, tabulated_labels = self._presenter.wf_list_for_prompt(wfs)
         prompt_choices = [(label, wf.id) for label, wf in zip(tabulated_labels, wfs)]
@@ -199,7 +202,19 @@ class WFRunResolver:
         if wf_run_id is not None:
             return self._wf_run_repo.get_wf_by_run_id(wf_run_id, config)
 
-        runs = self._wf_run_repo.list_wf_runs(config)
+        try:
+            resolved_workspace_id = self._spaces_resolver.resolve_workspace_id(config)
+            resolved_project_id = self._spaces_resolver.resolve_project_id(
+                config, workspace_id=resolved_workspace_id
+            )
+            project = ProjectRef(
+                workspace_id=resolved_workspace_id, project_id=resolved_project_id
+            )
+
+        except NotImplementedError:
+            project = None
+
+        runs = self._wf_run_repo.list_wf_runs(config, project=project)
 
         runs, tabulated_labels = self._presenter.wf_list_for_prompt(runs)
         prompt_choices = [(label, wf) for label, wf in zip(tabulated_labels, runs)]

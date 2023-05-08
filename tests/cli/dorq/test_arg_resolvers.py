@@ -462,6 +462,11 @@ class TestWFRunResolver:
 
             wf_run_id = None
             config = "<config sentinel>"
+            spaces_resolver = Mock()
+            fake_ws = "wake ws"
+            fake_project = "fake project"
+            spaces_resolver.resolve_workspace_id.return_value = fake_ws
+            spaces_resolver.resolve_project_id.return_value = fake_project
 
             wf_run_repo = Mock()
             time_delta = 1000
@@ -475,6 +480,7 @@ class TestWFRunResolver:
             resolver = _arg_resolvers.WFRunResolver(
                 wf_run_repo=wf_run_repo,
                 prompter=prompter,
+                spaces_resolver=spaces_resolver,
             )
 
             # When
@@ -482,7 +488,10 @@ class TestWFRunResolver:
 
             # Then
             # We should pass config value to wf_run_repo.
-            wf_run_repo.list_wf_runs.assert_called_with(config)
+            wf_run_repo.list_wf_runs.assert_called_with(
+                config,
+                project=ProjectRef(workspace_id="wake ws", project_id="fake project"),
+            )
 
             # We should prompt for selecting workflow run from the IDs returned
             # by the repo.
