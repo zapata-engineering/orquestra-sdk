@@ -1562,3 +1562,47 @@ class TestWorkflowDefRepoIntegration:
             with pytest.raises(exceptions.WorkflowSyntaxError):
                 # When
                 _ = repo.get_workflow_def(_example_wfs, wf_name)
+
+
+class TestSpacesRepo:
+    class TestUnit:
+        """
+        Test boundary::
+            [SpacesRepo]->sdk._config
+
+        """
+
+        def test_list_workspaces(self, monkeypatch):
+            """
+            Simple test that verifies that repo return all the workspaces returned by
+            sdk
+            """
+            spaces = ["ws1", "ws2"]
+
+            monkeypatch.setattr(sdk, "list_workspaces", lambda _: spaces)
+
+            repo = _repos.SpacesRepo()
+
+            # When
+            names = repo.list_workspaces("config")
+
+            # Then
+            assert names == spaces
+
+        def test_list_projects(self, monkeypatch):
+            """
+            Simple test that verifies that repo return all the projects
+            returned by
+            sdk
+            """
+            projects = ["p1", "p2"]
+
+            monkeypatch.setattr(sdk, "list_projects", lambda *_: projects)
+
+            repo = _repos.SpacesRepo()
+
+            # When
+            names = repo.list_projects("config", "workspace")
+
+            # Then
+            assert names == projects
