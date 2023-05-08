@@ -8,6 +8,7 @@ from unittest.mock import Mock
 import pytest
 
 from orquestra.sdk import exceptions
+from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base.cli._dorq import _arg_resolvers, _repos
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 
@@ -378,10 +379,16 @@ class TestWFRunResolver:
             prompter = Mock()
             selected_id = listed_runs[0].id
             prompter.choice.return_value = selected_id
+            spaces_resolver = Mock()
+            fake_ws = "wake ws"
+            fake_project = "fake project"
+            spaces_resolver.resolve_workspace_id.return_value = fake_ws
+            spaces_resolver.resolve_project_id.return_value = fake_project
 
             resolver = _arg_resolvers.WFRunResolver(
                 wf_run_repo=wf_run_repo,
                 prompter=prompter,
+                spaces_resolver=spaces_resolver,
             )
 
             # When
@@ -389,7 +396,10 @@ class TestWFRunResolver:
 
             # Then
             # We should pass config value to wf_run_repo.
-            wf_run_repo.list_wf_runs.assert_called_with(config)
+            wf_run_repo.list_wf_runs.assert_called_with(
+                config,
+                project=ProjectRef(workspace_id=fake_ws, project_id=fake_project),
+            )
 
             # We should prompt for selecting workflow ID from the ones returned
             # by the repo. Those choices should be sorted from newest at the top

@@ -9,8 +9,8 @@ import typing as t
 from unittest.mock import Mock
 
 import pytest
-from orquestra.sdk._base._spaces._structs import ProjectRef
 
+from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base.cli._dorq._workflow import _list
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 
@@ -99,7 +99,7 @@ class TestAction:
             state=state,
             interactive=interactive,
             workspace_id=workspace,
-            project_id=project
+            project_id=project,
         )
 
         # Then

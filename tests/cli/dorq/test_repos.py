@@ -21,6 +21,7 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base import _db
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe._client import QEClient
+from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._base.cli._dorq import _repos
 from orquestra.sdk._base.cli._dorq._ui import _models as ui_models
@@ -246,6 +247,8 @@ class TestWorkflowRunRepo:
             def test_passing_errors(monkeypatch, exc):
                 # Given
                 config = "<config sentinel>"
+                ws = "<workspace sentinel>"
+                project = "<project sentinel>"
 
                 monkeypatch.setattr(sdk, "list_workflow_runs", Mock(side_effect=exc))
 
@@ -254,7 +257,7 @@ class TestWorkflowRunRepo:
                 # Then
                 with pytest.raises(type(exc)):
                     # When
-                    _ = repo.list_wf_run_ids(config)
+                    _ = repo.list_wf_run_ids(config, ProjectRef(ws, project))
 
         class TestSubmit:
             @staticmethod
@@ -823,6 +826,8 @@ class TestWorkflowRunRepo:
         def test_list_wf_runs(monkeypatch):
             # Given
             config = "ray"
+            ws = "ws"
+            proj = "proj"
             stub_run_ids = ["wf.1", "wf.2"]
             state = State("RUNNING")
             mock_wf_runs = []
@@ -847,7 +852,7 @@ class TestWorkflowRunRepo:
             repo = _repos.WorkflowRunRepo()
 
             # When
-            runs = repo.list_wf_runs(config)
+            runs = repo.list_wf_runs(config, ProjectRef(ws, proj))
 
             # Then
             assert [run.id for run in runs] == stub_run_ids
@@ -864,6 +869,8 @@ class TestWorkflowRunRepo:
 
             # Given
             config = "ray"
+            ws = "ws"
+            proj = "proj"
             stub_run_ids = ["wf.1", "wf.2"]
             state = State("RUNNING")
 
@@ -893,7 +900,7 @@ class TestWorkflowRunRepo:
             repo = _repos.WorkflowRunRepo()
 
             # When
-            run_ids = repo.list_wf_run_ids(config)
+            run_ids = repo.list_wf_run_ids(config, ProjectRef(ws, proj))
 
             # Then
             assert run_ids == stub_run_ids
