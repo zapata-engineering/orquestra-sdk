@@ -1,3 +1,6 @@
+################################################################################
+# © Copyright 2023 Zapata Computing Inc.
+################################################################################
 import select
 import socket
 import time
@@ -37,7 +40,7 @@ class TriggerServer:
         self._socket.close()
 
 
-class TriggerClient:
+class TriggerClient:  # pragma: no cover
     def __init__(self, port: int):
         self._port = port
         self._trigger_msg = TRIGGER_MSG
