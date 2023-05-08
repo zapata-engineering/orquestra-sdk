@@ -255,7 +255,7 @@ def list(
 
     action = Action()
     action.on_cmd_call(
-        config, limit, max_age, state, interactive, workspace_id, project_id
+        config, limit, max_age, state, workspace_id, project_id, interactive
     )
 
 

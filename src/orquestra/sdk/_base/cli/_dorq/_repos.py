@@ -22,6 +22,7 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base import _config, _db, loader
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe import _client
+from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base.abc import ArtifactValue
 from orquestra.sdk.schema import _compat
 from orquestra.sdk.schema.configs import ConfigName, RuntimeName
@@ -54,12 +55,15 @@ class WorkflowRunRepo:
             stored_run = db.get_workflow_run(workflow_run_id=wf_run_id)
             return stored_run.config_name
 
-    def list_wf_run_ids(self, config: ConfigName) -> t.Sequence[WorkflowRunId]:
-        return [run.id for run in self.list_wf_runs(config)]
+    def list_wf_run_ids(
+        self, config: ConfigName, project: ProjectRef
+    ) -> t.Sequence[WorkflowRunId]:
+        return [run.id for run in self.list_wf_runs(config, project)]
 
     def list_wf_runs(
         self,
         config: ConfigName,
+        project: ProjectRef,
         limit: t.Optional[int] = None,
         max_age: t.Optional[str] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
@@ -74,10 +78,7 @@ class WorkflowRunRepo:
         """
         try:
             wf_runs = sdk.list_workflow_runs(
-                config,
-                limit=limit,
-                max_age=max_age,
-                state=state,
+                config, limit=limit, max_age=max_age, state=state, project=project
             )
         except (ConnectionError, exceptions.UnauthorizedError):
             raise

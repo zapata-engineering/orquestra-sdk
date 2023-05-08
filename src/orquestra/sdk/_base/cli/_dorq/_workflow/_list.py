@@ -6,6 +6,7 @@ Code for 'orq workflow list'.
 """
 import typing as t
 
+from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema.configs import ConfigName
 from orquestra.sdk.schema.workflow_run import WorkflowRun
 
@@ -29,6 +30,7 @@ class Action:
         error_presenter=_presenters.WrappedCorqOutputPresenter(),
         summary_repo=_repos.SummaryRepo(),
         wf_run_repo=_repos.WorkflowRunRepo(),
+        spaces_resolver: t.Optional[_arg_resolvers.SpacesResolver] = None,
         config_resolver: t.Optional[_arg_resolvers.ConfigResolver] = None,
         wf_run_filter_resolver: t.Optional[_arg_resolvers.WFRunFilterResolver] = None,
     ):
@@ -37,6 +39,7 @@ class Action:
 
         # arg resolvers
         self._config_resolver = config_resolver or _arg_resolvers.ConfigResolver()
+        self._spaces_resolver = spaces_resolver or _arg_resolvers.SpacesResolver()
         self._wf_run_filter_resolver = (
             wf_run_filter_resolver or _arg_resolvers.WFRunFilterResolver()
         )
@@ -62,6 +65,8 @@ class Action:
                 limit=limit,
                 max_age=max_age,
                 state=state,
+                workspace_id=workspace_id,
+                project_id=project_id,
                 interactive=interactive,
             )
         except Exception as e:
@@ -95,11 +100,20 @@ class Action:
         wf_runs: t.List[WorkflowRun] = []
 
         for resolved_config in resolved_configs:
+            resolved_workspace_id = self._spaces_resolver.resolve_workspace_id(
+                resolved_config, workspace_id
+            )
+            resolved_project_id = self._spaces_resolver.resolve_project_id(
+                resolved_config, resolved_workspace_id, project_id
+            )
             wf_runs += self._wf_run_repo.list_wf_runs(
                 resolved_config,
                 limit=resolved_limit,
                 max_age=resolved_max_age,
                 state=resolved_state,
+                project=ProjectRef(
+                    workspace_id=resolved_workspace_id, project_id=resolved_project_id
+                ),
             )
 
         summary = self._summary_repo.wf_list_summary(wf_runs)

@@ -11,6 +11,7 @@ import typing as t
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _services
 from orquestra.sdk._base._config import IN_PROCESS_CONFIG_NAME
+from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema.configs import ConfigName
 from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import (
@@ -125,7 +126,9 @@ class SpacesResolver:
         self._presenter = presenter
 
     def resolve_workspace_id(
-        self, workspace_id: t.Optional[WorkspaceId], config: ConfigName
+        self,
+        config: ConfigName,
+        workspace_id: t.Optional[WorkspaceId] = None,
     ):
         if workspace_id is not None:
             return workspace_id
@@ -137,9 +140,9 @@ class SpacesResolver:
 
     def resolve_project_id(
         self,
-        project_id: t.Optional[ProjectId],
-        workspace_id: WorkspaceId,
         config: ConfigName,
+        workspace_id: WorkspaceId,
+        project_id: t.Optional[ProjectId] = None,
     ):
         if project_id is not None:
             return project_id
@@ -160,10 +163,12 @@ class WFRunResolver:
         wf_run_repo=_repos.WorkflowRunRepo(),
         prompter=_prompts.Prompter(),
         presenter=_presenters.PromptPresenter(),
+        spaces_resolver=SpacesResolver(),
     ):
         self._wf_run_repo = wf_run_repo
         self._prompter = prompter
         self._presenter = presenter
+        self._spaces_resolver = spaces_resolver
 
     def resolve_id(
         self, wf_run_id: t.Optional[WorkflowRunId], config: ConfigName
@@ -171,7 +176,16 @@ class WFRunResolver:
         if wf_run_id is not None:
             return wf_run_id
 
-        wfs = self._wf_run_repo.list_wf_runs(config)
+        resolved_workspace_id = self._spaces_resolver.resolve_workspace_id(config)
+        resolved_project_id = self._spaces_resolver.resolve_project_id(
+            config, workspace_id=resolved_workspace_id
+        )
+        wfs = self._wf_run_repo.list_wf_runs(
+            config,
+            project=ProjectRef(
+                workspace_id=resolved_workspace_id, project_id=resolved_project_id
+            ),
+        )
 
         wfs, tabulated_labels = self._presenter.wf_list_for_prompt(wfs)
         prompt_choices = [(label, wf.id) for label, wf in zip(tabulated_labels, wfs)]
