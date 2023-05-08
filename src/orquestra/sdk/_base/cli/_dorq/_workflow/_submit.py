@@ -123,6 +123,8 @@ class Action:
                     resolved_wf_def,
                     resolved_config,
                     ignore_dirty_repo=True,
+                    workspace_id=workspace_id,
+                    project_id=project_id,
                 )
             else:
                 # abort
