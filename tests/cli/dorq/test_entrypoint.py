@@ -109,7 +109,8 @@ class TestList:
     class TestListOptions:
         @staticmethod
         @pytest.mark.parametrize(
-            "limit, expected_limit, max_age, expected_max_age, state, expected_state, workspace, expected_workspace, project, expected_project",
+            "limit, expected_limit, max_age, expected_max_age, state, "
+            "expected_state, workspace, expected_workspace, project, expected_project",
             [
                 (
                     ["-l", "10"],
