@@ -11,6 +11,11 @@ on:
           orquestra-sdk[ray]==0.47.0 
           Example of using an unpublished version:
           orquestra-sdk[ray] @ git+https://github.com/zapatacomputing/orquestra-workflow-sdk.git@v0.47.0
+      docker_tag:
+        type: string
+        description: |
+          Optional parameter to tag the Docker image. If provided,
+          the published image will be tagged with the given tag.
 jobs:
   trigger-build-and-push:
     runs-on: ubuntu-20.04
@@ -59,7 +64,7 @@ jobs:
           # See https://github.com/docker/metadata-action#tags-input for the
           # format this should take.
           # DUE TO JSON LIMITATIONS, NEWLINES MUST BE EXPLICITLY ADDED AS \n
-          additional_image_tags: ''
+          additional_image_tags: 'type=raw,value=${{ inputs.docker_tag }}'
           # For changing `latest` tag behavior, as well as global prefix/suffixes
           # See https://github.com/docker/metadata-action#flavor-input
           # for details on how to use the `flavor` input.
