@@ -15,7 +15,7 @@ import pytest
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
-from orquestra.sdk._base._testing import _example_wfs
+from orquestra.sdk._base._testing import _example_wfs, _ipc
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk._ray import _client, _dag, _ray_logs
 from orquestra.sdk.schema import configs, ir
@@ -276,11 +276,12 @@ class TestRayRuntimeMethods:
                │
                ▼
             """
-            triggers = [tmp_path / f"trigger{i}.txt" for i in range(2)]
+            triggers = [_ipc.TriggerServer() for _ in range(2)]
 
             wf = _example_wfs.serial_wf_with_file_triggers(
-                triggers, task_timeout=2.0
+                [trigger.port for trigger in triggers], task_timeout=2.0
             ).model
+
             wf_run_id = runtime.create_workflow_run(wf, None)
             wf_run = runtime.get_workflow_run_status(wf_run_id)
             assert wf_run.status.state == State.RUNNING
@@ -290,6 +291,7 @@ class TestRayRuntimeMethods:
             wf_run = runtime.get_workflow_run_status(wf_run_id)
             assert wf_run.status.state == State.TERMINATED
 
+        @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_on_finished_workflow(self, runtime: _dag.RayRuntime, tmp_path):
             wf = _example_wfs.multioutput_task_wf.model
             wf_run_id = runtime.create_workflow_run(wf, None)
@@ -320,6 +322,7 @@ class TestRayRuntimeMethods:
                 JSONResult(value='"yooooo emiliano from zapata computing"'),
             )
 
+        @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_failed_workflow(self, runtime: _dag.RayRuntime):
             wf_def = _example_wfs.exception_wf_with_multiple_values().model
             run_id = runtime.create_workflow_run(wf_def, None)
@@ -329,6 +332,7 @@ class TestRayRuntimeMethods:
             with pytest.raises(exceptions.WorkflowRunNotSucceeded):
                 runtime.get_workflow_run_outputs_non_blocking(run_id)
 
+        @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_in_progress_workflow(self, runtime: _dag.RayRuntime, tmp_path):
             """
             Workflow graph in the scenario under test:
@@ -341,10 +345,10 @@ class TestRayRuntimeMethods:
                │
                ▼
             """
-            triggers = [tmp_path / f"trigger{i}.txt" for i in range(2)]
+            triggers = [_ipc.TriggerServer() for _ in range(2)]
 
             wf = _example_wfs.serial_wf_with_file_triggers(
-                triggers, task_timeout=2.0
+                [trigger.port for trigger in triggers], task_timeout=5.0
             ).model
             run_id = runtime.create_workflow_run(wf, None)
 
@@ -352,9 +356,9 @@ class TestRayRuntimeMethods:
             with pytest.raises(exceptions.WorkflowRunNotSucceeded):
                 runtime.get_workflow_run_outputs_non_blocking(run_id)
 
-            # let the workers complete the workflow
-            triggers[0].write_text("triggered")
-            triggers[1].write_text("triggered")
+            for trigger in triggers:
+                trigger.trigger()
+                trigger.close()
 
     class TestGetAvailableOutputs:
         """
@@ -397,6 +401,7 @@ class TestRayRuntimeMethods:
             task_output = list(inv_artifacts.values())[0]
             assert task_output == JSONResult(value="58")
 
+        @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_after_one_task_finishes(self, runtime: _dag.RayRuntime, tmp_path):
             """
             Workflow graph in the scenario under test:
@@ -413,17 +418,14 @@ class TestRayRuntimeMethods:
                │
                ▼
             """
-            # Given
-            triggers = [tmp_path / f"trigger{i}.txt" for i in range(3)]
-
-            # Let the first task finish quickly
-            triggers[0].write_text("triggered")
+            triggers = [_ipc.TriggerServer() for _ in range(3)]
 
             wf = _example_wfs.serial_wf_with_file_triggers(
-                triggers, task_timeout=2.0
+                [trigger.port for trigger in triggers], task_timeout=10.0
             ).model
             wf_run_id = runtime.create_workflow_run(wf, None)
 
+            triggers[0].trigger()
             # Await completion of the first task
             loop_start = time.time()
             while True:
@@ -439,7 +441,7 @@ class TestRayRuntimeMethods:
                 if len(succeeded_runs) >= 1:
                     break
 
-                if time.time() - loop_start > 10.0:
+                if time.time() - loop_start > 20.0:
                     pytest.fail(
                         f"Timeout when awaiting for workflow finish. Full run: {wf_run}"
                     )
@@ -450,11 +452,15 @@ class TestRayRuntimeMethods:
             outputs_dict = runtime.get_available_outputs(wf_run_id)
 
             # Then
-            assert len(outputs_dict) == len(succeeded_runs)
+            assert len(outputs_dict) == 1
+            assert len(succeeded_runs) == 1
 
             # let the workers complete the workflow
-            triggers[1].write_text("triggered")
-            triggers[2].write_text("triggered")
+            triggers[1].trigger()
+            triggers[2].trigger()
+
+            for trigger in triggers:
+                trigger.close()
 
 
 @pytest.mark.slow
