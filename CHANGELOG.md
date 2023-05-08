@@ -21,6 +21,8 @@
 * In the CLI, where the user would be prompted with a choice but only one option is available, we now prompt for confirmation instead.
 
 🥷 *Internal*
+* Switch the login URL endpoint
+* Rewrite tests to avoid hangs on Windows CI
 
 📃 *Docs*
 
