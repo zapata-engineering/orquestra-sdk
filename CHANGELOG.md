@@ -11,6 +11,7 @@
 🔥 *Features*
 * New API functions: list_workspaces() and list_projects(). Usable only on CE runtime
 * Setting workflow_id and project_id is now available using "orq wf submit" command
+* All CLI commands that prompted for wf_run_id will now first prompt for workspace and project if wf_run_ID is not provided
 
 👩‍🔬 *Experimental*
 
