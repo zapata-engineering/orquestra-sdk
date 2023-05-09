@@ -104,7 +104,7 @@ else:
                 "catch_exceptions": catch_exceptions,
             }
 
-            ray_optional_kwargs = {}
+            ray_optional_kwargs: t.Dict[str, t.Any] = {}
             if num_cpus is not None:
                 ray_optional_kwargs["num_cpus"] = num_cpus
             if num_gpus is not None:
