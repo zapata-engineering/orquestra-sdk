@@ -1,4 +1,4 @@
-name: Publish orquestra-sdk-base Docker Image
+name: Publish orquestra-sdk-base Docker Image with CUDA support
 
 on:
   workflow_dispatch:
@@ -16,6 +16,8 @@ on:
         description: |
           Optional parameter to tag the Docker image. If provided,
           the published image will be tagged with the given tag.
+          For e.g. if foo-123 is given, the final image will be named
+          hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:foo-123
 jobs:
   trigger-build-and-push:
     runs-on: ubuntu-20.04
@@ -52,7 +54,7 @@ jobs:
           USER_TOKEN: ${{ secrets.PAGES_TOKEN }}
           repository: ${{github.repository}}
           ref: ${{ github.ref }}
-          path_to_dockerfile: 'docker/Dockerfile'
+          path_to_dockerfile: './docker/cuda.Dockerfile'
           docker_context_path: 'docker'
           target_docker_repository: 'hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base'
           github_sha: ${{ github.sha }}
@@ -69,7 +71,7 @@ jobs:
           # See https://github.com/docker/metadata-action#flavor-input
           # for details on how to use the `flavor` input.
           # DUE TO JSON LIMITATIONS, NEWLINES MUST BE EXPLICITLY ADDED AS \n
-          image_tag_flavor: ''
+          image_tag_flavor: 'suffix=-cuda'
           # pass any OCI labels you want to add to the final image
           # https://github.com/opencontainers/image-spec/blob/main/annotations.md
           # DUE TO JSON LIMITATIONS, NEWLINES MUST BE EXPLICITLY ADDED AS \n

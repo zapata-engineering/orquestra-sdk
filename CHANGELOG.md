@@ -22,6 +22,8 @@
 
 🥷 *Internal*
 * Allow using Ray 2.4.0.
+* Switch the login URL endpoint
+* Rewrite tests to avoid hangs on Windows CI
 
 📃 *Docs*
 
