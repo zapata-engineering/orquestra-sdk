@@ -100,12 +100,18 @@ class Action:
         wf_runs: t.List[WorkflowRun] = []
 
         for resolved_config in resolved_configs:
-            resolved_workspace_id = self._spaces_resolver.resolve_workspace_id(
-                resolved_config, workspace_id
-            )
-            resolved_project_id = self._spaces_resolver.resolve_project_id(
-                resolved_config, resolved_workspace_id, project_id
-            )
+            try:
+                resolved_workspace_id = self._spaces_resolver.resolve_workspace_id(
+                    resolved_config, workspace_id
+                )
+                resolved_project_id = self._spaces_resolver.resolve_project_id(
+                    resolved_config, resolved_workspace_id, project_id
+                )
+            except NotImplementedError:
+                # if handling on the runtime that doesnt support workspaces and projects
+                resolved_workspace_id = None
+                resolved_project_id = None
+
             wf_runs += self._wf_run_repo.list_wf_runs(
                 resolved_config,
                 limit=resolved_limit,

@@ -134,7 +134,9 @@ class SpacesResolver:
             return workspace_id
 
         workspaces = self._spaces_repo.list_workspaces(config)
-        selected_id = self._prompter.choice(workspaces, message="Workspace ID")
+        labels = self._presenter.workspaces_list_to_prompt(workspaces)
+        prompt_choices = [(label, ws) for label, ws in zip(labels, workspaces)]
+        selected_id = self._prompter.choice(prompt_choices, message="Workspace: ")
 
         return selected_id
 
@@ -147,8 +149,10 @@ class SpacesResolver:
         if project_id is not None:
             return project_id
 
-        workspaces = self._spaces_repo.list_projects(config, workspace_id)
-        selected_id = self._prompter.choice(workspaces, message="Project ID")
+        projects = self._spaces_repo.list_projects(config, workspace_id)
+        labels = self._presenter.project_list_to_prompt(projects)
+        prompt_choices = [(label, ws) for label, ws in zip(labels, projects)]
+        selected_id = self._prompter.choice(prompt_choices, message="Projects: ")
 
         return selected_id
 
@@ -184,8 +188,8 @@ class WFRunResolver:
             project = ProjectRef(
                 workspace_id=resolved_workspace_id, project_id=resolved_project_id
             )
-
         except NotImplementedError:
+            # if run on runtime that doesn't support workspaces
             project = None
 
         wfs = self._wf_run_repo.list_wf_runs(config, project=project)
