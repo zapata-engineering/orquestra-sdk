@@ -321,7 +321,8 @@ def _ray_resources_for_custom_image(image_name: str) -> t.Mapping[str, float]:
     Custom Ray resources we set to power running Orquestra tasks on custom Docker
     images. The values are coupled with Compute Engine server-side set up.
     """
-    # TODO: link the ADR where the Ray resource name syntax is specified.
+    # The format for custom image strings is described in the ADR:
+    # https://zapatacomputing.atlassian.net/wiki/spaces/ORQSRUN/pages/688259073/2023-05-05+Ray+resources+syntax+for+custom+images
     return {f"image:{image_name}": 1}
 
 
