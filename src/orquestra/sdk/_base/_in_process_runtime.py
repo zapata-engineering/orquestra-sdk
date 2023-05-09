@@ -33,7 +33,9 @@ WfRunId = str
 ArtifactValue = t.Any
 TaskOutputs = t.Tuple[ArtifactValue, ...]
 
-IDS: t.Optional[t.Tuple[WorkflowRunId, ir.TaskInvocationId, TaskRunId]] = None
+current_run_ids: t.Optional[
+    t.Tuple[WorkflowRunId, ir.TaskInvocationId, TaskRunId]
+] = None
 """
 Global variable to store the current workflow, task inv, and task run IDs.
 
@@ -45,17 +47,17 @@ None at all other times.
 @contextmanager
 def set_ids(ids: t.Tuple[WorkflowRunId, ir.TaskInvocationId, TaskRunId]):
     """
-    Temporarily set the IDS global variable.
+    Temporarily set the current_run_ids global variable.
 
-    IDS will be set to a tuple of the current WorkflowRunID, TaskInvocationID, and
-    TaskRunID.
+    current_run_ids will be set to a tuple of the current WorkflowRunID,
+    TaskInvocationID, and TaskRunID.
     """
 
-    global IDS
-    old_ids = IDS
-    IDS = ids
+    global current_run_ids
+    old_ids = current_run_ids
+    current_run_ids = ids
     yield
-    IDS = old_ids
+    current_run_ids = old_ids
 
 
 def _make_completed_task_run(workflow_run_id, start_time, end_time, task_inv):

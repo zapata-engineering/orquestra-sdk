@@ -541,6 +541,11 @@ def mock_argo_context(monkeypatch):
     )
     monkeypatch.setenv("ARGO_NODE_ID", argo_node_id)
     monkeypatch.setenv("ARGO_TEMPLATE", argo_template)
+    monkeypatch.setattr(
+        sdk._base._exec_ctx,
+        "global_context",
+        sdk._base._exec_ctx.ExecContext.PLATFORM_QE,
+    )
     return wf_run_id, task_inv_id, argo_node_id
 
 
@@ -554,38 +559,35 @@ def mock_ray_context(monkeypatch):
         "get_current_ids",
         Mock(return_value=(wf_run_id, task_inv_id, task_run_id)),
     )
-    monkeypatch.setattr("inspect.stack", Mock(return_value="{function='_ray_remote'}"))
+    monkeypatch.setattr(
+        sdk._base._exec_ctx, "global_context", sdk._base._exec_ctx.ExecContext.RAY
+    )
+
     return wf_run_id, task_inv_id, task_run_id
 
 
 @pytest.fixture
 def mock_in_process_context(monkeypatch):
-    pass
+    wf_run_id = "wf_run_id"
+    task_inv_id = "task_inv_id"
+    task_run_id = "task_run_id"
 
-    # monkeypatch.setattr("sys.modules['_in_process_runtime.IDS']", "BLAH")
+    monkeypatch.setattr(
+        sdk._base._exec_ctx, "global_context", sdk._base._exec_ctx.ExecContext.DIRECT
+    )
+    monkeypatch.setattr(
+        sdk._base._in_process_runtime,
+        "current_run_ids",
+        (wf_run_id, task_inv_id, task_run_id),
+    )
+
+    return (wf_run_id, task_inv_id, task_run_id)
 
 
 # endregion
 
 
 class TestGetBackendIDs:
-    class TestBackendDetection:
-        @staticmethod
-        def test_is_argo_backend(mock_argo_context):
-            assert _api._task_run._is_argo_backend()
-
-        @staticmethod
-        def test_not_argo_backend():
-            assert not _api._task_run._is_argo_backend()
-
-        @staticmethod
-        def test_is_ray_backend(mock_ray_context):
-            assert _api._task_run._is_ray_backend()
-
-        @staticmethod
-        def test_not_ray_backend():
-            assert not _api._task_run._is_ray_backend()
-
     class TestRuntimeSpecificGetIDs:
         @staticmethod
         def test_get_argo_backend_ids(mock_argo_context):
@@ -602,20 +604,12 @@ class TestGetBackendIDs:
             assert _api._task_run._get_ray_backend_ids() == mock_ray_context
 
         @staticmethod
-        @pytest.mark.xfail(reason="I do not know how to mock the IDS import yet.")
         def test_get_in_process_backend_ids(mock_in_process_context):
             assert (
                 _api._task_run._get_in_process_backend_ids() == mock_in_process_context
             )
 
     class TestRuntimeDependentBehaviour:
-        @staticmethod
-        def test_raises_assertionerror_if_multiple_runtimes(
-            mock_argo_context, mock_ray_context
-        ):
-            with pytest.raises(AssertionError):
-                sdk.get_backend_ids()
-
         @staticmethod
         def test_gets_ray_ids_for_ray_runtimes(mock_ray_context, monkeypatch):
             monkeypatch.setattr(
@@ -633,7 +627,7 @@ class TestGetBackendIDs:
                 ),
             )
 
-            assert sdk.get_backend_ids() == "<ray ids sentinel>"
+            assert sdk.current_run_ids() == "<ray ids sentinel>"
             mock_get_argo_ids.assert_not_called()
             mock_get_ray_ids.assert_called_once()
             mock_get_in_process_ids.assert_not_called()
@@ -655,7 +649,7 @@ class TestGetBackendIDs:
                 ),
             )
 
-            assert sdk.get_backend_ids() == "<argo ids sentinel>"
+            assert sdk.current_run_ids() == "<argo ids sentinel>"
             mock_get_argo_ids.assert_called_once()
             mock_get_ray_ids.assert_not_called()
             mock_get_in_process_ids.assert_not_called()
@@ -679,7 +673,7 @@ class TestGetBackendIDs:
                 ),
             )
 
-            assert sdk.get_backend_ids() == "<in_process ids sentinel>"
+            assert sdk.current_run_ids() == "<in_process ids sentinel>"
             mock_get_argo_ids.assert_not_called()
             mock_get_ray_ids.assert_not_called()
             mock_get_in_process_ids.assert_called_once()

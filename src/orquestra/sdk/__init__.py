@@ -8,7 +8,7 @@ from ._base._api import (
     RuntimeConfig,
     TaskRun,
     WorkflowRun,
-    get_backend_ids,
+    current_run_ids,
     list_workflow_runs,
     migrate_config_file,
 )
@@ -34,7 +34,7 @@ from ._base._workflow import NotATaskWarning, WorkflowDef, WorkflowTemplate, wor
 __all__ = [
     "ArtifactFuture",
     "DataAggregation",
-    "get_backend_ids",
+    "current_run_ids",
     "GithubImport",
     "GitImport",
     "Import",

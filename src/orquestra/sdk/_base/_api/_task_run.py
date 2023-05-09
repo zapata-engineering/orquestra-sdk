@@ -2,7 +2,6 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 
-import inspect
 import json
 import os
 import typing as t
@@ -263,25 +262,6 @@ class TaskRun:
         return set(parents)
 
 
-def _is_argo_backend():
-    """
-    Quantum Engine backend test.
-
-    Argo Workflows are executed in pods, where ARGO_NODE_ID corresponds
-    to the workflow step ID.
-    """
-    return "ARGO_NODE_ID" in os.environ
-
-
-def _is_ray_backend():
-    """
-    Ray backend test.
-
-    Checks the call stack for `_ray_remote`.
-    """
-    return "function='_ray_remote'" in str(inspect.stack())
-
-
 def _get_argo_backend_ids() -> t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunId]:
     """
     Get the workflow run, task invocation, and task run IDs from Argo.
@@ -329,15 +309,17 @@ def _get_in_process_backend_ids() -> (
     Get the workflow run, task invocation, and task run IDs from the In-process runtime.
     """
 
-    # Deferred import so that we get the value of IDS as set by the context manager for
-    # this task.
-    from orquestra.sdk._base._in_process_runtime import IDS
+    # Deferred import so that we get the value of current_run_ids as set by the context
+    # manager for this task.
+    from orquestra.sdk._base._in_process_runtime import current_run_ids
 
-    assert IDS is not None, "IDS global was imported with value None."
-    return IDS
+    assert (
+        current_run_ids is not None
+    ), "current_run_ids global was imported with value None."
+    return current_run_ids
 
 
-def get_backend_ids() -> (
+def current_run_ids() -> (
     t.Tuple[
         t.Optional[WorkflowRunId], t.Optional[TaskInvocationId], t.Optional[TaskRunId]
     ]
@@ -355,20 +337,13 @@ def get_backend_ids() -> (
     ```
     @sdk.task
     def t():
-        wf_run_id, task_inv_id, task_run_id =  sdk.get_backend_ids()
+        wf_run_id, task_inv_id, task_run_id =  sdk.current_run_ids()
         ...
     ```
 
     Returns:
         WorkflowRunId, TaskInvocationId, TaskRunId
     """
-
-    # if _exec_ctx.global_context == _exec_ctx.ExecContext.PLATFORM_QE:
-    #     return _get_argo_backend_ids()
-    # elif _exec_ctx.global_context == _exec_ctx.ExecContext.RAY:
-    #     return _get_ray_backend_ids()
-    # elif _exec_ctx.global_context == _exec_ctx.ExecContext.DIRECT:
-    #     return _get_in_process_backend_ids()
 
     try:
         if _exec_ctx.global_context == _exec_ctx.ExecContext.PLATFORM_QE:

@@ -10,7 +10,7 @@ import logging
 import typing as t
 from datetime import datetime, timezone
 
-from orquestra.sdk._base._api._task_run import get_backend_ids
+from orquestra.sdk._base._api._task_run import current_run_ids
 from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRunId
 
@@ -125,7 +125,7 @@ def workflow_logger() -> logging.LoggerAdapter:
     task_inv_id: t.Optional[TaskInvocationId]
     task_run_id: t.Optional[TaskRunId]
     try:
-        wf_run_id, task_inv_id, task_run_id = get_backend_ids()
+        wf_run_id, task_inv_id, task_run_id = current_run_ids()
     except ModuleNotFoundError:
         # Ray is not installed
         wf_run_id, task_inv_id, task_run_id = None, None, None
