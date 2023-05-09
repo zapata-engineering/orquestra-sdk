@@ -299,7 +299,11 @@ def _get_argo_backend_ids() -> t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunI
     return wf_run_id, task_inv_id, task_run_id
 
 
-def _get_ray_backend_ids() -> t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunId]:
+def _get_ray_backend_ids() -> (
+    t.Tuple[
+        t.Optional[WorkflowRunId], t.Optional[TaskInvocationId], t.Optional[TaskRunId]
+    ]
+):
     """
     Get the workflow run, task invocation, and task run IDs from Ray.
 
@@ -319,6 +323,8 @@ def _get_in_process_backend_ids() -> (
     Get the workflow run, task invocation, and task run IDs from the In-process runtime.
     """
 
+    # Deferred import so that we get the value of IDS as set by the context manager for
+    # this task.
     from orquestra.sdk._base._in_process_runtime import IDS
 
     assert IDS is not None, (
@@ -329,12 +335,24 @@ def _get_in_process_backend_ids() -> (
     return IDS
 
 
-def get_backend_ids() -> t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunId]:
+def get_backend_ids() -> (
+    t.Tuple[
+        t.Optional[WorkflowRunId], t.Optional[TaskInvocationId], t.Optional[TaskRunId]
+    ]
+):
     """
-    _summary_
+    Get the workflow run, task invocation, and task run IDs for the current task.
+
+    This method is intended to be used within the task code in the following way:
+    ```
+    @sdk.task
+    def t():
+        wf_run_id, task_inv_id, task_run_id =  sdk.get_backend_ids()
+        ...
+    ```
 
     Returns:
-        _description_
+        WorkflowRunId, TaskInvocationId, TaskRunId
     """
 
     if _is_argo_backend():
