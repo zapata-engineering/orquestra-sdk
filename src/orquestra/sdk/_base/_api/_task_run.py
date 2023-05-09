@@ -341,7 +341,13 @@ def get_backend_ids() -> (
     ]
 ):
     """
-    Get the workflow run, task invocation, and task run IDs for the current task.
+    Get the workflow run, task invocation, and task run IDs related to current execution context. 
+    
+    Workflow run ID is a globally unique identifier generated whenever a workflow is submitted for running. Single workflow definition can be run multiple times resulting in multiple workflow run IDs. Analog of PID for a standard program.
+    
+    Task invocation ID is related to using a task in your workflow definition, analogous to a function invocation in a standard program. Scoped to a workflow definition. Isn't globally unique. If you run the same workflow definition multiple times, you'll end up with the same task invocation IDs across runs.
+    
+    Task run ID is a globally unique identifier of executing an invocation exactly once.
 
     This function is intended to be used within the task code in the following way:
     ```
