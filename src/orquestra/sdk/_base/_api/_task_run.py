@@ -343,7 +343,7 @@ def get_backend_ids() -> (
     """
     Get the workflow run, task invocation, and task run IDs for the current task.
 
-    This method is intended to be used within the task code in the following way:
+    This function is intended to be used within the task code in the following way:
     ```
     @sdk.task
     def t():
