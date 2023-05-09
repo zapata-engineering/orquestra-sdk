@@ -16,6 +16,7 @@ from orquestra.sdk.schema.workflow_run import State, TaskInvocationId
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
 from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRunId
 
+from ..._base import _exec_ctx
 from ...exceptions import TaskRunNotFound
 from ..abc import ArtifactValue, RuntimeInterface
 from ..serde import deserialize_constant
@@ -285,6 +286,11 @@ def _get_argo_backend_ids() -> t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunI
     """
     Get the workflow run, task invocation, and task run IDs from Argo.
     """
+
+    assert (
+        "ARGO_NODE_ID" in os.environ
+    ), "The ARGO_NODE_ID environment variable is absent."
+
     node_id = os.environ["ARGO_NODE_ID"]
     # Argo Workflow ID is the left part of the step ID
     # [wf-id]-[retry-number]-[step-number]
@@ -299,11 +305,7 @@ def _get_argo_backend_ids() -> t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunI
     return wf_run_id, task_inv_id, task_run_id
 
 
-def _get_ray_backend_ids() -> (
-    t.Tuple[
-        t.Optional[WorkflowRunId], t.Optional[TaskInvocationId], t.Optional[TaskRunId]
-    ]
-):
+def _get_ray_backend_ids() -> t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunId]:
     """
     Get the workflow run, task invocation, and task run IDs from Ray.
 
@@ -313,7 +315,11 @@ def _get_ray_backend_ids() -> (
     # Deferred import because Ray isn't installed when running on QE.
     import orquestra.sdk._ray._dag
 
-    return orquestra.sdk._ray._dag.get_current_ids()
+    ids = orquestra.sdk._ray._dag.get_current_ids()
+
+    assert ids[0] is not None, "Could not get the workflow run id from ray."
+
+    return ids
 
 
 def _get_in_process_backend_ids() -> (
@@ -327,11 +333,7 @@ def _get_in_process_backend_ids() -> (
     # this task.
     from orquestra.sdk._base._in_process_runtime import IDS
 
-    assert IDS is not None, (
-        "IDS global was imported with value None. "
-        "This is likely due to the backend architecture being misidentified. "
-        "Please report this as a bug!"
-    )
+    assert IDS is not None, "IDS global was imported with value None."
     return IDS
 
 
@@ -361,16 +363,24 @@ def get_backend_ids() -> (
         WorkflowRunId, TaskInvocationId, TaskRunId
     """
 
-    if _is_argo_backend():
-        # Workflow is running in the Orquestra QE environment
-        assert (
-            not _is_ray_backend()
-        ), "Mismatch in backend detection. Please report this as a bug."
-        return _get_argo_backend_ids()
-    elif _is_ray_backend():
-        # Workflow is running on Ray
-        return _get_ray_backend_ids()
-    else:
-        # We assume that if we're not running on Argo or Ray, we must be running on the
-        # in-process runtime.
-        return _get_in_process_backend_ids()
+    # if _exec_ctx.global_context == _exec_ctx.ExecContext.PLATFORM_QE:
+    #     return _get_argo_backend_ids()
+    # elif _exec_ctx.global_context == _exec_ctx.ExecContext.RAY:
+    #     return _get_ray_backend_ids()
+    # elif _exec_ctx.global_context == _exec_ctx.ExecContext.DIRECT:
+    #     return _get_in_process_backend_ids()
+
+    try:
+        if _exec_ctx.global_context == _exec_ctx.ExecContext.PLATFORM_QE:
+            return _get_argo_backend_ids()
+        elif _exec_ctx.global_context == _exec_ctx.ExecContext.RAY:
+            return _get_ray_backend_ids()
+        elif _exec_ctx.global_context == _exec_ctx.ExecContext.DIRECT:
+            return _get_in_process_backend_ids()
+    except AssertionError:
+        return None, None, None
+
+    raise NotImplementedError(
+        f"Got unexpected global context {_exec_ctx.global_context}. "
+        "Please report this as a bug."
+    )
