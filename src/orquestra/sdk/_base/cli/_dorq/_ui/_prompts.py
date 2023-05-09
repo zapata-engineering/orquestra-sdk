@@ -57,7 +57,10 @@ class Prompter:
         default: t.Optional[str] = None,
     ) -> t.Union[ChoiceID, T]:
         """
-        Presents the user a choice and returns what they selected
+        Presents the user a choice and returns what they selected.
+
+        If only one option is available, the user is prompted to confirm that this is
+        the intended outcome and, if so, that option is selected automatically.
 
         Args:
             choices: The list of choices to present to the user. If this is of the shape
@@ -74,6 +77,28 @@ class Prompter:
         Raises:
             UserCancelledPrompt if the user cancels the prompt
         """
+
+        # If there's only one choice, select it automatically and confirm with the user
+        # that that's what they want to do.
+        if len(choices) == 1:
+            name: ChoiceID
+            value: t.Union[ChoiceID, T]
+            # When the choice is a tuple, we unpack the display
+            # name and the returned value.
+            # Otherwise, the choice is a ChoiceID and should be
+            # used as both the display name and the returned
+            # value.
+            if isinstance(choices[0], tuple):
+                name, value = choices[0]
+            else:
+                name, value = choices[0], choices[0]
+
+            if not self.confirm(
+                f"{message} - only one option is available. Proceed with {name}?",
+                default=True,
+            ):
+                raise exceptions.UserCancelledPrompt(f"User cancelled {message} prompt")
+            return value
 
         question = inquirer.List(
             SINGLE_INPUT,

@@ -48,7 +48,7 @@ API_ACTIONS = {
     "get_workflow_run_logs": "/api/workflow-run-logs",
     "get_task_run_logs": "/api/task-run-logs",
     # Login
-    "get_login_url": "v1/login",
+    "get_login_url": "/api/login",
     # Workspaces
     "list_workspaces": "/api/catalog/workspaces",
     "list_projects": "/api/catalog/workspaces/{}/projects",
@@ -260,9 +260,10 @@ class DriverClient:
         """
         resp = self._get(
             API_ACTIONS["get_login_url"],
-            query_params={"state": f"{redirect_port}"},
+            query_params={"port": f"{redirect_port}"},
             allow_redirects=False,
         )
+        _handle_common_errors(resp)
         return resp.headers["Location"]
 
     def get_workflow_def(self, workflow_def_id: _models.WorkflowDefID) -> WorkflowDef:

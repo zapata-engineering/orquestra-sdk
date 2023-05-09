@@ -1992,3 +1992,62 @@ class TestClient:
 
                 with pytest.raises(exception):
                     _ = client.list_projects(workspace_id)
+
+    class TestGetLoginUrl:
+        @staticmethod
+        @pytest.fixture
+        def login_uri():
+            return "https://example.com/login/url"
+
+        @staticmethod
+        @pytest.fixture
+        def port():
+            return 8080
+
+        @staticmethod
+        @pytest.fixture
+        def endpoint_mocker(endpoint_mocker_base, base_uri: str):
+            """
+            Returns a helper for mocking requests. Assumes that most of the tests
+            inside this class contain a very similar set up.
+            """
+            return endpoint_mocker_base(
+                responses.GET,
+                f"{base_uri}/api/login",
+                default_status_code=307,
+            )
+
+        @staticmethod
+        def test_params_encoding(
+            endpoint_mocker,
+            client: DriverClient,
+            login_uri: str,
+            port: int,
+        ):
+            """
+            Verifies that params are correctly sent to the server.
+            """
+            endpoint_mocker(
+                headers={"location": login_uri},
+            )
+
+            url = client.get_login_url(port)
+
+            assert url == login_uri
+
+        @staticmethod
+        @pytest.mark.parametrize(
+            "status, exception",
+            [
+                (500, _exceptions.UnknownHTTPError),
+            ],
+        )
+        def test_error_codes(
+            endpoint_mocker, client: DriverClient, port: int, status, exception
+        ):
+            endpoint_mocker(
+                status=status,
+            )
+
+            with pytest.raises(exception):
+                _ = client.get_login_url(port)
