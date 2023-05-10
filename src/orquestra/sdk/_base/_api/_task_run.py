@@ -295,11 +295,13 @@ def _get_ray_backend_ids() -> t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunId
     # Deferred import because Ray isn't installed when running on QE.
     import orquestra.sdk._ray._dag
 
-    ids = orquestra.sdk._ray._dag.get_current_ids()
+    wf_run_id, task_inv_id, task_run_id = orquestra.sdk._ray._dag.get_current_ids()
 
-    assert ids[0] is not None, "Could not get the workflow run id from ray."
+    assert wf_run_id is not None, "Could not get the workflow run ID from ray."
+    assert task_inv_id is not None, "Could not get the task invocation ID from ray."
+    assert task_run_id is not None, "Could not get the task run ID from ray."
 
-    return ids
+    return wf_run_id, task_inv_id, task_run_id
 
 
 def _get_in_process_backend_ids() -> (
@@ -311,12 +313,12 @@ def _get_in_process_backend_ids() -> (
 
     # Deferred import so that we get the value of current_run_ids as set by the context
     # manager for this task.
-    from orquestra.sdk._base._in_process_runtime import current_run_ids
+    from orquestra.sdk._base._in_process_runtime import global_current_run_ids
 
     assert (
-        current_run_ids is not None
+        global_current_run_ids is not None
     ), "current_run_ids global was imported with value None."
-    return current_run_ids
+    return global_current_run_ids
 
 
 def current_run_ids() -> (

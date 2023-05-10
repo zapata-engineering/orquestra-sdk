@@ -577,7 +577,7 @@ def mock_in_process_context(monkeypatch):
     )
     monkeypatch.setattr(
         sdk._base._in_process_runtime,
-        "current_run_ids",
+        "global_current_run_ids",
         (wf_run_id, task_inv_id, task_run_id),
     )
 
