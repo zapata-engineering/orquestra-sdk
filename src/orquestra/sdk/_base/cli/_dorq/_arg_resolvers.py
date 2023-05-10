@@ -188,7 +188,7 @@ class WFRunResolver:
             project = ProjectRef(
                 workspace_id=resolved_workspace_id, project_id=resolved_project_id
             )
-        except NotImplementedError:
+        except exceptions.WorkspacesNotSupportedError:
             # if run on runtime that doesn't support workspaces
             project = None
 
@@ -215,7 +215,7 @@ class WFRunResolver:
                 workspace_id=resolved_workspace_id, project_id=resolved_project_id
             )
 
-        except NotImplementedError:
+        except exceptions.WorkspacesNotSupportedError:
             project = None
 
         runs = self._wf_run_repo.list_wf_runs(config, project=project)

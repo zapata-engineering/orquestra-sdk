@@ -10,6 +10,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from orquestra.sdk import exceptions as exceptions
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base.cli._dorq._workflow import _list
 from orquestra.sdk.schema.workflow_run import RunStatus, State
@@ -25,7 +26,8 @@ class TestAction:
 
     @staticmethod
     @pytest.mark.parametrize("interactive", [True, False])
-    def test_data_passing(interactive, capsys):
+    @pytest.mark.parametrize("is_spaces_supported", [True, False])
+    def test_data_passing(interactive, capsys, is_spaces_supported):
         """
         Verifies how we pass variables between subcomponents.
         """
@@ -79,8 +81,13 @@ class TestAction:
         wf_run_filter_resolver.resolve_state.return_value = resolved_state
 
         spaces_resolver = Mock()
-        spaces_resolver.resolve_workspace_id.return_value = resolved_workspace
-        spaces_resolver.resolve_project_id.return_value = resolved_project
+        if is_spaces_supported:
+            spaces_resolver.resolve_workspace_id.return_value = resolved_workspace
+            spaces_resolver.resolve_project_id.return_value = resolved_project
+        else:
+            spaces_resolver.resolve_workspace_id.side_effect = (
+                exceptions.WorkspacesNotSupportedError()
+            )
 
         action = _list.Action(
             presenter=presenter,
@@ -119,15 +126,24 @@ class TestAction:
 
         # We should pass resolved values to run repo.
         for resolved_config in resolved_configs:
-            wf_run_repo.list_wf_runs.assert_any_call(
-                resolved_config,
-                limit=resolved_limit,
-                max_age=resolved_max_age,
-                state=resolved_state,
-                project=ProjectRef(
-                    workspace_id=resolved_workspace, project_id=resolved_project
-                ),
-            )
+            if is_spaces_supported:
+                wf_run_repo.list_wf_runs.assert_any_call(
+                    resolved_config,
+                    limit=resolved_limit,
+                    max_age=resolved_max_age,
+                    state=resolved_state,
+                    project=ProjectRef(
+                        workspace_id=resolved_workspace, project_id=resolved_project
+                    ),
+                )
+            else:
+                wf_run_repo.list_wf_runs.assert_any_call(
+                    resolved_config,
+                    limit=resolved_limit,
+                    max_age=resolved_max_age,
+                    state=resolved_state,
+                    project=None,
+                )
 
         # We expect printing of the workflow runs returned from the repo.
         expected_wf_runs_list = wf_runs + wf_runs

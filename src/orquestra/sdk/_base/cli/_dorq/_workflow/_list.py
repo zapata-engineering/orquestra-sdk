@@ -6,6 +6,7 @@ Code for 'orq workflow list'.
 """
 import typing as t
 
+from orquestra.sdk import exceptions as exceptions
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema.configs import ConfigName
 from orquestra.sdk.schema.workflow_run import WorkflowRun
@@ -107,19 +108,19 @@ class Action:
                 resolved_project_id = self._spaces_resolver.resolve_project_id(
                     resolved_config, resolved_workspace_id, project_id
                 )
-            except NotImplementedError:
+                project = ProjectRef(
+                    workspace_id=resolved_workspace_id, project_id=resolved_project_id
+                )
+            except exceptions.WorkspacesNotSupportedError:
                 # if handling on the runtime that doesnt support workspaces and projects
-                resolved_workspace_id = None
-                resolved_project_id = None
+                project = None
 
             wf_runs += self._wf_run_repo.list_wf_runs(
                 resolved_config,
                 limit=resolved_limit,
                 max_age=resolved_max_age,
                 state=resolved_state,
-                project=ProjectRef(
-                    workspace_id=resolved_workspace_id, project_id=resolved_project_id
-                ),
+                project=project,
             )
 
         summary = self._summary_repo.wf_list_summary(wf_runs)

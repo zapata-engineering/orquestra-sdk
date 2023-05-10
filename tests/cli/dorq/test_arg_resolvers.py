@@ -388,7 +388,9 @@ class TestWFRunResolver:
                 spaces_resolver.resolve_workspace_id.return_value = fake_ws
                 spaces_resolver.resolve_project_id.return_value = fake_project
             else:
-                spaces_resolver.resolve_workspace_id.side_effect = NotImplementedError()
+                spaces_resolver.resolve_workspace_id.side_effect = (
+                    exceptions.WorkspacesNotSupportedError()
+                )
 
             resolver = _arg_resolvers.WFRunResolver(
                 wf_run_repo=wf_run_repo,
@@ -478,7 +480,9 @@ class TestWFRunResolver:
                 spaces_resolver.resolve_workspace_id.return_value = fake_ws
                 spaces_resolver.resolve_project_id.return_value = fake_project
             else:
-                spaces_resolver.resolve_workspace_id.side_effect = NotImplementedError()
+                spaces_resolver.resolve_workspace_id.side_effect = (
+                    exceptions.WorkspacesNotSupportedError()
+                )
 
             wf_run_repo = Mock()
             time_delta = 1000
