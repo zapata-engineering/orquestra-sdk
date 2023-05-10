@@ -3,13 +3,14 @@
 ################################################################################
 import typing as t
 from datetime import datetime, timedelta
-from unittest.mock import Mock
+from unittest.mock import Mock, create_autospec
 
 import pytest
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base._spaces._structs import Project, ProjectRef, Workspace
 from orquestra.sdk._base.cli._dorq import _arg_resolvers, _repos
+from orquestra.sdk._base.cli._dorq._ui import _presenters, _prompts
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 
 
@@ -377,11 +378,11 @@ class TestWFRunResolver:
             listed_runs = [return_wf("1", 0), return_wf("2", time_delta)]
             wf_run_repo.list_wf_runs.return_value = listed_runs
 
-            prompter = Mock()
+            prompter = create_autospec(_prompts.Prompter)
 
             selected_id = listed_runs[0].id
             prompter.choice.return_value = selected_id
-            spaces_resolver = Mock()
+            spaces_resolver = create_autospec(_arg_resolvers.SpacesResolver)
             fake_ws = "wake ws"
             fake_project = "fake project"
             if runtime_supports_workspaces:
@@ -438,12 +439,12 @@ class TestWFRunResolver:
             wf_run = "<wf run sentinel>"
             config = "<config sentinel>"
 
-            repo = Mock()
+            repo = create_autospec(_repos.WorkflowRunRepo)
             repo.get_wf_by_run_id.return_value = wf_run
 
             resolver = _arg_resolvers.WFRunResolver(
                 wf_run_repo=repo,
-                prompter=Mock(),
+                prompter=create_autospec(_prompts.Prompter),
             )
 
             # When
@@ -473,7 +474,7 @@ class TestWFRunResolver:
 
             wf_run_id = None
             config = "<config sentinel>"
-            spaces_resolver = Mock()
+            spaces_resolver = create_autospec(_arg_resolvers.SpacesResolver)
             fake_ws = "wake ws"
             fake_project = "fake project"
             if runtime_supports_workspaces:
@@ -484,12 +485,12 @@ class TestWFRunResolver:
                     exceptions.WorkspacesNotSupportedError()
                 )
 
-            wf_run_repo = Mock()
+            wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
             time_delta = 1000
             listed_runs = [return_wf("1", 0), return_wf("2", time_delta)]
             wf_run_repo.list_wf_runs.return_value = listed_runs
 
-            prompter = Mock()
+            prompter = create_autospec(_prompts.Prompter)
             selected_run = listed_runs[0]
             prompter.choice.return_value = selected_run
 
@@ -1106,8 +1107,8 @@ class TestSpacesResolver:
             config = "<config>"
 
             resolver = _arg_resolvers.SpacesResolver(
-                spaces=Mock(),
-                prompter=Mock(),
+                spaces=create_autospec(_arg_resolvers.SpacesResolver),
+                prompter=create_autospec(_prompts.Prompter),
                 presenter=Mock(),
             )
 
@@ -1127,14 +1128,14 @@ class TestSpacesResolver:
             ws2 = Workspace(workspace_id="id2", name="name2")
             workspaces = [ws1, ws2]
 
-            spaces_repo = Mock()
+            spaces_repo = create_autospec(_repos.SpacesRepo)
             spaces_repo.list_workspaces.return_value = workspaces
 
-            prompter = Mock()
+            prompter = create_autospec(_prompts.Prompter)
             selected_workspace = workspaces[1]
             prompter.choice.return_value = selected_workspace
 
-            presenter = Mock()
+            presenter = create_autospec(_presenters.PromptPresenter)
             labels = ["label1", "label2"]
             presenter.workspaces_list_to_prompt.return_value = labels
             resolver = _arg_resolvers.SpacesResolver(
@@ -1170,9 +1171,9 @@ class TestSpacesResolver:
             config = "<config>"
 
             resolver = _arg_resolvers.SpacesResolver(
-                spaces=Mock(),
-                prompter=Mock(),
-                presenter=Mock(),
+                spaces=create_autospec(_repos.SpacesRepo),
+                prompter=create_autospec(_prompts.Prompter),
+                presenter=create_autospec(_presenters.PromptPresenter),
             )
 
             # When
@@ -1192,14 +1193,14 @@ class TestSpacesResolver:
             p2 = Project(workspace_id="id2", name="name2", project_id="p2")
             projects = [p1, p2]
 
-            spaces_repo = Mock()
+            spaces_repo = create_autospec(_repos.SpacesRepo)
             spaces_repo.list_projects.return_value = projects
 
-            prompter = Mock()
+            prompter = create_autospec(_prompts.Prompter)
             selected_project = projects[1]
             prompter.choice.return_value = selected_project
 
-            presenter = Mock()
+            presenter = create_autospec(_presenters.PromptPresenter)
             labels = ["label1", "label2"]
             presenter.project_list_to_prompt.return_value = labels
             resolver = _arg_resolvers.SpacesResolver(
