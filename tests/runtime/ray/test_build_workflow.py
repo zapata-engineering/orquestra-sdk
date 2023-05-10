@@ -3,6 +3,7 @@ from unittest.mock import ANY, Mock, call, create_autospec
 
 import pytest
 
+from orquestra.sdk._base import serde
 from orquestra.sdk._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
 )
@@ -144,13 +145,8 @@ class TestResourcesInMakeDag:
         expected: Dict[str, Union[int, float]],
         types: Dict[str, type],
     ):
-        # Given
         workflow = workflow_parametrised_with_resources(**resources).model
-
-        # When
         _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, None)
-
-        # Then
         calls = client.add_options.call_args_list
 
         # We should only have two calls: our invocation and the aggregation step
@@ -163,7 +159,6 @@ class TestResourcesInMakeDag:
             runtime_env=ANY,
             catch_exceptions=ANY,
             max_retries=ANY,
-            resources=ANY,
             **expected
         )
         for kwarg_name, type_ in types.items():

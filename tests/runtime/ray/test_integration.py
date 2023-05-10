@@ -305,7 +305,6 @@ class TestRayRuntimeMethods:
             # cancel changes the state to terminated
             assert status.status.state == State.TERMINATED
 
-    @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     class TestGetWorkflowRunOutputsNonBlocking:
         """
         Tests that validate get_workflow_run_outputs_non_blocking
@@ -323,6 +322,7 @@ class TestRayRuntimeMethods:
                 JSONResult(value='"yooooo emiliano from zapata computing"'),
             )
 
+        @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_failed_workflow(self, runtime: _dag.RayRuntime):
             wf_def = _example_wfs.exception_wf_with_multiple_values().model
             run_id = runtime.create_workflow_run(wf_def, None)
@@ -332,6 +332,7 @@ class TestRayRuntimeMethods:
             with pytest.raises(exceptions.WorkflowRunNotSucceeded):
                 runtime.get_workflow_run_outputs_non_blocking(run_id)
 
+        @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_in_progress_workflow(self, runtime: _dag.RayRuntime, tmp_path):
             """
             Workflow graph in the scenario under test:
