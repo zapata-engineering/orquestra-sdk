@@ -7,12 +7,10 @@
 * Removed deprecated save() method from RuntimeConfig class
 * Removed is_saved() method and "name" setter from RuntimeConfig class
 * WorkflowRun.get_results() returns values consistent with vanilla python - single results are returned as-as, multiple results are returned as a tuple.
-* If you set a custom task image (`@sdk.task(custom_image=...)`), the local Ray runtime won't execute the task unless the local Ray cluster was started with custom resources.
 
 🔥 *Features*
 * New API functions: list_workspaces() and list_projects(). Usable only on CE runtime
 * Setting workflow_id and project_id is now available using "orq wf submit" command
-* Support for running tasks in Docker containers with custom images on Compute Engine.
 
 👩‍🔬 *Experimental*
 
