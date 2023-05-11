@@ -15,9 +15,9 @@ on:
         type: string
         description: |
           Optional parameter to tag the Docker image. If provided,
-          the published image will be tagged with the given tag.
+          the published image will be tagged with the given tag plus -cuda.
           For e.g. if foo-123 is given, the final image will be named
-          hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:foo-123
+          hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:foo-123-cuda
 jobs:
   trigger-build-and-push:
     runs-on: ubuntu-20.04
