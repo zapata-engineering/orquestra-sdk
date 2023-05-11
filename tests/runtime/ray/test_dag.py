@@ -5,9 +5,11 @@
 Unit tests for orquestra.sdk._ray._dag. If you need a test against a live
 Ray connection, see tests/ray/test_integration.py instead.
 """
+import copy
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from unittest.mock import Mock, PropertyMock, create_autospec
+from typing import Dict, Union
+from unittest.mock import ANY, Mock, PropertyMock, call, create_autospec
 
 import pytest
 
@@ -15,6 +17,10 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base._config import RuntimeConfiguration, RuntimeName
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base._spaces._structs import ProjectRef
+from orquestra.sdk._base._testing._example_wfs import (
+    wf_with_secrets,
+    workflow_parametrised_with_resources,
+)
 from orquestra.sdk._ray import _client, _dag, _ray_logs
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import State
