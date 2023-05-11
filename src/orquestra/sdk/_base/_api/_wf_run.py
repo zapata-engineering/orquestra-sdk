@@ -23,11 +23,11 @@ from ...exceptions import (
 from ...schema import ir
 from ...schema.configs import ConfigName
 from ...schema.local_database import StoredWorkflowRun
-from ...schema.workflow_run import State, TaskInvocationId
+from ...schema.workflow_run import ProjectId, State, TaskInvocationId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
 from .. import serde
-from .._spaces._structs import ProjectRef, Workspace
+from .._spaces._structs import Project, ProjectRef, Workspace
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig, _resolve_config
 from ._task_run import TaskRun
@@ -472,6 +472,7 @@ def list_workflow_runs(
     state: t.Optional[t.Union[State, t.List[State]]] = None,
     project_dir: t.Optional[t.Union[Path, str]] = None,
     workspace: t.Optional[t.Union[Workspace, WorkspaceId]] = None,
+    project: t.Optional[t.Union[Project, ProjectRef, ProjectId]] = None,
 ) -> t.List[WorkflowRun]:
     # TODO: once seba's PR is merged, update this to match his call pattern.
     """
@@ -480,13 +481,15 @@ def list_workflow_runs(
     Args:
         config: The name of the configuration to use.
         limit: Restrict the number of runs to return, prioritising the most recent.
-        prefix: Only return runs that start with the specified string.
         max_age: Only return runs younger than the specified maximum age.
         state: Only return runs of runs with the specified status.
         project_dir: The location of the project directory. This directory must
             contain the workflows database to which this run was saved. If omitted,
             the current working directory is assumed to be the project directory.
         workspace: Only return runs from the specified workspace. Only supported on CE.
+        project: will be used to list workflows from specific workspace and project
+            when using CE. Currently unused
+
     Raises:
         ConfigNameNotFoundError: when the named config is not found in the file.
         NotImplementedError: when a filter is specified for a runtime that does not

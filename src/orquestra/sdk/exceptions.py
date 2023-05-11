@@ -247,3 +247,8 @@ class ProjectInvalidError(BaseRuntimeError):
     """When there is insufficient information provided to identify a unique project."""
 
     pass
+
+
+class WorkspacesNotSupportedError(BaseRuntimeError):
+    """When requested for a workspaces-related method in a runtime that doesn't
+    support workspaces"""

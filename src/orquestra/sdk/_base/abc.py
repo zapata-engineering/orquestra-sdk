@@ -16,6 +16,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from orquestra.sdk._base._spaces._structs import Project, ProjectRef, Workspace
+from orquestra.sdk.exceptions import WorkspacesNotSupportedError
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
@@ -195,13 +196,13 @@ class RuntimeInterface(ABC):
         """
         List workspaces available to a user. Works only on CE
         """
-        raise NotImplementedError()
+        raise WorkspacesNotSupportedError()
 
     def list_projects(self, workspace_id: str) -> t.Sequence[Project]:
         """
         List workspaces available to a user. Works only on CE
         """
-        raise NotImplementedError()
+        raise WorkspacesNotSupportedError()
 
 
 class WorkflowRepo(ABC):

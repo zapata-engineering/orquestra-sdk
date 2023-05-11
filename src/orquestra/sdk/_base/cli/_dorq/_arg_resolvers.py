@@ -11,13 +11,16 @@ import typing as t
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _services
 from orquestra.sdk._base._config import IN_PROCESS_CONFIG_NAME
+from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema.configs import ConfigName
 from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import (
+    ProjectId,
     State,
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
+    WorkspaceId,
 )
 
 from . import _repos
@@ -111,6 +114,49 @@ class WFConfigResolver:
         return ConfigResolver(self._config_repo, self._prompter).resolve(config)
 
 
+class SpacesResolver:
+    def __init__(
+        self,
+        spaces=_repos.SpacesRepo(),
+        prompter=_prompts.Prompter(),
+        presenter=_presenters.PromptPresenter(),
+    ):
+        self._spaces_repo = spaces
+        self._prompter = prompter
+        self._presenter = presenter
+
+    def resolve_workspace_id(
+        self,
+        config: ConfigName,
+        workspace_id: t.Optional[WorkspaceId] = None,
+    ):
+        if workspace_id is not None:
+            return workspace_id
+
+        workspaces = self._spaces_repo.list_workspaces(config)
+        labels = self._presenter.workspaces_list_to_prompt(workspaces)
+        prompt_choices = [(label, ws) for label, ws in zip(labels, workspaces)]
+        selected_id = self._prompter.choice(prompt_choices, message="Workspace: ")
+
+        return selected_id
+
+    def resolve_project_id(
+        self,
+        config: ConfigName,
+        workspace_id: WorkspaceId,
+        project_id: t.Optional[ProjectId] = None,
+    ):
+        if project_id is not None:
+            return project_id
+
+        projects = self._spaces_repo.list_projects(config, workspace_id)
+        labels = self._presenter.project_list_to_prompt(projects)
+        prompt_choices = [(label, ws) for label, ws in zip(labels, projects)]
+        selected_id = self._prompter.choice(prompt_choices, message="Projects: ")
+
+        return selected_id
+
+
 class WFRunResolver:
     """
     Resolves value of `wf_run_id` based on `config`.
@@ -121,10 +167,12 @@ class WFRunResolver:
         wf_run_repo=_repos.WorkflowRunRepo(),
         prompter=_prompts.Prompter(),
         presenter=_presenters.PromptPresenter(),
+        spaces_resolver=SpacesResolver(),
     ):
         self._wf_run_repo = wf_run_repo
         self._prompter = prompter
         self._presenter = presenter
+        self._spaces_resolver = spaces_resolver
 
     def resolve_id(
         self, wf_run_id: t.Optional[WorkflowRunId], config: ConfigName
@@ -132,7 +180,19 @@ class WFRunResolver:
         if wf_run_id is not None:
             return wf_run_id
 
-        wfs = self._wf_run_repo.list_wf_runs(config)
+        try:
+            resolved_workspace_id = self._spaces_resolver.resolve_workspace_id(config)
+            resolved_project_id = self._spaces_resolver.resolve_project_id(
+                config, workspace_id=resolved_workspace_id
+            )
+            project = ProjectRef(
+                workspace_id=resolved_workspace_id, project_id=resolved_project_id
+            )
+        except exceptions.WorkspacesNotSupportedError:
+            # if run on runtime that doesn't support workspaces
+            project = None
+
+        wfs = self._wf_run_repo.list_wf_runs(config, project=project)
 
         wfs, tabulated_labels = self._presenter.wf_list_for_prompt(wfs)
         prompt_choices = [(label, wf.id) for label, wf in zip(tabulated_labels, wfs)]
@@ -146,7 +206,19 @@ class WFRunResolver:
         if wf_run_id is not None:
             return self._wf_run_repo.get_wf_by_run_id(wf_run_id, config)
 
-        runs = self._wf_run_repo.list_wf_runs(config)
+        try:
+            resolved_workspace_id = self._spaces_resolver.resolve_workspace_id(config)
+            resolved_project_id = self._spaces_resolver.resolve_project_id(
+                config, workspace_id=resolved_workspace_id
+            )
+            project = ProjectRef(
+                workspace_id=resolved_workspace_id, project_id=resolved_project_id
+            )
+
+        except exceptions.WorkspacesNotSupportedError:
+            project = None
+
+        runs = self._wf_run_repo.list_wf_runs(config, project=project)
 
         runs, tabulated_labels = self._presenter.wf_list_for_prompt(runs)
         prompt_choices = [(label, wf) for label, wf in zip(tabulated_labels, runs)]
