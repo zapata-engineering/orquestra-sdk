@@ -296,3 +296,21 @@ class PromptPresenter:
         tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
 
         return wfs, tabulated_labels
+
+    def workspaces_list_to_prompt(self, workspaces):
+        # Create labels of workspaces that are printed by prompter
+        # Label is <display_name> <id> tabulated nicely to create good-looking
+        # table
+        labels = [[ws.name, ws.workspace_id] for ws in workspaces]
+        tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
+
+        return tabulated_labels
+
+    def project_list_to_prompt(self, projects):
+        # Create labels of projects that are printed by prompter
+        # Label is <display_name> <id> tabulated nicely to create good-looking
+        # table
+        labels = [[ws.name, ws.project_id] for ws in projects]
+        tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
+
+        return tabulated_labels

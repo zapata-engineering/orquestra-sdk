@@ -3,12 +3,14 @@
 ################################################################################
 import typing as t
 from datetime import datetime, timedelta
-from unittest.mock import Mock
+from unittest.mock import Mock, create_autospec
 
 import pytest
 
 from orquestra.sdk import exceptions
+from orquestra.sdk._base._spaces._structs import Project, ProjectRef, Workspace
 from orquestra.sdk._base.cli._dorq import _arg_resolvers, _repos
+from orquestra.sdk._base.cli._dorq._ui import _presenters, _prompts
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 
 
@@ -350,7 +352,8 @@ class TestWFRunResolver:
             assert resolved_id == wf_run_id
 
         @staticmethod
-        def test_no_wf_run_id():
+        @pytest.mark.parametrize("runtime_supports_workspaces", [True, False])
+        def test_no_wf_run_id(runtime_supports_workspaces):
             """
             User didn't pass ``wf_run_id``.
             """
@@ -375,13 +378,25 @@ class TestWFRunResolver:
             listed_runs = [return_wf("1", 0), return_wf("2", time_delta)]
             wf_run_repo.list_wf_runs.return_value = listed_runs
 
-            prompter = Mock()
+            prompter = create_autospec(_prompts.Prompter)
+
             selected_id = listed_runs[0].id
             prompter.choice.return_value = selected_id
+            spaces_resolver = create_autospec(_arg_resolvers.SpacesResolver)
+            fake_ws = "wake ws"
+            fake_project = "fake project"
+            if runtime_supports_workspaces:
+                spaces_resolver.resolve_workspace_id.return_value = fake_ws
+                spaces_resolver.resolve_project_id.return_value = fake_project
+            else:
+                spaces_resolver.resolve_workspace_id.side_effect = (
+                    exceptions.WorkspacesNotSupportedError()
+                )
 
             resolver = _arg_resolvers.WFRunResolver(
                 wf_run_repo=wf_run_repo,
                 prompter=prompter,
+                spaces_resolver=spaces_resolver,
             )
 
             # When
@@ -389,7 +404,13 @@ class TestWFRunResolver:
 
             # Then
             # We should pass config value to wf_run_repo.
-            wf_run_repo.list_wf_runs.assert_called_with(config)
+            if runtime_supports_workspaces:
+                wf_run_repo.list_wf_runs.assert_called_with(
+                    config,
+                    project=ProjectRef(workspace_id=fake_ws, project_id=fake_project),
+                )
+            else:
+                wf_run_repo.list_wf_runs.assert_called_with(config, project=None)
 
             # We should prompt for selecting workflow ID from the ones returned
             # by the repo. Those choices should be sorted from newest at the top
@@ -418,12 +439,12 @@ class TestWFRunResolver:
             wf_run = "<wf run sentinel>"
             config = "<config sentinel>"
 
-            repo = Mock()
+            repo = create_autospec(_repos.WorkflowRunRepo)
             repo.get_wf_by_run_id.return_value = wf_run
 
             resolver = _arg_resolvers.WFRunResolver(
                 wf_run_repo=repo,
-                prompter=Mock(),
+                prompter=create_autospec(_prompts.Prompter),
             )
 
             # When
@@ -433,7 +454,8 @@ class TestWFRunResolver:
             assert resolved_run == wf_run
 
         @staticmethod
-        def test_no_wf_run_id():
+        @pytest.mark.parametrize("runtime_supports_workspaces", [True, False])
+        def test_no_wf_run_id(runtime_supports_workspaces):
             """
             User didn't pass ``wf_run_id``.
             """
@@ -452,19 +474,30 @@ class TestWFRunResolver:
 
             wf_run_id = None
             config = "<config sentinel>"
+            spaces_resolver = create_autospec(_arg_resolvers.SpacesResolver)
+            fake_ws = "wake ws"
+            fake_project = "fake project"
+            if runtime_supports_workspaces:
+                spaces_resolver.resolve_workspace_id.return_value = fake_ws
+                spaces_resolver.resolve_project_id.return_value = fake_project
+            else:
+                spaces_resolver.resolve_workspace_id.side_effect = (
+                    exceptions.WorkspacesNotSupportedError()
+                )
 
-            wf_run_repo = Mock()
+            wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
             time_delta = 1000
             listed_runs = [return_wf("1", 0), return_wf("2", time_delta)]
             wf_run_repo.list_wf_runs.return_value = listed_runs
 
-            prompter = Mock()
+            prompter = create_autospec(_prompts.Prompter)
             selected_run = listed_runs[0]
             prompter.choice.return_value = selected_run
 
             resolver = _arg_resolvers.WFRunResolver(
                 wf_run_repo=wf_run_repo,
                 prompter=prompter,
+                spaces_resolver=spaces_resolver,
             )
 
             # When
@@ -472,7 +505,18 @@ class TestWFRunResolver:
 
             # Then
             # We should pass config value to wf_run_repo.
-            wf_run_repo.list_wf_runs.assert_called_with(config)
+            if runtime_supports_workspaces:
+                wf_run_repo.list_wf_runs.assert_called_with(
+                    config,
+                    project=ProjectRef(
+                        workspace_id="wake ws", project_id="fake project"
+                    ),
+                )
+            else:
+                wf_run_repo.list_wf_runs.assert_called_with(
+                    config,
+                    project=None,
+                )
 
             # We should prompt for selecting workflow run from the IDs returned
             # by the repo.
@@ -1043,3 +1087,139 @@ class TestWFRunFilterResolver:
                 default=[e.value for e in State],
                 message="Workflow Run State(s)",
             )
+
+
+class TestSpacesResolver:
+    """
+    Test boundaries::
+        [SpacesResolver]->[repos]
+                        ->[prompter]
+    """
+
+    class TestWorkspaceResolver:
+        @staticmethod
+        def test_passing_workspace_directly():
+            """
+            User passed `workspace` value directly as CLI arg.
+            """
+            # Given
+            workspace = "<sentinel>"
+            config = "<config>"
+
+            resolver = _arg_resolvers.SpacesResolver(
+                spaces=create_autospec(_arg_resolvers.SpacesResolver),
+                prompter=create_autospec(_prompts.Prompter),
+                presenter=Mock(),
+            )
+
+            # When
+            resolved_workspace = resolver.resolve_workspace_id(
+                config=config, workspace_id=workspace
+            )
+
+            # Then
+            assert resolved_workspace == workspace
+
+        @staticmethod
+        def test_no_workspace():
+            # Given
+            config = "config"
+            ws1 = Workspace(workspace_id="id1", name="name1")
+            ws2 = Workspace(workspace_id="id2", name="name2")
+            workspaces = [ws1, ws2]
+
+            spaces_repo = create_autospec(_repos.SpacesRepo)
+            spaces_repo.list_workspaces.return_value = workspaces
+
+            prompter = create_autospec(_prompts.Prompter)
+            selected_workspace = workspaces[1]
+            prompter.choice.return_value = selected_workspace
+
+            presenter = create_autospec(_presenters.PromptPresenter)
+            labels = ["label1", "label2"]
+            presenter.workspaces_list_to_prompt.return_value = labels
+            resolver = _arg_resolvers.SpacesResolver(
+                spaces=spaces_repo,
+                prompter=prompter,
+                presenter=presenter,
+            )
+
+            # When
+            resolved_workspace = resolver.resolve_workspace_id(
+                config=config, workspace_id=None
+            )
+
+            # Then
+            # We expect prompt for selecting config.
+            presenter.workspaces_list_to_prompt.assert_called_with(workspaces)
+            prompter.choice.assert_called_with(
+                [(labels[0], ws1), (labels[1], ws2)], message="Workspace: "
+            )
+
+            # Resolver should return the user's choice.
+            assert resolved_workspace == selected_workspace
+
+    class TestProjectResolver:
+        @staticmethod
+        def test_passing_project_directly():
+            """
+            User passed `project` value directly as CLI arg.
+            """
+            # Given
+            workspace = "<sentinel>"
+            project = "<project_sentinel>"
+            config = "<config>"
+
+            resolver = _arg_resolvers.SpacesResolver(
+                spaces=create_autospec(_repos.SpacesRepo),
+                prompter=create_autospec(_prompts.Prompter),
+                presenter=create_autospec(_presenters.PromptPresenter),
+            )
+
+            # When
+            resolved_project = resolver.resolve_project_id(
+                config=config, workspace_id=workspace, project_id=project
+            )
+
+            # Then
+            assert resolved_project == project
+
+        @staticmethod
+        def test_no_project():
+            # Given
+            config = "config"
+            ws = "workspace"
+            p1 = Project(workspace_id="id1", name="name1", project_id="p1")
+            p2 = Project(workspace_id="id2", name="name2", project_id="p2")
+            projects = [p1, p2]
+
+            spaces_repo = create_autospec(_repos.SpacesRepo)
+            spaces_repo.list_projects.return_value = projects
+
+            prompter = create_autospec(_prompts.Prompter)
+            selected_project = projects[1]
+            prompter.choice.return_value = selected_project
+
+            presenter = create_autospec(_presenters.PromptPresenter)
+            labels = ["label1", "label2"]
+            presenter.project_list_to_prompt.return_value = labels
+            resolver = _arg_resolvers.SpacesResolver(
+                spaces=spaces_repo,
+                prompter=prompter,
+                presenter=presenter,
+            )
+
+            # When
+            resolved_project = resolver.resolve_project_id(
+                config=config, workspace_id=ws, project_id=None
+            )
+
+            # Then
+            # We expect prompt for selecting config.
+            presenter.project_list_to_prompt.assert_called_with(projects)
+            prompter.choice.assert_called_with(
+                [(labels[0], p1), (labels[1], p2)], message="Projects: "
+            )
+
+            # Resolver should return the user's choice.
+            assert resolved_project == selected_project
