@@ -71,7 +71,7 @@ jobs:
           # See https://github.com/docker/metadata-action#flavor-input
           # for details on how to use the `flavor` input.
           # DUE TO JSON LIMITATIONS, NEWLINES MUST BE EXPLICITLY ADDED AS \n
-          image_tag_flavor: 'suffix=-cuda'
+          image_tag_flavor: ${{ inputs.sdk_requirement && 'suffix=-cuda' || ''}}
           # pass any OCI labels you want to add to the final image
           # https://github.com/opencontainers/image-spec/blob/main/annotations.md
           # DUE TO JSON LIMITATIONS, NEWLINES MUST BE EXPLICITLY ADDED AS \n
