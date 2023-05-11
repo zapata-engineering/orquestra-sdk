@@ -136,7 +136,7 @@ class SpacesResolver:
         workspaces = self._spaces_repo.list_workspaces(config)
         labels = self._presenter.workspaces_list_to_prompt(workspaces)
         prompt_choices = [(label, ws) for label, ws in zip(labels, workspaces)]
-        selected_id = self._prompter.choice(prompt_choices, message="Workspace: ")
+        selected_id = self._prompter.choice(prompt_choices, message="Workspace")
 
         return selected_id
 
@@ -154,7 +154,7 @@ class SpacesResolver:
         prompt_choices = [(label, ws) for label, ws in zip(labels, projects)]
         selected_id = self._prompter.choice(prompt_choices, message="Projects: ")
 
-        return selected_id
+        return self._prompter.choice(prompt_choices, message="Projects")
 
 
 class WFRunResolver:
