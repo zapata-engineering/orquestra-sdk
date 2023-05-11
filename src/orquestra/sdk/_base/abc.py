@@ -25,6 +25,7 @@ from orquestra.sdk.schema.workflow_run import (
     WorkflowRun,
     WorkflowRunId,
     WorkflowRunMinimal,
+    WorkspaceId,
 )
 
 
@@ -158,6 +159,7 @@ class RuntimeInterface(ABC):
         limit: t.Optional[int] = None,
         max_age: t.Optional[timedelta] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
+        workspace: t.Optional[WorkspaceId] = None,
     ) -> t.Sequence[WorkflowRunMinimal]:
         """
         List the workflow runs, with some filters
@@ -166,6 +168,8 @@ class RuntimeInterface(ABC):
             limit: Restrict the number of runs to return, prioritising the most recent.
             max_age: Only return runs younger than the specified maximum age.
             state: Only return runs of runs with the specified status.
+            workspace: Only return runs from the specified workspace. Supported only
+                on CE.
         Returns:
                 A list of the workflow runs
         """

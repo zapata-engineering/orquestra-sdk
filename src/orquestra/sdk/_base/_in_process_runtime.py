@@ -1,6 +1,9 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
+"""
+RuntimeInterface implementation that uses the current process.
+"""
 import typing as t
 import warnings
 from datetime import datetime, timedelta, timezone
@@ -9,7 +12,13 @@ from orquestra.sdk import ProjectRef, exceptions
 from orquestra.sdk._base import abc
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.responses import WorkflowResult
-from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun, WorkflowRun
+from orquestra.sdk.schema.workflow_run import (
+    RunStatus,
+    State,
+    TaskRun,
+    WorkflowRun,
+    WorkspaceId,
+)
 
 from .. import secrets
 from . import serde
@@ -225,6 +234,7 @@ class InProcessRuntime(abc.RuntimeInterface):
         limit: t.Optional[int] = None,
         max_age: t.Optional[timedelta] = None,
         state: t.Union[State, t.List[State], None] = None,
+        workspace: t.Optional[WorkspaceId] = None,
     ) -> t.List[WorkflowRun]:
         """
         List the workflow runs, with some filters
@@ -233,10 +243,15 @@ class InProcessRuntime(abc.RuntimeInterface):
             limit: Restrict the number of runs to return, prioritising the most recent.
             max_age: Only return runs younger than the specified maximum age.
             status: Only return runs of runs with the specified status.
-
+            workspace: Only return runs from the specified workspace. Not supported
+                on this runtime.
         Returns:
                 A list of the workflow runs
         """
+        if workspace is not None:
+            warnings.warn(
+                "Filtering by workspace is not supported on In Process runtimes."
+            )
         now = datetime.now(timezone.utc)
 
         if state is not None:

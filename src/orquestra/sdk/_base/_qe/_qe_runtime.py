@@ -1,6 +1,9 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
+"""
+RuntimeInterface implementation that uses QE.
+"""
 import base64
 import gzip
 import io
@@ -44,6 +47,7 @@ from orquestra.sdk.schema.workflow_run import (
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
+    WorkspaceId,
 )
 
 from . import _client
@@ -835,6 +839,7 @@ class QERuntime(RuntimeInterface):
         limit: Optional[int] = None,
         max_age: Optional[timedelta] = None,
         state: Optional[Union[State, List[State]]] = None,
+        workspace: Optional[WorkspaceId] = None,
     ) -> List[WorkflowRun]:
         """
         List the workflow runs, with some filters
@@ -843,6 +848,8 @@ class QERuntime(RuntimeInterface):
             limit: Restrict the number of runs to return, prioritising the most recent.
             max_age: Only return runs younger than the specified maximum age.
             status: Only return runs of runs with the specified status.
+            workspace: Only return runs from the specified workspace. Not supported
+                on this runtime.
 
         Raises:
             orquestra.sdk.exceptions.UnauthorizedError: if QE returns 401
@@ -850,6 +857,10 @@ class QERuntime(RuntimeInterface):
         Returns:
             A list of the workflow runs
         """
+        # TODO: raise WorkspaceNotSupportedError instead
+        if workspace is not None:
+            warnings.warn("Filtering by workspace is not supported on QE runtimes.")
+
         now = datetime.now(timezone.utc)
 
         # Grab the workflows we know about from the DB

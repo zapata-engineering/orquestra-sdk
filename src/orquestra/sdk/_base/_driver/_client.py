@@ -12,7 +12,7 @@ import io
 import json
 import zlib
 from tarfile import TarFile
-from typing import Generic, List, Mapping, Optional, Tuple, TypeVar, Union
+from typing import Generic, List, Mapping, Optional, TypeVar, Union
 from urllib.parse import urljoin
 
 import pydantic
@@ -23,7 +23,11 @@ from orquestra.sdk import ProjectRef
 from orquestra.sdk._ray._ray_logs import WFLog
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
-from orquestra.sdk.schema.workflow_run import WorkflowRun, WorkflowRunMinimal
+from orquestra.sdk.schema.workflow_run import (
+    WorkflowRun,
+    WorkflowRunMinimal,
+    WorkspaceId,
+)
 
 from . import _exceptions, _models
 
@@ -360,6 +364,7 @@ class DriverClient:
         workflow_def_id: Optional[_models.WorkflowDefID] = None,
         page_size: Optional[int] = None,
         page_token: Optional[str] = None,
+        workspace: Optional[WorkspaceId] = None,
     ) -> Paginated[WorkflowRunMinimal]:
         """
         List workflow runs with a specified workflow def ID from the workflow driver
@@ -369,12 +374,14 @@ class DriverClient:
             ForbiddenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
         """
+        # Schema: https://github.com/zapatacomputing/workflow-driver/blob/fa3eb17f1132d9c7f4960331ffe7ddbd31e02f8c/openapi/src/resources/workflow-runs.yaml#L10 # noqa: E501
         resp = self._get(
             API_ACTIONS["list_workflow_runs"],
             query_params=_models.ListWorkflowRunsRequest(
                 workflowDefinitionID=workflow_def_id,
                 pageSize=page_size,
                 pageToken=page_token,
+                workspaceId=workspace,
             ).dict(),
         )
 

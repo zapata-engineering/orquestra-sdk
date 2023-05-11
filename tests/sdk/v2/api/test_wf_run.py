@@ -32,6 +32,7 @@ from orquestra.sdk.schema.configs import RuntimeName
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
+from orquestra.sdk.schema.workflow_run import WorkspaceId
 
 from ..data.complex_serialization.workflow_defs import (
     capitalize,
@@ -748,7 +749,10 @@ class TestListWorkflows:
         _ = _api.list_workflow_runs("mocked_config", max_age=max_age)
         # Then
         mock_config_runtime.list_workflow_runs.assert_called_with(
-            limit=None, max_age=delta, state=None
+            limit=None,
+            max_age=delta,
+            state=None,
+            workspace=None,
         )
 
     def test_with_limit(self, mock_config_runtime):
@@ -757,7 +761,7 @@ class TestListWorkflows:
         _ = _api.list_workflow_runs("mocked_config", limit=10)
         # Then
         mock_config_runtime.list_workflow_runs.assert_called_with(
-            limit=10, max_age=None, state=None
+            limit=10, max_age=None, state=None, workspace=None
         )
 
     def test_with_state(self, mock_config_runtime):
@@ -766,7 +770,20 @@ class TestListWorkflows:
         _ = _api.list_workflow_runs("mocked_config", state=State.SUCCEEDED)
         # Then
         mock_config_runtime.list_workflow_runs.assert_called_with(
-            limit=None, max_age=None, state=State.SUCCEEDED
+            limit=None, max_age=None, state=State.SUCCEEDED, workspace=None
+        )
+
+    @pytest.mark.parametrize(
+        "workspace",
+        [
+            WorkspaceId("<workspace ID sentinel>"),
+            Workspace("<workspace ID sentinel>", "<workspace name sentinel>"),
+        ],
+    )
+    def test_with_workspace(self, mock_config_runtime, workspace):
+        _ = _api.list_workflow_runs("mocked_config", workspace=workspace)
+        mock_config_runtime.list_workflow_runs.assert_called_with(
+            limit=None, max_age=None, state=None, workspace="<workspace ID sentinel>"
         )
 
 

@@ -1,6 +1,9 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
+"""
+RuntimeInterface implementation that uses Compute Engine.
+"""
 import warnings
 from datetime import timedelta
 from pathlib import Path
@@ -21,6 +24,7 @@ from orquestra.sdk.schema.workflow_run import (
     WorkflowRun,
     WorkflowRunId,
     WorkflowRunMinimal,
+    WorkspaceId,
 )
 
 from . import _client, _exceptions, _models
@@ -221,7 +225,7 @@ class CERuntime(RuntimeInterface):
             wf_run = self.get_workflow_run_status(workflow_run_id)
             if wf_run.status.state == State.SUCCEEDED:
                 raise exceptions.WorkflowResultsNotReadyError(
-                    f"Workflow run `{workflow_run_id}` has succeded, but the results "
+                    f"Workflow run `{workflow_run_id}` has succeeded, but the results "
                     "are not ready yet.\n"
                     "After a workflow completes, there may be a short delay before the "
                     "results are ready to download. Please try again!"
@@ -347,6 +351,7 @@ class CERuntime(RuntimeInterface):
         limit: Optional[int] = None,
         max_age: Optional[timedelta] = None,
         state: Optional[Union[State, List[State]]] = None,
+        workspace: Optional[WorkspaceId] = None,
     ) -> List[WorkflowRunMinimal]:
         """
         List the workflow runs, with some filters
@@ -355,6 +360,7 @@ class CERuntime(RuntimeInterface):
             limit: Restrict the number of runs to return, prioritising the most recent.
             max_age: Only return runs younger than the specified maximum age.
             status: Only return runs of runs with the specified status.
+            workspace: Only return runs from the specified workspace.
 
         Raises:
             UnauthorizedError: if the remote cluster rejects the token
@@ -387,8 +393,9 @@ class CERuntime(RuntimeInterface):
         for page_size in page_sizes:
             try:
                 # TODO(ORQSDK-684): driver client cannot do filtering via API yet
+                # https://zapatacomputing.atlassian.net/browse/ORQSDK-684?atlOrigin=eyJpIjoiYmNiZjUyMjZiNzg5NDI2YWJmNGU5NzAxZDI1MmJlNzEiLCJwIjoiaiJ9 # noqa: E501
                 paginated_runs = self._client.list_workflow_runs(
-                    page_size=page_size, page_token=page_token
+                    page_size=page_size, page_token=page_token, workspace=workspace
                 )
             except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
                 raise exceptions.UnauthorizedError(

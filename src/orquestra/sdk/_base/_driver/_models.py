@@ -18,6 +18,7 @@ from orquestra.sdk.schema.workflow_run import (
     TaskRun,
     WorkflowRun,
     WorkflowRunMinimal,
+    WorkspaceId,
 )
 
 WorkflowDefID = str
@@ -255,6 +256,7 @@ class ListWorkflowRunsRequest(pydantic.BaseModel):
     workflowDefinitionID: Optional[WorkflowDefID]
     pageSize: Optional[int]
     pageToken: Optional[str]
+    workspaceId: Optional[WorkspaceId]
 
 
 ListWorkflowRunsResponse = List[MinimalWorkflowRunResponse]

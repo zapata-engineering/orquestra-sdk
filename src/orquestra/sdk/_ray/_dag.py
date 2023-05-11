@@ -37,6 +37,7 @@ from ..schema.workflow_run import (
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
+    WorkspaceId,
 )
 from . import _client, _id_gen, _ray_logs
 from ._build_workflow import TaskResult, make_ray_dag
@@ -482,6 +483,7 @@ class RayRuntime(RuntimeInterface):
         limit: t.Optional[int] = None,
         max_age: t.Optional[timedelta] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
+        workspace: t.Optional[WorkspaceId] = None,
     ) -> t.List[WorkflowRun]:
         """
         List the workflow runs, with some filters
@@ -490,10 +492,15 @@ class RayRuntime(RuntimeInterface):
             limit: Restrict the number of runs to return, prioritising the most recent.
             max_age: Only return runs younger than the specified maximum age.
             state: Only return runs of runs with the specified status.
+            workspace: Only return runs from the specified workspace. Not supported
+                on this runtime.
 
         Returns:
                 A list of the workflow runs
         """
+        # TODO: raise WorkspaceNotSupportedError instead
+        if workspace is not None:
+            warnings.warn("Filtering by workspace is not supported on Ray runtimes.")
         now = datetime.now(timezone.utc)
 
         if state is not None:
