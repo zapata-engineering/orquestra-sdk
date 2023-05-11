@@ -145,14 +145,27 @@ class SpacesResolver:
         config: ConfigName,
         workspace_id: WorkspaceId,
         project_id: t.Optional[ProjectId] = None,
-    ):
+        optional: bool = False,
+    ) -> t.Optional[ProjectId]:
+        """
+        Resolve the value of the Project ID.
+
+        If the ID hasn't been specified, prompts the user to pick from the available
+        projects.
+
+        If `optional` is set to True, adds an `All` option that returns `None` for the
+        ID.
+        """
+
         if project_id is not None:
             return project_id
 
         projects = self._spaces_repo.list_projects(config, workspace_id)
         labels = self._presenter.project_list_to_prompt(projects)
+        if optional:
+            projects.append(None)
+            labels.append("All")
         prompt_choices = [(label, ws) for label, ws in zip(labels, projects)]
-        selected_id = self._prompter.choice(prompt_choices, message="Projects: ")
 
         return self._prompter.choice(prompt_choices, message="Projects")
 
