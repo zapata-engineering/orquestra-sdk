@@ -66,12 +66,12 @@ jobs:
           # See https://github.com/docker/metadata-action#tags-input for the
           # format this should take.
           # DUE TO JSON LIMITATIONS, NEWLINES MUST BE EXPLICITLY ADDED AS \n
-          additional_image_tags: 'type=raw,value=${{ inputs.docker_tag }}'
+          additional_image_tags: ${{ inputs.docker_tag && 'type=raw,value=${{ inputs.docker_tag }}' || ''}}
           # For changing `latest` tag behavior, as well as global prefix/suffixes
           # See https://github.com/docker/metadata-action#flavor-input
           # for details on how to use the `flavor` input.
           # DUE TO JSON LIMITATIONS, NEWLINES MUST BE EXPLICITLY ADDED AS \n
-          image_tag_flavor: ${{ inputs.docker_tag && 'suffix=-cuda' || ''}}
+          image_tag_flavor: 'suffix=-cuda'
           # pass any OCI labels you want to add to the final image
           # https://github.com/opencontainers/image-spec/blob/main/annotations.md
           # DUE TO JSON LIMITATIONS, NEWLINES MUST BE EXPLICITLY ADDED AS \n
