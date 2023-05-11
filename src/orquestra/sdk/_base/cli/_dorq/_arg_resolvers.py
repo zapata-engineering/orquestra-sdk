@@ -115,6 +115,10 @@ class WFConfigResolver:
 
 
 class SpacesResolver:
+    """
+    Resolve values related to the workspace / project paradigm.
+    """
+
     def __init__(
         self,
         spaces=_repos.SpacesRepo(),
@@ -129,7 +133,13 @@ class SpacesResolver:
         self,
         config: ConfigName,
         workspace_id: t.Optional[WorkspaceId] = None,
-    ):
+    ) -> WorkspaceId:
+        """
+        Resolve the value of the workspace ID.
+
+        If the ID hasn't been specified, prompts the user to pick from the available
+        workspaces.
+        """
         if workspace_id is not None:
             return workspace_id
 
