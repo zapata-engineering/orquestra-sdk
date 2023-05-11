@@ -234,7 +234,7 @@ def stop(wf_run_id: t.Optional[str], config: t.Optional[str]):
     "-s",
     "--state",
     multiple=True,
-    help="State of workflow runs to display. Max be specified multiple times.",
+    help="State of workflow runs to display. May be specified multiple times.",
 )
 @WORKSPACE_OPTION
 @PROJECT_OPTION
