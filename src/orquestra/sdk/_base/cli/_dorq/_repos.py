@@ -64,12 +64,13 @@ class WorkflowRunRepo:
         self,
         config: ConfigName,
         project: t.Optional[ProjectRef],
+        workspace: t.Optional[WorkspaceId] = None,
         limit: t.Optional[int] = None,
         max_age: t.Optional[str] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
     ) -> t.List[WorkflowRun]:
         """
-        Asks the runtime for all workflow runs.
+        Asks the runtime for all workflow runs that match the filters.
 
         Raises:
             ConnectionError: when connection with Ray failed.
@@ -78,7 +79,12 @@ class WorkflowRunRepo:
         """
         try:
             wf_runs = sdk.list_workflow_runs(
-                config, limit=limit, max_age=max_age, state=state, project=project
+                config,
+                limit=limit,
+                max_age=max_age,
+                state=state,
+                project=project,
+                workspace=workspace,
             )
         except (ConnectionError, exceptions.UnauthorizedError):
             raise
