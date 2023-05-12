@@ -62,6 +62,9 @@ def get_space_ids(
             "project argument contains the workspace ID "
             f"`{_project_ref_workspace_id}`."
         )
+
+    _workspace_id = _workspace_id or _project_ref_workspace_id
+
     # Check for a project ID without an acompanying workspace ID
     if _project_id and not _workspace_id:
         raise ValueError(
