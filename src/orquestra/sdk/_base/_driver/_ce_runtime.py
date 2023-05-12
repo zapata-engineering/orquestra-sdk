@@ -19,6 +19,7 @@ from orquestra.sdk.schema.ir import ArtifactFormat, TaskInvocationId, WorkflowDe
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
+    ProjectId,
     State,
     TaskRunId,
     WorkflowRun,
@@ -352,6 +353,7 @@ class CERuntime(RuntimeInterface):
         max_age: Optional[timedelta] = None,
         state: Optional[Union[State, List[State]]] = None,
         workspace: Optional[WorkspaceId] = None,
+        project: Optional[ProjectId] = None,
     ) -> List[WorkflowRunMinimal]:
         """
         List the workflow runs, with some filters
@@ -395,7 +397,10 @@ class CERuntime(RuntimeInterface):
                 # TODO(ORQSDK-684): driver client cannot do filtering via API yet
                 # https://zapatacomputing.atlassian.net/browse/ORQSDK-684?atlOrigin=eyJpIjoiYmNiZjUyMjZiNzg5NDI2YWJmNGU5NzAxZDI1MmJlNzEiLCJwIjoiaiJ9 # noqa: E501
                 paginated_runs = self._client.list_workflow_runs(
-                    page_size=page_size, page_token=page_token, workspace=workspace
+                    page_size=page_size,
+                    page_token=page_token,
+                    workspace=workspace,
+                    project=project,
                 )
             except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
                 raise exceptions.UnauthorizedError(

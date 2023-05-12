@@ -13,6 +13,7 @@ from pydantic.generics import GenericModel
 
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.workflow_run import (
+    ProjectId,
     RunStatus,
     State,
     TaskRun,
@@ -257,6 +258,7 @@ class ListWorkflowRunsRequest(pydantic.BaseModel):
     pageSize: Optional[int]
     pageToken: Optional[str]
     workspaceId: Optional[WorkspaceId]
+    projectId: Optional[ProjectId]
 
 
 ListWorkflowRunsResponse = List[MinimalWorkflowRunResponse]

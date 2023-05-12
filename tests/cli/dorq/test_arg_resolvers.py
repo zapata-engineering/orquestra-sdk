@@ -1153,7 +1153,7 @@ class TestSpacesResolver:
             # We expect prompt for selecting config.
             presenter.workspaces_list_to_prompt.assert_called_with(workspaces)
             prompter.choice.assert_called_with(
-                [(labels[0], ws1), (labels[1], ws2)], message="Workspace: "
+                [(labels[0], ws1), (labels[1], ws2)], message="Workspace"
             )
 
             # Resolver should return the user's choice.
@@ -1218,7 +1218,47 @@ class TestSpacesResolver:
             # We expect prompt for selecting config.
             presenter.project_list_to_prompt.assert_called_with(projects)
             prompter.choice.assert_called_with(
-                [(labels[0], p1), (labels[1], p2)], message="Projects: "
+                [(labels[0], p1), (labels[1], p2)], message="Projects"
+            )
+
+            # Resolver should return the user's choice.
+            assert resolved_project == selected_project
+
+        @staticmethod
+        def test_optional():
+            # Given
+            config = "config"
+            ws = "workspace"
+            p1 = Project(workspace_id="id1", name="name1", project_id="p1")
+            p2 = Project(workspace_id="id2", name="name2", project_id="p2")
+            projects = [p1, p2]
+
+            spaces_repo = create_autospec(_repos.SpacesRepo)
+            spaces_repo.list_projects.return_value = projects
+
+            prompter = create_autospec(_prompts.Prompter)
+            selected_project = projects[1]
+            prompter.choice.return_value = selected_project
+
+            presenter = create_autospec(_presenters.PromptPresenter)
+            labels = ["label1", "label2"]
+            presenter.project_list_to_prompt.return_value = labels
+            resolver = _arg_resolvers.SpacesResolver(
+                spaces=spaces_repo,
+                prompter=prompter,
+                presenter=presenter,
+            )
+
+            # When
+            resolved_project = resolver.resolve_project_id(
+                config=config, workspace_id=ws, project_id=None, optional=True
+            )
+
+            # Then
+            # We expect prompt for selecting config.
+            presenter.project_list_to_prompt.assert_called_with(projects)
+            prompter.choice.assert_called_with(
+                [(labels[0], p1), (labels[1], p2), ("All", None)], message="Projects"
             )
 
             # Resolver should return the user's choice.

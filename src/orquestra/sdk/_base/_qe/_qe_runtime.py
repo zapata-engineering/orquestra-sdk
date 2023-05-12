@@ -41,6 +41,7 @@ from orquestra.sdk.schema.ir import (
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
+    ProjectId,
     RunStatus,
     State,
     TaskRun,
@@ -840,6 +841,7 @@ class QERuntime(RuntimeInterface):
         max_age: Optional[timedelta] = None,
         state: Optional[Union[State, List[State]]] = None,
         workspace: Optional[WorkspaceId] = None,
+        project: Optional[ProjectId] = None,
     ) -> List[WorkflowRun]:
         """
         List the workflow runs, with some filters
@@ -853,13 +855,16 @@ class QERuntime(RuntimeInterface):
 
         Raises:
             orquestra.sdk.exceptions.UnauthorizedError: if QE returns 401
+            orquestra.sdk.exceptions.WorkspacesNotSupportedError: if a workspace or
+                project is specified.
 
         Returns:
             A list of the workflow runs
         """
-        # TODO: raise WorkspaceNotSupportedError instead
-        if workspace is not None:
-            warnings.warn("Filtering by workspace is not supported on QE runtimes.")
+        if workspace or project:
+            raise exceptions.WorkspacesNotSupportedError(
+                "Filtering by workspace or project is not supported on QE runtimes."
+            )
 
         now = datetime.now(timezone.utc)
 

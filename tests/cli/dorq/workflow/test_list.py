@@ -88,6 +88,9 @@ class TestAction:
             spaces_resolver.resolve_workspace_id.side_effect = (
                 exceptions.WorkspacesNotSupportedError()
             )
+            spaces_resolver.resolve_project_id.side_effect = (
+                exceptions.WorkspacesNotSupportedError()
+            )
 
         action = _list.Action(
             presenter=presenter,
@@ -104,9 +107,9 @@ class TestAction:
             limit=limit,
             max_age=max_age,
             state=state,
-            interactive=interactive,
             workspace_id=workspace,
             project_id=project,
+            interactive=interactive,
         )
 
         # Then
@@ -132,6 +135,7 @@ class TestAction:
                     limit=resolved_limit,
                     max_age=resolved_max_age,
                     state=resolved_state,
+                    workspace=None,
                     project=ProjectRef(
                         workspace_id=resolved_workspace, project_id=resolved_project
                     ),
@@ -143,6 +147,7 @@ class TestAction:
                     max_age=resolved_max_age,
                     state=resolved_state,
                     project=None,
+                    workspace=None,
                 )
 
         # We expect printing of the workflow runs returned from the repo.

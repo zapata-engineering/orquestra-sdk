@@ -30,6 +30,7 @@ from ..schema import ir
 from ..schema.configs import RuntimeConfiguration
 from ..schema.local_database import StoredWorkflowRun
 from ..schema.workflow_run import (
+    ProjectId,
     RunStatus,
     State,
     TaskInvocationId,
@@ -482,6 +483,7 @@ class RayRuntime(RuntimeInterface):
         max_age: t.Optional[timedelta] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
         workspace: t.Optional[WorkspaceId] = None,
+        project: t.Optional[ProjectId] = None,
     ) -> t.List[WorkflowRun]:
         """
         List the workflow runs, with some filters
@@ -495,10 +497,14 @@ class RayRuntime(RuntimeInterface):
 
         Returns:
                 A list of the workflow runs
+
+        Raises:
+            WorkspacesNotSupportedError: when a workspace or project is specified.
         """
-        # TODO: raise WorkspaceNotSupportedError instead
-        if workspace is not None:
-            warnings.warn("Filtering by workspace is not supported on Ray runtimes.")
+        if workspace or project:
+            raise exceptions.WorkspacesNotSupportedError(
+                "Filtering by workspace or project is not supported on Ray runtimes."
+            )
         now = datetime.now(timezone.utc)
 
         if state is not None:

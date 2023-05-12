@@ -13,6 +13,7 @@ from orquestra.sdk._base import abc
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
+    ProjectId,
     RunStatus,
     State,
     TaskRun,
@@ -235,6 +236,7 @@ class InProcessRuntime(abc.RuntimeInterface):
         max_age: t.Optional[timedelta] = None,
         state: t.Union[State, t.List[State], None] = None,
         workspace: t.Optional[WorkspaceId] = None,
+        project: t.Optional[ProjectId] = None,
     ) -> t.List[WorkflowRun]:
         """
         List the workflow runs, with some filters
@@ -247,9 +249,11 @@ class InProcessRuntime(abc.RuntimeInterface):
                 on this runtime.
         Returns:
                 A list of the workflow runs
+        Raises:
+            WorkspacesNotSupportedError: when a workspace or project is specified.
         """
-        if workspace is not None:
-            warnings.warn(
+        if workspace or project:
+            raise exceptions.WorkspacesNotSupportedError(
                 "Filtering by workspace is not supported on In Process runtimes."
             )
         now = datetime.now(timezone.utc)

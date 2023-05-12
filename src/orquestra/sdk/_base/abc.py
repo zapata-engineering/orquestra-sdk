@@ -22,6 +22,7 @@ from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
+    ProjectId,
     State,
     WorkflowRun,
     WorkflowRunId,
@@ -161,6 +162,7 @@ class RuntimeInterface(ABC):
         max_age: t.Optional[timedelta] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
         workspace: t.Optional[WorkspaceId] = None,
+        project: t.Optional[ProjectId] = None
     ) -> t.Sequence[WorkflowRunMinimal]:
         """
         List the workflow runs, with some filters

@@ -27,6 +27,7 @@ from ...schema.workflow_run import ProjectId, State, TaskInvocationId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
 from .. import serde
+from .._spaces._resolvers import get_space_ids
 from .._spaces._structs import Project, ProjectRef, Workspace
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig, _resolve_config
@@ -474,7 +475,6 @@ def list_workflow_runs(
     workspace: t.Optional[t.Union[Workspace, WorkspaceId]] = None,
     project: t.Optional[t.Union[Project, ProjectRef, ProjectId]] = None,
 ) -> t.List[WorkflowRun]:
-    # TODO: once seba's PR is merged, update this to match his call pattern.
     """
     List the workflow runs, with some filters.
 
@@ -486,9 +486,10 @@ def list_workflow_runs(
         project_dir: The location of the project directory. This directory must
             contain the workflows database to which this run was saved. If omitted,
             the current working directory is assumed to be the project directory.
-        workspace: Only return runs from the specified workspace. Only supported on CE.
+        workspace: Only return runs from the specified workspace when using CE.
+            Currently unused.
         project: will be used to list workflows from specific workspace and project
-            when using CE. Currently unused
+            when using CE. Currently unused.
 
     Raises:
         ConfigNameNotFoundError: when the named config is not found in the file.
@@ -498,22 +499,18 @@ def list_workflow_runs(
     Returns:
         a list of WorkflowRuns
     """
+    # TODO: update docstring when platform workspace/project filtering is merged.
+
     _project_dir = Path(project_dir or Path.cwd())
 
     # Resolve config
-    resolved_config = _resolve_config(config)
+    resolved_config: RuntimeConfig = _resolve_config(config)
 
     # resolve runtime
     runtime = resolved_config._get_runtime(_project_dir)
 
-    # resolve workspace ID
-    _workspace_id: t.Optional[WorkspaceId]
-    if isinstance(workspace, Workspace):
-        _workspace_id = workspace.workspace_id
-    elif isinstance(workspace, WorkspaceId):
-        _workspace_id = workspace
-    else:
-        _workspace_id = None
+    # resolve workspace and project IDs
+    _workspace_id, _project_id = get_space_ids(workspace, project)
 
     # Grab the "workflow runs" from the runtime.
     # Note: WorkflowRun means something else in runtime land. To avoid overloading, this
@@ -523,6 +520,7 @@ def list_workflow_runs(
         max_age=_parse_max_age(max_age),
         state=state,
         workspace=_workspace_id,
+        project=_project_id,
     )
 
     # We need to convert to the public API notion of a WorkflowRun

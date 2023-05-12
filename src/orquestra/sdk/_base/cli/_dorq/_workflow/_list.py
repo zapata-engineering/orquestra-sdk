@@ -129,15 +129,19 @@ class Action:
                 # if handling on the runtime that doesn't support workspaces and
                 # projects - project and workspace are already set to None, so nothing
                 # to do.
-                continue
+                assert project is None and workspace is None, (
+                    "The project and workspace resolvers disagree about whether spaces "
+                    "are supported. Please report this as a bug."
+                )
+                pass
 
             wf_runs += self._wf_run_repo.list_wf_runs(
                 resolved_config,
+                project=project,
+                workspace=workspace,
                 limit=resolved_limit,
                 max_age=resolved_max_age,
                 state=resolved_state,
-                project=project,
-                workspace=workspace,
             )
 
         summary = self._summary_repo.wf_list_summary(wf_runs)
