@@ -2,7 +2,6 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 import time
-from pathlib import Path
 from typing import Optional, Sequence
 
 import orquestra.sdk as sdk
