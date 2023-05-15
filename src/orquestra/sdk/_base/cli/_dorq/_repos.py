@@ -509,6 +509,9 @@ class ConfigRepo:
         return config_name
 
     def read_config(self, config: ConfigName) -> RuntimeConfiguration:
+        """
+        Read a stored config.
+        """
         return _config.read_config(config)
 
 

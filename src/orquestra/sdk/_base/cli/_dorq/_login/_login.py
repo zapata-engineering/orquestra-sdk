@@ -29,7 +29,7 @@ class Action:
         config_repo=_repos.ConfigRepo(),
         runtime_repo=_repos.RuntimeRepo(),
         login_server=LoginServer(),
-        config_resolver: t.Optional[_arg_resolvers.ConfigResolver] = None,
+        config_resolver=_arg_resolvers.ConfigResolver(),
         prompter=_prompts.Prompter(),
     ):
         # presenters
@@ -42,9 +42,7 @@ class Action:
         self._config_repo: _repos.ConfigRepo = config_repo
         self._runtime_repo: _repos.RuntimeRepo = runtime_repo
         self._login_server: LoginServer = login_server
-        self._config_resolver = config_resolver or _arg_resolvers.ConfigResolver(
-            prompter=prompter
-        )
+        self._config_resolver: _arg_resolvers.ConfigResolver = config_resolver
 
     def on_cmd_call(
         self,
@@ -53,6 +51,9 @@ class Action:
         token: t.Optional[str],
         ce: bool,
     ):
+        """
+        Call the login command action, catching any exceptions that arise.
+        """
         try:
             self._on_cmd_call_with_exceptions(config, url, token, ce)
         except Exception as e:
