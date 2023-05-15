@@ -76,6 +76,7 @@ class Action:
             "should have been handled at CLI entry. Please report this as a bug."
         )
 
+        _url: str
         if config:
             loaded_config = self._config_repo.read_config(
                 self._config_resolver.resolve(config)
@@ -94,12 +95,14 @@ class Action:
                 )
 
             ce = loaded_config.runtime_name == RuntimeName.CE_REMOTE
-            url = loaded_config.runtime_options["uri"]
+            _url = loaded_config.runtime_options["uri"]
+
+        _url = url or _url
 
         if token is None:
-            self._prompt_for_login(url, ce)
+            self._prompt_for_login(_url, ce)
         else:
-            self._save_token(url, token, ce)
+            self._save_token(_url, token, ce)
 
     def _prompt_for_login(self, url: str, ce: bool):
         try:
