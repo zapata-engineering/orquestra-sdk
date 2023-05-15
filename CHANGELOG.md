@@ -5,7 +5,7 @@
 🚨 *Breaking Changes*
 
 🔥 *Features*
-* All CLI commands that prompted for `wf_run_id` will now first prompt for workspace and project if `wf_run_ID` is not provided.
+* All CLI commands that prompted for `wf_run_id` will now first prompt for workspace and project if `wf_run_id` is not provided.
 
 👩‍🔬 *Experimental*
 
@@ -20,24 +20,25 @@
 ## v0.48.0
 
 🚨 *Breaking Changes*
-* Removed deprecated "name" parameter for RuntimeConfig factory methods, like qe() or ray()
-* Removed deprecated save() method from RuntimeConfig class
-* Removed is_saved() method and "name" setter from RuntimeConfig class
-* WorkflowRun.get_results() returns values consistent with vanilla python - single results are returned as-as, multiple results are returned as a tuple.
+* Removed deprecated "name" parameter for `RuntimeConfig` factory methods, like `qe()` or `ray()`
+* Removed deprecated `save()` method from `RuntimeConfig` class
+* Removed `is_saved()` method and "name" setter from `RuntimeConfig` class
+* `WorkflowRun.get_results()` returns values consistent with vanilla python. Single results are returned as-as, multiple results are returned as a tuple.
 
 🔥 *Features*
-* New API functions: list_workspaces() and list_projects(). Usable only on CE runtime
-* Setting workflow_id and project_id is now available using "orq wf submit" command
+* New API functions: `list_workspaces()` and `list_projects()`. Usable only on CE runtime.
+* Setting `workflow_id` and `project_id` is now available using `orq wf submit` command.
 
 🐛 *Bug Fixes*
 * Tasks will no longer be retried on Ray and Compute Engine when the process crashes, preventing duplicated MLflow errors.
 
 💅 *Improvements*
-* In the CLI, where the user would be prompted with a choice but only one option is available, we now prompt for confirmation instead.
+* In the CLI, where the user would be prompted with a choice, but only one option is available, we now prompt for confirmation instead.
 
 🥷 *Internal*
 * Switch the login URL endpoint
 * Rewrite tests to avoid hangs on Windows CI
+
 
 ## 0.47.0
 
@@ -49,12 +50,12 @@
 * "auto" built-in config name becomes alias to "local" if not in a Studio environment
 
 👩‍🔬 *Experimental*
-* Setting workflow_id and project_id is now available on workflow Python API start() and prepare() functions
+* Setting `workflow_id` and `project_id` is now available on workflow Python API `start()` and `prepare()` functions
 
 🐛 *Bug Fixes*
 * Retry getting results from CE if the results were not ready but the workflow succeeded.
 * Using secrets inside the workflow function will now work correctly on Ray
-* Fix WorkflowDef.graph - honour kwargs of tasks and add aggregate_output to show outputs
+* Fix `WorkflowDef.graph` - honor kwargs of tasks and add `aggregate_output` to show outputs
 * Fixed returning intermediate workflow values (e.g. with `orq task results`) when the task has multiple outputs and only some of them were used in the rest of the workflow function. The following should work now as expected:
 ```python
 @sdk.workflow
