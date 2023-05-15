@@ -3,6 +3,23 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+
+🔥 *Features*
+* All CLI commands that prompted for `wf_run_id` will now first prompt for workspace and project if `wf_run_ID` is not provided.
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+## v0.48.0
+
+🚨 *Breaking Changes*
 * Removed deprecated "name" parameter for RuntimeConfig factory methods, like qe() or ray()
 * Removed deprecated save() method from RuntimeConfig class
 * Removed is_saved() method and "name" setter from RuntimeConfig class
@@ -11,9 +28,6 @@
 🔥 *Features*
 * New API functions: list_workspaces() and list_projects(). Usable only on CE runtime
 * Setting workflow_id and project_id is now available using "orq wf submit" command
-* All CLI commands that prompted for wf_run_id will now first prompt for workspace and project if wf_run_ID is not provided
-
-👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
 * Tasks will no longer be retried on Ray and Compute Engine when the process crashes, preventing duplicated MLflow errors.
@@ -24,8 +38,6 @@
 🥷 *Internal*
 * Switch the login URL endpoint
 * Rewrite tests to avoid hangs on Windows CI
-
-📃 *Docs*
 
 ## 0.47.0
 
