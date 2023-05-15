@@ -9,8 +9,11 @@ import typing as t
 
 from aiohttp import web
 
-from .. import _repos
-from .._ui import _presenters
+from orquestra.sdk.exceptions import RuntimeConfigError
+from orquestra.sdk.schema.configs import RuntimeName
+
+from .. import _arg_resolvers, _repos
+from .._ui import _presenters, _prompts
 from ._login_server import LoginServer
 
 
@@ -26,6 +29,8 @@ class Action:
         config_repo=_repos.ConfigRepo(),
         runtime_repo=_repos.RuntimeRepo(),
         login_server=LoginServer(),
+        config_resolver: t.Optional[_arg_resolvers.ConfigResolver] = None,
+        prompter=_prompts.Prompter(),
     ):
         # presenters
         self._exception_presenter: _presenters.WrappedCorqOutputPresenter = (
@@ -37,22 +42,59 @@ class Action:
         self._config_repo: _repos.ConfigRepo = config_repo
         self._runtime_repo: _repos.RuntimeRepo = runtime_repo
         self._login_server: LoginServer = login_server
+        self._config_resolver = config_resolver or _arg_resolvers.ConfigResolver(
+            prompter=prompter
+        )
 
-    def on_cmd_call(self, url: str, token: t.Optional[str], ce: bool):
+    def on_cmd_call(
+        self,
+        config: t.Optional[str],
+        url: t.Optional[str],
+        token: t.Optional[str],
+        ce: bool,
+    ):
         try:
-            self._on_cmd_call_with_exceptions(url, token, ce)
+            self._on_cmd_call_with_exceptions(config, url, token, ce)
         except Exception as e:
             self._exception_presenter.show_error(e)
 
     def _on_cmd_call_with_exceptions(
         self,
-        url: str,
+        config: t.Optional[str],
+        url: t.Optional[str],
         token: t.Optional[str],
         ce: bool,
     ):
         """
         Implementation of the command action. Doesn't catch exceptions.
         """
+        assert bool(config) ^ bool(url), (
+            "orq login action was called with arguments "
+            f"'config = {config}, url = {url}'. "
+            "Exactly one of these arguments must be provided, but this constraint "
+            "should have been handled at CLI entry. Please report this as a bug."
+        )
+
+        if config:
+            loaded_config = self._config_repo.read_config(
+                self._config_resolver.resolve(config)
+            )
+
+            if ce and loaded_config.runtime_name != RuntimeName.CE_REMOTE:
+                # CE has been set for a previously non-ce config. Rather than
+                # overwrite, we tell the user about the mismatch, and give them the
+                # explicit command to overwrite the old config if they want to.
+                raise RuntimeConfigError(
+                    f"Cannot log into config '{config}' to use a CE runtime as the "
+                    f"stored configuration is for a '{loaded_config.runtime_name}' "
+                    "runtime.\nTo update this config to use CE, please use the "
+                    "following command:\n"
+                    f"orq login -s {loaded_config.runtime_options['uri']} --ce"
+                )
+
+            ce = loaded_config.runtime_name == RuntimeName.CE_REMOTE
+            url = loaded_config.runtime_options["uri"]
+
         if token is None:
             self._prompt_for_login(url, ce)
         else:
