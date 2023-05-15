@@ -262,7 +262,9 @@ class TaskRun:
         return set(parents)
 
 
-def _get_argo_backend_ids() -> t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunId]:
+def _get_argo_backend_ids() -> (
+    t.Tuple[WorkflowRunId, t.Optional[TaskInvocationId], t.Optional[TaskRunId]]
+):
     """
     Get the workflow run, task invocation, and task run IDs from Argo.
 
@@ -291,7 +293,9 @@ def _get_argo_backend_ids() -> t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunI
     return wf_run_id, task_inv_id, task_run_id
 
 
-def _get_ray_backend_ids() -> t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunId]:
+def _get_ray_backend_ids() -> (
+    t.Tuple[WorkflowRunId, t.Optional[TaskInvocationId], t.Optional[TaskRunId]]
+):
     """
     Get the workflow run, task invocation, and task run IDs from Ray.
 
@@ -311,7 +315,7 @@ def _get_ray_backend_ids() -> t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunId
 
 
 def _get_in_process_backend_ids() -> (
-    t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunId]
+    t.Tuple[WorkflowRunId, t.Optional[TaskInvocationId], t.Optional[TaskRunId]]
 ):
     """
     Get the workflow run, task invocation, and task run IDs from the In-process runtime.
@@ -335,9 +339,7 @@ def _get_in_process_backend_ids() -> (
 
 
 def current_run_ids() -> (
-    t.Tuple[
-        t.Optional[WorkflowRunId], t.Optional[TaskInvocationId], t.Optional[TaskRunId]
-    ]
+    t.Tuple[WorkflowRunId, t.Optional[TaskInvocationId], t.Optional[TaskRunId]]
 ):
     """
     Get the workflow run, task invocation, and task run IDs related to current
