@@ -15,9 +15,9 @@ on:
         type: string
         description: |
           Optional parameter to tag the Docker image. If provided,
-          the published image will be tagged with the given tag.
+          the published image will be tagged with the given tag plus -cuda.
           For e.g. if foo-123 is given, the final image will be named
-          hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:foo-123
+          hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:foo-123-cuda
 jobs:
   trigger-build-and-push:
     runs-on: ubuntu-20.04
@@ -66,7 +66,7 @@ jobs:
           # See https://github.com/docker/metadata-action#tags-input for the
           # format this should take.
           # DUE TO JSON LIMITATIONS, NEWLINES MUST BE EXPLICITLY ADDED AS \n
-          additional_image_tags: 'type=raw,value=${{ inputs.docker_tag }}'
+          additional_image_tags: ${{ inputs.docker_tag && format('type=raw,value={0}', inputs.docker_tag) || ''}}
           # For changing `latest` tag behavior, as well as global prefix/suffixes
           # See https://github.com/docker/metadata-action#flavor-input
           # for details on how to use the `flavor` input.
