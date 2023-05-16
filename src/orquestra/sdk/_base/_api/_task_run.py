@@ -332,7 +332,7 @@ def _get_in_process_backend_ids() -> (
         raise WorkflowRunIDNotFoundError(
             "current_run_ids global was imported with value None."
         )
-    if global_current_run_ids[0] is None or len(global_current_run_ids[0]) == 0:
+    if global_current_run_ids[0] is None:
         raise WorkflowRunIDNotFoundError("Could not recover Workflow Run ID")
 
     return global_current_run_ids
