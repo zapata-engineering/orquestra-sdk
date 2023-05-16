@@ -366,6 +366,10 @@ def current_run_ids() -> (
 
     Returns:
         WorkflowRunId, TaskInvocationId, TaskRunId
+
+    Raises:
+        ModuleNotFoundError: raised from _get_ray_backend_ids when ray is not installed.
+        WorkflowRunIDNotFoundError: When the workflow run ID cannot be recovered.
     """
 
     if _exec_ctx.global_context == _exec_ctx.ExecContext.PLATFORM_QE:
