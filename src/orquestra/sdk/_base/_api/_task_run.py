@@ -287,7 +287,7 @@ def _get_argo_backend_ids() -> (
     # good this assumption is.
     task_inv_id = argo_template["name"]
 
-    if wf_run_id is None:
+    if len(wf_run_id) == 0:
         raise WorkflowRunIDNotFoundError("Could not recover Workflow Run ID")
 
     return wf_run_id, task_inv_id, task_run_id
@@ -332,7 +332,7 @@ def _get_in_process_backend_ids() -> (
         raise WorkflowRunIDNotFoundError(
             "current_run_ids global was imported with value None."
         )
-    if global_current_run_ids[0] is None:
+    if global_current_run_ids[0] is None or len(global_current_run_ids[0]) == 0:
         raise WorkflowRunIDNotFoundError("Could not recover Workflow Run ID")
 
     return global_current_run_ids
