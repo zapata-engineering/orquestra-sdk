@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1.5
 # Base image for running Orquestra tasks that require a GPU.
+# Published at hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base with -cuda suffix
 # Mounted gpu has cuda v11.5
 FROM nvcr.io/nvidia/cuquantum-appliance:22.03-cirq
 ARG SDK_REQUIREMENT
@@ -10,7 +11,7 @@ WORKDIR /app
 RUN <<EOF
 apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub
 apt update --yes
-apt install --yes wget build-essential gcc git
+apt install --yes wget build-essential gcc git openssh-client
 apt install --yes python3-pip
 EOF
 
