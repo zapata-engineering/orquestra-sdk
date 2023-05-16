@@ -218,6 +218,12 @@ class RayActorNameClashError(BaseRuntimeError):
     pass
 
 
+class RayNotRunningError(ConnectionError):
+    """Raised when there isn't a running ray instance."""
+
+    pass
+
+
 # CLI Exceptions
 class UserCancelledPrompt(BaseRuntimeError):
     """Raised when the user cancels a CLI prompt."""

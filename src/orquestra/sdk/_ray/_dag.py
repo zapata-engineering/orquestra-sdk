@@ -25,7 +25,7 @@ from .._base import _services, serde
 from .._base._db import WorkflowDB
 from .._base._env import RAY_GLOBAL_WF_RUN_ID_ENV
 from .._base._spaces._structs import ProjectRef
-from .._base.abc import ArtifactValue, LogReader, RuntimeInterface
+from .._base.abc import LogReader, RuntimeInterface
 from ..schema import ir
 from ..schema.configs import RuntimeConfiguration
 from ..schema.local_database import StoredWorkflowRun
@@ -240,7 +240,13 @@ class RayRuntime(RuntimeInterface):
         logger.setLevel(logging.ERROR)
 
         client = RayClient()
-        client.init(**dataclasses.asdict(ray_params))
+        try:
+            client.init(**dataclasses.asdict(ray_params))
+        except ConnectionError as e:
+            raise exceptions.RayNotRunningError(
+                "Could not find any running Ray instance. "
+                "You may need to run \n    orq up\n to start one."
+            ) from e
 
         try:
             client.workflow_init()
