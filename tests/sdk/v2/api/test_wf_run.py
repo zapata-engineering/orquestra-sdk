@@ -16,6 +16,7 @@ from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospe
 import pytest
 
 from orquestra.sdk._base import _api, _workflow, serde
+from orquestra.sdk._base._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
 from orquestra.sdk._base._spaces._api import list_projects, list_workspaces
 from orquestra.sdk._base._spaces._structs import ProjectRef, Workspace
 from orquestra.sdk._base.abc import RuntimeInterface
@@ -771,23 +772,75 @@ class TestListWorkflows:
 
 
 @pytest.mark.parametrize(
-    "workspace_id, project_id, raises, expected",
+    "workspace_id, project_id, workspace_env, project_env, raises, expected",
     [
-        ("a", "b", do_not_raise(), ProjectRef(workspace_id="a", project_id="b")),
-        ("a", None, pytest.raises(ProjectInvalidError), None),
-        (None, "b", pytest.raises(ProjectInvalidError), None),
-        (None, None, do_not_raise(), None),
+        (
+            "a",
+            "b",
+            None,
+            None,
+            do_not_raise(),
+            ProjectRef(workspace_id="a", project_id="b"),
+        ),
+        ("a", None, None, None, pytest.raises(ProjectInvalidError), None),
+        (None, "b", None, None, pytest.raises(ProjectInvalidError), None),
+        (None, None, None, None, do_not_raise(), None),
+        (
+            "a",
+            "b",
+            "env_ws",
+            "env_proj",
+            do_not_raise(),
+            ProjectRef(workspace_id="a", project_id="b"),
+        ),
+        (
+            None,
+            None,
+            "env_ws",
+            "env_proj",
+            do_not_raise(),
+            ProjectRef(workspace_id="env_ws", project_id="env_proj"),
+        ),
+        (None, None, "env_ws", None, do_not_raise(), None),
+        (None, None, None, "env_proj", do_not_raise(), None),
     ],
 )
 class TestProjectId:
-    def test_prepare(self, workspace_id, project_id, raises, expected):
+    def test_prepare(
+        self,
+        workspace_id,
+        project_id,
+        workspace_env,
+        project_env,
+        raises,
+        expected,
+        monkeypatch,
+    ):
+        if workspace_env:
+            monkeypatch.setenv(name=CURRENT_WORKSPACE_ENV, value=workspace_env)
+        if project_env:
+            monkeypatch.setenv(name=CURRENT_PROJECT_ENV, value=project_env)
         with raises:
             wf = wf_pass_tuple().prepare(
                 "in_process", workspace_id=workspace_id, project_id=project_id
             )
             assert wf._project == expected
 
-    def test_run(self, workspace_id, project_id, raises, expected, monkeypatch):
+    def test_run(
+        self,
+        workspace_id,
+        project_id,
+        workspace_env,
+        project_env,
+        raises,
+        expected,
+        monkeypatch,
+    ):
+        if workspace_env:
+            monkeypatch.setenv(name=CURRENT_WORKSPACE_ENV, value=workspace_env)
+        if project_env:
+            monkeypatch.setenv(name=CURRENT_PROJECT_ENV, value=project_env)
+
         monkeypatch.setattr(_api._wf_run.WorkflowRun, "start", Mock())
         with raises:
             wf = wf_pass_tuple().run(
