@@ -323,19 +323,18 @@ def _get_in_process_backend_ids() -> (
     Raises:
         WorkflowRunIDNotFoundError: When the workflow run ID can't be recovered.
     """
+    from ..._base._in_process_runtime import get_current_in_process_ids
 
-    # Deferred import so that we get the value of current_run_ids as set by the context
-    # manager for this task.
-    from orquestra.sdk._base._in_process_runtime import global_current_run_ids
+    ids = get_current_in_process_ids()
 
-    if global_current_run_ids is None:
+    if ids is None:
         raise WorkflowRunIDNotFoundError(
             "current_run_ids global was imported with value None."
         )
-    if global_current_run_ids[0] is None:
+    if ids[0] is None:
         raise WorkflowRunIDNotFoundError("Could not recover Workflow Run ID")
 
-    return global_current_run_ids
+    return ids
 
 
 def current_run_ids() -> (
@@ -368,24 +367,18 @@ def current_run_ids() -> (
         WorkflowRunId, TaskInvocationId, TaskRunId
 
     Raises:
-        ModuleNotFoundError: raised from _get_ray_backend_ids when ray is not installed.
         WorkflowRunIDNotFoundError: When the workflow run ID cannot be recovered.
+        NotImplementedError: When the execution context is not one of the covered cases.
     """
+    context = _exec_ctx.get_current_exec_context()
 
-    if _exec_ctx.global_context == _exec_ctx.ExecContext.PLATFORM_QE:
+    if context == _exec_ctx.ExecContext.PLATFORM_QE:
         return _get_argo_backend_ids()
-    elif _exec_ctx.global_context == _exec_ctx.ExecContext.RAY:
+    elif context == _exec_ctx.ExecContext.RAY:
         return _get_ray_backend_ids()
-    elif _exec_ctx.global_context == _exec_ctx.ExecContext.DIRECT:
-        try:
-            return _get_in_process_backend_ids()
-        except WorkflowRunIDNotFoundError:
-            # _exec_ctx is sometimes set as DIRECT when it should be RAY. THis will
-            # cause an AssertionError when the code tries to read the in-process IDs. We
-            # catch that here and try the ray ids instead. c.f. [ORQSDK-846](https://zapatacomputing.atlassian.net/browse/ORQSDK-846?atlOrigin=eyJpIjoiNzM2N2YxZGEwNGIzNGJkZTkzMzI1ZmIyNTcyYThmODMiLCJwIjoiaiJ9) # noqa: E501
-            return _get_ray_backend_ids()
+    elif context == _exec_ctx.ExecContext.DIRECT:
+        return _get_in_process_backend_ids()
 
     raise NotImplementedError(
-        f"Got unexpected global context {_exec_ctx.global_context}. "
-        "Please report this as a bug."
+        f"Got unexpected global context {context}. Please report this as a bug."
     )

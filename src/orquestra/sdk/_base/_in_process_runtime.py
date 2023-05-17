@@ -39,8 +39,8 @@ global_current_run_ids: t.Optional[
 """
 Global variable to store the current workflow, task inv, and task run IDs.
 
-This should _only_ be used in the context of the set_ids context manager, and should be
-None at all other times.
+This should _only_ be used in the context of the set_ids context manager or the
+`get_current_in_process_ids` function, and should be None at all other times.
 """
 
 
@@ -58,6 +58,15 @@ def set_ids(ids: t.Tuple[WorkflowRunId, ir.TaskInvocationId, TaskRunId]):
     global_current_run_ids = ids
     yield
     global_current_run_ids = old_ids
+
+
+def get_current_in_process_ids() -> (
+    t.Optional[t.Tuple[WorkflowRunId, ir.TaskInvocationId, TaskRunId]]
+):
+    """
+    Getter for the current In process run IDs.
+    """
+    return global_current_run_ids
 
 
 def _make_completed_task_run(workflow_run_id, start_time, end_time, task_inv):
