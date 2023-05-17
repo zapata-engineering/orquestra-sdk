@@ -1,3 +1,7 @@
+################################################################################
+# © Copyright 2023 Zapata Computing Inc.
+################################################################################
+
 import os
 import traceback
 import typing as t
@@ -188,9 +192,9 @@ def _make_ray_dag_node(
             deserialize=serialization,
         )
 
-        logger = _log_adapter.workflow_logger()
-        try:
-            with _exec_ctx.ray():
+        with _exec_ctx.ray():
+            logger = _log_adapter.workflow_logger()
+            try:
                 wrapped_return = wrapped(*inner_args, **inner_kwargs)
 
                 packed: responses.WorkflowResult = (
@@ -216,13 +220,13 @@ def _make_ray_dag_node(
                     packed=packed,
                     unpacked=unpacked,
                 )
-        except Exception as e:
-            # Log the stacktrace as a single log line.
-            logger.exception(traceback.format_exc())
+            except Exception as e:
+                # Log the stacktrace as a single log line.
+                logger.exception(traceback.format_exc())
 
-            # We need to stop further execution of this workflow. If we don't raise, Ray
-            # will think the task succeeded with a return value `None`.
-            raise e
+                # We need to stop further execution of this workflow. If we don't
+                # raise, Ray will think the task succeeded with a return value `None`.
+                raise e
 
     named_remote = client.add_options(_ray_remote, **ray_options)
     dag_node = named_remote.bind(*ray_args, **ray_kwargs)
