@@ -7,10 +7,10 @@ Log adapter adds a workflow context to logs, Workflow ID and Task ID.
 
 import json
 import logging
-import os
 import typing as t
 from datetime import datetime, timezone
 
+from orquestra.sdk._base._api._task_run import current_run_ids
 from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRunId
 
@@ -50,46 +50,6 @@ class TaggedWorkflowTaskLogger(logging.LoggerAdapter):
         # extras.
         new_kwargs = {**kwargs, "extra": new_extra}
         return new_msg, new_kwargs
-
-
-def is_argo_backend():
-    """
-    Quantum Engine backend test.
-    Argo Workflows are executed in pods, where ARGO_NODE_ID corresponds
-    to the workflow step ID.
-    """
-    return "ARGO_NODE_ID" in os.environ
-
-
-def get_argo_backend_ids() -> t.Tuple[WorkflowRunId, TaskInvocationId, TaskRunId]:
-    node_id = os.environ["ARGO_NODE_ID"]
-    # Argo Workflow ID is the left part of the step ID
-    # [wf-id]-[retry-number]-[step-number]
-    wf_run_id = "-".join(node_id.split("-")[:-2])
-    task_run_id = node_id
-
-    argo_template = json.loads(os.environ["ARGO_TEMPLATE"])
-    # Looks like the template name on Argo matches our task invocation ID. Not sure how
-    # good this assumption is.
-    task_inv_id = argo_template["name"]
-
-    return wf_run_id, task_inv_id, task_run_id
-
-
-def get_ray_backend_ids() -> (
-    t.Tuple[
-        t.Optional[WorkflowRunId], t.Optional[TaskInvocationId], t.Optional[TaskRunId]
-    ]
-):
-    try:
-        # Deferred import because Ray isn't installed when running on QE.
-        import orquestra.sdk._ray._dag
-
-    except ModuleNotFoundError:
-        # Ray is not installed
-        return None, None, None
-
-    return orquestra.sdk._ray._dag.get_current_ids()
 
 
 class ISOFormatter(logging.Formatter):
@@ -164,12 +124,11 @@ def workflow_logger() -> logging.LoggerAdapter:
     wf_run_id: t.Optional[WorkflowRunId]
     task_inv_id: t.Optional[TaskInvocationId]
     task_run_id: t.Optional[TaskRunId]
-    if is_argo_backend():
-        # Workflow is running in the Orquestra QE environment
-        wf_run_id, task_inv_id, task_run_id = get_argo_backend_ids()
-    else:
-        # We assume the workflow is running on Ray
-        wf_run_id, task_inv_id, task_run_id = get_ray_backend_ids()
+    try:
+        wf_run_id, task_inv_id, task_run_id = current_run_ids()
+    except ModuleNotFoundError:
+        # Ray is not installed
+        wf_run_id, task_inv_id, task_run_id = None, None, None
 
     logger = _make_logger(
         wf_run_id=wf_run_id, task_inv_id=task_inv_id, task_run_id=task_run_id
