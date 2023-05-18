@@ -15,6 +15,7 @@ from orquestra.sdk._base.cli._dorq._ui._presenters import (
     LoginPresenter,
     WrappedCorqOutputPresenter,
 )
+from orquestra.sdk._base.cli._dorq._ui._prompts import Prompter
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 
 
@@ -354,6 +355,124 @@ class TestAction:
         # THEN
         async_sleep.assert_not_called()
         config_resolver.resolve.assert_not_called()
+        exception_presenter.show_error.assert_called_once()
+        config_repo.store_token_in_config.assert_not_called()
+        login_presenter.prompt_config_saved.assert_not_called()
+
+    @staticmethod
+    def test_mismatch_between_cli_and_stored_runtime_config(async_sleep, ce):
+        # GIVEN
+        # CLI inputs
+        url = None
+        token = None
+        config = "<cli config sentinel>"
+
+        login_url = "config_url"
+        config_name = "cfg"
+
+        # Mocks
+        exception_presenter = create_autospec(WrappedCorqOutputPresenter)
+        login_presenter = create_autospec(LoginPresenter)
+        runtime_repo = create_autospec(RuntimeRepo)
+        config_repo = create_autospec(ConfigRepo)
+        login_server = create_autospec(_login_server.LoginServer)
+        config_resolver = create_autospec(ConfigResolver)
+        prompter = create_autospec(Prompter)
+
+        prompter.confirm.return_value = True
+
+        loaded_runtime_config = create_autospec(RuntimeConfiguration)
+        loaded_runtime_config.runtime_options = {"uri": login_url}
+        loaded_runtime_config.runtime_name = "QE_REMOTE" if ce else "CE_REMOTE"
+        config_resolver.resolve.return_value = config_name
+        config_repo.read_config.return_value = loaded_runtime_config
+        config_repo.store_token_in_config.return_value = config_name
+
+        action = _login.Action(
+            exception_presenter=exception_presenter,
+            login_presenter=login_presenter,
+            runtime_repo=runtime_repo,
+            config_repo=config_repo,
+            login_server=login_server,
+            config_resolver=config_resolver,
+            prompter=prompter,
+        )
+
+        # WHEN
+        action.on_cmd_call(config=config, url=url, token=token, ce=ce)
+
+        # THEN
+        # called
+        prompter.confirm.assert_called_once_with(
+            f"Config '{config}' will be changed from "
+            f"{loaded_runtime_config.runtime_name} to "
+            f"{'CE_REMOTE' if ce else 'QE_REMOTE'}. Continue?",
+            True,
+        )
+        async_sleep.assert_called_once()
+        config_resolver.resolve.assert_called_once_with(config)
+        login_presenter.prompt_config_saved.assert_called_once_with(
+            login_url, config_name
+        )
+        # not called
+        exception_presenter.show_error.assert_not_called()
+        config_repo.store_token_in_config.assert_called_once()
+
+    @staticmethod
+    def test_mismatch_between_cli_and_stored_runtime_config_user_cancels(
+        async_sleep, ce
+    ):
+        # GIVEN
+        # CLI inputs
+        url = None
+        token = None
+        config = "<cli config sentinel>"
+
+        login_url = "config_url"
+        config_name = "cfg"
+
+        # Mocks
+        exception_presenter = create_autospec(WrappedCorqOutputPresenter)
+        login_presenter = create_autospec(LoginPresenter)
+        runtime_repo = create_autospec(RuntimeRepo)
+        config_repo = create_autospec(ConfigRepo)
+        login_server = create_autospec(_login_server.LoginServer)
+        config_resolver = create_autospec(ConfigResolver)
+        prompter = create_autospec(Prompter)
+
+        prompter.confirm.return_value = False
+
+        loaded_runtime_config = create_autospec(RuntimeConfiguration)
+        loaded_runtime_config.runtime_options = {"uri": login_url}
+        loaded_runtime_config.runtime_name = "QE_REMOTE" if ce else "CE_REMOTE"
+        config_resolver.resolve.return_value = config_name
+        config_repo.read_config.return_value = loaded_runtime_config
+        config_repo.store_token_in_config.return_value = config_name
+
+        action = _login.Action(
+            exception_presenter=exception_presenter,
+            login_presenter=login_presenter,
+            runtime_repo=runtime_repo,
+            config_repo=config_repo,
+            login_server=login_server,
+            config_resolver=config_resolver,
+            prompter=prompter,
+        )
+
+        # WHEN
+        action.on_cmd_call(config=config, url=url, token=token, ce=ce)
+
+        # THEN
+        # called
+        config_resolver.resolve.assert_called_once_with(config)
+        prompter.confirm.assert_called_once_with(
+            f"Config '{config}' will be changed from "
+            f"{loaded_runtime_config.runtime_name} to "
+            f"{'CE_REMOTE' if ce else 'QE_REMOTE'}. Continue?",
+            True,
+        )
+        # not called
+        async_sleep.assert_not_called()
         exception_presenter.show_error.assert_called_once()
         config_repo.store_token_in_config.assert_not_called()
         login_presenter.prompt_config_saved.assert_not_called()
