@@ -1172,6 +1172,11 @@ class TestSummaryRepo:
 
 
 class TestConfigRepo:
+    @pytest.fixture(autouse=True)
+    def patch_token_checking(self, monkeypatch: pytest.MonkeyPatch):
+        check = create_autospec(_repos.check_jwt_without_signature_verification)
+        monkeypatch.setattr(_repos, "check_jwt_without_signature_verification", check)
+
     class TestUnit:
         """
         Test boundary::

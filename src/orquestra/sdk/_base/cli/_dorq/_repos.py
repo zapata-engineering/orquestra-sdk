@@ -21,6 +21,7 @@ from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _config, _db, loader
 from orquestra.sdk._base._driver._client import DriverClient
+from orquestra.sdk._base._jwt import check_jwt_without_signature_verification
 from orquestra.sdk._base._qe import _client
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base.abc import ArtifactValue
@@ -494,6 +495,15 @@ class ConfigRepo:
         ]
 
     def store_token_in_config(self, uri, token, ce):
+        """
+        Saves the token in the config file
+
+        Raises:
+            ExpiredTokenError: if the token is expired
+            InvalidTokenError: if the token is not a valid format
+        """
+        check_jwt_without_signature_verification(token)
+
         runtime_name = RuntimeName.CE_REMOTE if ce else RuntimeName.QE_REMOTE
         config_name = _config.generate_config_name(runtime_name, uri)
 

@@ -225,6 +225,18 @@ class UnauthorizedError(BaseRuntimeError):
     pass
 
 
+class ExpiredTokenError(BaseRuntimeError):
+    """Raised when the auth token is expired"""
+
+    pass
+
+
+class InvalidTokenError(BaseRuntimeError):
+    """Raised when an auth token is not a JWT"""
+
+    pass
+
+
 # Ray Errors
 class RayActorNameClashError(BaseRuntimeError):
     """Raised when multiple Ray actors exist with the same name."""

@@ -16,6 +16,7 @@ from orquestra.sdk._base.cli._dorq._ui._presenters import (
     WrappedCorqOutputPresenter,
 )
 from orquestra.sdk._base.cli._dorq._ui._prompts import Prompter
+from orquestra.sdk.exceptions import ExpiredTokenError, InvalidTokenError
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 
 
@@ -477,4 +478,49 @@ class TestAction:
         async_sleep.assert_not_called()
         exception_presenter.show_error.assert_called_once()
         config_repo.store_token_in_config.assert_not_called()
+        login_presenter.prompt_config_saved.assert_not_called()
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "exception",
+        (
+            InvalidTokenError(),
+            ExpiredTokenError(),
+        ),
+    )
+    def test_invalid_token(async_sleep, ce, exception):
+        # Given
+        # CLI inputs
+        url = "my_url"
+        token = "my_token"
+        config = None
+
+        exception_presenter = create_autospec(WrappedCorqOutputPresenter)
+        login_presenter = create_autospec(LoginPresenter)
+        runtime_repo = create_autospec(RuntimeRepo)
+        config_repo = create_autospec(ConfigRepo)
+        login_server = create_autospec(_login_server.LoginServer)
+        config_resolver = create_autospec(ConfigResolver)
+        prompter = create_autospec(Prompter)
+
+        exception = InvalidTokenError()
+        config_repo.store_token_in_config.side_effect = exception
+
+        action = _login.Action(
+            exception_presenter=exception_presenter,
+            login_presenter=login_presenter,
+            runtime_repo=runtime_repo,
+            config_repo=config_repo,
+            login_server=login_server,
+            config_resolver=config_resolver,
+            prompter=prompter,
+        )
+
+        # When
+        action.on_cmd_call(config=config, url=url, token=token, ce=ce)
+
+        # Then
+        async_sleep.assert_not_called()
+        exception_presenter.show_error.assert_called_once_with(exception)
+        config_repo.store_token_in_config.assert_called_once_with(url, token, ce)
         login_presenter.prompt_config_saved.assert_not_called()
