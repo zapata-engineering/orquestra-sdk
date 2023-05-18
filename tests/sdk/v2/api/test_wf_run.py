@@ -17,7 +17,7 @@ import pytest
 
 from orquestra.sdk._base import _api, _workflow, serde
 from orquestra.sdk._base._spaces._api import list_projects, list_workspaces
-from orquestra.sdk._base._spaces._structs import Project, ProjectRef, Workspace
+from orquestra.sdk._base._spaces._structs import ProjectRef, Workspace
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import (
     ProjectInvalidError,
@@ -30,9 +30,8 @@ from orquestra.sdk.exceptions import (
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeName
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.workflow_run import ProjectId, RunStatus, State
+from orquestra.sdk.schema.workflow_run import RunStatus, State
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
-from orquestra.sdk.schema.workflow_run import WorkspaceId
 
 from ..data.complex_serialization.workflow_defs import (
     capitalize,
@@ -782,15 +781,14 @@ class TestListWorkflows:
             project=None,
         )
 
-    @pytest.mark.parametrize(
-        "workspace",
-        [
-            WorkspaceId("<workspace ID sentinel>"),
-            Workspace("<workspace ID sentinel>", "<workspace name sentinel>"),
-        ],
-    )
-    def test_with_workspace(self, mock_config_runtime, workspace):
-        _ = _api.list_workflow_runs("mocked_config", workspace=workspace)
+    def test_with_workspace(self, mock_config_runtime):
+        # GIVEN
+        # WHEN
+        _ = _api.list_workflow_runs(
+            "mocked_config", workspace="<workspace ID sentinel>"
+        )
+
+        # THEN
         mock_config_runtime.list_workflow_runs.assert_called_once_with(
             limit=None,
             max_age=None,
@@ -799,33 +797,37 @@ class TestListWorkflows:
             project=None,
         )
 
-    @pytest.mark.parametrize(
-        "project",
-        [
-            ProjectId("<project ID sentinel>"),
-            ProjectRef(
-                workspace_id="<workspace ID sentinel>",
-                project_id="<project ID sentinel>",
-            ),
-            Project(
-                project_id="<project ID sentinel>",
-                workspace_id="<workspace ID sentinel>",
-                name="<project name sentinel>",
-            ),
-        ],
-    )
-    def test_with_project(self, mock_config_runtime, project):
-        # We include the workspace argument here to avoid exceptions being raised when a
-        # projectId is specified without an accompanying workspace ID.
+    def test_with_workspace_and_project(self, mock_config_runtime):
+        # GIVEN
+        # WHEN
         _ = _api.list_workflow_runs(
-            "mocked_config", project=project, workspace="<workspace ID sentinel>"
+            "mocked_config",
+            project="<project ID sentinel>",
+            workspace="<workspace ID sentinel>",
         )
+
+        # THEN
         mock_config_runtime.list_workflow_runs.assert_called_once_with(
             limit=None,
             max_age=None,
             state=None,
             workspace="<workspace ID sentinel>",
             project="<project ID sentinel>",
+        )
+
+    def test_raises_exception_with_project_and_no_workspace(self, mock_config_runtime):
+        # GIVEN
+        # WHEN
+        with pytest.raises(ProjectInvalidError) as e:
+            _ = _api.list_workflow_runs(
+                "mocked_config", project="<project ID sentinel>"
+            )
+
+        # THEN
+        assert e.exconly() == (
+            "orquestra.sdk.exceptions.ProjectInvalidError: The project "
+            "`<project ID sentinel>` cannot be uniquely identified without a workspace "
+            "parameter."
         )
 
 

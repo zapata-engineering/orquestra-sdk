@@ -11,7 +11,6 @@ from unittest.mock import Mock
 import pytest
 
 from orquestra.sdk import exceptions as exceptions
-from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base.cli._dorq._workflow import _list
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 
@@ -135,10 +134,8 @@ class TestAction:
                     limit=resolved_limit,
                     max_age=resolved_max_age,
                     state=resolved_state,
-                    workspace=None,
-                    project=ProjectRef(
-                        workspace_id=resolved_workspace, project_id=resolved_project
-                    ),
+                    workspace=resolved_workspace,
+                    project=resolved_project,
                 )
             else:
                 wf_run_repo.list_wf_runs.assert_any_call(
