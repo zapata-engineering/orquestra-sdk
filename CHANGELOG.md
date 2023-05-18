@@ -16,6 +16,7 @@
 🐛 *Bug Fixes*
 
 💅 *Improvements*
+* `orquestra-sdk` CPU Docker image has a 20% size reduction.
 
 🥷 *Internal*
 
