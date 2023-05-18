@@ -19,7 +19,9 @@ from orquestra.sdk.schema.workflow_run import (
     RunStatus,
     State,
     TaskRun,
+    TaskRunId,
     WorkflowRun,
+    WorkflowRunId,
     WorkspaceId,
 )
 
