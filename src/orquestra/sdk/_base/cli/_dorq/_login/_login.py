@@ -9,7 +9,7 @@ import typing as t
 
 from aiohttp import web
 
-from orquestra.sdk.exceptions import RuntimeConfigError
+from orquestra.sdk.exceptions import UserCancelledPrompt
 from orquestra.sdk.schema.configs import RuntimeName
 
 from .. import _arg_resolvers, _repos
@@ -37,6 +37,7 @@ class Action:
             exception_presenter
         )
         self._login_presenter: _presenters.LoginPresenter = login_presenter
+        self._prompter: _prompts.Prompter = prompter
 
         # data sources
         self._config_repo: _repos.ConfigRepo = config_repo
@@ -81,21 +82,20 @@ class Action:
             loaded_config = self._config_repo.read_config(
                 self._config_resolver.resolve(config)
             )
-
-            if ce and loaded_config.runtime_name != RuntimeName.CE_REMOTE:
-                # CE has been set for a previously non-ce config. Rather than
-                # overwrite, we tell the user about the mismatch, and give them the
-                # explicit command to overwrite the old config if they want to.
-                raise RuntimeConfigError(
-                    f"Cannot log into config '{config}' to use a CE runtime as the "
-                    f"stored configuration is for a '{loaded_config.runtime_name}' "
-                    "runtime.\nTo update this config to use CE, please use the "
-                    "following command:\n"
-                    f"orq login -s {loaded_config.runtime_options['uri']} --ce"
-                )
-
-            ce = loaded_config.runtime_name == RuntimeName.CE_REMOTE
             _url = loaded_config.runtime_options["uri"]
+
+            # If the CLI disagrees with the stored config about which runtime to use,
+            # prompt the user to agree to changing the config to match the cli args.
+            # TODO: This can be reworked once we have a --qe flag.
+            if ce != (loaded_config.runtime_name == RuntimeName.CE_REMOTE):
+                if not self._prompter.confirm(
+                    f"Config '{config}' will be changed from "
+                    f"{loaded_config.runtime_name} to "
+                    f"{RuntimeName.CE_REMOTE if ce else RuntimeName.QE_REMOTE}. "
+                    "Continue?",
+                    True,
+                ):
+                    raise UserCancelledPrompt()
 
         _url = url or _url
 
