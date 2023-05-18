@@ -58,7 +58,12 @@ class WorkflowRunRepo:
     def list_wf_run_ids(
         self, config: ConfigName, project: ProjectRef
     ) -> t.Sequence[WorkflowRunId]:
-        return [run.id for run in self.list_wf_runs(config, project)]
+        return [
+            run.id
+            for run in self.list_wf_runs(
+                config, project.workspace_id, project.project_id
+            )
+        ]
 
     def list_wf_runs(
         self,
