@@ -73,7 +73,7 @@ class Action:
             "orq login action was called with arguments "
             f"'config = {config}, url = {url}'. "
             "Exactly one of these arguments must be provided, but this constraint "
-            "should have been handled at CLI entry. Please report this as a bug."
+            "should have been handled at CLI entry."
         )
 
         _url: str
