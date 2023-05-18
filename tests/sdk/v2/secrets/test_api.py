@@ -88,23 +88,23 @@ class TestIntegrationWithClient:
                 with pytest.raises(type(exc)):
                     secrets_action()
 
+    @pytest.mark.parametrize("workspace_id", ["coolest_workspace_ever", None])
     class TestPassingData:
         @staticmethod
-        def test_creating(secrets_client_mock):
+        def test_creating(secrets_client_mock, workspace_id):
             secret_name = "my secret?"
             secret_value = "I don't like being mean to folks"
 
-            sdk.secrets.set(secret_name, secret_value)
+            sdk.secrets.set(secret_name, secret_value, workspace_id=workspace_id)
 
             secrets_client_mock.create_secret.assert_called_with(
                 _models.SecretDefinition(
-                    name=secret_name,
-                    value=secret_value,
+                    name=secret_name, value=secret_value, resourceGroup=workspace_id
                 ),
             )
 
         @staticmethod
-        def test_overwriting_secret(secrets_client_mock):
+        def test_overwriting_secret(secrets_client_mock, workspace_id):
             secret_name = "my secret?"
             secret_value = "I don't like being mean to folks"
 
@@ -112,22 +112,32 @@ class TestIntegrationWithClient:
                 _exceptions.SecretAlreadyExistsError(secret_name)
             )
 
-            sdk.secrets.set(secret_name, secret_value)
+            sdk.secrets.set(secret_name, secret_value, workspace_id=workspace_id)
 
+            expected_secret_name = (
+                secret_name
+                if workspace_id is None
+                else f"zri:v1:unused:0:{workspace_id}:secret:{secret_name}"
+            )
             secrets_client_mock.update_secret.assert_called_with(
-                secret_name, secret_value
+                expected_secret_name, secret_value
             )
 
         @staticmethod
-        def test_listing(secrets_client_mock):
-            sdk.secrets.list()
+        def test_listing(secrets_client_mock, workspace_id):
+            sdk.secrets.list(workspace_id=workspace_id)
 
-            secrets_client_mock.list_secrets.assert_called()
+            secrets_client_mock.list_secrets.assert_called_with(workspace_id)
 
         @staticmethod
-        def test_deleting(secrets_client_mock):
+        def test_deleting(secrets_client_mock, workspace_id):
             secret_name = "my secret"
 
-            sdk.secrets.delete(secret_name)
+            sdk.secrets.delete(secret_name, workspace_id=workspace_id)
+            expected_secret_name = (
+                secret_name
+                if workspace_id is None
+                else f"zri:v1:unused:0:{workspace_id}:secret:{secret_name}"
+            )
 
-            secrets_client_mock.delete_secret.assert_called_with(secret_name)
+            secrets_client_mock.delete_secret.assert_called_with(expected_secret_name)
