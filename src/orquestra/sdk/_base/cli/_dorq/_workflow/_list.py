@@ -7,7 +7,6 @@ Code for 'orq workflow list'.
 import typing as t
 
 from orquestra.sdk import exceptions as exceptions
-from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema.configs import ConfigName
 from orquestra.sdk.schema.workflow_run import ProjectId, WorkflowRun, WorkspaceId
 
@@ -101,39 +100,27 @@ class Action:
         wf_runs: t.List[WorkflowRun] = []
         for resolved_config in resolved_configs:
             # Resolve Workspace and Project for this config
-            project: t.Optional[ProjectRef] = None
             workspace: t.Optional[WorkspaceId] = None
-            try:
-                resolved_workspace_id: WorkspaceId = (
-                    self._spaces_resolver.resolve_workspace_id(
+            project: t.Optional[ProjectId] = None
+
+            # If nethier workspace or project are specified, leave both as None.
+            if workspace_id or project_id:
+                try:
+                    workspace = self._spaces_resolver.resolve_workspace_id(
                         resolved_config, workspace_id
                     )
-                )
-                resolved_project_id: t.Optional[
-                    ProjectId
-                ] = self._spaces_resolver.resolve_project_id(
-                    resolved_config, resolved_workspace_id, project_id, optional=True
-                )
-
-                if resolved_project_id is not None:
-                    # We have a project, so we can specify the full workspace/project
-                    # via a ProjectRef
-                    project = ProjectRef(
-                        workspace_id=resolved_workspace_id,
-                        project_id=resolved_project_id,
+                    project = self._spaces_resolver.resolve_project_id(
+                        resolved_config, workspace, project_id, optional=True
                     )
-                else:
-                    # We don't have a project so we'll pass the workspace
-                    workspace = resolved_workspace_id
-            except exceptions.WorkspacesNotSupportedError:
-                # if handling on the runtime that doesn't support workspaces and
-                # projects - project and workspace are already set to None, so nothing
-                # to do.
-                assert project is None and workspace is None, (
-                    "The project and workspace resolvers disagree about whether spaces "
-                    "are supported. Please report this as a bug."
-                )
-                pass
+                except exceptions.WorkspacesNotSupportedError:
+                    # if handling on the runtime that doesn't support workspaces and
+                    # projects - project and workspace are already set to None, so
+                    # nothing to do.
+                    assert project is None and workspace is None, (
+                        "The project and workspace resolvers disagree about whether "
+                        "spaces are supported. Please report this as a bug."
+                    )
+                    pass
 
             wf_runs += self._wf_run_repo.list_wf_runs(
                 resolved_config,

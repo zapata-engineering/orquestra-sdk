@@ -63,8 +63,8 @@ class WorkflowRunRepo:
     def list_wf_runs(
         self,
         config: ConfigName,
-        project: t.Optional[ProjectRef],
         workspace: t.Optional[WorkspaceId] = None,
+        project: t.Optional[ProjectId] = None,
         limit: t.Optional[int] = None,
         max_age: t.Optional[str] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
@@ -83,8 +83,8 @@ class WorkflowRunRepo:
                 limit=limit,
                 max_age=max_age,
                 state=state,
-                project=project,
                 workspace=workspace,
+                project=project,
             )
         except (ConnectionError, exceptions.UnauthorizedError):
             raise

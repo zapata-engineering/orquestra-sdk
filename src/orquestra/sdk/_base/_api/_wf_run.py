@@ -27,8 +27,7 @@ from ...schema.workflow_run import ProjectId, State, TaskInvocationId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
 from .. import serde
-from .._spaces._resolvers import get_space_ids
-from .._spaces._structs import Project, ProjectRef, Workspace
+from .._spaces._structs import ProjectRef
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig, _resolve_config
 from ._task_run import TaskRun
@@ -472,8 +471,8 @@ def list_workflow_runs(
     max_age: t.Optional[str] = None,
     state: t.Optional[t.Union[State, t.List[State]]] = None,
     project_dir: t.Optional[t.Union[Path, str]] = None,
-    workspace: t.Optional[t.Union[Workspace, WorkspaceId]] = None,
-    project: t.Optional[t.Union[Project, ProjectRef, ProjectId]] = None,
+    workspace: t.Optional[WorkspaceId] = None,
+    project: t.Optional[ProjectId] = None,
 ) -> t.List[WorkflowRun]:
     """
     List the workflow runs, with some filters.
@@ -509,9 +508,6 @@ def list_workflow_runs(
     # resolve runtime
     runtime = resolved_config._get_runtime(_project_dir)
 
-    # resolve workspace and project IDs
-    _workspace_id, _project_id = get_space_ids(workspace, project)
-
     # Grab the "workflow runs" from the runtime.
     # Note: WorkflowRun means something else in runtime land. To avoid overloading, this
     #       import is aliased to WorkflowRunStatus in here.
@@ -519,8 +515,8 @@ def list_workflow_runs(
         limit=limit,
         max_age=_parse_max_age(max_age),
         state=state,
-        workspace=_workspace_id,
-        project=_project_id,
+        workspace=workspace,
+        project=project,
     )
 
     # We need to convert to the public API notion of a WorkflowRun
