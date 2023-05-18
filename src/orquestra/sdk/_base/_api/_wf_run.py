@@ -13,6 +13,7 @@ from pathlib import Path
 from ...exceptions import (
     ConfigFileNotFoundError,
     ConfigNameNotFoundError,
+    ProjectInvalidError,
     UnauthorizedError,
     WorkflowRunCanNotBeTerminated,
     WorkflowRunNotFinished,
@@ -499,6 +500,12 @@ def list_workflow_runs(
         a list of WorkflowRuns
     """
     # TODO: update docstring when platform workspace/project filtering is merged [ORQP-1479](https://zapatacomputing.atlassian.net/browse/ORQP-1479?atlOrigin=eyJpIjoiZWExMWI4MDUzYTI0NDQ0ZDg2ZTBlNzgyNjE3Njc4MDgiLCJwIjoiaiJ9) # noqa: E501
+
+    if project and not workspace:
+        raise ProjectInvalidError(
+            f"The project `{project}` cannot be uniquely identified "
+            "without a workspace parameter."
+        )
 
     _project_dir = Path(project_dir or Path.cwd())
 
