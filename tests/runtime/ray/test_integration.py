@@ -281,8 +281,16 @@ class TestRayRuntimeMethods:
 
             runtime.stop_workflow_run(wf_run_id)
 
-            wf_run = runtime.get_workflow_run_status(wf_run_id)
-            assert wf_run.status.state == State.TERMINATED
+            # ray should cancel workflow synchronously, but just in case it doesn't
+            # let's give a workflow some time to change its state
+            timeout = time.time() + 30  # now + 30 seconds
+            while True:
+                if time.time() > timeout:
+                    assert False, "timeout while waiting for workflow termination"
+                wf_run = runtime.get_workflow_run_status(wf_run_id)
+                if wf_run.status.state != State.RUNNING:
+                    assert wf_run.status.state == State.TERMINATED
+                    break
 
         @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_on_finished_workflow(self, runtime: _dag.RayRuntime, tmp_path):
