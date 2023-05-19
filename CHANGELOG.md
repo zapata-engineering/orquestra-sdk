@@ -18,6 +18,7 @@
 💅 *Improvements*
 
 🥷 *Internal*
+* Fix random CI failures on socket warning
 
 📃 *Docs*
 
