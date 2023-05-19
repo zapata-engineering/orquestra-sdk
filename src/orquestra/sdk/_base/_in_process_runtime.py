@@ -1,15 +1,28 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
+
+"""
+In-process implementation of the runtime interface.
+"""
+
 import typing as t
 import warnings
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 
 from orquestra.sdk import ProjectRef, exceptions
 from orquestra.sdk._base import abc
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.responses import WorkflowResult
-from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun, WorkflowRun
+from orquestra.sdk.schema.workflow_run import (
+    RunStatus,
+    State,
+    TaskRun,
+    TaskRunId,
+    WorkflowRun,
+    WorkflowRunId,
+)
 
 from .. import secrets
 from . import serde
@@ -19,6 +32,41 @@ from .dispatch import locate_fn_ref
 WfRunId = str
 ArtifactValue = t.Any
 TaskOutputs = t.Tuple[ArtifactValue, ...]
+
+global_current_run_ids: t.Optional[
+    t.Tuple[WorkflowRunId, ir.TaskInvocationId, TaskRunId]
+] = None
+"""
+Global variable to store the current workflow, task inv, and task run IDs.
+
+This should _only_ be used in the context of the set_ids context manager or the
+`get_current_in_process_ids` function, and should be None at all other times.
+"""
+
+
+@contextmanager
+def set_ids(ids: t.Tuple[WorkflowRunId, ir.TaskInvocationId, TaskRunId]):
+    """
+    Temporarily set the global_current_run_ids global variable.
+
+    global_current_run_ids will be set to a tuple of the current WorkflowRunID,
+    TaskInvocationID, and TaskRunID.
+    """
+
+    global global_current_run_ids
+    old_ids = global_current_run_ids
+    global_current_run_ids = ids
+    yield
+    global_current_run_ids = old_ids
+
+
+def get_current_in_process_ids() -> (
+    t.Optional[t.Tuple[WorkflowRunId, ir.TaskInvocationId, TaskRunId]]
+):
+    """
+    Getter for the current In process run IDs.
+    """
+    return global_current_run_ids
 
 
 def _make_completed_task_run(workflow_run_id, start_time, end_time, task_inv):
@@ -122,7 +170,9 @@ class InProcessRuntime(abc.RuntimeInterface):
                 fn = task_fn._TaskDef__sdk_task_body
             except AttributeError:
                 fn = task_fn
-            fn_output = fn(*args, **kwargs)
+
+            with set_ids((run_id, task_inv.id, task_inv.task_id)):
+                fn_output = fn(*args, **kwargs)
 
             # Finally, we need to dereference the output IDs
             for artifact_id in task_inv.output_ids:
@@ -168,9 +218,10 @@ class InProcessRuntime(abc.RuntimeInterface):
 
             artifact_nodes = [wf_def.artifact_nodes[id] for id in inv.output_ids]
             packed_nodes = [n for n in artifact_nodes if n.artifact_index is None]
-            assert (
-                len(packed_nodes) == 1
-            ), f"Task invocation should have exactly 1 packed output. {inv.id} has {len(packed_nodes)}: {packed_nodes}"  # noqa: E501
+            assert len(packed_nodes) == 1, (
+                "Task invocation should have exactly 1 packed output. "
+                f"{inv.id} has {len(packed_nodes)}: {packed_nodes}"
+            )
             packed_artifact = packed_nodes[0]
 
             task_result = self._artifact_store[workflow_run_id][packed_artifact.id]
