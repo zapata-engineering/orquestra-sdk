@@ -142,3 +142,15 @@ def _(e: exceptions.NoOptionsAvailableError) -> ResponseStatusCode:
 def _(e: exceptions.LocalConfigLoginError) -> ResponseStatusCode:
     click.echo(e.message)
     return ResponseStatusCode.INVALID_CLI_COMMAND_ERROR
+
+
+@pretty_print_exception.register
+def _(e: exceptions.InvalidTokenError) -> ResponseStatusCode:
+    click.echo("The auth token is not valid.\n" "Please try logging in again.")
+    return ResponseStatusCode.UNAUTHORIZED
+
+
+@pretty_print_exception.register
+def _(e: exceptions.ExpiredTokenError) -> ResponseStatusCode:
+    click.echo("The auth token has expired.\n" "Please try logging in again.")
+    return ResponseStatusCode.UNAUTHORIZED

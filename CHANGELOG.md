@@ -18,6 +18,7 @@
 🐛 *Bug Fixes*
 
 💅 *Improvements*
+* `orq login` will perform some sanity checks before saving the token.
 
 🥷 *Internal*
 * Fix random CI failures on socket warning
