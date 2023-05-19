@@ -25,7 +25,7 @@ from orquestra.sdk._base._qe import _client
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base.abc import ArtifactValue
 from orquestra.sdk.schema import _compat
-from orquestra.sdk.schema.configs import ConfigName, RuntimeName
+from orquestra.sdk.schema.configs import ConfigName, RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.workflow_run import (
     ProjectId,
@@ -507,6 +507,12 @@ class ConfigRepo:
         _config.save_or_update(config_name, runtime_name, config._get_runtime_options())
 
         return config_name
+
+    def read_config(self, config: ConfigName) -> RuntimeConfiguration:
+        """
+        Read a stored config.
+        """
+        return _config.read_config(config)
 
 
 class SpacesRepo:
