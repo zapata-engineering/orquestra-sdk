@@ -21,11 +21,12 @@ from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _config, _db, loader
 from orquestra.sdk._base._driver._client import DriverClient
+from orquestra.sdk._base._jwt import check_jwt_without_signature_verification
 from orquestra.sdk._base._qe import _client
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base.abc import ArtifactValue
 from orquestra.sdk.schema import _compat
-from orquestra.sdk.schema.configs import ConfigName, RuntimeName
+from orquestra.sdk.schema.configs import ConfigName, RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.workflow_run import (
     ProjectId,
@@ -494,6 +495,15 @@ class ConfigRepo:
         ]
 
     def store_token_in_config(self, uri, token, ce):
+        """
+        Saves the token in the config file
+
+        Raises:
+            ExpiredTokenError: if the token is expired
+            InvalidTokenError: if the token is not a valid format
+        """
+        check_jwt_without_signature_verification(token)
+
         runtime_name = RuntimeName.CE_REMOTE if ce else RuntimeName.QE_REMOTE
         config_name = _config.generate_config_name(runtime_name, uri)
 
@@ -507,6 +517,12 @@ class ConfigRepo:
         _config.save_or_update(config_name, runtime_name, config._get_runtime_options())
 
         return config_name
+
+    def read_config(self, config: ConfigName) -> RuntimeConfiguration:
+        """
+        Read a stored config.
+        """
+        return _config.read_config(config)
 
 
 class SpacesRepo:

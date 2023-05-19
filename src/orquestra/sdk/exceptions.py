@@ -73,6 +73,12 @@ class UnsavedConfigChangesError(BaseRuntimeError):
     pass
 
 
+class LocalConfigLoginError(BaseRuntimeError):
+    """Raised when trying to log in using a config that relates to local execution."""
+
+    pass
+
+
 # Workflow Definition Errors
 class WorkflowDefinitionModuleNotFound(NotFoundError):
     """
@@ -219,6 +225,18 @@ class UnauthorizedError(BaseRuntimeError):
     pass
 
 
+class ExpiredTokenError(BaseRuntimeError):
+    """Raised when the auth token is expired"""
+
+    pass
+
+
+class InvalidTokenError(BaseRuntimeError):
+    """Raised when an auth token is not a JWT"""
+
+    pass
+
+
 # Ray Errors
 class RayActorNameClashError(BaseRuntimeError):
     """Raised when multiple Ray actors exist with the same name."""
@@ -238,6 +256,12 @@ class LoginURLUnavailableError(BaseRuntimeError):
 
     def __init__(self, base_uri: str):
         self.base_uri = base_uri
+
+
+class NoOptionsAvailableError(NotFoundError):
+    """Raised when the user would choose options, but no options are available"""
+
+    pass
 
 
 class InProcessFromCLIError(NotFoundError):

@@ -88,6 +88,8 @@ class TestPrettyPrintException:
                 'The "in_process" runtime is designed for debugging and testing via the'
                 " Python API only",
             ),
+            (exceptions.InvalidTokenError, "The auth token is not valid"),
+            (exceptions.ExpiredTokenError, "The auth token has expired"),
         ],
     )
     def tests_prints_exception_without_traceback(capsys, exc, stdout_marker: str):
