@@ -79,9 +79,7 @@ class Prompter:
         """
         # If there are no choices, report it to the user and exit.
         if len(choices) == 0:
-            raise exceptions.NoOptionsAvailableError(
-                f"{message} - no options are available."
-            )
+            raise exceptions.NoOptionsAvailableError(message)
 
         # If there's only one choice, select it automatically and confirm with the user
         # that that's what they want to do.
@@ -172,9 +170,7 @@ class Prompter:
         """
         # If there are no choices, report it to the user and exit.
         if len(choices) == 0:
-            raise exceptions.NoOptionsAvailableError(
-                f"{message} - no options are available."
-            )
+            raise exceptions.NoOptionsAvailableError(message)
 
         # If there's only one choice, select it automatically and confirm with the user
         # that that's what they want to do.

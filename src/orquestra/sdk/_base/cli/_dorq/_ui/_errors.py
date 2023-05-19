@@ -134,7 +134,7 @@ def _(e: exceptions.ConfigNameNotFoundError) -> ResponseStatusCode:
 @pretty_print_exception.register
 def _(e: exceptions.NoOptionsAvailableError) -> ResponseStatusCode:
     _print_traceback(e)
-    click.echo(e.message)
+    click.echo(f"{e.message}:\nNo options are available.")
     return ResponseStatusCode.NOT_FOUND
 
 
