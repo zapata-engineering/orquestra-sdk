@@ -17,7 +17,10 @@ import yaml
 import orquestra.sdk as sdk
 from orquestra.sdk._base import _dsl, dispatch, loader
 from orquestra.sdk._base._conversions import _yaml_exporter as yaml_converter
-from orquestra.sdk._base._testing._example_wfs import wf_with_secrets
+from orquestra.sdk._base._testing._example_wfs import (
+    wf_with_explicit_n_outputs,
+    wf_with_secrets,
+)
 from orquestra.sdk.schema import ir
 from orquestra.sdk.secrets import _client, _models
 
@@ -59,6 +62,7 @@ def wf_with_ctx():
         # Checks that we set the execution context flag correctly.
         (wf_with_ctx, '"PLATFORM_QE"'),
         (wf_with_secrets, '"Mocked"'),
+        (wf_with_explicit_n_outputs, "true"),
     ],
 )
 def test_execution(monkeypatch, tmp_path, wf, expected_out):
@@ -91,8 +95,10 @@ def test_execution(monkeypatch, tmp_path, wf, expected_out):
         Mock(return_value=_models.SecretDefinition(name="mocked", value="mocked")),
     )
 
+    wf_model = wf().model
+
     # Convert the workflow to a YAML workflow
-    yaml_model = yaml_converter.workflow_to_yaml(wf().model)
+    yaml_model = yaml_converter.workflow_to_yaml(wf_model)
 
     # 2. Get into a single step specification
     yaml_str = yaml_converter.pydantic_to_yaml(yaml_model)
@@ -118,7 +124,7 @@ def test_execution(monkeypatch, tmp_path, wf, expected_out):
         json_files = [
             f for f in os.listdir(temp_dir) if os.path.splitext(f)[1] == ".json"
         ]
-        assert len(json_files) == 1
+        assert len(json_files) == len(wf_model.artifact_nodes)
 
         with open(os.path.join(temp_dir, json_files[0])) as f:
             output_content = json.load(f)

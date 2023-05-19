@@ -1172,6 +1172,11 @@ class TestSummaryRepo:
 
 
 class TestConfigRepo:
+    @pytest.fixture(autouse=True)
+    def patch_token_checking(self, monkeypatch: pytest.MonkeyPatch):
+        check = create_autospec(_repos.check_jwt_without_signature_verification)
+        monkeypatch.setattr(_repos, "check_jwt_without_signature_verification", check)
+
     class TestUnit:
         """
         Test boundary::
@@ -1515,6 +1520,7 @@ class TestWorkflowDefRepoIntegration:
                 "wf_using_inline_imports",
                 "wf_using_git_imports",
                 "serial_wf_with_slow_middle_task",
+                "infinite_workflow",
                 "serial_wf_with_file_triggers",
                 "exception_wf_with_multiple_values",
                 "wf_with_log",
@@ -1523,6 +1529,7 @@ class TestWorkflowDefRepoIntegration:
                 "wf_with_secrets",
                 "workflow_parametrised_with_resources",
                 "workflow_with_different_resources",
+                "wf_with_explicit_n_outputs",
             ]
 
         @staticmethod
