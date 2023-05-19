@@ -13,6 +13,7 @@ from pathlib import Path
 from ...exceptions import (
     ConfigFileNotFoundError,
     ConfigNameNotFoundError,
+    ProjectInvalidError,
     UnauthorizedError,
     WorkflowRunCanNotBeTerminated,
     WorkflowRunNotFinished,
@@ -23,9 +24,9 @@ from ...exceptions import (
 from ...schema import ir
 from ...schema.configs import ConfigName
 from ...schema.local_database import StoredWorkflowRun
-from ...schema.workflow_run import State, TaskInvocationId
+from ...schema.workflow_run import ProjectId, State, TaskInvocationId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
-from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal
+from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
 from .. import serde
 from .._spaces._structs import ProjectRef
 from ..abc import RuntimeInterface
@@ -471,9 +472,11 @@ def list_workflow_runs(
     max_age: t.Optional[str] = None,
     state: t.Optional[t.Union[State, t.List[State]]] = None,
     project_dir: t.Optional[t.Union[Path, str]] = None,
-    project: t.Optional[ProjectRef] = None,
+    workspace: t.Optional[WorkspaceId] = None,
+    project: t.Optional[ProjectId] = None,
 ) -> t.List[WorkflowRun]:
-    """Get the WorkflowRun corresponding to a previous workflow run.
+    """
+    List the workflow runs, with some filters.
 
     Args:
         config: The name of the configuration to use.
@@ -483,27 +486,44 @@ def list_workflow_runs(
         project_dir: The location of the project directory. This directory must
             contain the workflows database to which this run was saved. If omitted,
             the current working directory is assumed to be the project directory.
+        workspace: Only return runs from the specified workspace when using CE.
+            Currently unused.
         project: will be used to list workflows from specific workspace and project
-            when using CE. Currently unused
+            when using CE. Currently unused.
 
     Raises:
         ConfigNameNotFoundError: when the named config is not found in the file.
+        NotImplementedError: when a filter is specified for a runtime that does not
+            support it.
 
     Returns:
         a list of WorkflowRuns
     """
+    # TODO: update docstring when platform workspace/project filtering is merged [ORQP-1479](https://zapatacomputing.atlassian.net/browse/ORQP-1479?atlOrigin=eyJpIjoiZWExMWI4MDUzYTI0NDQ0ZDg2ZTBlNzgyNjE3Njc4MDgiLCJwIjoiaiJ9) # noqa: E501
+
+    if project and not workspace:
+        raise ProjectInvalidError(
+            f"The project `{project}` cannot be uniquely identified "
+            "without a workspace parameter."
+        )
+
     _project_dir = Path(project_dir or Path.cwd())
 
     # Resolve config
-    resolved_config = _resolve_config(config)
+    resolved_config: RuntimeConfig = _resolve_config(config)
 
+    # resolve runtime
     runtime = resolved_config._get_runtime(_project_dir)
 
     # Grab the "workflow runs" from the runtime.
     # Note: WorkflowRun means something else in runtime land. To avoid overloading, this
     #       import is aliased to WorkflowRunStatus in here.
     run_statuses: t.Sequence[WorkflowRunMinimal] = runtime.list_workflow_runs(
-        limit=limit, max_age=_parse_max_age(max_age), state=state
+        limit=limit,
+        max_age=_parse_max_age(max_age),
+        state=state,
+        workspace=workspace,
+        project=project,
     )
 
     # We need to convert to the public API notion of a WorkflowRun
