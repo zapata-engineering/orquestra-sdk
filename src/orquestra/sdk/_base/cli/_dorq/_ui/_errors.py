@@ -88,6 +88,12 @@ def _(e: exceptions.WorkflowRunNotFinished) -> ResponseStatusCode:
 
 
 @pretty_print_exception.register
+def _(e: exceptions.RayNotRunningError) -> ResponseStatusCode:
+    click.echo(f"{e}")
+    return ResponseStatusCode.CONNECTION_ERROR
+
+
+@pretty_print_exception.register
 def _(e: ConnectionError) -> ResponseStatusCode:
     _print_traceback(e)
     click.echo(f"{e}")
