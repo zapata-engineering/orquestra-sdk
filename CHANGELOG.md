@@ -5,6 +5,11 @@
 🚨 *Breaking Changes*
 
 🔥 *Features*
+* Login CLI command now accepts the name of a stored config as an alternative to the uri.
+* Choice and Checklist CLI prompts present an informative error message when there are no options rather than prompting the user to select from an empty list.
+* New API functions: list_workspaces() and list_projects(). Usable only on CE runtime
+* Setting workflow_id and project_id is now available using "orq wf submit" command
+* `sdk.current_run_ids()` can now be used within task code to access the workflow run ID, task invocation ID, and task run ID.
 * All CLI commands that prompted for `wf_run_id` will now first prompt for workspace and project if `wf_run_id` is not provided.
 
 👩‍🔬 *Experimental*
@@ -12,8 +17,10 @@
 🐛 *Bug Fixes*
 
 💅 *Improvements*
+* `orq login` will perform some sanity checks before saving the token.
 
 🥷 *Internal*
+* Fix random CI failures on socket warning
 
 📃 *Docs*
 

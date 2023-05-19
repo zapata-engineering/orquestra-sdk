@@ -4,64 +4,10 @@
 import subprocess
 import sys
 import typing as t
-from unittest.mock import Mock
 
 import pytest
 
-from orquestra.sdk._base import _log_adapter
-from orquestra.sdk._ray import _dag, _ray_logs
-
-TEST_ARGO_NODE_ID = "hello-orquestra-nk148-r000-4219834842"
-TEST_ARGO_TEMPLATE = """{
-    "name": "hello",
-    "inputs": "",
-    "outputs": ""
-}"""
-
-
-def test_is_argo_backend(monkeypatch):
-    monkeypatch.setenv("ARGO_NODE_ID", TEST_ARGO_NODE_ID)
-
-    assert _log_adapter.is_argo_backend()
-
-
-def test_not_argo_backend():
-    assert not _log_adapter.is_argo_backend()
-
-
-def test_get_argo_backend_ids(monkeypatch):
-    monkeypatch.setenv("ARGO_NODE_ID", TEST_ARGO_NODE_ID)
-    monkeypatch.setenv("ARGO_TEMPLATE", TEST_ARGO_TEMPLATE)
-
-    wf_run_id, task_inv_id, task_run_id = _log_adapter.get_argo_backend_ids()
-
-    assert wf_run_id == "hello-orquestra-nk148"
-    assert task_inv_id == "hello"
-    assert task_run_id == TEST_ARGO_NODE_ID
-
-
-def test_get_ray_backend_ids(monkeypatch):
-    """
-    Test boundary::
-        [_dag.get_current_ids]
-
-    The Ray underlying machinery is tested in integration tests for RayRuntime.
-    """
-    # Given
-    wf_run_id = "wf.1"
-    task_inv_id = "inv-1-generate-data"
-    task_run_id = f"{wf_run_id}@{task_inv_id}"
-    monkeypatch.setattr(
-        _dag,
-        "get_current_ids",
-        Mock(return_value=(wf_run_id, task_inv_id, task_run_id)),
-    )
-
-    # When
-    ids = _log_adapter.get_ray_backend_ids()
-
-    # Then
-    assert ids == (wf_run_id, task_inv_id, task_run_id)
+from orquestra.sdk._ray import _ray_logs
 
 
 class TestMakeLogger:

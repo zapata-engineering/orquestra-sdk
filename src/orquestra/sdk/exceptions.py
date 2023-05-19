@@ -73,6 +73,12 @@ class UnsavedConfigChangesError(BaseRuntimeError):
     pass
 
 
+class LocalConfigLoginError(BaseRuntimeError):
+    """Raised when trying to log in using a config that relates to local execution."""
+
+    pass
+
+
 # Workflow Definition Errors
 class WorkflowDefinitionModuleNotFound(NotFoundError):
     """
@@ -204,9 +210,29 @@ class WorkflowResultsNotReadyError(NotFoundError):
     """
 
 
+class WorkflowRunIDNotFoundError(NotFoundError):
+    """Raised when we can't recover the ID for this Workflow Run."""
+
+    # Note that this is different to the WorkflowRunNotFoundError.
+    # We have an ID but can't find the workflow: WorkflowRunNotFoundError
+    # We have a workflow but can't recover the ID: WorkflowRunIDNotFoundError
+
+
 # Auth Errors
 class UnauthorizedError(BaseRuntimeError):
     """Raised when the remote cluster rejects the auth token."""
+
+    pass
+
+
+class ExpiredTokenError(BaseRuntimeError):
+    """Raised when the auth token is expired"""
+
+    pass
+
+
+class InvalidTokenError(BaseRuntimeError):
+    """Raised when an auth token is not a JWT"""
 
     pass
 
@@ -236,6 +262,12 @@ class LoginURLUnavailableError(BaseRuntimeError):
 
     def __init__(self, base_uri: str):
         self.base_uri = base_uri
+
+
+class NoOptionsAvailableError(NotFoundError):
+    """Raised when the user would choose options, but no options are available"""
+
+    pass
 
 
 class InProcessFromCLIError(NotFoundError):

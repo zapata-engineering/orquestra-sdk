@@ -79,3 +79,8 @@ def platform_qe():
     """
     with _set_context(ExecContext.PLATFORM_QE):
         yield
+
+
+def get_current_exec_context() -> ExecContext:
+    """Getter for the current execution context."""
+    return global_context
