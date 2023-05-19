@@ -384,6 +384,7 @@ class TestAction:
         loaded_runtime_config = create_autospec(RuntimeConfiguration)
         loaded_runtime_config.runtime_options = {"uri": login_url}
         loaded_runtime_config.runtime_name = "QE_REMOTE" if ce else "CE_REMOTE"
+        loaded_runtime_config.config_name = config_name
         config_resolver.resolve_stored_config_for_login.return_value = config_name
         config_repo.read_config.return_value = loaded_runtime_config
         config_repo.store_token_in_config.return_value = config_name
@@ -404,7 +405,7 @@ class TestAction:
         # THEN
         # called
         prompter.confirm.assert_called_once_with(
-            f"Config '{config}' will be changed from "
+            f"Config '{config_name}' will be changed from "
             f"{loaded_runtime_config.runtime_name} to "
             f"{'CE_REMOTE' if ce else 'QE_REMOTE'}. Continue?",
             True,
@@ -445,6 +446,7 @@ class TestAction:
         loaded_runtime_config = create_autospec(RuntimeConfiguration)
         loaded_runtime_config.runtime_options = {"uri": login_url}
         loaded_runtime_config.runtime_name = "QE_REMOTE" if ce else "CE_REMOTE"
+        loaded_runtime_config.config_name = config_name
         config_resolver.resolve.return_value = config_name
         config_repo.read_config.return_value = loaded_runtime_config
         config_repo.store_token_in_config.return_value = config_name
@@ -466,7 +468,7 @@ class TestAction:
         # called
         config_resolver.resolve_stored_config_for_login.assert_called_once_with(config)
         prompter.confirm.assert_called_once_with(
-            f"Config '{config}' will be changed from "
+            f"Config '{config_name}' will be changed from "
             f"{loaded_runtime_config.runtime_name} to "
             f"{'CE_REMOTE' if ce else 'QE_REMOTE'}. Continue?",
             True,
