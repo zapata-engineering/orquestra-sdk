@@ -152,7 +152,22 @@ class TestClient:
                 json=resp_mocks.make_list_response(secret_names=secret_names)
             )
 
-            secrets = client.list_secrets()
+            secrets = client.list_secrets(workspace_id=None)
+
+            assert [s.name for s in secrets] == secret_names
+
+        @staticmethod
+        def test_response_parsing_with_workspace(
+            endpoint_mocker, client: SecretsClient, secret_names
+        ):
+            """
+            Verifies that the response is correctly deserialized.
+            """
+            endpoint_mocker(
+                json=resp_mocks.make_list_response(secret_names=secret_names)
+            )
+
+            secrets = client.list_secrets(workspace_id="workspace")
 
             assert [s.name for s in secrets] == secret_names
 
@@ -167,7 +182,7 @@ class TestClient:
                 json=resp_mocks.make_list_response(secret_names=secret_names),
             )
 
-            client.list_secrets()
+            client.list_secrets(None)
 
             # The assertion is done by mocked_responses
 
@@ -179,7 +194,7 @@ class TestClient:
             )
 
             with pytest.raises(_exceptions.InvalidTokenError):
-                _ = client.list_secrets()
+                _ = client.list_secrets(None)
 
     # ------ mutations ------
 
@@ -208,12 +223,17 @@ class TestClient:
             """
             Verifies that params are correctly sent to the server.
             """
+            workspace_id = "my_cool_workspace"
             endpoint_mocker(
                 json=resp_mocks.make_create_response(secret_name=secret_name),
                 match=[
                     responses.matchers.json_params_matcher(
                         {
-                            "data": {"name": secret_name, "value": secret_value},
+                            "data": {
+                                "name": secret_name,
+                                "value": secret_value,
+                                "resourceGroup": workspace_id,
+                            },
                         }
                     )
                 ],
@@ -223,7 +243,9 @@ class TestClient:
             )
 
             client.create_secret(
-                _models.SecretDefinition(name=secret_name, value=secret_value)
+                _models.SecretDefinition(
+                    name=secret_name, value=secret_value, resourceGroup=workspace_id
+                )
             )
 
             # The assertion is done by mocked_responses

@@ -12,6 +12,7 @@
 * Setting workflow_id and project_id is now available using "orq wf submit" command
 * `sdk.current_run_ids()` can now be used within task code to access the workflow run ID, task invocation ID, and task run ID.
 * All CLI commands that prompted for `wf_run_id` will now first prompt for workspace and project if `wf_run_id` is not provided.
+* `sdk.secrets.list()`, `sdk.secrets.get()`, `sdk.secrets.set()` and `sdk.secrets.delete()` now accept `workspace_id` parameter to specify secrets in particular workspace
 
 👩‍🔬 *Experimental*
 

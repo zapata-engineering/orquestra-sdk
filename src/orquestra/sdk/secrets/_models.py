@@ -6,10 +6,14 @@ Models for accessing the Config Service API.
 
 API spec: https://github.com/zapatacomputing/config-service/tree/main/openapi/src
 """
+from typing import Optional
+
 import pydantic
 
 SecretName = str
 SecretValue = str
+ResourceGroup = str
+WorkspaceId = str
 
 
 class SecretNameObj(pydantic.BaseModel):
@@ -44,3 +48,13 @@ class SecretDefinition(pydantic.BaseModel):
 
     name: SecretName
     value: SecretValue
+    resourceGroup: Optional[ResourceGroup]
+
+
+class ListSecretsRequest(pydantic.BaseModel):
+    """
+    Model for
+    https://github.com/zapatacomputing/config-service/blob/fbfc4627450bc9a460278b242738e55210e7bf03/openapi/src/parameters/query/workspace.yaml
+    """
+
+    workspace: WorkspaceId
