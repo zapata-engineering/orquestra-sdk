@@ -177,7 +177,7 @@ class InProcessRuntime(abc.RuntimeInterface):
             # Finally, we need to dereference the output IDs
             for artifact_id in task_inv.output_ids:
                 artifact = workflow_def.artifact_nodes[artifact_id]
-                if artifact.artifact_index is None:
+                if artifact.artifact_index is None or not isinstance(fn_output, tuple):
                     self._artifact_store[run_id][artifact_id] = fn_output
                 else:
                     self._artifact_store[run_id][artifact_id] = fn_output[
