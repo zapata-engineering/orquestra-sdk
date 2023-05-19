@@ -9,7 +9,7 @@ import typing as t
 
 from aiohttp import web
 
-from orquestra.sdk.exceptions import UserCancelledPrompt
+from orquestra.sdk.exceptions import LocalConfigLoginError, UserCancelledPrompt
 from orquestra.sdk.schema.configs import RuntimeName
 
 from .. import _arg_resolvers, _repos
@@ -79,10 +79,19 @@ class Action:
 
         _url: str
         if config:
+            # _config =
             loaded_config = self._config_repo.read_config(
-                self._config_resolver.resolve(config)
+                self._config_resolver.resolve_stored_config_for_login(config)
             )
-            _url = loaded_config.runtime_options["uri"]
+            try:
+                _url = loaded_config.runtime_options["uri"]
+            except KeyError as e:
+                raise LocalConfigLoginError(
+                    f"Cannot log in with '{loaded_config.config_name}' "
+                    "as this config does not include a server URL. "
+                    "It is likely that this config is for local execution, "
+                    "and therefore can be used without logging in."
+                ) from e
 
             # If the CLI disagrees with the stored config about which runtime to use,
             # prompt the user to agree to changing the config to match the cli args.

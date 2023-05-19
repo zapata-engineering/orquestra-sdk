@@ -55,6 +55,38 @@ class ConfigResolver:
         selected_config = self._prompter.choice(config_names, message="Runtime config")
         return selected_config
 
+    def resolve_stored_config_for_login(
+        self, config: t.Optional[ConfigName]
+    ) -> ConfigName:
+        """
+        Resolve the name of a config for logging in.
+
+        This functions similarly to `resolve`, however we enforce two conditions:
+        1. The resolved config name must correspond to a stored config
+        2. The stored config must specify a URL
+        """
+        config_names = self._config_repo.list_config_names()
+        valid_configs = [
+            name
+            for name in config_names
+            if "uri" in self._config_repo.read_config(name).runtime_options.keys()
+        ]
+
+        if config is not None and config in valid_configs:
+            return config
+
+        message = "Please select a valid config"
+
+        # The user specified a config, but it doesn't exist
+        if config is not None and config not in config_names:
+            message = f"No config '{config}' found in file. " + message
+        elif config is not None and config in config_names:
+            message = (
+                f"Cannot log in with '{config}' as it relates to local runs. " + message
+            )
+
+        return self._prompter.choice(valid_configs, message=message)
+
     def resolve_multiple(
         self, configs: t.Optional[t.Sequence[str]]
     ) -> t.Sequence[ConfigName]:

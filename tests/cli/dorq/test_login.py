@@ -123,7 +123,7 @@ class TestAction:
         action.on_cmd_call(config=config, url=url, token=token, ce=ce)
 
         # Then
-        config_resolver.resolve.assert_not_called()
+        config_resolver.resolve_stored_config_for_login.assert_not_called()
         exception_presenter.show_error.assert_not_called()
         config_repo.store_token_in_config.assert_called_once_with(
             url, retrieved_token, ce
@@ -168,7 +168,7 @@ class TestAction:
 
         # Then
         async_sleep.assert_not_called()
-        config_resolver.resolve.assert_not_called()
+        config_resolver.resolve_stored_config_for_login.assert_not_called()
         exception_presenter.show_error.assert_not_called()
         config_repo.store_token_in_config.assert_not_called()
         login_presenter.prompt_config_saved.assert_not_called()
@@ -211,7 +211,7 @@ class TestAction:
         # Then
         # We should get the login url from QE
         async_sleep.assert_not_called()
-        config_resolver.resolve.assert_not_called()
+        config_resolver.resolve_stored_config_for_login.assert_not_called()
         exception_presenter.show_error.assert_not_called()
         config_repo.store_token_in_config.assert_called_once_with(url, token, ce)
         login_presenter.prompt_config_saved.assert_called_once_with(url, config_name)
@@ -239,7 +239,7 @@ class TestAction:
 
         loaded_runtime_config.runtime_options = {"uri": login_url}
         loaded_runtime_config.runtime_name = "CE_REMOTE" if ce else "QE_REMOTE"
-        config_resolver.resolve.return_value = config_name
+        config_resolver.resolve_stored_config_for_login.return_value = config_name
         config_repo.read_config.return_value = loaded_runtime_config
         config_repo.store_token_in_config.return_value = config_name
         type(login_server).token = PropertyMock(return_value=retrieved_token)
@@ -258,7 +258,7 @@ class TestAction:
 
         # THEN
         async_sleep.assert_called_once()
-        config_resolver.resolve.assert_called_once_with(config)
+        config_resolver.resolve_stored_config_for_login.assert_called_once_with(config)
         exception_presenter.show_error.assert_not_called()
         config_repo.store_token_in_config.assert_called_once_with(
             login_url, retrieved_token, ce
@@ -289,7 +289,7 @@ class TestAction:
 
         loaded_runtime_config.runtime_options = {"uri": login_url}
         loaded_runtime_config.runtime_name = "CE_REMOTE" if ce else "QE_REMOTE"
-        config_resolver.resolve.return_value = config_name
+        config_resolver.resolve_stored_config_for_login.return_value = config_name
         config_repo.read_config.return_value = loaded_runtime_config
         config_repo.store_token_in_config.return_value = config_name
 
@@ -307,7 +307,7 @@ class TestAction:
 
         # THEN
         async_sleep.assert_not_called()
-        config_resolver.resolve.assert_called_once_with(config)
+        config_resolver.resolve_stored_config_for_login.assert_called_once_with(config)
         exception_presenter.show_error.assert_not_called()
         config_repo.store_token_in_config.assert_called_once_with(login_url, token, ce)
         login_presenter.prompt_config_saved.assert_called_once_with(
@@ -336,7 +336,7 @@ class TestAction:
 
         loaded_runtime_config.runtime_options = {"uri": login_url}
         loaded_runtime_config.runtime_name = "CE_REMOTE" if ce else "QE_REMOTE"
-        config_resolver.resolve.return_value = config_name
+        config_resolver.resolve_stored_config_for_login.return_value = config_name
         config_repo.read_config.return_value = loaded_runtime_config
         config_repo.store_token_in_config.return_value = config_name
 
@@ -354,7 +354,7 @@ class TestAction:
 
         # THEN
         async_sleep.assert_not_called()
-        config_resolver.resolve.assert_not_called()
+        config_resolver.resolve_stored_config_for_login.assert_not_called()
         exception_presenter.show_error.assert_called_once()
         config_repo.store_token_in_config.assert_not_called()
         login_presenter.prompt_config_saved.assert_not_called()
@@ -384,7 +384,7 @@ class TestAction:
         loaded_runtime_config = create_autospec(RuntimeConfiguration)
         loaded_runtime_config.runtime_options = {"uri": login_url}
         loaded_runtime_config.runtime_name = "QE_REMOTE" if ce else "CE_REMOTE"
-        config_resolver.resolve.return_value = config_name
+        config_resolver.resolve_stored_config_for_login.return_value = config_name
         config_repo.read_config.return_value = loaded_runtime_config
         config_repo.store_token_in_config.return_value = config_name
 
@@ -410,7 +410,7 @@ class TestAction:
             True,
         )
         async_sleep.assert_called_once()
-        config_resolver.resolve.assert_called_once_with(config)
+        config_resolver.resolve_stored_config_for_login.assert_called_once_with(config)
         login_presenter.prompt_config_saved.assert_called_once_with(
             login_url, config_name
         )
@@ -464,7 +464,7 @@ class TestAction:
 
         # THEN
         # called
-        config_resolver.resolve.assert_called_once_with(config)
+        config_resolver.resolve_stored_config_for_login.assert_called_once_with(config)
         prompter.confirm.assert_called_once_with(
             f"Config '{config}' will be changed from "
             f"{loaded_runtime_config.runtime_name} to "

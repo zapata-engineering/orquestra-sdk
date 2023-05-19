@@ -73,6 +73,12 @@ class UnsavedConfigChangesError(BaseRuntimeError):
     pass
 
 
+class LocalConfigLoginError(BaseRuntimeError):
+    """Raised when trying to log in using a config that relates to local execution."""
+
+    pass
+
+
 # Workflow Definition Errors
 class WorkflowDefinitionModuleNotFound(NotFoundError):
     """

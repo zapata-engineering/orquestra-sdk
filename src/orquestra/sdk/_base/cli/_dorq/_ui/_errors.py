@@ -122,3 +122,16 @@ def _(_: exceptions.InProcessFromCLIError) -> ResponseStatusCode:
         ).format(IN_PROCESS_CONFIG_NAME, RAY_CONFIG_NAME_ALIAS),
     )
     return ResponseStatusCode.USER_CANCELLED
+
+
+@pretty_print_exception.register
+def _(e: exceptions.ConfigNameNotFoundError) -> ResponseStatusCode:
+    _print_traceback(e)
+    click.echo(e.message)
+    return ResponseStatusCode.NOT_FOUND
+
+
+@pretty_print_exception.register
+def _(e: exceptions.LocalConfigLoginError) -> ResponseStatusCode:
+    click.echo(e.message)
+    return ResponseStatusCode.INVALID_CLI_COMMAND_ERROR
