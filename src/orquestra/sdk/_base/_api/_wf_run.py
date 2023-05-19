@@ -477,32 +477,27 @@ def list_workflow_runs(
     project: t.Optional[ProjectId] = None,
 ) -> t.List[WorkflowRun]:
     """
-        List the workflow runs, with some filters.
+    List the workflow runs, with some filters.
 
-        Args:
-            config: The name of the configuration to use.
-            limit: Restrict the number of runs to return, prioritising the most recent.
-            max_age: Only return runs younger than the specified maximum age.
-            state: Only return runs of runs with the specified status.
-            project_dir: The location of the project directory. This directory must
-                contain the workflows database to which this run was saved. If omitted,
-                the current working directory is assumed to be the project directory.
-            workspace: Only return runs from the specified workspace when using CE.
-                Currently unused.
-            project: will be used to list workflows from specific workspace and project
-    <<<<<<< HEAD
-                when using CE.
-    =======
-                when using CE. Currently unused.
-    >>>>>>> origin/main
+    Args:
+        config: The name of the configuration to use.
+        limit: Restrict the number of runs to return, prioritising the most recent.
+        max_age: Only return runs younger than the specified maximum age.
+        state: Only return runs of runs with the specified status.
+        project_dir: The location of the project directory. This directory must
+            contain the workflows database to which this run was saved. If omitted,
+            the current working directory is assumed to be the project directory.
+        workspace: Only return runs from the specified workspace when using CE.
+        project: will be used to list workflows from specific workspace and project
+            when using CE.
 
-        Raises:
-            ConfigNameNotFoundError: when the named config is not found in the file.
-            NotImplementedError: when a filter is specified for a runtime that does not
-                support it.
+    Raises:
+        ConfigNameNotFoundError: when the named config is not found in the file.
+        NotImplementedError: when a filter is specified for a runtime that does not
+            support it.
 
-        Returns:
-            a list of WorkflowRuns
+    Returns:
+        a list of WorkflowRuns
     """
     # TODO: update docstring when platform workspace/project filtering is merged [ORQP-1479](https://zapatacomputing.atlassian.net/browse/ORQP-1479?atlOrigin=eyJpIjoiZWExMWI4MDUzYTI0NDQ0ZDg2ZTBlNzgyNjE3Njc4MDgiLCJwIjoiaiJ9) # noqa: E501
 
