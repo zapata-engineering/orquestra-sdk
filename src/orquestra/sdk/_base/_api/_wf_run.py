@@ -28,6 +28,7 @@ from ...schema.workflow_run import ProjectId, State, TaskInvocationId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
 from .. import serde
+from .._spaces._resolver import resolve_project_ref
 from .._spaces._structs import ProjectRef
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig, _resolve_config
@@ -489,7 +490,7 @@ def list_workflow_runs(
         workspace: Only return runs from the specified workspace when using CE.
             Currently unused.
         project: will be used to list workflows from specific workspace and project
-            when using CE. Currently unused.
+            when using CE.
 
     Raises:
         ConfigNameNotFoundError: when the named config is not found in the file.
@@ -506,6 +507,13 @@ def list_workflow_runs(
             f"The project `{project}` cannot be uniquely identified "
             "without a workspace parameter."
         )
+
+    # If user wasn't specific with workspace and project, we might want to resolve it
+    if not workspace and not project:
+        if _project := resolve_project_ref(workspace, project):
+            workspace = _project.workspace_id
+            project = _project.project_id
+
 
     _project_dir = Path(project_dir or Path.cwd())
 
