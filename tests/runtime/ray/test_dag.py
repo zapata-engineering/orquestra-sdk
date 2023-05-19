@@ -363,7 +363,7 @@ class TestRayRuntime:
             runs = runtime.list_workflow_runs(limit=2)
             # Then
             assert len(runs) == 2
-            
+
         @staticmethod
         @pytest.mark.parametrize(
             "kwargs",
