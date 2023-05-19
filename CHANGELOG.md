@@ -6,6 +6,7 @@
 
 🔥 *Features*
 * Login CLI command now accepts the name of a stored config as an alternative to the uri.
+* Choice and Checklist CLI prompts present an informative error message when there are no options rather than prompting the user to select from an empty list.
 * All CLI commands that prompted for `wf_run_id` will now first prompt for workspace and project if `wf_run_id` is not provided.
 
 👩‍🔬 *Experimental*
