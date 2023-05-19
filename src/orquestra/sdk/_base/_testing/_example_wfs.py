@@ -195,11 +195,11 @@ def add_with_trigger(a, b, port, timeout: float):
 
 
 @sdk.task
-def infinite_task(*_):
+def long_task(*_):
     import time
 
-    while True:
-        time.sleep(10)
+    # sleep for an hour - just in case someone forgets to terminate this buddy
+    time.sleep(60 * 60)
 
 
 @sdk.workflow
@@ -207,8 +207,10 @@ def infinite_workflow():
     """
     Allows reproducing scenario where tasks take some time to run.
     This workflow is used to test termination as it will never complete
+    This workflow isn't actually infinite - it just takes an hour of sleep time to
+    complete
     """
-    return infinite_task()
+    return long_task()
 
 
 @sdk.workflow
