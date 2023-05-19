@@ -1,6 +1,9 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
+"""
+RuntimeInterface implementation that uses QE.
+"""
 import base64
 import gzip
 import io
@@ -38,12 +41,14 @@ from orquestra.sdk.schema.ir import (
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
+    ProjectId,
     RunStatus,
     State,
     TaskRun,
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
+    WorkspaceId,
 )
 
 from . import _client
@@ -835,6 +840,8 @@ class QERuntime(RuntimeInterface):
         limit: Optional[int] = None,
         max_age: Optional[timedelta] = None,
         state: Optional[Union[State, List[State]]] = None,
+        workspace: Optional[WorkspaceId] = None,
+        project: Optional[ProjectId] = None,
     ) -> List[WorkflowRun]:
         """
         List the workflow runs, with some filters
@@ -843,13 +850,22 @@ class QERuntime(RuntimeInterface):
             limit: Restrict the number of runs to return, prioritising the most recent.
             max_age: Only return runs younger than the specified maximum age.
             status: Only return runs of runs with the specified status.
+            workspace: Only return runs from the specified workspace. Not supported
+                on this runtime.
 
         Raises:
             orquestra.sdk.exceptions.UnauthorizedError: if QE returns 401
+            orquestra.sdk.exceptions.WorkspacesNotSupportedError: if a workspace or
+                project is specified.
 
         Returns:
             A list of the workflow runs
         """
+        if workspace or project:
+            raise exceptions.WorkspacesNotSupportedError(
+                "Filtering by workspace or project is not supported on QE runtimes."
+            )
+
         now = datetime.now(timezone.utc)
 
         # Grab the workflows we know about from the DB

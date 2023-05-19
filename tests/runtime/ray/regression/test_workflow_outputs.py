@@ -1,7 +1,6 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-import os
 from pathlib import Path
 from typing import Any, Dict, Tuple, Union
 

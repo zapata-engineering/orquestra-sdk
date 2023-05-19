@@ -852,7 +852,7 @@ class TestWorkflowRunRepo:
             repo = _repos.WorkflowRunRepo()
 
             # When
-            runs = repo.list_wf_runs(config, ProjectRef(ws, proj))
+            runs = repo.list_wf_runs(config, ws, proj)
 
             # Then
             assert [run.id for run in runs] == stub_run_ids

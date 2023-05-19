@@ -747,8 +747,12 @@ class TestListWorkflows:
         # When
         _ = _api.list_workflow_runs("mocked_config", max_age=max_age)
         # Then
-        mock_config_runtime.list_workflow_runs.assert_called_with(
-            limit=None, max_age=delta, state=None
+        mock_config_runtime.list_workflow_runs.assert_called_once_with(
+            limit=None,
+            max_age=delta,
+            state=None,
+            workspace=None,
+            project=None,
         )
 
     def test_with_limit(self, mock_config_runtime):
@@ -756,8 +760,12 @@ class TestListWorkflows:
         # When
         _ = _api.list_workflow_runs("mocked_config", limit=10)
         # Then
-        mock_config_runtime.list_workflow_runs.assert_called_with(
-            limit=10, max_age=None, state=None
+        mock_config_runtime.list_workflow_runs.assert_called_once_with(
+            limit=10,
+            max_age=None,
+            state=None,
+            workspace=None,
+            project=None,
         )
 
     def test_with_state(self, mock_config_runtime):
@@ -765,8 +773,61 @@ class TestListWorkflows:
         # When
         _ = _api.list_workflow_runs("mocked_config", state=State.SUCCEEDED)
         # Then
-        mock_config_runtime.list_workflow_runs.assert_called_with(
-            limit=None, max_age=None, state=State.SUCCEEDED
+        mock_config_runtime.list_workflow_runs.assert_called_once_with(
+            limit=None,
+            max_age=None,
+            state=State.SUCCEEDED,
+            workspace=None,
+            project=None,
+        )
+
+    def test_with_workspace(self, mock_config_runtime):
+        # GIVEN
+        # WHEN
+        _ = _api.list_workflow_runs(
+            "mocked_config", workspace="<workspace ID sentinel>"
+        )
+
+        # THEN
+        mock_config_runtime.list_workflow_runs.assert_called_once_with(
+            limit=None,
+            max_age=None,
+            state=None,
+            workspace="<workspace ID sentinel>",
+            project=None,
+        )
+
+    def test_with_workspace_and_project(self, mock_config_runtime):
+        # GIVEN
+        # WHEN
+        _ = _api.list_workflow_runs(
+            "mocked_config",
+            project="<project ID sentinel>",
+            workspace="<workspace ID sentinel>",
+        )
+
+        # THEN
+        mock_config_runtime.list_workflow_runs.assert_called_once_with(
+            limit=None,
+            max_age=None,
+            state=None,
+            workspace="<workspace ID sentinel>",
+            project="<project ID sentinel>",
+        )
+
+    def test_raises_exception_with_project_and_no_workspace(self, mock_config_runtime):
+        # GIVEN
+        # WHEN
+        with pytest.raises(ProjectInvalidError) as e:
+            _ = _api.list_workflow_runs(
+                "mocked_config", project="<project ID sentinel>"
+            )
+
+        # THEN
+        assert e.exconly() == (
+            "orquestra.sdk.exceptions.ProjectInvalidError: The project "
+            "`<project ID sentinel>` cannot be uniquely identified without a workspace "
+            "parameter."
         )
 
 
