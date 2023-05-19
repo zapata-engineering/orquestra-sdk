@@ -16,6 +16,7 @@
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
+* Fixed tasks that failed when explicitly state `n_outputs=1` on QE and in-process.
 
 💅 *Improvements*
 * `orq login` will perform some sanity checks before saving the token.

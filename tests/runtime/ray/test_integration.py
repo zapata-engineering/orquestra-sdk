@@ -568,6 +568,15 @@ class TestRayRuntimeMethods:
                 "invocation-3-task-capitalize-inline": JSONResult(value='"Zapata"'),
             },
         ),
+        (
+            _example_wfs.wf_with_explicit_n_outputs,
+            (JSONResult(value="true"),),
+            {
+                "invocation-0-task-task-with-single-output-explicit": JSONResult(
+                    value="true"
+                ),
+            },
+        ),
     ],
 )
 def test_run_and_get_output(
