@@ -194,6 +194,23 @@ def add_with_trigger(a, b, port, timeout: float):
     return a + b
 
 
+@sdk.task
+def infinite_task(*_):
+    import time
+
+    while True:
+        time.sleep(10)
+
+
+@sdk.workflow
+def infinite_workflow():
+    """
+    Allows reproducing scenario where tasks take some time to run.
+    This workflow is used to test termination as it will never complete
+    """
+    return infinite_task()
+
+
 @sdk.workflow
 def serial_wf_with_file_triggers(ports: Sequence[int], task_timeout: float):
     """

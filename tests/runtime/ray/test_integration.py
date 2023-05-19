@@ -271,16 +271,9 @@ class TestRayRuntimeMethods:
                │
                │
                ▼
-              [ ]  => waiting
-               │
-               │
-               ▼
             """
-            triggers = [_ipc.TriggerServer() for _ in range(2)]
 
-            wf = _example_wfs.serial_wf_with_file_triggers(
-                [trigger.port for trigger in triggers], task_timeout=2.0
-            ).model
+            wf = _example_wfs.infinite_workflow().model
 
             wf_run_id = runtime.create_workflow_run(wf, None)
             wf_run = runtime.get_workflow_run_status(wf_run_id)
