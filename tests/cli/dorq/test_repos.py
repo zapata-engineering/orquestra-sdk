@@ -1515,6 +1515,7 @@ class TestWorkflowDefRepoIntegration:
                 "wf_using_inline_imports",
                 "wf_using_git_imports",
                 "serial_wf_with_slow_middle_task",
+                "infinite_workflow",
                 "serial_wf_with_file_triggers",
                 "exception_wf_with_multiple_values",
                 "wf_with_log",

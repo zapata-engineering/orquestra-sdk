@@ -210,6 +210,14 @@ class WorkflowResultsNotReadyError(NotFoundError):
     """
 
 
+class WorkflowRunIDNotFoundError(NotFoundError):
+    """Raised when we can't recover the ID for this Workflow Run."""
+
+    # Note that this is different to the WorkflowRunNotFoundError.
+    # We have an ID but can't find the workflow: WorkflowRunNotFoundError
+    # We have a workflow but can't recover the ID: WorkflowRunIDNotFoundError
+
+
 # Auth Errors
 class UnauthorizedError(BaseRuntimeError):
     """Raised when the remote cluster rejects the auth token."""
