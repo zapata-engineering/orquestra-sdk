@@ -77,6 +77,11 @@ class Prompter:
         Raises:
             UserCancelledPrompt if the user cancels the prompt
         """
+        # If there are no choices, report it to the user and exit.
+        if len(choices) == 0:
+            raise exceptions.NoOptionsAvailableError(
+                f"{message} - no options are available."
+            )
 
         # If there's only one choice, select it automatically and confirm with the user
         # that that's what they want to do.
@@ -182,6 +187,33 @@ class Prompter:
         Raises:
             UserCancelledPrompt if the user cancels the prompt
         """
+        # If there are no choices, report it to the user and exit.
+        if len(choices) == 0:
+            raise exceptions.NoOptionsAvailableError(
+                f"{message} - no options are available."
+            )
+
+        # If there's only one choice, select it automatically and confirm with the user
+        # that that's what they want to do.
+        if len(choices) == 1:
+            name: ChoiceID
+            value: t.Union[ChoiceID, T]
+            # When the choice is a tuple, we unpack the display
+            # name and the returned value.
+            # Otherwise, the choice is a ChoiceID and should be
+            # used as both the display name and the returned
+            # value.
+            if isinstance(choices[0], tuple):
+                name, value = choices[0]
+            else:
+                name, value = choices[0], choices[0]
+
+            if not self.confirm(
+                f"{message} - only one option is available. Proceed with {name}?",
+                default=True,
+            ):
+                raise exceptions.UserCancelledPrompt(f"User cancelled {message} prompt")
+            return value
 
         question = inquirer.Checkbox(
             SINGLE_INPUT,

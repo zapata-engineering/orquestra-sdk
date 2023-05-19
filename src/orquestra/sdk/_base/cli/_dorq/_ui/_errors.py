@@ -132,6 +132,13 @@ def _(e: exceptions.ConfigNameNotFoundError) -> ResponseStatusCode:
 
 
 @pretty_print_exception.register
+def _(e: exceptions.NoOptionsAvailableError) -> ResponseStatusCode:
+    _print_traceback(e)
+    click.echo(e.message)
+    return ResponseStatusCode.NOT_FOUND
+
+
+@pretty_print_exception.register
 def _(e: exceptions.LocalConfigLoginError) -> ResponseStatusCode:
     click.echo(e.message)
     return ResponseStatusCode.INVALID_CLI_COMMAND_ERROR

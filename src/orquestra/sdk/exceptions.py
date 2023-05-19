@@ -238,6 +238,12 @@ class LoginURLUnavailableError(BaseRuntimeError):
         self.base_uri = base_uri
 
 
+class NoOptionsAvailableError(NotFoundError):
+    """Raised when the user would choose options, but no options are available"""
+
+    pass
+
+
 class InProcessFromCLIError(NotFoundError):
     """Raised when the user requests the in-process runtime when using the CLI"""
 
