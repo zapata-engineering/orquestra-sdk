@@ -314,3 +314,13 @@ def workflow_with_different_resources():
     gpu = add(1, 1).with_invocation_meta(gpu="1")
     all_resources = add(1, 1).with_invocation_meta(cpu="2000m", memory="2Gi", gpu="0")
     return cpu, small_cpu, memory, small_memory, gpu, all_resources
+
+
+@sdk.task(source_import=sdk.InlineImport(), n_outputs=1)
+def task_with_single_output_explicit():
+    return True
+
+
+@sdk.workflow
+def wf_with_explicit_n_outputs():
+    return task_with_single_output_explicit()
