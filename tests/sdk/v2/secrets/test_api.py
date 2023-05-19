@@ -117,7 +117,7 @@ class TestIntegrationWithClient:
             expected_secret_name = (
                 secret_name
                 if workspace_id is None
-                else f"zri:v1:unused:0:{workspace_id}:secret:{secret_name}"
+                else f"zri:v1::0:{workspace_id}:secret:{secret_name}"
             )
             secrets_client_mock.update_secret.assert_called_with(
                 expected_secret_name, secret_value
@@ -137,7 +137,7 @@ class TestIntegrationWithClient:
             expected_secret_name = (
                 secret_name
                 if workspace_id is None
-                else f"zri:v1:unused:0:{workspace_id}:secret:{secret_name}"
+                else f"zri:v1::0:{workspace_id}:secret:{secret_name}"
             )
 
             secrets_client_mock.delete_secret.assert_called_with(expected_secret_name)

@@ -15,7 +15,7 @@ def _translate_to_zri(workspace_id: str, secret_name: str) -> str:
     """
     Create ZRI from workspace_id and secret_name
     """
-    return f"zri:v1:unused:0:{workspace_id}:secret:{secret_name}"
+    return f"zri:v1::0:{workspace_id}:secret:{secret_name}"
 
 
 def get(
@@ -29,7 +29,8 @@ def get(
 
     Args:
         name: secret identifier.
-        workspace_id: ID of the workspace. Using platform-defined default if omitted
+        workspace_id: ID of the workspace. Using platform-defined default if omitted -
+            - currently it is personal workspace
         config_name: config entry to use to communicate with Orquestra Platform.
             Required when used from a local machine. Ignored when
             ORQUESTRA_PASSPORT_FILE env variable is set.
@@ -78,7 +79,8 @@ def list(
     Lists all secret names.
 
     Args:
-        workspace_id: ID of the workspace. Using platform-defined default if omitted
+        workspace_id: ID of the workspace. Using platform-defined default if omitted -
+            - currently it is personal workspace
         config_name: config entry to use to communicate with Orquestra Platform.
             Required when used from a local machine. Ignored when
             ORQUESTRA_PASSPORT_FILE env variable is set.
@@ -117,7 +119,7 @@ def set(
         name: secret identifier.
         value: new secret name.
         workspace_id: workspace in which secret will be created. Using platform-defined
-            default if omitted
+            default if omitted - currently it is personal workspace
         config_name: config entry to use to communicate with Orquestra Platform.
             Required when used from a local machine. Ignored when
             ORQUESTRA_PASSPORT_FILE env variable is set.
@@ -160,7 +162,8 @@ def delete(
 
     Args:
         name: secret identifier.
-        workspace_id: ID of the workspace. Using platform-defined default if omitted
+        workspace_id: ID of the workspace. Using platform-defined default if omitted -
+            - currently it is personal workspace
         config_name: config entry to use to communicate with Orquestra Platform.
             Required when used from a local machine. Ignored when
             ORQUESTRA_PASSPORT_FILE env variable is set.
