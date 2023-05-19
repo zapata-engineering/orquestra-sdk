@@ -1,6 +1,8 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
+import subprocess
+
 import pytest
 
 from orquestra.sdk._base._services import RayManager
@@ -8,14 +10,42 @@ from orquestra.sdk._base._testing._connections import ray_suitable_temp_dir
 
 
 @pytest.mark.slow
-def test_ray_roundtrip(monkeypatch: pytest.MonkeyPatch):
-    with ray_suitable_temp_dir() as tmp_path:
-        orq_dir = tmp_path / ".orquestra"
-        monkeypatch.setenv("ORQ_RAY_TEMP_PATH", str(orq_dir / "ray"))
-        monkeypatch.setenv("ORQ_RAY_STORAGE_PATH", str(orq_dir / "ray_storage"))
-        monkeypatch.setenv("ORQ_RAY_PLASMA_PATH", str(orq_dir / "ray_plasma"))
-        ray = RayManager()
-        ray.up()
-        assert ray.is_running()
-        ray.down()
-        assert not ray.is_running()
+class TestRayCLI:
+    @staticmethod
+    def test_up_down(monkeypatch):
+        with ray_suitable_temp_dir() as tmp_path:
+            orq_dir = tmp_path / ".orquestra"
+            monkeypatch.setenv("ORQ_RAY_TEMP_PATH", str(orq_dir / "ray"))
+            monkeypatch.setenv("ORQ_RAY_STORAGE_PATH", str(orq_dir / "ray_storage"))
+            monkeypatch.setenv("ORQ_RAY_PLASMA_PATH", str(orq_dir / "ray_plasma"))
+
+            ray = RayManager()
+
+            ray.up()
+            assert ray.is_running()
+            ray.down()
+            assert not ray.is_running()
+
+    @staticmethod
+    def test_failure(monkeypatch: pytest.MonkeyPatch):
+        # Given
+        with ray_suitable_temp_dir() as tmp_path:
+            tmp_path.mkdir()
+            monkeypatch.chdir(tmp_path)
+            # As of Ray 2.3.1 setting paths to "." is a reliable way to make 'ray start'
+            # fail.
+            monkeypatch.setenv("ORQ_RAY_TEMP_PATH", ".")
+            monkeypatch.setenv("ORQ_RAY_STORAGE_PATH", ".")
+            monkeypatch.setenv("ORQ_RAY_PLASMA_PATH", ".")
+
+            ray = RayManager()
+
+            # TODO: use a better exception type
+            with pytest.raises(subprocess.CalledProcessError) as exc_info:
+                # When
+                ray.up()
+
+            # Then
+            # TODO: use a better assertion heuristic
+            assert exc_info.value.stdout != ""
+            assert exc_info.value.stderr != ""
