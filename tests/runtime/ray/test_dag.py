@@ -5,11 +5,9 @@
 Unit tests for orquestra.sdk._ray._dag. If you need a test against a live
 Ray connection, see tests/ray/test_integration.py instead.
 """
-import copy
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Dict, Union
-from unittest.mock import ANY, Mock, PropertyMock, call, create_autospec
+from unittest.mock import Mock, PropertyMock, create_autospec
 
 import pytest
 
@@ -17,10 +15,6 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base._config import RuntimeConfiguration, RuntimeName
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base._spaces._structs import ProjectRef
-from orquestra.sdk._base._testing._example_wfs import (
-    wf_with_secrets,
-    workflow_parametrised_with_resources,
-)
 from orquestra.sdk._ray import _client, _dag, _ray_logs
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import State
@@ -369,3 +363,29 @@ class TestRayRuntime:
             runs = runtime.list_workflow_runs(limit=2)
             # Then
             assert len(runs) == 2
+
+        @staticmethod
+        @pytest.mark.parametrize(
+            "kwargs",
+            [
+                {"workspace": "<workspace sentinel>"},
+                {"project": "<project sentinel>"},
+                {"workspace": "<workspace sentinel>", "project": "<project sentinel>"},
+            ],
+        )
+        def test_raises_WorkspacesNotSupported_error_if_workspace_or_project(
+            client, runtime_config, kwargs, tmp_path
+        ):
+            runtime = _dag.RayRuntime(
+                client=client,
+                config=runtime_config,
+                project_dir=tmp_path,
+            )
+
+            with pytest.raises(exceptions.WorkspacesNotSupportedError):
+                runtime = _dag.RayRuntime(
+                    client=client,
+                    config=runtime_config,
+                    project_dir=tmp_path,
+                )
+                runtime.list_workflow_runs(**kwargs)

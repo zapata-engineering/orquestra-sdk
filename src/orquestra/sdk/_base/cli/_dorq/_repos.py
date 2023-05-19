@@ -59,18 +59,24 @@ class WorkflowRunRepo:
     def list_wf_run_ids(
         self, config: ConfigName, project: ProjectRef
     ) -> t.Sequence[WorkflowRunId]:
-        return [run.id for run in self.list_wf_runs(config, project)]
+        return [
+            run.id
+            for run in self.list_wf_runs(
+                config, project.workspace_id, project.project_id
+            )
+        ]
 
     def list_wf_runs(
         self,
         config: ConfigName,
-        project: t.Optional[ProjectRef],
+        workspace: t.Optional[WorkspaceId] = None,
+        project: t.Optional[ProjectId] = None,
         limit: t.Optional[int] = None,
         max_age: t.Optional[str] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
     ) -> t.List[WorkflowRun]:
         """
-        Asks the runtime for all workflow runs.
+        Asks the runtime for all workflow runs that match the filters.
 
         Raises:
             ConnectionError: when connection with Ray failed.
@@ -79,7 +85,12 @@ class WorkflowRunRepo:
         """
         try:
             wf_runs = sdk.list_workflow_runs(
-                config, limit=limit, max_age=max_age, state=state, project=project
+                config,
+                limit=limit,
+                max_age=max_age,
+                state=state,
+                workspace=workspace,
+                project=project,
             )
         except (ConnectionError, exceptions.UnauthorizedError):
             raise

@@ -235,6 +235,21 @@ class TestListWorkflowRuns:
         # It doesn't make sense to get a running workflow from this runtime
         assert len(wf_runs) == 1
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        "kwargs",
+        [
+            {"workspace": "<workspace sentinel>"},
+            {"project": "<project sentinel>"},
+            {"workspace": "<workspace sentinel>", "project": "<project sentinel>"},
+        ],
+    )
+    def test_raises_WorkspacesNotSupported_error_if_workspace_or_project(
+        runtime, kwargs
+    ):
+        with pytest.raises(exceptions.WorkspacesNotSupportedError):
+            runtime.list_workflow_runs(**kwargs)
+
 
 class TestUnsupportedMethods:
     @staticmethod
