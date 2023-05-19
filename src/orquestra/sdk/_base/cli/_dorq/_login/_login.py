@@ -79,7 +79,6 @@ class Action:
 
         _url: str
         if config:
-            # _config =
             loaded_config = self._config_repo.read_config(
                 self._config_resolver.resolve_stored_config_for_login(config)
             )
@@ -98,7 +97,7 @@ class Action:
             # TODO: This can be reworked once we have a --qe flag.
             if ce != (loaded_config.runtime_name == RuntimeName.CE_REMOTE):
                 if not self._prompter.confirm(
-                    f"Config '{config}' will be changed from "
+                    f"Config '{loaded_config.config_name}' will be changed from "
                     f"{loaded_config.runtime_name} to "
                     f"{RuntimeName.CE_REMOTE if ce else RuntimeName.QE_REMOTE}. "
                     "Continue?",
