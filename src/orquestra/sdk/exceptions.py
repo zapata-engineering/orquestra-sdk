@@ -73,6 +73,12 @@ class UnsavedConfigChangesError(BaseRuntimeError):
     pass
 
 
+class LocalConfigLoginError(BaseRuntimeError):
+    """Raised when trying to log in using a config that relates to local execution."""
+
+    pass
+
+
 # Workflow Definition Errors
 class WorkflowDefinitionModuleNotFound(NotFoundError):
     """
@@ -238,6 +244,12 @@ class LoginURLUnavailableError(BaseRuntimeError):
 
     def __init__(self, base_uri: str):
         self.base_uri = base_uri
+
+
+class NoOptionsAvailableError(NotFoundError):
+    """Raised when the user would choose options, but no options are available"""
+
+    pass
 
 
 class InProcessFromCLIError(NotFoundError):

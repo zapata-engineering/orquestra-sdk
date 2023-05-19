@@ -386,10 +386,17 @@ dorq.section(
     status,
 )
 
+server_config_group = cloup.OptionGroup(
+    "Server configuration", constraint=cloup.constraints.RequireExactly(1)
+)
+
 
 @dorq.command()
-@cloup.option(
-    "-s", "--server", required=True, help="server URI that you want to log into"
+@server_config_group.option(
+    "-c", "--config", required=False, help="The name of an existing configureation."
+)
+@server_config_group.option(
+    "-s", "--server", required=False, help="server URI that you want to log into"
 )
 @cloup.option(
     "-t",
@@ -404,14 +411,14 @@ dorq.section(
     default=False,
     help="Log in to Compute Engine. If not passed, will log in to Quantum Engine",
 )
-def login(server: str, token: t.Optional[str], ce: bool):
+def login(config: str, server: str, token: t.Optional[str], ce: bool):
     """
     Login in to remote cluster
     """
     from ._login._login import Action
 
     action = Action()
-    action.on_cmd_call(server, token, ce)
+    action.on_cmd_call(config, server, token, ce)
 
 
 def main():

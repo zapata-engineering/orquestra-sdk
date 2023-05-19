@@ -193,6 +193,25 @@ def add_with_trigger(a, b, port, timeout: float):
     return a + b
 
 
+@sdk.task
+def long_task(*_):
+    import time
+
+    # sleep for an hour - just in case someone forgets to terminate this buddy
+    time.sleep(60 * 60)
+
+
+@sdk.workflow
+def infinite_workflow():
+    """
+    Allows reproducing scenario where tasks take some time to run.
+    This workflow is used to test termination as it will never complete
+    This workflow isn't actually infinite - it just takes an hour of sleep time to
+    complete
+    """
+    return long_task()
+
+
 @sdk.workflow
 def serial_wf_with_file_triggers(ports: Sequence[int], task_timeout: float):
     """
