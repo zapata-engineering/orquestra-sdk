@@ -7,7 +7,6 @@ from unittest.mock import DEFAULT, MagicMock, Mock, call, create_autospec
 import pytest
 
 from orquestra.sdk import Project, Workspace, exceptions
-from orquestra.sdk._base import serde
 from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _models
 from orquestra.sdk._base._testing._example_wfs import (
     my_workflow,
@@ -15,7 +14,7 @@ from orquestra.sdk._base._testing._example_wfs import (
     workflow_with_different_resources,
 )
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
-from orquestra.sdk.schema.ir import ArtifactFormat, WorkflowDef
+from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, JSONResult
 from orquestra.sdk.schema.workflow_run import (
     RunStatus,
@@ -927,36 +926,66 @@ class TestListWorkflowRuns:
 
         # Then
         mocked_client.list_workflow_runs.assert_called_once_with(
-            page_size=None, page_token=None
+            page_size=None, page_token=None, workspace=None, project=None
         )
         assert runs == wf_runs
 
     @pytest.mark.parametrize(
         "limit, expected_requests",
         [
-            (89, [call(page_size=89, page_token=None)]),
+            (89, [call(page_size=89, page_token=None, workspace=None, project=None)]),
             (
                 144,
                 [
-                    call(page_size=100, page_token=None),
-                    call(page_size=44, page_token="<token sentinel 0>"),
+                    call(page_size=100, page_token=None, workspace=None, project=None),
+                    call(
+                        page_size=44,
+                        page_token="<token sentinel 0>",
+                        workspace=None,
+                        project=None,
+                    ),
                 ],
             ),
             (
                 233,
                 [
-                    call(page_size=100, page_token=None),
-                    call(page_size=100, page_token="<token sentinel 0>"),
-                    call(page_size=33, page_token="<token sentinel 1>"),
+                    call(page_size=100, page_token=None, workspace=None, project=None),
+                    call(
+                        page_size=100,
+                        page_token="<token sentinel 0>",
+                        workspace=None,
+                        project=None,
+                    ),
+                    call(
+                        page_size=33,
+                        page_token="<token sentinel 1>",
+                        workspace=None,
+                        project=None,
+                    ),
                 ],
             ),
             (
                 377,
                 [
-                    call(page_size=100, page_token=None),
-                    call(page_size=100, page_token="<token sentinel 0>"),
-                    call(page_size=100, page_token="<token sentinel 1>"),
-                    call(page_size=77, page_token="<token sentinel 2>"),
+                    call(page_size=100, page_token=None, workspace=None, project=None),
+                    call(
+                        page_size=100,
+                        page_token="<token sentinel 0>",
+                        workspace=None,
+                        project=None,
+                    ),
+                    call(
+                        page_size=100,
+                        page_token="<token sentinel 1>",
+                        workspace=None,
+                        project=None,
+                    ),
+                    call(
+                        page_size=77,
+                        page_token="<token sentinel 2>",
+                        workspace=None,
+                        project=None,
+                    ),
                 ],
             ),
         ],
@@ -986,10 +1015,10 @@ class TestListWorkflowRuns:
     @pytest.mark.parametrize(
         "limit, expected_requests",
         [
-            (89, [call(page_size=89, page_token=None)]),
-            (144, [call(page_size=100, page_token=None)]),
-            (233, [call(page_size=100, page_token=None)]),
-            (377, [call(page_size=100, page_token=None)]),
+            (89, [call(page_size=89, page_token=None, workspace=None, project=None)]),
+            (144, [call(page_size=100, page_token=None, workspace=None, project=None)]),
+            (233, [call(page_size=100, page_token=None, workspace=None, project=None)]),
+            (377, [call(page_size=100, page_token=None, workspace=None, project=None)]),
         ],
     )
     def test_limit_applied_when_there_are_fewer_workflows(

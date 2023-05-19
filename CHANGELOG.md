@@ -5,6 +5,7 @@
 🚨 *Breaking Changes*
 
 🔥 *Features*
+* The API list_workflow_runs() function now accepts workspace and project arguments when used with CE configs.
 * Login CLI command now accepts the name of a stored config as an alternative to the uri.
 * Choice and Checklist CLI prompts present an informative error message when there are no options rather than prompting the user to select from an empty list.
 * New API functions: list_workspaces() and list_projects(). Usable only on CE runtime
@@ -16,6 +17,7 @@
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
+* Fixed tasks that failed when explicitly state `n_outputs=1` on QE and in-process.
 
 💅 *Improvements*
 * `orq login` will perform some sanity checks before saving the token.

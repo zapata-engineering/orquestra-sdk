@@ -363,6 +363,32 @@ class TestRayRuntime:
             runs = runtime.list_workflow_runs(limit=2)
             # Then
             assert len(runs) == 2
+            
+        @staticmethod
+        @pytest.mark.parametrize(
+            "kwargs",
+            [
+                {"workspace": "<workspace sentinel>"},
+                {"project": "<project sentinel>"},
+                {"workspace": "<workspace sentinel>", "project": "<project sentinel>"},
+            ],
+        )
+        def test_raises_WorkspacesNotSupported_error_if_workspace_or_project(
+            client, runtime_config, kwargs, tmp_path
+        ):
+            runtime = _dag.RayRuntime(
+                client=client,
+                config=runtime_config,
+                project_dir=tmp_path,
+            )
+
+            with pytest.raises(exceptions.WorkspacesNotSupportedError):
+                runtime = _dag.RayRuntime(
+                    client=client,
+                    config=runtime_config,
+                    project_dir=tmp_path,
+                )
+                runtime.list_workflow_runs(**kwargs)
 
     class TestStartup:
         @staticmethod
