@@ -167,11 +167,73 @@ class TestResourcesInMakeDag:
             runtime_env=ANY,
             catch_exceptions=ANY,
             max_retries=ANY,
-            resources=ANY,
-            **expected
+            **expected,
         )
         for kwarg_name, type_ in types.items():
             assert isinstance(calls[0].kwargs[kwarg_name], type_)
+
+    class TestSettingCustomImage:
+        def test_with_env_set(
+            self,
+            client: Mock,
+            wf_run_id: str,
+            monkeypatch: pytest.MonkeyPatch,
+        ):
+            # Given
+            monkeypatch.setenv("ORQ_RAY_SET_CUSTOM_IMAGE_RESOURCES", "1")
+            custom_image = "a_custom_image:latest"
+            workflow = workflow_parametrised_with_resources(
+                custom_image=custom_image
+            ).model
+
+            # When
+            _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, None)
+
+            # Then
+            calls = client.add_options.call_args_list
+
+            # We should only have two calls: our invocation and the aggregation step
+            assert len(calls) == 2
+            # Checking our call did not have any resources included
+            expected_resources = {f"image:{custom_image}": 1}
+            assert calls[0] == call(
+                ANY,
+                name=ANY,
+                metadata=ANY,
+                runtime_env=ANY,
+                catch_exceptions=ANY,
+                max_retries=ANY,
+                resources=expected_resources,
+            )
+
+        def test_with_env_not_set(
+            self,
+            client: Mock,
+            wf_run_id: str,
+        ):
+            # Given
+            custom_image = "a_custom_image:latest"
+            workflow = workflow_parametrised_with_resources(
+                custom_image=custom_image
+            ).model
+
+            # When
+            _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, None)
+
+            # Then
+            calls = client.add_options.call_args_list
+
+            # We should only have two calls: our invocation and the aggregation step
+            assert len(calls) == 2
+            # Checking our call did not have any resources included
+            assert calls[0] == call(
+                ANY,
+                name=ANY,
+                metadata=ANY,
+                runtime_env=ANY,
+                catch_exceptions=ANY,
+                max_retries=ANY,
+            )
 
 
 class TestArgumentUnwrapper:

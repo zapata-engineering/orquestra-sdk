@@ -30,7 +30,6 @@ class TestClient:
                 "catch_exceptions": False,
                 "runtime_env": None,
                 "max_retries": 0,
-                "resources": None,
             }
 
         @staticmethod
@@ -62,9 +61,10 @@ class TestClient:
                 ({"num_cpus": 2}, {"num_cpus": 2}),
                 ({"num_gpus": 1}, {"num_gpus": 1}),
                 ({"memory": 1}, {"memory": 1}),
+                ({"resources": {"abc": 1}}, {"resources": {"abc": 1}}),
             ],
         )
-        def test_orquestra_task_resources(
+        def test_ray_resources(
             client: RayClient,
             remote_fn,
             required_kwargs,
@@ -72,8 +72,7 @@ class TestClient:
             expected_overrides,
         ):
             """
-            Passes in required args with overrides related to Orquestra task resource
-            requests.
+            Passes in required args with overrides related to Ray resource requests.
 
             Note: Orquestra task resources are a different concept than Ray resources.
             The former is what user passes in to ``@sdk.task()`` or

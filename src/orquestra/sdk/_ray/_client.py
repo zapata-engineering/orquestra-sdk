@@ -91,7 +91,7 @@ else:
             runtime_env: t.Optional[RuntimeEnv],
             catch_exceptions: t.Optional[bool],
             max_retries: int,
-            resources: t.Optional[t.Mapping[str, float]],
+            resources: t.Optional[t.Mapping[str, float]] = None,
             num_cpus: t.Optional[t.Union[int, float]] = None,
             num_gpus: t.Optional[t.Union[int, float]] = None,
             memory: t.Optional[t.Union[int, float]] = None,

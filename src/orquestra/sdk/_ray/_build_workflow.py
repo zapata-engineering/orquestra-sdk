@@ -14,7 +14,10 @@ from typing_extensions import assert_never
 
 from .. import exceptions, secrets
 from .._base import _exec_ctx, _git_url_utils, _graphs, _log_adapter, dispatch, serde
-from .._base._env import RAY_DOWNLOAD_GIT_IMPORTS_ENV
+from .._base._env import (
+    RAY_DOWNLOAD_GIT_IMPORTS_ENV,
+    RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV,
+)
 from ..kubernetes.quantity import parse_quantity
 from ..schema import _compat, ir, responses, workflow_run
 from . import _client, _id_gen
@@ -371,16 +374,19 @@ def make_ray_dag(
             # Normal Python exceptions are NOT retried.
             # So, we turn max_retries down to 0.
             "max_retries": 0,
+        }
+
+        # Set custom image
+        if os.getenv(RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV) is not None:
             # Custom "Ray resources" request. The entries need to correspond to the ones
             # used when starting the Ray cluster. See also:
             # https://docs.ray.io/en/latest/ray-core/scheduling/resources.html#custom-resources
-            "resources": (
+            ray_options["resources"] = (
                 _ray_resources_for_custom_image(custom_image)
                 if (custom_image := invocation.custom_image or user_task.custom_image)
                 is not None
                 else None
-            ),
-        }
+            )
 
         # Non-custom task resources
         if invocation.resources is not None:

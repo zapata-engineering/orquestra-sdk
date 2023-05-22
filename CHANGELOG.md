@@ -3,7 +3,6 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
-* If you set a custom task image (`@sdk.task(custom_image=...)`), the local Ray runtime won't execute the task unless the local Ray cluster was started with custom resources.
 
 🔥 *Features*
 * The API list_workflow_runs() function now accepts workspace and project arguments when used with CE configs.
