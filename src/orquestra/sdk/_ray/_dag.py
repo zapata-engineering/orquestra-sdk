@@ -242,7 +242,10 @@ class RayRuntime(RuntimeInterface):
         logger.setLevel(logging.ERROR)
 
         client = RayClient()
-        client.init(**dataclasses.asdict(ray_params))
+        try:
+            client.init(**dataclasses.asdict(ray_params))
+        except ConnectionError as e:
+            raise exceptions.RayNotRunningError from e
 
         try:
             client.workflow_init()
