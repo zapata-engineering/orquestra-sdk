@@ -3,9 +3,8 @@
 ################################################################################
 # >> Tutorial code snippet: quickstart
 # use for literalinclude start-after >> Start
-from workflow_defs import hello_orquestra_wf
-
 import orquestra.sdk as sdk
+from workflow_defs import hello_orquestra_wf
 
 wf = hello_orquestra_wf()
 wf_run = wf.run("in_process")
