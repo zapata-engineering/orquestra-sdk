@@ -245,13 +245,11 @@ class RayRuntime(RuntimeInterface):
         try:
             client.init(**dataclasses.asdict(ray_params))
         except ConnectionError as e:
-            if "Could not find any running Ray instance" in str(e):
-                raise exceptions.RayNotRunningError(
-                    "Could not find any running Ray instance. "
-                    "You can use 'orq status' to check the status of the ray service. "
-                    "If it is not running, it can be started with the `orq up` command."
-                ) from e
-            raise e
+            raise exceptions.RayNotRunningError(
+                "Could not find any running Ray instance. "
+                "You can use 'orq status' to check the status of the ray service. "
+                "If it is not running, it can be started with the `orq up` command."
+            ) from e
 
         try:
             client.workflow_init()
