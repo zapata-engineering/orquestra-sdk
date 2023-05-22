@@ -3,6 +3,7 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+* If you set a custom task image (`@sdk.task(custom_image=...)`), the local Ray runtime won't execute the task unless the local Ray cluster was started with custom resources.
 
 🔥 *Features*
 * The API list_workflow_runs() function now accepts workspace and project arguments when used with CE configs.
@@ -13,6 +14,7 @@
 * `sdk.current_run_ids()` can now be used within task code to access the workflow run ID, task invocation ID, and task run ID.
 * All CLI commands that prompted for `wf_run_id` will now first prompt for workspace and project if `wf_run_id` is not provided.
 * `sdk.secrets.list()`, `sdk.secrets.get()`, `sdk.secrets.set()` and `sdk.secrets.delete()` now accept `workspace_id` parameter to specify secrets in particular workspace
+* Support for running tasks in Docker containers with custom images on Compute Engine.
 
 👩‍🔬 *Experimental*
 

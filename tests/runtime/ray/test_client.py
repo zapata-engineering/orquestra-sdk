@@ -11,26 +11,37 @@ from orquestra.sdk._ray._client import RayClient
 
 class TestClient:
     class TestAddOptions:
+        @staticmethod
         @pytest.fixture
-        def client(self):
+        def client():
             return RayClient()
 
+        @staticmethod
         @pytest.fixture
-        def remote_fn(self):
+        def remote_fn():
             return Mock()
 
+        @staticmethod
         @pytest.fixture
-        def required_kwargs(self):
+        def required_kwargs():
             return {
                 "name": "mocked name",
                 "metadata": {},
                 "catch_exceptions": False,
                 "runtime_env": None,
                 "max_retries": 0,
+                "resources": None,
             }
 
-        def test_required_args(self, client: RayClient, remote_fn, required_kwargs):
+        @staticmethod
+        def test_required_args(client: RayClient, remote_fn, required_kwargs):
+            """
+            Passes in all the required args and checks what we call Ray with.
+            """
+            # When
             client.add_options(remote_fn, **required_kwargs)
+
+            # Then
             remote_fn.options.assert_called_with(
                 _metadata={
                     "workflow.io/options": {
@@ -43,21 +54,35 @@ class TestClient:
                 max_retries=required_kwargs["max_retries"],
             )
 
+        @staticmethod
         @pytest.mark.parametrize(
-            "kwargs,expected",
+            "kwarg_overrides,expected_overrides",
             [
-                ({}, {}),
                 ({"num_cpus": None}, {}),
                 ({"num_cpus": 2}, {"num_cpus": 2}),
                 ({"num_gpus": 1}, {"num_gpus": 1}),
                 ({"memory": 1}, {"memory": 1}),
             ],
         )
-        def test_resources(
-            self, client: RayClient, remote_fn, required_kwargs, kwargs, expected
+        def test_orquestra_task_resources(
+            client: RayClient,
+            remote_fn,
+            required_kwargs,
+            kwarg_overrides,
+            expected_overrides,
         ):
-            print(kwargs)
-            client.add_options(remote_fn, **required_kwargs, **kwargs)
+            """
+            Passes in required args with overrides related to Orquestra task resource
+            requests.
+
+            Note: Orquestra task resources are a different concept than Ray resources.
+            The former is what user passes in to ``@sdk.task()`` or
+            ``.with_resources()``.
+            """
+            # When
+            client.add_options(remote_fn, **required_kwargs, **kwarg_overrides)
+
+            # Then
             remote_fn.options.assert_called_with(
                 _metadata={
                     "workflow.io/options": {
@@ -68,5 +93,5 @@ class TestClient:
                 },
                 runtime_env=required_kwargs["runtime_env"],
                 max_retries=required_kwargs["max_retries"],
-                **expected,
+                **expected_overrides,
             )
