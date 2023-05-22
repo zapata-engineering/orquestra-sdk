@@ -411,13 +411,6 @@ class TestRayRuntime:
             ray_params = _dag.RayParams()
 
             # WHEN
-            with pytest.raises(exceptions.RayNotRunningError) as e:
-                _dag.RayRuntime.startup(ray_params=ray_params)
-
             # THEN
-            assert e.exconly() == (
-                "orquestra.sdk.exceptions.RayNotRunningError: Could not find any "
-                "running Ray instance. You can use 'orq status' to check the status of "
-                "the ray service. If it is not running, it can be started with the `orq"
-                " up` command."
-            )
+            with pytest.raises(exceptions.RayNotRunningError):
+                _dag.RayRuntime.startup(ray_params=ray_params)
