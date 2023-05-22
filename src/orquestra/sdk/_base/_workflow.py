@@ -44,7 +44,7 @@ from ._dsl import (
     parse_custom_name,
 )
 from ._in_process_runtime import InProcessRuntime
-from ._spaces._resolver import resolve_project_ref
+from ._spaces._resolver import resolve_studio_project_ref
 from ._spaces._structs import ProjectRef
 from .abc import RuntimeInterface
 
@@ -205,8 +205,9 @@ class WorkflowDef(Generic[_R]):
         # appropriate runtime to use, based on `config`. Regardless of this
         # logic, the runtime should always be resolved.
         assert runtime is not None
-
-        _project: Optional[ProjectRef] = resolve_project_ref(workspace_id, project_id)
+        _project: Optional[ProjectRef] = resolve_studio_project_ref(
+            workspace_id, project_id, _config.name
+        )
 
         # The DirtyGitRepo warning can be raised here.
         wf_def_model = self.model

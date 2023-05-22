@@ -831,6 +831,54 @@ class TestListWorkflows:
             "parameter."
         )
 
+    def test_in_studio_passed_arguments(self, monkeypatch, mock_config_runtime):
+        # GIVEN
+        monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", "env_workspace")
+        monkeypatch.setenv("ORQ_CURRENT_PROJECT", "env_project")
+
+        # WHEN
+        _ = _api.list_workflow_runs(
+            "mocked_config",
+            project="<project ID sentinel>",
+            workspace="<workspace ID sentinel>",
+        )
+
+        # THEN
+        mock_config_runtime.list_workflow_runs.assert_called_once_with(
+            limit=None,
+            max_age=None,
+            state=None,
+            workspace="<workspace ID sentinel>",
+            project="<project ID sentinel>",
+        )
+
+    def test_in_studio_no_arguments(self, monkeypatch, mock_config_runtime):
+        # GIVEN
+        monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", "env_workspace")
+        monkeypatch.setenv("ORQ_CURRENT_PROJECT", "env_project")
+
+        # overwride config name
+        mock_config = MagicMock(_api.RuntimeConfig)
+        mock_config._get_runtime.return_value = mock_config_runtime
+        mock_config.name = "auto"
+        monkeypatch.setattr(
+            _api.RuntimeConfig, "load", MagicMock(return_value=mock_config)
+        )
+
+        # WHEN
+        _ = _api.list_workflow_runs(
+            "mock_config",
+        )
+
+        # THEN
+        mock_config_runtime.list_workflow_runs.assert_called_once_with(
+            limit=None,
+            max_age=None,
+            state=None,
+            workspace="env_workspace",
+            project="env_project",
+        )
+
 
 @pytest.mark.parametrize(
     "workspace_id, project_id, workspace_env, project_env, raises, expected",
@@ -881,6 +929,8 @@ class TestProjectId:
             monkeypatch.setenv(name=CURRENT_WORKSPACE_ENV, value=workspace_env)
         if project_env:
             monkeypatch.setenv(name=CURRENT_PROJECT_ENV, value=project_env)
+        monkeypatch.setattr(_api._config.RuntimeConfig, "name", "auto")
+
         with raises:
             wf = wf_pass_tuple().prepare(
                 "in_process", workspace_id=workspace_id, project_id=project_id
@@ -903,6 +953,7 @@ class TestProjectId:
             monkeypatch.setenv(name=CURRENT_PROJECT_ENV, value=project_env)
 
         monkeypatch.setattr(_api._wf_run.WorkflowRun, "start", Mock())
+        monkeypatch.setattr(_api._config.RuntimeConfig, "name", "auto")
         with raises:
             wf = wf_pass_tuple().run(
                 "in_process", workspace_id=workspace_id, project_id=project_id

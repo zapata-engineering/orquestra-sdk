@@ -28,7 +28,7 @@ from ...schema.workflow_run import ProjectId, State, TaskInvocationId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
 from .. import serde
-from .._spaces._resolver import resolve_project_ref
+from .._spaces._resolver import resolve_studio_project_ref
 from .._spaces._structs import ProjectRef
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig, _resolve_config
@@ -507,16 +507,17 @@ def list_workflow_runs(
             "without a workspace parameter."
         )
 
-    # If user wasn't specific with workspace and project, we might want to resolve it
-    if not workspace and not project:
-        if _project := resolve_project_ref(workspace, project):
-            workspace = _project.workspace_id
-            project = _project.project_id
-
     _project_dir = Path(project_dir or Path.cwd())
 
     # Resolve config
     resolved_config: RuntimeConfig = _resolve_config(config)
+    # If user wasn't specific with workspace and project, we might want to resolve it
+    if not workspace and not project:
+        if _project := resolve_studio_project_ref(
+            workspace, project, resolved_config.name
+        ):
+            workspace = _project.workspace_id
+            project = _project.project_id
 
     # resolve runtime
     runtime = resolved_config._get_runtime(_project_dir)
