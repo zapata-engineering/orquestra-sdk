@@ -1,9 +1,12 @@
+################################################################################
+# © Copyright 2023 Zapata Computing Inc.
+################################################################################
+
 from typing import Dict, Union
 from unittest.mock import ANY, Mock, call, create_autospec
 
 import pytest
 
-from orquestra.sdk._base import serde
 from orquestra.sdk._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
 )

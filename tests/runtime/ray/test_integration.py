@@ -271,16 +271,9 @@ class TestRayRuntimeMethods:
                │
                │
                ▼
-              [ ]  => waiting
-               │
-               │
-               ▼
             """
-            triggers = [_ipc.TriggerServer() for _ in range(2)]
 
-            wf = _example_wfs.serial_wf_with_file_triggers(
-                [trigger.port for trigger in triggers], task_timeout=2.0
-            ).model
+            wf = _example_wfs.infinite_workflow().model
 
             wf_run_id = runtime.create_workflow_run(wf, None)
             wf_run = runtime.get_workflow_run_status(wf_run_id)
@@ -288,8 +281,16 @@ class TestRayRuntimeMethods:
 
             runtime.stop_workflow_run(wf_run_id)
 
-            wf_run = runtime.get_workflow_run_status(wf_run_id)
-            assert wf_run.status.state == State.TERMINATED
+            # ray should cancel workflow synchronously, but just in case it doesn't
+            # let's give a workflow some time to change its state
+            timeout = time.time() + 30  # now + 30 seconds
+            while True:
+                if time.time() > timeout:
+                    assert False, "timeout while waiting for workflow termination"
+                wf_run = runtime.get_workflow_run_status(wf_run_id)
+                if wf_run.status.state != State.RUNNING:
+                    assert wf_run.status.state == State.TERMINATED
+                    break
 
         @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_on_finished_workflow(self, runtime: _dag.RayRuntime, tmp_path):
@@ -565,6 +566,15 @@ class TestRayRuntimeMethods:
                 ),
                 "invocation-2-task-concat": JSONResult(value='"Emiliano Zapata"'),
                 "invocation-3-task-capitalize-inline": JSONResult(value='"Zapata"'),
+            },
+        ),
+        (
+            _example_wfs.wf_with_explicit_n_outputs,
+            (JSONResult(value="true"),),
+            {
+                "invocation-0-task-task-with-single-output-explicit": JSONResult(
+                    value="true"
+                ),
             },
         ),
     ],

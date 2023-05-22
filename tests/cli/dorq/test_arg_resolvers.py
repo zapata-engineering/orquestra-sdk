@@ -11,6 +11,7 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base._spaces._structs import Project, ProjectRef, Workspace
 from orquestra.sdk._base.cli._dorq import _arg_resolvers, _repos
 from orquestra.sdk._base.cli._dorq._ui import _presenters, _prompts
+from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 
 
@@ -21,62 +22,67 @@ class TestConfigResolver:
                         ->[prompter]
     """
 
-    @staticmethod
-    def test_passing_config_directly():
-        """
-        User passed `config` value directly as CLI arg.
-        """
-        # Given
-        config = "<config sentinel>"
+    class TestResolveSingular:
+        @staticmethod
+        def test_passing_config_directly():
+            """
+            User passed `config` value directly as CLI arg.
+            """
+            # Given
+            config = "<config sentinel>"
 
-        resolver = _arg_resolvers.ConfigResolver(
-            config_repo=Mock(),
-            prompter=Mock(),
-        )
+            resolver = _arg_resolvers.ConfigResolver(
+                config_repo=Mock(),
+                prompter=Mock(),
+            )
 
-        # When
-        resolved_config = resolver.resolve(config=config)
+            # When
+            resolved_config = resolver.resolve(config=config)
 
-        # Then
-        assert resolved_config == config
+            # Then
+            assert resolved_config == config
 
-    @staticmethod
-    def test_no_config():
-        # Given
-        config = None
+        @staticmethod
+        def test_no_config():
+            # Given
+            config = None
 
-        config_repo = Mock()
-        local_config_names = ["cfg1", "cfg2"]
-        config_repo.list_config_names.return_value = local_config_names
+            config_repo = Mock()
+            local_config_names = ["cfg1", "cfg2"]
+            config_repo.list_config_names.return_value = local_config_names
 
-        prompter = Mock()
-        selected_config = local_config_names[1]
-        prompter.choice.return_value = selected_config
+            prompter = Mock()
+            selected_config = local_config_names[1]
+            prompter.choice.return_value = selected_config
 
-        resolver = _arg_resolvers.ConfigResolver(
-            config_repo=config_repo,
-            prompter=prompter,
-        )
+            resolver = _arg_resolvers.ConfigResolver(
+                config_repo=config_repo,
+                prompter=prompter,
+            )
 
-        # When
-        resolved_config = resolver.resolve(config=config)
+            # When
+            resolved_config = resolver.resolve(config=config)
 
-        # Then
-        # We expect prompt for selecting config.
-        prompter.choice.assert_called_with(local_config_names, message="Runtime config")
+            # Then
+            # We expect prompt for selecting config.
+            prompter.choice.assert_called_with(
+                local_config_names, message="Runtime config"
+            )
 
-        # Resolver should return the user's choice.
-        assert resolved_config == selected_config
+            # Resolver should return the user's choice.
+            assert resolved_config == selected_config
 
-    @staticmethod
-    def test_with_in_process():
-        # Given
-        config = "in_process"
-        resolver = _arg_resolvers.ConfigResolver(config_repo=Mock(), prompter=Mock())
+        @staticmethod
+        def test_with_in_process():
+            # Given
+            config = "in_process"
+            resolver = _arg_resolvers.ConfigResolver(
+                config_repo=Mock(), prompter=Mock()
+            )
 
-        # When/Then
-        with pytest.raises(exceptions.InProcessFromCLIError):
-            resolver.resolve(config)
+            # When/Then
+            with pytest.raises(exceptions.InProcessFromCLIError):
+                resolver.resolve(config)
 
     class TestResolveMultiple:
         @staticmethod
@@ -155,6 +161,120 @@ class TestConfigResolver:
 
             # Resolver should return the user's choice.
             assert resolved_config == selected_config
+
+    class TestResolveStoredForLogin:
+        @staticmethod
+        def test_passing_valid_config_name():
+            # GIVEN
+            # cli inputs
+            config = "<config sentinel>"
+
+            # Stored configs
+            stored_config = create_autospec(RuntimeConfiguration)
+            stored_config.config_name = config
+            stored_config.runtime_options = {"uri": "<stored uri sentinel>"}
+            stored_configs = [stored_config]
+
+            # test boundaries
+            config_repo = create_autospec(_repos.ConfigRepo)
+            config_repo.list_config_names.return_value = [
+                config.config_name for config in stored_configs
+            ]
+            config_repo.read_config.side_effect = stored_configs
+            prompter = create_autospec(_prompts.Prompter)
+
+            resolver = _arg_resolvers.ConfigResolver(
+                config_repo=config_repo,
+                prompter=prompter,
+            )
+
+            # WHEN
+            resolved_config = resolver.resolve_stored_config_for_login(config)
+
+            # THEN
+            assert resolved_config == config
+            prompter.choice.assert_not_called()
+
+        @staticmethod
+        def test_passing_non_existant_config_name():
+            # GIVEN
+            # cli inputs
+            config = "<config sentinel>"
+
+            # Stored configs
+            stored_config = create_autospec(RuntimeConfiguration)
+            stored_config.config_name = "<stored config name sentinel>"
+            stored_config.runtime_options = {"uri": "<stored uri sentinel>"}
+            stored_configs = [stored_config]
+
+            # test boundaries
+            config_repo = create_autospec(_repos.ConfigRepo)
+            config_repo.list_config_names.return_value = [
+                config.config_name for config in stored_configs
+            ]
+            config_repo.read_config.side_effect = stored_configs
+            prompter = create_autospec(_prompts.Prompter)
+            prompter.choice.return_value = "<chosen config sentinel>"
+
+            resolver = _arg_resolvers.ConfigResolver(
+                config_repo=config_repo,
+                prompter=prompter,
+            )
+
+            # WHEN
+            resolved_config = resolver.resolve_stored_config_for_login(config)
+
+            # THEN
+            assert resolved_config == "<chosen config sentinel>"
+            prompter.choice.assert_called_once_with(
+                ["<stored config name sentinel>"],
+                message=(
+                    "No config '<config sentinel>' found in file. "
+                    "Please select a valid config"
+                ),
+            )
+
+        @staticmethod
+        def test_passing_local_config_name():
+            # GIVEN
+            # cli inputs
+            config = "<config sentinel>"
+
+            # Stored configs
+            stored_config = create_autospec(RuntimeConfiguration)
+            stored_config.config_name = "<stored config name sentinel>"
+            stored_config.runtime_options = {"uri": "<stored uri sentinel>"}
+            stored_local_config = create_autospec(RuntimeConfiguration)
+            stored_local_config.config_name = config
+            stored_local_config.runtime_options = {}
+            stored_configs = [stored_config, stored_local_config]
+
+            # test boundaries
+            config_repo = create_autospec(_repos.ConfigRepo)
+            config_repo.list_config_names.return_value = [
+                config.config_name for config in stored_configs
+            ]
+            config_repo.read_config.side_effect = stored_configs
+            prompter = create_autospec(_prompts.Prompter)
+            prompter.choice.return_value = "<chosen config sentinel>"
+
+            resolver = _arg_resolvers.ConfigResolver(
+                config_repo=config_repo,
+                prompter=prompter,
+            )
+
+            # WHEN
+            resolved_config = resolver.resolve_stored_config_for_login(config)
+
+            # THEN
+            assert resolved_config == "<chosen config sentinel>"
+            prompter.choice.assert_called_once_with(
+                ["<stored config name sentinel>"],
+                message=(
+                    "Cannot log in with '<config sentinel>' as it relates to local "
+                    "runs. Please select a valid config"
+                ),
+            )
 
 
 class TestWFConfigResolver:
@@ -1153,7 +1273,7 @@ class TestSpacesResolver:
             # We expect prompt for selecting config.
             presenter.workspaces_list_to_prompt.assert_called_with(workspaces)
             prompter.choice.assert_called_with(
-                [(labels[0], ws1), (labels[1], ws2)], message="Workspace: "
+                [(labels[0], ws1), (labels[1], ws2)], message="Workspace"
             )
 
             # Resolver should return the user's choice.
@@ -1218,7 +1338,47 @@ class TestSpacesResolver:
             # We expect prompt for selecting config.
             presenter.project_list_to_prompt.assert_called_with(projects)
             prompter.choice.assert_called_with(
-                [(labels[0], p1), (labels[1], p2)], message="Projects: "
+                [(labels[0], p1), (labels[1], p2)], message="Projects"
+            )
+
+            # Resolver should return the user's choice.
+            assert resolved_project == selected_project
+
+        @staticmethod
+        def test_optional():
+            # Given
+            config = "config"
+            ws = "workspace"
+            p1 = Project(workspace_id="id1", name="name1", project_id="p1")
+            p2 = Project(workspace_id="id2", name="name2", project_id="p2")
+            projects = [p1, p2]
+
+            spaces_repo = create_autospec(_repos.SpacesRepo)
+            spaces_repo.list_projects.return_value = projects
+
+            prompter = create_autospec(_prompts.Prompter)
+            selected_project = projects[1]
+            prompter.choice.return_value = selected_project
+
+            presenter = create_autospec(_presenters.PromptPresenter)
+            labels = ["label1", "label2"]
+            presenter.project_list_to_prompt.return_value = labels
+            resolver = _arg_resolvers.SpacesResolver(
+                spaces=spaces_repo,
+                prompter=prompter,
+                presenter=presenter,
+            )
+
+            # When
+            resolved_project = resolver.resolve_project_id(
+                config=config, workspace_id=ws, project_id=None, optional=True
+            )
+
+            # Then
+            # We expect prompt for selecting config.
+            presenter.project_list_to_prompt.assert_called_with(projects)
+            prompter.choice.assert_called_with(
+                [(labels[0], p1), (labels[1], p2), ("All", None)], message="Projects"
             )
 
             # Resolver should return the user's choice.

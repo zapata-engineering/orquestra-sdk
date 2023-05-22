@@ -55,6 +55,38 @@ class ConfigResolver:
         selected_config = self._prompter.choice(config_names, message="Runtime config")
         return selected_config
 
+    def resolve_stored_config_for_login(
+        self, config: t.Optional[ConfigName]
+    ) -> ConfigName:
+        """
+        Resolve the name of a config for logging in.
+
+        This functions similarly to `resolve`, however we enforce two conditions:
+        1. The resolved config name must correspond to a stored config
+        2. The stored config must specify a URL
+        """
+        config_names = self._config_repo.list_config_names()
+        valid_configs = [
+            name
+            for name in config_names
+            if "uri" in self._config_repo.read_config(name).runtime_options.keys()
+        ]
+
+        if config is not None and config in valid_configs:
+            return config
+
+        message = "Please select a valid config"
+
+        # The user specified a config, but it doesn't exist
+        if config is not None and config not in config_names:
+            message = f"No config '{config}' found in file. " + message
+        elif config is not None and config in config_names:
+            message = (
+                f"Cannot log in with '{config}' as it relates to local runs. " + message
+            )
+
+        return self._prompter.choice(valid_configs, message=message)
+
     def resolve_multiple(
         self, configs: t.Optional[t.Sequence[str]]
     ) -> t.Sequence[ConfigName]:
@@ -115,6 +147,10 @@ class WFConfigResolver:
 
 
 class SpacesResolver:
+    """
+    Resolve values related to the workspace / project paradigm.
+    """
+
     def __init__(
         self,
         spaces=_repos.SpacesRepo(),
@@ -129,14 +165,20 @@ class SpacesResolver:
         self,
         config: ConfigName,
         workspace_id: t.Optional[WorkspaceId] = None,
-    ):
+    ) -> WorkspaceId:
+        """
+        Resolve the value of the workspace ID.
+
+        If the ID hasn't been specified, prompts the user to pick from the available
+        workspaces.
+        """
         if workspace_id is not None:
             return workspace_id
 
         workspaces = self._spaces_repo.list_workspaces(config)
         labels = self._presenter.workspaces_list_to_prompt(workspaces)
         prompt_choices = [(label, ws) for label, ws in zip(labels, workspaces)]
-        selected_id = self._prompter.choice(prompt_choices, message="Workspace: ")
+        selected_id = self._prompter.choice(prompt_choices, message="Workspace")
 
         return selected_id
 
@@ -145,16 +187,29 @@ class SpacesResolver:
         config: ConfigName,
         workspace_id: WorkspaceId,
         project_id: t.Optional[ProjectId] = None,
-    ):
+        optional: bool = False,
+    ) -> t.Optional[ProjectId]:
+        """
+        Resolve the value of the Project ID.
+
+        If the ID hasn't been specified, prompts the user to pick from the available
+        projects.
+
+        If `optional` is set to True, adds an `All` option that returns `None` for the
+        ID.
+        """
+
         if project_id is not None:
             return project_id
 
         projects = self._spaces_repo.list_projects(config, workspace_id)
         labels = self._presenter.project_list_to_prompt(projects)
+        if optional:
+            projects.append(None)
+            labels.append("All")
         prompt_choices = [(label, ws) for label, ws in zip(labels, projects)]
-        selected_id = self._prompter.choice(prompt_choices, message="Projects: ")
 
-        return selected_id
+        return self._prompter.choice(prompt_choices, message="Projects")
 
 
 class WFRunResolver:

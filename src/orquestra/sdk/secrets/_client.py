@@ -14,11 +14,13 @@ from requests import codes
 
 from . import _exceptions
 from ._models import (
+    ListSecretsRequest,
     SecretDefinition,
     SecretName,
     SecretNameObj,
     SecretValue,
     SecretValueObj,
+    WorkspaceId,
 )
 
 API_ACTIONS = {
@@ -60,9 +62,14 @@ class SecretsClient:
 
     # --- helpers ---
 
-    def _get(self, endpoint: str) -> requests.Response:
+    def _get(
+        self, endpoint: str, query_params: t.Optional[t.Mapping] = None
+    ) -> requests.Response:
         """Helper method for GET requests"""
-        response = self._session.get(urljoin(self._base_uri, endpoint))
+        response = self._session.get(
+            urljoin(self._base_uri, endpoint),
+            params=query_params,
+        )
 
         return response
 
@@ -100,13 +107,20 @@ class SecretsClient:
 
         return SecretDefinition.parse_obj(resp.json()["data"]["details"])
 
-    def list_secrets(self) -> t.Sequence[SecretNameObj]:
+    def list_secrets(
+        self, workspace_id: t.Optional[WorkspaceId]
+    ) -> t.Sequence[SecretNameObj]:
         """
         Raises:
             InvalidTokenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
         """
-        resp = self._get(API_ACTIONS["list_secrets"])
+        resp = self._get(
+            API_ACTIONS["list_secrets"],
+            query_params=ListSecretsRequest(workspace=workspace_id).dict()
+            if workspace_id
+            else None,
+        )
         _handle_common_errors(resp)
 
         return [SecretNameObj.parse_obj(d) for d in resp.json()["data"]]

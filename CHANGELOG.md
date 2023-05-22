@@ -5,20 +5,27 @@
 🚨 *Breaking Changes*
 
 🔥 *Features*
+* The API list_workflow_runs() function now accepts workspace and project arguments when used with CE configs.
+* Login CLI command now accepts the name of a stored config as an alternative to the uri.
+* Choice and Checklist CLI prompts present an informative error message when there are no options rather than prompting the user to select from an empty list.
 * New API functions: list_workspaces() and list_projects(). Usable only on CE runtime
 * Setting workflow_id and project_id is now available using "orq wf submit" command
-* All CLI commands that prompted for wf_run_id will now first prompt for workspace and project if wf_run_ID is not provided
 * `sdk.current_run_ids()` can now be used within task code to access the workflow run ID, task invocation ID, and task run ID.
 * All CLI commands that prompted for `wf_run_id` will now first prompt for workspace and project if `wf_run_id` is not provided.
+* The error raised when trying to submit to Ray while Ray is not running now tells the user how to start Ray.
+* `sdk.secrets.list()`, `sdk.secrets.get()`, `sdk.secrets.set()` and `sdk.secrets.delete()` now accept `workspace_id` parameter to specify secrets in particular workspace
 
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
+* Fixed tasks that failed when explicitly state `n_outputs=1` on QE and in-process.
 
 💅 *Improvements*
 * `orquestra-sdk` CPU Docker image has a 20% size reduction.
+* `orq login` will perform some sanity checks before saving the token.
 
 🥷 *Internal*
+* Fix random CI failures on socket warning
 
 📃 *Docs*
 

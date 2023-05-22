@@ -278,7 +278,7 @@ def exec_task_fn(
     ]
 
     for ret_node in ret_nodes:
-        if ret_node.artifact_index is None:
+        if ret_node.artifact_index is None or not isinstance(ret_obj, tuple):
             ret_val = ret_obj
         else:
             ret_val = ret_obj[ret_node.artifact_index]
