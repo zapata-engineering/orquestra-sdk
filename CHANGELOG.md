@@ -6,6 +6,7 @@
 
 🔥 *Features*
 * Add .project property to WorkflowRun to get the info about workspace and project of running workflow
+* Add `--qe` flag to `orq login`, this is the default so there is no change in behavior.
 
 👩‍🔬 *Experimental*
 
