@@ -3,6 +3,7 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+* Removed `WorkflowDef.prepare()` and `WorkflowRun.start()` functions. Use `WorkflowDef.run()` instead
 
 🔥 *Features*
 * The API list_workflow_runs() function now accepts workspace and project arguments when used with CE configs.
