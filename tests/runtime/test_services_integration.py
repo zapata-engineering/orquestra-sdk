@@ -30,7 +30,7 @@ class TestRayCLI:
     def test_failure(monkeypatch: pytest.MonkeyPatch):
         # Given
         with ray_suitable_temp_dir() as tmp_path:
-            tmp_path.mkdir()
+            tmp_path.mkdir(exist_ok=True)
             monkeypatch.chdir(tmp_path)
             # As of Ray 2.3.1 setting paths to "." is a reliable way to make 'ray start'
             # fail.
@@ -40,12 +40,10 @@ class TestRayCLI:
 
             ray = RayManager()
 
-            # TODO: use a better exception type
             with pytest.raises(subprocess.CalledProcessError) as exc_info:
                 # When
                 ray.up()
 
             # Then
-            # TODO: use a better assertion heuristic
-            assert exc_info.value.stdout != ""
-            assert exc_info.value.stderr != ""
+            assert b"Local node IP" in exc_info.value.stdout
+            assert b"URI has empty scheme" in exc_info.value.stderr
