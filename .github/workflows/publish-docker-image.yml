@@ -22,13 +22,14 @@ jobs:
     steps:
       - name: Trigger cicd-actions repository workflow over Github API
         run: |
+          eventType="$repository | $ref"
           curl \
           "https://api.github.com/repos/zapatacomputing/cicd-actions/dispatches" \
           -H "Authorization: token "$USER_TOKEN \
           -H 'Accept: application/vnd.github.everest-preview+json' \
           --data-raw '
           {
-            "event_type":  "'"$repository"' | '"$ref"'", 
+            "event_type":  "'"${eventType:0:100}"'",
             "client_payload": 
                 {
                   "repository": "'"$repository"'", 
