@@ -149,7 +149,6 @@ class WorkflowRun:
         wf_def: ir.WorkflowDef,
         runtime: RuntimeInterface,
         config: t.Optional["RuntimeConfig"] = None,
-        project: t.Optional[ProjectRef] = None,
     ):
         """
         Users aren't expected to use __init__() directly. Please use
@@ -167,7 +166,6 @@ class WorkflowRun:
         self._wf_def = wf_def
         self._runtime = runtime
         self._config = config
-        self._project = project
 
     def __str__(self) -> str:
         outstr: str = ""
