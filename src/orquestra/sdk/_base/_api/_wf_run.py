@@ -512,7 +512,7 @@ def list_workflow_runs(
     # Resolve config
     resolved_config: RuntimeConfig = _resolve_config(config)
     # If user wasn't specific with workspace and project, we might want to resolve it
-    if not workspace and not project:
+    if workspace is None and project is None:
         if _project := resolve_studio_project_ref(
             workspace, project, resolved_config.name
         ):

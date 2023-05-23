@@ -18,22 +18,24 @@ def resolve_studio_project_ref(
     config_name: str,
 ) -> Optional[ProjectRef]:
     # Passed explicitly
-    if workspace_id or project_id:
-        if workspace_id is None or project_id is None:
-            raise ProjectInvalidError(
-                "Invalid project ID. Either explicitly pass workspace_id "
-                "and project_id, or omit both"
-            )
+    if workspace_id and project_id:
         return ProjectRef(workspace_id=workspace_id, project_id=project_id)
+    # passed explicitly only 1 value. Invalid entry
+    elif workspace_id or project_id:
+        raise ProjectInvalidError(
+            "Invalid project ID. Either explicitly pass workspace_id "
+            "and project_id, or omit both"
+        )
 
     # Infer workspace and project from studio ONLY when using "auto" config-name
     if config_name != AUTO_CONFIG_NAME:
         return None
 
     # Currently no way to figure out workspace and projects without env vars
-    if CURRENT_PROJECT_ENV not in os.environ or CURRENT_WORKSPACE_ENV not in os.environ:
+    try:
+        current_workspace = os.environ[CURRENT_WORKSPACE_ENV]
+        current_project = os.environ[CURRENT_PROJECT_ENV]
+    except KeyError:
         return None
 
-    current_workspace = os.environ[CURRENT_WORKSPACE_ENV]
-    current_project = os.environ[CURRENT_PROJECT_ENV]
     return ProjectRef(workspace_id=current_workspace, project_id=current_project)
