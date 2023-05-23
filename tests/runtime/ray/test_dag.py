@@ -389,3 +389,28 @@ class TestRayRuntime:
                     project_dir=tmp_path,
                 )
                 runtime.list_workflow_runs(**kwargs)
+
+    class TestStartup:
+        @staticmethod
+        # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
+        # unraisable exceptions. Last tested with Ray 2.3.0.
+        @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+        def test_raises_RayNotRunningError_when_ray_not_running(
+            monkeypatch, runtime_config, tmp_path
+        ):
+            # GIVEN
+            monkeypatch.setattr(
+                _client.RayClient,
+                "init",
+                Mock(
+                    side_effect=ConnectionError(
+                        "Could not find any running Ray instance"
+                    )
+                ),
+            )
+            ray_params = _dag.RayParams()
+
+            # WHEN
+            # THEN
+            with pytest.raises(exceptions.RayNotRunningError):
+                _dag.RayRuntime.startup(ray_params=ray_params)

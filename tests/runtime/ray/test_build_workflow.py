@@ -215,6 +215,7 @@ class TestResourcesInMakeDag:
             # We should only have two calls: our invocation and the aggregation step
             assert len(calls) == 2
             # Checking our call did not have any resources included
+
             assert calls[0] == call(
                 ANY,
                 name=ANY,
