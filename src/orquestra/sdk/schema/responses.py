@@ -11,7 +11,7 @@ import enum
 import typing as t
 
 from pydantic import BaseModel, Field
-from typing_extensions import Annotated
+from typing_extensions import Annotated, Literal
 
 from .configs import RuntimeConfiguration
 from .ir import (
@@ -148,7 +148,7 @@ class ServicesStatusResponse(BaseModel):
 class JSONResult(BaseModel):
     # Output value dumped to a flat JSON string.
     value: str
-    serialization_format: t.Literal[ArtifactFormat.JSON] = ArtifactFormat.JSON
+    serialization_format: Literal[ArtifactFormat.JSON] = ArtifactFormat.JSON
 
 
 class PickleResult(BaseModel):
@@ -156,7 +156,7 @@ class PickleResult(BaseModel):
     # chunks. Chunking is required because some JSON parsers have limitation on max
     # string field length.
     chunks: t.List[str]
-    serialization_format: t.Literal[
+    serialization_format: Literal[
         ArtifactFormat.ENCODED_PICKLE
     ] = ArtifactFormat.ENCODED_PICKLE
 
@@ -168,7 +168,7 @@ WorkflowResult = Annotated[
 
 class ComputeEngineWorkflowResult(BaseModel):
     results: t.Tuple[WorkflowResult, ...]
-    type: t.Literal["ComputeEngineWorkflowResult"] = "ComputeEngineWorkflowResult"
+    type: Literal["ComputeEngineWorkflowResult"] = "ComputeEngineWorkflowResult"
 
 
 class GetWorkflowRunResultsResponse(BaseModel):
