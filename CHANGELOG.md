@@ -14,6 +14,7 @@
 * All CLI commands that prompted for `wf_run_id` will now first prompt for workspace and project if `wf_run_id` is not provided.
 * The error raised when trying to submit to Ray while Ray is not running now tells the user how to start Ray.
 * `sdk.secrets.list()`, `sdk.secrets.get()`, `sdk.secrets.set()` and `sdk.secrets.delete()` now accept `workspace_id` parameter to specify secrets in particular workspace
+* `auto` config inside studio will infer workspace and project IDs from studio instance
 
 👩‍🔬 *Experimental*
 
