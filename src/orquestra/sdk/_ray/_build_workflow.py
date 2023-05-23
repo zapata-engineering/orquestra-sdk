@@ -1,7 +1,9 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-
+"""
+Translates IR workflow def into a Ray workflow.
+"""
 import os
 import traceback
 import typing as t
@@ -12,7 +14,10 @@ from typing_extensions import assert_never
 
 from .. import exceptions, secrets
 from .._base import _exec_ctx, _git_url_utils, _graphs, _log_adapter, dispatch, serde
-from .._base._env import RAY_DOWNLOAD_GIT_IMPORTS_ENV
+from .._base._env import (
+    RAY_DOWNLOAD_GIT_IMPORTS_ENV,
+    RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV,
+)
 from ..kubernetes.quantity import parse_quantity
 from ..schema import _compat, ir, responses, workflow_run
 from . import _client, _id_gen
@@ -152,7 +157,7 @@ def _make_ray_dag_node(
     kwargs_artifact_nodes: t.Mapping,
     n_outputs: t.Optional[int],
     project_dir: t.Optional[Path],
-    user_fn_ref: t.Optional[ir.FunctionRef] = None,
+    user_fn_ref: t.Optional[ir.FunctionRef],
 ) -> _client.FunctionNode:
     """
     Prepares a Ray task that fits a single ir.TaskInvocation. The result is a
@@ -314,6 +319,16 @@ def _gather_kwargs(kwargs, workflow_def, ray_futures):
     return ray_kwargs, ray_kwargs_artifact_nodes
 
 
+def _ray_resources_for_custom_image(image_name: str) -> t.Mapping[str, float]:
+    """
+    Custom Ray resources we set to power running Orquestra tasks on custom Docker
+    images. The values are coupled with Compute Engine server-side set up.
+    """
+    # The format for custom image strings is described in the ADR:
+    # https://zapatacomputing.atlassian.net/wiki/spaces/ORQSRUN/pages/688259073/2023-05-05+Ray+resources+syntax+for+custom+images
+    return {f"image:{image_name}": 1}
+
+
 def make_ray_dag(
     client: RayClient,
     workflow_def: ir.WorkflowDef,
@@ -361,7 +376,19 @@ def make_ray_dag(
             "max_retries": 0,
         }
 
-        # Task resources
+        # Set custom image
+        if os.getenv(RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV) is not None:
+            # Custom "Ray resources" request. The entries need to correspond to the ones
+            # used when starting the Ray cluster. See also:
+            # https://docs.ray.io/en/latest/ray-core/scheduling/resources.html#custom-resources
+            ray_options["resources"] = (
+                _ray_resources_for_custom_image(custom_image)
+                if (custom_image := invocation.custom_image or user_task.custom_image)
+                is not None
+                else None
+            )
+
+        # Non-custom task resources
         if invocation.resources is not None:
             if invocation.resources.cpu is not None:
                 cpu = parse_quantity(invocation.resources.cpu)
@@ -409,6 +436,9 @@ def make_ray_dag(
             # Set to avoid retrying when the worker crashes.
             # See the comment with the invocation's options for more details.
             "max_retries": 0,
+            # Custom "Ray resources" request. We don't need any for the aggregation
+            # step.
+            "resources": None,
         },
         ray_args=pos_args,
         ray_kwargs={},
@@ -416,6 +446,7 @@ def make_ray_dag(
         kwargs_artifact_nodes={},
         n_outputs=len(pos_args),
         project_dir=None,
+        user_fn_ref=None,
     )
 
     # Data aggregation step is run with catch_exceptions=True - so it returns tuple of
