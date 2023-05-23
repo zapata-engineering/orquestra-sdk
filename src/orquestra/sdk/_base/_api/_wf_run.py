@@ -28,6 +28,7 @@ from ...schema.workflow_run import ProjectId, State, TaskInvocationId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
 from .. import serde
+from .._spaces._resolver import resolve_studio_project_ref
 from .._spaces._structs import ProjectRef
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig, _resolve_config
@@ -406,9 +407,8 @@ def list_workflow_runs(
             contain the workflows database to which this run was saved. If omitted,
             the current working directory is assumed to be the project directory.
         workspace: Only return runs from the specified workspace when using CE.
-            Currently unused.
         project: will be used to list workflows from specific workspace and project
-            when using CE. Currently unused.
+            when using CE.
 
     Raises:
         ConfigNameNotFoundError: when the named config is not found in the file.
@@ -430,6 +430,13 @@ def list_workflow_runs(
 
     # Resolve config
     resolved_config: RuntimeConfig = _resolve_config(config)
+    # If user wasn't specific with workspace and project, we might want to resolve it
+    if workspace is None and project is None:
+        if _project := resolve_studio_project_ref(
+            workspace, project, resolved_config.name
+        ):
+            workspace = _project.workspace_id
+            project = _project.project_id
 
     # resolve runtime
     runtime = resolved_config._get_runtime(_project_dir)

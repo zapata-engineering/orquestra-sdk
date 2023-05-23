@@ -26,11 +26,7 @@ from typing import (
 from typing_extensions import ParamSpec
 
 import orquestra.sdk.schema.ir as ir
-from orquestra.sdk.exceptions import (
-    ConfigNameNotFoundError,
-    ProjectInvalidError,
-    WorkflowSyntaxError,
-)
+from orquestra.sdk.exceptions import ConfigNameNotFoundError, WorkflowSyntaxError
 from orquestra.sdk.schema.workflow_run import ProjectId, WorkspaceId
 
 from .. import secrets
@@ -48,6 +44,7 @@ from ._dsl import (
     parse_custom_name,
 )
 from ._in_process_runtime import InProcessRuntime
+from ._spaces._resolver import resolve_studio_project_ref
 from ._spaces._structs import ProjectRef
 from .abc import RuntimeInterface
 
@@ -217,16 +214,9 @@ class WorkflowDef(Generic[_R]):
         # logic, the runtime should always be resolved.
         assert runtime is not None
 
-        _project: Optional[ProjectRef]
-        if project_id is not None and workspace_id is not None:
-            _project = ProjectRef(project_id=project_id, workspace_id=workspace_id)
-        elif project_id is None and workspace_id is None:
-            _project = None
-        else:
-            raise ProjectInvalidError(
-                "Invalid project ID. Either explicitly pass workspace_id "
-                "and project_id, or omit both"
-            )
+        _project: Optional[ProjectRef] = resolve_studio_project_ref(
+            workspace_id, project_id, _config.name
+        )
 
         # The DirtyGitRepo warning can be raised here.
         wf_def_model = self.model
