@@ -313,7 +313,9 @@ class WorkflowRun:
             results = (
                 *(
                     serde.deserialize(o)
-                    for o in self._runtime.get_workflow_run_outputs_non_blocking(run_id)
+                    for o in self._runtime.get_workflow_run_outputs_non_blocking(
+                        self.run_id
+                    )
                 ),
             )
         except WorkflowRunNotSucceeded:
