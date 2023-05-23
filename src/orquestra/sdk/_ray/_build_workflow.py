@@ -24,6 +24,8 @@ from . import _client, _id_gen
 from ._client import RayClient
 from ._wf_metadata import InvUserMetadata, pydatic_to_json_dict
 
+DEFAULT_IMAGE_TEMPLATE = "hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:{}"
+
 
 def _arg_from_graph(argument_id: ir.ArgumentId, workflow_def: ir.WorkflowDef):
     try:
@@ -378,14 +380,17 @@ def make_ray_dag(
 
         # Set custom image
         if os.getenv(RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV) is not None:
+            # This makes an assumption that only "new" IRs will get to this point
+            assert workflow_def.metadata is not None, "Expected a >=0.45.0 IR"
+            sdk_version = workflow_def.metadata.sdk_version.original
+
             # Custom "Ray resources" request. The entries need to correspond to the ones
             # used when starting the Ray cluster. See also:
             # https://docs.ray.io/en/latest/ray-core/scheduling/resources.html#custom-resources
-            ray_options["resources"] = (
-                _ray_resources_for_custom_image(custom_image)
-                if (custom_image := invocation.custom_image or user_task.custom_image)
-                is not None
-                else None
+            ray_options["resources"] = _ray_resources_for_custom_image(
+                invocation.custom_image
+                or user_task.custom_image
+                or DEFAULT_IMAGE_TEMPLATE.format(sdk_version)
             )
 
         # Non-custom task resources

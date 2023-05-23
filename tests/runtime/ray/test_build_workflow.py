@@ -2,7 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 from unittest.mock import ANY, Mock, call, create_autospec
 
 import pytest
@@ -172,19 +172,39 @@ class TestResourcesInMakeDag:
         for kwarg_name, type_ in types.items():
             assert isinstance(calls[0].kwargs[kwarg_name], type_)
 
+    @pytest.mark.parametrize(
+        "custom_image, expected_resources",
+        (
+            ("a_custom_image:latest", {"image:a_custom_image:latest": 1}),
+            (
+                None,
+                {
+                    "image:hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:mocked": 1  # noqa: E501
+                },
+            ),
+        ),
+    )
     class TestSettingCustomImage:
         def test_with_env_set(
             self,
             client: Mock,
             wf_run_id: str,
             monkeypatch: pytest.MonkeyPatch,
+            custom_image: Optional[str],
+            expected_resources: Dict[str, int],
         ):
             # Given
             monkeypatch.setenv("ORQ_RAY_SET_CUSTOM_IMAGE_RESOURCES", "1")
-            custom_image = "a_custom_image:latest"
             workflow = workflow_parametrised_with_resources(
                 custom_image=custom_image
             ).model
+
+            # To prevent hardcoding a version number, let's override the version for
+            # this test.
+
+            # We can be certain the workfloe def metadata is available
+            assert workflow.metadata is not None
+            workflow.metadata.sdk_version.original = "mocked"
 
             # When
             _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, None)
@@ -195,7 +215,6 @@ class TestResourcesInMakeDag:
             # We should only have two calls: our invocation and the aggregation step
             assert len(calls) == 2
             # Checking our call did not have any resources included
-            expected_resources = {f"image:{custom_image}": 1}
             assert calls[0] == call(
                 ANY,
                 name=ANY,
@@ -210,9 +229,10 @@ class TestResourcesInMakeDag:
             self,
             client: Mock,
             wf_run_id: str,
+            custom_image: Optional[str],
+            expected_resources: Dict[str, int],
         ):
             # Given
-            custom_image = "a_custom_image:latest"
             workflow = workflow_parametrised_with_resources(
                 custom_image=custom_image
             ).model
