@@ -841,13 +841,6 @@ class TestListWorkflows:
     ],
 )
 class TestProjectId:
-    def test_prepare(self, workspace_id, project_id, raises, expected):
-        with raises:
-            wf = wf_pass_tuple().prepare(
-                "in_process", workspace_id=workspace_id, project_id=project_id
-            )
-            assert wf._project == expected
-
     def test_run(self, workspace_id, project_id, raises, expected, monkeypatch):
         monkeypatch.setattr(_api._wf_run.WorkflowRun, "start", Mock())
         with raises:

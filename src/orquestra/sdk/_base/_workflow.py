@@ -161,76 +161,6 @@ class WorkflowDef(Generic[_R]):
         _dsl.DIRECT_EXECUTION = False
         return result
 
-    def prepare(
-        self,
-        config: Union[_api.RuntimeConfig, str],
-        project_dir: Optional[Union[str, Path]] = None,
-        workspace_id: Optional[WorkspaceId] = None,
-        project_id: Optional[ProjectId] = None,
-    ) -> _api.WorkflowRun:
-        """
-        "Prepares" workflow for running. Call ".start()" on the result to
-        schedule the workflow for execution.
-
-        Args:
-            config: SDK needs to know where to execute the workflow. The config
-                contains the required details. This can be a RuntimeConfig object, or
-                the name of a saved configuration.
-            project_dir: the path to the project directory. If omitted, the current
-                working directory is used.
-            workspace_id: ID of the workspace for workflow - supported only on CE
-            project_id: ID of the project for workflow - supported only on CE
-
-        Raises:
-            ConfigNameNotFoundError: when the configuration has not been saved prior to
-                this point.
-            orquestra.sdk.exceptions.DirtyGitRepo: (warning) when a task def used by
-                this workflow def has a "GitImport" and the git repo that contains it
-                has uncommitted changes.
-            ProjectInvalidError: when only 1 out of project and workspace is passed
-        """
-        _config: _api.RuntimeConfig
-        if isinstance(config, _api.RuntimeConfig):
-            _config = config
-        elif isinstance(config, str):
-            _config = _api.RuntimeConfig.load(config)
-        else:
-            raise TypeError(
-                f"'config' argument to `prepare()` has unsupported type {type(config)}."
-            )
-        runtime: RuntimeInterface
-        if _config._runtime_name == "IN_PROCESS":
-            runtime = InProcessRuntime()
-        else:
-            runtime = _config._get_runtime(project_dir=project_dir)
-
-        # In close future there will be multiple ways of figuring out the
-        # appropriate runtime to use, based on `config`. Regardless of this
-        # logic, the runtime should always be resolved.
-        assert runtime is not None
-
-        _project: Optional[ProjectRef]
-        if project_id is not None and workspace_id is not None:
-            _project = ProjectRef(project_id=project_id, workspace_id=workspace_id)
-        elif project_id is None and workspace_id is None:
-            _project = None
-        else:
-            raise ProjectInvalidError(
-                "Invalid project ID. Either explicitly pass workspace_id "
-                "and project_id, or omit both"
-            )
-
-        # The DirtyGitRepo warning can be raised here.
-        wf_def_model = self.model
-
-        return _api.WorkflowRun(
-            run_id=None,
-            wf_def=wf_def_model,
-            runtime=runtime,
-            config=_config,
-            project=_project,
-        )
-
     def run(
         self,
         config: Optional[Union[_api.RuntimeConfig, str]] = None,
@@ -239,8 +169,7 @@ class WorkflowDef(Generic[_R]):
         project_id: Optional[ProjectId] = None,
     ) -> _api.WorkflowRun:
         """
-        Schedules workflow for execution. Shorthand for
-        `workflow.prepare().start()`.
+        Schedules workflow for execution.
 
         Args:
             config: SDK needs to know where to execute the workflow. This
@@ -267,14 +196,48 @@ class WorkflowDef(Generic[_R]):
                 "under which they are saved, or passing in the RuntimeConfig object "
                 "directly. "
             )
-        run = self.prepare(
-            config,
-            project_dir=project_dir,
-            workspace_id=workspace_id,
-            project_id=project_id,
+
+        _config: _api.RuntimeConfig
+        if isinstance(config, _api.RuntimeConfig):
+            _config = config
+        elif isinstance(config, str):
+            _config = _api.RuntimeConfig.load(config)
+        else:
+            raise TypeError(
+                f"'config' argument to `run()` has unsupported type {type(config)}."
+            )
+        runtime: RuntimeInterface
+        if _config._runtime_name == "IN_PROCESS":
+            runtime = InProcessRuntime()
+        else:
+            runtime = _config._get_runtime(project_dir=project_dir)
+
+        # In close future there will be multiple ways of figuring out the
+        # appropriate runtime to use, based on `config`. Regardless of this
+        # logic, the runtime should always be resolved.
+        assert runtime is not None
+
+        _project: Optional[ProjectRef]
+        if project_id is not None and workspace_id is not None:
+            _project = ProjectRef(project_id=project_id, workspace_id=workspace_id)
+        elif project_id is None and workspace_id is None:
+            _project = None
+        else:
+            raise ProjectInvalidError(
+                "Invalid project ID. Either explicitly pass workspace_id "
+                "and project_id, or omit both"
+            )
+
+        # The DirtyGitRepo warning can be raised here.
+        wf_def_model = self.model
+
+        wf_run = _api.WorkflowRun._start(
+            wf_def=wf_def_model,
+            runtime=runtime,
+            config=_config,
+            project=_project,
         )
-        run.start()
-        return run
+        return wf_run
 
     def with_resources(
         self,
