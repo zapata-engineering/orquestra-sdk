@@ -33,7 +33,7 @@ Then, you can read and set secrets within a script or a Python REPL:
 
 ``value`` is any string you like (up a reasonable length limit).
 
-``workspace_id`` specifies the workspace id where the secret will be saved. If omitted, personal workspace will be used
+``workspace_id`` specifies the workspace id where the secret will be saved. If omitted, personal workspace will be used. You can get workspace_id from the workspace view in the web Orquestra Portal or by using list_workspace API call.
 
 ``config_name`` specifies the configuration that stores the cluster URI and auth token that are used to access the secrets vault.
 
@@ -67,4 +67,4 @@ The workflow runs on your computer, but the secrets storage is on Orquestra Plat
 The workflow runs on Orquestra Platform, and the secrets vault is already on the same cluster.
 In this case, the SDK handles authorization for accessing secrets vault automatically.
 
-``workspace_id`` specifies the workspace id which contains the secret. If omitted, personal workspace will be used
+``workspace_id`` specifies the workspace id which contains the secret. If omitted, personal workspace will be used. You can get workspace_id from the workspace view in the web Orquestra Portal or by using list_workspace API call.
