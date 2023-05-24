@@ -18,7 +18,6 @@ from ...exceptions import (
     WorkflowRunCanNotBeTerminated,
     WorkflowRunNotFinished,
     WorkflowRunNotFoundError,
-    WorkflowRunNotStarted,
     WorkflowRunNotSucceeded,
 )
 from ...schema import ir
@@ -29,7 +28,6 @@ from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
 from .. import serde
 from .._spaces._resolver import resolve_studio_project_ref
-from .._spaces._structs import ProjectRef
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig, _resolve_config
 from ._task_run import TaskRun
@@ -210,9 +208,6 @@ class WorkflowRun:
             verbose: If ``True``, each iteration of the polling loop will print to
                 stderr.
 
-        Raises:
-            WorkflowRunNotStarted: when the workflow run has not started
-
         Returns:
             State: The state of the finished workflow.
         """
@@ -265,9 +260,6 @@ class WorkflowRun:
     def get_status(self) -> State:
         """
         Return the current status of the workflow.
-
-        Raises:
-            WorkflowRunNotStarted: when the workflow run has not started
         """
         return self.get_status_model().status.state
 

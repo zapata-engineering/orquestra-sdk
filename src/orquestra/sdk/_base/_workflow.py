@@ -169,8 +169,9 @@ class WorkflowDef(Generic[_R]):
         Schedules workflow for execution.
 
         Args:
-            config: SDK needs to know where to execute the workflow. This
-                objects contains the required details.
+            config: SDK needs to know where to execute the workflow. The config
+                contains the required details. This can be a RuntimeConfig object, or
+                the name of a saved configuration.
             project_dir: the path to the project directory. If omitted, the current
                 working directory is used.
             workspace_id: ID of the workspace for workflow - supported only on CE
@@ -180,6 +181,8 @@ class WorkflowDef(Generic[_R]):
             orquestra.sdk.exceptions.DirtyGitRepo: (warning) when a task def used by
                 this workflow def has a "GitImport" and the git repo that contains it
                 has uncommitted changes.
+            ProjectInvalidError: when only 1 out of project and workspace is passed
+
         """
         # This exists for users who have gotten used to doing `run()`. Once this has
         # been released, the following release should make config a required argument
@@ -188,7 +191,7 @@ class WorkflowDef(Generic[_R]):
             raise FutureWarning(
                 "Please specify the runtime configuration for this run. "
                 "The built in `local` and `in_process` configurations can be used by "
-                'calling `run.("local")` and `run("in_process")` respectively. '
+                'calling `run("local")` and `run("in_process")` respectively. '
                 "User defined configurations can be specified by providing the name "
                 "under which they are saved, or passing in the RuntimeConfig object "
                 "directly. "
