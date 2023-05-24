@@ -403,8 +403,8 @@ class DriverClient:
 
         workflow_runs = []
         for r in parsed_response.data:
-            workflow_def = self.get_workflow_def(r.definitionId).workflow
-            workflow_runs.append(r.to_ir(workflow_def))
+            workflow_def = self.get_workflow_def(r.definitionId)
+            workflow_runs.append(r.to_ir(workflow_def.workflow))
 
         return Paginated(
             contents=workflow_runs,

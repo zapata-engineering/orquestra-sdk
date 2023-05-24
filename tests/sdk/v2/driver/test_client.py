@@ -14,7 +14,7 @@ import responses
 import orquestra.sdk as sdk
 from orquestra.sdk._base._driver import _exceptions
 from orquestra.sdk._base._driver._client import DriverClient, Paginated
-from orquestra.sdk._base._driver._models import Resources
+from orquestra.sdk._base._driver._models import GetWorkflowDefResponse, Resources
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import JSONResult, PickleResult
@@ -129,7 +129,13 @@ class TestClient:
 
                 returned_wf_def = client.get_workflow_def(workflow_def_id)
 
-                assert returned_wf_def == workflow_def
+                assert returned_wf_def.workflow == workflow_def
+                assert (
+                    returned_wf_def.workspaceId
+                    == "evil/emiliano.zapata@zapatacomputing.com"
+                )
+                assert returned_wf_def.project == "emiliano's project"
+                assert returned_wf_def.sdkVersion == "0x859"
 
             @staticmethod
             def test_sets_auth(
@@ -628,9 +634,11 @@ class TestClient:
                 workflow_def: WorkflowDef,
                 monkeypatch: pytest.MonkeyPatch,
             ):
-                mock = create_autospec(client.get_workflow_def)
-                mock.return_value = workflow_def
-                monkeypatch.setattr(client, "get_workflow_def", mock)
+                mock = create_autospec(GetWorkflowDefResponse)
+                mock.workflow = workflow_def
+                function_mock = create_autospec(client.get_workflow_def)
+                function_mock.return_value = mock
+                monkeypatch.setattr(client, "get_workflow_def", function_mock)
 
             @staticmethod
             def test_invalid_wf_run_id(
@@ -769,9 +777,11 @@ class TestClient:
                 workflow_def: WorkflowDef,
                 monkeypatch: pytest.MonkeyPatch,
             ):
-                mock = create_autospec(client.get_workflow_def)
-                mock.return_value = workflow_def
-                monkeypatch.setattr(client, "get_workflow_def", mock)
+                mock = create_autospec(GetWorkflowDefResponse)
+                mock.workflow = workflow_def
+                function_mock = create_autospec(client.get_workflow_def)
+                function_mock.return_value = mock
+                monkeypatch.setattr(client, "get_workflow_def", function_mock)
 
             @staticmethod
             def test_list_workflow_runs(

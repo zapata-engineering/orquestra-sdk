@@ -32,6 +32,9 @@ def _wf_def_resp(id_: WorkflowDefID, wf_def: WorkflowDef):
         "created": "2022-11-23T18:58:13.86752161Z",
         "owner": "evil/emiliano.zapata@zapatacomputing.com",
         "workflow": wf_def.dict(),
+        "workspaceId": "evil/emiliano.zapata@zapatacomputing.com",
+        "project": "emiliano's project",
+        "sdkVersion": "0x859",
     }
 
 
