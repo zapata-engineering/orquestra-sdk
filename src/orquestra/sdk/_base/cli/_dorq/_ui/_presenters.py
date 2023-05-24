@@ -12,7 +12,7 @@ import webbrowser
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable, Iterator, List
+from typing import Iterable, Iterator, List, Sequence
 
 import click
 from tabulate import tabulate
@@ -154,7 +154,7 @@ class ArtifactPresenter:
 class ServicePresenter:
     @contextmanager
     def show_progress(
-        self, services: List[_services.Service], *, label: str
+        self, services: Sequence[_services.Service], *, label: str
     ) -> Iterator[Iterable[_services.Service]]:
         """
         Starts a progress bar on the context enter.
@@ -171,7 +171,7 @@ class ServicePresenter:
         ) as bar:
             yield bar
 
-    def show_services(self, services: List[responses.ServiceResponse]):
+    def show_services(self, services: Sequence[responses.ServiceResponse]):
         click.echo(
             tabulate(
                 [
@@ -188,6 +188,11 @@ class ServicePresenter:
                 tablefmt="plain",
             ),
         )
+
+    def show_failure(self, service_responses: Sequence[responses.ServiceResponse]):
+        self.show_services(service_responses)
+
+        sys.exit(responses.ResponseStatusCode.SERVICES_ERROR.value)
 
 
 class LoginPresenter:

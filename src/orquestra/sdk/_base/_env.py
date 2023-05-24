@@ -81,6 +81,13 @@ RAY_GLOBAL_WF_RUN_ID_ENV = "GLOBAL_WF_RUN_ID"
 Used to set the workflow run ID in a Ray workflow
 """
 
+RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV = "ORQ_RAY_SET_CUSTOM_IMAGE_RESOURCES"
+"""
+Used to configure if Ray uses custom images
+Example:
+    ORQ_RAY_SET_CUSTOM_IMAGE_RESOURCES=1
+"""
+
 
 # ------------------------------- utilities ----------------------------------
 
