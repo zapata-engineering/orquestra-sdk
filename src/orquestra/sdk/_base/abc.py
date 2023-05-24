@@ -194,11 +194,12 @@ class RuntimeInterface(ABC):
         """
         raise NotImplementedError()
 
+    @abstractmethod
     def get_workflow_project(self, wf_run_id: WorkflowRunId):
         """
         Returns project and workspace IDs of given workflow
         """
-        raise WorkspacesNotSupportedError()
+        raise NotImplementedError()
 
     def list_workspaces(self) -> t.Sequence[Workspace]:
         """

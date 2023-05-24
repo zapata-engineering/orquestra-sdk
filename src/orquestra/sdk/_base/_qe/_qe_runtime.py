@@ -909,3 +909,6 @@ class QERuntime(RuntimeInterface):
                 -limit:
             ]
         return wf_runs
+
+    def get_workflow_project(self, wf_run_id: WorkflowRunId):
+        raise exceptions.WorkspacesNotSupportedError()

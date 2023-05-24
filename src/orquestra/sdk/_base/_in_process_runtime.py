@@ -349,3 +349,6 @@ class InProcessRuntime(abc.RuntimeInterface):
         raise NotImplementedError(
             "This functionality isn't available for 'in_process' runtime"
         )
+
+    def get_workflow_project(self, wf_run_id: WorkflowRunId):
+        raise exceptions.WorkspacesNotSupportedError()

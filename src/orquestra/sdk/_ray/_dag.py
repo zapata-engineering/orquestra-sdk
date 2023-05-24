@@ -547,6 +547,9 @@ class RayRuntime(RuntimeInterface):
             ]
         return wf_runs
 
+    def get_workflow_project(self, wf_run_id: WorkflowRunId):
+        raise exceptions.WorkspacesNotSupportedError()
+
 
 def get_current_ids() -> (
     t.Tuple[

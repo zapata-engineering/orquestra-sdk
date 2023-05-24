@@ -157,7 +157,9 @@ class TestWorkflowRun:
             "task_run2": serde.result_from_artifact("another", ir.ArtifactFormat.AUTO),
             "task_run3": serde.result_from_artifact(123, ir.ArtifactFormat.AUTO),
         }
-
+        runtime.get_workflow_project.return_value = ProjectRef(
+            workspace_id="ws", project_id="proj"
+        )
         wf_def_model = sample_wf_def.model
         task_invs = list(wf_def_model.task_invocations.values())
         # Get logs, the runtime interface returns invocation IDs
@@ -587,6 +589,18 @@ class TestWorkflowRun:
             with pytest.raises(type(exc)):
                 # When
                 run.stop()
+
+    class TestProject:
+        def test_get_project(self, run):
+            project = run.project
+            assert project.workspace_id == "ws"
+            assert project.project_id == "proj"
+
+        def test_value_get_cashed(self, run):
+            _ = run.project
+            _ = run.project
+
+            run._runtime.get_workflow_project.assert_called_once()
 
 
 class TestListWorkflows:

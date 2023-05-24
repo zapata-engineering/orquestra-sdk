@@ -200,6 +200,14 @@ class WorkflowRun:
 
     @cached_property
     def project(self):
+        """Get the project and workspace id of a workflowrun,
+        Currently supported only on CE
+
+        Raises:
+            orquestra.sdk.exceptions.WorkspacesNotSupportedError: when runtime
+            does not support workspaces and projects
+        """
+
         return self._runtime.get_workflow_project(self.run_id)
 
     def wait_until_finished(self, frequency: float = 0.25, verbose=True) -> State:

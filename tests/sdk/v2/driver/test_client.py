@@ -2142,7 +2142,6 @@ class TestClient:
                 workflow_run_id: str,
                 workflow_def_id: str,
                 workflow_run_status: RunStatus,
-
             ):
                 endpoint_mocker(
                     json=resp_mocks.make_get_wf_run_missing_task_run_status(
