@@ -80,9 +80,7 @@ class RayManager:
         Starts a Ray cluster. If a Ray is already running, this does nothing.
 
         Raises:
-            RuntimeError: if we ask Ray to start and it fails
-            subprocess.CalledProcessError: if calling the `ray` CLI failed. This
-                shouldn't happen in regular conditions.
+            subprocess.CalledProcessError: if calling the `ray` CLI failed.
         """
         ray_temp = ray_temp_path()
         ray_storage = ray_storage_path()
@@ -97,7 +95,7 @@ class RayManager:
         # 1. Attempt to start the Ray cluster. Ignore errors.
         # 2. Check if the cluster is running to confirm that either the cluster was
         #    started, or it had been already running prior to this command.
-        _ = subprocess.run(
+        proc = subprocess.run(
             [
                 "ray",
                 "start",
@@ -108,11 +106,11 @@ class RayManager:
             ],
             check=False,
             timeout=IPC_TIMEOUT,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
         if not self.is_running():
-            raise RuntimeError("Couldn't start Ray cluster")
+            proc.check_returncode()
 
     def down(self):
         """

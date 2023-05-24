@@ -25,6 +25,7 @@
 
 💅 *Improvements*
 * `orq login` will perform some sanity checks before saving the token.
+* If `orq up` fails, the output will now include the error message from the underlying subprocess.
 
 🥷 *Internal*
 * Fix random CI failures on socket warning
