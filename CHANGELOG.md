@@ -31,6 +31,7 @@
 * Fix random CI failures on socket warning
 
 📃 *Docs*
+* Update secrets guide to take workspaces into account
 
 ## v0.48.0
 
