@@ -194,6 +194,12 @@ class RuntimeInterface(ABC):
         """
         raise NotImplementedError()
 
+    def get_workflow_project(self, wf_run_id: WorkflowRunId):
+        """
+        Returns project and workspace IDs of given workflow
+        """
+        raise WorkspacesNotSupportedError()
+
     def list_workspaces(self) -> t.Sequence[Workspace]:
         """
         List workspaces available to a user. Works only on CE

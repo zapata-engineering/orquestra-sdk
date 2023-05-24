@@ -8,6 +8,7 @@ import time
 import typing as t
 import warnings
 from datetime import timedelta
+from functools import cached_property
 from pathlib import Path
 
 from ...exceptions import (
@@ -196,6 +197,10 @@ class WorkflowRun:
         The run_id for this workflow run.
         """
         return self._run_id
+
+    @cached_property
+    def project(self):
+        return self._runtime.get_workflow_project(self.run_id)
 
     def wait_until_finished(self, frequency: float = 0.25, verbose=True) -> State:
         """Block until the workflow run finishes.
