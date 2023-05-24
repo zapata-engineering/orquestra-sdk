@@ -18,7 +18,6 @@ from ...exceptions import (
     WorkflowRunCanNotBeTerminated,
     WorkflowRunNotFinished,
     WorkflowRunNotFoundError,
-    WorkflowRunNotStarted,
     WorkflowRunNotSucceeded,
 )
 from ...schema import ir
@@ -29,7 +28,6 @@ from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
 from .. import serde
 from .._spaces._resolver import resolve_studio_project_ref
-from .._spaces._structs import ProjectRef
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig, _resolve_config
 from ._task_run import TaskRun
@@ -127,17 +125,32 @@ class WorkflowRun:
 
         return workflow_run
 
+    @classmethod
+    def _start(cls, wf_def: ir.WorkflowDef, runtime, config, project):
+        """
+        Schedule workflow for execution and return WorkflowRun.
+        """
+        run_id = runtime.create_workflow_run(wf_def, project)
+
+        workflow_run = WorkflowRun(
+            run_id=run_id,
+            wf_def=wf_def,
+            runtime=runtime,
+            config=config,
+        )
+
+        return workflow_run
+
     def __init__(
         self,
-        run_id: t.Optional[WorkflowRunId],
+        run_id: WorkflowRunId,
         wf_def: ir.WorkflowDef,
         runtime: RuntimeInterface,
         config: t.Optional["RuntimeConfig"] = None,
-        project: t.Optional[ProjectRef] = None,
     ):
         """
         Users aren't expected to use __init__() directly. Please use
-        `WorkflowRun.by_id`, `WorkflowDef.prepare()`, or `WorkflowDef.run()`.
+        `WorkflowRun.by_id` or `WorkflowDef.run()`.
 
         Args:
             wf_def: the workflow being run. Workflow definition in the model
@@ -151,14 +164,11 @@ class WorkflowRun:
         self._wf_def = wf_def
         self._runtime = runtime
         self._config = config
-        self._project = project
 
     def __str__(self) -> str:
         outstr: str = ""
-        if self._run_id is None:
-            outstr += "Unstarted WorkflowRun with parameters:"
-        else:
-            outstr += f"WorkflowRun '{self._run_id}' with parameters:"
+
+        outstr += f"WorkflowRun '{self._run_id}' with parameters:"
         if self._config is None:
             outstr += "\n- Runtime: In-process runtime."
         else:
@@ -175,12 +185,7 @@ class WorkflowRun:
             no_config_message = (
                 "This workflow run was created without a runtime configuration. "
             )
-            if self._run_id is None:
-                no_config_message += (
-                    "The default in-process runtime will be used at execution."
-                )
-            else:
-                no_config_message += "The default in-process runtime was used."
+            no_config_message += "The default in-process runtime was used."
             warnings.warn(no_config_message)
 
         return self._config
@@ -189,24 +194,8 @@ class WorkflowRun:
     def run_id(self):
         """
         The run_id for this workflow run.
-
-        Raises:
-            WorkflowRunNotStarted: when the workflow run has not started
         """
-        workflow_not_started_message = (
-            "Cannot get the run id of workflow run that hasn't started yet. "
-            "You will need to call the `.start()` method prior accessing this property."
-        )
-        if self._run_id is None:
-            raise WorkflowRunNotStarted(workflow_not_started_message)
         return self._run_id
-
-    def start(self):
-        """
-        Schedule workflow for execution.
-        """
-        run_id = self._runtime.create_workflow_run(self._wf_def, self._project)
-        self._run_id = run_id
 
     def wait_until_finished(self, frequency: float = 0.25, verbose=True) -> State:
         """Block until the workflow run finishes.
@@ -219,25 +208,13 @@ class WorkflowRun:
             verbose: If ``True``, each iteration of the polling loop will print to
                 stderr.
 
-        Raises:
-            WorkflowRunNotStarted: when the workflow run has not started
-
         Returns:
             State: The state of the finished workflow.
         """
 
         assert frequency > 0.0, "Frequency must be a positive non-zero value"
 
-        try:
-            status = self.get_status()
-        except WorkflowRunNotStarted as e:
-            message = (
-                "Cannot wait for the completion of workflow run that hasn't started "
-                "yet. "
-                "You will need to call the `.start()` method prior to calling this "
-                "method."
-            )
-            raise WorkflowRunNotStarted(message) from e
+        status = self.get_status()
 
         while status == State.RUNNING or status == State.WAITING:
             sleep_time = 1.0 / frequency
@@ -270,49 +247,27 @@ class WorkflowRun:
         Asks the runtime to stop the workflow run.
 
         Raises:
-            orquestra.sdk.exceptions.WorkflowRunNotStarted: when the workflow run was
-                not started yet
             orquestra.sdk.exceptions.UnauthorizedError: when communication with runtime
                 failed because of an auth error
             orquestra.sdk.exceptions.WorkflowRunCanNotBeTerminated if the termination
                 attempt failed
         """
         try:
-            run_id = self.run_id
-        except WorkflowRunNotStarted:
-            raise
-
-        try:
-            self._runtime.stop_workflow_run(run_id)
+            self._runtime.stop_workflow_run(self.run_id)
         except (UnauthorizedError, WorkflowRunCanNotBeTerminated):
             raise
 
     def get_status(self) -> State:
         """
         Return the current status of the workflow.
-
-        Raises:
-            WorkflowRunNotStarted: when the workflow run has not started
         """
         return self.get_status_model().status.state
 
     def get_status_model(self) -> WorkflowRunModel:
         """
         Serializable representation of the workflow run state at a given point in time.
-
-        Raises:
-            WorkflowRunNotStarted: if the workflow wasn't started yet.
         """
-        try:
-            run_id = self.run_id
-        except WorkflowRunNotStarted as e:
-            message = (
-                "Cannot get the status of a workflow run that hasn't started yet. "
-                "You will need to call the `.start()` method prior to calling this "
-                "method."
-            )
-            raise WorkflowRunNotStarted(message) from e
-        return self._runtime.get_workflow_run_status(run_id)
+        return self._runtime.get_workflow_run_status(self.run_id)
 
     def get_results(self, wait: bool = False) -> t.Sequence[t.Any]:
         """
@@ -331,28 +286,17 @@ class WorkflowRun:
                    more control.
 
         Raises:
-            WorkflowRunNotStarted: when the workflow run has not started
             WorkflowRunNotFinished: when the workflow run has not finished and `wait` is
                                    False
             WorkflowRunNotSucceeded: when the workflow is no longer executing, but it did not
                 succeed.
         """  # noqa 501
-        try:
-            run_id = self.run_id
-        except WorkflowRunNotStarted as e:
-            message = (
-                "Cannot get the results of a workflow run that hasn't started yet. "
-                "You will need to call the `.start()` method prior to calling this "
-                "method."
-            )
-            raise WorkflowRunNotStarted(message) from e
-
         if wait:
             self.wait_until_finished()
 
         if (state := self.get_status()) not in COMPLETED_STATES:
             raise WorkflowRunNotFinished(
-                f"Workflow run with id {run_id} has not finished. "
+                f"Workflow run with id {self.run_id} has not finished. "
                 f"Current state: {state}",
                 state,
             )
@@ -360,7 +304,9 @@ class WorkflowRun:
             results = (
                 *(
                     serde.deserialize(o)
-                    for o in self._runtime.get_workflow_run_outputs_non_blocking(run_id)
+                    for o in self._runtime.get_workflow_run_outputs_non_blocking(
+                        self.run_id
+                    )
                 ),
             )
         except WorkflowRunNotSucceeded:
@@ -379,29 +325,15 @@ class WorkflowRun:
         Returns values calculated by this workflow's tasks. If a given task hasn't
         succeeded yet, the mapping won't contain the corresponding entry.
 
-        Raises:
-            WorkflowRunNotStarted: when the workflow has not started
-
         Returns:
             A dictionary with an entry for each task run in the workflow. The key is the
                 task's invocation ID. The value is whatever the task returned. If the
                 task has 1 output, it's the dict entry's value. If the tasks has n
                 outputs, the dict entry's value is a n-tuple.
         """
-
-        try:
-            run_id = self.run_id
-        except WorkflowRunNotStarted as e:
-            message = (
-                "Cannot get the values of a workflow run that hasn't started yet. "
-                "You will need to call the `.start()` method prior to calling this "
-                "method."
-            )
-            raise WorkflowRunNotStarted(message) from e
-
         # NOTE: this is a possible place for improvement. If future runtime APIs support
         # getting a subset of artifacts, we should use them here.
-        inv_outputs = self._runtime.get_available_outputs(run_id)
+        inv_outputs = self._runtime.get_available_outputs(self.run_id)
 
         # The output shape differs across runtimes when the workflow functions returns a
         # single, packed future. See more in:
@@ -419,46 +351,23 @@ class WorkflowRun:
         only subset of tasks, consider using ``WorkflowRun.get_tasks()`` and
         ``TaskRun.get_logs()``.
 
-        Raises:
-            WorkflowRunNotStarted: when the workflow has not started
-
         Returns:
             A dictionary where each key-value entry corresponds to a single task run.
             The key identifies a task invocation, a single node in the workflow graph.
             The value is a list of log lines produced by the corresponding task
             invocation while running this workflow.
         """
-        try:
-            wf_run_id = self.run_id
-        except WorkflowRunNotStarted as e:
-            message = (
-                "Cannot get the logs of a workflow run that hasn't started yet. "
-                "You will need to call the `.start()` method prior to calling this "
-                "method."
-            )
-            raise WorkflowRunNotStarted(message) from e
-
-        return self._runtime.get_workflow_logs(wf_run_id=wf_run_id)
+        return self._runtime.get_workflow_logs(wf_run_id=self.run_id)
 
     # TODO: ORQSDK-617 add filtering ability for the users
     def get_tasks(self) -> t.Set[TaskRun]:
-        try:
-            wf_run_id = self.run_id
-        except WorkflowRunNotStarted as e:
-            message = (
-                "Cannot get tasks of a workflow run that hasn't started yet. "
-                "You will need to call the `.start()` method prior to calling this "
-                "method."
-            )
-            raise WorkflowRunNotStarted(message) from e
-
         wf_run_model = self.get_status_model()
 
         return {
             TaskRun(
                 task_run_id=task_run_model.id,
                 task_invocation_id=task_run_model.invocation_id,
-                workflow_run_id=wf_run_id,
+                workflow_run_id=self.run_id,
                 runtime=self._runtime,
                 wf_def=self._wf_def,
             )

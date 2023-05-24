@@ -137,8 +137,7 @@ class TestStartWorkflowRun:
             body="workflow-id",
         )
 
-        run = my_workflow().prepare(remote_config)
-        run.start()
+        run = my_workflow().run(remote_config)
 
         assert run.run_id == "workflow-id"
 
@@ -154,10 +153,8 @@ class TestStartWorkflowRun:
         def BadNameWorkflow():
             return [simple_task()]
 
-        run = BadNameWorkflow().prepare(remote_config)
-
         with pytest.raises(exceptions.InvalidWorkflowDefinitionError) as exc_info:
-            run.start()
+            BadNameWorkflow().run(remote_config)
         assert f'Workflow name "{workflow_name}" is invalid' in str(exc_info)
 
 
@@ -209,8 +206,7 @@ class TestGetWorkflowRunStatus:
             json=qe_status_response,
         )
 
-        run = my_workflow().prepare(remote_config)
-        run.start()
+        run = my_workflow().run(remote_config)
 
         assert run.get_status() == State.SUCCEEDED
 
