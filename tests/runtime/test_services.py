@@ -6,11 +6,12 @@ Unit tests for orquestra.sdk._base._services.
 """
 
 import builtins
+import subprocess
 import sys
 import typing as t
 from contextlib import contextmanager
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, create_autospec
 
 import pytest
 
@@ -51,6 +52,16 @@ def _fake_run_for_ray(
     return _fake_run
 
 
+def _mock_subprocess_module(monkeypatch):
+    mock_subprocess = Mock()
+    monkeypatch.setattr(
+        _services,
+        "subprocess",
+        mock_subprocess,
+    )
+    return mock_subprocess
+
+
 def _mock_subprocess_for_ray(
     monkeypatch,
     ray_start_retcode: t.Optional[int] = None,
@@ -60,16 +71,11 @@ def _mock_subprocess_for_ray(
     """
     See docstring for ``_fake_run_for_ray``.
     """
-    mock_subprocess = Mock()
+    mock_subprocess = _mock_subprocess_module(monkeypatch)
     mock_subprocess.run = _fake_run_for_ray(
         ray_start_retcode=ray_start_retcode,
         ray_status_retcode=ray_status_retcode,
         ray_stop_retcode=ray_stop_retcode,
-    )
-    monkeypatch.setattr(
-        _services,
-        "subprocess",
-        mock_subprocess,
     )
 
 
@@ -148,22 +154,26 @@ class TestRayManager:
             # [Expect no exception]
 
         def test_ray_failed_to_start(self, monkeypatch):
+            """
+            ``ray start`` failed and ``ray status`` reports the cluster isn't running.
+            """
             # Given
             sm = _services.RayManager()
-            # Mimic 'ray' CLI behavior.
-            _mock_subprocess_for_ray(
-                monkeypatch,
-                ray_start_retcode=0,
-                ray_status_retcode=0,
+            _subprocess = _mock_subprocess_module(monkeypatch)
+            proc = create_autospec(subprocess.CompletedProcess)
+            proc.check_returncode.side_effect = subprocess.CalledProcessError(
+                returncode=1,
+                cmd=["ray", "start", "--something"],
+                output="some stdout".encode(),
+                stderr="some stderr".encode(),
             )
+            _subprocess.run.return_value = proc
             monkeypatch.setattr(sm, "is_running", lambda: False)
 
-            # When
-            with pytest.raises(RuntimeError) as exc_info:
-                sm.up()
-
             # Then
-            assert "Couldn't start Ray" in str(exc_info)
+            with pytest.raises(subprocess.CalledProcessError):
+                # When
+                sm.up()
 
     class TestDown:
         def test_no_services_running(self, monkeypatch):

@@ -90,6 +90,10 @@ class TestPrettyPrintException:
             ),
             (exceptions.InvalidTokenError, "The auth token is not valid"),
             (exceptions.ExpiredTokenError, "The auth token has expired"),
+            (
+                exceptions.RayNotRunningError(),
+                "Could not find any running Ray instance. You can use 'orq status' to check the status of the ray service. If it is not running, it can be started with the `orq up` command.",  # noqa: E501
+            ),
         ],
     )
     def tests_prints_exception_without_traceback(capsys, exc, stdout_marker: str):

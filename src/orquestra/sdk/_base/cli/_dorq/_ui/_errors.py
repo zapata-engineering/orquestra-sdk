@@ -88,6 +88,16 @@ def _(e: exceptions.WorkflowRunNotFinished) -> ResponseStatusCode:
 
 
 @pretty_print_exception.register
+def _(e: exceptions.RayNotRunningError) -> ResponseStatusCode:
+    click.echo(
+        "Could not find any running Ray instance. "
+        "You can use 'orq status' to check the status of the ray service. "
+        "If it is not running, it can be started with the `orq up` command."
+    )
+    return ResponseStatusCode.CONNECTION_ERROR
+
+
+@pretty_print_exception.register
 def _(e: ConnectionError) -> ResponseStatusCode:
     _print_traceback(e)
     click.echo(f"{e}")
