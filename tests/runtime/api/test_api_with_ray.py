@@ -54,14 +54,15 @@ class TestRunningLocalInBackground:
 
             assert results == 3
 
-    class TestShorthand:
+    class TestStartFromIr:
         @staticmethod
         def test_single_run(
             patch_config_location, ray, monkeypatch, tmp_path, mock_workflow_db_location
         ):
             monkeypatch.setattr(Path, "cwd", Mock(return_value=tmp_path))
-
-            run = wf_pass_tuple().run(sdk.RuntimeConfig.ray())
+            run = sdk.WorkflowRun.start_from_ir(
+                wf_pass_tuple().model, sdk.RuntimeConfig.ray()
+            )
             run.wait_until_finished()
             results = run.get_results()
 

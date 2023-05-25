@@ -132,7 +132,6 @@ class WorkflowRun:
         cls,
         wf_def: ir.WorkflowDef,
         config: t.Union[RuntimeConfig, str],
-        project_dir: t.Optional[t.Union[str, Path]] = None,
     ):
         _config: RuntimeConfig
         if isinstance(config, RuntimeConfig):
@@ -147,7 +146,7 @@ class WorkflowRun:
         if _config._runtime_name == "IN_PROCESS":
             runtime = InProcessRuntime()
         else:
-            runtime = _config._get_runtime(project_dir=project_dir)
+            runtime = _config._get_runtime()
 
         assert runtime is not None
 
@@ -163,7 +162,7 @@ class WorkflowRun:
         cls,
         wf_def: ir.WorkflowDef,
         runtime: RuntimeInterface,
-        config: RuntimeConfig,
+        config: t.Optional[RuntimeConfig],
         project: t.Optional[ProjectRef] = None,
     ):
         """
