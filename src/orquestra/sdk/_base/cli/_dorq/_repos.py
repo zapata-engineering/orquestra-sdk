@@ -97,7 +97,8 @@ class WorkflowRunRepo:
             except (ConnectionError, exceptions.UnauthorizedError):
                 raise
 
-            return [run.get_status_model() for run in wf_runs]
+            ret = [run.get_status_model() for run in wf_runs]
+        return ret
 
     def get_wf_by_run_id(
         self, wf_run_id: WorkflowRunId, config_name: t.Optional[ConfigName]
