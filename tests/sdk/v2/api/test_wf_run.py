@@ -365,7 +365,7 @@ class TestWorkflowRun:
 
         def test_wrong_config_type(self, wf_ir_def):
             with pytest.raises(TypeError):
-                _api.WorkflowRun.start_from_ir(wf_ir_def, 123)  # noqa
+                _api.WorkflowRun.start_from_ir(wf_ir_def, 123)  # type: ignore
 
         def test_different_runtime(self, wf_ir_def, mock_runtime):
             mock_config = MagicMock(_api.RuntimeConfig)
