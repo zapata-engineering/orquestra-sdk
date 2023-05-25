@@ -27,7 +27,9 @@ from ...schema.workflow_run import ProjectId, State, TaskInvocationId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
 from .. import serde
+from .._in_process_runtime import InProcessRuntime
 from .._spaces._resolver import resolve_studio_project_ref
+from .._spaces._structs import ProjectRef
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig, _resolve_config
 from ._task_run import TaskRun
@@ -126,7 +128,44 @@ class WorkflowRun:
         return workflow_run
 
     @classmethod
-    def _start(cls, wf_def: ir.WorkflowDef, runtime, config, project):
+    def start_from_ir(
+        cls,
+        wf_def: ir.WorkflowDef,
+        config: t.Union[RuntimeConfig, str],
+        project_dir: t.Optional[t.Union[str, Path]] = None,
+    ):
+        _config: RuntimeConfig
+        if isinstance(config, RuntimeConfig):
+            _config = config
+        elif isinstance(config, str):
+            _config = RuntimeConfig.load(config)
+        else:
+            raise TypeError(
+                f"'config' argument to `run()` has unsupported type {type(config)}."
+            )
+        runtime: RuntimeInterface
+        if _config._runtime_name == "IN_PROCESS":
+            runtime = InProcessRuntime()
+        else:
+            runtime = _config._get_runtime(project_dir=project_dir)
+
+        assert runtime is not None
+
+        wf_run = cls._start(
+            wf_def=wf_def,
+            runtime=runtime,
+            config=_config,
+        )
+        return wf_run
+
+    @classmethod
+    def _start(
+        cls,
+        wf_def: ir.WorkflowDef,
+        runtime: RuntimeInterface,
+        config: RuntimeConfig,
+        project: t.Optional[ProjectRef] = None,
+    ):
         """
         Schedule workflow for execution and return WorkflowRun.
         """
