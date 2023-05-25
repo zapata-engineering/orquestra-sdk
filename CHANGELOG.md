@@ -17,6 +17,7 @@
 * `sdk.secrets.list()`, `sdk.secrets.get()`, `sdk.secrets.set()` and `sdk.secrets.delete()` now accept `workspace_id` parameter to specify secrets in particular workspace.
 * `auto` config inside studio will infer workspace and project IDs from studio instance.
 * Support for running tasks in Docker containers with custom images on Compute Engine.
+* VersionMismatch warnings are shown only when interacting with specific workflow runs, not while listing workflows.
 
 👩‍🔬 *Experimental*
 
