@@ -210,7 +210,9 @@ class SpacesResolver:
         prompt_choices = [(label, project) for label, project in zip(labels, projects)]
 
         selected_id = self._prompter.choice(prompt_choices, message="Projects")
-        return selected_id.project_id if selected_id else selected_id
+        if selected_id is not None:
+            return selected_id.project_id
+        return None
 
 
 class WFRunResolver:
