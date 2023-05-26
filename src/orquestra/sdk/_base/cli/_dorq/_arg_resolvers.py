@@ -241,14 +241,14 @@ class WFRunResolver:
             resolved_project_id = self._spaces_resolver.resolve_project_id(
                 config, workspace_id=resolved_workspace_id
             )
-            project = ProjectRef(
-                workspace_id=resolved_workspace_id, project_id=resolved_project_id
-            )
         except exceptions.WorkspacesNotSupportedError:
             # if run on runtime that doesn't support workspaces
-            project = None
+            resolved_workspace_id = None
+            resolved_project_id = None
 
-        wfs = self._wf_run_repo.list_wf_runs(config, project=project)
+        wfs = self._wf_run_repo.list_wf_runs(
+            config, workspace=resolved_workspace_id, project=resolved_project_id
+        )
 
         wfs, tabulated_labels = self._presenter.wf_list_for_prompt(wfs)
         prompt_choices = [(label, wf.id) for label, wf in zip(tabulated_labels, wfs)]
