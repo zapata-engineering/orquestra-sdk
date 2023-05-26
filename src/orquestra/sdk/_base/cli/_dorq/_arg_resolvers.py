@@ -180,7 +180,7 @@ class SpacesResolver:
         prompt_choices = [(label, ws) for label, ws in zip(labels, workspaces)]
         selected_id = self._prompter.choice(prompt_choices, message="Workspace")
 
-        return selected_id
+        return selected_id.workspace_id
 
     def resolve_project_id(
         self,
@@ -207,9 +207,12 @@ class SpacesResolver:
         if optional:
             projects.append(None)
             labels.append("All")
-        prompt_choices = [(label, ws) for label, ws in zip(labels, projects)]
+        prompt_choices = [(label, project) for label, project in zip(labels, projects)]
 
-        return self._prompter.choice(prompt_choices, message="Projects")
+        selected_id = self._prompter.choice(prompt_choices, message="Projects")
+        if selected_id is not None:
+            return selected_id.project_id
+        return None
 
 
 class WFRunResolver:
@@ -240,14 +243,14 @@ class WFRunResolver:
             resolved_project_id = self._spaces_resolver.resolve_project_id(
                 config, workspace_id=resolved_workspace_id
             )
-            project = ProjectRef(
-                workspace_id=resolved_workspace_id, project_id=resolved_project_id
-            )
         except exceptions.WorkspacesNotSupportedError:
             # if run on runtime that doesn't support workspaces
-            project = None
+            resolved_workspace_id = None
+            resolved_project_id = None
 
-        wfs = self._wf_run_repo.list_wf_runs(config, project=project)
+        wfs = self._wf_run_repo.list_wf_runs(
+            config, workspace=resolved_workspace_id, project=resolved_project_id
+        )
 
         wfs, tabulated_labels = self._presenter.wf_list_for_prompt(wfs)
         prompt_choices = [(label, wf.id) for label, wf in zip(tabulated_labels, wfs)]
@@ -266,14 +269,13 @@ class WFRunResolver:
             resolved_project_id = self._spaces_resolver.resolve_project_id(
                 config, workspace_id=resolved_workspace_id
             )
-            project = ProjectRef(
-                workspace_id=resolved_workspace_id, project_id=resolved_project_id
-            )
-
         except exceptions.WorkspacesNotSupportedError:
-            project = None
+            resolved_workspace_id = None
+            resolved_project_id = None
 
-        runs = self._wf_run_repo.list_wf_runs(config, project=project)
+        runs = self._wf_run_repo.list_wf_runs(
+            config, workspace=resolved_workspace_id, project=resolved_project_id
+        )
 
         runs, tabulated_labels = self._presenter.wf_list_for_prompt(runs)
         prompt_choices = [(label, wf) for label, wf in zip(tabulated_labels, runs)]

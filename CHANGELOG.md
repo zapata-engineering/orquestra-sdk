@@ -9,6 +9,7 @@
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
+* Fix CLI prompters to not throw exceptions after selecting project and workspace
 
 💅 *Improvements*
 
