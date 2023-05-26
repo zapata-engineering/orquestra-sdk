@@ -8,10 +8,6 @@ Implemented API spec:
     https://github.com/zapatacomputing/workflow-driver/tree/2b3534/openapi
 """
 
-import io
-import json
-import zlib
-from tarfile import TarFile
 from typing import Generic, List, Mapping, Optional, TypeVar, Union
 from urllib.parse import urljoin
 
@@ -20,7 +16,6 @@ import requests
 from requests import codes
 
 from orquestra.sdk import ProjectRef
-from orquestra.sdk._ray._ray_logs import WFLog
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
@@ -30,7 +25,7 @@ from orquestra.sdk.schema.workflow_run import (
     WorkspaceId,
 )
 
-from . import _exceptions, _models
+from . import _exceptions, _log_parsing, _models
 
 API_ACTIONS = {
     # Workflow Definitions
@@ -646,34 +641,7 @@ class DriverClient:
 
         _handle_common_errors(resp)
 
-        # Decompress data
-        try:
-            unzipped: bytes = zlib.decompress(resp.content, 16 + zlib.MAX_WBITS)
-        except zlib.error as e:
-            raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id) from e
-
-        untarred = TarFile(fileobj=io.BytesIO(unzipped)).extractfile("step-logs")
-        assert untarred is not None
-        decoded = untarred.read().decode()
-
-        # Parse the decoded data as logs
-        # TODO: index by taskinvocationID rather than workflowrunID [ORQSDK-777]
-        logs = []
-        for section in decoded.split("\n"):
-            if len(section) < 1:
-                continue
-            for log in json.loads(section):
-                try:
-                    # Orquestra logs are jsonable - where we can we parse these and
-                    # extract the useful information
-                    interpreted_log = WFLog.parse_raw(log[1]["log"])
-                    logs.append(interpreted_log.message)
-                except pydantic.ValidationError:
-                    # If the log isn't jsonable (i.e. it comes from Ray) we just return
-                    # plain log content.
-                    logs.append(log[1]["log"])
-
-        return logs
+        return _log_parsing.parse_logs_archive(resp.content)
 
     def get_task_run_logs(self, task_run_id: _models.TaskRunID) -> bytes:
         """
