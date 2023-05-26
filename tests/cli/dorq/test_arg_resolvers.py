@@ -526,11 +526,12 @@ class TestWFRunResolver:
             # We should pass config value to wf_run_repo.
             if runtime_supports_workspaces:
                 wf_run_repo.list_wf_runs.assert_called_with(
-                    config,
-                    project=ProjectRef(workspace_id=fake_ws, project_id=fake_project),
+                    config, workspace=fake_ws, project=fake_project
                 )
             else:
-                wf_run_repo.list_wf_runs.assert_called_with(config, project=None)
+                wf_run_repo.list_wf_runs.assert_called_with(
+                    config, workspace=None, project=None
+                )
 
             # We should prompt for selecting workflow ID from the ones returned
             # by the repo. Those choices should be sorted from newest at the top
