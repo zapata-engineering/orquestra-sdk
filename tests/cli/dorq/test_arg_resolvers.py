@@ -627,14 +627,12 @@ class TestWFRunResolver:
             # We should pass config value to wf_run_repo.
             if runtime_supports_workspaces:
                 wf_run_repo.list_wf_runs.assert_called_with(
-                    config,
-                    project=ProjectRef(
-                        workspace_id="wake ws", project_id="fake project"
-                    ),
+                    config, workspace="wake ws", project="fake project"
                 )
             else:
                 wf_run_repo.list_wf_runs.assert_called_with(
                     config,
+                    workspace=None,
                     project=None,
                 )
 
@@ -1277,7 +1275,7 @@ class TestSpacesResolver:
             )
 
             # Resolver should return the user's choice.
-            assert resolved_workspace == selected_workspace
+            assert resolved_workspace == selected_workspace.workspace_id
 
     class TestProjectResolver:
         @staticmethod
@@ -1342,7 +1340,7 @@ class TestSpacesResolver:
             )
 
             # Resolver should return the user's choice.
-            assert resolved_project == selected_project
+            assert resolved_project == selected_project.project_id
 
         @staticmethod
         def test_optional():
@@ -1382,4 +1380,4 @@ class TestSpacesResolver:
             )
 
             # Resolver should return the user's choice.
-            assert resolved_project == selected_project
+            assert resolved_project == selected_project.project_id
