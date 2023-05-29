@@ -3,6 +3,23 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+
+🔥 *Features*
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+* Fix CLI prompters to not throw exceptions after selecting project and workspace
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+## v0.49.0
+
+🚨 *Breaking Changes*
 * Removed `WorkflowDef.prepare()` and `WorkflowRun.start()` functions. Use `WorkflowDef.run()` instead
 
 🔥 *Features*
@@ -17,8 +34,6 @@
 * `sdk.secrets.list()`, `sdk.secrets.get()`, `sdk.secrets.set()` and `sdk.secrets.delete()` now accept `workspace_id` parameter to specify secrets in particular workspace.
 * `auto` config inside studio will infer workspace and project IDs from studio instance.
 * Support for running tasks in Docker containers with custom images on Compute Engine.
-
-👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
 * Fixed tasks that failed when explicitly state `n_outputs=1` on QE and in-process.
