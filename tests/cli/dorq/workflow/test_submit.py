@@ -461,7 +461,9 @@ class TestAction:
             )
 
             # When
-            action.on_cmd_call(module, name, config, None, None, False)
+            action.on_cmd_call(
+                module, name, config, workspace_id=None, project_id=None, force=False
+            )
 
             # Then
             # We don't expect prompts.
