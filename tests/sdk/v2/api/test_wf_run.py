@@ -596,7 +596,7 @@ class TestWorkflowRun:
             assert project.workspace_id == "ws"
             assert project.project_id == "proj"
 
-        def test_value_get_cashed(self, run):
+        def test_value_get_cached(self, run):
             _ = run.project
             _ = run.project
 
