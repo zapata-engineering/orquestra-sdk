@@ -5,6 +5,7 @@
 🚨 *Breaking Changes*
 
 🔥 *Features*
+* Add .project property to WorkflowRun to get the info about worksapce and project of running workflow
 
 👩‍🔬 *Experimental*
 
