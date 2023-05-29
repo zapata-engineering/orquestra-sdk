@@ -9,13 +9,18 @@
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
-* Fix CLI prompters to not throw exceptions after selecting project and workspace
 
 💅 *Improvements*
 
 🥷 *Internal*
 
 📃 *Docs*
+
+
+## v0.49.1
+
+🐛 *Bug Fixes*
+* Fix CLI prompters to not throw exceptions after selecting project and workspace
 
 ## v0.49.0
 
