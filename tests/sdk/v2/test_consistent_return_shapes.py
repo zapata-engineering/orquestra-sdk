@@ -810,18 +810,7 @@ class TestCLI:
         )
         results_ce = (
             subprocess.run(
-                [
-                    "orq",
-                    "wf",
-                    "results",
-                    "-c",
-                    "CE",
-                    mock_ce_run_multiple,
-                    "-w",
-                    "ws",
-                    "-p",
-                    "p",
-                ],
+                ["orq", "wf", "results", "-c", "CE", mock_ce_run_multiple],
                 check=True,
                 capture_output=True,
             )
