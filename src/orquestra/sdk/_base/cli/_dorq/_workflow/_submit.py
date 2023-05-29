@@ -74,12 +74,16 @@ class Action:
         # 1. Resolve config, workspace and project
         resolved_config = self._config_resolver.resolve(config)
 
-        resolved_workspace_id = self._space_resolver.resolve_workspace_id(
-            resolved_config, workspace_id
-        )
-        resolved_project_id = self._space_resolver.resolve_project_id(
-            resolved_config, resolved_workspace_id, project_id
-        )
+        try:
+            resolved_workspace_id = self._space_resolver.resolve_workspace_id(
+                resolved_config, workspace_id
+            )
+            resolved_project_id = self._space_resolver.resolve_project_id(
+                resolved_config, resolved_workspace_id, project_id
+            )
+        except exceptions.WorkspacesNotSupportedError:
+            resolved_workspace_id = None
+            resolved_project_id = None
 
         # 2. Resolve module with workflow defs
         try:
