@@ -13,6 +13,7 @@
 
 💅 *Improvements*
 * Add prompters to `orq wf submit` command for CE runtime if workspace and project weren't passed explicitly
+
 🥷 *Internal*
 
 📃 *Docs*
