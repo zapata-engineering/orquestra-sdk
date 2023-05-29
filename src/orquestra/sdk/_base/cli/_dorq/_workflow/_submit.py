@@ -27,6 +27,7 @@ class Action:
         wf_def_repo=_repos.WorkflowDefRepo(),
         wf_run_repo=_repos.WorkflowRunRepo(),
         config_resolver: t.Optional[_arg_resolvers.ConfigResolver] = None,
+        spaces_resolver: t.Optional[_arg_resolvers.SpacesResolver] = None,
     ):
         # text IO
         self._prompter = prompter
@@ -36,6 +37,9 @@ class Action:
         self._wf_run_repo = wf_run_repo
         self._wf_def_repo = wf_def_repo
         self._config_resolver = config_resolver or _arg_resolvers.ConfigResolver(
+            prompter=prompter
+        )
+        self._space_resolver = spaces_resolver or _arg_resolvers.SpacesResolver(
             prompter=prompter
         )
 
@@ -67,8 +71,15 @@ class Action:
         """
         Implementation of the command action. Doesn't catch exceptions.
         """
-        # 1. Resolve config
+        # 1. Resolve config, workspace and project
         resolved_config = self._config_resolver.resolve(config)
+
+        resolved_workspace_id = self._space_resolver.resolve_workspace_id(
+            resolved_config, workspace_id
+        )
+        resolved_project_id = self._space_resolver.resolve_project_id(
+            resolved_config, resolved_workspace_id, project_id
+        )
 
         # 2. Resolve module with workflow defs
         try:
@@ -108,8 +119,8 @@ class Action:
                 resolved_wf_def,
                 resolved_config,
                 ignore_dirty_repo=force,
-                workspace_id=workspace_id,
-                project_id=project_id,
+                workspace_id=resolved_workspace_id,
+                project_id=resolved_project_id,
             )
         except exceptions.DirtyGitRepo:
             # Ask the user for the decision.
