@@ -22,6 +22,7 @@ Required hardware resources are configured on a per-task basis by setting the ``
         ...
 
 ``resources`` expects a ``sdk.Resources()`` object that specifies some or all of:
+
 * ``cpu``: number of cores.
 * ``memory``: amount of RAM (bytes).
 * ``disk``: disk space (bytes).
@@ -63,11 +64,12 @@ Setting Workflow Resources
 --------------------------
 
 Resources can also be configured at the workflow definition level using the same syntax as with tasks, with one difference - the ``sdk.Resources()`` object my additionally specify a number of nodes to be requested for the workflow. The full parameter list is therefore:
+
 * ``cpu``: number of cores.
 * ``memory``: amount of RAM (bytes).
 * ``disk``: disk space (bytes).
 * ``gpu``: whether access to a gpu unit is required (``1`` if a GPU is required, ``0`` otherwise).
-* ``nodes``: the number of nodes requested.
+* ``nodes``: the maximum number of nodes requested.
 
 .. code-block::
     :caption: Workflow resource request example
@@ -84,7 +86,9 @@ Resources can also be configured at the workflow definition level using the same
     Note that unlike the other parameters, ``nodes`` must be an integer rather than a string.
 
 Currently, the workflow resource request is only utilised by Compute Engine.
-If resources are not provided, Compute Engine will infer the overall resource requirements from the aggregated requirements of individual tasks.
+If resources are not provided, Compute Engine will provision one node with 2 CPUs, 2GB memory and no GPUs by default.
+When you specify workflow resources with more than one node, each node will get created with the resources you have specified.
+New nodes will get created as the tasks start to run and request resources. Existing ones will be destroyed if they become idle.
 Tweaking the resource request may be required when your tasks spawn additional actors or remote functions to avoid deadlock, see below.
 
 
