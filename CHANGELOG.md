@@ -5,13 +5,14 @@
 🚨 *Breaking Changes*
 
 🔥 *Features*
-* Add .project property to WorkflowRun to get the info about worksapce and project of running workflow
+* Add .project property to WorkflowRun to get the info about workspace and project of running workflow
 
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
 
 💅 *Improvements*
+* Add prompters to `orq wf submit` command for CE runtime if workspace and project weren't passed explicitly
 
 🥷 *Internal*
 
