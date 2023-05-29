@@ -1256,7 +1256,7 @@ class TestSpacesResolver:
 
             presenter = create_autospec(_presenters.PromptPresenter)
             labels = ["label1", "label2"]
-            presenter.workspaces_list_to_prompt.return_value = labels
+            presenter.workspaces_list_to_prompt.return_value = labels, workspaces
             resolver = _arg_resolvers.SpacesResolver(
                 spaces=spaces_repo,
                 prompter=prompter,
@@ -1270,7 +1270,7 @@ class TestSpacesResolver:
 
             # Then
             # We expect prompt for selecting config.
-            presenter.workspaces_list_to_prompt.assert_called_with(workspaces)
+            presenter.workspaces_list_to_prompt.assert_called_with(workspaces, config)
             prompter.choice.assert_called_with(
                 [(labels[0], ws1), (labels[1], ws2)], message="Workspace"
             )
@@ -1321,7 +1321,7 @@ class TestSpacesResolver:
 
             presenter = create_autospec(_presenters.PromptPresenter)
             labels = ["label1", "label2"]
-            presenter.project_list_to_prompt.return_value = labels
+            presenter.project_list_to_prompt.return_value = (labels, projects)
             resolver = _arg_resolvers.SpacesResolver(
                 spaces=spaces_repo,
                 prompter=prompter,
@@ -1335,7 +1335,7 @@ class TestSpacesResolver:
 
             # Then
             # We expect prompt for selecting config.
-            presenter.project_list_to_prompt.assert_called_with(projects)
+            presenter.project_list_to_prompt.assert_called_with(projects, config)
             prompter.choice.assert_called_with(
                 [(labels[0], p1), (labels[1], p2)], message="Projects"
             )
@@ -1361,7 +1361,7 @@ class TestSpacesResolver:
 
             presenter = create_autospec(_presenters.PromptPresenter)
             labels = ["label1", "label2"]
-            presenter.project_list_to_prompt.return_value = labels
+            presenter.project_list_to_prompt.return_value = (labels, projects)
             resolver = _arg_resolvers.SpacesResolver(
                 spaces=spaces_repo,
                 prompter=prompter,
@@ -1375,7 +1375,7 @@ class TestSpacesResolver:
 
             # Then
             # We expect prompt for selecting config.
-            presenter.project_list_to_prompt.assert_called_with(projects)
+            presenter.project_list_to_prompt.assert_called_with(projects, config)
             prompter.choice.assert_called_with(
                 [(labels[0], p1), (labels[1], p2), ("All", None)], message="Projects"
             )
