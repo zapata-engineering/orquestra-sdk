@@ -420,54 +420,73 @@ class TestAction:
             presenter.show_submitted_wf_run.assert_called_with(wf_run_id)
 
     class TestProjectResolve:
-        # Given
-        module = "my_wfs"
-        name = "sample_wf"
-        config = "cluster_z"
+        @pytest.mark.parametrize("workspace_support", [True, False])
+        def test_workspace_and_project_resolve(self, workspace_support):
+            # Given
+            module = "my_wfs"
+            name = "sample_wf"
+            config = "cluster_z"
 
-        prompter = create_autospec(_prompts.Prompter)
-        presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
+            prompter = create_autospec(_prompts.Prompter)
+            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
 
-        wf_run_id = "wf.test"
-        wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
-        # submit() doesn't raise = no effect of the "--force" flag
-        wf_run_repo.submit.return_value = wf_run_id
+            wf_run_id = "wf.test"
+            wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
+            # submit() doesn't raise = no effect of the "--force" flag
+            wf_run_repo.submit.return_value = wf_run_id
 
-        wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
-        wf_def_repo.get_module_from_spec.return_value = module
-        wf_def_sentinel = "<wf def sentinel>"
-        wf_def_repo.get_workflow_def.return_value = wf_def_sentinel
+            wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
+            wf_def_repo.get_module_from_spec.return_value = module
+            wf_def_sentinel = "<wf def sentinel>"
+            wf_def_repo.get_workflow_def.return_value = wf_def_sentinel
 
-        spaces_resolver = create_autospec(SpacesResolver)
-        spaces_resolver.resolve_workspace_id.return_value = "resolved_ws"
-        spaces_resolver.resolve_project_id.return_value = "resolved_project"
+            spaces_resolver = create_autospec(SpacesResolver)
+            if workspace_support:
+                spaces_resolver.resolve_workspace_id.return_value = "resolved_ws"
+                spaces_resolver.resolve_project_id.return_value = "resolved_project"
+            else:
+                spaces_resolver.resolve_workspace_id.side_effect = (
+                    exceptions.WorkspacesNotSupportedError()
+                )
+                spaces_resolver.resolve_project_id.side_effect = (
+                    exceptions.WorkspacesNotSupportedError()
+                )
 
-        action = _submit.Action(
-            prompter=prompter,
-            presenter=presenter,
-            wf_run_repo=wf_run_repo,
-            wf_def_repo=wf_def_repo,
-            spaces_resolver=spaces_resolver,
-        )
+            action = _submit.Action(
+                prompter=prompter,
+                presenter=presenter,
+                wf_run_repo=wf_run_repo,
+                wf_def_repo=wf_def_repo,
+                spaces_resolver=spaces_resolver,
+            )
 
-        # When
-        action.on_cmd_call(module, name, config, None, None, False)
+            # When
+            action.on_cmd_call(module, name, config, None, None, False)
 
-        # Then
-        # We don't expect prompts.
-        prompter.choice.assert_not_called()
+            # Then
+            # We don't expect prompts.
+            prompter.choice.assert_not_called()
 
-        # We expect getting workflow def from the module.
-        wf_def_repo.get_workflow_def.assert_called_with(module, name)
+            # We expect getting workflow def from the module.
+            wf_def_repo.get_workflow_def.assert_called_with(module, name)
 
-        # We expect submitting the retrieved wf def to the passed config cluster.
-        wf_run_repo.submit.assert_called_with(
-            wf_def_sentinel,
-            config,
-            ignore_dirty_repo=False,
-            workspace_id="resolved_ws",
-            project_id="resolved_project",
-        )
+            # We expect submitting the retrieved wf def to the passed config cluster.
+            if workspace_support:
+                wf_run_repo.submit.assert_called_with(
+                    wf_def_sentinel,
+                    config,
+                    ignore_dirty_repo=False,
+                    workspace_id="resolved_ws",
+                    project_id="resolved_project",
+                )
+            else:
+                wf_run_repo.submit.assert_called_with(
+                    wf_def_sentinel,
+                    config,
+                    ignore_dirty_repo=False,
+                    workspace_id=None,
+                    project_id=None,
+                )
 
-        # We expect telling the user the wf run ID.
-        presenter.show_submitted_wf_run.assert_called_with(wf_run_id)
+            # We expect telling the user the wf run ID.
+            presenter.show_submitted_wf_run.assert_called_with(wf_run_id)
