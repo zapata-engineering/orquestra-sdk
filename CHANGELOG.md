@@ -3,6 +3,30 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+
+🔥 *Features*
+* Add .project property to WorkflowRun to get the info about workspace and project of running workflow
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+* Add prompters to `orq wf submit` command for CE runtime if workspace and project weren't passed explicitly
+
+🥷 *Internal*
+
+📃 *Docs*
+
+
+## v0.49.1
+
+🐛 *Bug Fixes*
+* Fix CLI prompters to not throw exceptions after selecting project and workspace
+
+## v0.49.0
+
+🚨 *Breaking Changes*
 * Removed `WorkflowDef.prepare()` and `WorkflowRun.start()` functions. Use `WorkflowDef.run()` instead
 
 🔥 *Features*
@@ -18,8 +42,6 @@
 * `auto` config inside studio will infer workspace and project IDs from studio instance.
 * Support for running tasks in Docker containers with custom images on Compute Engine.
 * VersionMismatch warnings are shown only when interacting with specific workflow runs, not while listing workflows.
-
-👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
 * Fixed tasks that failed when explicitly state `n_outputs=1` on QE and in-process.
