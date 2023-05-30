@@ -9,6 +9,7 @@ import itertools
 import json
 import time
 import typing as t
+import warnings
 from contextlib import suppress as do_not_raise
 from datetime import timedelta
 from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospec
@@ -24,6 +25,7 @@ from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import (
     ProjectInvalidError,
     UnauthorizedError,
+    VersionMismatch,
     WorkflowRunCanNotBeTerminated,
     WorkflowRunNotFinished,
     WorkflowRunNotFoundError,
@@ -366,6 +368,52 @@ class TestWorkflowRun:
             model = run.get_status_model()
 
             assert model.status.state == run.get_status()
+
+        @staticmethod
+        def test_happy_path():
+            # Given
+            run_id = "wf.1"
+            wf_def = Mock()
+            config = Mock()
+            runtime = Mock()
+            run = _api.WorkflowRun(
+                run_id=run_id, wf_def=wf_def, runtime=runtime, config=config
+            )
+
+            # When
+            run.get_status_model()
+
+            # Then
+            runtime.get_workflow_run_status.assert_called_with(run_id)
+
+        @staticmethod
+        def test_suppresses_versionmismatch_warnings():
+            # Given
+            run_id = "wf.1"
+            wf_def = Mock()
+            config = Mock()
+            runtime = Mock()
+
+            def raise_warnings(*args, **kwargs):
+                warnings.warn("a warning that should not be suppressed")
+                warnings.warn(VersionMismatch("foo", Mock(), None))
+                warnings.warn(VersionMismatch("foo", Mock(), None))
+
+            runtime.get_workflow_run_status.side_effect = raise_warnings
+
+            run = _api.WorkflowRun(
+                run_id=run_id, wf_def=wf_def, runtime=runtime, config=config
+            )
+
+            # When
+            with pytest.warns(Warning) as record:
+                run.get_status_model()
+
+            # Then
+            assert len(record) == 1
+            assert str(record[0].message) == str(
+                UserWarning("a warning that should not be suppressed")
+            )
 
     class TestWaitUntilFinished:
         class TestHappyPath:
@@ -747,7 +795,7 @@ class TestListWorkflows:
         monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", "env_workspace")
         monkeypatch.setenv("ORQ_CURRENT_PROJECT", "env_project")
 
-        # overwride config name
+        # overwrite config name
         mock_config = MagicMock(_api.RuntimeConfig)
         mock_config._get_runtime.return_value = mock_config_runtime
         mock_config.name = "auto"
@@ -767,6 +815,27 @@ class TestListWorkflows:
             state=None,
             workspace="env_workspace",
             project="env_project",
+        )
+
+    @staticmethod
+    def test_suppresses_versionmismatch_warnings(mock_config_runtime):
+        # Given
+        def raise_warnings(*args, **kwargs):
+            warnings.warn("a warning that should not be suppressed")
+            warnings.warn(VersionMismatch("foo", Mock(), None))
+            warnings.warn(VersionMismatch("foo", Mock(), None))
+            return [Mock(), Mock(), Mock()]
+
+        mock_config_runtime.list_workflow_runs.side_effect = raise_warnings
+
+        # When
+        with pytest.warns(Warning) as record:
+            _ = _api.list_workflow_runs("mocked_config")
+
+        # Then
+        assert len(record) == 1
+        assert str(record[0].message) == str(
+            UserWarning("a warning that should not be suppressed")
         )
 
 

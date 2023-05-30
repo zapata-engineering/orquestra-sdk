@@ -231,30 +231,6 @@ class TestWorkflowRunRepo:
                         config_name=config,
                     )
 
-        class TestListWFRuns:
-            @staticmethod
-            def test_suppresses_versionmismatch_marnings(monkeypatch, mock_wf_run):
-                config = "<config sentinel>"
-                repo = _repos.WorkflowRunRepo()
-
-                def raise_warnings(*args, **kwargs):
-                    warnings.warn("a warning that should not be suppressed")
-                    warnings.warn(exceptions.VersionMismatch("foo", "bar", None))
-                    warnings.warn(exceptions.VersionMismatch("foo", "bar", None))
-                    return [mock_wf_run, mock_wf_run]
-
-                monkeypatch.setattr(
-                    sdk, "list_workflow_runs", Mock(side_effect=raise_warnings)
-                )
-
-                with pytest.warns(Warning) as record:
-                    _ = repo.list_wf_runs(config)
-
-                assert len(record) == 1
-                assert str(record[0].message) == str(
-                    UserWarning("a warning that should not be suppressed")
-                )
-
         class TestListWFRunIDs:
             """
             Boundaries::

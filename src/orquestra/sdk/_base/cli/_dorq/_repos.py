@@ -83,21 +83,19 @@ class WorkflowRunRepo:
             orquestra.sdk.exceptions.UnauthorizedError: when connection with runtime
                 failed because of an auth error.
         """
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=exceptions.VersionMismatch)
-            try:
-                wf_runs = sdk.list_workflow_runs(
-                    config,
-                    limit=limit,
-                    max_age=max_age,
-                    state=state,
-                    workspace=workspace,
-                    project=project,
-                )
-            except (ConnectionError, exceptions.UnauthorizedError):
-                raise
+        try:
+            wf_runs = sdk.list_workflow_runs(
+                config,
+                limit=limit,
+                max_age=max_age,
+                state=state,
+                workspace=workspace,
+                project=project,
+            )
+        except (ConnectionError, exceptions.UnauthorizedError):
+            raise
 
-            ret = [run.get_status_model() for run in wf_runs]
+        ret = [run.get_status_model() for run in wf_runs]
         return ret
 
     def get_wf_by_run_id(
