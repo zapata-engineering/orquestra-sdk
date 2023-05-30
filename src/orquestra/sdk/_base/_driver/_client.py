@@ -271,9 +271,7 @@ class DriverClient:
         _handle_common_errors(resp)
         return resp.headers["Location"]
 
-    def get_workflow_def(
-        self, workflow_def_id: _models.WorkflowDefID
-    ) -> _models.GetWorkflowDefResponse:
+    def get_workflow_def(self, workflow_def_id: _models.WorkflowDefID) -> WorkflowDef:
         """
         Gets a stored workflow definition
 
@@ -303,7 +301,7 @@ class DriverClient:
             _models.GetWorkflowDefResponse, _models.MetaEmpty
         ].parse_obj(resp.json())
 
-        return parsed_resp.data
+        return parsed_resp.data.workflow
 
     def delete_workflow_def(self, workflow_def_id: _models.WorkflowDefID):
         """
@@ -404,7 +402,7 @@ class DriverClient:
         workflow_runs = []
         for r in parsed_response.data:
             workflow_def = self.get_workflow_def(r.definitionId)
-            workflow_runs.append(r.to_ir(workflow_def.workflow))
+            workflow_runs.append(r.to_ir(workflow_def))
 
         return Paginated(
             contents=workflow_runs,
@@ -441,7 +439,7 @@ class DriverClient:
 
         workflow_def = self.get_workflow_def(parsed_response.data.definitionId)
 
-        return parsed_response.data.to_ir(workflow_def.workflow)
+        return parsed_response.data.to_ir(workflow_def)
 
     def terminate_workflow_run(self, wf_run_id: _models.WorkflowRunID):
         """
@@ -744,37 +742,3 @@ class DriverClient:
         )
 
         return parsed_response
-
-    def get_workflow_project(self, wf_run_id: _models.WorkflowRunID) -> ProjectRef:
-        """
-        Gets the status of a workflow run from the workflow driver
-
-        Raises:
-            InvalidWorkflowRunID: see the exception's docstring
-            WorkflowRunNotFound: see the exception's docstring
-            InvalidTokenError: see the exception's docstring
-            ForbiddenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
-        """
-
-        resp = self._get(
-            API_ACTIONS["get_workflow_run"].format(wf_run_id),
-            query_params=None,
-        )
-
-        if resp.status_code == codes.BAD_REQUEST:
-            raise _exceptions.InvalidWorkflowRunID(wf_run_id)
-        elif resp.status_code == codes.NOT_FOUND:
-            raise _exceptions.WorkflowRunNotFound(wf_run_id)
-
-        _handle_common_errors(resp)
-
-        parsed_response = _models.Response[
-            _models.WorkflowRunResponse, _models.MetaEmpty
-        ].parse_obj(resp.json())
-
-        workflow_def = self.get_workflow_def(parsed_response.data.definitionId)
-
-        return ProjectRef(
-            workspace_id=workflow_def.workspaceId, project_id=workflow_def.project
-        )

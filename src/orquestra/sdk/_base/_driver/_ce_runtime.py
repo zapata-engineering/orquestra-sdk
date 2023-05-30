@@ -460,6 +460,7 @@ class CERuntime(RuntimeInterface):
 
     def list_workspaces(self):
         try:
+            breakpoint()
             workspaces = self._client.list_workspaces()
             return [
                 Workspace(workspace_id=ws.id, name=ws.displayName) for ws in workspaces
