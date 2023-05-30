@@ -17,10 +17,10 @@ from orquestra.sdk._base.cli._dorq._ui._presenters import (
 )
 from orquestra.sdk._base.cli._dorq._ui._prompts import Prompter
 from orquestra.sdk.exceptions import ExpiredTokenError, InvalidTokenError
-from orquestra.sdk.schema.configs import RuntimeConfiguration
+from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 
 
-@pytest.mark.parametrize("ce", [True, False])
+@pytest.mark.parametrize("runtime_name", [RuntimeName.CE_REMOTE, RuntimeName.QE_REMOTE])
 class TestAction:
     """
     Test boundaries::
@@ -35,7 +35,7 @@ class TestAction:
         return sleep
 
     @staticmethod
-    def test_passed_server_no_token(async_sleep, ce):
+    def test_passed_server_no_token(async_sleep, runtime_name):
         """
         Verifies how we pass variables between subcomponents.
         """
@@ -70,7 +70,9 @@ class TestAction:
         )
 
         # When
-        action.on_cmd_call(config=config, url=url, token=token, ce=ce)
+        action.on_cmd_call(
+            config=config, url=url, token=token, runtime_name=runtime_name
+        )
 
         # Then
         async_sleep.assert_called_once()
@@ -79,13 +81,13 @@ class TestAction:
         login_presenter.open_url_in_browser.assert_called_once_with(login_url)
         login_presenter.print_login_help.assert_called_once()
         config_repo.store_token_in_config.assert_called_once_with(
-            url, retrieved_token, ce
+            url, retrieved_token, runtime_name
         )
         login_presenter.prompt_config_saved.assert_called_once_with(url, config_name)
 
     @staticmethod
     def test_passed_server_no_token_server_exits_gracefully(
-        monkeypatch: pytest.MonkeyPatch, ce
+        monkeypatch: pytest.MonkeyPatch, runtime_name
     ):
         # Given
         # CLI inputs
@@ -121,18 +123,20 @@ class TestAction:
         )
 
         # When
-        action.on_cmd_call(config=config, url=url, token=token, ce=ce)
+        action.on_cmd_call(
+            config=config, url=url, token=token, runtime_name=runtime_name
+        )
 
         # Then
         config_resolver.resolve_stored_config_for_login.assert_not_called()
         exception_presenter.show_error.assert_not_called()
         config_repo.store_token_in_config.assert_called_once_with(
-            url, retrieved_token, ce
+            url, retrieved_token, runtime_name
         )
         login_presenter.prompt_config_saved.assert_called_once_with(url, config_name)
 
     @staticmethod
-    def test_passed_server_no_token_auto_login_failed(async_sleep, ce):
+    def test_passed_server_no_token_auto_login_failed(async_sleep, runtime_name):
         # Given
         # CLI inputs
         url = "my_url"
@@ -165,7 +169,9 @@ class TestAction:
         )
 
         # When
-        action.on_cmd_call(config=config, url=url, token=token, ce=ce)
+        action.on_cmd_call(
+            config=config, url=url, token=token, runtime_name=runtime_name
+        )
 
         # Then
         async_sleep.assert_not_called()
@@ -173,10 +179,12 @@ class TestAction:
         exception_presenter.show_error.assert_not_called()
         config_repo.store_token_in_config.assert_not_called()
         login_presenter.prompt_config_saved.assert_not_called()
-        login_presenter.prompt_for_login.assert_called_once_with(login_url, url, ce)
+        login_presenter.prompt_for_login.assert_called_once_with(
+            login_url, url, runtime_name
+        )
 
     @staticmethod
-    def test_passed_server_and_token(async_sleep, ce):
+    def test_passed_server_and_token(async_sleep, runtime_name):
         """
         Verifies how we pass variables between subcomponents.
         """
@@ -207,18 +215,22 @@ class TestAction:
         )
 
         # When
-        action.on_cmd_call(config=config, url=url, token=token, ce=ce)
+        action.on_cmd_call(
+            config=config, url=url, token=token, runtime_name=runtime_name
+        )
 
         # Then
         # We should get the login url from QE
         async_sleep.assert_not_called()
         config_resolver.resolve_stored_config_for_login.assert_not_called()
         exception_presenter.show_error.assert_not_called()
-        config_repo.store_token_in_config.assert_called_once_with(url, token, ce)
+        config_repo.store_token_in_config.assert_called_once_with(
+            url, token, runtime_name
+        )
         login_presenter.prompt_config_saved.assert_called_once_with(url, config_name)
 
     @staticmethod
-    def test_passed_config_no_token(async_sleep, ce):
+    def test_passed_config_no_token(async_sleep, runtime_name):
         # GIVEN
         # CLI inputs
         url = None
@@ -239,7 +251,7 @@ class TestAction:
         loaded_runtime_config = create_autospec(RuntimeConfiguration)
 
         loaded_runtime_config.runtime_options = {"uri": login_url}
-        loaded_runtime_config.runtime_name = "CE_REMOTE" if ce else "QE_REMOTE"
+        loaded_runtime_config.runtime_name = runtime_name
         config_resolver.resolve_stored_config_for_login.return_value = config_name
         config_repo.read_config.return_value = loaded_runtime_config
         config_repo.store_token_in_config.return_value = config_name
@@ -255,21 +267,23 @@ class TestAction:
         )
 
         # WHEN
-        action.on_cmd_call(config=config, url=url, token=token, ce=ce)
+        action.on_cmd_call(
+            config=config, url=url, token=token, runtime_name=runtime_name
+        )
 
         # THEN
         async_sleep.assert_called_once()
         config_resolver.resolve_stored_config_for_login.assert_called_once_with(config)
         exception_presenter.show_error.assert_not_called()
         config_repo.store_token_in_config.assert_called_once_with(
-            login_url, retrieved_token, ce
+            login_url, retrieved_token, runtime_name
         )
         login_presenter.prompt_config_saved.assert_called_once_with(
             login_url, config_name
         )
 
     @staticmethod
-    def test_passed_config_and_token(async_sleep, ce):
+    def test_passed_config_and_token(async_sleep, runtime_name):
         # GIVEN
         # CLI inputs
         url = None
@@ -289,7 +303,7 @@ class TestAction:
         loaded_runtime_config = create_autospec(RuntimeConfiguration)
 
         loaded_runtime_config.runtime_options = {"uri": login_url}
-        loaded_runtime_config.runtime_name = "CE_REMOTE" if ce else "QE_REMOTE"
+        loaded_runtime_config.runtime_name = runtime_name
         config_resolver.resolve_stored_config_for_login.return_value = config_name
         config_repo.read_config.return_value = loaded_runtime_config
         config_repo.store_token_in_config.return_value = config_name
@@ -304,19 +318,23 @@ class TestAction:
         )
 
         # WHEN
-        action.on_cmd_call(config=config, url=url, token=token, ce=ce)
+        action.on_cmd_call(
+            config=config, url=url, token=token, runtime_name=runtime_name
+        )
 
         # THEN
         async_sleep.assert_not_called()
         config_resolver.resolve_stored_config_for_login.assert_called_once_with(config)
         exception_presenter.show_error.assert_not_called()
-        config_repo.store_token_in_config.assert_called_once_with(login_url, token, ce)
+        config_repo.store_token_in_config.assert_called_once_with(
+            login_url, token, runtime_name
+        )
         login_presenter.prompt_config_saved.assert_called_once_with(
             login_url, config_name
         )
 
     @staticmethod
-    def test_passed_config_and_server_exits_gracefully(async_sleep, ce):
+    def test_passed_config_and_server_exits_gracefully(async_sleep, runtime_name):
         # GIVEN
         # CLI inputs
         url = "<cli url sentinel>"
@@ -336,7 +354,7 @@ class TestAction:
         loaded_runtime_config = create_autospec(RuntimeConfiguration)
 
         loaded_runtime_config.runtime_options = {"uri": login_url}
-        loaded_runtime_config.runtime_name = "CE_REMOTE" if ce else "QE_REMOTE"
+        loaded_runtime_config.runtime_name = runtime_name
         config_resolver.resolve_stored_config_for_login.return_value = config_name
         config_repo.read_config.return_value = loaded_runtime_config
         config_repo.store_token_in_config.return_value = config_name
@@ -351,7 +369,9 @@ class TestAction:
         )
 
         # WHEN
-        action.on_cmd_call(config=config, url=url, token=token, ce=ce)
+        action.on_cmd_call(
+            config=config, url=url, token=token, runtime_name=runtime_name
+        )
 
         # THEN
         async_sleep.assert_not_called()
@@ -361,7 +381,7 @@ class TestAction:
         login_presenter.prompt_config_saved.assert_not_called()
 
     @staticmethod
-    def test_mismatch_between_cli_and_stored_runtime_config(async_sleep, ce):
+    def test_mismatch_between_cli_and_stored_runtime_config(async_sleep, runtime_name):
         # GIVEN
         # CLI inputs
         url = None
@@ -384,7 +404,11 @@ class TestAction:
 
         loaded_runtime_config = create_autospec(RuntimeConfiguration)
         loaded_runtime_config.runtime_options = {"uri": login_url}
-        loaded_runtime_config.runtime_name = "QE_REMOTE" if ce else "CE_REMOTE"
+        loaded_runtime_config.runtime_name = (
+            RuntimeName.CE_REMOTE
+            if runtime_name == RuntimeName.QE_REMOTE
+            else RuntimeName.QE_REMOTE
+        )
         loaded_runtime_config.config_name = config_name
         config_resolver.resolve_stored_config_for_login.return_value = config_name
         config_repo.read_config.return_value = loaded_runtime_config
@@ -401,14 +425,16 @@ class TestAction:
         )
 
         # WHEN
-        action.on_cmd_call(config=config, url=url, token=token, ce=ce)
+        action.on_cmd_call(
+            config=config, url=url, token=token, runtime_name=runtime_name
+        )
 
         # THEN
         # called
         prompter.confirm.assert_called_once_with(
             f"Config '{config_name}' will be changed from "
             f"{loaded_runtime_config.runtime_name} to "
-            f"{'CE_REMOTE' if ce else 'QE_REMOTE'}. Continue?",
+            f"{runtime_name}. Continue?",
             True,
         )
         async_sleep.assert_called_once()
@@ -422,7 +448,7 @@ class TestAction:
 
     @staticmethod
     def test_mismatch_between_cli_and_stored_runtime_config_user_cancels(
-        async_sleep, ce
+        async_sleep, runtime_name
     ):
         # GIVEN
         # CLI inputs
@@ -446,7 +472,11 @@ class TestAction:
 
         loaded_runtime_config = create_autospec(RuntimeConfiguration)
         loaded_runtime_config.runtime_options = {"uri": login_url}
-        loaded_runtime_config.runtime_name = "QE_REMOTE" if ce else "CE_REMOTE"
+        loaded_runtime_config.runtime_name = (
+            RuntimeName.CE_REMOTE
+            if runtime_name == RuntimeName.QE_REMOTE
+            else RuntimeName.QE_REMOTE
+        )
         loaded_runtime_config.config_name = config_name
         config_resolver.resolve.return_value = config_name
         config_repo.read_config.return_value = loaded_runtime_config
@@ -463,7 +493,9 @@ class TestAction:
         )
 
         # WHEN
-        action.on_cmd_call(config=config, url=url, token=token, ce=ce)
+        action.on_cmd_call(
+            config=config, url=url, token=token, runtime_name=runtime_name
+        )
 
         # THEN
         # called
@@ -471,7 +503,7 @@ class TestAction:
         prompter.confirm.assert_called_once_with(
             f"Config '{config_name}' will be changed from "
             f"{loaded_runtime_config.runtime_name} to "
-            f"{'CE_REMOTE' if ce else 'QE_REMOTE'}. Continue?",
+            f"{runtime_name}. Continue?",
             True,
         )
         # not called
@@ -488,7 +520,7 @@ class TestAction:
             ExpiredTokenError(),
         ),
     )
-    def test_invalid_token(async_sleep, ce, exception):
+    def test_invalid_token(async_sleep, runtime_name, exception):
         # Given
         # CLI inputs
         url = "my_url"
@@ -517,10 +549,14 @@ class TestAction:
         )
 
         # When
-        action.on_cmd_call(config=config, url=url, token=token, ce=ce)
+        action.on_cmd_call(
+            config=config, url=url, token=token, runtime_name=runtime_name
+        )
 
         # Then
         async_sleep.assert_not_called()
         exception_presenter.show_error.assert_called_once_with(exception)
-        config_repo.store_token_in_config.assert_called_once_with(url, token, ce)
+        config_repo.store_token_in_config.assert_called_once_with(
+            url, token, runtime_name
+        )
         login_presenter.prompt_config_saved.assert_not_called()
