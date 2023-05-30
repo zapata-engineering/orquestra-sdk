@@ -258,6 +258,7 @@ class GraphTraversal:
                     id=f"secret-{secret_counter}",
                     secret_name=n.name,
                     secret_config=n.config_name,
+                    workspace_id=n.workspace_id,
                 )
                 secret_counter += 1
             else:
@@ -402,6 +403,7 @@ def _make_import_model(imp: _dsl.Import):
                 id=f"secret-{id_}",
                 secret_name=imp.auth_secret.name,
                 secret_config=imp.auth_secret.config_name,
+                workspace_id=imp.auth_secret.workspace_id,
             )
         return ir.GitImport(
             id=id_,
