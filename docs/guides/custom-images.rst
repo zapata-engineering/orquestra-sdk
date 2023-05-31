@@ -55,9 +55,15 @@ need to request more than one node for your workflow as Compute Engine supports 
 which is activated when more than one node is requested for a workflow.
 
 When you use a custom image, ``nodes`` workflow resource becomes the maximum number of nodes that will be created per
-unique Docker image you use. For example, if you use two different custom images for your tasks and specify ``nodes=5``
-in your workflow resources, a maximum of 15 nodes will be created (note the addition of default image). As in the case
+unique Docker image you use. For example, if you use two different custom images for your tasks and specify ``nodes=4``
+in your workflow resources, a maximum of 12 nodes will be created (note the addition of default image). As in the case
 without any custom images, containers will get created and destroyed based on resource requests from tasks.
+See the diagram below which shows the example scenario with two different custom images:
+
+.. image:: images/ce-nodes-parameter.png
+    :width: 75%
+    :align: center
+
 
 To make your task use a custom image on Compute Engine, you need to pass a ``custom_image`` argument to the
 ``@sdk.task()`` decorator as shown below:
