@@ -144,7 +144,7 @@ class DirectRayReader:
 
         # TODO: read env setup logs for local Ray
         # https://zapatacomputing.atlassian.net/browse/ORQSDK-643
-        env_setup = []
+        env_setup: t.List[str] = []
 
         return WorkflowLogs(
             per_task=logs_dict,

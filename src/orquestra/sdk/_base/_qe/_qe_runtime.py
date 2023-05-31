@@ -808,7 +808,7 @@ class QERuntime(RuntimeInterface):
         # At the moment we don't have a clear way to separate the env setup vs task logs
         # and we probably won't implement it. QE is going to be deprecated _soon_
         # anyway.
-        env_logs = []
+        env_logs: List[str] = []
         return WorkflowLogs(per_task=task_logs, env_setup=env_logs)
 
     def stop_workflow_run(self, run_id: WorkflowRunId) -> None:

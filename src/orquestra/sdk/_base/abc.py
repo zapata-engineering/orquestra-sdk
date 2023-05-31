@@ -15,13 +15,14 @@ from abc import ABC, abstractmethod
 from datetime import timedelta
 from pathlib import Path
 
-from orquestra.sdk._base._spaces._structs import Project, ProjectRef, Workspace
-from orquestra.sdk.exceptions import WorkspacesNotSupportedError
-from orquestra.sdk.schema.configs import RuntimeConfiguration
-from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
-from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.responses import WorkflowResult
-from orquestra.sdk.schema.workflow_run import (
+from ._logs._interfaces import LogReader, WorkflowLogs
+from ._spaces._structs import Project, ProjectRef, Workspace
+from ..exceptions import WorkspacesNotSupportedError
+from ..schema.configs import RuntimeConfiguration
+from ..schema.ir import TaskInvocationId, WorkflowDef
+from ..schema.local_database import StoredWorkflowRun
+from ..schema.responses import WorkflowResult
+from ..schema.workflow_run import (
     ProjectId,
     State,
     WorkflowRun,
@@ -34,7 +35,7 @@ from orquestra.sdk.schema.workflow_run import (
 ArtifactValue = t.Any
 
 
-class RuntimeInterface(ABC):
+class RuntimeInterface(ABC, LogReader):
     """
     The main abstraction for managing Orquestra workflows. Allows swapping the
     implementations related to local vs remote runs.
@@ -162,6 +163,16 @@ class RuntimeInterface(ABC):
         List workspaces available to a user. Works only on CE
         """
         raise WorkspacesNotSupportedError()
+
+    @abstractmethod
+    def get_task_logs(
+        self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
+    ) -> t.List[str]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_workflow_logs(self, wf_run_id: WorkflowRunId) -> WorkflowLogs:
+        raise NotImplementedError()
 
 
 class WorkflowRepo(ABC):
