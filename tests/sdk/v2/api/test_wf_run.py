@@ -518,6 +518,27 @@ class TestWorkflowRun:
                 assert task._wf_def == run._wf_def
                 assert task.task_invocation_id in wf_def_model.task_invocations
 
+        class TestFiltering:
+            @staticmethod
+            @pytest.mark.parametrize(
+                "state, n_expected_results",
+                [
+                    (State.WAITING, 0),
+                    (State.RUNNING, 0),
+                    (State.SUCCEEDED, 1),
+                    (State.TERMINATED, 0),
+                    (State.FAILED, 2),
+                    (State.ERROR, 0),
+                    ([State.SUCCEEDED, State.FAILED], 3),
+                ],
+            )
+            def test_filter_by_state(run, state, n_expected_results):
+                # When
+                tasks = run.get_tasks(state=state)
+
+                # Then
+                assert len(tasks) == n_expected_results
+
     class TestGetLogs:
         @staticmethod
         def test_happy_path(run):
@@ -761,7 +782,7 @@ class TestListWorkflows:
         monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", "env_workspace")
         monkeypatch.setenv("ORQ_CURRENT_PROJECT", "env_project")
 
-        # overwride config name
+        # overwrite config name
         mock_config = MagicMock(_api.RuntimeConfig)
         mock_config._get_runtime.return_value = mock_config_runtime
         mock_config.name = "auto"

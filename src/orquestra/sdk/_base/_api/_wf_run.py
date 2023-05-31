@@ -372,10 +372,32 @@ class WorkflowRun:
         """
         return self._runtime.get_workflow_logs(wf_run_id=self.run_id)
 
-    # TODO: ORQSDK-617 add filtering ability for the users
-    def get_tasks(self) -> t.Set[TaskRun]:
-        wf_run_model = self.get_status_model()
+    def get_tasks(
+        self,
+        state: t.Optional[t.Union[State, t.List[State]]] = None,
+    ) -> t.Set[TaskRun]:
+        """
+        Returns TaskRun representations of the tasks executed as part of this workflow.
 
+        Returns:
+            An iterable of TaskRuns
+        """
+
+        def matches_filters(
+            task_run_model,
+            state: t.Optional[t.Union[State, t.List[State]]] = None,
+        ) -> bool:
+            ret = True
+            if state:
+                states: t.List[State]
+                if isinstance(state, State):
+                    states = [state]
+                else:
+                    states = state
+                ret = ret and task_run_model.status.state in states
+            return ret
+
+        wf_run_model: WorkflowRunModel = self.get_status_model()
         return {
             TaskRun(
                 task_run_id=task_run_model.id,
@@ -385,6 +407,7 @@ class WorkflowRun:
                 wf_def=self._wf_def,
             )
             for task_run_model in wf_run_model.task_runs
+            if matches_filters(task_run_model, state=state)
         }
 
 
