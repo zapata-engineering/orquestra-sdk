@@ -31,39 +31,6 @@ from orquestra.sdk.schema.workflow_run import (
 )
 
 
-class LogReader(t.Protocol):
-    """
-    A component that reads logs produced by tasks and workflows.
-    """
-
-    def get_task_logs(
-        self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
-    ) -> t.List[str]:
-        """
-        Reads all available logs, specific to a single task invocation/run.
-
-        Returns:
-            Log lines printed when running this task invocation. If the task didn't
-            produce any logs this should be an empty list.
-        """
-        ...
-
-    def get_workflow_logs(
-        self, wf_run_id: WorkflowRunId
-    ) -> t.Dict[TaskInvocationId, t.List[str]]:
-        """
-        Reads all available logs printed during execution of this workflow run.
-
-        Returns:
-            A mapping with task logs. Each key-value pair corresponds to one task
-            invocation.
-            - key: task invocation ID (see
-                orquestra.sdk._base.ir.WorkflowDef.task_invocations)
-            - value: log lines from running this task invocation
-        """
-        ...
-
-
 # A typealias that hints where we expect raw artifact values.
 ArtifactValue = t.Any
 
