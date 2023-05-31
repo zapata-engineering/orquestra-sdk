@@ -19,6 +19,10 @@ CUDA dependencies installed and one without. Their names follow the pattern
 ``hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:0.49.0-cuda``. You should pick the one that matches
 your SDK version and your GPU needs (``-cuda`` needs to be picked for GPU workflows).
 
+.. note::
+
+    It is your responsibility as the author of the custom image to keep your image up to date with new SDK versions.
+
 The base images run as a user named ``orquestra`` with uid ``1000``. Since these are Ubuntu based images, you
 can install any package that you need from Ubuntu repositories (by doing ``RUN apt install <package name>``).
 However, before doing so, you need to temporarily switch to the root user (via ``USER root`` directive) and
