@@ -6,7 +6,8 @@
 
 🔥 *Features*
 * Add .project property to WorkflowRun to get the info about workspace and project of running workflow
-* VersionMismatch warnings are shown only when interacting with specific workflow runs, not while listing workflows.
+* `VersionMismatch` warnings are shown only when interacting with specific workflow runs, not while listing workflows.
+* ```
 
 👩‍🔬 *Experimental*
 
