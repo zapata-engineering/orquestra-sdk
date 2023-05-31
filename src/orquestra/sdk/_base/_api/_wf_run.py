@@ -25,12 +25,13 @@ from ...exceptions import (
 from ...schema import ir
 from ...schema.configs import ConfigName
 from ...schema.local_database import StoredWorkflowRun
-from ...schema.workflow_run import ProjectId, State, TaskInvocationId
+from ...schema.workflow_run import ProjectId, State
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
 from .. import serde
 from .._spaces._resolver import resolve_studio_project_ref
 from ..abc import RuntimeInterface
+from .._logs._interfaces import WorkflowLogs
 from ._config import RuntimeConfig, _resolve_config
 from ._task_run import TaskRun
 
@@ -359,19 +360,12 @@ class WorkflowRun:
             for inv_id, inv_output in inv_outputs.items()
         }
 
-    def get_logs(self) -> t.Mapping[TaskInvocationId, t.List[str]]:
+    def get_logs(self) -> WorkflowLogs:
         """
         Unstable: this API will change.
 
-        Returns logs produced by all task runs in this workflow. If you're interested in
-        only subset of tasks, consider using ``WorkflowRun.get_tasks()`` and
-        ``TaskRun.get_logs()``.
-
-        Returns:
-            A dictionary where each key-value entry corresponds to a single task run.
-            The key identifies a task invocation, a single node in the workflow graph.
-            The value is a list of log lines produced by the corresponding task
-            invocation while running this workflow.
+        Returns logs produced this workflow. See ``WorkflowLogs`` attributes for log
+        categories or ``TaskRun.get_logs()`` for logs related to only a single task.
         """
         return self._runtime.get_workflow_logs(wf_run_id=self.run_id)
 
