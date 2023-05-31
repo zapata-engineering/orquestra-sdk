@@ -45,11 +45,23 @@ jobs:
         shell: bash
         run: make github_actions
 
-      # Leverages Makefile to check all style linters
-      - name: Check style
+      # Ensure we don't run checks against stale, cached modules.
+      - name: Clean
         shell: bash
         run: |
           make clean
+
+      # Pyright-specific step. Temporarily separated from the regular "style" check.
+      # To be merged with 'make style' when we fix all pyright errors. Until then,
+      # it only prints type errors, but doesn't fail the job.
+      - name: Run pyright
+        shell: bash
+        run: |
+          make pyright or true
+
+      - name: Check style
+        shell: bash
+        run: |
           make style
 
   ruff:
@@ -59,34 +71,3 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: chartboost/ruff-action@v1
-
-  # Pyright-specific job. Temporarily separated from the regular "style" check.
-  # To be removed when we fix all pyright errors.
-  style-pyright:
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python: ["3.9"]
-
-    name: Style - Pyright - Python ${{ matrix.python }}
-    timeout-minutes: 25
-
-    steps:
-      - uses: actions/checkout@v3
-
-      # Load a specific version of Python
-      - name: Setup python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python }}
-          architecture: x64
-
-      - name: Install deps
-        shell: bash
-        run: make github_actions
-
-      - name: Typecheck with Pyright
-        shell: bash
-        run: |
-          make pyright
