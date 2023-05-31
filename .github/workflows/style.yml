@@ -57,7 +57,7 @@ jobs:
       - name: Run pyright
         shell: bash
         run: |
-          make pyright or true
+          make pyright || true
 
       - name: Check style
         shell: bash
