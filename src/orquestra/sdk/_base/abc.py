@@ -178,22 +178,6 @@ class RuntimeInterface(ABC):
         """
         raise NotImplementedError()
 
-    def get_task_logs(
-        self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
-    ) -> t.List[str]:
-        """
-        See LogReader.get_task_logs()
-        """
-        raise NotImplementedError()
-
-    def get_workflow_logs(
-        self, wf_run_id: WorkflowRunId
-    ) -> t.Dict[TaskInvocationId, t.List[str]]:
-        """
-        See LogReader.get_task_logs()
-        """
-        raise NotImplementedError()
-
     @abstractmethod
     def get_workflow_project(self, wf_run_id: WorkflowRunId):
         """
