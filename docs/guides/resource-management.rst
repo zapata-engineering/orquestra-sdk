@@ -69,7 +69,7 @@ Resources can also be configured at the workflow definition level using the same
 * ``memory``: amount of RAM (bytes).
 * ``disk``: disk space (bytes).
 * ``gpu``: whether access to a gpu unit is required (``1`` if a GPU is required, ``0`` otherwise).
-* ``nodes``: the number of nodes requested (needs to be bigger than ``1`` when custom images are used and specifies the maximum number of nodes per different image type in that case).
+* ``nodes``: the number of nodes requested (needs to be greater than ``1`` when custom images are used and specifies the maximum number of nodes per different image type in that case).
 
 .. code-block::
     :caption: Workflow resource request example
