@@ -15,8 +15,6 @@ from abc import ABC, abstractmethod
 from datetime import timedelta
 from pathlib import Path
 
-from ._logs._interfaces import LogReader, WorkflowLogs
-from ._spaces._structs import Project, ProjectRef, Workspace
 from ..exceptions import WorkspacesNotSupportedError
 from ..schema.configs import RuntimeConfiguration
 from ..schema.ir import TaskInvocationId, WorkflowDef
@@ -30,6 +28,8 @@ from ..schema.workflow_run import (
     WorkflowRunMinimal,
     WorkspaceId,
 )
+from ._logs._interfaces import LogReader, WorkflowLogs
+from ._spaces._structs import Project, ProjectRef, Workspace
 
 # A typealias that hints where we expect raw artifact values.
 ArtifactValue = t.Any

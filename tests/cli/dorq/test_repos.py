@@ -20,8 +20,8 @@ from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _db
 from orquestra.sdk._base._driver._client import DriverClient
-from orquestra.sdk._base._qe._client import QEClient
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
+from orquestra.sdk._base._qe._client import QEClient
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._base.cli._dorq import _repos
@@ -726,7 +726,9 @@ class TestWorkflowRunRepo:
                     "inv2": ["and another one"],
                 }
 
-                mock_wf_run.get_logs.return_value = WorkflowLogs(per_task=logs_dict, env_setup=[])
+                mock_wf_run.get_logs.return_value = WorkflowLogs(
+                    per_task=logs_dict, env_setup=[]
+                )
 
                 repo = _repos.WorkflowRunRepo()
 
