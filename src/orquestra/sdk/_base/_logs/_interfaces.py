@@ -32,7 +32,7 @@ class LogReader(t.Protocol):
 
     def get_task_logs(
         self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
-    ) -> t.List[str]:
+    ) -> t.List[str]:  # pragma: no cover
         """
         Reads all available logs, specific to a single task invocation/run.
 
@@ -40,9 +40,12 @@ class LogReader(t.Protocol):
             Log lines printed when running this task invocation. If the task didn't
             produce any logs this should be an empty list.
         """
+        # pragma: no cover
         ...
 
-    def get_workflow_logs(self, wf_run_id: WorkflowRunId) -> WorkflowLogs:
+    def get_workflow_logs(
+        self, wf_run_id: WorkflowRunId
+    ) -> WorkflowLogs:  # pragma: no cover
         """
         Reads all available logs printed during execution of this workflow run.
         """
