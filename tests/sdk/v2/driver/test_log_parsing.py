@@ -62,3 +62,14 @@ class TestParseLogsArchive:
         env = parsed_logs.envs[0]
         assert env.job_id == "01000000"
         assert len(env.lines) == 174
+
+
+class TestProcessLogsResponse:
+    @staticmethod
+    def test_recorded_response(response_content: bytes):
+        # When
+        processed = _log_parsing.process_logs_response(response_content)
+
+        # Then
+        assert len(processed.env) == 0
+        assert len(processed.env) == 0

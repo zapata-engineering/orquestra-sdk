@@ -190,7 +190,7 @@ class RuntimeInterface(ABC):
         self, wf_run_id: WorkflowRunId
     ) -> t.Dict[TaskInvocationId, t.List[str]]:
         """
-        See LogReader.get_task_logs()
+        See LogReader.get_workflow_logs()
         """
         raise NotImplementedError()
 

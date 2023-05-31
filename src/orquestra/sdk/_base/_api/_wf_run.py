@@ -31,6 +31,7 @@ from .. import serde
 from .._spaces._resolver import resolve_studio_project_ref
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig, _resolve_config
+from ._logs import LogsClient, WorkflowLogs
 from ._task_run import TaskRun
 
 COMPLETED_STATES = [State.FAILED, State.TERMINATED, State.SUCCEEDED]
@@ -371,6 +372,17 @@ class WorkflowRun:
             invocation while running this workflow.
         """
         return self._runtime.get_workflow_logs(wf_run_id=self.run_id)
+
+    def get_logs2(self) -> WorkflowLogs:
+        self._runtime.get_workflow_logs
+        return WorkflowLogs(
+            per_task={},
+            env_setup=[],
+        )
+
+    @property
+    def logs(self) -> LogsClient:
+        return LogsClient(wf_run_id=self.run_id, runtime=self._runtime)
 
     # TODO: ORQSDK-617 add filtering ability for the users
     def get_tasks(self) -> t.Set[TaskRun]:
