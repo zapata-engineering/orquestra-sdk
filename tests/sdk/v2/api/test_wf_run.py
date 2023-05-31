@@ -9,6 +9,7 @@ import itertools
 import json
 import time
 import typing as t
+import warnings
 from contextlib import suppress as do_not_raise
 from datetime import timedelta
 from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospec
@@ -16,16 +17,18 @@ from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospe
 import pytest
 
 from orquestra.sdk._base import _api, _workflow, serde
+from orquestra.sdk._base._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
+from orquestra.sdk._base._in_process_runtime import InProcessRuntime
 from orquestra.sdk._base._spaces._api import list_projects, list_workspaces
 from orquestra.sdk._base._spaces._structs import ProjectRef, Workspace
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import (
     ProjectInvalidError,
     UnauthorizedError,
+    VersionMismatch,
     WorkflowRunCanNotBeTerminated,
     WorkflowRunNotFinished,
     WorkflowRunNotFoundError,
-    WorkflowRunNotStarted,
 )
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeName
@@ -82,22 +85,10 @@ class TestRunningInProcess:
             assert results == 3
 
         def test_single_run(self):
-            run = wf_pass_tuple().prepare("in_process")
-            run.start()
+            run = wf_pass_tuple().run("in_process")
             results = run.get_results()
 
             assert results == 3
-
-        def test_multiple_starts(self):
-            run = wf_pass_tuple().prepare("in_process")
-
-            run.start()
-            results1 = run.get_results()
-
-            run.start()
-            results2 = run.get_results()
-
-            assert results1 == results2
 
     class TestShorthand:
         def test_single_run(self):
@@ -168,7 +159,9 @@ class TestWorkflowRun:
             "task_run2": serde.result_from_artifact("another", ir.ArtifactFormat.AUTO),
             "task_run3": serde.result_from_artifact(123, ir.ArtifactFormat.AUTO),
         }
-
+        runtime.get_workflow_project.return_value = ProjectRef(
+            workspace_id="ws", project_id="proj"
+        )
         wf_def_model = sample_wf_def.model
         task_invs = list(wf_def_model.task_invocations.values())
         # Get logs, the runtime interface returns invocation IDs
@@ -203,8 +196,8 @@ class TestWorkflowRun:
     @staticmethod
     @pytest.fixture
     def run(sample_wf_def, mock_runtime) -> _api.WorkflowRun:
-        return _api.WorkflowRun(
-            run_id=None, wf_def=sample_wf_def.model, runtime=mock_runtime, config=None
+        return _api.WorkflowRun._start(
+            wf_def=sample_wf_def.model, runtime=mock_runtime, config=None, project=None
         )
 
     class TestByID:
@@ -363,14 +356,8 @@ class TestWorkflowRun:
 
     class TestGetStatus:
         @staticmethod
-        def test_raises_exception_for_unstarted_workflow(run):
-            with pytest.raises(WorkflowRunNotStarted):
-                run.get_status()
-
-        @staticmethod
         def test_returns_status_from_runtime(run, mock_runtime):
             # Given
-            run.start()
             # When
             state = run.get_status()
             # Then
@@ -379,32 +366,58 @@ class TestWorkflowRun:
 
     class TestGetStatusModel:
         @staticmethod
-        def test_raises_exception_for_unstarted_workflow(run, mock_runtime):
-            with pytest.raises(WorkflowRunNotStarted):
-                run.get_status_model()
-
-        @staticmethod
         def test_matches_get_status(run):
-            run.start()
-
             model = run.get_status_model()
 
             assert model.status.state == run.get_status()
 
-    class TestWaitUntilFinished:
         @staticmethod
-        def test_raises_exception_if_workflow_not_started():
+        def test_happy_path():
             # Given
-            run = wf_pass_tuple().prepare("in_process")
-            # When
-            with pytest.raises(WorkflowRunNotStarted) as exc_info:
-                run.wait_until_finished()
-            # Then
-            assert (
-                "You will need to call the `.start()` method prior to calling this "
-                "method."
-            ) in str(exc_info)
+            run_id = "wf.1"
+            wf_def = Mock()
+            config = Mock()
+            runtime = Mock()
+            run = _api.WorkflowRun(
+                run_id=run_id, wf_def=wf_def, runtime=runtime, config=config
+            )
 
+            # When
+            run.get_status_model()
+
+            # Then
+            runtime.get_workflow_run_status.assert_called_with(run_id)
+
+        @staticmethod
+        def test_suppresses_versionmismatch_warnings():
+            # Given
+            run_id = "wf.1"
+            wf_def = Mock()
+            config = Mock()
+            runtime = Mock()
+
+            def raise_warnings(*args, **kwargs):
+                warnings.warn("a warning that should not be suppressed")
+                warnings.warn(VersionMismatch("foo", Mock(), None))
+                warnings.warn(VersionMismatch("foo", Mock(), None))
+
+            runtime.get_workflow_run_status.side_effect = raise_warnings
+
+            run = _api.WorkflowRun(
+                run_id=run_id, wf_def=wf_def, runtime=runtime, config=config
+            )
+
+            # When
+            with pytest.warns(Warning) as record:
+                run.get_status_model()
+
+            # Then
+            assert len(record) == 1
+            assert str(record[0].message) == str(
+                UserWarning("a warning that should not be suppressed")
+            )
+
+    class TestWaitUntilFinished:
         class TestHappyPath:
             @staticmethod
             def test_verbose(monkeypatch, run, mock_runtime, capsys):
@@ -412,7 +425,6 @@ class TestWorkflowRun:
                 monkeypatch.setattr(time, "sleep", MagicMock())
 
                 # When
-                run.start()
                 run.wait_until_finished()
 
                 # Then
@@ -437,7 +449,6 @@ class TestWorkflowRun:
                 monkeypatch.setattr(time, "sleep", MagicMock())
 
                 # When
-                run.start()
                 run.wait_until_finished(verbose=False)
 
                 # Then
@@ -454,22 +465,8 @@ class TestWorkflowRun:
 
     class TestGetResults:
         @staticmethod
-        def test_raises_exception_if_workflow_not_started():
-            # Given
-            run = wf_pass_tuple().prepare("in_process")
-            # When
-            with pytest.raises(WorkflowRunNotStarted) as exc_info:
-                run.get_results()
-            # Then
-            assert (
-                "You will need to call the `.start()` method prior to calling this "
-                "method."
-            ) in str(exc_info)
-
-        @staticmethod
         def test_raises_exception_if_workflow_not_finished(run):
             # Given
-            run.start()
             # When
             with pytest.raises(WorkflowRunNotFinished) as exc_info:
                 run.get_results()
@@ -483,7 +480,6 @@ class TestWorkflowRun:
         @pytest.mark.slow
         def test_waits_when_wait_is_true(run, mock_runtime):
             # Given
-            run.start()
             # When
             results = run.get_results(wait=True)
             # Then
@@ -496,7 +492,6 @@ class TestWorkflowRun:
             # Remove RUNNING in mock
             mock_runtime.get_workflow_run_status.side_effect = None
             # Given
-            run.start()
             # When
             results = run.get_results(wait=False)
             # Then
@@ -505,17 +500,6 @@ class TestWorkflowRun:
             assert mock_runtime.get_workflow_run_status.call_count == 1
 
     class TestGetArtifacts:
-        @staticmethod
-        def test_raises_exception_if_workflow_not_started(run):
-            # When
-            with pytest.raises(WorkflowRunNotStarted) as exc_info:
-                run.get_artifacts()
-            # Then
-            assert (
-                "You will need to call the `.start()` method prior to calling this "
-                "method."
-            ) in str(exc_info)
-
         @staticmethod
         def test_handling_n_outputs():
             """
@@ -567,21 +551,8 @@ class TestWorkflowRun:
 
     class TestGetTasks:
         @staticmethod
-        def test_raises_exception_if_workflow_not_started(run):
-            with pytest.raises(WorkflowRunNotStarted) as exc_info:
-                run.get_tasks()
-
-            # Then
-            assert (
-                "You will need to call the `.start()` method prior to calling this "
-                "method."
-            ) in str(exc_info)
-
-        @staticmethod
         def test_get_tasks_from_started_workflow(run):
             # Given
-            run.start()
-
             # When
             tasks = run.get_tasks()
 
@@ -597,22 +568,8 @@ class TestWorkflowRun:
 
     class TestGetLogs:
         @staticmethod
-        def test_raises_exception_if_workflow_not_started(run):
-            # When
-            with pytest.raises(WorkflowRunNotStarted) as exc_info:
-                run.get_logs()
-
-            # Then
-            assert (
-                "You will need to call the `.start()` method prior to calling this "
-                "method."
-            ) in str(exc_info)
-
-        @staticmethod
         def test_happy_path(run):
             # Given
-            run.start()
-
             # When
             logs = run.get_logs()
 
@@ -655,22 +612,6 @@ class TestWorkflowRun:
             runtime.stop_workflow_run.assert_called_with(run_id)
 
         @staticmethod
-        def test_not_started():
-            # Given
-            run_id = None
-            wf_def = Mock()
-            runtime = Mock()
-            config = Mock()
-            run = _api.WorkflowRun(
-                run_id=run_id, wf_def=wf_def, runtime=runtime, config=config
-            )
-
-            # Then
-            with pytest.raises(WorkflowRunNotStarted):
-                # When
-                run.stop()
-
-        @staticmethod
         @pytest.mark.parametrize(
             "exc",
             [
@@ -696,6 +637,18 @@ class TestWorkflowRun:
             with pytest.raises(type(exc)):
                 # When
                 run.stop()
+
+    class TestProject:
+        def test_get_project(self, run):
+            project = run.project
+            assert project.workspace_id == "ws"
+            assert project.project_id == "proj"
+
+        def test_value_get_cached(self, run):
+            _ = run.project
+            _ = run.project
+
+            run._runtime.get_workflow_project.assert_called_once()
 
 
 class TestListWorkflows:
@@ -830,31 +783,139 @@ class TestListWorkflows:
             "parameter."
         )
 
+    def test_in_studio_passed_arguments(self, monkeypatch, mock_config_runtime):
+        # GIVEN
+        monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", "env_workspace")
+        monkeypatch.setenv("ORQ_CURRENT_PROJECT", "env_project")
+
+        # WHEN
+        _ = _api.list_workflow_runs(
+            "mocked_config",
+            project="<project ID sentinel>",
+            workspace="<workspace ID sentinel>",
+        )
+
+        # THEN
+        mock_config_runtime.list_workflow_runs.assert_called_once_with(
+            limit=None,
+            max_age=None,
+            state=None,
+            workspace="<workspace ID sentinel>",
+            project="<project ID sentinel>",
+        )
+
+    def test_in_studio_no_arguments(self, monkeypatch, mock_config_runtime):
+        # GIVEN
+        monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", "env_workspace")
+        monkeypatch.setenv("ORQ_CURRENT_PROJECT", "env_project")
+
+        # overwrite config name
+        mock_config = MagicMock(_api.RuntimeConfig)
+        mock_config._get_runtime.return_value = mock_config_runtime
+        mock_config.name = "auto"
+        monkeypatch.setattr(
+            _api.RuntimeConfig, "load", MagicMock(return_value=mock_config)
+        )
+
+        # WHEN
+        _ = _api.list_workflow_runs(
+            "mock_config",
+        )
+
+        # THEN
+        mock_config_runtime.list_workflow_runs.assert_called_once_with(
+            limit=None,
+            max_age=None,
+            state=None,
+            workspace="env_workspace",
+            project="env_project",
+        )
+
+    @staticmethod
+    def test_suppresses_versionmismatch_warnings(mock_config_runtime):
+        # Given
+        def raise_warnings(*args, **kwargs):
+            warnings.warn("a warning that should not be suppressed")
+            warnings.warn(VersionMismatch("foo", Mock(), None))
+            warnings.warn(VersionMismatch("foo", Mock(), None))
+            return [Mock(), Mock(), Mock()]
+
+        mock_config_runtime.list_workflow_runs.side_effect = raise_warnings
+
+        # When
+        with pytest.warns(Warning) as record:
+            _ = _api.list_workflow_runs("mocked_config")
+
+        # Then
+        assert len(record) == 1
+        assert str(record[0].message) == str(
+            UserWarning("a warning that should not be suppressed")
+        )
+
 
 @pytest.mark.parametrize(
-    "workspace_id, project_id, raises, expected",
+    "workspace_id, project_id, workspace_env, project_env, raises, expected",
     [
-        ("a", "b", do_not_raise(), ProjectRef(workspace_id="a", project_id="b")),
-        ("a", None, pytest.raises(ProjectInvalidError), None),
-        (None, "b", pytest.raises(ProjectInvalidError), None),
-        (None, None, do_not_raise(), None),
+        (
+            "a",
+            "b",
+            None,
+            None,
+            do_not_raise(),
+            ProjectRef(workspace_id="a", project_id="b"),
+        ),
+        ("a", None, None, None, pytest.raises(ProjectInvalidError), None),
+        (None, "b", None, None, pytest.raises(ProjectInvalidError), None),
+        (None, None, None, None, do_not_raise(), None),
+        (
+            "a",
+            "b",
+            "env_ws",
+            "env_proj",
+            do_not_raise(),
+            ProjectRef(workspace_id="a", project_id="b"),
+        ),
+        (
+            None,
+            None,
+            "env_ws",
+            "env_proj",
+            do_not_raise(),
+            ProjectRef(workspace_id="env_ws", project_id="env_proj"),
+        ),
+        (None, None, "env_ws", None, do_not_raise(), None),
+        (None, None, None, "env_proj", do_not_raise(), None),
     ],
 )
 class TestProjectId:
-    def test_prepare(self, workspace_id, project_id, raises, expected):
-        with raises:
-            wf = wf_pass_tuple().prepare(
-                "in_process", workspace_id=workspace_id, project_id=project_id
-            )
-            assert wf._project == expected
+    def test_run(
+        self,
+        workspace_id,
+        project_id,
+        workspace_env,
+        project_env,
+        raises,
+        expected,
+        monkeypatch,
+    ):
+        workflow_create_mock = Mock()
+        monkeypatch.setattr(
+            InProcessRuntime, "create_workflow_run", workflow_create_mock
+        )
+        wf_def = wf_pass_tuple()
 
-    def test_run(self, workspace_id, project_id, raises, expected, monkeypatch):
-        monkeypatch.setattr(_api._wf_run.WorkflowRun, "start", Mock())
+        if workspace_env:
+            monkeypatch.setenv(name=CURRENT_WORKSPACE_ENV, value=workspace_env)
+        if project_env:
+            monkeypatch.setenv(name=CURRENT_PROJECT_ENV, value=project_env)
+
+        monkeypatch.setattr(
+            InProcessRuntime, "create_workflow_run", workflow_create_mock
+        )
+        monkeypatch.setattr(_api._config.RuntimeConfig, "name", "auto")
         with raises:
-            wf = wf_pass_tuple().run(
-                "in_process", workspace_id=workspace_id, project_id=project_id
-            )
-            assert wf._project == expected
+            wf_def.run("in_process", workspace_id=workspace_id, project_id=project_id)
+            workflow_create_mock.assert_called_once_with(wf_def.model, expected)
 
 
 class TestListWorkspaces:

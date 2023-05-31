@@ -48,30 +48,11 @@ class TestRunningLocalInBackground:
         ):
             monkeypatch.setattr(Path, "cwd", Mock(return_value=tmp_path))
 
-            run = wf_pass_tuple().prepare(sdk.RuntimeConfig.ray())
-            run.start()
+            run = wf_pass_tuple().run(sdk.RuntimeConfig.ray())
             run.wait_until_finished()
             results = run.get_results()
 
             assert results == 3
-
-        @staticmethod
-        def test_multiple_starts(
-            patch_config_location, ray, monkeypatch, tmp_path, mock_workflow_db_location
-        ):
-            monkeypatch.setattr(Path, "cwd", Mock(return_value=tmp_path))
-
-            run = wf_pass_tuple().prepare(sdk.RuntimeConfig.ray())
-
-            run.start()
-            run.wait_until_finished()
-            results1 = run.get_results()
-
-            run.start()
-            run.wait_until_finished()
-            results2 = run.get_results()
-
-            assert results1 == results2
 
     class TestShorthand:
         @staticmethod

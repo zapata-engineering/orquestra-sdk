@@ -83,6 +83,9 @@ class Secret(NamedTuple):
     # This matches the behaviour of `sdk.secrets.get` where the config name is used to
     # get a secret when running locally.
     config_name: Optional[str] = None
+    # Workspace ID is used by local and remote runtimes to fetch a secret from a specfic
+    # workspace.
+    workspace_id: Optional[str] = None
 
 
 @dataclass(frozen=True, eq=True)
@@ -988,26 +991,31 @@ def task(
     custom_image: Optional[str] = None,
     custom_name: Optional[str] = None,
 ) -> Union[TaskDef[_P, _R], Callable[[Callable[_P, _R]], TaskDef[_P, _R]]]:
-    """Wraps a function into an SDK Task.
+    """
+    Wraps a function into an Orquestra Task.
+
+    The result is something you can use inside your `@sdk.workflow` function. If you
+    need to call the task's underlying function directly, see
+    ``orquestra.sdk.packaging.execute_task()``.
 
     Args:
         fn: A function definition to expose to Orquestra.
-        source_import: Tells Orquestra what git repo to clone to run this task
-            Only matters when running workflows remotely (on Quantum Engine).
-        dependency_imports: Tells Orquestra what other git repos need to be
-            cloned and installed before running this task. Use it only when
-            your dependencies aren't installable from PyPI. Only matters when
-            running workflows remotely (on Quantum Engine).
+        source_import: Tells Orquestra what "import" needs to be installed to access
+            this task's code. For more information see the ``Import``'s union definition
+            and the guide:
+            https://docs.orquestra.io/docs/core/sdk/guides/dependency-installation.html
+        dependency_imports: Tells Orquestra what other "imports" need to be
+            installed before running this task. For more information see:
+            https://docs.orquestra.io/docs/core/sdk/guides/dependency-installation.html
         resources: hints Orquestra what computational resources are required to
-            run this task. Only matters when running workflows remotely (on Quantum
-            Engine).
+            run this task. For more information see:
+            https://docs.orquestra.io/docs/core/sdk/guides/resource-management.html
         n_outputs: tells Orquestra how many outputs this task produces. If omitted,
             the SDK magically infers this information from the task function's source
             code by analyzing the Abstract Syntax Tree (AST).
         custom_image: tell the runtime to run this task in a docker container
-            preloaded with a custom docker image. If the runtime doesn't support
-            it, this field is ignored. Currently, this field only has effect
-            when running the workflow using QERuntime.
+            preloaded with a custom docker image. Only supported with remote workflows
+            sent to Quantum Engine and Compute Engine.
         custom_name: changes name for invocation of this task. Supports python
             formatting in brackets {} using task parameters. Currently, supports only
             values known at submit time. If parameter is unknown at submit time (e.g.

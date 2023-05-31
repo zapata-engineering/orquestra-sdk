@@ -51,7 +51,10 @@ def get(
             secret at execution time.
     """
     if _exec_ctx.global_context == _exec_ctx.ExecContext.WORKFLOW_BUILD:
-        return t.cast(str, _dsl.Secret(name=name, config_name=config_name))
+        return t.cast(
+            str,
+            _dsl.Secret(name=name, config_name=config_name, workspace_id=workspace_id),
+        )
 
     try:
         client = _auth.authorized_client(config_name)

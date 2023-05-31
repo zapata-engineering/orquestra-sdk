@@ -289,8 +289,12 @@ class RayRuntime(RuntimeInterface):
         global_run_id = os.getenv(RAY_GLOBAL_WF_RUN_ID_ENV)
         wf_run_id = global_run_id or _generate_wf_run_id(workflow_def)
 
-        # dag = make_ray_dag(self._client, workflow_def, wf_run_id, self._project_dir)
-        dag = make_ray_dag(self._client, workflow_def, wf_run_id)
+        dag = make_ray_dag(
+            self._client,
+            workflow_def=workflow_def,
+            workflow_run_id=wf_run_id,
+            project_dir=self._project_dir,
+        )
         wf_user_metadata = WfUserMetadata(workflow_def=workflow_def)
 
         # Unfortunately, Ray doesn't validate uniqueness of workflow IDs. Let's
@@ -301,11 +305,9 @@ class RayRuntime(RuntimeInterface):
             metadata=pydatic_to_json_dict(wf_user_metadata),
         )
 
-        config_name: str
-        config_name = self._config.config_name
         wf_run = StoredWorkflowRun(
             workflow_run_id=wf_run_id,
-            config_name=config_name,
+            config_name=self._config.config_name,
             workflow_def=workflow_def,
         )
         with WorkflowDB.open_project_db(self._project_dir) as db:
@@ -544,6 +546,9 @@ class RayRuntime(RuntimeInterface):
                 -limit:
             ]
         return wf_runs
+
+    def get_workflow_project(self, wf_run_id: WorkflowRunId):
+        raise exceptions.WorkspacesNotSupportedError()
 
 
 def get_current_ids() -> (

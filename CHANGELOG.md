@@ -5,17 +5,45 @@
 🚨 *Breaking Changes*
 
 🔥 *Features*
+* Add .project property to WorkflowRun to get the info about workspace and project of running workflow
+* `VersionMismatch` warnings are shown only when interacting with specific workflow runs, not while listing workflows.
+* Add `--qe` flag to `orq login`, this is the default so there is no change in behavior.
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+* Secrets with workspaces now work inside workflow functions and for personal access tokens in `GithubImport`.
+
+💅 *Improvements*
+* Add prompters to `orq wf submit` command for CE runtime if workspace and project weren't passed explicitly
+
+🥷 *Internal*
+
+📃 *Docs*
+
+
+## v0.49.1
+
+🐛 *Bug Fixes*
+* Fix CLI prompters to not throw exceptions after selecting project and workspace
+
+## v0.49.0
+
+🚨 *Breaking Changes*
+* Removed `WorkflowDef.prepare()` and `WorkflowRun.start()` functions. Use `WorkflowDef.run()` instead
+
+🔥 *Features*
 * The API list_workflow_runs() function now accepts workspace and project arguments when used with CE configs.
 * Login CLI command now accepts the name of a stored config as an alternative to the uri.
 * Choice and Checklist CLI prompts present an informative error message when there are no options rather than prompting the user to select from an empty list.
-* New API functions: list_workspaces() and list_projects(). Usable only on CE runtime
-* Setting workflow_id and project_id is now available using "orq wf submit" command
+* New API functions: list_workspaces() and list_projects(). Usable only on CE runtime.
+* Setting workflow_id and project_id is now available using "orq wf submit" command.
 * `sdk.current_run_ids()` can now be used within task code to access the workflow run ID, task invocation ID, and task run ID.
 * All CLI commands that prompted for `wf_run_id` will now first prompt for workspace and project if `wf_run_id` is not provided.
 * The error raised when trying to submit to Ray while Ray is not running now tells the user how to start Ray.
-* `sdk.secrets.list()`, `sdk.secrets.get()`, `sdk.secrets.set()` and `sdk.secrets.delete()` now accept `workspace_id` parameter to specify secrets in particular workspace
-
-👩‍🔬 *Experimental*
+* `sdk.secrets.list()`, `sdk.secrets.get()`, `sdk.secrets.set()` and `sdk.secrets.delete()` now accept `workspace_id` parameter to specify secrets in particular workspace.
+* `auto` config inside studio will infer workspace and project IDs from studio instance.
+* Support for running tasks in Docker containers with custom images on Compute Engine.
 
 🐛 *Bug Fixes*
 * Fixed tasks that failed when explicitly state `n_outputs=1` on QE and in-process.
@@ -23,11 +51,13 @@
 💅 *Improvements*
 * `orquestra-sdk` CPU Docker image has a 20% size reduction.
 * `orq login` will perform some sanity checks before saving the token.
+* If `orq up` fails, the output will now include the error message from the underlying subprocess.
 
 🥷 *Internal*
 * Fix random CI failures on socket warning
 
 📃 *Docs*
+* Update secrets guide to take workspaces into account
 
 ## v0.48.0
 

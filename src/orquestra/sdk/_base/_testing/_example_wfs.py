@@ -295,13 +295,28 @@ def parametrized_wf(a: int):
 
 @sdk.workflow
 def wf_with_secrets():
-    secret = sdk.secrets.get("some-secret", config_name="test_config_default")
+    secret = sdk.secrets.get(
+        "some-secret", config_name="test_config_default", workspace_id="test_workspace"
+    )
     return capitalize_inline(secret)
 
 
 @sdk.workflow
-def workflow_parametrised_with_resources(cpu=None, memory=None, gpu=None):
-    return add(1, 1).with_invocation_meta(cpu=cpu, memory=memory, gpu=gpu)
+def workflow_parametrised_with_resources(
+    cpu=None, memory=None, gpu=None, custom_image=None
+):
+    future = add(1, 1)
+
+    if cpu is not None:
+        future = future.with_invocation_meta(cpu=cpu)
+    if memory is not None:
+        future = future.with_invocation_meta(memory=memory)
+    if gpu is not None:
+        future = future.with_invocation_meta(gpu=gpu)
+    if custom_image is not None:
+        future = future.with_invocation_meta(custom_image=custom_image)
+
+    return future
 
 
 @sdk.workflow

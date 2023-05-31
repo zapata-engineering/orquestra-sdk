@@ -27,6 +27,8 @@ def runtime(tmp_path_factory: pytest.TempPathFactory, change_db_location):
     yield rt
 
 
+# Uses real Ray connection
+@pytest.mark.slow
 # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
 # unraisable exceptions. Last tested with Ray 2.3.0.
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")

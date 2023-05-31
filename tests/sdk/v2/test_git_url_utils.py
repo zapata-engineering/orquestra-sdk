@@ -85,8 +85,12 @@ class TestBuildGitURL:
 
         secret_name = "my_secret"
         secret_config = "secret config"
+        secret_workspace = "secret workspace"
         git_url.password = SecretNode(
-            id="mocked secret", secret_name=secret_name, secret_config=secret_config
+            id="mocked secret",
+            secret_name=secret_name,
+            secret_config=secret_config,
+            workspace_id=secret_workspace,
         )
 
         url = _git_url_utils.build_git_url(git_url)
@@ -94,7 +98,9 @@ class TestBuildGitURL:
             "https://git:<mocked secret>@github.com"
             "/zapatacomputing/orquestra-workflow-sdk"
         )
-        secrets_get.assert_called_once_with(secret_name, config_name=secret_config)
+        secrets_get.assert_called_once_with(
+            secret_name, config_name=secret_config, workspace_id=secret_workspace
+        )
 
     def test_unknown_protocol_in_original(self, git_url: GitURL):
         git_url.original_url = "custom_protocol://<blah>"

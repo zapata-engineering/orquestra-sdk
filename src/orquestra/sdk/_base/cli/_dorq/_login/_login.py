@@ -10,7 +10,7 @@ import typing as t
 from aiohttp import web
 
 from orquestra.sdk.exceptions import LocalConfigLoginError, UserCancelledPrompt
-from orquestra.sdk.schema.configs import RuntimeName
+from orquestra.sdk.schema.configs import RemoteRuntime
 
 from .. import _arg_resolvers, _repos
 from .._ui import _presenters, _prompts
@@ -50,13 +50,13 @@ class Action:
         config: t.Optional[str],
         url: t.Optional[str],
         token: t.Optional[str],
-        ce: bool,
+        runtime_name: RemoteRuntime,
     ):
         """
         Call the login command action, catching any exceptions that arise.
         """
         try:
-            self._on_cmd_call_with_exceptions(config, url, token, ce)
+            self._on_cmd_call_with_exceptions(config, url, token, runtime_name)
         except Exception as e:
             self._exception_presenter.show_error(e)
 
@@ -65,7 +65,7 @@ class Action:
         config: t.Optional[str],
         url: t.Optional[str],
         token: t.Optional[str],
-        ce: bool,
+        runtime_name: RemoteRuntime,
     ):
         """
         Implementation of the command action. Doesn't catch exceptions.
@@ -94,12 +94,10 @@ class Action:
 
             # If the CLI disagrees with the stored config about which runtime to use,
             # prompt the user to agree to changing the config to match the cli args.
-            # TODO: This can be reworked once we have a --qe flag.
-            if ce != (loaded_config.runtime_name == RuntimeName.CE_REMOTE):
+            if runtime_name != loaded_config.runtime_name:
                 if not self._prompter.confirm(
                     f"Config '{loaded_config.config_name}' will be changed from "
-                    f"{loaded_config.runtime_name} to "
-                    f"{RuntimeName.CE_REMOTE if ce else RuntimeName.QE_REMOTE}. "
+                    f"{loaded_config.runtime_name} to {runtime_name}. "
                     "Continue?",
                     True,
                 ):
@@ -108,31 +106,33 @@ class Action:
         _url = url or _url
 
         if token is None:
-            self._prompt_for_login(_url, ce)
+            self._prompt_for_login(_url, runtime_name)
         else:
-            self._save_token(_url, token, ce)
+            self._save_token(_url, token, runtime_name)
 
-    def _prompt_for_login(self, url: str, ce: bool):
+    def _prompt_for_login(self, url: str, runtime_name: RemoteRuntime):
         try:
-            asyncio.run(self._get_token_from_server(url, ce, 60))
+            asyncio.run(self._get_token_from_server(url, runtime_name, 60))
         except (web.GracefulExit, KeyboardInterrupt):
             pass
         if self._login_server.token is None:
             # We didn't get a token, this means the collector timed out or otherwise
             # couldn't receive a token
             # In this case, print out the manual instructions
-            self._login_presenter.prompt_for_login(self._login_url, url, ce)
+            self._login_presenter.prompt_for_login(self._login_url, url, runtime_name)
             return
-        self._save_token(url, self._login_server.token, ce)
+        self._save_token(url, self._login_server.token, runtime_name)
 
-    def _save_token(self, url, token, ce: bool):
-        config_name = self._config_repo.store_token_in_config(url, token, ce)
+    def _save_token(self, url, token, runtime_name: RemoteRuntime):
+        config_name = self._config_repo.store_token_in_config(url, token, runtime_name)
         self._login_presenter.prompt_config_saved(url, config_name)
 
-    async def _get_token_from_server(self, url, ce, timeout):
+    async def _get_token_from_server(
+        self, url: str, runtime_name: RemoteRuntime, timeout: int
+    ):
         try:
             port = await self._login_server.start(url)
-            self._login_url = self._runtime_repo.get_login_url(url, ce, port)
+            self._login_url = self._runtime_repo.get_login_url(url, runtime_name, port)
             browser_opened = self._login_presenter.open_url_in_browser(self._login_url)
             if browser_opened:
                 self._login_presenter.print_login_help()

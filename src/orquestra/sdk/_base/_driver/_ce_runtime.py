@@ -490,3 +490,6 @@ class CERuntime(RuntimeInterface):
             raise exceptions.NotFoundError(
                 f"Could not find workspace with id: {workspace_id}."
             ) from e
+
+    def get_workflow_project(self, wf_run_id: WorkflowRunId) -> ProjectRef:
+        return self._client.get_workflow_project(wf_run_id)

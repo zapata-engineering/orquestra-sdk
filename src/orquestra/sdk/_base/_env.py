@@ -20,10 +20,24 @@ Example:
     ORQ_DB_PATH=/tmp/workflows.db
 """
 
-
 PASSPORT_FILE_ENV = "ORQUESTRA_PASSPORT_FILE"
 """
 Consumed by the Workflow SDK to set auth in remote contexts
+"""
+
+CURRENT_CLUSTER_ENV = "ORQ_CURRENT_CLUSTER"
+"""
+Set by Studio to share cluster's URL
+"""
+
+CURRENT_WORKSPACE_ENV = "ORQ_CURRENT_WORKSPACE"
+"""
+Set by Studio to share current workspace ID
+"""
+
+CURRENT_PROJECT_ENV = "ORQ_CURRENT_PROJECT"
+"""
+Set by Studio to share current project ID
 """
 
 ORQ_VERBOSE = "ORQ_VERBOSE"
@@ -65,6 +79,13 @@ Example:
 RAY_GLOBAL_WF_RUN_ID_ENV = "GLOBAL_WF_RUN_ID"
 """
 Used to set the workflow run ID in a Ray workflow
+"""
+
+RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV = "ORQ_RAY_SET_CUSTOM_IMAGE_RESOURCES"
+"""
+Used to configure if Ray uses custom images
+Example:
+    ORQ_RAY_SET_CUSTOM_IMAGE_RESOURCES=1
 """
 
 
