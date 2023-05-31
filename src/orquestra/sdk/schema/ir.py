@@ -34,6 +34,10 @@ class SecretNode(BaseModel):
     # runtimes.
     secret_config: t.Optional[str] = None
 
+    # Workspace ID
+    # This is used locally and remotely to get a secret from a specific workspace
+    workspace_id: t.Optional[str] = None
+
 
 class GitURL(BaseModel):
     original_url: str

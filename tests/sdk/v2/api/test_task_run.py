@@ -385,7 +385,10 @@ class TestTaskRun:
                     "wf_single_task_with_secret_parent",
                     [
                         ir.SecretNode(
-                            id="secret-0", secret_name="test", secret_config=None
+                            id="secret-0",
+                            secret_name="test",
+                            secret_config=None,
+                            workspace_id=None,
                         )
                     ],
                     {},
