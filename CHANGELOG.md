@@ -16,7 +16,8 @@
 🥷 *Internal*
 
 📃 *Docs*
-
+* Update resource management guide for Compute Engine
+* Add section for using custom images on Compute Engine
 
 ## v0.49.1
 
