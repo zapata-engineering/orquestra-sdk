@@ -1,11 +1,11 @@
-Using Custom Docker Images on Compute Engine
+Using Custom Container Images on Compute Engine
 ============================================
 
 When running workflows remotely on Compute Engine, your tasks run in a container that uses one of the
-``orquestra-sdk-base`` images depending on whether you have requested a GPU or not (you can see their source code
+``orquestra-sdk-base`` images depending on whether the ``sdk.task`` requires a GPU resource or not (you can see their source code
 `here <https://github.com/zapatacomputing/orquestra-workflow-sdk/blob/main/docker/Dockerfile>`_ and
 `here <https://github.com/zapatacomputing/orquestra-workflow-sdk/blob/main/docker/cuda.Dockerfile>`_). These images
-are automatically selected based on your workflow's SDK version. If your task needs extra dependencies that you
+are automatically selected based on the workflow's SDK version. If your task needs extra dependencies that you
 cannot install using imports (such as native libraries or executable binaries), you can use one of the above images
 as your base image to publish a new image that you will use as your container when running your task.
 
@@ -21,7 +21,7 @@ your SDK version and your GPU needs (``-cuda`` needs to be picked for GPU workfl
 
 .. note::
 
-    It is your responsibility as the author of the custom image to keep your image up to date with new SDK versions.
+    It is the responsibility of the author of the custom image to keep the image up to date with new SDK versions.
 
 The base images run as a user named ``orquestra`` with uid ``1000``. Since these are Ubuntu based images, you
 can install any package that you need from Ubuntu repositories (by doing ``RUN apt install <package name>``).
@@ -54,8 +54,8 @@ You can run workflows that use custom images only on Compute Engine and not on Q
 need to request more than one node for your workflow as Compute Engine supports custom images only on clustered mode
 which is activated when more than one node is requested for a workflow.
 
-When you use a custom image, ``nodes`` workflow resource becomes the maximum number of nodes that will be created per
-unique Docker image you use. For example, if you use two different custom images for your tasks and specify ``nodes=4``
+When you use a custom image, ``nodes`` workflow resource indicates the maximum number of nodes that may be allocated
+with the custom image, if needed. For example, if you use two different custom images for your tasks and specify ``nodes=4``
 in your workflow resources, a maximum of 12 nodes will be created (note the addition of default image). As in the case
 without any custom images, containers will get created and destroyed based on resource requests from tasks.
 See the diagram below which shows the example scenario with two different custom images:
