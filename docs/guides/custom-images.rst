@@ -4,10 +4,10 @@ Using Custom Docker Images on Compute Engine
 When running workflows remotely on Compute Engine, your tasks run in a container that uses one of the
 ``orquestra-sdk-base`` images depending on whether you have requested a GPU or not (you can see their source code
 `here <https://github.com/zapatacomputing/orquestra-workflow-sdk/blob/main/docker/Dockerfile>`_ and
-`here <https://github.com/zapatacomputing/orquestra-workflow-sdk/blob/main/docker/cuda.Dockerfile>`_).
-If your task needs extra dependencies that you cannot install using imports (such as native libraries or
-executable binaries), you can use one of the above images as your base image to publish a new image that you
-will use as your container when running your task.
+`here <https://github.com/zapatacomputing/orquestra-workflow-sdk/blob/main/docker/cuda.Dockerfile>`_). These images
+are automatically selected based on your workflow's SDK version. If your task needs extra dependencies that you
+cannot install using imports (such as native libraries or executable binaries), you can use one of the above images
+as your base image to publish a new image that you will use as your container when running your task.
 
 Building an Image
 -----------------
