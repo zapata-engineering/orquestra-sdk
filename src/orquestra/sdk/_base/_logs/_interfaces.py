@@ -5,10 +5,25 @@
 Logs-related interfaces.
 """
 import typing as t
+from dataclasses import dataclass
 
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
 from orquestra.sdk.schema.ir import TaskInvocationId
+
+
+@dataclass(frozen=True)
+class WorkflowLogs:
+    per_task: t.Mapping[TaskInvocationId, t.Sequence[str]]
+    """
+    A mapping with task logs. Each key-value pair corresponds to one task
+    invocation.
+    - key: task invocation ID (see
+        orquestra.sdk._base.ir.WorkflowDef.task_invocations)
+    - value: log lines from running this task invocation
+    """
+
+    env_setup: t.Sequence[str]
 
 
 class LogReader(t.Protocol):
@@ -28,17 +43,8 @@ class LogReader(t.Protocol):
         """
         ...
 
-    def get_workflow_logs(
-        self, wf_run_id: WorkflowRunId
-    ) -> t.Dict[TaskInvocationId, t.List[str]]:
+    def get_workflow_logs(self, wf_run_id: WorkflowRunId) -> WorkflowLogs:
         """
         Reads all available logs printed during execution of this workflow run.
-
-        Returns:
-            A mapping with task logs. Each key-value pair corresponds to one task
-            invocation.
-            - key: task invocation ID (see
-                orquestra.sdk._base.ir.WorkflowDef.task_invocations)
-            - value: log lines from running this task invocation
         """
         ...

@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pydantic
 
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRunId
 
@@ -86,8 +87,8 @@ def _iter_log_lines(paths: t.Iterable[Path]) -> t.Iterator[bytes]:
 
 class DirectRayReader:
     """
-    Directly reads log files produced by Ray, bypassing the fluent-bit service.
-    Implements the orquestra.sdk._base.abc.LogReader interface.
+    Directly reads log files produced by Ray.
+    Implements the ``LogReader`` interface.
 
     Requires ``ray_temp`` to be consistent with the path passed when initializing the
     Ray cluster. For example, if the cluster was started with::
@@ -128,9 +129,7 @@ class DirectRayReader:
         ]
         return [log.json() for log in task_logs]
 
-    def get_workflow_logs(
-        self, wf_run_id: WorkflowRunId
-    ) -> t.Dict[TaskInvocationId, t.List[str]]:
+    def get_workflow_logs(self, wf_run_id: WorkflowRunId) -> WorkflowLogs:
         parsed_logs = self._get_parsed_logs()
 
         logs_dict: t.Dict[TaskInvocationId, t.List[str]] = {}
@@ -143,4 +142,11 @@ class DirectRayReader:
 
             logs_dict.setdefault(log.task_inv_id, []).append(log.json())
 
-        return logs_dict
+        # TODO: read env setup logs for local Ray
+        # https://zapatacomputing.atlassian.net/browse/ORQSDK-643
+        env_setup = []
+
+        return WorkflowLogs(
+            per_task=logs_dict,
+            env_setup=env_setup,
+        )

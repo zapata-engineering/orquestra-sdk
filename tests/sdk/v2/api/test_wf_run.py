@@ -18,6 +18,7 @@ import pytest
 
 from orquestra.sdk._base import _api, _workflow, serde
 from orquestra.sdk._base._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
+from orquestra.sdk._base._logs._interfaces import LogReader, WorkflowLogs
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
 from orquestra.sdk._base._spaces._api import list_projects, list_workspaces
 from orquestra.sdk._base._spaces._structs import ProjectRef, Workspace
@@ -122,7 +123,14 @@ class TestWorkflowRun:
 
     @staticmethod
     @pytest.fixture
-    def mock_runtime(sample_wf_def):
+    def sample_task_inv_ids(sample_wf_def) -> t.List[ir.TaskInvocationId]:
+        wf_def_model = sample_wf_def.model
+        task_invs = wf_def_model.task_invocations.values()
+        return [inv.id for inv in task_invs]
+
+    @staticmethod
+    @pytest.fixture
+    def mock_runtime(sample_task_inv_ids):
         runtime = create_autospec(RuntimeInterface, name="runtime")
         # For getting workflow ID
         runtime.create_workflow_run.return_value = "wf_pass_tuple-1"
@@ -162,31 +170,22 @@ class TestWorkflowRun:
         runtime.get_workflow_project.return_value = ProjectRef(
             workspace_id="ws", project_id="proj"
         )
-        wf_def_model = sample_wf_def.model
-        task_invs = list(wf_def_model.task_invocations.values())
-        # Get logs, the runtime interface returns invocation IDs
-        runtime.get_workflow_logs.return_value = {
-            task_invs[0].id: ["woohoo!\n"],
-            task_invs[1].id: ["another\n", "line\n"],
-            # This task invocation was executed, but it produced no logs.
-            task_invs[2].id: [],
-            # There's also 4th task invocation in the workflow def, it wasn't executed
-            # yet, so we don't return it.
-        }
+        invs = sample_task_inv_ids
+
         running_wf_run_model.task_runs = [
             TaskRunModel(
                 id="task_run1",
-                invocation_id=task_invs[0].id,
+                invocation_id=invs[0],
                 status=RunStatus(state=State.SUCCEEDED),
             ),
             TaskRunModel(
                 id="task_run2",
-                invocation_id=task_invs[1].id,
+                invocation_id=invs[1],
                 status=RunStatus(state=State.FAILED),
             ),
             TaskRunModel(
                 id="task_run3",
-                invocation_id=task_invs[2].id,
+                invocation_id=invs[2],
                 status=RunStatus(state=State.FAILED),
             ),
         ]
@@ -568,17 +567,34 @@ class TestWorkflowRun:
 
     class TestGetLogs:
         @staticmethod
-        def test_happy_path(run):
+        def test_happy_path(run: _api.WorkflowRun, sample_task_inv_ids):
             # Given
+            invs = sample_task_inv_ids
+            log_reader = create_autospec(LogReader)
+            log_reader.get_workflow_logs.return_value = WorkflowLogs(
+                {
+                    invs[0]: ["woohoo!\n"],
+                    invs[1]: ["another\n", "line\n"],
+                    # This task invocation was executed, but it produced no logs.
+                    invs[2]: [],
+                    # There's also 4th task invocation in the workflow def, it wasn't
+                    # executed yet, so we don't return it.
+                },
+                [],
+            )
+
+            run._runtime = log_reader
+
             # When
             logs = run.get_logs()
 
             # Then
-            assert len(logs) == 3
+            assert len(logs.per_task) == 3
+
             expected_inv = "invocation-0-task-capitalize"
-            assert expected_inv in logs
-            assert len(logs[expected_inv]) == 1
-            assert logs[expected_inv][0] == "woohoo!\n"
+            assert expected_inv in logs.per_task
+            assert len(logs.per_task[expected_inv]) == 1
+            assert logs.per_task[expected_inv][0] == "woohoo!\n"
 
     class TestGetConfig:
         @staticmethod

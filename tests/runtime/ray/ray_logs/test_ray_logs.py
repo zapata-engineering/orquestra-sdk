@@ -11,6 +11,7 @@ from unittest.mock import Mock
 import pytest
 
 from orquestra.sdk._ray import _ray_logs
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 
 INFO_LOG = _ray_logs.WFLog(
     timestamp=datetime(2023, 2, 9, 11, 26, 7, 98413, tzinfo=timezone.utc),
@@ -307,7 +308,7 @@ class TestDirectRayReader:
         @pytest.mark.parametrize(
             "wf_run_id,parsed_logs,expected",
             [
-                pytest.param("wf.1", [], {}, id="no_parsed_logs"),
+                pytest.param("wf.1", [], WorkflowLogs({}, []), id="no_parsed_logs"),
                 pytest.param(
                     "wf.1",
                     [
@@ -339,15 +340,18 @@ class TestDirectRayReader:
                             task_run_id="wf.1@inv2",
                         ),
                     ],
-                    {
-                        "inv1": [
-                            '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": "wf.1", "task_inv_id": "inv1", "task_run_id": "wf.1@inv1"}',  # noqa: E501
-                            '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "general kenobi!", "wf_run_id": "wf.1", "task_inv_id": "inv1", "task_run_id": "wf.1@inv1"}',  # noqa: E501
-                        ],
-                        "inv2": [
-                            '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "and another one", "wf_run_id": "wf.1", "task_inv_id": "inv2", "task_run_id": "wf.1@inv2"}',  # noqa: E501
-                        ],
-                    },
+                    WorkflowLogs(
+                        {
+                            "inv1": [
+                                '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": "wf.1", "task_inv_id": "inv1", "task_run_id": "wf.1@inv1"}',  # noqa: E501
+                                '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "general kenobi!", "wf_run_id": "wf.1", "task_inv_id": "inv1", "task_run_id": "wf.1@inv1"}',  # noqa: E501
+                            ],
+                            "inv2": [
+                                '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "and another one", "wf_run_id": "wf.1", "task_inv_id": "inv2", "task_run_id": "wf.1@inv2"}',  # noqa: E501
+                            ],
+                        },
+                        [],
+                    ),
                     id="matching_wf_run",
                 ),
                 pytest.param(
@@ -363,7 +367,7 @@ class TestDirectRayReader:
                             task_run_id=None,
                         )
                     ],
-                    {},
+                    WorkflowLogs({}, []),
                     id="no_task_ids",
                 ),
                 pytest.param(
@@ -379,7 +383,7 @@ class TestDirectRayReader:
                             task_run_id="wf.2@inv2",
                         )
                     ],
-                    {},
+                    WorkflowLogs({}, []),
                     id="other_wf_run",
                 ),
             ],

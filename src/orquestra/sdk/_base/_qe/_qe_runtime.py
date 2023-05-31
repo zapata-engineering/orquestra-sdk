@@ -28,6 +28,7 @@ from orquestra.sdk._base._conversions._yaml_exporter import (
     workflow_to_yaml,
 )
 from orquestra.sdk._base._db import WorkflowDB
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.schema.configs import RuntimeConfiguration
@@ -788,9 +789,7 @@ class QERuntime(RuntimeInterface):
 
         return log_lines
 
-    def get_workflow_logs(
-        self, wf_run_id: WorkflowRunId
-    ) -> Dict[TaskInvocationId, List[str]]:
+    def get_workflow_logs(self, wf_run_id: WorkflowRunId) -> WorkflowLogs:
         try:
             workflow_run = self.get_workflow_run_status(wf_run_id)
         except exceptions.NotFoundError as e:
@@ -798,13 +797,19 @@ class QERuntime(RuntimeInterface):
             raise e
 
         # NOTE: we're making N requests here.
-        return {
+        task_logs = {
             task_run.invocation_id: self._get_task_run_logs(
                 wf_run_id=wf_run_id,
                 task_run_id=task_run.id,
             )
             for task_run in workflow_run.task_runs
         }
+        # Package installations are included in per-task logs on QE.
+        # At the moment we don't have a clear way to separate the env setup vs task logs
+        # and we probably won't implement it. QE is going to be deprecated _soon_
+        # anyway.
+        env_logs = []
+        return WorkflowLogs(per_task=task_logs, env_setup=env_logs)
 
     def stop_workflow_run(self, run_id: WorkflowRunId) -> None:
         """Terminates a workflow run.
