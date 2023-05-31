@@ -5,13 +5,16 @@
 🚨 *Breaking Changes*
 
 🔥 *Features*
-* Add .project property to WorkflowRun to get the info about worksapce and project of running workflow
+* Add .project property to WorkflowRun to get the info about workspace and project of running workflow
+* `VersionMismatch` warnings are shown only when interacting with specific workflow runs, not while listing workflows.
+* Add `--qe` flag to `orq login`, this is the default so there is no change in behavior.
 
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
 
 💅 *Improvements*
+* Add prompters to `orq wf submit` command for CE runtime if workspace and project weren't passed explicitly
 
 🥷 *Internal*
 
