@@ -18,8 +18,8 @@ import pytest
 
 from orquestra.sdk._base import _api, _workflow, serde
 from orquestra.sdk._base._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
-from orquestra.sdk._base._logs._interfaces import LogReader, WorkflowLogs
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
+from orquestra.sdk._base._logs._interfaces import LogReader, WorkflowLogs
 from orquestra.sdk._base._spaces._api import list_projects, list_workspaces
 from orquestra.sdk._base._spaces._structs import ProjectRef, Workspace
 from orquestra.sdk._base.abc import RuntimeInterface

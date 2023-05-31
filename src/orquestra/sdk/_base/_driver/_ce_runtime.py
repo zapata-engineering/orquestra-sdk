@@ -11,8 +11,8 @@ from typing import Dict, List, Optional, Sequence, Union
 
 from orquestra.sdk import Project, ProjectRef, Workspace, exceptions
 from orquestra.sdk._base import _retry, serde
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._db import WorkflowDB
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.kubernetes.quantity import parse_quantity
 from orquestra.sdk.schema.configs import RuntimeConfiguration

@@ -30,7 +30,6 @@ from orquestra.sdk.schema.workflow_run import (
     WorkspaceId,
 )
 
-
 # A typealias that hints where we expect raw artifact values.
 ArtifactValue = t.Any
 

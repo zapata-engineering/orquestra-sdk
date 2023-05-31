@@ -10,8 +10,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from orquestra.sdk._ray import _ray_logs
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
+from orquestra.sdk._ray import _ray_logs
 
 INFO_LOG = _ray_logs.WFLog(
     timestamp=datetime(2023, 2, 9, 11, 26, 7, 98413, tzinfo=timezone.utc),

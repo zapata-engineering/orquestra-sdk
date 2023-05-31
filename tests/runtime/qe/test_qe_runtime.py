@@ -21,8 +21,8 @@ from orquestra.sdk._base._conversions._yaml_exporter import (
     pydantic_to_yaml,
     workflow_to_yaml,
 )
-from orquestra.sdk._base._qe import _qe_runtime
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
+from orquestra.sdk._base._qe import _qe_runtime
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing._example_wfs import my_workflow
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName

@@ -12,8 +12,8 @@ import pytest
 
 import orquestra.sdk as sdk
 from orquestra.sdk._base import _api, _workflow, serde
-from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk._base._logs._interfaces import LogReader
+from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk._ray import _dag
 from orquestra.sdk.exceptions import TaskRunNotFound
 from orquestra.sdk.schema import ir

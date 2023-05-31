@@ -7,9 +7,8 @@ Logs-related interfaces.
 import typing as t
 from dataclasses import dataclass
 
-from orquestra.sdk.schema.workflow_run import WorkflowRunId
-
 from orquestra.sdk.schema.ir import TaskInvocationId
+from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
 
 @dataclass(frozen=True)

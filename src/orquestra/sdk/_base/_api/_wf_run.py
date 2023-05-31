@@ -29,9 +29,9 @@ from ...schema.workflow_run import ProjectId, State
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
 from .. import serde
+from .._logs._interfaces import WorkflowLogs
 from .._spaces._resolver import resolve_studio_project_ref
 from ..abc import RuntimeInterface
-from .._logs._interfaces import WorkflowLogs
 from ._config import RuntimeConfig, _resolve_config
 from ._task_run import TaskRun
 
