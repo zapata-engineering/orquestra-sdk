@@ -295,7 +295,9 @@ def parametrized_wf(a: int):
 
 @sdk.workflow
 def wf_with_secrets():
-    secret = sdk.secrets.get("some-secret", config_name="test_config_default")
+    secret = sdk.secrets.get(
+        "some-secret", config_name="test_config_default", workspace_id="test_workspace"
+    )
     return capitalize_inline(secret)
 
 

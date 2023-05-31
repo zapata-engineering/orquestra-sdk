@@ -12,6 +12,7 @@
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
+* Secrets with workspaces now work inside workflow functions and for personal access tokens in `GithubImport`.
 
 💅 *Improvements*
 * Add prompters to `orq wf submit` command for CE runtime if workspace and project weren't passed explicitly
