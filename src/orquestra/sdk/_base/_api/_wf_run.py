@@ -16,6 +16,7 @@ from ...exceptions import (
     ConfigNameNotFoundError,
     ProjectInvalidError,
     UnauthorizedError,
+    VersionMismatch,
     WorkflowRunCanNotBeTerminated,
     WorkflowRunNotFinished,
     WorkflowRunNotFoundError,
@@ -280,7 +281,9 @@ class WorkflowRun:
         """
         Serializable representation of the workflow run state at a given point in time.
         """
-        return self._runtime.get_workflow_run_status(self.run_id)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=VersionMismatch)
+            return self._runtime.get_workflow_run_status(self.run_id)
 
     def get_results(self, wait: bool = False) -> t.Sequence[t.Any]:
         """
@@ -447,13 +450,15 @@ def list_workflow_runs(
     # Grab the "workflow runs" from the runtime.
     # Note: WorkflowRun means something else in runtime land. To avoid overloading, this
     #       import is aliased to WorkflowRunStatus in here.
-    run_statuses: t.Sequence[WorkflowRunMinimal] = runtime.list_workflow_runs(
-        limit=limit,
-        max_age=_parse_max_age(max_age),
-        state=state,
-        workspace=workspace,
-        project=project,
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=VersionMismatch)
+        run_statuses: t.Sequence[WorkflowRunMinimal] = runtime.list_workflow_runs(
+            limit=limit,
+            max_age=_parse_max_age(max_age),
+            state=state,
+            workspace=workspace,
+            project=project,
+        )
 
     # We need to convert to the public API notion of a WorkflowRun
     runs = []
