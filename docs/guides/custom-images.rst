@@ -1,5 +1,5 @@
 Using Custom Docker Images on Compute Engine
-=====================
+============================================
 
 When running workflows remotely on Compute Engine, your tasks run in a container that uses one of the
 ``orquestra-sdk-base`` images depending on whether you have requested a GPU or not (you can see their source code
