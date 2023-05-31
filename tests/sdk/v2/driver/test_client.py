@@ -1615,8 +1615,9 @@ class TestClient:
             def test_logs_decode(
                 endpoint_mocker, client: DriverClient, workflow_run_id: str
             ):
+                # Given
                 endpoint_mocker(
-                    body=resp_mocks.make_get_wf_run_logs_response_with_content(),
+                    body=resp_mocks.make_get_wf_run_logs_response(),
                     match=[
                         responses.matchers.query_param_matcher(
                             {"workflowRunId": workflow_run_id}
@@ -1624,72 +1625,11 @@ class TestClient:
                     ],
                 )
 
-                assert client.get_workflow_run_logs(workflow_run_id) == [
-                    ":actor_name:Manager",
-                    ":actor_name:Manager",
-                    ":task_name:create_ray_workflow",
-                    '2023-03-14 14:32:57,554\tINFO api.py:203 -- Workflow job created. [id="wf.wf_def.3c5f938"].',  # noqa: E501
-                    ":task_name:_workflow_task_executor_remote",
-                    "2023-03-14 14:32:57,933\tINFO task_executor.py:78 -- Task status [RUNNING]\t[wf.wf_def.3c5f938@invocation-0-task-do-thing]",  # noqa: E501
-                    'Traceback (most recent call last):\n  File "/home/orquestra/venv/lib/python3.9/site-packages/orquestra/sdk/_ray/_dag.py", line 192, in _ray_remote\n    return wrapped(*inner_args, **inner_kwargs)\n  File "/home/orquestra/venv/lib/python3.9/site-packages/orquestra/sdk/_ray/_dag.py", line 147, in __call__\n    return self._fn(*unpacked_args, **unpacked_kwargs)\n  File "/Users/benjaminmummery/Documents/Projects/orquestra-workflow-sdk/../scratch/scratch.py", line 12, in do_thing\nException: Blah\n',  # noqa: E501
-                    "Traceback (most recent call last):",
-                    '  File "/home/orquestra/venv/lib/python3.9/site-packages/orquestra/sdk/_ray/_dag.py", line 192, in _ray_remote',  # noqa: E501
-                    "    return wrapped(*inner_args, **inner_kwargs)",
-                    '  File "/home/orquestra/venv/lib/python3.9/site-packages/orquestra/sdk/_ray/_dag.py", line 147, in __call__',  # noqa: E501
-                    "    return self._fn(*unpacked_args, **unpacked_kwargs)",
-                    '  File "/Users/benjaminmummery/Documents/Projects/orquestra-workflow-sdk/../scratch/scratch.py", line 12, in do_thing',  # noqa: E501
-                    "Exception: Blah",
-                    "2023-03-14 14:32:57,944\tERROR worker.py:399 -- Unhandled error (suppress with 'RAY_IGNORE_UNHANDLED_ERRORS=1'): \x1b[36mray::WorkflowManagementActor.execute_workflow()\x1b[39m (pid=178, ip=10.200.134.19, repr=<ray.workflow.workflow_access.WorkflowManagementActor object at 0x7fc4c4288760>)",  # noqa: E501
-                    "ray.exceptions.RayTaskError: \x1b[36mray::_workflow_task_executor_remote()\x1b[39m (pid=235, ip=10.200.134.19)",  # noqa: E501
-                    '  File "/home/orquestra/venv/lib/python3.9/site-packages/ray/workflow/task_executor.py", line 115, in _workflow_task_executor_remote',  # noqa: E501
-                    "    return _workflow_task_executor(",
-                    '  File "/home/orquestra/venv/lib/python3.9/site-packages/ray/workflow/task_executor.py", line 84, in _workflow_task_executor',  # noqa: E501
-                    "    raise e",
-                    '  File "/home/orquestra/venv/lib/python3.9/site-packages/ray/workflow/task_executor.py", line 79, in _workflow_task_executor',  # noqa: E501
-                    "    output = func(*args, **kwargs)",
-                    '  File "/home/orquestra/venv/lib/python3.9/site-packages/orquestra/sdk/_ray/_dag.py", line 199, in _ray_remote',  # noqa: E501
-                    "    raise e",
-                    '  File "/home/orquestra/venv/lib/python3.9/site-packages/orquestra/sdk/_ray/_dag.py", line 192, in _ray_remote',  # noqa: E501
-                    "    return wrapped(*inner_args, **inner_kwargs)",
-                    '  File "/home/orquestra/venv/lib/python3.9/site-packages/orquestra/sdk/_ray/_dag.py", line 147, in __call__',  # noqa: E501
-                    "    return self._fn(*unpacked_args, **unpacked_kwargs)",
-                    '  File "/Users/benjaminmummery/Documents/Projects/orquestra-workflow-sdk/../scratch/scratch.py", line 12, in do_thing',  # noqa: E501
-                    "Exception: Blah",
-                    "The above exception was the direct cause of the following exception:",  # noqa: E501
-                    "\x1b[36mray::WorkflowManagementActor.execute_workflow()\x1b[39m (pid=178, ip=10.200.134.19, repr=<ray.workflow.workflow_access.WorkflowManagementActor object at 0x7fc4c4288760>)",  # noqa: E501
-                    '  File "/usr/local/lib/python3.9/concurrent/futures/_base.py", line 439, in result',  # noqa: E501
-                    "    return self.__get_result()",
-                    '  File "/usr/local/lib/python3.9/concurrent/futures/_base.py", line 391, in __get_result',  # noqa: E501
-                    "    raise self._exception",
-                    '  File "/home/orquestra/venv/lib/python3.9/site-packages/ray/workflow/workflow_access.py", line 209, in execute_workflow',  # noqa: E501
-                    "    await executor.run_until_complete(job_id, context, wf_store)",
-                    '  File "/home/orquestra/venv/lib/python3.9/site-packages/ray/workflow/workflow_executor.py", line 109, in run_until_complete',  # noqa: E501
-                    "    await asyncio.gather(",
-                    '  File "/home/orquestra/venv/lib/python3.9/site-packages/ray/workflow/workflow_executor.py", line 356, in _handle_ready_task',  # noqa: E501
-                    "    raise err",
-                    "ray.workflow.exceptions.WorkflowExecutionError: Workflow[id=wf.wf_def.3c5f938] failed during execution.",  # noqa: E501
-                    ":task_name:create_ray_workflow",
-                    ":task_name:_workflow_task_executor_remote",
-                    ":actor_name:WorkflowManagementActor",
-                    "2023-03-14 14:32:57,923\tINFO workflow_executor.py:86 -- Workflow job [id=wf.wf_def.3c5f938] started.",  # noqa: E501
-                    "2023-03-14 14:32:57,938\tERROR workflow_executor.py:306 -- Task status [FAILED] due to an exception raised by the task.\t[wf.wf_def.3c5f938@invocation-0-task-do-thing]",  # noqa: E501
-                    "2023-03-14 14:32:57,942\tERROR workflow_executor.py:352 -- Workflow 'wf.wf_def.3c5f938' failed due to \x1b[36mray::_workflow_task_executor_remote()\x1b[39m (pid=235, ip=10.200.134.19)",  # noqa: E501
-                    '  File "/home/orquestra/venv/lib/python3.9/site-packages/ray/workflow/task_executor.py", line 115, in _workflow_task_executor_remote',  # noqa: E501
-                    "    return _workflow_task_executor(",
-                    '  File "/home/orquestra/venv/lib/python3.9/site-packages/ray/workflow/task_executor.py", line 84, in _workflow_task_executor',  # noqa: E501
-                    "    raise e",
-                    '  File "/home/orquestra/venv/lib/python3.9/site-packages/ray/workflow/task_executor.py", line 79, in _workflow_task_executor',  # noqa: E501
-                    "    output = func(*args, **kwargs)",
-                    '  File "/home/orquestra/venv/lib/python3.9/site-packages/orquestra/sdk/_ray/_dag.py", line 199, in _ray_remote',  # noqa: E501
-                    "    raise e",
-                    '  File "/home/orquestra/venv/lib/python3.9/site-packages/orquestra/sdk/_ray/_dag.py", line 192, in _ray_remote',  # noqa: E501
-                    "    return wrapped(*inner_args, **inner_kwargs)",
-                    '  File "/home/orquestra/venv/lib/python3.9/site-packages/orquestra/sdk/_ray/_dag.py", line 147, in __call__',  # noqa: E501
-                    "    return self._fn(*unpacked_args, **unpacked_kwargs)",
-                    '  File "/Users/benjaminmummery/Documents/Projects/orquestra-workflow-sdk/../scratch/scratch.py", line 12, in do_thing',  # noqa: E501
-                    "Exception: Blah",
-                    ":actor_name:WorkflowManagementActor",
-                ]
+                # When
+                messages = client.get_workflow_run_logs(workflow_run_id)
+
+                # Then
+                assert messages == resp_mocks.make_get_wf_run_logs_messages()
 
             @staticmethod
             def test_params_encoding(
@@ -1700,7 +1640,7 @@ class TestClient:
                 """
                 endpoint_mocker(
                     # json=resp_mocks.make_get_wf_run_logs_response(),
-                    body=resp_mocks.make_get_wf_run_logs_response_with_content(),
+                    body=resp_mocks.make_get_wf_run_logs_response(),
                     match=[
                         responses.matchers.query_param_matcher(
                             {"workflowRunId": workflow_run_id}
@@ -1759,8 +1699,7 @@ class TestClient:
                 endpoint_mocker, client: DriverClient, token: str, workflow_run_id: str
             ):
                 endpoint_mocker(
-                    # json=resp_mocks.make_get_wf_run_logs_response(),
-                    body=resp_mocks.make_get_wf_run_logs_response_with_content(),
+                    body=resp_mocks.make_get_wf_run_logs_response(),
                     match=[
                         responses.matchers.header_matcher(
                             {"Authorization": f"Bearer {token}"}

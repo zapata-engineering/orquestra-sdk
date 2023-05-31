@@ -821,7 +821,7 @@ class QERuntime(RuntimeInterface):
         # and we probably won't implement it. QE is going to be deprecated _soon_
         # anyway.
         env_logs: List[str] = []
-        return WorkflowLogs(per_task=task_logs, env_setup=env_logs)
+        return WorkflowLogs(per_task=task_logs, env_setup=env_logs, other=[])
 
     def stop_workflow_run(self, run_id: WorkflowRunId) -> None:
         """Terminates a workflow run.

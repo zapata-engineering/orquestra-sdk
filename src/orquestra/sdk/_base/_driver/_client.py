@@ -20,7 +20,6 @@ import requests
 from requests import codes
 
 from orquestra.sdk import ProjectRef
-from orquestra.sdk._ray._ray_logs import WFLog
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
@@ -618,7 +617,9 @@ class DriverClient:
 
     # --- Workflow Logs ---
 
-    def get_workflow_run_logs(self, wf_run_id: _models.WorkflowRunID) -> List[str]:
+    def get_workflow_run_logs(
+        self, wf_run_id: _models.WorkflowRunID
+    ) -> List[_models.Message]:
         """
         Gets the logs of a workflow run from the workflow driver
 
@@ -657,23 +658,19 @@ class DriverClient:
         decoded = untarred.read().decode()
 
         # Parse the decoded data as logs
-        # TODO: index by taskinvocationID rather than workflowrunID [ORQSDK-777]
-        logs = []
-        for section in decoded.split("\n"):
-            if len(section) < 1:
+        # TODO: index by taskinvocationID rather than workflowrunID [ORQSDK-840]
+        # logs = []
+        messages = []
+        for section_str in decoded.split("\n"):
+            if len(section_str) < 1:
                 continue
-            for log in json.loads(section):
-                try:
-                    # Orquestra logs are jsonable - where we can we parse these and
-                    # extract the useful information
-                    interpreted_log = WFLog.parse_raw(log[1]["log"])
-                    logs.append(interpreted_log.message)
-                except pydantic.ValidationError:
-                    # If the log isn't jsonable (i.e. it comes from Ray) we just return
-                    # plain log content.
-                    logs.append(log[1]["log"])
 
-        return logs
+            events = pydantic.parse_raw_as(_models.Section, section_str)
+
+            for event in events:
+                messages.append(event.message)
+
+        return messages
 
     def get_task_run_logs(self, task_run_id: _models.TaskRunID) -> bytes:
         """
