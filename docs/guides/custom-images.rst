@@ -47,8 +47,8 @@ Using the Image on Compute Engine
 ---------------------------------
 
 You can run workflows that use custom images only on Compute Engine and not on Quantum Engine or locally. You
-also need to request more than one node while doing so because Compute Engine supports using custom images
-only when more than one node is requested.
+need to request more than one node for your workflow as Compute Engine supports custom images only on clustered mode
+which is activated when more than one node is requested for a workflow.
 
 When you use a custom image, ``nodes`` workflow resource becomes the maximum number of nodes that will be created per
 unique Docker image you use. For example, if you use two different custom images for your tasks and specify ``nodes=5``
