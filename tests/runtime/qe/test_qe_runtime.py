@@ -728,7 +728,7 @@ class TestGetWorkflowRunStatus:
             ),
         )
 
-    def test_get_workflow_run_status_fails(self, mock_workflow_db_location):
+    def test_get_workflow_run_status_not_in_db(self, mock_workflow_db_location):
         # Fake QE configuration
         config = RuntimeConfiguration(
             config_name="hello",
@@ -743,6 +743,31 @@ class TestGetWorkflowRunStatus:
             _ = runtime.get_workflow_run_status(stub_runID)
 
         assert stub_runID in str(exc_info)
+
+    def test_get_workflow_run_status_not_found(self, monkeypatch, runtime, mocked_responses):
+        workflow_run_id = "hello-there-abc123-r000"
+        # Given
+        _get_workflow_run = Mock(
+            return_value=StoredWorkflowRun(
+                workflow_run_id=workflow_run_id,
+                config_name="hello",
+                workflow_def=TEST_WORKFLOW,
+            )
+        )
+        monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
+        mocked_responses.add(
+            responses.GET,
+            "http://localhost/v1/workflow",
+            status=404,
+        )
+
+        # When
+        with pytest.raises(exceptions.WorkflowRunNotFoundError) as exc_info:
+            _ = runtime.get_workflow_run_status("hello-there-abc123-r000")
+
+        # Then
+        assert workflow_run_id in str(exc_info)
+
 
     def test_task_waiting_with_message(self, monkeypatch, runtime, mocked_responses):
         _get_workflow_run = Mock(
