@@ -18,6 +18,7 @@
 * Add prompters to `orq wf submit` command for CE runtime if workspace and project weren't passed explicitly
 
 🥷 *Internal*
+* Use external URI to cluster when using `auto` config inside studio
 
 📃 *Docs*
 
