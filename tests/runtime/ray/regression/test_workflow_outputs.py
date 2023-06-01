@@ -14,6 +14,12 @@ from orquestra.sdk.schema import configs
 PRODUCING_SDK_VERSIONS_TO_TEST = ["0.46.0", "0.47.0"]
 BASE_PATH = Path(__file__).parent / "data"
 
+# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
+# unraisable exceptions. Last tested with Ray 2.4.0.
+pytestmark = pytest.mark.filterwarnings(
+    "ignore::pytest.PytestUnraisableExceptionWarning"
+)
+
 
 @pytest.fixture(scope="module")
 def runtime(tmp_path_factory: pytest.TempPathFactory, change_db_location):
@@ -29,9 +35,6 @@ def runtime(tmp_path_factory: pytest.TempPathFactory, change_db_location):
 
 # Uses real Ray connection
 @pytest.mark.slow
-# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
-# unraisable exceptions. Last tested with Ray 2.3.0.
-@pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 # We intentionally load old workflow definitions
 @pytest.mark.filterwarnings("ignore::orquestra.sdk.exceptions.VersionMismatch")
 class TestOutputs:

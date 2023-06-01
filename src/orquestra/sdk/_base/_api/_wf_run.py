@@ -8,6 +8,7 @@ import time
 import typing as t
 import warnings
 from datetime import timedelta
+from functools import cached_property
 from pathlib import Path
 
 from ...exceptions import (
@@ -15,6 +16,7 @@ from ...exceptions import (
     ConfigNameNotFoundError,
     ProjectInvalidError,
     UnauthorizedError,
+    VersionMismatch,
     WorkflowRunCanNotBeTerminated,
     WorkflowRunNotFinished,
     WorkflowRunNotFoundError,
@@ -23,11 +25,12 @@ from ...exceptions import (
 from ...schema import ir
 from ...schema.configs import ConfigName
 from ...schema.local_database import StoredWorkflowRun
-from ...schema.workflow_run import ProjectId, State, TaskInvocationId
+from ...schema.workflow_run import ProjectId, State
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
 from .. import serde
 from .._in_process_runtime import InProcessRuntime
+from .._logs._interfaces import WorkflowLogs
 from .._spaces._resolver import resolve_studio_project_ref
 from .._spaces._structs import ProjectRef
 from ..abc import RuntimeInterface
@@ -235,6 +238,18 @@ class WorkflowRun:
         """
         return self._run_id
 
+    @cached_property
+    def project(self):
+        """Get the project and workspace id of a workflowrun,
+        Currently supported only on CE
+
+        Raises:
+            orquestra.sdk.exceptions.WorkspacesNotSupportedError: when runtime
+            does not support workspaces and projects
+        """
+
+        return self._runtime.get_workflow_project(self.run_id)
+
     def wait_until_finished(self, frequency: float = 0.25, verbose=True) -> State:
         """Block until the workflow run finishes.
 
@@ -305,7 +320,9 @@ class WorkflowRun:
         """
         Serializable representation of the workflow run state at a given point in time.
         """
-        return self._runtime.get_workflow_run_status(self.run_id)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=VersionMismatch)
+            return self._runtime.get_workflow_run_status(self.run_id)
 
     def get_results(self, wait: bool = False) -> t.Sequence[t.Any]:
         """
@@ -381,19 +398,12 @@ class WorkflowRun:
             for inv_id, inv_output in inv_outputs.items()
         }
 
-    def get_logs(self) -> t.Mapping[TaskInvocationId, t.List[str]]:
+    def get_logs(self) -> WorkflowLogs:
         """
         Unstable: this API will change.
 
-        Returns logs produced by all task runs in this workflow. If you're interested in
-        only subset of tasks, consider using ``WorkflowRun.get_tasks()`` and
-        ``TaskRun.get_logs()``.
-
-        Returns:
-            A dictionary where each key-value entry corresponds to a single task run.
-            The key identifies a task invocation, a single node in the workflow graph.
-            The value is a list of log lines produced by the corresponding task
-            invocation while running this workflow.
+        Returns logs produced this workflow. See ``WorkflowLogs`` attributes for log
+        categories or ``TaskRun.get_logs()`` for logs related to only a single task.
         """
         return self._runtime.get_workflow_logs(wf_run_id=self.run_id)
 
@@ -472,13 +482,15 @@ def list_workflow_runs(
     # Grab the "workflow runs" from the runtime.
     # Note: WorkflowRun means something else in runtime land. To avoid overloading, this
     #       import is aliased to WorkflowRunStatus in here.
-    run_statuses: t.Sequence[WorkflowRunMinimal] = runtime.list_workflow_runs(
-        limit=limit,
-        max_age=_parse_max_age(max_age),
-        state=state,
-        workspace=workspace,
-        project=project,
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=VersionMismatch)
+        run_statuses: t.Sequence[WorkflowRunMinimal] = runtime.list_workflow_runs(
+            limit=limit,
+            max_age=_parse_max_age(max_age),
+            state=state,
+            workspace=workspace,
+            project=project,
+        )
 
     # We need to convert to the public API notion of a WorkflowRun
     runs = []

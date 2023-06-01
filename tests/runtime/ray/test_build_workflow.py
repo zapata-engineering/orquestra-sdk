@@ -332,7 +332,7 @@ class TestArgumentUnwrapper:
 
             # Then
             mock_secret_get.assert_called_with(
-                secret_node.secret_name, config_name=None
+                secret_node.secret_name, config_name=None, workspace_id=None
             )
             fn.assert_called_with(expected_arg)
 

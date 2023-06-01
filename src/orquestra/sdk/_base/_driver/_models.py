@@ -84,13 +84,16 @@ class CreateWorkflowDefResponse(pydantic.BaseModel):
 class GetWorkflowDefResponse(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/7b472546225d0a87be3694ddaa330db4ddcad3c1/openapi/src/schemas/WorkflowDefinition.yaml
+        https://github.com/zapatacomputing/workflow-driver/blob/cb61512e9f3da24addd933c7259aa4584ab04e4f/openapi/src/schemas/WorkflowDefinition.yaml
     """
 
     id: WorkflowDefID
     created: datetime
     owner: str
     workflow: WorkflowDef
+    workspaceId: WorkspaceId
+    project: ProjectId
+    sdkVersion: str
 
 
 class ListWorkflowDefsRequest(pydantic.BaseModel):

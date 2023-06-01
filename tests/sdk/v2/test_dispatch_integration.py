@@ -4,7 +4,7 @@
 import json
 import os
 import sys
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 
 try:
     import importlib.metadata as metadata  # type: ignore
@@ -55,17 +55,21 @@ def wf_with_ctx():
 
 
 @pytest.mark.parametrize(
-    "wf, expected_out",
+    "wf, expected_out, secrets_calls",
     [
         # Checks that the task was executed correctly.
-        (wf_with_uppercasing, '"EMILIANO ZAPATA"'),
+        (wf_with_uppercasing, '"EMILIANO ZAPATA"', []),
         # Checks that we set the execution context flag correctly.
-        (wf_with_ctx, '"PLATFORM_QE"'),
-        (wf_with_secrets, '"Mocked"'),
-        (wf_with_explicit_n_outputs, "true"),
+        (wf_with_ctx, '"PLATFORM_QE"', []),
+        (
+            wf_with_secrets,
+            '"Mocked"',
+            [call("zri:v1::0:test_workspace:secret:some-secret")],
+        ),
+        (wf_with_explicit_n_outputs, "true", []),
     ],
 )
-def test_execution(monkeypatch, tmp_path, wf, expected_out):
+def test_execution(monkeypatch, tmp_path, wf, expected_out, secrets_calls):
     """The dispatcher is complicated, with multiple layers of abstraction. This
     test verifies that something we output from the yaml converter can be
     executed by the dispatcher.
@@ -84,6 +88,9 @@ def test_execution(monkeypatch, tmp_path, wf, expected_out):
     # For example, we may have a dirty branch, have extra commits the release version
     # doesn't have, etc.
     version_mock = Mock(return_value="0.1.0")
+    secrets_get = Mock(
+        return_value=_models.SecretDefinition(name="mocked", value="mocked")
+    )
     monkeypatch.setattr(metadata, "version", version_mock)
     # Setup a mocked secrets client
     passport_file = tmp_path / "passport"
@@ -92,7 +99,7 @@ def test_execution(monkeypatch, tmp_path, wf, expected_out):
     monkeypatch.setattr(
         _client.SecretsClient,
         "get_secret",
-        Mock(return_value=_models.SecretDefinition(name="mocked", value="mocked")),
+        secrets_get,
     )
 
     wf_model = wf().model
@@ -133,6 +140,8 @@ def test_execution(monkeypatch, tmp_path, wf, expected_out):
             "serialization_format": "JSON",
             "value": expected_out,
         }
+
+    assert secrets_get.mock_calls == secrets_calls
 
 
 class TestModuleCaching:

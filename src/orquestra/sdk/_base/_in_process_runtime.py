@@ -152,7 +152,9 @@ class InProcessRuntime(abc.RuntimeInterface):
         }
         for id, secret in workflow_def.secret_nodes.items():
             consts[id] = secrets.get(
-                secret.secret_name, config_name=secret.secret_config
+                secret.secret_name,
+                config_name=secret.secret_config,
+                workspace_id=secret.workspace_id,
             )
         # We'll store artifacts for this run here.
         self._artifact_store[run_id] = {}
@@ -350,3 +352,6 @@ class InProcessRuntime(abc.RuntimeInterface):
         raise NotImplementedError(
             "This functionality isn't available for 'in_process' runtime"
         )
+
+    def get_workflow_project(self, wf_run_id: WorkflowRunId):
+        raise exceptions.WorkspacesNotSupportedError()

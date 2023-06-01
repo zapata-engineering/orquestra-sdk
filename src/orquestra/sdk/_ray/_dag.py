@@ -24,8 +24,9 @@ from .. import exceptions
 from .._base import _services, serde
 from .._base._db import WorkflowDB
 from .._base._env import RAY_GLOBAL_WF_RUN_ID_ENV
+from .._base._logs._interfaces import LogReader
 from .._base._spaces._structs import ProjectRef
-from .._base.abc import LogReader, RuntimeInterface
+from .._base.abc import RuntimeInterface
 from ..schema import ir
 from ..schema.configs import RuntimeConfiguration
 from ..schema.local_database import StoredWorkflowRun
@@ -546,6 +547,9 @@ class RayRuntime(RuntimeInterface):
                 -limit:
             ]
         return wf_runs
+
+    def get_workflow_project(self, wf_run_id: WorkflowRunId):
+        raise exceptions.WorkspacesNotSupportedError()
 
 
 def get_current_ids() -> (

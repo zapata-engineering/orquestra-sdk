@@ -15,13 +15,12 @@ from abc import ABC, abstractmethod
 from datetime import timedelta
 from pathlib import Path
 
-from orquestra.sdk._base._spaces._structs import Project, ProjectRef, Workspace
-from orquestra.sdk.exceptions import WorkspacesNotSupportedError
-from orquestra.sdk.schema.configs import RuntimeConfiguration
-from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
-from orquestra.sdk.schema.local_database import StoredWorkflowRun
-from orquestra.sdk.schema.responses import WorkflowResult
-from orquestra.sdk.schema.workflow_run import (
+from ..exceptions import WorkspacesNotSupportedError
+from ..schema.configs import RuntimeConfiguration
+from ..schema.ir import TaskInvocationId, WorkflowDef
+from ..schema.local_database import StoredWorkflowRun
+from ..schema.responses import WorkflowResult
+from ..schema.workflow_run import (
     ProjectId,
     State,
     WorkflowRun,
@@ -29,46 +28,14 @@ from orquestra.sdk.schema.workflow_run import (
     WorkflowRunMinimal,
     WorkspaceId,
 )
-
-
-class LogReader(t.Protocol):
-    """
-    A component that reads logs produced by tasks and workflows.
-    """
-
-    def get_task_logs(
-        self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
-    ) -> t.List[str]:
-        """
-        Reads all available logs, specific to a single task invocation/run.
-
-        Returns:
-            Log lines printed when running this task invocation. If the task didn't
-            produce any logs this should be an empty list.
-        """
-        ...
-
-    def get_workflow_logs(
-        self, wf_run_id: WorkflowRunId
-    ) -> t.Dict[TaskInvocationId, t.List[str]]:
-        """
-        Reads all available logs printed during execution of this workflow run.
-
-        Returns:
-            A mapping with task logs. Each key-value pair corresponds to one task
-            invocation.
-            - key: task invocation ID (see
-                orquestra.sdk._base.ir.WorkflowDef.task_invocations)
-            - value: log lines from running this task invocation
-        """
-        ...
-
+from ._logs._interfaces import LogReader, WorkflowLogs
+from ._spaces._structs import Project, ProjectRef, Workspace
 
 # A typealias that hints where we expect raw artifact values.
 ArtifactValue = t.Any
 
 
-class RuntimeInterface(ABC):
+class RuntimeInterface(ABC, LogReader):
     """
     The main abstraction for managing Orquestra workflows. Allows swapping the
     implementations related to local vs remote runs.
@@ -178,19 +145,10 @@ class RuntimeInterface(ABC):
         """
         raise NotImplementedError()
 
-    def get_task_logs(
-        self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
-    ) -> t.List[str]:
+    @abstractmethod
+    def get_workflow_project(self, wf_run_id: WorkflowRunId):
         """
-        See LogReader.get_task_logs()
-        """
-        raise NotImplementedError()
-
-    def get_workflow_logs(
-        self, wf_run_id: WorkflowRunId
-    ) -> t.Dict[TaskInvocationId, t.List[str]]:
-        """
-        See LogReader.get_task_logs()
+        Returns project and workspace IDs of given workflow
         """
         raise NotImplementedError()
 
@@ -205,6 +163,16 @@ class RuntimeInterface(ABC):
         List workspaces available to a user. Works only on CE
         """
         raise WorkspacesNotSupportedError()
+
+    @abstractmethod
+    def get_task_logs(
+        self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
+    ) -> t.List[str]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def get_workflow_logs(self, wf_run_id: WorkflowRunId) -> WorkflowLogs:
+        raise NotImplementedError()
 
 
 class WorkflowRepo(ABC):

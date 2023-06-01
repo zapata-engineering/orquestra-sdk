@@ -14,7 +14,7 @@ import responses
 import orquestra.sdk as sdk
 from orquestra.sdk._base._driver import _exceptions
 from orquestra.sdk._base._driver._client import DriverClient, Paginated
-from orquestra.sdk._base._driver._models import Resources
+from orquestra.sdk._base._driver._models import GetWorkflowDefResponse, Resources
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import JSONResult, PickleResult
@@ -129,7 +129,13 @@ class TestClient:
 
                 returned_wf_def = client.get_workflow_def(workflow_def_id)
 
-                assert returned_wf_def == workflow_def
+                assert returned_wf_def.workflow == workflow_def
+                assert (
+                    returned_wf_def.workspaceId
+                    == "evil/emiliano.zapata@zapatacomputing.com"
+                )
+                assert returned_wf_def.project == "emiliano's project"
+                assert returned_wf_def.sdkVersion == "0x859"
 
             @staticmethod
             def test_sets_auth(
@@ -628,9 +634,11 @@ class TestClient:
                 workflow_def: WorkflowDef,
                 monkeypatch: pytest.MonkeyPatch,
             ):
-                mock = create_autospec(client.get_workflow_def)
-                mock.return_value = workflow_def
-                monkeypatch.setattr(client, "get_workflow_def", mock)
+                mock = create_autospec(GetWorkflowDefResponse)
+                mock.workflow = workflow_def
+                function_mock = create_autospec(client.get_workflow_def)
+                function_mock.return_value = mock
+                monkeypatch.setattr(client, "get_workflow_def", function_mock)
 
             @staticmethod
             def test_invalid_wf_run_id(
@@ -769,9 +777,11 @@ class TestClient:
                 workflow_def: WorkflowDef,
                 monkeypatch: pytest.MonkeyPatch,
             ):
-                mock = create_autospec(client.get_workflow_def)
-                mock.return_value = workflow_def
-                monkeypatch.setattr(client, "get_workflow_def", mock)
+                mock = create_autospec(GetWorkflowDefResponse)
+                mock.workflow = workflow_def
+                function_mock = create_autospec(client.get_workflow_def)
+                function_mock.return_value = mock
+                monkeypatch.setattr(client, "get_workflow_def", function_mock)
 
             @staticmethod
             def test_list_workflow_runs(
@@ -2051,3 +2061,161 @@ class TestClient:
 
             with pytest.raises(exception):
                 _ = client.get_login_url(port)
+
+    class TestWorkflowProject:
+        # ------ queries ------
+
+        class TestGet:
+            @pytest.fixture
+            def workflow_run_status(self):
+                return RunStatus(state=State.WAITING, start_time=None, end_time=None)
+
+            @staticmethod
+            @pytest.fixture
+            def endpoint_mocker(endpoint_mocker_base, base_uri: str, workflow_run_id):
+                """
+                Returns a helper for mocking requests. Assumes that most of the tests
+                inside this class contain a very similar set up.
+                """
+
+                return endpoint_mocker_base(
+                    responses.GET,
+                    f"{base_uri}/api/workflow-runs/{workflow_run_id}",
+                )
+
+            @pytest.fixture
+            def workflow_workspace(self):
+                return "my workspace"
+
+            @pytest.fixture
+            def workflow_project(self):
+                return "my project"
+
+            @staticmethod
+            @pytest.fixture
+            def mock_get_workflow_def(
+                workflow_workspace,
+                workflow_project,
+                client: DriverClient,
+                monkeypatch: pytest.MonkeyPatch,
+            ):
+                mock = create_autospec(GetWorkflowDefResponse)
+                mock.workspaceId = workflow_workspace
+                mock.project = workflow_project
+                function_mock = create_autospec(client.get_workflow_def)
+                function_mock.return_value = mock
+                monkeypatch.setattr(client, "get_workflow_def", function_mock)
+
+            @staticmethod
+            def test_invalid_wf_run_id(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/workflow-run.yaml#L20
+                    status=400,
+                )
+
+                with pytest.raises(_exceptions.InvalidWorkflowRunID):
+                    _ = client.get_workflow_project(workflow_run_id)
+
+            @staticmethod
+            def test_missing_wf_run(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/workflow-run.yaml#L28
+                    status=404,
+                )
+
+                with pytest.raises(_exceptions.WorkflowRunNotFound):
+                    _ = client.get_workflow_project(workflow_run_id)
+
+            @staticmethod
+            def test_happy_path(
+                endpoint_mocker,
+                mock_get_workflow_def,
+                workflow_workspace,
+                workflow_project,
+                client: DriverClient,
+                workflow_run_id: str,
+                workflow_def_id: str,
+                workflow_run_status: RunStatus,
+            ):
+                endpoint_mocker(
+                    json=resp_mocks.make_get_wf_run_missing_task_run_status(
+                        workflow_run_id, workflow_def_id, workflow_run_status
+                    ),
+                )
+
+                project = client.get_workflow_project(workflow_run_id)
+
+                assert project.workspace_id == workflow_workspace
+                assert project.project_id == workflow_project
+
+            @staticmethod
+            def test_sets_auth(
+                endpoint_mocker,
+                mock_get_workflow_def,
+                client: DriverClient,
+                token,
+                workflow_run_id,
+                workflow_def_id,
+                workflow_run_status,
+            ):
+                endpoint_mocker(
+                    json=resp_mocks.make_get_wf_run_missing_task_run_status(
+                        id_=workflow_run_id,
+                        workflow_def_id=workflow_def_id,
+                        status=workflow_run_status,
+                    ),
+                    match=[
+                        responses.matchers.header_matcher(
+                            {"Authorization": f"Bearer {token}"}
+                        )
+                    ],
+                )
+
+                client.get_workflow_project(workflow_run_id)
+
+                # The assertion is done by mocked_responses
+
+            @staticmethod
+            def test_unauthorized(
+                endpoint_mocker, client: DriverClient, workflow_run_id
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/workflow-run.yaml#L26
+                    status=401,
+                )
+
+                with pytest.raises(_exceptions.InvalidTokenError):
+                    _ = client.get_workflow_project(workflow_run_id)
+
+            @staticmethod
+            def test_forbidden(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/workflow-run.yaml#L28
+                    status=403,
+                )
+
+                with pytest.raises(_exceptions.ForbiddenError):
+                    _ = client.get_workflow_project(workflow_run_id)
+
+            @staticmethod
+            def test_unknown_error(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/workflow-run.yaml#L36
+                    status=500,
+                )
+
+                with pytest.raises(_exceptions.UnknownHTTPError):
+                    _ = client.get_workflow_project(workflow_run_id)

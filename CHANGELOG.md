@@ -3,6 +3,36 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+* `WorkflowRun.get_logs()` now returns a data structure with logs split into categories.
+
+🔥 *Features*
+* Add .project property to WorkflowRun to get the info about workspace and project of running workflow
+* `VersionMismatch` warnings are shown only when interacting with specific workflow runs, not while listing workflows.
+* Add `--qe` flag to `orq login`, this is the default so there is no change in behavior.
+* Bump Ray version to 2.4.0
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+* Secrets with workspaces now work inside workflow functions and for personal access tokens in `GithubImport`.
+* `list_workspaces` and `list_projects` work inside studio with `auto` config
+
+💅 *Improvements*
+* Add prompters to `orq wf submit` command for CE runtime if workspace and project weren't passed explicitly
+
+🥷 *Internal*
+
+📃 *Docs*
+
+
+## v0.49.1
+
+🐛 *Bug Fixes*
+* Fix CLI prompters to not throw exceptions after selecting project and workspace
+
+## v0.49.0
+
+🚨 *Breaking Changes*
 * Removed `WorkflowDef.prepare()` and `WorkflowRun.start()` functions. Use `WorkflowDef.run()` instead
 
 🔥 *Features*
@@ -17,8 +47,6 @@
 * `sdk.secrets.list()`, `sdk.secrets.get()`, `sdk.secrets.set()` and `sdk.secrets.delete()` now accept `workspace_id` parameter to specify secrets in particular workspace.
 * `auto` config inside studio will infer workspace and project IDs from studio instance.
 * Support for running tasks in Docker containers with custom images on Compute Engine.
-
-👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
 * Fixed tasks that failed when explicitly state `n_outputs=1` on QE and in-process.

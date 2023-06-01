@@ -8,6 +8,7 @@ import pytest
 
 from orquestra.sdk import Project, Workspace, exceptions
 from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _models
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._testing._example_wfs import (
     my_workflow,
     workflow_parametrised_with_resources,
@@ -1143,14 +1144,17 @@ class TestGetWorkflowLogs:
 
         # Then
         mocked_client.get_workflow_run_logs.assert_called_once_with(workflow_run_id)
-        assert logs == {
-            "UNKNOWN TASK INV ID": [
-                "<message sentinel 1>",
-                "<message sentinel 2>",
-                "<message sentinel 3>",
-                "<message sentinel 4>",
-            ]
-        }
+        assert logs == WorkflowLogs(
+            per_task={
+                "UNKNOWN TASK INV ID": [
+                    "<message sentinel 1>",
+                    "<message sentinel 2>",
+                    "<message sentinel 3>",
+                    "<message sentinel 4>",
+                ]
+            },
+            env_setup=[],
+        )
 
     @pytest.mark.parametrize(
         "exception, expected_exception",

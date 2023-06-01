@@ -701,7 +701,7 @@ class TestCLI:
             capture_output=True,
         )
         run_ce = subprocess.run(
-            ["orq", "wf", "submit", "-c", "CE", "workflow_defs"],
+            ["orq", "wf", "submit", "-c", "CE", "workflow_defs", "-w", "ws", "-p", "p"],
             check=True,
             capture_output=True,
         )
@@ -776,7 +776,7 @@ class TestCLI:
             capture_output=True,
         )
         run_ce = subprocess.run(
-            ["orq", "wf", "submit", "-c", "CE", "workflow_defs"],
+            ["orq", "wf", "submit", "-c", "CE", "workflow_defs", "-w", "ws", "-p", "p"],
             check=True,
             capture_output=True,
         )
@@ -959,7 +959,7 @@ class TestCLIDownloadDir:
             capture_output=True,
         )
         subprocess.run(
-            ["orq", "wf", "submit", "-c", "CE", "workflow_defs"],
+            ["orq", "wf", "submit", "-c", "CE", "workflow_defs", "-w", "ws", "-p", "p"],
             check=True,
             capture_output=True,
         )
