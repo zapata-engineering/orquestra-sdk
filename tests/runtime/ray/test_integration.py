@@ -729,12 +729,12 @@ class TestDirectRayReader:
         reader = _ray_logs.DirectRayReader(Path(ray_params._temp_dir))
 
         # When
-        logs_dict = reader.get_workflow_logs(wf_run_id=wf_run_id)
+        logs = reader.get_workflow_logs(wf_run_id=wf_run_id)
 
         # Then
         log_lines_joined = "".join(
             log_line
-            for task_log_lines in logs_dict.values()
+            for task_log_lines in logs.per_task.values()
             for log_line in task_log_lines
         )
 
@@ -784,13 +784,13 @@ def test_ray_direct_reader_no_duplicate_lines(
     _wait_to_finish_wf(run_id, runtime)
 
     # When
-    logs_dict = reader.get_workflow_logs(wf_run_id=run_id)
+    logs = reader.get_workflow_logs(wf_run_id=run_id)
 
     # Then
     # First check for the tell_tale in all log lines
     matches = [
         tell_tale in log_line
-        for task_log_lines in logs_dict.values()
+        for task_log_lines in logs.per_task.values()
         for log_line in task_log_lines
     ]
 
