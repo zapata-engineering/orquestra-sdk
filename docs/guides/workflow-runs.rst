@@ -53,9 +53,9 @@ determines what runtime to use (in-process, local Ray, remote).
 In addition, a configuration contains details required for connection with the runtime, like cluster URL and auth token.
 
 The built-in configurations include:
-* ``in_process``. You can use it via ``sdk.RuntimeConfiguration.in_process()` or by passing `"in_process"` whenever config is required.
-* ``ray``. You can use it via ``sdk.RuntimeConfiguration.ray()` or by passing `"ray"` whenever config is required.
-Configurations for interaction with remote runtime are created by using the CLI for auth flow (<paste tutorial link here>).
+* ``in_process``. You can use it via ``sdk.RuntimeConfiguration.in_process()`` or by passing ``"in_process"`` whenever config is required.
+* ``ray``. You can use it via ``sdk.RuntimeConfiguration.ray()`` or by passing ``"ray"`` whenever config is required.
+Configurations for interaction with remote runtime are created by using the :ref:`CLI for auth flow<cli_remote_login>`.
 
 .. literalinclude:: ../examples/config_management.py
     :start-after: >> Tutorial code snippet: save config
