@@ -1,15 +1,29 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
+"""
+In-process implementation of the runtime interface.
+"""
+
 import typing as t
 import warnings
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 
 from orquestra.sdk import ProjectRef, exceptions
 from orquestra.sdk._base import abc
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.responses import WorkflowResult
-from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun, WorkflowRun
+from orquestra.sdk.schema.workflow_run import (
+    ProjectId,
+    RunStatus,
+    State,
+    TaskRun,
+    TaskRunId,
+    WorkflowRun,
+    WorkflowRunId,
+    WorkspaceId,
+)
 
 from .. import secrets
 from . import serde
@@ -19,6 +33,41 @@ from .dispatch import locate_fn_ref
 WfRunId = str
 ArtifactValue = t.Any
 TaskOutputs = t.Tuple[ArtifactValue, ...]
+
+global_current_run_ids: t.Optional[
+    t.Tuple[WorkflowRunId, ir.TaskInvocationId, TaskRunId]
+] = None
+"""
+Global variable to store the current workflow, task inv, and task run IDs.
+
+This should _only_ be used in the context of the set_ids context manager or the
+`get_current_in_process_ids` function, and should be None at all other times.
+"""
+
+
+@contextmanager
+def set_ids(ids: t.Tuple[WorkflowRunId, ir.TaskInvocationId, TaskRunId]):
+    """
+    Temporarily set the global_current_run_ids global variable.
+
+    global_current_run_ids will be set to a tuple of the current WorkflowRunID,
+    TaskInvocationID, and TaskRunID.
+    """
+
+    global global_current_run_ids
+    old_ids = global_current_run_ids
+    global_current_run_ids = ids
+    yield
+    global_current_run_ids = old_ids
+
+
+def get_current_in_process_ids() -> (
+    t.Optional[t.Tuple[WorkflowRunId, ir.TaskInvocationId, TaskRunId]]
+):
+    """
+    Getter for the current In process run IDs.
+    """
+    return global_current_run_ids
 
 
 def _make_completed_task_run(workflow_run_id, start_time, end_time, task_inv):
@@ -102,7 +151,9 @@ class InProcessRuntime(abc.RuntimeInterface):
         }
         for id, secret in workflow_def.secret_nodes.items():
             consts[id] = secrets.get(
-                secret.secret_name, config_name=secret.secret_config
+                secret.secret_name,
+                config_name=secret.secret_config,
+                workspace_id=secret.workspace_id,
             )
         # We'll store artifacts for this run here.
         self._artifact_store[run_id] = {}
@@ -122,12 +173,14 @@ class InProcessRuntime(abc.RuntimeInterface):
                 fn = task_fn._TaskDef__sdk_task_body
             except AttributeError:
                 fn = task_fn
-            fn_output = fn(*args, **kwargs)
+
+            with set_ids((run_id, task_inv.id, task_inv.task_id)):
+                fn_output = fn(*args, **kwargs)
 
             # Finally, we need to dereference the output IDs
             for artifact_id in task_inv.output_ids:
                 artifact = workflow_def.artifact_nodes[artifact_id]
-                if artifact.artifact_index is None:
+                if artifact.artifact_index is None or not isinstance(fn_output, tuple):
                     self._artifact_store[run_id][artifact_id] = fn_output
                 else:
                     self._artifact_store[run_id][artifact_id] = fn_output[
@@ -168,9 +221,10 @@ class InProcessRuntime(abc.RuntimeInterface):
 
             artifact_nodes = [wf_def.artifact_nodes[id] for id in inv.output_ids]
             packed_nodes = [n for n in artifact_nodes if n.artifact_index is None]
-            assert (
-                len(packed_nodes) == 1
-            ), f"Task invocation should have exactly 1 packed output. {inv.id} has {len(packed_nodes)}: {packed_nodes}"  # noqa: E501
+            assert len(packed_nodes) == 1, (
+                "Task invocation should have exactly 1 packed output. "
+                f"{inv.id} has {len(packed_nodes)}: {packed_nodes}"
+            )
             packed_artifact = packed_nodes[0]
 
             task_result = self._artifact_store[workflow_run_id][packed_artifact.id]
@@ -225,6 +279,8 @@ class InProcessRuntime(abc.RuntimeInterface):
         limit: t.Optional[int] = None,
         max_age: t.Optional[timedelta] = None,
         state: t.Union[State, t.List[State], None] = None,
+        workspace: t.Optional[WorkspaceId] = None,
+        project: t.Optional[ProjectId] = None,
     ) -> t.List[WorkflowRun]:
         """
         List the workflow runs, with some filters
@@ -233,10 +289,17 @@ class InProcessRuntime(abc.RuntimeInterface):
             limit: Restrict the number of runs to return, prioritising the most recent.
             max_age: Only return runs younger than the specified maximum age.
             status: Only return runs of runs with the specified status.
-
+            workspace: Only return runs from the specified workspace. Not supported
+                on this runtime.
         Returns:
                 A list of the workflow runs
+        Raises:
+            WorkspacesNotSupportedError: when a workspace or project is specified.
         """
+        if workspace or project:
+            raise exceptions.WorkspacesNotSupportedError(
+                "Filtering by workspace is not supported on In Process runtimes."
+            )
         now = datetime.now(timezone.utc)
 
         if state is not None:
@@ -288,3 +351,6 @@ class InProcessRuntime(abc.RuntimeInterface):
         raise NotImplementedError(
             "This functionality isn't available for 'in_process' runtime"
         )
+
+    def get_workflow_project(self, wf_run_id: WorkflowRunId):
+        raise exceptions.WorkspacesNotSupportedError()

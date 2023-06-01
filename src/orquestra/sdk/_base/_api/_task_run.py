@@ -2,6 +2,8 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 
+import json
+import os
 import typing as t
 from collections import namedtuple
 from itertools import chain
@@ -13,7 +15,8 @@ from orquestra.sdk.schema.workflow_run import State, TaskInvocationId
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
 from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRunId
 
-from ...exceptions import TaskRunNotFound
+from ..._base import _exec_ctx
+from ...exceptions import TaskRunNotFound, WorkflowRunIDNotFoundError
 from ..abc import ArtifactValue, RuntimeInterface
 from ..serde import deserialize_constant
 
@@ -257,3 +260,125 @@ class TaskRun:
         ]
 
         return set(parents)
+
+
+def _get_argo_backend_ids() -> (
+    t.Tuple[WorkflowRunId, t.Optional[TaskInvocationId], t.Optional[TaskRunId]]
+):
+    """
+    Get the workflow run, task invocation, and task run IDs from Argo.
+
+    Raises:
+        WorkflowRunIDNotFoundError: When the workflow run ID can't be recovered.
+    """
+
+    assert (
+        "ARGO_NODE_ID" in os.environ
+    ), "The ARGO_NODE_ID environment variable is absent."
+
+    node_id = os.environ["ARGO_NODE_ID"]
+    # Argo Workflow ID is the left part of the step ID
+    # [wf-id]-[retry-number]-[step-number]
+    wf_run_id = "-".join(node_id.split("-")[:-2])
+    task_run_id = node_id
+
+    argo_template = json.loads(os.environ["ARGO_TEMPLATE"])
+    # Looks like the template name on Argo matches our task invocation ID. Not sure how
+    # good this assumption is.
+    task_inv_id = argo_template["name"]
+
+    if len(wf_run_id) == 0:
+        raise WorkflowRunIDNotFoundError("Could not recover Workflow Run ID")
+
+    return wf_run_id, task_inv_id, task_run_id
+
+
+def _get_ray_backend_ids() -> (
+    t.Tuple[WorkflowRunId, t.Optional[TaskInvocationId], t.Optional[TaskRunId]]
+):
+    """
+    Get the workflow run, task invocation, and task run IDs from Ray.
+
+    Raises:
+        ModuleNotFoundError: when Ray isn't installed.
+        WorkflowRunIDNotFoundError: When the workflow run ID can't be recovered.
+    """
+    # Deferred import because Ray isn't installed when running on QE.
+    import orquestra.sdk._ray._dag
+
+    wf_run_id, task_inv_id, task_run_id = orquestra.sdk._ray._dag.get_current_ids()
+
+    if wf_run_id is None:
+        raise WorkflowRunIDNotFoundError("Could not recover Workflow Run ID")
+
+    return wf_run_id, task_inv_id, task_run_id
+
+
+def _get_in_process_backend_ids() -> (
+    t.Tuple[WorkflowRunId, t.Optional[TaskInvocationId], t.Optional[TaskRunId]]
+):
+    """
+    Get the workflow run, task invocation, and task run IDs from the In-process runtime.
+
+    Raises:
+        WorkflowRunIDNotFoundError: When the workflow run ID can't be recovered.
+    """
+    from ..._base._in_process_runtime import get_current_in_process_ids
+
+    ids = get_current_in_process_ids()
+
+    if ids is None:
+        raise WorkflowRunIDNotFoundError(
+            "current_run_ids global was imported with value None."
+        )
+    if ids[0] is None:
+        raise WorkflowRunIDNotFoundError("Could not recover Workflow Run ID")
+
+    return ids
+
+
+def current_run_ids() -> (
+    t.Tuple[WorkflowRunId, t.Optional[TaskInvocationId], t.Optional[TaskRunId]]
+):
+    """
+    Get the workflow run, task invocation, and task run IDs related to current
+    execution context.
+
+    Workflow run ID is a globally unique identifier generated whenever a workflow is
+    submitted for running. Single workflow definition can be run multiple times
+    resulting in multiple workflow run IDs. Analog of PID for a standard program.
+
+    Task invocation ID is related to using a task in your workflow definition,
+    analogous to a function invocation in a standard program. Scoped to a workflow
+    definition. Isn't globally unique. If you run the same workflow definition multiple
+    times, you'll end up with the same task invocation IDs across runs.
+
+    Task run ID is a globally unique identifier of executing an invocation exactly once.
+
+    This function is intended to be used within the task code in the following way:
+    ```
+    @sdk.task
+    def t():
+        wf_run_id, task_inv_id, task_run_id =  sdk.current_run_ids()
+        ...
+    ```
+
+    Returns:
+        WorkflowRunId, TaskInvocationId, TaskRunId
+
+    Raises:
+        WorkflowRunIDNotFoundError: When the workflow run ID cannot be recovered.
+        NotImplementedError: When the execution context is not one of the covered cases.
+    """
+    context = _exec_ctx.get_current_exec_context()
+
+    if context == _exec_ctx.ExecContext.PLATFORM_QE:
+        return _get_argo_backend_ids()
+    elif context == _exec_ctx.ExecContext.RAY:
+        return _get_ray_backend_ids()
+    elif context == _exec_ctx.ExecContext.DIRECT:
+        return _get_in_process_backend_ids()
+
+    raise NotImplementedError(
+        f"Got unexpected global context {context}. Please report this as a bug."
+    )

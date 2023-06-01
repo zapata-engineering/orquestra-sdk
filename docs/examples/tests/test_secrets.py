@@ -35,7 +35,11 @@ class Snippets:
         from orquestra import sdk
 
         # should print: ABC123abc64534
-        print(sdk.secrets.get("ibmq-token", config_name="prod-d"))
+        print(
+            sdk.secrets.get(
+                "ibmq-token", workspace_id="my-workspace-abc", config_name="prod-d"
+            )
+        )
         # </snippet>
 
     @staticmethod
@@ -43,7 +47,12 @@ class Snippets:
         # <snippet set-secret-from-repl>
         from orquestra import sdk
 
-        sdk.secrets.set("ibmq-token", "ABC123abc64534", config_name="prod-d")
+        sdk.secrets.set(
+            "ibmq-token",
+            "ABC123abc64534",
+            workspace_id="my-workspace-abc",
+            config_name="prod-d",
+        )
         # </snippet>
 
     @staticmethod
@@ -59,7 +68,9 @@ class Snippets:
 
         @sdk.task
         def use_ext_api():
-            token: str = sdk.secrets.get("ibmq-token", config_name="prod-d")
+            token: str = sdk.secrets.get(
+                "ibmq-token", workspace_id="my-workspace-abc", config_name="prod-d"
+            )
             # At this point, 'token' is a regular string. You can pass it to other
             # functions that require credentials.
             access_external_api(api_token=token)
@@ -113,7 +124,8 @@ class TestSecrets:
         # Mock the http request
         mocked_responses.add(
             responses.GET,
-            f"{base_uri}/api/config/secrets/ibmq-token",
+            f"{base_uri}/api/config/secrets/zri:v1::0:"
+            f"my-workspace-abc:secret:ibmq-token",
             json={
                 "data": {
                     "details": {
@@ -173,7 +185,8 @@ class TestSecrets:
         # 2. Mock the http request
         mocked_responses.add(
             responses.GET,
-            "http://config-service.config-service:8099/api/config/secrets/ibmq-token",
+            "http://config-service.config-service:8099/api/"
+            "config/secrets/zri:v1::0:my-workspace-abc:secret:ibmq-token",
             json={
                 "data": {
                     "details": {

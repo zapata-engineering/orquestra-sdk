@@ -1,6 +1,7 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
+import subprocess
 import sys
 from typing import Optional
 
@@ -40,7 +41,7 @@ class Action:
             manage_ray=manage_ray, manage_all=manage_all
         )
 
-        services = []
+        responses = []
         success = True
 
         with self._presenter.show_progress(
@@ -49,20 +50,32 @@ class Action:
             for service in progress:
                 try:
                     service.up()
-                    services.append(
+
+                    responses.append(
                         ServiceResponse(
                             name=service.name, is_running=True, info="Started!"
                         )
                     )
-                except RuntimeError as e:
+                except subprocess.CalledProcessError as e:
                     success = False
-                    services.append(
+                    responses.append(
                         ServiceResponse(
-                            name=service.name, is_running=False, info=str(e)
+                            name=service.name,
+                            is_running=False,
+                            info="\n".join(
+                                [
+                                    "command:",
+                                    str(e.cmd),
+                                    "stdout:",
+                                    *e.stdout.decode().splitlines(),
+                                    "stderr:",
+                                    *e.stderr.decode().splitlines(),
+                                ]
+                            ),
                         )
                     )
 
-        self._presenter.show_services(services=services)
-
-        if not success:
-            sys.exit(ResponseStatusCode.SERVICES_ERROR.value)
+        if success:
+            self._presenter.show_services(responses)
+        else:
+            self._presenter.show_failure(responses)

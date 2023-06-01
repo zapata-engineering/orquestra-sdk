@@ -15,7 +15,6 @@ For example, you may want to run a quantum circuit::
 Orquestra lets you store and retrieve secret values without embedding them directly in your source code.
 This is especially important when sending workflows for remote runs.
 
-
 Accessing Secrets From Local Machine
 ====================================
 
@@ -33,6 +32,8 @@ Then, you can read and set secrets within a script or a Python REPL:
 ``name`` is the secret identifier. It can be any string you like, as long as it fits in the length limit. This identifier is subsequently used to access the secret. Secrets are scoped to a single user account, so there's no risk you're overriding somebody else's entry.
 
 ``value`` is any string you like (up a reasonable length limit).
+
+``workspace_id`` specifies the workspace id where the secret will be saved. If omitted, personal workspace will be used. You can get workspace_id from the workspace view in the web Orquestra Portal or by using list_workspace API call.
 
 ``config_name`` specifies the configuration that stores the cluster URI and auth token that are used to access the secrets vault.
 
@@ -65,3 +66,5 @@ The workflow runs on your computer, but the secrets storage is on Orquestra Plat
 ``config_name`` is ignored when running the task remotely.
 The workflow runs on Orquestra Platform, and the secrets vault is already on the same cluster.
 In this case, the SDK handles authorization for accessing secrets vault automatically.
+
+``workspace_id`` specifies the workspace id which contains the secret. If omitted, personal workspace will be used. You can get workspace_id from the workspace view in the web Orquestra Portal or by using list_workspace API call.

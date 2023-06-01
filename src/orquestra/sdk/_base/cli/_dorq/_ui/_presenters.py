@@ -12,7 +12,7 @@ import webbrowser
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable, Iterator, List
+from typing import Iterable, Iterator, List, Sequence
 
 import click
 from tabulate import tabulate
@@ -154,7 +154,7 @@ class ArtifactPresenter:
 class ServicePresenter:
     @contextmanager
     def show_progress(
-        self, services: List[_services.Service], *, label: str
+        self, services: Sequence[_services.Service], *, label: str
     ) -> Iterator[Iterable[_services.Service]]:
         """
         Starts a progress bar on the context enter.
@@ -171,7 +171,7 @@ class ServicePresenter:
         ) as bar:
             yield bar
 
-    def show_services(self, services: List[responses.ServiceResponse]):
+    def show_services(self, services: Sequence[responses.ServiceResponse]):
         click.echo(
             tabulate(
                 [
@@ -188,6 +188,11 @@ class ServicePresenter:
                 tablefmt="plain",
             ),
         )
+
+    def show_failure(self, service_responses: Sequence[responses.ServiceResponse]):
+        self.show_services(service_responses)
+
+        sys.exit(responses.ResponseStatusCode.SERVICES_ERROR.value)
 
 
 class LoginPresenter:
@@ -296,3 +301,21 @@ class PromptPresenter:
         tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
 
         return wfs, tabulated_labels
+
+    def workspaces_list_to_prompt(self, workspaces):
+        # Create labels of workspaces that are printed by prompter
+        # Label is <display_name> <id> tabulated nicely to create good-looking
+        # table
+        labels = [[ws.name, ws.workspace_id] for ws in workspaces]
+        tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
+
+        return tabulated_labels
+
+    def project_list_to_prompt(self, projects):
+        # Create labels of projects that are printed by prompter
+        # Label is <display_name> <id> tabulated nicely to create good-looking
+        # table
+        labels = [[ws.name, ws.project_id] for ws in projects]
+        tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
+
+        return tabulated_labels

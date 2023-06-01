@@ -2,7 +2,6 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 import time
-from pathlib import Path
 from typing import Optional, Sequence
 
 import orquestra.sdk as sdk
@@ -194,6 +193,25 @@ def add_with_trigger(a, b, port, timeout: float):
     return a + b
 
 
+@sdk.task
+def long_task(*_):
+    import time
+
+    # sleep for an hour - just in case someone forgets to terminate this buddy
+    time.sleep(60 * 60)
+
+
+@sdk.workflow
+def infinite_workflow():
+    """
+    Allows reproducing scenario where tasks take some time to run.
+    This workflow is used to test termination as it will never complete
+    This workflow isn't actually infinite - it just takes an hour of sleep time to
+    complete
+    """
+    return long_task()
+
+
 @sdk.workflow
 def serial_wf_with_file_triggers(ports: Sequence[int], task_timeout: float):
     """
@@ -277,13 +295,28 @@ def parametrized_wf(a: int):
 
 @sdk.workflow
 def wf_with_secrets():
-    secret = sdk.secrets.get("some-secret", config_name="test_config_default")
+    secret = sdk.secrets.get(
+        "some-secret", config_name="test_config_default", workspace_id="test_workspace"
+    )
     return capitalize_inline(secret)
 
 
 @sdk.workflow
-def workflow_parametrised_with_resources(cpu=None, memory=None, gpu=None):
-    return add(1, 1).with_invocation_meta(cpu=cpu, memory=memory, gpu=gpu)
+def workflow_parametrised_with_resources(
+    cpu=None, memory=None, gpu=None, custom_image=None
+):
+    future = add(1, 1)
+
+    if cpu is not None:
+        future = future.with_invocation_meta(cpu=cpu)
+    if memory is not None:
+        future = future.with_invocation_meta(memory=memory)
+    if gpu is not None:
+        future = future.with_invocation_meta(gpu=gpu)
+    if custom_image is not None:
+        future = future.with_invocation_meta(custom_image=custom_image)
+
+    return future
 
 
 @sdk.workflow
@@ -295,3 +328,13 @@ def workflow_with_different_resources():
     gpu = add(1, 1).with_invocation_meta(gpu="1")
     all_resources = add(1, 1).with_invocation_meta(cpu="2000m", memory="2Gi", gpu="0")
     return cpu, small_cpu, memory, small_memory, gpu, all_resources
+
+
+@sdk.task(source_import=sdk.InlineImport(), n_outputs=1)
+def task_with_single_output_explicit():
+    return True
+
+
+@sdk.workflow
+def wf_with_explicit_n_outputs():
+    return task_with_single_output_explicit()

@@ -10,21 +10,28 @@ import datetime
 import importlib
 import os
 import sys
-import typing
 import typing as t
 import warnings
 from contextlib import contextmanager
 
 import requests
+from typing_extensions import assert_never
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _config, _db, loader
 from orquestra.sdk._base._driver._client import DriverClient
+from orquestra.sdk._base._jwt import check_jwt_without_signature_verification
 from orquestra.sdk._base._qe import _client
+from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base.abc import ArtifactValue
 from orquestra.sdk.schema import _compat
-from orquestra.sdk.schema.configs import ConfigName, RuntimeName
+from orquestra.sdk.schema.configs import (
+    ConfigName,
+    RemoteRuntime,
+    RuntimeConfiguration,
+    RuntimeName,
+)
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.workflow_run import (
     ProjectId,
@@ -54,18 +61,27 @@ class WorkflowRunRepo:
             stored_run = db.get_workflow_run(workflow_run_id=wf_run_id)
             return stored_run.config_name
 
-    def list_wf_run_ids(self, config: ConfigName) -> t.Sequence[WorkflowRunId]:
-        return [run.id for run in self.list_wf_runs(config)]
+    def list_wf_run_ids(
+        self, config: ConfigName, project: ProjectRef
+    ) -> t.Sequence[WorkflowRunId]:
+        return [
+            run.id
+            for run in self.list_wf_runs(
+                config, project.workspace_id, project.project_id
+            )
+        ]
 
     def list_wf_runs(
         self,
         config: ConfigName,
+        workspace: t.Optional[WorkspaceId] = None,
+        project: t.Optional[ProjectId] = None,
         limit: t.Optional[int] = None,
         max_age: t.Optional[str] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
     ) -> t.List[WorkflowRun]:
         """
-        Asks the runtime for all workflow runs.
+        Asks the runtime for all workflow runs that match the filters.
 
         Raises:
             ConnectionError: when connection with Ray failed.
@@ -78,11 +94,14 @@ class WorkflowRunRepo:
                 limit=limit,
                 max_age=max_age,
                 state=state,
+                workspace=workspace,
+                project=project,
             )
         except (ConnectionError, exceptions.UnauthorizedError):
             raise
 
-        return [run.get_status_model() for run in wf_runs]
+        ret = [run.get_status_model() for run in wf_runs]
+        return ret
 
     def get_wf_by_run_id(
         self, wf_run_id: WorkflowRunId, config_name: t.Optional[ConfigName]
@@ -492,8 +511,16 @@ class ConfigRepo:
             if config not in _config.CLI_IGNORED_CONFIGS
         ]
 
-    def store_token_in_config(self, uri, token, ce):
-        runtime_name = RuntimeName.CE_REMOTE if ce else RuntimeName.QE_REMOTE
+    def store_token_in_config(self, uri: str, token: str, runtime_name: RemoteRuntime):
+        """
+        Saves the token in the config file
+
+        Raises:
+            ExpiredTokenError: if the token is expired
+            InvalidTokenError: if the token is not a valid format
+        """
+        check_jwt_without_signature_verification(token)
+
         config_name = _config.generate_config_name(runtime_name, uri)
 
         config = sdk.RuntimeConfig(
@@ -507,19 +534,46 @@ class ConfigRepo:
 
         return config_name
 
+    def read_config(self, config: ConfigName) -> RuntimeConfiguration:
+        """
+        Read a stored config.
+        """
+        return _config.read_config(config)
+
+
+class SpacesRepo:
+    """
+    Wraps access to workspaces and projects
+    """
+
+    def list_workspaces(
+        self,
+        config: ConfigName,
+    ):
+        return sdk.list_workspaces(config)
+
+    def list_projects(self, config: ConfigName, workspace_id):
+        return sdk.list_projects(config, workspace_id)
+
 
 class RuntimeRepo:
     """
     Wraps access to QE/CE clients
     """
 
-    def get_login_url(self, uri: str, ce: bool, redirect_port: int):
-        client: typing.Union[DriverClient, _client.QEClient]
-        if ce:
+    def get_login_url(
+        self,
+        uri: str,
+        runtime_name: RemoteRuntime,
+        redirect_port: int,
+    ):
+        client: t.Union[DriverClient, _client.QEClient]
+        if runtime_name == RuntimeName.CE_REMOTE:
             client = DriverClient(base_uri=uri, session=requests.Session())
-        else:
+        elif runtime_name == RuntimeName.QE_REMOTE:
             client = _client.QEClient(session=requests.Session(), base_uri=uri)
-            # Ask QE for the login url to log in to the platform
+        else:
+            assert_never(runtime_name)
         try:
             target_url = client.get_login_url(redirect_port)
         except requests.RequestException as e:

@@ -4,7 +4,7 @@
 import json
 import os
 import sys
-from unittest.mock import Mock
+from unittest.mock import Mock, call
 
 try:
     import importlib.metadata as metadata  # type: ignore
@@ -17,7 +17,10 @@ import yaml
 import orquestra.sdk as sdk
 from orquestra.sdk._base import _dsl, dispatch, loader
 from orquestra.sdk._base._conversions import _yaml_exporter as yaml_converter
-from orquestra.sdk._base._testing._example_wfs import wf_with_secrets
+from orquestra.sdk._base._testing._example_wfs import (
+    wf_with_explicit_n_outputs,
+    wf_with_secrets,
+)
 from orquestra.sdk.schema import ir
 from orquestra.sdk.secrets import _client, _models
 
@@ -52,16 +55,21 @@ def wf_with_ctx():
 
 
 @pytest.mark.parametrize(
-    "wf, expected_out",
+    "wf, expected_out, secrets_calls",
     [
         # Checks that the task was executed correctly.
-        (wf_with_uppercasing, '"EMILIANO ZAPATA"'),
+        (wf_with_uppercasing, '"EMILIANO ZAPATA"', []),
         # Checks that we set the execution context flag correctly.
-        (wf_with_ctx, '"PLATFORM_QE"'),
-        (wf_with_secrets, '"Mocked"'),
+        (wf_with_ctx, '"PLATFORM_QE"', []),
+        (
+            wf_with_secrets,
+            '"Mocked"',
+            [call("zri:v1::0:test_workspace:secret:some-secret")],
+        ),
+        (wf_with_explicit_n_outputs, "true", []),
     ],
 )
-def test_execution(monkeypatch, tmp_path, wf, expected_out):
+def test_execution(monkeypatch, tmp_path, wf, expected_out, secrets_calls):
     """The dispatcher is complicated, with multiple layers of abstraction. This
     test verifies that something we output from the yaml converter can be
     executed by the dispatcher.
@@ -80,6 +88,9 @@ def test_execution(monkeypatch, tmp_path, wf, expected_out):
     # For example, we may have a dirty branch, have extra commits the release version
     # doesn't have, etc.
     version_mock = Mock(return_value="0.1.0")
+    secrets_get = Mock(
+        return_value=_models.SecretDefinition(name="mocked", value="mocked")
+    )
     monkeypatch.setattr(metadata, "version", version_mock)
     # Setup a mocked secrets client
     passport_file = tmp_path / "passport"
@@ -88,11 +99,13 @@ def test_execution(monkeypatch, tmp_path, wf, expected_out):
     monkeypatch.setattr(
         _client.SecretsClient,
         "get_secret",
-        Mock(return_value=_models.SecretDefinition(name="mocked", value="mocked")),
+        secrets_get,
     )
 
+    wf_model = wf().model
+
     # Convert the workflow to a YAML workflow
-    yaml_model = yaml_converter.workflow_to_yaml(wf().model)
+    yaml_model = yaml_converter.workflow_to_yaml(wf_model)
 
     # 2. Get into a single step specification
     yaml_str = yaml_converter.pydantic_to_yaml(yaml_model)
@@ -118,7 +131,7 @@ def test_execution(monkeypatch, tmp_path, wf, expected_out):
         json_files = [
             f for f in os.listdir(temp_dir) if os.path.splitext(f)[1] == ".json"
         ]
-        assert len(json_files) == 1
+        assert len(json_files) == len(wf_model.artifact_nodes)
 
         with open(os.path.join(temp_dir, json_files[0])) as f:
             output_content = json.load(f)
@@ -127,6 +140,8 @@ def test_execution(monkeypatch, tmp_path, wf, expected_out):
             "serialization_format": "JSON",
             "value": expected_out,
         }
+
+    assert secrets_get.mock_calls == secrets_calls
 
 
 class TestModuleCaching:

@@ -25,11 +25,12 @@ from .._base import _services, serde
 from .._base._db import WorkflowDB
 from .._base._env import RAY_GLOBAL_WF_RUN_ID_ENV
 from .._base._spaces._structs import ProjectRef
-from .._base.abc import ArtifactValue, LogReader, RuntimeInterface
+from .._base.abc import LogReader, RuntimeInterface
 from ..schema import ir
 from ..schema.configs import RuntimeConfiguration
 from ..schema.local_database import StoredWorkflowRun
 from ..schema.workflow_run import (
+    ProjectId,
     RunStatus,
     State,
     TaskInvocationId,
@@ -37,6 +38,7 @@ from ..schema.workflow_run import (
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
+    WorkspaceId,
 )
 from . import _client, _id_gen, _ray_logs
 from ._build_workflow import TaskResult, make_ray_dag
@@ -240,7 +242,10 @@ class RayRuntime(RuntimeInterface):
         logger.setLevel(logging.ERROR)
 
         client = RayClient()
-        client.init(**dataclasses.asdict(ray_params))
+        try:
+            client.init(**dataclasses.asdict(ray_params))
+        except ConnectionError as e:
+            raise exceptions.RayNotRunningError from e
 
         try:
             client.workflow_init()
@@ -284,8 +289,12 @@ class RayRuntime(RuntimeInterface):
         global_run_id = os.getenv(RAY_GLOBAL_WF_RUN_ID_ENV)
         wf_run_id = global_run_id or _generate_wf_run_id(workflow_def)
 
-        # dag = make_ray_dag(self._client, workflow_def, wf_run_id, self._project_dir)
-        dag = make_ray_dag(self._client, workflow_def, wf_run_id)
+        dag = make_ray_dag(
+            self._client,
+            workflow_def=workflow_def,
+            workflow_run_id=wf_run_id,
+            project_dir=self._project_dir,
+        )
         wf_user_metadata = WfUserMetadata(workflow_def=workflow_def)
 
         # Unfortunately, Ray doesn't validate uniqueness of workflow IDs. Let's
@@ -296,11 +305,9 @@ class RayRuntime(RuntimeInterface):
             metadata=pydatic_to_json_dict(wf_user_metadata),
         )
 
-        config_name: str
-        config_name = self._config.config_name
         wf_run = StoredWorkflowRun(
             workflow_run_id=wf_run_id,
-            config_name=config_name,
+            config_name=self._config.config_name,
             workflow_def=workflow_def,
         )
         with WorkflowDB.open_project_db(self._project_dir) as db:
@@ -480,6 +487,8 @@ class RayRuntime(RuntimeInterface):
         limit: t.Optional[int] = None,
         max_age: t.Optional[timedelta] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
+        workspace: t.Optional[WorkspaceId] = None,
+        project: t.Optional[ProjectId] = None,
     ) -> t.List[WorkflowRun]:
         """
         List the workflow runs, with some filters
@@ -488,10 +497,19 @@ class RayRuntime(RuntimeInterface):
             limit: Restrict the number of runs to return, prioritising the most recent.
             max_age: Only return runs younger than the specified maximum age.
             state: Only return runs of runs with the specified status.
+            workspace: Only return runs from the specified workspace. Not supported
+                on this runtime.
 
         Returns:
                 A list of the workflow runs
+
+        Raises:
+            WorkspacesNotSupportedError: when a workspace or project is specified.
         """
+        if workspace or project:
+            raise exceptions.WorkspacesNotSupportedError(
+                "Filtering by workspace or project is not supported on Ray runtimes."
+            )
         now = datetime.now(timezone.utc)
 
         if state is not None:
@@ -528,6 +546,9 @@ class RayRuntime(RuntimeInterface):
                 -limit:
             ]
         return wf_runs
+
+    def get_workflow_project(self, wf_run_id: WorkflowRunId):
+        raise exceptions.WorkspacesNotSupportedError()
 
 
 def get_current_ids() -> (

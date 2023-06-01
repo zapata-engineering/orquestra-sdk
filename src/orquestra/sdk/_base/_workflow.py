@@ -26,11 +26,7 @@ from typing import (
 from typing_extensions import ParamSpec
 
 import orquestra.sdk.schema.ir as ir
-from orquestra.sdk.exceptions import (
-    ConfigNameNotFoundError,
-    ProjectInvalidError,
-    WorkflowSyntaxError,
-)
+from orquestra.sdk.exceptions import ConfigNameNotFoundError, WorkflowSyntaxError
 from orquestra.sdk.schema.workflow_run import ProjectId, WorkspaceId
 
 from .. import secrets
@@ -48,6 +44,7 @@ from ._dsl import (
     parse_custom_name,
 )
 from ._in_process_runtime import InProcessRuntime
+from ._spaces._resolver import resolve_studio_project_ref
 from ._spaces._structs import ProjectRef
 from .abc import RuntimeInterface
 
@@ -161,16 +158,15 @@ class WorkflowDef(Generic[_R]):
         _dsl.DIRECT_EXECUTION = False
         return result
 
-    def prepare(
+    def run(
         self,
-        config: Union[_api.RuntimeConfig, str],
+        config: Optional[Union[_api.RuntimeConfig, str]] = None,
         project_dir: Optional[Union[str, Path]] = None,
         workspace_id: Optional[WorkspaceId] = None,
         project_id: Optional[ProjectId] = None,
     ) -> _api.WorkflowRun:
         """
-        "Prepares" workflow for running. Call ".start()" on the result to
-        schedule the workflow for execution.
+        Schedules workflow for execution.
 
         Args:
             config: SDK needs to know where to execute the workflow. The config
@@ -182,13 +178,25 @@ class WorkflowDef(Generic[_R]):
             project_id: ID of the project for workflow - supported only on CE
 
         Raises:
-            ConfigNameNotFoundError: when the configuration has not been saved prior to
-                this point.
             orquestra.sdk.exceptions.DirtyGitRepo: (warning) when a task def used by
                 this workflow def has a "GitImport" and the git repo that contains it
                 has uncommitted changes.
             ProjectInvalidError: when only 1 out of project and workspace is passed
+
         """
+        # This exists for users who have gotten used to doing `run()`. Once this has
+        # been released, the following release should make config a required argument
+        # and remove this check.
+        if config is None:
+            raise FutureWarning(
+                "Please specify the runtime configuration for this run. "
+                "The built in `local` and `in_process` configurations can be used by "
+                'calling `run("local")` and `run("in_process")` respectively. '
+                "User defined configurations can be specified by providing the name "
+                "under which they are saved, or passing in the RuntimeConfig object "
+                "directly. "
+            )
+
         _config: _api.RuntimeConfig
         if isinstance(config, _api.RuntimeConfig):
             _config = config
@@ -196,7 +204,7 @@ class WorkflowDef(Generic[_R]):
             _config = _api.RuntimeConfig.load(config)
         else:
             raise TypeError(
-                f"'config' argument to `prepare()` has unsupported type {type(config)}."
+                f"'config' argument to `run()` has unsupported type {type(config)}."
             )
         runtime: RuntimeInterface
         if _config._runtime_name == "IN_PROCESS":
@@ -209,72 +217,20 @@ class WorkflowDef(Generic[_R]):
         # logic, the runtime should always be resolved.
         assert runtime is not None
 
-        _project: Optional[ProjectRef]
-        if project_id is not None and workspace_id is not None:
-            _project = ProjectRef(project_id=project_id, workspace_id=workspace_id)
-        elif project_id is None and workspace_id is None:
-            _project = None
-        else:
-            raise ProjectInvalidError(
-                "Invalid project ID. Either explicitly pass workspace_id "
-                "and project_id, or omit both"
-            )
+        _project: Optional[ProjectRef] = resolve_studio_project_ref(
+            workspace_id, project_id, _config.name
+        )
 
         # The DirtyGitRepo warning can be raised here.
         wf_def_model = self.model
 
-        return _api.WorkflowRun(
-            run_id=None,
+        wf_run = _api.WorkflowRun._start(
             wf_def=wf_def_model,
             runtime=runtime,
             config=_config,
             project=_project,
         )
-
-    def run(
-        self,
-        config: Optional[Union[_api.RuntimeConfig, str]] = None,
-        project_dir: Optional[Union[str, Path]] = None,
-        workspace_id: Optional[WorkspaceId] = None,
-        project_id: Optional[ProjectId] = None,
-    ) -> _api.WorkflowRun:
-        """
-        Schedules workflow for execution. Shorthand for
-        `workflow.prepare().start()`.
-
-        Args:
-            config: SDK needs to know where to execute the workflow. This
-                objects contains the required details.
-            project_dir: the path to the project directory. If omitted, the current
-                working directory is used.
-            workspace_id: ID of the workspace for workflow - supported only on CE
-            project_id: ID of the project for workflow - supported only on CE
-
-        Raises:
-            orquestra.sdk.exceptions.DirtyGitRepo: (warning) when a task def used by
-                this workflow def has a "GitImport" and the git repo that contains it
-                has uncommitted changes.
-        """
-        # This exists for users who have gotten used to doing `run()`. Once this has
-        # been released, the following release should make config a required argument
-        # and remove this check.
-        if config is None:
-            raise FutureWarning(
-                "Please specify the runtime configuration for this run. "
-                "The built in `local` and `in_process` configurations can be used by "
-                'calling `run.("local")` and `run("in_process")` respectively. '
-                "User defined configurations can be specified by providing the name "
-                "under which they are saved, or passing in the RuntimeConfig object "
-                "directly. "
-            )
-        run = self.prepare(
-            config,
-            project_dir=project_dir,
-            workspace_id=workspace_id,
-            project_id=project_id,
-        )
-        run.start()
-        return run
+        return wf_run
 
     def with_resources(
         self,

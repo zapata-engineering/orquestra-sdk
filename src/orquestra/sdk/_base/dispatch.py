@@ -252,7 +252,10 @@ def exec_task_fn(
                 embedded_value = serde.value_from_result_dict(yaml_value)
                 keyword_args[yaml_input_name] = embedded_value
             elif isinstance(yaml_value, t.Mapping) and SECRET_MAGIC_KEY in yaml_value:
-                embedded_value = secrets.get(yaml_value[SECRET_MAGIC_KEY])
+                embedded_value = secrets.get(
+                    yaml_value[SECRET_MAGIC_KEY],
+                    workspace_id=yaml_value.get("workspace_id"),
+                )
                 keyword_args[yaml_input_name] = embedded_value
 
         # --- Phase 2.3: make some **kwargs work as *args ---
@@ -278,7 +281,7 @@ def exec_task_fn(
     ]
 
     for ret_node in ret_nodes:
-        if ret_node.artifact_index is None:
+        if ret_node.artifact_index is None or not isinstance(ret_obj, tuple):
             ret_val = ret_obj
         else:
             ret_val = ret_obj[ret_node.artifact_index]
