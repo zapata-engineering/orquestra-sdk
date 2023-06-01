@@ -217,7 +217,7 @@ def _resolve_auto_config(config_name) -> RuntimeConfiguration:
         raise EnvironmentError(
             f"{PASSPORT_FILE_ENV} env variable was set, but {CURRENT_CLUSTER_ENV} not. "
             "Unable to deduce cluster's URI")
-    uri = ParseResult("https", netloc)
+    uri = ParseResult("https", netloc, "", "", "", "").geturl()
     breakpoint()
     runtime_config.runtime_options = {
         "uri": uri,
