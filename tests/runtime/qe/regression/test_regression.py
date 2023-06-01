@@ -42,6 +42,7 @@ def mock_workflow_db(monkeypatch: pytest.MonkeyPatch):
             workflow_run_id=wf_run_id,
             config_name="hello",
             workflow_def=wf_def,
+            is_qe=True,
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
 

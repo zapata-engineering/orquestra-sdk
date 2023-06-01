@@ -62,6 +62,7 @@ class TestProjectToSharedDBMigration:
                     workflow_run_id="test",
                     config_name="test",
                     workflow_def=workflow_def,
+                    is_qe=False,
                 )
             )
         # When

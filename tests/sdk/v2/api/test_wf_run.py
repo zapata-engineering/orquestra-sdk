@@ -305,6 +305,7 @@ class TestWorkflowRun:
                                 workflow_run_id=run_id,
                                 config_name=config_name,
                                 workflow_def=wf_pass_tuple().model,
+                                is_qe=False,
                             )
                         ),
                     )

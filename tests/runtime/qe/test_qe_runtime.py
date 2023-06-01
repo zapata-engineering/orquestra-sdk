@@ -605,6 +605,7 @@ class TestGetAvailableOutputs:
                 workflow_run_id=wf_run_id,
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
@@ -640,6 +641,7 @@ class TestGetAvailableOutputs:
                 workflow_run_id=wf_run_id,
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
@@ -675,6 +677,7 @@ class TestGetWorkflowRunStatus:
                 workflow_run_id="hello-there-abc123-r000",
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
@@ -744,7 +747,9 @@ class TestGetWorkflowRunStatus:
 
         assert stub_runID in str(exc_info)
 
-    def test_get_workflow_run_status_not_found(self, monkeypatch, runtime, mocked_responses):
+    def test_get_workflow_run_status_in_db_but_not_qe(
+        self, monkeypatch, runtime, mock_workflow_db_location
+    ):
         workflow_run_id = "hello-there-abc123-r000"
         # Given
         _get_workflow_run = Mock(
@@ -752,6 +757,29 @@ class TestGetWorkflowRunStatus:
                 workflow_run_id=workflow_run_id,
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=False,
+            )
+        )
+        monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
+
+        # When
+        with pytest.raises(exceptions.WorkflowRunNotFoundError) as exc_info:
+            _ = runtime.get_workflow_run_status("hello-there-abc123-r000")
+
+        # Then
+        assert workflow_run_id in str(exc_info)
+
+    def test_get_workflow_run_status_not_found(
+        self, monkeypatch, runtime, mocked_responses
+    ):
+        workflow_run_id = "hello-there-abc123-r000"
+        # Given
+        _get_workflow_run = Mock(
+            return_value=StoredWorkflowRun(
+                workflow_run_id=workflow_run_id,
+                config_name="hello",
+                workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
@@ -768,13 +796,13 @@ class TestGetWorkflowRunStatus:
         # Then
         assert workflow_run_id in str(exc_info)
 
-
     def test_task_waiting_with_message(self, monkeypatch, runtime, mocked_responses):
         _get_workflow_run = Mock(
             return_value=StoredWorkflowRun(
                 workflow_run_id="hello-there-abc123-r000",
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
@@ -797,6 +825,7 @@ class TestGetWorkflowRunStatus:
                 workflow_run_id="hello-there-abc123-r000",
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
@@ -826,6 +855,7 @@ class TestGetWorkflowRunStatus:
                 workflow_run_id="hello-there-abc123-r000",
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
@@ -885,6 +915,7 @@ class TestGetWorkflowRunStatus:
                 workflow_run_id="hello-there-abc123-r000",
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
@@ -915,6 +946,7 @@ class TestGetWorkflowRunOutputsNonBlocking:
                 workflow_run_id="hello-there-abc123-r000",
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
@@ -959,6 +991,7 @@ class TestGetWorkflowRunOutputsNonBlocking:
                 workflow_run_id="hello-there-abc123-r000",
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
@@ -978,6 +1011,7 @@ class TestGetWorkflowRunOutputsNonBlocking:
                 workflow_run_id="hello-there-abc123-r000",
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         _empty_tgz = Mock(side_effect=IndexError)
@@ -1002,6 +1036,7 @@ class TestGetWorkflowRunOutputsNonBlocking:
                 workflow_run_id="hello-there-abc123-r000",
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
@@ -1024,6 +1059,7 @@ class TestGetWorkflowRunOutputsNonBlocking:
                 workflow_run_id="hello-there-abc123-r000",
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
@@ -1054,6 +1090,7 @@ class TestGetWorkflowLogs:
                 workflow_run_id=wf_run_id,
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
@@ -1103,6 +1140,7 @@ class TestGetTaskLogs:
                 workflow_run_id=wf_run_id,
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
@@ -1136,6 +1174,7 @@ class TestGetTaskLogs:
                 workflow_run_id=wf_run_id,
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
@@ -1181,6 +1220,7 @@ class TestGetTaskLogs:
                 workflow_run_id=wf_run_id,
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
@@ -1203,6 +1243,7 @@ class TestGetTaskLogs:
                 workflow_run_id=wf_run_id,
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
@@ -1262,21 +1303,25 @@ class TestListWorkflowRuns:
                     workflow_run_id="hello-there-abc123-r000",
                     config_name="hello",
                     workflow_def=TEST_WORKFLOW,
+                    is_qe=True,
                 ),
                 StoredWorkflowRun(
                     workflow_run_id="hello-there-abc123-r000",
                     config_name="hello",
                     workflow_def=TEST_WORKFLOW,
+                    is_qe=True,
                 ),
                 StoredWorkflowRun(
                     workflow_run_id="hello-there-abc123-r000",
                     config_name="hello",
                     workflow_def=TEST_WORKFLOW,
+                    is_qe=True,
                 ),
                 StoredWorkflowRun(
                     workflow_run_id="hello-there-abc123-r000",
                     config_name="hello",
                     workflow_def=TEST_WORKFLOW,
+                    is_qe=True,
                 ),
             ]
         )
@@ -1456,6 +1501,7 @@ class TestHTTPErrors:
                 workflow_run_id="hello-there-abc123-r000",
                 config_name="hello",
                 workflow_def=TEST_WORKFLOW,
+                is_qe=True,
             )
         )
         monkeypatch.setattr(_db.WorkflowDB, "get_workflow_run", _get_workflow_run)
@@ -1488,6 +1534,7 @@ class TestHTTPErrors:
                         workflow_run_id="hello-there-abc123-r000",
                         config_name="hello",
                         workflow_def=TEST_WORKFLOW,
+                        is_qe=True,
                     )
                 ]
             ),
@@ -1502,6 +1549,7 @@ class TestHTTPErrors:
                     workflow_run_id="hello-there-abc123-r000",
                     config_name="hello",
                     workflow_def=TEST_WORKFLOW,
+                    is_qe=True,
                 )
             ),
         )
@@ -1532,6 +1580,7 @@ class TestHTTPErrors:
                     workflow_run_id="hello-there-abc123-r000",
                     config_name="hello",
                     workflow_def=TEST_WORKFLOW,
+                    is_qe=True,
                 )
             ),
         )
