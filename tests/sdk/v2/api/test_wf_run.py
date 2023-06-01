@@ -353,7 +353,7 @@ class TestWorkflowRun:
                         # When
                         _ = _api.WorkflowRun.by_id(run_id=run_id)
 
-    class TestStartFromIr:
+    class TestStartFromIR:
         @pytest.fixture
         def wf_ir_def(self, sample_wf_def):
             return sample_wf_def.model

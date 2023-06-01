@@ -57,7 +57,7 @@ class TestRunningLocalInBackground:
 
             assert results == 3
 
-    class TestStartFromIr:
+    class TestStartFromIR:
         @staticmethod
         def test_single_run(
             patch_config_location, ray, monkeypatch, tmp_path, mock_workflow_db_location

@@ -143,7 +143,8 @@ class WorkflowRun:
             _config = RuntimeConfig.load(config)
         else:
             raise TypeError(
-                f"'config' argument to `run()` has unsupported type {type(config)}."
+                f"'config' argument to `start_from_ir()` has unsupported "
+                f"type {type(config)}."
             )
         runtime: RuntimeInterface
         if _config._runtime_name == "IN_PROCESS":
