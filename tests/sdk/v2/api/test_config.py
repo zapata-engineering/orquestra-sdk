@@ -318,12 +318,24 @@ class TestRuntimeConfiguration:
                 pass_file = tmp_path / "pass.port"
                 pass_file.write_text(token)
                 monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", str(pass_file))
+                monkeypatch.setenv("ORQ_CURRENT_CLUSTER", "cluster.io")
 
                 cfg = api_cfg.RuntimeConfig.load(
                     "auto",
                 )
 
                 assert cfg.token == token
+                assert cfg.uri == "https://cluster.io"
+
+            def test_no_cluster_uri(self, tmp_path, monkeypatch):
+                token = "the best token you have ever seen"
+                pass_file = tmp_path / "pass.port"
+                pass_file.write_text(token)
+                monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", str(pass_file))
+                with pytest.raises(EnvironmentError):
+                    api_cfg.RuntimeConfig.load(
+                        "auto",
+                    )
 
             def test_on_local_env(self):
                 assert api_cfg.RuntimeConfig.load("auto") == api_cfg.RuntimeConfig.load(
