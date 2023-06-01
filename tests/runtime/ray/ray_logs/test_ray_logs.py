@@ -308,7 +308,7 @@ class TestDirectRayReader:
         @pytest.mark.parametrize(
             "wf_run_id,parsed_logs,expected",
             [
-                pytest.param("wf.1", [], WorkflowLogs({}, []), id="no_parsed_logs"),
+                pytest.param("wf.1", [], WorkflowLogs(per_task={}, env_setup=[]), id="no_parsed_logs"),
                 pytest.param(
                     "wf.1",
                     [
@@ -367,7 +367,7 @@ class TestDirectRayReader:
                             task_run_id=None,
                         )
                     ],
-                    WorkflowLogs({}, []),
+                    WorkflowLogs(per_task={}, env_setup=[]),
                     id="no_task_ids",
                 ),
                 pytest.param(
@@ -383,7 +383,7 @@ class TestDirectRayReader:
                             task_run_id="wf.2@inv2",
                         )
                     ],
-                    WorkflowLogs({}, []),
+                    WorkflowLogs(per_task={}, env_setup=[]),
                     id="other_wf_run",
                 ),
             ],

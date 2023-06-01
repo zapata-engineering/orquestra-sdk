@@ -1145,7 +1145,7 @@ class TestGetWorkflowLogs:
         # Then
         mocked_client.get_workflow_run_logs.assert_called_once_with(workflow_run_id)
         assert logs == WorkflowLogs(
-            {
+            per_task={
                 "UNKNOWN TASK INV ID": [
                     "<message sentinel 1>",
                     "<message sentinel 2>",
@@ -1153,7 +1153,7 @@ class TestGetWorkflowLogs:
                     "<message sentinel 4>",
                 ]
             },
-            [],
+            env_setup=[],
         )
 
     @pytest.mark.parametrize(
