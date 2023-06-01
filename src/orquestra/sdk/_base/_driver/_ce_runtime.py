@@ -396,6 +396,7 @@ class CERuntime(RuntimeInterface):
             try:
                 # TODO(ORQSDK-684): driver client cannot do filtering via API yet
                 # https://zapatacomputing.atlassian.net/browse/ORQSDK-684?atlOrigin=eyJpIjoiYmNiZjUyMjZiNzg5NDI2YWJmNGU5NzAxZDI1MmJlNzEiLCJwIjoiaiJ9 # noqa: E501
+                breakpoint()
                 paginated_runs = self._client.list_workflow_runs(
                     page_size=page_size,
                     page_token=page_token,
