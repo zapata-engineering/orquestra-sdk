@@ -9,7 +9,7 @@ import os
 import pathlib
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Tuple, Union
-from urllib.parse import urlparse
+from urllib.parse import urlparse, ParseResult
 
 import filelock
 from pydantic.error_wrappers import ValidationError
@@ -212,12 +212,12 @@ def _resolve_auto_config(config_name) -> RuntimeConfiguration:
     runtime_config = SPECIAL_CONFIG_NAME_DICT[config_name]
 
     try:
-        path = os.environ[CURRENT_CLUSTER_ENV]
+        netloc = os.environ[CURRENT_CLUSTER_ENV]
     except KeyError:
         raise EnvironmentError(
             f"{PASSPORT_FILE_ENV} env variable was set, but {CURRENT_CLUSTER_ENV} not. "
             "Unable to deduce cluster's URI")
-    uri = urlparse(path, scheme="https").geturl()
+    uri = ParseResult("https", netloc)
     breakpoint()
     runtime_config.runtime_options = {
         "uri": uri,
