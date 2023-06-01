@@ -211,14 +211,13 @@ def _resolve_auto_config(config_name) -> RuntimeConfiguration:
 
     runtime_config = SPECIAL_CONFIG_NAME_DICT[config_name]
 
-    uri: str = ""
     try:
         uri = os.environ[CURRENT_CLUSTER_ENV]
     except KeyError:
         raise EnvironmentError(
             f"{PASSPORT_FILE_ENV} env variable was set, but {CURRENT_CLUSTER_ENV} not. "
             "Unable to deduce cluster's URI")
-
+    breakpoint()
     runtime_config.runtime_options = {
         "uri": uri,
         "token": passport_token,
