@@ -308,7 +308,12 @@ class TestDirectRayReader:
         @pytest.mark.parametrize(
             "wf_run_id,parsed_logs,expected",
             [
-                pytest.param("wf.1", [], WorkflowLogs(per_task={}, env_setup=[]), id="no_parsed_logs"),
+                pytest.param(
+                    "wf.1",
+                    [],
+                    WorkflowLogs(per_task={}, env_setup=[]),
+                    id="no_parsed_logs",
+                ),
                 pytest.param(
                     "wf.1",
                     [
