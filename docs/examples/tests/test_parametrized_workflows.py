@@ -13,6 +13,12 @@ import pytest
 
 from .parsers import get_snippet_as_str
 
+# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
+# unraisable exceptions. Last tested with Ray 2.4.0.
+pytestmark = pytest.mark.filterwarnings(
+    "ignore::pytest.PytestUnraisableExceptionWarning"
+)
+
 
 class Snippets:
     @staticmethod
@@ -86,9 +92,6 @@ class TestSnippets:
 
     @staticmethod
     @pytest.mark.dependency()
-    # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
-    # unraisable exceptions. Last tested with Ray 2.2.0.
-    @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     def test_execute_workflow(change_test_dir, shared_ray_conn, change_db_location):
         # Given
         # Prepare the project dir: 'workflow_defs.py' and 'script.py' files
@@ -132,9 +135,6 @@ class TestSnippets:
         assert "3" in std_out
 
     @staticmethod
-    # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
-    # unraisable exceptions. Last tested with Ray 2.2.0.
-    @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     def test_execute_multiple_workflows(
         change_test_dir, shared_ray_conn, change_db_location
     ):

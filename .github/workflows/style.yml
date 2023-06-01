@@ -45,12 +45,25 @@ jobs:
         shell: bash
         run: make github_actions
 
-      # Leverages Makefile to check all style linters
-      - name: Check style
+      # Ensure we don't run checks against stale, cached modules.
+      - name: Clean
         shell: bash
         run: |
           make clean
+
+      # Pyright-specific step. Temporarily separated from the regular "style" check.
+      # To be merged with 'make style' when we fix all pyright errors. Until then,
+      # it only prints type errors, but doesn't fail the job.
+      - name: Run pyright
+        shell: bash
+        run: |
+          make pyright || true
+
+      - name: Check style
+        shell: bash
+        run: |
           make style
+
   ruff:
     runs-on: ubuntu-latest
     name: Style - Ruff
