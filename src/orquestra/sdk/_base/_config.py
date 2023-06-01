@@ -9,7 +9,7 @@ import os
 import pathlib
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Tuple, Union
-from urllib.parse import urlparse
+from urllib.parse import ParseResult, urlparse
 
 import filelock
 from pydantic.error_wrappers import ValidationError
@@ -23,7 +23,7 @@ from orquestra.sdk.schema.configs import (
     RuntimeName,
 )
 
-from ._env import CONFIG_PATH_ENV, PASSPORT_FILE_ENV
+from ._env import CONFIG_PATH_ENV, CURRENT_CLUSTER_ENV, PASSPORT_FILE_ENV
 
 # Why JSON?
 #  The Python TOML package is unmaintained as of 2022-02-18.
@@ -60,10 +60,6 @@ SAME_CLUSTER_RUNTIME_CONFIGURATION = RuntimeConfiguration(
     runtime_name=RuntimeName.CE_REMOTE,
     runtime_options={},
 )
-# We assume that we can access the workflow API under a well-known URI if the passport
-# auth is being used. This relies on the DNS configuration on the remote cluster.
-# Works from CE and jupiter-notebook inside Studio
-SAME_CLUSTER_URL = "http://workflow-driver.workflow-driver"
 
 SPECIAL_CONFIG_NAME_DICT = {
     IN_PROCESS_CONFIG_NAME: IN_PROCESS_RUNTIME_CONFIGURATION,
@@ -214,8 +210,20 @@ def _resolve_auto_config(config_name) -> RuntimeConfiguration:
         ) from e
 
     runtime_config = SPECIAL_CONFIG_NAME_DICT[config_name]
+
+    try:
+        netloc = os.environ[CURRENT_CLUSTER_ENV]
+    except KeyError:
+        raise EnvironmentError(
+            f"{PASSPORT_FILE_ENV} env variable was set, but {CURRENT_CLUSTER_ENV} not. "
+            "Unable to deduce cluster's URI"
+        )
+    uri = ParseResult(
+        scheme="https", netloc=netloc, path="", params="", query="", fragment=""
+    ).geturl()
+
     runtime_config.runtime_options = {
-        "uri": SAME_CLUSTER_URL,
+        "uri": uri,
         "token": passport_token,
     }
     return runtime_config

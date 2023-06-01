@@ -21,6 +21,7 @@ from orquestra.sdk._base._conversions._yaml_exporter import (
     pydantic_to_yaml,
     workflow_to_yaml,
 )
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._qe import _qe_runtime
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing._example_wfs import my_workflow
@@ -1109,16 +1110,19 @@ class TestGetWorkflowLogs:
         logs = runtime.get_workflow_logs(wf_run_id)
 
         # Then
-        assert logs == {
-            "invocation-1-task-multi-output-test": [
-                "a couple of mocked out lines",
-                "joined with newline separator",
-            ],
-            "invocation-0-task-make-greeting-message": [
-                "a couple of mocked out lines",
-                "joined with newline separator",
-            ],
-        }
+        assert logs == WorkflowLogs(
+            per_task={
+                "invocation-1-task-multi-output-test": [
+                    "a couple of mocked out lines",
+                    "joined with newline separator",
+                ],
+                "invocation-0-task-make-greeting-message": [
+                    "a couple of mocked out lines",
+                    "joined with newline separator",
+                ],
+            },
+            env_setup=[],
+        )
 
     def test_invalid_id(self, monkeypatch, runtime, mocked_responses):
         _get_workflow_run = Mock(side_effect=exceptions.NotFoundError)

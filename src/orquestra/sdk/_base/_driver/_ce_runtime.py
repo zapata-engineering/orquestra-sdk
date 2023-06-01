@@ -12,6 +12,7 @@ from typing import Dict, List, Optional, Sequence, Union
 from orquestra.sdk import Project, ProjectRef, Workspace, exceptions
 from orquestra.sdk._base import _retry, serde
 from orquestra.sdk._base._db import WorkflowDB
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.kubernetes.quantity import parse_quantity
 from orquestra.sdk.schema.configs import RuntimeConfiguration
@@ -419,11 +420,9 @@ class CERuntime(RuntimeInterface):
 
         return runs
 
-    def get_workflow_logs(
-        self, wf_run_id: WorkflowRunId
-    ) -> Dict[TaskInvocationId, List[str]]:
+    def get_workflow_logs(self, wf_run_id: WorkflowRunId) -> WorkflowLogs:
         """
-        Get the workflow logs.
+        Get all logs produced during the execution of this workflow run.
 
         Args:
             wf_run_id: the ID of a workflow run
@@ -432,10 +431,6 @@ class CERuntime(RuntimeInterface):
             WorkflowRunNotFound: if the workflow run cannot be found
             UnauthorizedError: if the remote cluster rejects the token
             ...
-
-        Returns:
-            A dictionary whose keys are the task invocation ids, and whose values are a
-                list of log lines corresponding to that invocation.
         """
         try:
             logs: List[str] = self._client.get_workflow_run_logs(wf_run_id)
@@ -454,7 +449,10 @@ class CERuntime(RuntimeInterface):
                 "Please report this as a bug."
             ) from e
 
-        return {"UNKNOWN TASK INV ID": logs}
+        return WorkflowLogs(
+            per_task={"UNKNOWN TASK INV ID": logs},
+            env_setup=[],
+        )
 
     def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
         raise NotImplementedError()
