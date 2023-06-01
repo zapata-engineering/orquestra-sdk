@@ -12,20 +12,22 @@ import io
 import json
 import zlib
 from tarfile import TarFile
-from typing import Generic, List, Mapping, Optional, Tuple, TypeVar, Union
+from typing import Generic, List, Mapping, Optional, TypeVar, Union
 from urllib.parse import urljoin
 
 import pydantic
 import requests
 from requests import codes
 
+from orquestra.sdk import ProjectRef
 from orquestra.sdk._ray._ray_logs import WFLog
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
-    ProjectRef,
+    ProjectId,
     WorkflowRun,
     WorkflowRunMinimal,
+    WorkspaceId,
 )
 
 from . import _exceptions, _models
@@ -51,7 +53,10 @@ API_ACTIONS = {
     "get_workflow_run_logs": "/api/workflow-run-logs",
     "get_task_run_logs": "/api/task-run-logs",
     # Login
-    "get_login_url": "v1/login",
+    "get_login_url": "/api/login",
+    # Workspaces
+    "list_workspaces": "/api/catalog/workspaces",
+    "list_projects": "/api/catalog/workspaces/{}/projects",
 }
 
 
@@ -260,12 +265,15 @@ class DriverClient:
         """
         resp = self._get(
             API_ACTIONS["get_login_url"],
-            query_params={"state": f"{redirect_port}"},
+            query_params={"port": f"{redirect_port}"},
             allow_redirects=False,
         )
+        _handle_common_errors(resp)
         return resp.headers["Location"]
 
-    def get_workflow_def(self, workflow_def_id: _models.WorkflowDefID) -> WorkflowDef:
+    def get_workflow_def(
+        self, workflow_def_id: _models.WorkflowDefID
+    ) -> _models.GetWorkflowDefResponse:
         """
         Gets a stored workflow definition
 
@@ -295,7 +303,7 @@ class DriverClient:
             _models.GetWorkflowDefResponse, _models.MetaEmpty
         ].parse_obj(resp.json())
 
-        return parsed_resp.data.workflow
+        return parsed_resp.data
 
     def delete_workflow_def(self, workflow_def_id: _models.WorkflowDefID):
         """
@@ -359,6 +367,8 @@ class DriverClient:
         workflow_def_id: Optional[_models.WorkflowDefID] = None,
         page_size: Optional[int] = None,
         page_token: Optional[str] = None,
+        workspace: Optional[WorkspaceId] = None,
+        project: Optional[ProjectId] = None,
     ) -> Paginated[WorkflowRunMinimal]:
         """
         List workflow runs with a specified workflow def ID from the workflow driver
@@ -368,12 +378,15 @@ class DriverClient:
             ForbiddenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
         """
+        # Schema: https://github.com/zapatacomputing/workflow-driver/blob/fa3eb17f1132d9c7f4960331ffe7ddbd31e02f8c/openapi/src/resources/workflow-runs.yaml#L10 # noqa: E501
         resp = self._get(
             API_ACTIONS["list_workflow_runs"],
             query_params=_models.ListWorkflowRunsRequest(
                 workflowDefinitionID=workflow_def_id,
                 pageSize=page_size,
                 pageToken=page_token,
+                workspaceId=workspace,
+                projectId=project,
             ).dict(),
         )
 
@@ -391,7 +404,7 @@ class DriverClient:
         workflow_runs = []
         for r in parsed_response.data:
             workflow_def = self.get_workflow_def(r.definitionId)
-            workflow_runs.append(r.to_ir(workflow_def))
+            workflow_runs.append(r.to_ir(workflow_def.workflow))
 
         return Paginated(
             contents=workflow_runs,
@@ -428,7 +441,7 @@ class DriverClient:
 
         workflow_def = self.get_workflow_def(parsed_response.data.definitionId)
 
-        return parsed_response.data.to_ir(workflow_def)
+        return parsed_response.data.to_ir(workflow_def.workflow)
 
     def terminate_workflow_run(self, wf_run_id: _models.WorkflowRunID):
         """
@@ -682,3 +695,86 @@ class DriverClient:
 
         # TODO: unzip, get logs (ORQSDK-654)
         return resp.content
+
+    def list_workspaces(self):
+        """
+        Gets the list of all workspaces
+        """
+
+        resp = self._get(
+            API_ACTIONS["list_workspaces"],
+            query_params=None,
+        )
+
+        _handle_common_errors(resp)
+
+        parsed_response = pydantic.parse_obj_as(
+            _models.ListWorkspacesResponse, resp.json()
+        )
+
+        return parsed_response
+
+    def list_projects(self, workspace_id):
+        """
+        Gets the list of all projects in given workspace
+        """
+        default_tenant_id = 0
+        special_workspace = "system"
+        zri_type = "resource_group"
+
+        # we have to build project ZRI from some hardcoded values + workspaceId
+        # based on https://zapatacomputing.atlassian.net/wiki/spaces/Platform/pages/512787664/2022-09-26+Zapata+Resource+Identifiers+ZRIs  # noqa
+        workspace_zri = (
+            f"zri:v1::{default_tenant_id}:"
+            f"{special_workspace}:{zri_type}:{workspace_id}"
+        )
+
+        resp = self._get(
+            API_ACTIONS["list_projects"].format(workspace_zri),
+            query_params=None,
+        )
+
+        if resp.status_code == codes.BAD_REQUEST:
+            raise _exceptions.InvalidWorkspaceZRI(workspace_zri)
+
+        _handle_common_errors(resp)
+
+        parsed_response = pydantic.parse_obj_as(
+            _models.ListProjectResponse, resp.json()
+        )
+
+        return parsed_response
+
+    def get_workflow_project(self, wf_run_id: _models.WorkflowRunID) -> ProjectRef:
+        """
+        Gets the status of a workflow run from the workflow driver
+
+        Raises:
+            InvalidWorkflowRunID: see the exception's docstring
+            WorkflowRunNotFound: see the exception's docstring
+            InvalidTokenError: see the exception's docstring
+            ForbiddenError: see the exception's docstring
+            UnknownHTTPError: see the exception's docstring
+        """
+
+        resp = self._get(
+            API_ACTIONS["get_workflow_run"].format(wf_run_id),
+            query_params=None,
+        )
+
+        if resp.status_code == codes.BAD_REQUEST:
+            raise _exceptions.InvalidWorkflowRunID(wf_run_id)
+        elif resp.status_code == codes.NOT_FOUND:
+            raise _exceptions.WorkflowRunNotFound(wf_run_id)
+
+        _handle_common_errors(resp)
+
+        parsed_response = _models.Response[
+            _models.WorkflowRunResponse, _models.MetaEmpty
+        ].parse_obj(resp.json())
+
+        workflow_def = self.get_workflow_def(parsed_response.data.definitionId)
+
+        return ProjectRef(
+            workspace_id=workflow_def.workspaceId, project_id=workflow_def.project
+        )

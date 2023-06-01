@@ -34,6 +34,10 @@ class SecretNode(BaseModel):
     # runtimes.
     secret_config: t.Optional[str] = None
 
+    # Workspace ID
+    # This is used locally and remotely to get a secret from a specific workspace
+    workspace_id: t.Optional[str] = None
+
 
 class GitURL(BaseModel):
     original_url: str
@@ -83,10 +87,11 @@ class InlineImport(BaseModel):
 
 
 class PackageSpec(BaseModel):
+    # noqa E501
     """Representation of single package import
 
     The fields in this class are based on:
-    https://packaging.pypa.io/en/latest/requirements.html#packaging.requirements.Requirement   # noqa
+    https://packaging.pypa.io/en/latest/requirements.html#packaging.requirements.Requirement
 
     Look there for more information about valid string values.
     """

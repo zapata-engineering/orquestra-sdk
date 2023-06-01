@@ -1,7 +1,6 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-import os
 from pathlib import Path
 from typing import Any, Dict, Tuple, Union
 
@@ -34,6 +33,8 @@ def runtime(tmp_path_factory: pytest.TempPathFactory, change_db_location):
     yield rt
 
 
+# Uses real Ray connection
+@pytest.mark.slow
 # We intentionally load old workflow definitions
 @pytest.mark.filterwarnings("ignore::orquestra.sdk.exceptions.VersionMismatch")
 class TestOutputs:

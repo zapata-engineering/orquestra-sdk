@@ -60,7 +60,7 @@ class Snippets:
         # This blocks the process until the workflow is completed.
         wf_run.wait_until_finished()
 
-        # Should print ("Hello, Orquestra!",)
+        # Should print "Hello, Orquestra!"
         print(wf_run.get_results())
         # </snippet>
 
@@ -112,4 +112,4 @@ class TestSnippets:
         # Then
         proc.check_returncode()
         std_out = str(proc.stdout, "utf-8")
-        assert "('Hello Orquestra!',)" in std_out
+        assert "Hello Orquestra!" in std_out

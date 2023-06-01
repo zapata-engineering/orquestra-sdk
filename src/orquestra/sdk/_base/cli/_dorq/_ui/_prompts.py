@@ -57,7 +57,10 @@ class Prompter:
         default: t.Optional[str] = None,
     ) -> t.Union[ChoiceID, T]:
         """
-        Presents the user a choice and returns what they selected
+        Presents the user a choice and returns what they selected.
+
+        If only one option is available, the user is prompted to confirm that this is
+        the intended outcome and, if so, that option is selected automatically.
 
         Args:
             choices: The list of choices to present to the user. If this is of the shape
@@ -74,6 +77,14 @@ class Prompter:
         Raises:
             UserCancelledPrompt if the user cancels the prompt
         """
+        # If there are no choices, report it to the user and exit.
+        if len(choices) == 0:
+            raise exceptions.NoOptionsAvailableError(message)
+
+        # If there's only one choice, select it automatically and confirm with the user
+        # that that's what they want to do.
+        if len(choices) == 1:
+            return self._handle_single_option(message, choices[0])
 
         question = inquirer.List(
             SINGLE_INPUT,
@@ -157,6 +168,17 @@ class Prompter:
         Raises:
             UserCancelledPrompt if the user cancels the prompt
         """
+        # If there are no choices, report it to the user and exit.
+        if len(choices) == 0:
+            raise exceptions.NoOptionsAvailableError(message)
+
+        # If there's only one choice, select it automatically and confirm with the user
+        # that that's what they want to do.
+        if len(choices) == 1:
+            return t.cast(
+                t.Union[t.List[ChoiceID], t.List[T]],
+                [self._handle_single_option(message, choices[0])],
+            )
 
         question = inquirer.Checkbox(
             SINGLE_INPUT,
@@ -269,3 +291,26 @@ class Prompter:
             return None
 
         return answers[SINGLE_INPUT]
+
+    def _handle_single_option(
+        self, message: str, choice: t.Union[ChoiceID, t.Tuple[ChoiceID, T]]
+    ) -> t.Union[ChoiceID, T]:
+        """
+        Rather than ask the user to choose between 1 option, prompt for confirmation.
+        """
+        name: ChoiceID
+        value: t.Union[ChoiceID, T]
+        # When the choice is a tuple, we unpack the display name and the returned value.
+        # Otherwise, the choice is a ChoiceID and should be used as both the display
+        # name and the returned value.
+        if isinstance(choice, tuple):
+            name, value = choice
+        else:
+            name, value = choice, choice
+
+        if not self.confirm(
+            f"{message} - only one option is available. Proceed with {name}?",
+            default=True,
+        ):
+            raise exceptions.UserCancelledPrompt(f"User cancelled {message} prompt")
+        return value

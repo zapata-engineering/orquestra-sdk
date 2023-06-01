@@ -3,7 +3,7 @@
 ################################################################################
 import sys
 import typing as t
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -16,7 +16,7 @@ from orquestra.sdk._base.cli._dorq._ui import _models as ui_models
 from orquestra.sdk._base.cli._dorq._ui import _presenters
 from orquestra.sdk._base.cli._dorq._ui._corq_format import per_command
 from orquestra.sdk.schema.ir import ArtifactFormat
-from orquestra.sdk.schema.responses import ServiceResponse
+from orquestra.sdk.schema.responses import ResponseStatusCode, ServiceResponse
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 
 
@@ -28,6 +28,13 @@ def add(a, b):
 @sdk.workflow
 def my_wf():
     return add(1, 2)
+
+
+@pytest.fixture
+def sys_exit_mock(monkeypatch):
+    exit_mock = Mock()
+    monkeypatch.setattr(sys, "exit", exit_mock)
+    return exit_mock
 
 
 class TestWrappedCorqOutputPresenter:
@@ -107,16 +114,13 @@ class TestWrappedCorqOutputPresenter:
             assert f"Workflow logs saved at {dummy_path}" in captured.out
 
     @staticmethod
-    def test_handling_error(monkeypatch):
+    def test_handling_error(monkeypatch, sys_exit_mock):
         # Given
         status_int = 42
         status_code_enum = Mock()
         status_code_enum.value = status_int
         pretty_print_mock = Mock(return_value=status_code_enum)
         monkeypatch.setattr(_errors, "pretty_print_exception", pretty_print_mock)
-
-        exit_mock = Mock()
-        monkeypatch.setattr(sys, "exit", exit_mock)
 
         exception: t.Any = "<exception object sentinel>"
 
@@ -130,7 +134,7 @@ class TestWrappedCorqOutputPresenter:
         pretty_print_mock.assert_called_with(exception)
 
         # We expect status code was passed to sys.exit()
-        exit_mock.assert_called_with(status_int)
+        sys_exit_mock.assert_called_with(status_int)
 
 
 class TestArtifactPresenter:
@@ -242,7 +246,7 @@ class TestArtifactPresenter:
         ) == captured.out
 
 
-class TestServicesPresneter:
+class TestServicesPresenter:
     class TestShowServices:
         def test_running(self, capsys):
             # Given
@@ -275,6 +279,27 @@ class TestServicesPresneter:
             # Then
             captured = capsys.readouterr()
             assert "mocked  Not Running  something" in captured.out
+
+    @staticmethod
+    def test_show_failure(capsys, sys_exit_mock):
+        # Given
+        presenter = _presenters.ServicePresenter()
+        services = [
+            ServiceResponse(
+                name="background service", is_running=False, info="something"
+            )
+        ]
+
+        # When
+        presenter.show_failure(services)
+
+        # Then
+        captured = capsys.readouterr()
+        assert services[0].name in captured.out
+        assert services[0].info in captured.out
+        assert captured.err == ""
+
+        sys_exit_mock.assert_called_with(ResponseStatusCode.SERVICES_ERROR.value)
 
 
 class TestLoginPresenter:

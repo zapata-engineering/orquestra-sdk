@@ -93,7 +93,7 @@ def test_import_faker_unload(import_modifier):
     sys.meta_path.insert(sys.meta_path.index(PathFinder), finder)
     original_imports = set(sys.modules.keys())
     assert "orquestra.fake.hellothere" not in original_imports
-    import orquestra.fake.hellothere  # type: ignore
+    import orquestra.fake.hellothere  # type: ignore # noqa: F401
 
     assert "orquestra.fake.hellothere" in sys.modules.keys()
     finder.unload_fakes()

@@ -15,7 +15,7 @@ import pytest
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
-from orquestra.sdk._base._testing import _example_wfs
+from orquestra.sdk._base._testing import _example_wfs, _ipc
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk._ray import _client, _dag, _ray_logs
 from orquestra.sdk.schema import configs, ir
@@ -274,27 +274,29 @@ class TestRayRuntimeMethods:
                │
                │
                ▼
-              [ ]  => waiting
-               │
-               │
-               ▼
             """
-            triggers = [tmp_path / f"trigger{i}.txt" for i in range(2)]
 
-            wf = _example_wfs.serial_wf_with_file_triggers(
-                triggers, task_timeout=2.0
-            ).model
+            wf = _example_wfs.infinite_workflow().model
+
             wf_run_id = runtime.create_workflow_run(wf, None)
             wf_run = runtime.get_workflow_run_status(wf_run_id)
             assert wf_run.status.state == State.RUNNING
 
             runtime.stop_workflow_run(wf_run_id)
 
-            wf_run = runtime.get_workflow_run_status(wf_run_id)
-            assert wf_run.status.state == State.TERMINATED
+            # ray should cancel workflow synchronously, but just in case it doesn't
+            # let's give a workflow some time to change its state
+            timeout = time.time() + 30  # now + 30 seconds
+            while True:
+                if time.time() > timeout:
+                    assert False, "timeout while waiting for workflow termination"
+                wf_run = runtime.get_workflow_run_status(wf_run_id)
+                if wf_run.status.state != State.RUNNING:
+                    assert wf_run.status.state == State.TERMINATED
+                    break
 
+        @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_on_finished_workflow(self, runtime: _dag.RayRuntime, tmp_path):
-
             wf = _example_wfs.multioutput_task_wf.model
             wf_run_id = runtime.create_workflow_run(wf, None)
             _wait_to_finish_wf(wf_run_id, runtime)
@@ -307,6 +309,7 @@ class TestRayRuntimeMethods:
             # cancel changes the state to terminated
             assert status.status.state == State.TERMINATED
 
+    @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
     class TestGetWorkflowRunOutputsNonBlocking:
         """
         Tests that validate get_workflow_run_outputs_non_blocking
@@ -345,10 +348,10 @@ class TestRayRuntimeMethods:
                │
                ▼
             """
-            triggers = [tmp_path / f"trigger{i}.txt" for i in range(2)]
+            triggers = [_ipc.TriggerServer() for _ in range(2)]
 
             wf = _example_wfs.serial_wf_with_file_triggers(
-                triggers, task_timeout=2.0
+                [trigger.port for trigger in triggers], task_timeout=5.0
             ).model
             run_id = runtime.create_workflow_run(wf, None)
 
@@ -356,9 +359,9 @@ class TestRayRuntimeMethods:
             with pytest.raises(exceptions.WorkflowRunNotSucceeded):
                 runtime.get_workflow_run_outputs_non_blocking(run_id)
 
-            # let the workers complete the workflow
-            triggers[0].write_text("triggered")
-            triggers[1].write_text("triggered")
+            for trigger in triggers:
+                trigger.trigger()
+                trigger.close()
 
     class TestGetAvailableOutputs:
         """
@@ -401,6 +404,7 @@ class TestRayRuntimeMethods:
             task_output = list(inv_artifacts.values())[0]
             assert task_output == JSONResult(value="58")
 
+        @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_after_one_task_finishes(self, runtime: _dag.RayRuntime, tmp_path):
             """
             Workflow graph in the scenario under test:
@@ -417,17 +421,14 @@ class TestRayRuntimeMethods:
                │
                ▼
             """
-            # Given
-            triggers = [tmp_path / f"trigger{i}.txt" for i in range(3)]
-
-            # Let the first task finish quickly
-            triggers[0].write_text("triggered")
+            triggers = [_ipc.TriggerServer() for _ in range(3)]
 
             wf = _example_wfs.serial_wf_with_file_triggers(
-                triggers, task_timeout=2.0
+                [trigger.port for trigger in triggers], task_timeout=10.0
             ).model
             wf_run_id = runtime.create_workflow_run(wf, None)
 
+            triggers[0].trigger()
             # Await completion of the first task
             loop_start = time.time()
             while True:
@@ -443,7 +444,7 @@ class TestRayRuntimeMethods:
                 if len(succeeded_runs) >= 1:
                     break
 
-                if time.time() - loop_start > 10.0:
+                if time.time() - loop_start > 20.0:
                     pytest.fail(
                         f"Timeout when awaiting for workflow finish. Full run: {wf_run}"
                     )
@@ -454,11 +455,15 @@ class TestRayRuntimeMethods:
             outputs_dict = runtime.get_available_outputs(wf_run_id)
 
             # Then
-            assert len(outputs_dict) == len(succeeded_runs)
+            assert len(outputs_dict) == 1
+            assert len(succeeded_runs) == 1
 
             # let the workers complete the workflow
-            triggers[1].write_text("triggered")
-            triggers[2].write_text("triggered")
+            triggers[1].trigger()
+            triggers[2].trigger()
+
+            for trigger in triggers:
+                trigger.close()
 
 
 @pytest.mark.slow
@@ -560,6 +565,15 @@ class TestRayRuntimeMethods:
                 ),
                 "invocation-2-task-concat": JSONResult(value='"Emiliano Zapata"'),
                 "invocation-3-task-capitalize-inline": JSONResult(value='"Zapata"'),
+            },
+        ),
+        (
+            _example_wfs.wf_with_explicit_n_outputs,
+            (JSONResult(value="true"),),
+            {
+                "invocation-0-task-task-with-single-output-explicit": JSONResult(
+                    value="true"
+                ),
             },
         ),
     ],

@@ -21,6 +21,7 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base import _db
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._qe._client import QEClient
+from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._base.cli._dorq import _repos
 from orquestra.sdk._base.cli._dorq._ui import _models as ui_models
@@ -246,6 +247,8 @@ class TestWorkflowRunRepo:
             def test_passing_errors(monkeypatch, exc):
                 # Given
                 config = "<config sentinel>"
+                ws = "<workspace sentinel>"
+                project = "<project sentinel>"
 
                 monkeypatch.setattr(sdk, "list_workflow_runs", Mock(side_effect=exc))
 
@@ -254,26 +257,36 @@ class TestWorkflowRunRepo:
                 # Then
                 with pytest.raises(type(exc)):
                     # When
-                    _ = repo.list_wf_run_ids(config)
+                    _ = repo.list_wf_run_ids(config, ProjectRef(ws, project))
 
         class TestSubmit:
             @staticmethod
-            def test_passes_config_and_id():
+            def test_passes_parameters():
                 # Given
                 repo = _repos.WorkflowRunRepo()
 
                 config = "test_cfg"
-
                 run_id = "wf.2"
+                project_id = "my_project"
+                workspace_id = "my_workspace"
+
                 wf_def = Mock()
                 wf_def.run().run_id = run_id
 
                 # When
-                result_id = repo.submit(wf_def, config, ignore_dirty_repo=True)
+                result_id = repo.submit(
+                    wf_def,
+                    config,
+                    workspace_id=workspace_id,
+                    project_id=project_id,
+                    ignore_dirty_repo=True,
+                )
 
                 # Then
                 assert result_id == run_id
-                wf_def.run.assert_called_with(config)
+                wf_def.run.assert_called_with(
+                    config, workspace_id=workspace_id, project_id=project_id
+                )
 
             class TestWithDirtyRepo:
                 @staticmethod
@@ -303,7 +316,13 @@ class TestWorkflowRunRepo:
 
                     # When + Then
                     with pytest.raises(exceptions.DirtyGitRepo):
-                        _ = repo.submit(wf_def, config, ignore_dirty_repo=False)
+                        _ = repo.submit(
+                            wf_def,
+                            config,
+                            ignore_dirty_repo=False,
+                            workspace_id="ws",
+                            project_id="project",
+                        )
 
                 @staticmethod
                 def test_warns(wf_def):
@@ -313,7 +332,13 @@ class TestWorkflowRunRepo:
 
                     # When + Then
                     with pytest.warns(exceptions.DirtyGitRepo):
-                        _ = repo.submit(wf_def, config, ignore_dirty_repo=True)
+                        _ = repo.submit(
+                            wf_def,
+                            config,
+                            ignore_dirty_repo=True,
+                            workspace_id="ws",
+                            project_id="project",
+                        )
 
         class TestStop:
             @staticmethod
@@ -354,10 +379,10 @@ class TestWorkflowRunRepo:
                 config_name = "<config sentinel>"
 
                 wf_run = Mock()
-                fake_outputs = [
+                fake_outputs = (
                     "<output sentinel 0>",
                     "<output sentinel 1>",
-                ]
+                )
                 wf_run.get_results.return_value = fake_outputs
 
                 by_id = Mock(return_value=wf_run)
@@ -801,6 +826,8 @@ class TestWorkflowRunRepo:
         def test_list_wf_runs(monkeypatch):
             # Given
             config = "ray"
+            ws = "ws"
+            proj = "proj"
             stub_run_ids = ["wf.1", "wf.2"]
             state = State("RUNNING")
             mock_wf_runs = []
@@ -825,7 +852,7 @@ class TestWorkflowRunRepo:
             repo = _repos.WorkflowRunRepo()
 
             # When
-            runs = repo.list_wf_runs(config)
+            runs = repo.list_wf_runs(config, ws, proj)
 
             # Then
             assert [run.id for run in runs] == stub_run_ids
@@ -842,6 +869,8 @@ class TestWorkflowRunRepo:
 
             # Given
             config = "ray"
+            ws = "ws"
+            proj = "proj"
             stub_run_ids = ["wf.1", "wf.2"]
             state = State("RUNNING")
 
@@ -871,7 +900,7 @@ class TestWorkflowRunRepo:
             repo = _repos.WorkflowRunRepo()
 
             # When
-            run_ids = repo.list_wf_run_ids(config)
+            run_ids = repo.list_wf_run_ids(config, ProjectRef(ws, proj))
 
             # Then
             assert run_ids == stub_run_ids
@@ -1143,6 +1172,11 @@ class TestSummaryRepo:
 
 
 class TestConfigRepo:
+    @pytest.fixture(autouse=True)
+    def patch_token_checking(self, monkeypatch: pytest.MonkeyPatch):
+        check = create_autospec(_repos.check_jwt_without_signature_verification)
+        monkeypatch.setattr(_repos, "check_jwt_without_signature_verification", check)
+
     class TestUnit:
         """
         Test boundary::
@@ -1166,9 +1200,10 @@ class TestConfigRepo:
             # Then
             assert names == configs
 
-        @pytest.mark.parametrize("ce", [True, False])
-        def test_store_token(self, monkeypatch, ce):
-
+        @pytest.mark.parametrize(
+            "runtime_name", [RuntimeName.CE_REMOTE, RuntimeName.QE_REMOTE]
+        )
+        def test_store_token(self, monkeypatch, runtime_name):
             repo = _repos.ConfigRepo()
             uri = "funny_uri"
             token = "even_funnier_token"
@@ -1186,7 +1221,7 @@ class TestConfigRepo:
             )
 
             # When
-            config_name = repo.store_token_in_config(uri, token, ce)
+            config_name = repo.store_token_in_config(uri, token, runtime_name)
 
             # Then
             (
@@ -1196,11 +1231,7 @@ class TestConfigRepo:
             ) = mock_save_or_update.call_args[0]
 
             assert config_parameter == generated_name
-            assert (
-                runtime_parameter == RuntimeName.CE_REMOTE
-                if ce
-                else RuntimeName.QE_REMOTE
-            )
+            assert runtime_parameter == runtime_name
             assert options_parameter["uri"] == uri
             assert options_parameter["token"] == token
             assert config_name == generated_name
@@ -1253,7 +1284,7 @@ class TestConfigRepo:
 
         @staticmethod
         @pytest.mark.parametrize(
-            "ce, runtime_name", [(True, "CE_REMOTE"), (False, "QE_REMOTE")]
+            "runtime_name", [RuntimeName.CE_REMOTE, RuntimeName.QE_REMOTE]
         )
         @pytest.mark.parametrize(
             "uri, token, config_name",
@@ -1273,7 +1304,6 @@ class TestConfigRepo:
             uri,
             token,
             config_name,
-            ce,
             runtime_name,
         ):
             """
@@ -1295,7 +1325,7 @@ class TestConfigRepo:
             )
 
             # When
-            repo.store_token_in_config(uri, token, ce)
+            repo.store_token_in_config(uri, token, runtime_name)
 
             # Then
             with open(config_path) as f:
@@ -1304,17 +1334,22 @@ class TestConfigRepo:
                 assert (
                     content["configs"][config_name]["runtime_options"]["token"] == token
                 )
-                assert content["configs"][config_name]["runtime_name"] == runtime_name
+                assert (
+                    content["configs"][config_name]["runtime_name"]
+                    == runtime_name.value
+                )
 
 
 class TestRuntimeRepo:
-    @pytest.mark.parametrize("ce", [True, False])
-    def test_return_valid_token(self, monkeypatch, ce):
+    @pytest.mark.parametrize(
+        "runtime_name", [RuntimeName.CE_REMOTE, RuntimeName.QE_REMOTE]
+    )
+    def test_return_valid_token(self, monkeypatch, runtime_name):
         # Given
         fake_login_url = "http://my_login.url"
 
         monkeypatch.setattr(
-            DriverClient if ce else QEClient,
+            DriverClient if runtime_name == RuntimeName.CE_REMOTE else QEClient,
             "get_login_url",
             lambda x, _: fake_login_url,
         )
@@ -1322,29 +1357,33 @@ class TestRuntimeRepo:
         repo = _repos.RuntimeRepo()
 
         # When
-        login_url = repo.get_login_url("uri", ce, 0)
+        login_url = repo.get_login_url("uri", runtime_name, 0)
 
         # Then
         assert login_url == fake_login_url
 
-    @pytest.mark.parametrize("ce", [True, False])
+    @pytest.mark.parametrize(
+        "runtime_name", [RuntimeName.CE_REMOTE, RuntimeName.QE_REMOTE]
+    )
     @pytest.mark.parametrize(
         "exception", [requests.ConnectionError, requests.exceptions.MissingSchema]
     )
-    def test_exceptions(self, monkeypatch, exception, ce):
+    def test_exceptions(self, monkeypatch, exception, runtime_name):
         # Given
         def _exception(_, __):
             raise exception
 
         monkeypatch.setattr(
-            DriverClient if ce else QEClient, "get_login_url", _exception
+            DriverClient if runtime_name == RuntimeName.CE_REMOTE else QEClient,
+            "get_login_url",
+            _exception,
         )
 
         repo = _repos.RuntimeRepo()
 
         # Then
         with pytest.raises(exceptions.LoginURLUnavailableError):
-            repo.get_login_url("uri", ce, 0)
+            repo.get_login_url("uri", runtime_name, 0)
 
 
 class TestResolveDottedName:
@@ -1487,6 +1526,7 @@ class TestWorkflowDefRepoIntegration:
                 "wf_using_inline_imports",
                 "wf_using_git_imports",
                 "serial_wf_with_slow_middle_task",
+                "infinite_workflow",
                 "serial_wf_with_file_triggers",
                 "exception_wf_with_multiple_values",
                 "wf_with_log",
@@ -1495,6 +1535,7 @@ class TestWorkflowDefRepoIntegration:
                 "wf_with_secrets",
                 "workflow_parametrised_with_resources",
                 "workflow_with_different_resources",
+                "wf_with_explicit_n_outputs",
             ]
 
         @staticmethod
@@ -1534,3 +1575,47 @@ class TestWorkflowDefRepoIntegration:
             with pytest.raises(exceptions.WorkflowSyntaxError):
                 # When
                 _ = repo.get_workflow_def(_example_wfs, wf_name)
+
+
+class TestSpacesRepo:
+    class TestUnit:
+        """
+        Test boundary::
+            [SpacesRepo]->sdk._config
+
+        """
+
+        def test_list_workspaces(self, monkeypatch):
+            """
+            Simple test that verifies that repo return all the workspaces returned by
+            sdk
+            """
+            spaces = ["ws1", "ws2"]
+
+            monkeypatch.setattr(sdk, "list_workspaces", lambda _: spaces)
+
+            repo = _repos.SpacesRepo()
+
+            # When
+            names = repo.list_workspaces("config")
+
+            # Then
+            assert names == spaces
+
+        def test_list_projects(self, monkeypatch):
+            """
+            Simple test that verifies that repo return all the projects
+            returned by
+            sdk
+            """
+            projects = ["p1", "p2"]
+
+            monkeypatch.setattr(sdk, "list_projects", lambda *_: projects)
+
+            repo = _repos.SpacesRepo()
+
+            # When
+            names = repo.list_projects("config", "workspace")
+
+            # Then
+            assert names == projects

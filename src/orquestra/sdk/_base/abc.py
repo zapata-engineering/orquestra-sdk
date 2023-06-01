@@ -15,16 +15,19 @@ from abc import ABC, abstractmethod
 from datetime import timedelta
 from pathlib import Path
 
+from orquestra.sdk._base._spaces._structs import Project, ProjectRef, Workspace
+from orquestra.sdk.exceptions import WorkspacesNotSupportedError
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
-    ProjectRef,
+    ProjectId,
     State,
     WorkflowRun,
     WorkflowRunId,
     WorkflowRunMinimal,
+    WorkspaceId,
 )
 
 
@@ -158,6 +161,8 @@ class RuntimeInterface(ABC):
         limit: t.Optional[int] = None,
         max_age: t.Optional[timedelta] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
+        workspace: t.Optional[WorkspaceId] = None,
+        project: t.Optional[ProjectId] = None
     ) -> t.Sequence[WorkflowRunMinimal]:
         """
         List the workflow runs, with some filters
@@ -165,7 +170,9 @@ class RuntimeInterface(ABC):
         Args:
             limit: Restrict the number of runs to return, prioritising the most recent.
             max_age: Only return runs younger than the specified maximum age.
-            status: Only return runs of runs with the specified status.
+            state: Only return runs of runs with the specified status.
+            workspace: Only return runs from the specified workspace. Supported only
+                on CE.
         Returns:
                 A list of the workflow runs
         """
@@ -186,6 +193,25 @@ class RuntimeInterface(ABC):
         See LogReader.get_task_logs()
         """
         raise NotImplementedError()
+
+    @abstractmethod
+    def get_workflow_project(self, wf_run_id: WorkflowRunId):
+        """
+        Returns project and workspace IDs of given workflow
+        """
+        raise NotImplementedError()
+
+    def list_workspaces(self) -> t.Sequence[Workspace]:
+        """
+        List workspaces available to a user. Works only on CE
+        """
+        raise WorkspacesNotSupportedError()
+
+    def list_projects(self, workspace_id: str) -> t.Sequence[Project]:
+        """
+        List workspaces available to a user. Works only on CE
+        """
+        raise WorkspacesNotSupportedError()
 
 
 class WorkflowRepo(ABC):

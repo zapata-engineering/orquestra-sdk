@@ -15,7 +15,7 @@ import pytest
 
 import orquestra.sdk as sdk
 from orquestra.sdk._base import _dsl, loader
-from orquestra.sdk.exceptions import DirtyGitRepo, InvalidTaskDefinitionError
+from orquestra.sdk.exceptions import DirtyGitRepo
 
 DEFAULT_LOCAL_REPO_PATH = Path(__file__).parent.resolve()
 

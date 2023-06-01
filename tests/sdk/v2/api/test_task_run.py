@@ -10,8 +10,10 @@ from unittest.mock import MagicMock, Mock, create_autospec
 
 import pytest
 
+import orquestra.sdk as sdk
 from orquestra.sdk._base import _api, _workflow, serde
 from orquestra.sdk._base.abc import RuntimeInterface
+from orquestra.sdk._ray import _dag
 from orquestra.sdk.exceptions import TaskRunNotFound
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.workflow_run import RunStatus, State
@@ -383,7 +385,10 @@ class TestTaskRun:
                     "wf_single_task_with_secret_parent",
                     [
                         ir.SecretNode(
-                            id="secret-0", secret_name="test", secret_config=None
+                            id="secret-0",
+                            secret_name="test",
+                            secret_config=None,
+                            workspace_id=None,
                         )
                     ],
                     {},
@@ -522,3 +527,156 @@ class TestTaskRun:
             # then
             assert task_input.args == [21]
             assert task_input.kwargs == {}
+
+
+# region: fixtures
+@pytest.fixture
+def mock_argo_context(monkeypatch):
+    wf_run_id = "hello-orquestra-nk148"
+    task_inv_id = "hello"
+    argo_node_id = f"{wf_run_id}-r000-4219834842"
+    argo_template = (
+        "{\n"
+        f'    "name": "{task_inv_id}",\n'
+        '    "inputs": "",\n'
+        '    "outputs": ""\n'
+        "}"
+    )
+    monkeypatch.setenv("ARGO_NODE_ID", argo_node_id)
+    monkeypatch.setenv("ARGO_TEMPLATE", argo_template)
+    monkeypatch.setattr(
+        sdk._base._exec_ctx,
+        "global_context",
+        sdk._base._exec_ctx.ExecContext.PLATFORM_QE,
+    )
+    return wf_run_id, task_inv_id, argo_node_id
+
+
+@pytest.fixture
+def mock_ray_context(monkeypatch):
+    wf_run_id = "wf.1"
+    task_inv_id = "inv-1-generate-data"
+    task_run_id = f"{wf_run_id}@{task_inv_id}"
+    monkeypatch.setattr(
+        _dag,
+        "get_current_ids",
+        Mock(return_value=(wf_run_id, task_inv_id, task_run_id)),
+    )
+    monkeypatch.setattr(
+        sdk._base._exec_ctx, "global_context", sdk._base._exec_ctx.ExecContext.RAY
+    )
+
+    return wf_run_id, task_inv_id, task_run_id
+
+
+@pytest.fixture
+def mock_in_process_context(monkeypatch):
+    wf_run_id = "wf_run_id"
+    task_inv_id = "task_inv_id"
+    task_run_id = "task_run_id"
+
+    monkeypatch.setattr(
+        sdk._base._exec_ctx, "global_context", sdk._base._exec_ctx.ExecContext.DIRECT
+    )
+    monkeypatch.setattr(
+        sdk._base._in_process_runtime,
+        "global_current_run_ids",
+        (wf_run_id, task_inv_id, task_run_id),
+    )
+
+    return (wf_run_id, task_inv_id, task_run_id)
+
+
+# endregion
+
+
+class TestGetBackendIDs:
+    class TestRuntimeSpecificGetIDs:
+        @staticmethod
+        def test_get_argo_backend_ids(mock_argo_context):
+            assert _api._task_run._get_argo_backend_ids() == mock_argo_context
+
+        @staticmethod
+        def test_get_ray_backend_ids(mock_ray_context):
+            """
+            Test boundary::
+                [_dag.get_current_ids]
+
+            The Ray underlying machinery is tested in integration tests for RayRuntime.
+            """
+            assert _api._task_run._get_ray_backend_ids() == mock_ray_context
+
+        @staticmethod
+        def test_get_in_process_backend_ids(mock_in_process_context):
+            assert (
+                _api._task_run._get_in_process_backend_ids() == mock_in_process_context
+            )
+
+    class TestRuntimeDependentBehaviour:
+        @staticmethod
+        def test_gets_ray_ids_for_ray_runtimes(mock_ray_context, monkeypatch):
+            monkeypatch.setattr(
+                "orquestra.sdk._base._api._task_run._get_argo_backend_ids",
+                mock_get_argo_ids := Mock(return_value="<argo ids sentinel>"),
+            )
+            monkeypatch.setattr(
+                "orquestra.sdk._base._api._task_run._get_ray_backend_ids",
+                mock_get_ray_ids := Mock(return_value="<ray ids sentinel>"),
+            )
+            monkeypatch.setattr(
+                "orquestra.sdk._base._api._task_run._get_in_process_backend_ids",
+                mock_get_in_process_ids := Mock(
+                    return_value="<in_process ids sentinel>"
+                ),
+            )
+
+            assert sdk.current_run_ids() == "<ray ids sentinel>"
+            mock_get_argo_ids.assert_not_called()
+            mock_get_ray_ids.assert_called_once()
+            mock_get_in_process_ids.assert_not_called()
+
+        @staticmethod
+        def test_gets_qe_ids_for_qe_runtimes(mock_argo_context, monkeypatch):
+            monkeypatch.setattr(
+                "orquestra.sdk._base._api._task_run._get_argo_backend_ids",
+                mock_get_argo_ids := Mock(return_value="<argo ids sentinel>"),
+            )
+            monkeypatch.setattr(
+                "orquestra.sdk._base._api._task_run._get_ray_backend_ids",
+                mock_get_ray_ids := Mock(return_value="<ray ids sentinel>"),
+            )
+            monkeypatch.setattr(
+                "orquestra.sdk._base._api._task_run._get_in_process_backend_ids",
+                mock_get_in_process_ids := Mock(
+                    return_value="<in_process ids sentinel>"
+                ),
+            )
+
+            assert sdk.current_run_ids() == "<argo ids sentinel>"
+            mock_get_argo_ids.assert_called_once()
+            mock_get_ray_ids.assert_not_called()
+            mock_get_in_process_ids.assert_not_called()
+
+        @staticmethod
+        def test_gets_in_process_ids_for_in_process_runtimes(
+            mock_in_process_context, monkeypatch
+        ):
+            monkeypatch.setattr(
+                "orquestra.sdk._base._api._task_run._get_argo_backend_ids",
+                mock_get_argo_ids := Mock(return_value="<argo ids sentinel>"),
+            )
+            monkeypatch.setattr(
+                "orquestra.sdk._base._api._task_run._get_ray_backend_ids",
+                mock_get_ray_ids := Mock(return_value="<ray ids sentinel>"),
+            )
+            monkeypatch.setattr(
+                "orquestra.sdk._base._api._task_run._get_in_process_backend_ids",
+                mock_get_in_process_ids := Mock(
+                    return_value="<in_process ids sentinel>"
+                ),
+            )
+
+            assert sdk.current_run_ids() == "<in_process ids sentinel>"
+            mock_get_argo_ids.assert_not_called()
+            mock_get_ray_ids.assert_not_called()
+            mock_get_in_process_ids.assert_called_once()

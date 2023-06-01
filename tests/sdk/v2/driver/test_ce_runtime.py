@@ -6,8 +6,7 @@ from unittest.mock import DEFAULT, MagicMock, Mock, call, create_autospec
 
 import pytest
 
-from orquestra.sdk import exceptions
-from orquestra.sdk._base import serde
+from orquestra.sdk import Project, Workspace, exceptions
 from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _models
 from orquestra.sdk._base._testing._example_wfs import (
     my_workflow,
@@ -15,7 +14,7 @@ from orquestra.sdk._base._testing._example_wfs import (
     workflow_with_different_resources,
 )
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
-from orquestra.sdk.schema.ir import ArtifactFormat, WorkflowDef
+from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, JSONResult
 from orquestra.sdk.schema.workflow_run import (
     RunStatus,
@@ -927,36 +926,66 @@ class TestListWorkflowRuns:
 
         # Then
         mocked_client.list_workflow_runs.assert_called_once_with(
-            page_size=None, page_token=None
+            page_size=None, page_token=None, workspace=None, project=None
         )
         assert runs == wf_runs
 
     @pytest.mark.parametrize(
         "limit, expected_requests",
         [
-            (89, [call(page_size=89, page_token=None)]),
+            (89, [call(page_size=89, page_token=None, workspace=None, project=None)]),
             (
                 144,
                 [
-                    call(page_size=100, page_token=None),
-                    call(page_size=44, page_token="<token sentinel 0>"),
+                    call(page_size=100, page_token=None, workspace=None, project=None),
+                    call(
+                        page_size=44,
+                        page_token="<token sentinel 0>",
+                        workspace=None,
+                        project=None,
+                    ),
                 ],
             ),
             (
                 233,
                 [
-                    call(page_size=100, page_token=None),
-                    call(page_size=100, page_token="<token sentinel 0>"),
-                    call(page_size=33, page_token="<token sentinel 1>"),
+                    call(page_size=100, page_token=None, workspace=None, project=None),
+                    call(
+                        page_size=100,
+                        page_token="<token sentinel 0>",
+                        workspace=None,
+                        project=None,
+                    ),
+                    call(
+                        page_size=33,
+                        page_token="<token sentinel 1>",
+                        workspace=None,
+                        project=None,
+                    ),
                 ],
             ),
             (
                 377,
                 [
-                    call(page_size=100, page_token=None),
-                    call(page_size=100, page_token="<token sentinel 0>"),
-                    call(page_size=100, page_token="<token sentinel 1>"),
-                    call(page_size=77, page_token="<token sentinel 2>"),
+                    call(page_size=100, page_token=None, workspace=None, project=None),
+                    call(
+                        page_size=100,
+                        page_token="<token sentinel 0>",
+                        workspace=None,
+                        project=None,
+                    ),
+                    call(
+                        page_size=100,
+                        page_token="<token sentinel 1>",
+                        workspace=None,
+                        project=None,
+                    ),
+                    call(
+                        page_size=77,
+                        page_token="<token sentinel 2>",
+                        workspace=None,
+                        project=None,
+                    ),
                 ],
             ),
         ],
@@ -986,10 +1015,10 @@ class TestListWorkflowRuns:
     @pytest.mark.parametrize(
         "limit, expected_requests",
         [
-            (89, [call(page_size=89, page_token=None)]),
-            (144, [call(page_size=100, page_token=None)]),
-            (233, [call(page_size=100, page_token=None)]),
-            (377, [call(page_size=100, page_token=None)]),
+            (89, [call(page_size=89, page_token=None, workspace=None, project=None)]),
+            (144, [call(page_size=100, page_token=None, workspace=None, project=None)]),
+            (233, [call(page_size=100, page_token=None, workspace=None, project=None)]),
+            (377, [call(page_size=100, page_token=None, workspace=None, project=None)]),
         ],
     )
     def test_limit_applied_when_there_are_fewer_workflows(
@@ -1151,3 +1180,116 @@ class TestGetWorkflowLogs:
         # When
         with pytest.raises(expected_exception):
             runtime.get_workflow_logs(workflow_run_id)
+
+
+class TestListWorkspaces:
+    def test_happy_path(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+    ):
+        workspaces = [
+            Mock(
+                id="<id sentinel 1>",
+                displayName="<displayName sentinel 1>",
+                some_other_parameter="w/e",
+            ),
+            Mock(
+                id="<id sentinel 2>",
+                displayName="<displayName sentinel 2>",
+                some_other_parameter="w/e",
+            ),
+        ]
+        mocked_client.list_workspaces.return_value = workspaces
+
+        workspace_defs = runtime.list_workspaces()
+
+        assert len(workspace_defs) == 2
+        assert workspace_defs == [
+            Workspace(workspace_id="<id sentinel 1>", name="<displayName sentinel 1>"),
+            Workspace(workspace_id="<id sentinel 2>", name="<displayName sentinel 2>"),
+        ]
+
+    @pytest.mark.parametrize(
+        "exception, expected_exception",
+        [
+            (_exceptions.InvalidTokenError, exceptions.UnauthorizedError),
+            (_exceptions.ForbiddenError, exceptions.UnauthorizedError),
+        ],
+    )
+    def test_exception_handling(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        exception,
+        expected_exception,
+    ):
+        # Given
+        mocked_client.list_workspaces.side_effect = exception(MagicMock())
+
+        # When
+        with pytest.raises(expected_exception):
+            runtime.list_workspaces()
+
+
+class TestListProjects:
+    def test_happy_path(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+    ):
+        projects = [
+            Mock(
+                id="<id sentinel 1>",
+                displayName="<displayName sentinel 1>",
+                resourceGroupId="<rgID1>",
+                some_other_parameter="w/e",
+            ),
+            Mock(
+                id="<id sentinel 2>",
+                displayName="<displayName sentinel 2>",
+                resourceGroupId="<rgID2>",
+                some_other_parameter="w/e",
+            ),
+        ]
+        mocked_client.list_projects.return_value = projects
+        workspace_id = "id"
+
+        workspace_defs = runtime.list_projects(workspace_id)
+
+        assert len(workspace_defs) == 2
+        assert workspace_defs == [
+            Project(
+                project_id="<id sentinel 1>",
+                workspace_id="<rgID1>",
+                name="<displayName sentinel 1>",
+            ),
+            Project(
+                project_id="<id sentinel 2>",
+                workspace_id="<rgID2>",
+                name="<displayName sentinel 2>",
+            ),
+        ]
+
+    @pytest.mark.parametrize(
+        "exception, expected_exception",
+        [
+            (_exceptions.InvalidTokenError, exceptions.UnauthorizedError),
+            (_exceptions.ForbiddenError, exceptions.UnauthorizedError),
+            (_exceptions.InvalidWorkspaceZRI, exceptions.NotFoundError),
+        ],
+    )
+    def test_exception_handling(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        exception,
+        expected_exception,
+    ):
+        # Given
+        mocked_client.list_projects.side_effect = exception(MagicMock())
+        workspace_id = "id"
+
+        # When
+        with pytest.raises(expected_exception):
+            runtime.list_projects(workspace_id)

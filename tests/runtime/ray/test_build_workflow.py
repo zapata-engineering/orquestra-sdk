@@ -1,9 +1,12 @@
-from typing import Dict, Union
+################################################################################
+# © Copyright 2023 Zapata Computing Inc.
+################################################################################
+
+from typing import Dict, Optional, Union
 from unittest.mock import ANY, Mock, call, create_autospec
 
 import pytest
 
-from orquestra.sdk._base import serde
 from orquestra.sdk._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
 )
@@ -145,8 +148,13 @@ class TestResourcesInMakeDag:
         expected: Dict[str, Union[int, float]],
         types: Dict[str, type],
     ):
+        # Given
         workflow = workflow_parametrised_with_resources(**resources).model
+
+        # When
         _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, None)
+
+        # Then
         calls = client.add_options.call_args_list
 
         # We should only have two calls: our invocation and the aggregation step
@@ -158,10 +166,95 @@ class TestResourcesInMakeDag:
             metadata=ANY,
             runtime_env=ANY,
             catch_exceptions=ANY,
-            **expected
+            max_retries=ANY,
+            **expected,
         )
         for kwarg_name, type_ in types.items():
             assert isinstance(calls[0].kwargs[kwarg_name], type_)
+
+    @pytest.mark.parametrize(
+        "custom_image, expected_resources",
+        (
+            ("a_custom_image:latest", {"image:a_custom_image:latest": 1}),
+            (
+                None,
+                {
+                    "image:hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:mocked": 1  # noqa: E501
+                },
+            ),
+        ),
+    )
+    class TestSettingCustomImage:
+        def test_with_env_set(
+            self,
+            client: Mock,
+            wf_run_id: str,
+            monkeypatch: pytest.MonkeyPatch,
+            custom_image: Optional[str],
+            expected_resources: Dict[str, int],
+        ):
+            # Given
+            monkeypatch.setenv("ORQ_RAY_SET_CUSTOM_IMAGE_RESOURCES", "1")
+            workflow = workflow_parametrised_with_resources(
+                custom_image=custom_image
+            ).model
+
+            # To prevent hardcoding a version number, let's override the version for
+            # this test.
+
+            # We can be certain the workfloe def metadata is available
+            assert workflow.metadata is not None
+            workflow.metadata.sdk_version.original = "mocked"
+
+            # When
+            _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, None)
+
+            # Then
+            calls = client.add_options.call_args_list
+
+            # We should only have two calls: our invocation and the aggregation step
+            assert len(calls) == 2
+            # Checking our call did not have any resources included
+
+            assert calls[0] == call(
+                ANY,
+                name=ANY,
+                metadata=ANY,
+                runtime_env=ANY,
+                catch_exceptions=ANY,
+                max_retries=ANY,
+                resources=expected_resources,
+            )
+
+        def test_with_env_not_set(
+            self,
+            client: Mock,
+            wf_run_id: str,
+            custom_image: Optional[str],
+            expected_resources: Dict[str, int],
+        ):
+            # Given
+            workflow = workflow_parametrised_with_resources(
+                custom_image=custom_image
+            ).model
+
+            # When
+            _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, None)
+
+            # Then
+            calls = client.add_options.call_args_list
+
+            # We should only have two calls: our invocation and the aggregation step
+            assert len(calls) == 2
+            # Checking our call did not have any resources included
+            assert calls[0] == call(
+                ANY,
+                name=ANY,
+                metadata=ANY,
+                runtime_env=ANY,
+                catch_exceptions=ANY,
+                max_retries=ANY,
+            )
 
 
 class TestArgumentUnwrapper:
@@ -239,7 +332,7 @@ class TestArgumentUnwrapper:
 
             # Then
             mock_secret_get.assert_called_with(
-                secret_node.secret_name, config_name=None
+                secret_node.secret_name, config_name=None, workspace_id=None
             )
             fn.assert_called_with(expected_arg)
 

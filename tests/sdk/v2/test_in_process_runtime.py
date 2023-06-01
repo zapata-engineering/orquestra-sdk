@@ -17,9 +17,13 @@ from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import serde
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
-from orquestra.sdk._base._testing._example_wfs import wf_with_secrets
+from orquestra.sdk._base._spaces._structs import ProjectRef
+from orquestra.sdk._base._testing._example_wfs import (
+    wf_with_explicit_n_outputs,
+    wf_with_secrets,
+)
 from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.workflow_run import ProjectRef, State, WorkflowRunId
+from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
 from orquestra.sdk.secrets import _client, _models
 
 from .data.complex_serialization.workflow_defs import (
@@ -77,6 +81,13 @@ def test_secret_inside_ir(
     result = runtime.get_workflow_run_outputs_non_blocking(run_id)
 
     assert result == (serde.result_from_artifact("Mocked", ir.ArtifactFormat.AUTO),)
+
+
+def test_explicit_n_outputs_single(runtime: InProcessRuntime):
+    run_id = runtime.create_workflow_run(wf_with_explicit_n_outputs().model, None)
+    result = runtime.get_workflow_run_outputs_non_blocking(run_id)
+
+    assert result == (serde.result_from_artifact(True, ir.ArtifactFormat.AUTO),)
 
 
 class TestQueriesAfterRunning:
@@ -233,6 +244,21 @@ class TestListWorkflowRuns:
         # Then
         # It doesn't make sense to get a running workflow from this runtime
         assert len(wf_runs) == 1
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "kwargs",
+        [
+            {"workspace": "<workspace sentinel>"},
+            {"project": "<project sentinel>"},
+            {"workspace": "<workspace sentinel>", "project": "<project sentinel>"},
+        ],
+    )
+    def test_raises_WorkspacesNotSupported_error_if_workspace_or_project(
+        runtime, kwargs
+    ):
+        with pytest.raises(exceptions.WorkspacesNotSupportedError):
+            runtime.list_workflow_runs(**kwargs)
 
 
 class TestUnsupportedMethods:

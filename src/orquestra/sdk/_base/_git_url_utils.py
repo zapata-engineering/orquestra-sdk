@@ -1,3 +1,7 @@
+################################################################################
+# © Copyright 2023 Zapata Computing Inc.
+################################################################################
+
 import re
 from typing import Optional
 
@@ -37,7 +41,9 @@ def build_git_url(url: GitURL, protocol_override: Optional[str] = None) -> str:
     # Dereference secret used as password
     if url.password is not None:
         secret = secrets.get(
-            url.password.secret_name, config_name=url.password.secret_config
+            url.password.secret_name,
+            config_name=url.password.secret_config,
+            workspace_id=url.password.workspace_id,
         )
         password = f":{secret}"
     else:

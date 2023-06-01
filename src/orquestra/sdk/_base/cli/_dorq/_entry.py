@@ -12,6 +12,8 @@ from pathlib import Path
 import click
 import cloup
 
+from orquestra.sdk.schema.configs import RemoteRuntime, RuntimeName
+
 from . import _cli_logs
 
 # Adds '-h' alias for '--help'
@@ -34,6 +36,24 @@ CONFIG_OPTION = cloup.option(
 Name of the config used to submit workflow. Use 'in-process' for running workflow
 as local python process, 'ray' to run workflow in local ray cluster.
 To get config name for remote runtime, use orq login -s <uri> first
+""",
+)
+
+WORKSPACE_OPTION = cloup.option(
+    "-w",
+    "--workspace-id",
+    required=False,
+    help="""
+ID of the workspace used to submit workflow. Used only on CE runtime
+""",
+)
+
+PROJECT_OPTION = cloup.option(
+    "-p",
+    "--project-id",
+    required=False,
+    help="""
+ID of the project used to submit workflow. Used only on CE runtime
 """,
 )
 
@@ -81,6 +101,8 @@ selecting a function from the ones available in 'module'.
 """,
 )
 @CONFIG_OPTION
+@WORKSPACE_OPTION
+@PROJECT_OPTION
 @cloup.option(
     "--force",
     is_flag=True,
@@ -90,7 +112,14 @@ selecting a function from the ones available in 'module'.
         "uncommitted changes."
     ),
 )
-def submit(module: str, name: t.Optional[str], config: t.Optional[str], force: bool):
+def submit(
+    module: str,
+    name: t.Optional[str],
+    config: t.Optional[str],
+    workspace_id: t.Optional[str],
+    project_id: t.Optional[str],
+    force: bool,
+):
     """
     Submits a workflow for execution.
 
@@ -104,7 +133,7 @@ def submit(module: str, name: t.Optional[str], config: t.Optional[str], force: b
     from ._workflow._submit import Action
 
     action = Action()
-    action.on_cmd_call(module, name, config, force)
+    action.on_cmd_call(module, name, config, workspace_id, project_id, force)
 
 
 @workflow.command()
@@ -207,14 +236,18 @@ def stop(wf_run_id: t.Optional[str], config: t.Optional[str]):
     "-s",
     "--state",
     multiple=True,
-    help="State of workflow runs to display. Max be specified multiple times.",
+    help="State of workflow runs to display. May be specified multiple times.",
 )
+@WORKSPACE_OPTION
+@PROJECT_OPTION
 def list(
     config: t.Optional[str],
     interactive: t.Optional[bool] = False,
     limit: t.Optional[int] = None,
     max_age: t.Optional[str] = None,
     state: t.Optional[t.List[str]] = None,
+    workspace_id: t.Optional[str] = None,
+    project_id: t.Optional[str] = None,
 ):
     """
     Lists the available workflows
@@ -223,7 +256,9 @@ def list(
     from ._workflow._list import Action
 
     action = Action()
-    action.on_cmd_call(config, limit, max_age, state, interactive)
+    action.on_cmd_call(
+        config, limit, max_age, state, workspace_id, project_id, interactive
+    )
 
 
 # ----------- 'orq task' commands ----------
@@ -353,10 +388,17 @@ dorq.section(
     status,
 )
 
+server_config_group = cloup.OptionGroup(
+    "Server configuration", constraint=cloup.constraints.RequireExactly(1)
+)
+
 
 @dorq.command()
-@cloup.option(
-    "-s", "--server", required=True, help="server URI that you want to log into"
+@server_config_group.option(
+    "-c", "--config", required=False, help="The name of an existing configureation."
+)
+@server_config_group.option(
+    "-s", "--server", required=False, help="server URI that you want to log into"
 )
 @cloup.option(
     "-t",
@@ -365,15 +407,28 @@ dorq.section(
     help="User Token to given server. To generate token, use this command without -t"
     "option first",
 )
-@cloup.option("--ce", is_flag=True, default=False, help="Start a Ray cluster")
-def login(server: str, token: t.Optional[str], ce: bool):
+@cloup.option_group(
+    "Remote Environment",
+    cloup.option(
+        "--qe", is_flag=True, default=False, help="Log in to Quantum Engine. (Default)"
+    ),
+    cloup.option("--ce", is_flag=True, default=False, help="Log in to Compute Engine."),
+    constraint=cloup.constraints.mutually_exclusive,
+)
+def login(config: str, server: str, token: t.Optional[str], ce: bool, qe: bool):
     """
     Login in to remote cluster
     """
     from ._login._login import Action
 
+    runtime_name: RemoteRuntime
+    if ce:
+        runtime_name = RuntimeName.CE_REMOTE
+    else:
+        runtime_name = RuntimeName.QE_REMOTE
+
     action = Action()
-    action.on_cmd_call(server, token, ce)
+    action.on_cmd_call(config, server, token, runtime_name)
 
 
 def main():

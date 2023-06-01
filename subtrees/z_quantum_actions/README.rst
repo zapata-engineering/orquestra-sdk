@@ -33,14 +33,14 @@ Files for Github Actions:
    * workflow-templates/submit-dev-main-pr.yml
    * actions/: All actions folders for *uses:* includes for
      workflow-templates should not be modified normally.
-   * actions/coverage/action.yml 
+   * actions/coverage/action.yml
    * actions/publish-release/action.yml
    * actions/ssh_setup/action.yml
    * actions/style/action.yml
 
 Actions Subtree Setup
 ==========================
-This repo is designed to be subtree added to your git repo. 
+This repo is designed to be subtree added to your git repo.
 
 .. Note:: We use underscores in the subtree folder name so that python imports
    to *subtrees.z_quantum_actions/* work properly.

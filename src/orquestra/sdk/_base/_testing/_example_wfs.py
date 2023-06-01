@@ -2,10 +2,10 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 import time
-from pathlib import Path
 from typing import Optional, Sequence
 
 import orquestra.sdk as sdk
+import orquestra.sdk._base._testing._ipc as ipc
 
 
 @sdk.task
@@ -53,7 +53,7 @@ def multioutput_task():
 def task_with_git_import():
     import piccup  # type: ignore # noqa
 
-    # return whatever - make sure it just doesnt assert on import
+    # return whatever - make sure it just doesn't assert on import
     return 2
 
 
@@ -183,36 +183,48 @@ def serial_wf_with_slow_middle_task():
 
 
 @sdk.task
-def add_with_trigger(a, b, path: Path, timeout: float):
+def add_with_trigger(a, b, port, timeout: float):
     """
-    Simulates a task that takes some time to run. Waits until a file exists
-    under `path` or for `timeout` seconds.
+    Simulates a task that takes some time to run. Waits until a message
+    in given socket appears
     """
-    start_time = time.time()
-    while not path.exists():
-        ts = time.time()
-        if ts - start_time > timeout:
-            raise TimeoutError()
-
-        time.sleep(0.01)
+    ipc.TriggerClient(port).wait_on_trigger(timeout)
 
     return a + b
 
 
+@sdk.task
+def long_task(*_):
+    import time
+
+    # sleep for an hour - just in case someone forgets to terminate this buddy
+    time.sleep(60 * 60)
+
+
 @sdk.workflow
-def serial_wf_with_file_triggers(trigger_paths: Sequence[Path], task_timeout: float):
+def infinite_workflow():
+    """
+    Allows reproducing scenario where tasks take some time to run.
+    This workflow is used to test termination as it will never complete
+    This workflow isn't actually infinite - it just takes an hour of sleep time to
+    complete
+    """
+    return long_task()
+
+
+@sdk.workflow
+def serial_wf_with_file_triggers(ports: Sequence[int], task_timeout: float):
     """
     Allows reproducing scenario where tasks take some time to run. Uses
-    FS-based process coordination.
+    socket-based coordination.
 
-    There are as many workflow graph nodes as there are `trigger_paths`. Each
-    task in the series waits for file to be present at a corresponding path.
+    There are as many workflow graph nodes as there are `ports`. Each
+    task in the series waits for message to be present at a corresponding port.
     """
-    first_future = add_with_trigger(21, 37, trigger_paths[0], timeout=task_timeout)
+    first_future = add_with_trigger(21, 37, ports[0], timeout=task_timeout)
     future = first_future
-    for trigger_path in trigger_paths[1:]:
-        # Like a 'reduce(); over 'trigger_output_paths'
-        future = add_with_trigger(future, future, trigger_path, timeout=task_timeout)
+    for port in ports[1:]:
+        future = add_with_trigger(future, future, port, timeout=task_timeout)
 
     return [future]
 
@@ -283,13 +295,28 @@ def parametrized_wf(a: int):
 
 @sdk.workflow
 def wf_with_secrets():
-    secret = sdk.secrets.get("some-secret", config_name="test_config_default")
+    secret = sdk.secrets.get(
+        "some-secret", config_name="test_config_default", workspace_id="test_workspace"
+    )
     return capitalize_inline(secret)
 
 
 @sdk.workflow
-def workflow_parametrised_with_resources(cpu=None, memory=None, gpu=None):
-    return add(1, 1).with_invocation_meta(cpu=cpu, memory=memory, gpu=gpu)
+def workflow_parametrised_with_resources(
+    cpu=None, memory=None, gpu=None, custom_image=None
+):
+    future = add(1, 1)
+
+    if cpu is not None:
+        future = future.with_invocation_meta(cpu=cpu)
+    if memory is not None:
+        future = future.with_invocation_meta(memory=memory)
+    if gpu is not None:
+        future = future.with_invocation_meta(gpu=gpu)
+    if custom_image is not None:
+        future = future.with_invocation_meta(custom_image=custom_image)
+
+    return future
 
 
 @sdk.workflow
@@ -301,3 +328,13 @@ def workflow_with_different_resources():
     gpu = add(1, 1).with_invocation_meta(gpu="1")
     all_resources = add(1, 1).with_invocation_meta(cpu="2000m", memory="2Gi", gpu="0")
     return cpu, small_cpu, memory, small_memory, gpu, all_resources
+
+
+@sdk.task(source_import=sdk.InlineImport(), n_outputs=1)
+def task_with_single_output_explicit():
+    return True
+
+
+@sdk.workflow
+def wf_with_explicit_n_outputs():
+    return task_with_single_output_explicit()

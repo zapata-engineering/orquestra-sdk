@@ -22,13 +22,13 @@ from orquestra.sdk._base._conversions._yaml_exporter import (
     workflow_to_yaml,
 )
 from orquestra.sdk._base._qe import _qe_runtime
+from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing._example_wfs import my_workflow
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.ir import ArtifactFormat, ArtifactNodeId, TaskInvocationId
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import JSONResult, PickleResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
-    ProjectRef,
     RunStatus,
     State,
     TaskRun,
@@ -1366,6 +1366,21 @@ class TestListWorkflowRuns:
         runs = runtime.list_workflow_runs(limit=2)
         # Then
         assert len(runs) == 2
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "kwargs",
+        [
+            {"workspace": "<workspace sentinel>"},
+            {"project": "<project sentinel>"},
+            {"workspace": "<workspace sentinel>", "project": "<project sentinel>"},
+        ],
+    )
+    def test_raises_WorkspacesNotSupported_error_if_workspace_or_project(
+        runtime, kwargs
+    ):
+        with pytest.raises(exceptions.WorkspacesNotSupportedError):
+            runtime.list_workflow_runs(**kwargs)
 
 
 @pytest.mark.parametrize(
