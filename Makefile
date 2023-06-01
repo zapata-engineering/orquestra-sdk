@@ -96,6 +96,14 @@ isort:
 mypy:
 	$(PYTHON) -m mypy src tests
 
+
+# Type check the project. Alternative to mypy. We'll eventually make it
+# required but we need to gradually improve ourcodebase.
+# (no override)
+.PHONY:
+pyright:
+	$(PYTHON) -m pyright src tests
+
 # (override)
 style: flake8 black isort mypy
 	@echo This project passes style!
