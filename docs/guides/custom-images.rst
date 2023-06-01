@@ -40,12 +40,8 @@ Publishing the Image
 --------------------
 
 Once you have your ``Dockerfile`` ready, you can publish your image to our Nexus repository by using standard Docker tools.
-Please refer to `this page <https://zapatacomputing.atlassian.net/wiki/spaces/~61209e4528ae75006af8a1b8/pages/619577422/Nexus+Starts+Here>`_
+Please refer to `this page <https://zapatacomputing.atlassian.net/wiki/spaces/PRO/pages/619577422/Nexus+Users+Guide>`_
 to see how.
-
-..
-    TODO: Either move the page to a more general space or copy the relevant bits here
-
 
 Using the Image on Compute Engine
 ---------------------------------
