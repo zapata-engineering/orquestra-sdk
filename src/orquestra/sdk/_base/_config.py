@@ -9,7 +9,7 @@ import os
 import pathlib
 from pathlib import Path
 from typing import Any, List, Mapping, Optional, Tuple, Union
-from urllib.parse import urlparse, ParseResult
+from urllib.parse import ParseResult, urlparse
 
 import filelock
 from pydantic.error_wrappers import ValidationError
@@ -23,7 +23,7 @@ from orquestra.sdk.schema.configs import (
     RuntimeName,
 )
 
-from ._env import CONFIG_PATH_ENV, PASSPORT_FILE_ENV, CURRENT_CLUSTER_ENV
+from ._env import CONFIG_PATH_ENV, CURRENT_CLUSTER_ENV, PASSPORT_FILE_ENV
 
 # Why JSON?
 #  The Python TOML package is unmaintained as of 2022-02-18.
@@ -216,9 +216,10 @@ def _resolve_auto_config(config_name) -> RuntimeConfiguration:
     except KeyError:
         raise EnvironmentError(
             f"{PASSPORT_FILE_ENV} env variable was set, but {CURRENT_CLUSTER_ENV} not. "
-            "Unable to deduce cluster's URI")
+            "Unable to deduce cluster's URI"
+        )
     uri = ParseResult("https", netloc, "", "", "", "").geturl()
-    breakpoint()
+
     runtime_config.runtime_options = {
         "uri": uri,
         "token": passport_token,
