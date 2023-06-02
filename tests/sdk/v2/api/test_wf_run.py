@@ -353,6 +353,32 @@ class TestWorkflowRun:
                         # When
                         _ = _api.WorkflowRun.by_id(run_id=run_id)
 
+    class TestStartFromIR:
+        @pytest.fixture
+        def wf_ir_def(self, sample_wf_def):
+            return sample_wf_def.model
+
+        @pytest.mark.parametrize(
+            "config", ["in_process", _api.RuntimeConfig.in_process()]
+        )
+        def test_happy_path(self, wf_ir_def, config):
+            wf_run = _api.WorkflowRun.start_from_ir(wf_ir_def, config)
+
+            assert wf_run.get_results() == ("Hellothere", "Generalkenobi")
+
+        def test_wrong_config_type(self, wf_ir_def):
+            with pytest.raises(TypeError):
+                _api.WorkflowRun.start_from_ir(wf_ir_def, 123)  # type: ignore
+
+        def test_different_runtime(self, wf_ir_def, mock_runtime):
+            mock_config = MagicMock(_api.RuntimeConfig)
+            mock_config._runtime_name = "runtime_name"
+            mock_config._get_runtime.return_value = mock_runtime
+
+            wf_run = _api.WorkflowRun.start_from_ir(wf_ir_def, mock_config)
+
+            assert wf_run.run_id == "wf_pass_tuple-1"
+
     class TestGetStatus:
         @staticmethod
         def test_returns_status_from_runtime(run, mock_runtime):
