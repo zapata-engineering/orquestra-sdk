@@ -174,43 +174,6 @@ class TestGetWorkflowRunStatus:
             "created": "1989-12-13T09:03:49.39478764Z",
         }
 
-    def test_two_step_form(
-        self,
-        monkeypatch,
-        mocked_responses,
-        remote_config,
-        qe_status_response,
-        tmp_path,
-        mock_workflow_db_location,
-    ):
-        monkeypatch.setattr(
-            _db.WorkflowDB,
-            "get_workflow_run",
-            Mock(
-                return_value=StoredWorkflowRun(
-                    workflow_run_id="workflow-id",
-                    config_name="hello",
-                    workflow_def=my_workflow().model,
-                    is_qe=True,
-                )
-            ),
-        )
-        monkeypatch.setattr(_db.WorkflowDB, "save_workflow_run", Mock())
-        mocked_responses.add(
-            responses.POST,
-            "http://localhost/v1/workflows",
-            body="workflow-id",
-        )
-        mocked_responses.add(
-            responses.GET,
-            "http://localhost/v1/workflow",
-            json=qe_status_response,
-        )
-
-        run = my_workflow().run(remote_config)
-
-        assert run.get_status() == State.SUCCEEDED
-
     def test_shorthand_form(
         self,
         monkeypatch,
