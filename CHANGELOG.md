@@ -19,6 +19,7 @@
 
 💅 *Improvements*
 * Add prompters to `orq wf submit` command for CE runtime if workspace and project weren't passed explicitly
+* `orquestra-sdk-base` CPU container image has a 20% size reduction.
 
 🥷 *Internal*
 
@@ -52,7 +53,6 @@
 * Fixed tasks that failed when explicitly state `n_outputs=1` on QE and in-process.
 
 💅 *Improvements*
-* `orquestra-sdk` CPU Docker image has a 20% size reduction.
 * `orq login` will perform some sanity checks before saving the token.
 * If `orq up` fails, the output will now include the error message from the underlying subprocess.
 
