@@ -55,7 +55,7 @@ jobs:
           ref: ${{ github.ref }}
           path_to_dockerfile: 'docker/Dockerfile'
           docker_context_path: 'docker'
-          target_docker_repository: 'hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base'
+          target_docker_repository: 'hub.stage.nexus.orquestra.io/users/james.clark/orquestra-sdk-base'
           github_sha: ${{ github.sha }}
           build_number: ${{ github.run_number }}
           # Add any desired additional tags for the image. When this action is
