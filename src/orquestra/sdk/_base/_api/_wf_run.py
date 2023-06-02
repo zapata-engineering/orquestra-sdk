@@ -135,7 +135,21 @@ class WorkflowRun:
         cls,
         wf_def: ir.WorkflowDef,
         config: t.Union[RuntimeConfig, str],
+        workspace_id: t.Optional[WorkspaceId] = None,
+        project_id: t.Optional[ProjectId] = None,
     ):
+        """
+        Start workflow run from its IR representation
+
+        Args:
+            wf_def: IR definition of a workflow.
+            config: SDK needs to know where to execute the workflow. The config
+                contains the required details. This can be a RuntimeConfig object, or
+                the name of a saved configuration.
+            workspace_id: ID of the workspace for workflow - supported only on CE
+            project_id: ID of the project for workflow - supported only on CE
+
+        """
         _config: RuntimeConfig
         if isinstance(config, RuntimeConfig):
             _config = config
@@ -154,11 +168,14 @@ class WorkflowRun:
 
         assert runtime is not None
 
-        wf_run = cls._start(
-            wf_def=wf_def,
-            runtime=runtime,
-            config=_config,
+        _project: t.Optional[ProjectRef] = resolve_studio_project_ref(
+            workspace_id, project_id, _config.name
         )
+
+        wf_run = cls._start(
+            wf_def=wf_def, runtime=runtime, config=_config, project=_project
+        )
+
         return wf_run
 
     @classmethod
