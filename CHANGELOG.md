@@ -19,6 +19,7 @@
 
 💅 *Improvements*
 * Add prompters to `orq wf submit` command for CE runtime if workspace and project weren't passed explicitly
+* `orquestra-sdk-base` CPU container image has a 20% size reduction.
 
 🥷 *Internal*
 
