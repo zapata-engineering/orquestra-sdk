@@ -7,7 +7,10 @@ from contextlib import AbstractContextManager
 from pathlib import Path
 from typing import List, Optional, Union
 
-from orquestra.sdk._base._db._migration import migrate_project_db_to_shared_db
+from orquestra.sdk._base._db._migration import (
+    migrate_project_db_to_shared_db,
+    run_migrations,
+)
 from orquestra.sdk._base._env import DB_PATH_ENV
 from orquestra.sdk._base.abc import WorkflowRepo
 from orquestra.sdk.exceptions import WorkflowNotFoundError
@@ -24,6 +27,7 @@ def _create_workflow_table(db: sqlite3.Connection):
         db.execute(
             "CREATE UNIQUE INDEX IF NOT EXISTS workflow_runs_id ON workflow_runs(workflow_run_id)"  # noqa: E501
         )
+        run_migrations(db)
 
 
 def _get_default_db_location() -> Path:
@@ -69,11 +73,12 @@ class WorkflowDB(WorkflowRepo, AbstractContextManager):
     ):
         with self._db:
             self._db.execute(
-                "INSERT INTO workflow_runs VALUES (?, ?, ?)",
+                "INSERT INTO workflow_runs VALUES (?, ?, ?, ?)",
                 (
                     workflow_run.workflow_run_id,
                     workflow_run.config_name,
                     workflow_run.workflow_def.json(),
+                    workflow_run.is_qe,
                 ),
             )
 
@@ -105,6 +110,7 @@ class WorkflowDB(WorkflowRepo, AbstractContextManager):
                 workflow_run_id=result[0],
                 config_name=result[1],
                 workflow_def=WorkflowDef.parse_raw(result[2]),
+                is_qe=result[3] or True,
             )
 
     def get_workflow_runs_list(
@@ -145,6 +151,7 @@ class WorkflowDB(WorkflowRepo, AbstractContextManager):
                 workflow_run_id=row[0],
                 config_name=row[1],
                 workflow_def=WorkflowDef.parse_raw(row[2]),
+                is_qe=row[3] or True,
             )
             for row in result
         ]

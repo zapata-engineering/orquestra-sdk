@@ -191,6 +191,7 @@ class TestGetWorkflowRunStatus:
                     workflow_run_id="workflow-id",
                     config_name="hello",
                     workflow_def=my_workflow().model,
+                    is_qe=True,
                 )
             ),
         )

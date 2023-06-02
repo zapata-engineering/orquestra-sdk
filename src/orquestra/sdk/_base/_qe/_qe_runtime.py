@@ -594,6 +594,7 @@ class QERuntime(RuntimeInterface):
             workflow_run_id=workflow_run_id,
             config_name=self._config.config_name,
             workflow_def=workflow_def,
+            is_qe=True,
         )
         with WorkflowDB.open_project_db(self._project_dir) as db:
             db.save_workflow_run(wf_run)
@@ -619,13 +620,24 @@ class QERuntime(RuntimeInterface):
                 except exceptions.WorkflowNotFoundError:
                     # explicit re-raise
                     raise
-
         except sqlite3.OperationalError as e:
             raise exceptions.WorkflowNotFoundError(workflow_run_id) from e
 
+        if not wf_run.is_qe:
+            raise exceptions.WorkflowRunNotFoundError(
+                f"Workflow {workflow_run_id} not found"
+            )
+
         wf_def = wf_run.workflow_def
-        with _http_error_handling():
-            json_response = self._client.get_workflow(wf_id=workflow_run_id)
+        try:
+            with _http_error_handling():
+                json_response = self._client.get_workflow(wf_id=workflow_run_id)
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 404:
+                raise exceptions.WorkflowRunNotFoundError(
+                    f"Workflow {workflow_run_id} not found"
+                )
+            raise e
 
         # Load the Argo representation from the response
         # TODO/FIXME: Is this a stable interface? Should it be exposed?

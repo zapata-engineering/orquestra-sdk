@@ -310,6 +310,7 @@ class RayRuntime(RuntimeInterface):
             workflow_run_id=wf_run_id,
             config_name=self._config.config_name,
             workflow_def=workflow_def,
+            is_qe=False,
         )
         with WorkflowDB.open_project_db(self._project_dir) as db:
             db.save_workflow_run(wf_run)

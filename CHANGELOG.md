@@ -17,6 +17,7 @@
 🐛 *Bug Fixes*
 * Secrets with workspaces now work inside workflow functions and for personal access tokens in `GithubImport`.
 * `list_workspaces` and `list_projects` work inside studio with `auto` config
+* Listing workflows on QE no longer fails if there was a CE workflow in the DB
 
 💅 *Improvements*
 * Add prompters to `orq wf submit` command for CE runtime if workspace and project weren't passed explicitly
