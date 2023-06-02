@@ -10,8 +10,9 @@ import warnings
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 
-from orquestra.sdk import ProjectRef, exceptions
+from orquestra.sdk import exceptions
 from orquestra.sdk._base import abc
+from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (

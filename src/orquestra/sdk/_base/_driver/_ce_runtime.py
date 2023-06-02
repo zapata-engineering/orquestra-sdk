@@ -152,6 +152,7 @@ class CERuntime(RuntimeInterface):
                     workflow_run_id=workflow_run_id,
                     config_name=self._config.config_name,
                     workflow_def=workflow_def,
+                    is_qe=False,
                 )
             )
         return workflow_run_id
