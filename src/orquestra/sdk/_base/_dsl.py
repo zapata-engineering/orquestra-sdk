@@ -83,6 +83,9 @@ class Secret(NamedTuple):
     # This matches the behaviour of `sdk.secrets.get` where the config name is used to
     # get a secret when running locally.
     config_name: Optional[str] = None
+    # Workspace ID is used by local and remote runtimes to fetch a secret from a specfic
+    # workspace.
+    workspace_id: Optional[str] = None
 
 
 @dataclass(frozen=True, eq=True)

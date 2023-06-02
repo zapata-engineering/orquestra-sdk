@@ -28,6 +28,7 @@ from orquestra.sdk._base._conversions._yaml_exporter import (
     workflow_to_yaml,
 )
 from orquestra.sdk._base._db import WorkflowDB
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.schema.configs import RuntimeConfiguration
@@ -593,6 +594,7 @@ class QERuntime(RuntimeInterface):
             workflow_run_id=workflow_run_id,
             config_name=self._config.config_name,
             workflow_def=workflow_def,
+            is_qe=True,
         )
         with WorkflowDB.open_project_db(self._project_dir) as db:
             db.save_workflow_run(wf_run)
@@ -618,13 +620,24 @@ class QERuntime(RuntimeInterface):
                 except exceptions.WorkflowNotFoundError:
                     # explicit re-raise
                     raise
-
         except sqlite3.OperationalError as e:
             raise exceptions.WorkflowNotFoundError(workflow_run_id) from e
 
+        if not wf_run.is_qe:
+            raise exceptions.WorkflowRunNotFoundError(
+                f"Workflow {workflow_run_id} not found"
+            )
+
         wf_def = wf_run.workflow_def
-        with _http_error_handling():
-            json_response = self._client.get_workflow(wf_id=workflow_run_id)
+        try:
+            with _http_error_handling():
+                json_response = self._client.get_workflow(wf_id=workflow_run_id)
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 404:
+                raise exceptions.WorkflowRunNotFoundError(
+                    f"Workflow {workflow_run_id} not found"
+                )
+            raise e
 
         # Load the Argo representation from the response
         # TODO/FIXME: Is this a stable interface? Should it be exposed?
@@ -788,9 +801,7 @@ class QERuntime(RuntimeInterface):
 
         return log_lines
 
-    def get_workflow_logs(
-        self, wf_run_id: WorkflowRunId
-    ) -> Dict[TaskInvocationId, List[str]]:
+    def get_workflow_logs(self, wf_run_id: WorkflowRunId) -> WorkflowLogs:
         try:
             workflow_run = self.get_workflow_run_status(wf_run_id)
         except exceptions.NotFoundError as e:
@@ -798,13 +809,19 @@ class QERuntime(RuntimeInterface):
             raise e
 
         # NOTE: we're making N requests here.
-        return {
+        task_logs = {
             task_run.invocation_id: self._get_task_run_logs(
                 wf_run_id=wf_run_id,
                 task_run_id=task_run.id,
             )
             for task_run in workflow_run.task_runs
         }
+        # Package installations are included in per-task logs on QE.
+        # At the moment we don't have a clear way to separate the env setup vs task logs
+        # and we probably won't implement it. QE is going to be deprecated _soon_
+        # anyway.
+        env_logs: List[str] = []
+        return WorkflowLogs(per_task=task_logs, env_setup=env_logs)
 
     def stop_workflow_run(self, run_id: WorkflowRunId) -> None:
         """Terminates a workflow run.

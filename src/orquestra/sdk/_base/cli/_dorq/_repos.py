@@ -100,7 +100,8 @@ class WorkflowRunRepo:
         except (ConnectionError, exceptions.UnauthorizedError):
             raise
 
-        return [run.get_status_model() for run in wf_runs]
+        ret = [run.get_status_model() for run in wf_runs]
+        return ret
 
     def get_wf_by_run_id(
         self, wf_run_id: WorkflowRunId, config_name: t.Optional[ConfigName]
@@ -389,9 +390,11 @@ class WorkflowRunRepo:
             # While this method can also raise WorkflowRunNotStarted error we don't ever
             # expect it to happen, because we're getting workflow run by ID. Workflows
             # get their IDs at the start time.
-            return wf_run.get_logs()
+            logs = wf_run.get_logs()
         except (ConnectionError, exceptions.UnauthorizedError):
             raise
+
+        return logs.per_task
 
     def get_task_logs(
         self,

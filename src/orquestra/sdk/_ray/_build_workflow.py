@@ -118,7 +118,11 @@ class ArgumentUnwrapper:
             return serde.deserialize(arg) if self._deserialize else arg
         elif isinstance(arg, ir.SecretNode):
             return (
-                secrets.get(arg.secret_name, config_name=arg.secret_config)
+                secrets.get(
+                    arg.secret_name,
+                    config_name=arg.secret_config,
+                    workspace_id=arg.workspace_id,
+                )
                 if self._deserialize
                 else arg
             )

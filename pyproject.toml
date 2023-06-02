@@ -58,3 +58,13 @@ exclude_lines = [
 
 [tool.pytest.ini_options]
 log_level="INFO"
+
+
+[tool.ruff]
+select = [
+  "E",   # pycodestyle
+  "W",   # pycodestyle
+  "F",   # pyflakes
+]
+ignore = ["E203","E266","F401"]
+target-version = "py38"
