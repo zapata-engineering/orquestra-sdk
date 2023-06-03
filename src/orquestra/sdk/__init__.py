@@ -32,6 +32,10 @@ from ._base._spaces._api import list_projects, list_workspaces
 from ._base._spaces._structs import Project, ProjectRef, Workspace
 from ._base._workflow import NotATaskWarning, WorkflowDef, WorkflowTemplate, workflow
 
+# It's already in a public module, but we'll re-export it under `orquestra.sdk.*` anyway
+# because it's commonly used to filter task runs.
+from .schema.workflow_run import State
+
 __all__ = [
     "ArtifactFuture",
     "DataAggregation",
@@ -63,5 +67,6 @@ __all__ = [
     "wfprint",
     "Project",
     "ProjectRef",
+    "State",
     "Workspace",
 ]
