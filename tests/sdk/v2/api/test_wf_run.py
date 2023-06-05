@@ -172,6 +172,18 @@ class TestWorkflowRun:
         )
         invs = sample_task_inv_ids
 
+
+        # Get logs, the runtime interface returns invocation IDs
+        runtime.get_workflow_logs.return_value = {
+            invs[0].id: ["woohoo!\n"],
+            invs[1].id: ["another\n", "line\n"],
+            # This task invocation was executed, but it produced no logs.
+            invs[2].id: [],
+            # There's also 4th task invocation in the workflow def, it wasn't executed
+            # yet, so we don't return it.
+        }
+
+        runtime.get_system_logs.return_value = ["woohoo!\n", "another\n", "line\n"]
         running_wf_run_model.task_runs = [
             TaskRunModel(
                 id="task_run1",
