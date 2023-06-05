@@ -1,5 +1,5 @@
 Using Custom Container Images on Compute Engine
-============================================
+===============================================
 
 When running workflows remotely on Compute Engine, your tasks run in a container that uses one of the
 ``orquestra-sdk-base`` images depending on whether the ``sdk.task`` requires a GPU resource or not (you can see their source code
