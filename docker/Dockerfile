@@ -11,16 +11,18 @@ ARG TARGETARCH
 # (development using an M1 is fun :') )
 RUN <<EOF
 set -ex
-apt update --yes
-apt upgrade --yes
-apt install --yes --no-install-recommends git openssh-client
+apt-get update --yes
+apt-get upgrade --yes
+apt-get install --yes --no-install-recommends git openssh-client
 
 if [ "$TARGETARCH" = "arm64" ]; then
-  apt install --yes --no-install-recommends gcc libc-dev
+  apt-get install --yes --no-install-recommends gcc libc-dev
 fi
 
-python -m pip install -U pip wheel
-python -m pip install "${SDK_REQUIREMENT}"
+rm -rf /var/lib/apt/lists/*
+
+python -m pip install --no-cache-dir -U pip wheel
+python -m pip install --no-cache-dir "${SDK_REQUIREMENT}"
 EOF
 
 RUN useradd -ms /bin/bash -d /home/orquestra orquestra --uid 1000 --gid 100

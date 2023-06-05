@@ -9,6 +9,8 @@ Prerequisites
 #. You've :doc:`installed Orquestra Workflow SDK<installing-macos-linux>`.
 #. You have access to remote QE cluster
 
+.. _cli_remote_login:
+
 Log In to Your Orquestra Account
 ================================
 

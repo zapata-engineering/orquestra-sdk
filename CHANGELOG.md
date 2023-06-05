@@ -3,25 +3,33 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+* `WorkflowRun.get_logs()` now returns a data structure with logs split into categories.
 
 🔥 *Features*
 * Add .project property to WorkflowRun to get the info about workspace and project of running workflow
 * `VersionMismatch` warnings are shown only when interacting with specific workflow runs, not while listing workflows.
 * Add `--qe` flag to `orq login`, this is the default so there is no change in behavior.
 * Add `WorkflowRun.get_system_logs()` to access CE System-level logs.
+* Bump Ray version to 2.4.0
+* New API method `WorkflowRun.start_from_ir()` that allows to start workflow run having only IR object
 
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
 * Secrets with workspaces now work inside workflow functions and for personal access tokens in `GithubImport`.
+* `list_workspaces` and `list_projects` work inside studio with `auto` config
+* Listing workflows on QE no longer fails if there was a CE workflow in the DB
 
 💅 *Improvements*
 * Add prompters to `orq wf submit` command for CE runtime if workspace and project weren't passed explicitly
+* `orquestra-sdk-base` CPU container image has a 20% size reduction.
+* Added `State` enum to the base `orquestra.sdk` package for easier filtering task runs.
 
 🥷 *Internal*
 
 📃 *Docs*
-
+* Update resource management guide for Compute Engine
+* Add section for using custom images on Compute Engine
 
 ## v0.49.1
 

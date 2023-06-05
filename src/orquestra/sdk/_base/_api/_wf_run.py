@@ -25,11 +25,14 @@ from ...exceptions import (
 from ...schema import ir
 from ...schema.configs import ConfigName
 from ...schema.local_database import StoredWorkflowRun
-from ...schema.workflow_run import ProjectId, State, TaskInvocationId
+from ...schema.workflow_run import ProjectId, State
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
 from .. import serde
+from .._in_process_runtime import InProcessRuntime
+from .._logs._interfaces import WorkflowLogs
 from .._spaces._resolver import resolve_studio_project_ref
+from .._spaces._structs import ProjectRef
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig, _resolve_config
 from ._task_run import TaskRun
@@ -128,7 +131,61 @@ class WorkflowRun:
         return workflow_run
 
     @classmethod
-    def _start(cls, wf_def: ir.WorkflowDef, runtime, config, project):
+    def start_from_ir(
+        cls,
+        wf_def: ir.WorkflowDef,
+        config: t.Union[RuntimeConfig, str],
+        workspace_id: t.Optional[WorkspaceId] = None,
+        project_id: t.Optional[ProjectId] = None,
+    ):
+        """
+        Start workflow run from its IR representation
+
+        Args:
+            wf_def: IR definition of a workflow.
+            config: SDK needs to know where to execute the workflow. The config
+                contains the required details. This can be a RuntimeConfig object, or
+                the name of a saved configuration.
+            workspace_id: ID of the workspace for workflow - supported only on CE
+            project_id: ID of the project for workflow - supported only on CE
+
+        """
+        _config: RuntimeConfig
+        if isinstance(config, RuntimeConfig):
+            _config = config
+        elif isinstance(config, str):
+            _config = RuntimeConfig.load(config)
+        else:
+            raise TypeError(
+                f"'config' argument to `start_from_ir()` has unsupported "
+                f"type {type(config)}."
+            )
+        runtime: RuntimeInterface
+        if _config._runtime_name == "IN_PROCESS":
+            runtime = InProcessRuntime()
+        else:
+            runtime = _config._get_runtime()
+
+        assert runtime is not None
+
+        _project: t.Optional[ProjectRef] = resolve_studio_project_ref(
+            workspace_id, project_id, _config.name
+        )
+
+        wf_run = cls._start(
+            wf_def=wf_def, runtime=runtime, config=_config, project=_project
+        )
+
+        return wf_run
+
+    @classmethod
+    def _start(
+        cls,
+        wf_def: ir.WorkflowDef,
+        runtime: RuntimeInterface,
+        config: t.Optional[RuntimeConfig],
+        project: t.Optional[ProjectRef] = None,
+    ):
         """
         Schedule workflow for execution and return WorkflowRun.
         """
@@ -359,19 +416,12 @@ class WorkflowRun:
             for inv_id, inv_output in inv_outputs.items()
         }
 
-    def get_logs(self) -> t.Mapping[TaskInvocationId, t.List[str]]:
+    def get_logs(self) -> WorkflowLogs:
         """
         Unstable: this API will change.
 
-        Returns logs produced by all task runs in this workflow. If you're interested in
-        only subset of tasks, consider using ``WorkflowRun.get_tasks()`` and
-        ``TaskRun.get_logs()``.
-
-        Returns:
-            A dictionary where each key-value entry corresponds to a single task run.
-            The key identifies a task invocation, a single node in the workflow graph.
-            The value is a list of log lines produced by the corresponding task
-            invocation while running this workflow.
+        Returns logs produced this workflow. See ``WorkflowLogs`` attributes for log
+        categories or ``TaskRun.get_logs()`` for logs related to only a single task.
         """
         return self._runtime.get_workflow_logs(wf_run_id=self.run_id)
 

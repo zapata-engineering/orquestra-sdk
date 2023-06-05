@@ -64,6 +64,7 @@ def _make_mock_wf_db(wf_run_id, wf_def):
             workflow_run_id=wf_run_id,
             config_name="testing",
             workflow_def=wf_def,
+            is_qe=False,
         )
     )
 
