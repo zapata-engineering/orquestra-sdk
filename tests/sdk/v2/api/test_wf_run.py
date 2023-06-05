@@ -173,7 +173,7 @@ class TestWorkflowRun:
             # There's also 4th task invocation in the workflow def, it wasn't executed
             # yet, so we don't return it.
         }
-        # TODO: ORQSDK-852: review this mock when we know what the logs look like.
+
         runtime.get_system_logs.return_value = ["woohoo!\n", "another\n", "line\n"]
         running_wf_run_model.task_runs = [
             TaskRunModel(
