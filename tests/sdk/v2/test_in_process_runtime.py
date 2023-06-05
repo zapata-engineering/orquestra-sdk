@@ -267,6 +267,7 @@ class TestUnsupportedMethods:
         "method",
         [
             InProcessRuntime.from_runtime_configuration,
+            InProcessRuntime.get_system_logs,
         ],
     )
     def test_raises(runtime, method):

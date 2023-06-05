@@ -10,6 +10,7 @@ Implemented API spec:
 
 import io
 import json
+import warnings
 import zlib
 from tarfile import TarFile
 from typing import Generic, List, Mapping, Optional, TypeVar, Union
@@ -20,7 +21,7 @@ import requests
 from requests import codes
 
 from orquestra.sdk import ProjectRef
-from orquestra.sdk._ray._ray_logs import WFLog
+from orquestra.sdk._ray._ray_logs import K8sEventLog, SystemLogSourceType, WFLog
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
@@ -52,6 +53,7 @@ API_ACTIONS = {
     # Logs
     "get_workflow_run_logs": "/api/workflow-run-logs",
     "get_task_run_logs": "/api/task-run-logs",
+    "get_workflow_run_system_logs": "/api/workflow-run-logs/system",
     # Login
     "get_login_url": "/api/login",
     # Workspaces
@@ -695,6 +697,84 @@ class DriverClient:
 
         # TODO: unzip, get logs (ORQSDK-654)
         return resp.content
+
+    def get_system_logs(self, wf_run_id: _models.WorkflowRunID) -> List[str]:
+        """
+        Get the logs of a workflow run from the workflow driver.
+
+        Raises:
+            ForbiddenError: see the exception's docstring
+            InvalidTokenError: see the exception's docstring
+            InvalidWorkflowRunID: see the exception's docstring
+            WorkflowRunLogsNotFound: see the exception's docstring
+            WorkflowRunLogsNotReadable: see the exception's docstring
+            UnknownHTTPError: see the exception's docstring
+            NotImplementedError: when a log object's source_type is not a recognised
+                value, or is a value for a schema has not been defined.
+        """
+        resp = self._get(
+            API_ACTIONS["get_workflow_run_system_logs"],
+            query_params=_models.GetWorkflowRunLogsRequest(
+                workflowRunId=wf_run_id
+            ).dict(),
+        )
+
+        # Handle errors
+        if resp.status_code == codes.NOT_FOUND:
+            raise _exceptions.WorkflowRunLogsNotFound(wf_run_id)
+        elif resp.status_code == codes.BAD_REQUEST:
+            raise _exceptions.InvalidWorkflowRunID(wf_run_id)
+
+        _handle_common_errors(resp)
+
+        # Decompress data
+        try:
+            unzipped: bytes = zlib.decompress(resp.content, 16 + zlib.MAX_WBITS)
+        except zlib.error as e:
+            raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id) from e
+
+        untarred = TarFile(fileobj=io.BytesIO(unzipped)).extractfile("step-logs")
+        assert untarred is not None
+        decoded = untarred.read().decode()
+
+        # Parse the decoded data as logs
+        logs = []
+        for section in decoded.split("\n"):
+            if len(section) < 1:
+                continue
+            for log in json.loads(section):
+                # Check that the source type is something that we expect.
+                try:
+                    source_type = SystemLogSourceType(log[1]["source_type"])
+                except ValueError as e:
+                    raise NotImplementedError(
+                        f"{log[1]['source_type']} is not a recognised system log "
+                        "source type."
+                    ) from e
+
+                if source_type in [
+                    SystemLogSourceType.RAY_HEAD_NODE,
+                    SystemLogSourceType.RAY_WORKER_NODE,
+                ]:
+                    # Logs from RAY_HEAD_NODE or RAY_WORKER_LOAD are strings
+                    logs.append(log[1]["log"])
+                elif source_type in [SystemLogSourceType.K8S_EVENT]:
+                    # Logs from K8S_EVENT are json objects.
+                    try:
+                        interpreted_log = K8sEventLog.parse_obj(log[1]["log"])
+                        logs.append(interpreted_log.message)
+                    except pydantic.ValidationError:
+                        warnings.warn(
+                            f"The following {source_type} system log entry could not "
+                            f"be parsed:\n{log[1]['log']}\nPlease report this as a bug."
+                        )
+                        logs.append(log[1]["log"])
+                else:
+                    raise NotImplementedError(
+                        "No logging scheme is defined for source type {source_type}"
+                    )
+
+        return logs
 
     def list_workspaces(self):
         """

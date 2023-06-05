@@ -352,5 +352,10 @@ class InProcessRuntime(abc.RuntimeInterface):
             "This functionality isn't available for 'in_process' runtime"
         )
 
+    def get_system_logs(self, *args, **kwargs):
+        raise NotImplementedError(
+            "This functionality isn't available for 'in_process' runtime"
+        )
+
     def get_workflow_project(self, wf_run_id: WorkflowRunId):
         raise exceptions.WorkspacesNotSupportedError()

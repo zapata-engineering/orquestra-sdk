@@ -173,6 +173,8 @@ class TestWorkflowRun:
             # There's also 4th task invocation in the workflow def, it wasn't executed
             # yet, so we don't return it.
         }
+        # TODO: ORQSDK-852: review this mock when we know what the logs look like.
+        runtime.get_system_logs.return_value = ["woohoo!\n", "another\n", "line\n"]
         running_wf_run_model.task_runs = [
             TaskRunModel(
                 id="task_run1",
@@ -579,6 +581,14 @@ class TestWorkflowRun:
             assert expected_inv in logs
             assert len(logs[expected_inv]) == 1
             assert logs[expected_inv][0] == "woohoo!\n"
+
+    class TestGetSystemLogs:
+        @staticmethod
+        def test_happy_path(run):
+            logs = run.get_system_logs()
+
+            assert len(logs) == 3
+            assert logs == ["woohoo!\n", "another\n", "line\n"]
 
     class TestGetConfig:
         @staticmethod

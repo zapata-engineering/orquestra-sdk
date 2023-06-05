@@ -806,6 +806,9 @@ class QERuntime(RuntimeInterface):
             for task_run in workflow_run.task_runs
         }
 
+    def get_system_logs(self, *args, **kwargs):
+        raise NotImplementedError("This functionality isn't available for 'QE' runtime")
+
     def stop_workflow_run(self, run_id: WorkflowRunId) -> None:
         """Terminates a workflow run.
 

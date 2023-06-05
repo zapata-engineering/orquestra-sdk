@@ -1811,6 +1811,301 @@ class TestClient:
                 with pytest.raises(_exceptions.UnknownHTTPError):
                     _ = client.get_workflow_run_logs(workflow_run_id)
 
+        class TestSystemLogs:
+            @staticmethod
+            @pytest.fixture
+            def endpoint_mocker(endpoint_mocker_base, base_uri: str):
+                """
+                Returns a helper for mocking requests. Assumes that most of the tests
+                inside this class contain a very similar set up.
+                """
+
+                return endpoint_mocker_base(
+                    responses.GET,
+                    f"{base_uri}/api/workflow-run-logs/system",
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/92d9ff32189c580fd0a2ff6eec03cc977fd01502/openapi/src/resources/workflow-run-system-logs.yaml
+                    default_status_code=200,
+                )
+
+            @staticmethod
+            def test_logs_decode(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    body=resp_mocks.make_get_wf_run_system_logs_response_with_content(),
+                    match=[
+                        responses.matchers.query_param_matcher(
+                            {"workflowRunId": workflow_run_id}
+                        )
+                    ],
+                )
+
+                assert client.get_system_logs(workflow_run_id) == [
+                    "wf-run-92ae97be-6f19-43dc-9c21-29153cb55f81 ADDED Pending",
+                    "wf-run-92ae97be-6f19-43dc-9c21-29153cb55f81 UPDATED Pending\n  Pod Conditions:\n  -- PodScheduled False (Unschedulable): 0/4 nodes are available: 4 pod has unbound immediate PersistentVolumeClaims. preemption: 0/4 nodes are available: 4 Preemption is not helpful for scheduling. ",  # noqa: E501
+                    "wf-run-92ae97be-6f19-43dc-9c21-29153cb55f81 UPDATED Pending\n  Pod Conditions:\n  -- PodScheduled False (Unschedulable): 0/4 nodes are available: 1 Insufficient cpu, 3 node(s) didn't match Pod's node affinity/selector. preemption: 0/4 nodes are available: 1 No preemption victims found for incoming pod, 3 Preemption is not helpful for scheduling. ",  # noqa: E501
+                    "wf-run-92ae97be-6f19-43dc-9c21-29153cb55f81 UPDATED Pending\n  Pod Conditions:\n  -- PodScheduled True",  # noqa: E501
+                    "wf-run-92ae97be-6f19-43dc-9c21-29153cb55f81 UPDATED Pending\n  Pod Conditions:\n  -- Initialized False (ContainersNotInitialized): containers with incomplete status: [linkerd-init] \n  -- Ready False (ContainersNotReady): containers with unready status: [linkerd-proxy workflow-run fluent-bit] \n  -- ContainersReady False (ContainersNotReady): containers with unready status: [linkerd-proxy workflow-run fluent-bit] \n  -- PodScheduled True\n  Container Information:\n  -- fluent-bit Waiting (PodInitializing)\n  -- linkerd-proxy Waiting (PodInitializing)\n  -- workflow-run Waiting (PodInitializing)",  # noqa: E501
+                    "wf-run-92ae97be-6f19-43dc-9c21-29153cb55f81 UPDATED Pending\n  Pod Conditions:\n  -- Initialized True\n  -- Ready False (ContainersNotReady): containers with unready status: [linkerd-proxy workflow-run fluent-bit] \n  -- ContainersReady False (ContainersNotReady): containers with unready status: [linkerd-proxy workflow-run fluent-bit] \n  -- PodScheduled True\n  Container Information:\n  -- fluent-bit Waiting (PodInitializing)\n  -- linkerd-proxy Waiting (PodInitializing)\n  -- workflow-run Waiting (PodInitializing)",  # noqa: E501
+                    "2023-06-02 08:50:32,701\tWARNING services.py:1780 -- WARNING: The object store is using /tmp instead of /dev/shm because /dev/shm has only 67108864 bytes available. This will harm performance! You may be able to free up space by deleting files in /dev/shm. If you are inside a Docker container, you can increase /dev/shm size by passing '--shm-size=0.60gb' to 'docker run' (or add it to the run_options list in a Ray cluster config). Make sure to set this to more than 30% of available RAM.",  # noqa: E501
+                    "2023-06-02 08:50:29,943\tINFO usage_lib.py:461 -- Usage stats collection is enabled by default without user confirmation because this terminal is detected to be non-interactive. To disable this, add `--disable-usage-stats` to the command that starts the cluster, or run the following command: `ray disable-usage-stats` before starting the cluster. See https://docs.ray.io/en/master/cluster/usage-stats.html for more details.",  # noqa: E501
+                    "2023-06-02 08:50:29,944\tINFO scripts.py:710 -- \x1b[37mLocal node IP\x1b[39m: \x1b[1m10.200.135.120\x1b[22m",  # noqa: E501
+                    "2023-06-02 08:50:32,873\tSUCC scripts.py:747 -- \x1b[32m--------------------\x1b[39m",  # noqa: E501
+                    "2023-06-02 08:50:32,873\tSUCC scripts.py:748 -- \x1b[32mRay runtime started.\x1b[39m",  # noqa: E501
+                    "2023-06-02 08:50:32,873\tSUCC scripts.py:749 -- \x1b[32m--------------------\x1b[39m",  # noqa: E501
+                    "2023-06-02 08:50:32,873\tINFO scripts.py:751 -- \x1b[36mNext steps\x1b[39m",  # noqa: E501
+                    "2023-06-02 08:50:32,873\tINFO scripts.py:752 -- To connect to this Ray runtime from another node, run",  # noqa: E501
+                    "2023-06-02 08:50:32,873\tINFO scripts.py:755 -- \x1b[1m  ray start --address='10.200.135.120:6379'\x1b[22m",  # noqa: E501
+                    "2023-06-02 08:50:32,873\tINFO scripts.py:771 -- Alternatively, use the following Python code:",  # noqa: E501
+                    "2023-06-02 08:50:32,874\tINFO scripts.py:773 -- \x1b[35mimport\x1b[39m\x1b[26m ray",  # noqa: E501
+                    "2023-06-02 08:50:32,874\tINFO scripts.py:777 -- ray\x1b[35m.\x1b[39m\x1b[26minit(address\x1b[35m=\x1b[39m\x1b[26m\x1b[33m'auto'\x1b[39m\x1b[26m)",  # noqa: E501
+                    "2023-06-02 08:50:32,874\tINFO scripts.py:790 -- To see the status of the cluster, use",  # noqa: E501
+                    "2023-06-02 08:50:32,874\tINFO scripts.py:791 --   \x1b[1mray status\x1b[22m\x1b[26m",  # noqa: E501
+                    "2023-06-02 08:50:32,874\tINFO scripts.py:794 -- To monitor and debug Ray, view the dashboard at ",  # noqa: E501
+                    "2023-06-02 08:50:32,874\tINFO scripts.py:795 --   \x1b[1m10.200.135.120:8265\x1b[22m\x1b[26m",  # noqa: E501
+                    "2023-06-02 08:50:32,874\tINFO scripts.py:801 -- \x1b[4mIf connection fails, check your firewall settings and network configuration.\x1b[24m",  # noqa: E501
+                    "2023-06-02 08:50:32,874\tINFO scripts.py:809 -- To terminate the Ray runtime, run",  # noqa: E501
+                    "2023-06-02 08:50:32,874\tINFO scripts.py:810 -- \x1b[1m  ray stop\x1b[22m",  # noqa: E501
+                    "INFO:root:Connecting to NATS server at nats://nats.nats.svc.cluster.local:4222. Will publish to subjects NatsVars(wf_status_changes_subject='workflow.states', wf_run_results_created_subject='workflow.run.result.created', wf_artifact_created_subject='workflow.artifact.created', wf_termination_subject='workflow.run.terminated.hello_orquestra_wf-ZrioL-r000', wf_termination_stream='workflow-run-terminated-stream', wf_termination_customer='wf-driver-ray@workflow-run-terminated-consumer', wf_eoe_string_subjects=['workflow.logs.ray.hello_orquestra_wf-ZrioL-r000']).",  # noqa: E501
+                    "2023-06-02 08:50:34,729\tINFO worker.py:1364 -- Connecting to existing Ray cluster at address: 10.200.135.120:6379...",  # noqa: E501
+                    "2023-06-02 08:50:34,736\tINFO worker.py:1544 -- Connected to Ray cluster. View the dashboard at \x1b[1m\x1b[32m10.200.135.120:8265 \x1b[39m\x1b[22m",  # noqa: E501
+                    "2023-06-02 08:50:34,758\tINFO workflow_access.py:356 -- Initializing workflow manager...",  # noqa: E501
+                    '2023-06-02 08:50:36,708\tINFO api.py:203 -- Workflow job created. [id="hello_orquestra_wf-ZrioL-r000"].',  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m 2023-06-02 08:50:36,979\tINFO workflow_executor.py:86 -- Workflow job [id=hello_orquestra_wf-ZrioL-r000] started.",  # noqa: E501
+                    "\x1b[2m\x1b[33m(raylet)\x1b[0m E0602 08:50:37.031979683     140 fork_posix.cc:76]           Other threads are currently calling into gRPC, skipping fork() handlers",  # noqa: E501
+                    "INFO:root:Workflow Run created with global ID hello_orquestra_wf-ZrioL-r000.",  # noqa: E501
+                    "\x1b[2m\x1b[33m(raylet)\x1b[0m E0602 08:50:37.647010247     140 fork_posix.cc:76]           Other threads are currently calling into gRPC, skipping fork() handlers",  # noqa: E501
+                    "\x1b[2m\x1b[33m(raylet)\x1b[0m E0602 08:50:38.472377038     140 fork_posix.cc:76]           Other threads are currently calling into gRPC, skipping fork() handlers",  # noqa: E501
+                    "\x1b[2m\x1b[33m(raylet)\x1b[0m E0602 08:50:41.315081740     140 fork_posix.cc:76]           Other threads are currently calling into gRPC, skipping fork() handlers",  # noqa: E501
+                    "\x1b[2m\x1b[33m(raylet)\x1b[0m E0602 08:50:41.940183950     140 fork_posix.cc:76]           Other threads are currently calling into gRPC, skipping fork() handlers",  # noqa: E501
+                    "\x1b[2m\x1b[33m(raylet)\x1b[0m E0602 08:50:42.729892179     140 fork_posix.cc:76]           Other threads are currently calling into gRPC, skipping fork() handlers",  # noqa: E501
+                    "\x1b[2m\x1b[33m(raylet)\x1b[0m E0602 08:50:45.493200183     140 fork_posix.cc:76]           Other threads are currently calling into gRPC, skipping fork() handlers",  # noqa: E501
+                    "\x1b[2m\x1b[33m(raylet)\x1b[0m E0602 08:50:46.110986629     140 fork_posix.cc:76]           Other threads are currently calling into gRPC, skipping fork() handlers",  # noqa: E501
+                    "\x1b[2m\x1b[33m(raylet)\x1b[0m E0602 08:50:46.823247649     140 fork_posix.cc:76]           Other threads are currently calling into gRPC, skipping fork() handlers",  # noqa: E501
+                    "2023-06-02 08:50:49,323\tERROR worker.py:399 -- Unhandled error (suppress with 'RAY_IGNORE_UNHANDLED_ERRORS=1'): \x1b[36mray::WorkflowManagementActor.execute_workflow()\x1b[39m (pid=215, ip=10.200.135.120, repr=<ray.workflow.workflow_access.WorkflowManagementActor object at 0x7f04148a0c40>)",  # noqa: E501
+                    "ray.exceptions.RuntimeEnvSetupError: Failed to set up runtime environment.",  # noqa: E501
+                    "\x1b[36mray::WorkflowManagementActor.execute_workflow()\x1b[39m (pid=215, ip=10.200.135.120, repr=<ray.workflow.workflow_access.WorkflowManagementActor object at 0x7f04148a0c40>)",  # noqa: E501
+                    '  File "/usr/local/lib/python3.9/site-packages/ray/dashboard/modules/runtime_env/runtime_env_agent.py", line 355, in _create_runtime_env_with_retry',  # noqa: E501
+                    "    runtime_env_context = await asyncio.wait_for(",  # noqa: E501
+                    '  File "/usr/local/lib/python3.9/asyncio/tasks.py", line 479, in wait_for',  # noqa: E501
+                    "    return fut.result()",  # noqa: E501
+                    '  File "/usr/local/lib/python3.9/site-packages/ray/dashboard/modules/runtime_env/runtime_env_agent.py", line 310, in _setup_runtime_env',  # noqa: E501
+                    "    await create_for_plugin_if_needed(",  # noqa: E501
+                    "ray._private.runtime_env.utils.SubprocessCalledProcessError: Run cmd[9] failed with the following details.",  # noqa: E501
+                    "Command '['/tmp/ray/session_2023-06-02_08-50-29_944743_10/runtime_resources/pip/5e83a2cad736e67605dd0a40b34d623957c7f9f8/virtualenv/bin/python', '-m', 'pip', 'install', '--disable-pip-version-check', '--no-cache-dir', '-r', '/tmp/ray/session_2023-06-02_08-50-29_944743_10/runtime_resources/pip/5e83a2cad736e67605dd0a40b34d623957c7f9f8/requirements.txt']' returned non-zero exit status 1.",  # noqa: E501
+                    "Last 50 lines of stdout:",  # noqa: E501
+                    "    Collecting git+ssh://****@github.com/zapatacomputing/orquestra-workflow-sdk.git@main (from -r /tmp/ray/session_2023-06-02_08-50-29_944743_10/runtime_resources/pip/5e83a2cad736e67605dd0a40b34d623957c7f9f8/requirements.txt (line 1))",  # noqa: E501
+                    "      Cloning ssh://****@github.com/zapatacomputing/orquestra-workflow-sdk.git (to revision main) to /tmp/pip-req-build-i_os9yla",  # noqa: E501
+                    "      Running command git clone --filter=blob:none --quiet 'ssh://****@github.com/zapatacomputing/orquestra-workflow-sdk.git' /tmp/pip-req-build-i_os9yla",  # noqa: E501
+                    "      Host key verification failed.",  # noqa: E501
+                    "      fatal: Could not read from remote repository.",  # noqa: E501
+                    "      Please make sure you have the correct access rights",  # noqa: E501
+                    "      and the repository exists.",  # noqa: E501
+                    "      error: subprocess-exited-with-error",  # noqa: E501
+                    "  ",  # noqa: E501
+                    "      × git clone --filter=blob:none --quiet 'ssh://****@github.com/zapatacomputing/orquestra-workflow-sdk.git' /tmp/pip-req-build-i_os9yla did not run successfully.",  # noqa: E501
+                    "      │ exit code: 128",  # noqa: E501
+                    "      ╰─> See above for output.",  # noqa: E501
+                    "  ",  # noqa: E501
+                    "      note: This error originates from a subprocess, and is likely not a problem with pip.",  # noqa: E501
+                    "    error: subprocess-exited-with-error",  # noqa: E501
+                    "    × git clone --filter=blob:none --quiet 'ssh://****@github.com/zapatacomputing/orquestra-workflow-sdk.git' /tmp/pip-req-build-i_os9yla did not run successfully.",  # noqa: E501
+                    "    │ exit code: 128",  # noqa: E501
+                    "    ╰─> See above for output.",  # noqa: E501
+                    "    note: This error originates from a subprocess, and is likely not a problem with pip.",  # noqa: E501
+                    "The above exception was the direct cause of the following exception:",  # noqa: E501
+                    "\x1b[36mray::WorkflowManagementActor.execute_workflow()\x1b[39m (pid=215, ip=10.200.135.120, repr=<ray.workflow.workflow_access.WorkflowManagementActor object at 0x7f04148a0c40>)",  # noqa: E501
+                    '  File "/usr/local/lib/python3.9/concurrent/futures/_base.py", line 439, in result',  # noqa: E501
+                    "    return self.__get_result()",  # noqa: E501
+                    '  File "/usr/local/lib/python3.9/concurrent/futures/_base.py", line 391, in __get_result',  # noqa: E501
+                    "    raise self._exception",  # noqa: E501
+                    '  File "/usr/local/lib/python3.9/site-packages/ray/workflow/workflow_access.py", line 209, in execute_workflow',  # noqa: E501
+                    "    await executor.run_until_complete(job_id, context, wf_store)",  # noqa: E501
+                    '  File "/usr/local/lib/python3.9/site-packages/ray/workflow/workflow_executor.py", line 109, in run_until_complete',  # noqa: E501
+                    "    await asyncio.gather(",  # noqa: E501
+                    '  File "/usr/local/lib/python3.9/site-packages/ray/workflow/workflow_executor.py", line 356, in _handle_ready_task',  # noqa: E501
+                    "    raise err",  # noqa: E501
+                    "ray.workflow.exceptions.WorkflowExecutionError: Workflow[id=hello_orquestra_wf-ZrioL-r000] failed during execution.",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m 2023-06-02 08:50:49,312\tERROR workflow_executor.py:306 -- Task status [FAILED] due to a system error.\t[hello_orquestra_wf-ZrioL-r000@invocation-0-task-hello-orquestra]",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m 2023-06-02 08:50:49,320\tERROR workflow_executor.py:352 -- Workflow 'hello_orquestra_wf-ZrioL-r000' failed due to Failed to set up runtime environment.",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m Traceback (most recent call last):",  # noqa: E501
+                    '\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m   File "/usr/local/lib/python3.9/site-packages/ray/dashboard/modules/runtime_env/runtime_env_agent.py", line 355, in _create_runtime_env_with_retry',  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m     runtime_env_context = await asyncio.wait_for(",  # noqa: E501
+                    '\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m   File "/usr/local/lib/python3.9/asyncio/tasks.py", line 479, in wait_for',  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m     return fut.result()",  # noqa: E501
+                    '\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m   File "/usr/local/lib/python3.9/site-packages/ray/dashboard/modules/runtime_env/runtime_env_agent.py", line 310, in _setup_runtime_env',  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m     await create_for_plugin_if_needed(",  # noqa: E501
+                    '\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m   File "/usr/local/lib/python3.9/site-packages/ray/_private/runtime_env/plugin.py", line 252, in create_for_plugin_if_needed',  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m     size_bytes = await plugin.create(uri, runtime_env, context, logger=logger)",  # noqa: E501
+                    '\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m   File "/usr/local/lib/python3.9/site-packages/ray/_private/runtime_env/pip.py", line 473, in create',  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m     return await task",  # noqa: E501
+                    '\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m   File "/usr/local/lib/python3.9/site-packages/ray/_private/runtime_env/pip.py", line 455, in _create_for_hash',  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m     await PipProcessor(",  # noqa: E501
+                    '\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m   File "/usr/local/lib/python3.9/site-packages/ray/_private/runtime_env/pip.py", line 361, in _run',  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m     await self._install_pip_packages(",  # noqa: E501
+                    '\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m   File "/usr/local/lib/python3.9/site-packages/ray/_private/runtime_env/pip.py", line 337, in _install_pip_packages',  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m     await check_output_cmd(pip_install_cmd, logger=logger, cwd=cwd, env=pip_env)",  # noqa: E501
+                    '\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m   File "/usr/local/lib/python3.9/site-packages/ray/_private/runtime_env/utils.py", line 101, in check_output_cmd',  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m     raise SubprocessCalledProcessError(",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m ray._private.runtime_env.utils.SubprocessCalledProcessError: Run cmd[9] failed with the following details.",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m Command '['/tmp/ray/session_2023-06-02_08-50-29_944743_10/runtime_resources/pip/5e83a2cad736e67605dd0a40b34d623957c7f9f8/virtualenv/bin/python', '-m', 'pip', 'install', '--disable-pip-version-check', '--no-cache-dir', '-r', '/tmp/ray/session_2023-06-02_08-50-29_944743_10/runtime_resources/pip/5e83a2cad736e67605dd0a40b34d623957c7f9f8/requirements.txt']' returned non-zero exit status 1.",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m Last 50 lines of stdout:",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m     Collecting git+ssh://****@github.com/zapatacomputing/orquestra-workflow-sdk.git@main (from -r /tmp/ray/session_2023-06-02_08-50-29_944743_10/runtime_resources/pip/5e83a2cad736e67605dd0a40b34d623957c7f9f8/requirements.txt (line 1))",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m       Cloning ssh://****@github.com/zapatacomputing/orquestra-workflow-sdk.git (to revision main) to /tmp/pip-req-build-i_os9yla",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m       Running command git clone --filter=blob:none --quiet 'ssh://****@github.com/zapatacomputing/orquestra-workflow-sdk.git' /tmp/pip-req-build-i_os9yla",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m       Host key verification failed.",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m       fatal: Could not read from remote repository.",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m ",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m       Please make sure you have the correct access rights",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m       and the repository exists.",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m       error: subprocess-exited-with-error",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m   ",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m       × git clone --filter=blob:none --quiet 'ssh://****@github.com/zapatacomputing/orquestra-workflow-sdk.git' /tmp/pip-req-build-i_os9yla did not run successfully.",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m       │ exit code: 128",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m       ╰─> See above for output.",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m   ",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m       note: This error originates from a subprocess, and is likely not a problem with pip.",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m     error: subprocess-exited-with-error",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m ",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m     × git clone --filter=blob:none --quiet 'ssh://****@github.com/zapatacomputing/orquestra-workflow-sdk.git' /tmp/pip-req-build-i_os9yla did not run successfully.",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m     │ exit code: 128",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m     ╰─> See above for output.",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m ",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m     note: This error originates from a subprocess, and is likely not a problem with pip.",  # noqa: E501
+                    "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m ",  # noqa: E501
+                    "ERROR:root:Workflow run completed unsuccessfully",  # noqa: E501
+                    "NoneType: None",  # noqa: E501
+                    "INFO:root:Caught a nats.errors.TimeoutError. This is expected at the end of the task.",  # noqa: E501
+                    "WARNING:root:Disconnected from NATS.",  # noqa: E501
+                    "WARNING:root:NATS connection is closed.",  # noqa: E501
+                    "wf-run-92ae97be-6f19-43dc-9c21-29153cb55f81 UPDATED Running\n  Pod Conditions:\n  -- Initialized True\n  -- Ready False (ContainersNotReady): containers with unready status: [linkerd-proxy workflow-run] \n  -- ContainersReady False (ContainersNotReady): containers with unready status: [linkerd-proxy workflow-run] \n  -- PodScheduled True\n  Container Information:\n  -- fluent-bit Running\n  -- linkerd-proxy Running\n  -- workflow-run Terminated: Exit code: 0 ",  # noqa: E501
+                    "wf-run-92ae97be-6f19-43dc-9c21-29153cb55f81 UPDATED Running\n  Pod Conditions:\n  -- Initialized True\n  -- Ready False (ContainersNotReady): containers with unready status: [workflow-run] \n  -- ContainersReady False (ContainersNotReady): containers with unready status: [workflow-run] \n  -- PodScheduled True\n  Container Information:\n  -- fluent-bit Running\n  -- linkerd-proxy Running\n  -- workflow-run Terminated: Exit code: 0 ",  # noqa: E501
+                    "wf-run-92ae97be-6f19-43dc-9c21-29153cb55f81 ADDED Running\n  Pod Conditions:\n  -- Initialized True\n  -- Ready False (ContainersNotReady): containers with unready status: [workflow-run] \n  -- ContainersReady False (ContainersNotReady): containers with unready status: [workflow-run] \n  -- PodScheduled True\n  Container Information:\n  -- fluent-bit Running\n  -- linkerd-proxy Running\n  -- workflow-run Terminated: Exit code: 0 ",  # noqa: E501
+                    "wf-run-92ae97be-6f19-43dc-9c21-29153cb55f81 UPDATED Running\n  Pod Conditions:\n  -- Initialized True\n  -- Ready False (ContainersNotReady): containers with unready status: [workflow-run] \n  -- ContainersReady False (ContainersNotReady): containers with unready status: [workflow-run] \n  -- PodScheduled True\n  Container Information:\n  -- fluent-bit Running\n  -- linkerd-proxy Running\n  -- workflow-run Terminated: Exit code: 0 ",  # noqa: E501
+                    "wf-run-92ae97be-6f19-43dc-9c21-29153cb55f81 UPDATED Succeeded\n  Pod Conditions:\n  -- Initialized True (PodCompleted)\n  -- Ready False (PodCompleted)\n  -- ContainersReady False (PodCompleted)\n  -- PodScheduled True\n  Container Information:\n  -- fluent-bit Terminated: Exit code: 0 \n  -- linkerd-proxy Terminated: Exit code: 0 \n  -- workflow-run Terminated: Exit code: 0 ",  # noqa: E501
+                    "wf-run-92ae97be-6f19-43dc-9c21-29153cb55f81 UPDATED Succeeded\n  Pod Conditions:\n  -- Initialized True (PodCompleted)\n  -- Ready False (PodCompleted)\n  -- ContainersReady False (PodCompleted)\n  -- PodScheduled True\n  Container Information:\n  -- fluent-bit Terminated: Exit code: 0 \n  -- linkerd-proxy Terminated: Exit code: 0 \n  -- workflow-run Terminated: Exit code: 0 ",  # noqa: E501
+                    "wf-run-92ae97be-6f19-43dc-9c21-29153cb55f81 DELETED Succeeded\n  Pod Conditions:\n  -- Initialized True (PodCompleted)\n  -- Ready False (PodCompleted)\n  -- ContainersReady False (PodCompleted)\n  -- PodScheduled True\n  Container Information:\n  -- fluent-bit Terminated: Exit code: 0 \n  -- linkerd-proxy Terminated: Exit code: 0 \n  -- workflow-run Terminated: Exit code: 0 ",  # noqa: E501
+                ]
+
+            @staticmethod
+            def test_params_encoding(
+                endpoint_mocker, client: DriverClient, workflow_run_id
+            ):
+                """Veriefies the params are correctly senf to the server."""
+                endpoint_mocker(
+                    # json=resp_mocks.make_get_wf_run_logs_response(),
+                    body=resp_mocks.make_get_wf_run_system_logs_response_with_content(),
+                    match=[
+                        responses.matchers.query_param_matcher(
+                            {"workflowRunId": workflow_run_id}
+                        )
+                    ],
+                )
+
+                _ = client.get_system_logs(workflow_run_id)
+
+                # The assertion is done by mocked_responses
+
+            @staticmethod
+            def test_invalid_id(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/2ea0f3fa410bbbc9a1b7fcffbda155aa84c4e0bd/openapi/src/resources/workflow-run-system-logs.yaml#L111
+                    status=400,
+                )
+
+                with pytest.raises(_exceptions.InvalidWorkflowRunID):
+                    _ = client.get_system_logs(workflow_run_id)
+
+            @staticmethod
+            def test_not_found(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/2ea0f3fa410bbbc9a1b7fcffbda155aa84c4e0bd/openapi/src/resources/workflow-run-system-logs.yaml#L121
+                    status=404,
+                )
+
+                with pytest.raises(_exceptions.WorkflowRunLogsNotFound):
+                    _ = client.get_system_logs(workflow_run_id)
+
+            @staticmethod
+            def test_zlib_error(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    body=b"invalid bytes",
+                    match=[
+                        responses.matchers.query_param_matcher(
+                            {"workflowRunId": workflow_run_id}
+                        )
+                    ],
+                )
+
+                with pytest.raises(_exceptions.WorkflowRunLogsNotReadable):
+                    _ = client.get_system_logs(workflow_run_id)
+
+            @staticmethod
+            def test_sets_auth(
+                endpoint_mocker, client: DriverClient, token: str, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # json=resp_mocks.make_get_wf_run_logs_response(),
+                    body=resp_mocks.make_get_wf_run_system_logs_response_with_content(),
+                    match=[
+                        responses.matchers.header_matcher(
+                            {"Authorization": f"Bearer {token}"}
+                        )
+                    ],
+                )
+
+                _ = client.get_system_logs(workflow_run_id)
+
+                # The assertion is done by mocked_responses
+
+            @staticmethod
+            def test_unauthorized(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/2ea0f3fa410bbbc9a1b7fcffbda155aa84c4e0bd/openapi/src/resources/workflow-run-system-logs.yaml#L117
+                    status=401,
+                )
+
+                with pytest.raises(_exceptions.InvalidTokenError):
+                    _ = client.get_system_logs(workflow_run_id)
+
+            @staticmethod
+            def test_forbidden(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/2ea0f3fa410bbbc9a1b7fcffbda155aa84c4e0bd/openapi/src/resources/workflow-run-system-logs.yaml#L119
+                    status=403,
+                )
+
+                with pytest.raises(_exceptions.ForbiddenError):
+                    _ = client.get_system_logs(workflow_run_id)
+
+            @staticmethod
+            def test_unknown_error(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/2ea0f3fa410bbbc9a1b7fcffbda155aa84c4e0bd/openapi/src/resources/workflow-run-system-logs.yaml#L131
+                    status=500,
+                )
+
+                with pytest.raises(_exceptions.UnknownHTTPError):
+                    _ = client.get_system_logs(workflow_run_id)
+
         class TestTaskRunLogs:
             @staticmethod
             @pytest.fixture
