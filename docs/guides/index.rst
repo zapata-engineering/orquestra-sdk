@@ -11,4 +11,5 @@ Guides
     workflow-syntax
     dependency-installation
     resource-management
+    custom-images
     version-compatibility
