@@ -513,6 +513,16 @@ class ConfigRepo:
             if config not in _config.CLI_IGNORED_CONFIGS
         ]
 
+    def list_remote_config_names(self) -> t.Sequence[ConfigName]:
+        """
+        List config names that are not part of the local 'special cases'.
+        """
+        return [
+            config
+            for config in sdk.RuntimeConfig.list_configs()
+            if config not in _config.SPECIAL_CONFIG_NAME_DICT
+        ]
+
     def store_token_in_config(self, uri: str, token: str, runtime_name: RemoteRuntime):
         """
         Saves the token in the config file

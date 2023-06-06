@@ -19,6 +19,7 @@ from tabulate import tabulate
 
 from orquestra.sdk._base import _services, serde
 from orquestra.sdk.schema import responses
+from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.workflow_run import (
     TaskInvocationId,
@@ -209,6 +210,7 @@ class LoginPresenter:
         )
 
     def prompt_config_saved(self, url, config_name):
+        # TODO: tell the user what runtime is being used.
         click.echo("Token saved in config file.")
         click.echo(f"Configuration name for {url} is {config_name}")
 
@@ -219,6 +221,43 @@ class LoginPresenter:
 
     def open_url_in_browser(self, url) -> bool:
         return webbrowser.open(url)
+
+
+class ConfigPresenter:
+    """
+    Present config information to the user.
+    """
+
+    def print_configs_list(
+        self,
+        configs: t.Sequence[RuntimeConfiguration],
+        message: t.Optional[str] = "Stored configs:",
+    ):
+        """
+        Print a list of stored configs.
+        """
+        click.echo(message)
+        click.echo(
+            tabulate(
+                [
+                    [
+                        click.style(config.config_name, bold=True),
+                        click.style(config.runtime_name, fg="blue")
+                        if config.runtime_name == RuntimeName.CE_REMOTE
+                        else click.style(config.runtime_name, fg="green"),
+                        config.runtime_options["uri"],
+                    ]
+                    for config in configs
+                ],
+                colalign=("left",),
+                tablefmt="plain",
+                headers=[
+                    click.style("Name", underline=True),
+                    click.style("Runtime", underline=True),
+                    click.style("Server URI", underline=True),
+                ],
+            ),
+        )
 
 
 def _format_datetime(dt: t.Optional[datetime]) -> str:

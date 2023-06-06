@@ -11,6 +11,7 @@ from pathlib import Path
 
 import click
 import cloup
+from click_default_group import DefaultGroup
 
 from orquestra.sdk.schema.configs import RemoteRuntime, RuntimeName
 
@@ -388,24 +389,37 @@ dorq.section(
     status,
 )
 
+
+# region: login
+class GroupWithDefaultCommand(cloup.Group, DefaultGroup):
+    def get_help(self, ctx) -> str:
+        return auth.get_help(ctx) + "\n\n" + super().get_help(ctx)
+
+
+@dorq.group(cls=GroupWithDefaultCommand, default="auth", invoke_without_command=False)
+def login():
+    """Commands related to logging in to clusters."""
+    pass
+
+
 server_config_group = cloup.OptionGroup(
     "Server configuration", constraint=cloup.constraints.RequireExactly(1)
 )
 
 
-@dorq.command()
+@login.command(hidden=True)
 @server_config_group.option(
     "-c", "--config", required=False, help="The name of an existing configureation."
 )
 @server_config_group.option(
-    "-s", "--server", required=False, help="server URI that you want to log into"
+    "-s", "--server", required=False, help="The server URI that you want to log into."
 )
 @cloup.option(
     "-t",
     "--token",
     required=False,
-    help="User Token to given server. To generate token, use this command without -t"
-    "option first",
+    help="User Token to given server. To generate token, use this command without the "
+    "-t option first.",
 )
 @cloup.option_group(
     "Remote Environment",
@@ -415,9 +429,9 @@ server_config_group = cloup.OptionGroup(
     cloup.option("--ce", is_flag=True, default=False, help="Log in to Compute Engine."),
     constraint=cloup.constraints.mutually_exclusive,
 )
-def login(config: str, server: str, token: t.Optional[str], ce: bool, qe: bool):
+def auth(config: str, server: str, token: t.Optional[str], ce: bool, qe: bool):
     """
-    Login in to remote cluster
+    Log in to remote cluster
     """
     from ._login._login import Action
 
@@ -429,6 +443,20 @@ def login(config: str, server: str, token: t.Optional[str], ce: bool, qe: bool):
 
     action = Action()
     action.on_cmd_call(config, server, token, runtime_name)
+
+
+@login.command(
+    help="List the stored logins.",
+    aliases=["-l"],
+)
+def __list():
+    from ._config._list import Action
+
+    action = Action()
+    action.on_cmd_call()
+
+
+# endregion
 
 
 def main():
