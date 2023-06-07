@@ -475,6 +475,7 @@ class CERuntime(RuntimeInterface):
 
         return WorkflowLogs(
             per_task={"UNKNOWN TASK INV ID": task_logs},
+            system=system_logs,
             env_setup=env_logs,
             system=system_logs,
             other=other_logs,

@@ -614,6 +614,11 @@ class TestWorkflowRun:
                     "<sys log sentinel 3>",
                 ],
                 other=[],
+                system=[
+                    "<system logs sentinel 1>",
+                    "<system logs sentinel 2>",
+                    "<system logs sentinel 3>",
+                ],
             )
 
             run._runtime = log_reader

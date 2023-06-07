@@ -40,6 +40,11 @@ class WorkflowLogs:
     Zapata Computing.
     """
 
+    system: t.Optional[t.Sequence[str]] = None
+    """
+    Logs relating to the system executing the workflow, rather than the workflow itself.
+    """
+
 
 class LogReader(t.Protocol):
     """
