@@ -320,8 +320,9 @@ class PromptPresenter:
                         labels.insert(0, labels.pop(index))
                         workspaces = workspaces[:]
                         workspaces.insert(0, workspaces.pop(index))
+                        break
             except KeyError:
-                ...
+                pass
 
         tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
 
@@ -331,20 +332,21 @@ class PromptPresenter:
         # Create labels of projects that are printed by prompter
         # Label is <display_name> <id> tabulated nicely to create good-looking
         # table
-        labels = [[ws.name, ws.project_id] for ws in projects]
+        labels = [[p.name, p.project_id] for p in projects]
         if config_name == _config.AUTO_CONFIG_NAME:
             try:
                 curr_proj = os.environ[_env.CURRENT_PROJECT_ENV]
                 for index, label in enumerate(labels):
                     if label[1] == curr_proj:
                         label.append("(CURRENT PROJECT)")
-                        # put current workspace at the top of the list so it is
+                        # put current project at the top of the list so it is
                         # auto-selected
                         labels.insert(0, labels.pop(index))
                         projects = projects[:]
                         projects.insert(0, projects.pop(index))
+                        break
             except KeyError:
-                ...
+                pass
         tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
 
         return tabulated_labels, projects
