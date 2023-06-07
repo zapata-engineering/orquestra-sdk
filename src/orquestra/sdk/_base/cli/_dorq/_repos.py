@@ -10,12 +10,12 @@ import datetime
 import importlib
 import os
 import sys
-import typing
 import typing as t
 import warnings
 from contextlib import contextmanager
 
 import requests
+from typing_extensions import assert_never
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
@@ -26,7 +26,12 @@ from orquestra.sdk._base._qe import _client
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base.abc import ArtifactValue
 from orquestra.sdk.schema import _compat
-from orquestra.sdk.schema.configs import ConfigName, RuntimeConfiguration, RuntimeName
+from orquestra.sdk.schema.configs import (
+    ConfigName,
+    RemoteRuntime,
+    RuntimeConfiguration,
+    RuntimeName,
+)
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.schema.workflow_run import (
     ProjectId,
@@ -95,7 +100,8 @@ class WorkflowRunRepo:
         except (ConnectionError, exceptions.UnauthorizedError):
             raise
 
-        return [run.get_status_model() for run in wf_runs]
+        ret = [run.get_status_model() for run in wf_runs]
+        return ret
 
     def get_wf_by_run_id(
         self, wf_run_id: WorkflowRunId, config_name: t.Optional[ConfigName]
@@ -384,9 +390,11 @@ class WorkflowRunRepo:
             # While this method can also raise WorkflowRunNotStarted error we don't ever
             # expect it to happen, because we're getting workflow run by ID. Workflows
             # get their IDs at the start time.
-            return wf_run.get_logs()
+            logs = wf_run.get_logs()
         except (ConnectionError, exceptions.UnauthorizedError):
             raise
+
+        return logs.per_task
 
     def get_task_logs(
         self,
@@ -505,7 +513,7 @@ class ConfigRepo:
             if config not in _config.CLI_IGNORED_CONFIGS
         ]
 
-    def store_token_in_config(self, uri, token, ce):
+    def store_token_in_config(self, uri: str, token: str, runtime_name: RemoteRuntime):
         """
         Saves the token in the config file
 
@@ -515,7 +523,6 @@ class ConfigRepo:
         """
         check_jwt_without_signature_verification(token)
 
-        runtime_name = RuntimeName.CE_REMOTE if ce else RuntimeName.QE_REMOTE
         config_name = _config.generate_config_name(runtime_name, uri)
 
         config = sdk.RuntimeConfig(
@@ -556,13 +563,19 @@ class RuntimeRepo:
     Wraps access to QE/CE clients
     """
 
-    def get_login_url(self, uri: str, ce: bool, redirect_port: int):
-        client: typing.Union[DriverClient, _client.QEClient]
-        if ce:
+    def get_login_url(
+        self,
+        uri: str,
+        runtime_name: RemoteRuntime,
+        redirect_port: int,
+    ):
+        client: t.Union[DriverClient, _client.QEClient]
+        if runtime_name == RuntimeName.CE_REMOTE:
             client = DriverClient(base_uri=uri, session=requests.Session())
-        else:
+        elif runtime_name == RuntimeName.QE_REMOTE:
             client = _client.QEClient(session=requests.Session(), base_uri=uri)
-            # Ask QE for the login url to log in to the platform
+        else:
+            assert_never(runtime_name)
         try:
             target_url = client.get_login_url(redirect_port)
         except requests.RequestException as e:

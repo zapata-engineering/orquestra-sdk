@@ -20,6 +20,7 @@ from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _db
 from orquestra.sdk._base._driver._client import DriverClient
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._qe._client import QEClient
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing import _example_wfs
@@ -725,7 +726,9 @@ class TestWorkflowRunRepo:
                     "inv2": ["and another one"],
                 }
 
-                mock_wf_run.get_logs.return_value = logs_dict
+                mock_wf_run.get_logs.return_value = WorkflowLogs(
+                    per_task=logs_dict, env_setup=[]
+                )
 
                 repo = _repos.WorkflowRunRepo()
 
@@ -1200,8 +1203,10 @@ class TestConfigRepo:
             # Then
             assert names == configs
 
-        @pytest.mark.parametrize("ce", [True, False])
-        def test_store_token(self, monkeypatch, ce):
+        @pytest.mark.parametrize(
+            "runtime_name", [RuntimeName.CE_REMOTE, RuntimeName.QE_REMOTE]
+        )
+        def test_store_token(self, monkeypatch, runtime_name):
             repo = _repos.ConfigRepo()
             uri = "funny_uri"
             token = "even_funnier_token"
@@ -1219,7 +1224,7 @@ class TestConfigRepo:
             )
 
             # When
-            config_name = repo.store_token_in_config(uri, token, ce)
+            config_name = repo.store_token_in_config(uri, token, runtime_name)
 
             # Then
             (
@@ -1229,11 +1234,7 @@ class TestConfigRepo:
             ) = mock_save_or_update.call_args[0]
 
             assert config_parameter == generated_name
-            assert (
-                runtime_parameter == RuntimeName.CE_REMOTE
-                if ce
-                else RuntimeName.QE_REMOTE
-            )
+            assert runtime_parameter == runtime_name
             assert options_parameter["uri"] == uri
             assert options_parameter["token"] == token
             assert config_name == generated_name
@@ -1286,7 +1287,7 @@ class TestConfigRepo:
 
         @staticmethod
         @pytest.mark.parametrize(
-            "ce, runtime_name", [(True, "CE_REMOTE"), (False, "QE_REMOTE")]
+            "runtime_name", [RuntimeName.CE_REMOTE, RuntimeName.QE_REMOTE]
         )
         @pytest.mark.parametrize(
             "uri, token, config_name",
@@ -1306,7 +1307,6 @@ class TestConfigRepo:
             uri,
             token,
             config_name,
-            ce,
             runtime_name,
         ):
             """
@@ -1328,7 +1328,7 @@ class TestConfigRepo:
             )
 
             # When
-            repo.store_token_in_config(uri, token, ce)
+            repo.store_token_in_config(uri, token, runtime_name)
 
             # Then
             with open(config_path) as f:
@@ -1337,17 +1337,22 @@ class TestConfigRepo:
                 assert (
                     content["configs"][config_name]["runtime_options"]["token"] == token
                 )
-                assert content["configs"][config_name]["runtime_name"] == runtime_name
+                assert (
+                    content["configs"][config_name]["runtime_name"]
+                    == runtime_name.value
+                )
 
 
 class TestRuntimeRepo:
-    @pytest.mark.parametrize("ce", [True, False])
-    def test_return_valid_token(self, monkeypatch, ce):
+    @pytest.mark.parametrize(
+        "runtime_name", [RuntimeName.CE_REMOTE, RuntimeName.QE_REMOTE]
+    )
+    def test_return_valid_token(self, monkeypatch, runtime_name):
         # Given
         fake_login_url = "http://my_login.url"
 
         monkeypatch.setattr(
-            DriverClient if ce else QEClient,
+            DriverClient if runtime_name == RuntimeName.CE_REMOTE else QEClient,
             "get_login_url",
             lambda x, _: fake_login_url,
         )
@@ -1355,29 +1360,33 @@ class TestRuntimeRepo:
         repo = _repos.RuntimeRepo()
 
         # When
-        login_url = repo.get_login_url("uri", ce, 0)
+        login_url = repo.get_login_url("uri", runtime_name, 0)
 
         # Then
         assert login_url == fake_login_url
 
-    @pytest.mark.parametrize("ce", [True, False])
+    @pytest.mark.parametrize(
+        "runtime_name", [RuntimeName.CE_REMOTE, RuntimeName.QE_REMOTE]
+    )
     @pytest.mark.parametrize(
         "exception", [requests.ConnectionError, requests.exceptions.MissingSchema]
     )
-    def test_exceptions(self, monkeypatch, exception, ce):
+    def test_exceptions(self, monkeypatch, exception, runtime_name):
         # Given
         def _exception(_, __):
             raise exception
 
         monkeypatch.setattr(
-            DriverClient if ce else QEClient, "get_login_url", _exception
+            DriverClient if runtime_name == RuntimeName.CE_REMOTE else QEClient,
+            "get_login_url",
+            _exception,
         )
 
         repo = _repos.RuntimeRepo()
 
         # Then
         with pytest.raises(exceptions.LoginURLUnavailableError):
-            repo.get_login_url("uri", ce, 0)
+            repo.get_login_url("uri", runtime_name, 0)
 
 
 class TestResolveDottedName:

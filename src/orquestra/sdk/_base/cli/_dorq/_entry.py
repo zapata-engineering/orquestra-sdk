@@ -12,6 +12,8 @@ from pathlib import Path
 import click
 import cloup
 
+from orquestra.sdk.schema.configs import RemoteRuntime, RuntimeName
+
 from . import _cli_logs
 
 # Adds '-h' alias for '--help'
@@ -405,20 +407,28 @@ server_config_group = cloup.OptionGroup(
     help="User Token to given server. To generate token, use this command without -t"
     "option first",
 )
-@cloup.option(
-    "--ce",
-    is_flag=True,
-    default=False,
-    help="Log in to Compute Engine. If not passed, will log in to Quantum Engine",
+@cloup.option_group(
+    "Remote Environment",
+    cloup.option(
+        "--qe", is_flag=True, default=False, help="Log in to Quantum Engine. (Default)"
+    ),
+    cloup.option("--ce", is_flag=True, default=False, help="Log in to Compute Engine."),
+    constraint=cloup.constraints.mutually_exclusive,
 )
-def login(config: str, server: str, token: t.Optional[str], ce: bool):
+def login(config: str, server: str, token: t.Optional[str], ce: bool, qe: bool):
     """
     Login in to remote cluster
     """
     from ._login._login import Action
 
+    runtime_name: RemoteRuntime
+    if ce:
+        runtime_name = RuntimeName.CE_REMOTE
+    else:
+        runtime_name = RuntimeName.QE_REMOTE
+
     action = Action()
-    action.on_cmd_call(config, server, token, ce)
+    action.on_cmd_call(config, server, token, runtime_name)
 
 
 def main():
