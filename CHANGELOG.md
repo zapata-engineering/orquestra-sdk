@@ -21,6 +21,7 @@
 
 💅 *Improvements*
 * Add prompters to `orq wf submit` command for CE runtime if workspace and project weren't passed explicitly
+* Auto-select and highlight current workspace and project when using `auto` config in CLI in studio
 * `orquestra-sdk-base` CPU container image has a 20% size reduction.
 * Added `State` enum to the base `orquestra.sdk` package for easier filtering task runs.
 
