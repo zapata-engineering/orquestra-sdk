@@ -63,13 +63,13 @@ Convention is to use binary prefixes for memory resource requests (``disk`` and 
 Setting Workflow Resources
 --------------------------
 
-Resources can also be configured at the workflow definition level using the same syntax as with tasks, with one difference - the ``sdk.Resources()`` object my additionally specify a number of nodes to be requested for the workflow. The full parameter list is therefore:
+Resources can also be configured at the workflow definition level using the same syntax as with tasks, with one difference - the ``sdk.Resources()`` object may additionally specify a number of nodes to be requested for the workflow. The full parameter list is therefore:
 
 * ``cpu``: number of cores.
 * ``memory``: amount of RAM (bytes).
 * ``disk``: disk space (bytes).
 * ``gpu``: whether access to a gpu unit is required (``1`` if a GPU is required, ``0`` otherwise).
-* ``nodes``: indicates the maximum number of nodes that may be allocated throughout the execution of this workflow - Must be a positive integer and must be greater than 1 node when using custom images in ``sdk.task`` resources. If omitted, it defaults to 1.
+* ``nodes``: indicates the maximum number of nodes that may be allocated throughout the execution of this workflow - Must be a positive integer. If omitted, it defaults to 1.
 
 .. code-block::
     :caption: Workflow resource request example
