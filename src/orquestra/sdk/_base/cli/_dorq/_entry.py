@@ -392,8 +392,13 @@ dorq.section(
 
 # region: login
 class GroupWithDefaultCommand(cloup.Group, DefaultGroup):
+    ...
+
     def get_help(self, ctx) -> str:
-        return auth.get_help(ctx) + "\n\n" + super().get_help(ctx)
+        # Hack to get the help for `orq login` to make sense
+        print(dir(super()))
+        sub = super().get_help(ctx).split("\n")
+        return auth.get_help(ctx) + "\n\n" + "\n".join(sub[sub.index("Commands:") :])
 
 
 @dorq.group(cls=GroupWithDefaultCommand, default="auth", invoke_without_command=False)
@@ -407,7 +412,14 @@ server_config_group = cloup.OptionGroup(
 )
 
 
-@login.command(hidden=True)
+class HiddenSubCommand(cloup.Command):
+    ...
+
+    def get_usage(self, ctx) -> str:
+        return "HERE"
+
+
+@login.command(cls=HiddenSubCommand, hidden=True)
 @server_config_group.option(
     "-c", "--config", required=False, help="The name of an existing configureation."
 )
@@ -447,7 +459,7 @@ def auth(config: str, server: str, token: t.Optional[str], ce: bool, qe: bool):
 
 @login.command(
     help="List the stored logins.",
-    aliases=["-l"],
+    aliases=["-l", "list"],
 )
 def __list():
     from ._config._list import Action

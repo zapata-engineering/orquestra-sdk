@@ -5,6 +5,8 @@
 """
 Code for 'orq login --list'.
 """
+from orquestra.sdk._base._jwt import check_jwt_without_signature_verification
+from orquestra.sdk.exceptions import ExpiredTokenError, InvalidTokenError
 
 from .. import _repos
 from .._ui import _presenters, _prompts
@@ -45,10 +47,22 @@ class Action:
         """
         Implementation of the command action. Doesn't catch exceptions.
         """
+        configs = [
+            self._config_repo.read_config(config_name)
+            for config_name in self._config_repo.list_remote_config_names()
+        ]
+        status = {config.config_name: False for config in configs}
+        for config in configs:
+            try:
+                check_jwt_without_signature_verification(
+                    config.runtime_options["token"]
+                )
+                status[config.config_name] = True
+            except (ExpiredTokenError, InvalidTokenError):
+                continue
+
         self._config_presenter.print_configs_list(
-            [
-                self._config_repo.read_config(config_name)
-                for config_name in self._config_repo.list_remote_config_names()
-            ],
+            configs,
+            status,
             message="Stored Logins:",
         )

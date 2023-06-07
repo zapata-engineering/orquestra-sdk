@@ -231,6 +231,7 @@ class ConfigPresenter:
     def print_configs_list(
         self,
         configs: t.Sequence[RuntimeConfiguration],
+        status: t.Mapping[RuntimeName, bool],
         message: t.Optional[str] = "Stored configs:",
     ):
         """
@@ -246,6 +247,9 @@ class ConfigPresenter:
                         if config.runtime_name == RuntimeName.CE_REMOTE
                         else click.style(config.runtime_name, fg="green"),
                         config.runtime_options["uri"],
+                        click.style("\u2713", fg="green")
+                        if status[config.config_name]
+                        else click.style("\u2A09", fg="red"),
                     ]
                     for config in configs
                 ],
@@ -255,6 +259,7 @@ class ConfigPresenter:
                     click.style("Name", underline=True),
                     click.style("Runtime", underline=True),
                     click.style("Server URI", underline=True),
+                    click.style("Active Login", underline=True),
                 ],
             ),
         )
