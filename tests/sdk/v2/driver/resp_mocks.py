@@ -280,18 +280,12 @@ def make_get_wf_run_system_logs_response():
     return (DATA_DIR / "get_wf_system_logs_response" / "sys_logs.tar.gz").read_bytes()
 
 
+
 def make_get_wf_run_logs_response() -> bytes:
     """
     As make_get_wf_run_logs_response(), but returns bytes that can be decoded.
     """
     return (DATA_DIR / "get_wf_logs_response" / "logs.tar.gz").read_bytes()
-
-
-def make_get_wf_run_logs_messages():
-    """
-    Deserialized version of ``make_get_wf_run_logs_response()``.
-    """
-    return make_expected_messages()
 
 
 def make_get_task_run_logs_response():

@@ -3,6 +3,22 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+
+🔥 *Features*
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+## v0.50.0
+
+🚨 *Breaking Changes*
 * `WorkflowRun.get_logs()` now returns a data structure with logs split into categories.
 
 🔥 *Features*
@@ -13,8 +29,6 @@
 * New API method `WorkflowRun.start_from_ir()` that allows to start workflow run having only IR object
 * The WorkflowLogs object returned from `WorkflowRun.get_logs()` now includes Compute Engine system logs for workflow runs using CE.
 
-👩‍🔬 *Experimental*
-
 🐛 *Bug Fixes*
 * Secrets with workspaces now work inside workflow functions and for personal access tokens in `GithubImport`.
 * `list_workspaces` and `list_projects` work inside studio with `auto` config
@@ -22,11 +36,11 @@
 
 💅 *Improvements*
 * Add prompters to `orq wf submit` command for CE runtime if workspace and project weren't passed explicitly
+* Auto-select and highlight current workspace and project when using `auto` config in CLI in studio
 * `orquestra-sdk-base` CPU container image has a 20% size reduction.
 * Added `State` enum to the base `orquestra.sdk` package for easier filtering task runs.
 * Logs fetched from CE are now split into "task" and "env setup" categories.
 
-🥷 *Internal*
 
 📃 *Docs*
 * Update resource management guide for Compute Engine

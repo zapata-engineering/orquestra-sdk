@@ -661,8 +661,6 @@ class DriverClient:
         decoded = untarred.read().decode()
 
         # Parse the decoded data as logs
-        # TODO: index by taskinvocationID rather than workflowrunID [ORQSDK-840]
-        # logs = []
         messages = []
         for section_str in decoded.split("\n"):
             if len(section_str) < 1:

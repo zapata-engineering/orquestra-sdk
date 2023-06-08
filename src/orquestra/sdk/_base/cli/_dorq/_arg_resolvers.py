@@ -176,7 +176,9 @@ class SpacesResolver:
             return workspace_id
 
         workspaces = self._spaces_repo.list_workspaces(config)
-        labels = self._presenter.workspaces_list_to_prompt(workspaces)
+        labels, workspaces = self._presenter.workspaces_list_to_prompt(
+            workspaces, config
+        )
         prompt_choices = [(label, ws) for label, ws in zip(labels, workspaces)]
         selected_id = self._prompter.choice(prompt_choices, message="Workspace")
 
@@ -203,7 +205,7 @@ class SpacesResolver:
             return project_id
 
         projects = self._spaces_repo.list_projects(config, workspace_id)
-        labels = self._presenter.project_list_to_prompt(projects)
+        labels, projects = self._presenter.project_list_to_prompt(projects, config)
         if optional:
             projects.append(None)
             labels.append("All")
