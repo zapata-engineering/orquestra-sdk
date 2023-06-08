@@ -4,7 +4,8 @@
 """
 Tests for orquestra.sdk._base._driver._client.
 """
-from typing import Any, Dict
+import re
+from typing import Any, Dict, Iterable, Sequence
 from unittest.mock import create_autospec
 
 import numpy as np
@@ -14,7 +15,11 @@ import responses
 import orquestra.sdk as sdk
 from orquestra.sdk._base._driver import _exceptions
 from orquestra.sdk._base._driver._client import DriverClient, Paginated
-from orquestra.sdk._base._driver._models import GetWorkflowDefResponse, Resources
+from orquestra.sdk._base._driver._models import (
+    GetWorkflowDefResponse,
+    Message,
+    Resources,
+)
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import JSONResult, PickleResult
@@ -1611,25 +1616,48 @@ class TestClient:
                     default_status_code=200,
                 )
 
-            @staticmethod
-            def test_logs_decode(
-                endpoint_mocker, client: DriverClient, workflow_run_id: str
-            ):
-                # Given
-                endpoint_mocker(
-                    body=resp_mocks.make_get_wf_run_logs_response(),
-                    match=[
-                        responses.matchers.query_param_matcher(
-                            {"workflowRunId": workflow_run_id}
-                        )
-                    ],
-                )
+            class TestDecoding:
+                """
+                Tests that verify that we can correctly decode the API response and
+                deserialize the log records.
+                """
 
-                # When
-                messages = client.get_workflow_run_logs(workflow_run_id)
+                @staticmethod
+                @pytest.fixture
+                def mock_recorded_response(endpoint_mocker, workflow_run_id: str):
+                    endpoint_mocker(
+                        body=resp_mocks.make_get_wf_run_logs_response(),
+                        match=[
+                            responses.matchers.query_param_matcher(
+                                {"workflowRunId": workflow_run_id}
+                            )
+                        ],
+                    )
 
-                # Then
-                assert messages == resp_mocks.make_get_wf_run_logs_messages()
+                @staticmethod
+                def test_number_of_messages(
+                    mock_recorded_response,
+                    client: DriverClient,
+                    workflow_run_id: str,
+                ):
+                    # When
+                    messages = client.get_workflow_run_logs(workflow_run_id)
+
+                    # Then
+                    assert len(messages) == 265
+
+                @staticmethod
+                def test_indexed_filenames(
+                    mock_recorded_response,
+                    client: DriverClient,
+                    workflow_run_id: str,
+                ):
+                    # When
+                    messages = client.get_workflow_run_logs(workflow_run_id)
+
+                    # Then
+                    unique_filenames = {m.ray_filename for m in messages}
+                    assert len(unique_filenames) == 7
 
             @staticmethod
             def test_params_encoding(
@@ -1639,7 +1667,6 @@ class TestClient:
                 Verifies that params are correctly sent to the server.
                 """
                 endpoint_mocker(
-                    # json=resp_mocks.make_get_wf_run_logs_response(),
                     body=resp_mocks.make_get_wf_run_logs_response(),
                     match=[
                         responses.matchers.query_param_matcher(
