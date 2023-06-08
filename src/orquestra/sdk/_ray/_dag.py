@@ -480,11 +480,6 @@ class RayRuntime(RuntimeInterface):
     def get_workflow_logs(self, wf_run_id: WorkflowRunId):
         return self._log_reader.get_workflow_logs(wf_run_id)
 
-    def get_system_logs(self, *args, **kwargs):
-        raise NotImplementedError(
-            "This functionality is not available for 'RAY' runtime"
-        )
-
     def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
         return self._log_reader.get_task_logs(wf_run_id, task_inv_id)
 

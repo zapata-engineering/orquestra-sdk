@@ -696,7 +696,7 @@ class DriverClient:
         # TODO: unzip, get logs (ORQSDK-654)
         return resp.content
 
-    def get_system_logs(self, wf_run_id: _models.WorkflowRunID) -> List[str]:
+    def _get_system_logs(self, wf_run_id: _models.WorkflowRunID) -> List[str]:
         """
         Get the logs of a workflow run from the workflow driver.
 

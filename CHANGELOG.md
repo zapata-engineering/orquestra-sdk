@@ -9,9 +9,9 @@
 * Add .project property to WorkflowRun to get the info about workspace and project of running workflow
 * `VersionMismatch` warnings are shown only when interacting with specific workflow runs, not while listing workflows.
 * Add `--qe` flag to `orq login`, this is the default so there is no change in behavior.
-* Add `WorkflowRun.get_system_logs()` to access CE System-level logs.
 * Bump Ray version to 2.4.0
 * New API method `WorkflowRun.start_from_ir()` that allows to start workflow run having only IR object
+* The WorkflowLogs object returned from `WorkflowRun.get_logs()` now includes Compute Engine system logs for workflow runs using CE.
 
 👩‍🔬 *Experimental*
 

@@ -1180,58 +1180,6 @@ class TestGetWorkflowLogs:
             runtime.get_workflow_logs(workflow_run_id)
 
 
-class TestGetSystemLogs:
-    def test_happy_path(
-        self,
-        mocked_client: MagicMock,
-        runtime: _ce_runtime.CERuntime,
-        workflow_run_id: str,
-    ):
-        # Given
-        sys_logs = [
-            "<message sentinel 1>",
-            "<message sentinel 2>",
-            "<message sentinel 3>",
-        ]
-        mocked_client.get_system_logs.return_value = sys_logs
-
-        # When
-        logs = runtime.get_system_logs(workflow_run_id)
-
-        # Then
-        mocked_client.get_system_logs.assert_called_once_with(workflow_run_id)
-        assert logs == sys_logs
-
-    @pytest.mark.parametrize(
-        "exception, expected_exception",
-        [
-            (_exceptions.InvalidWorkflowRunID, exceptions.WorkflowRunNotFoundError),
-            (_exceptions.WorkflowRunNotFound, exceptions.WorkflowRunNotFoundError),
-            (_exceptions.InvalidTokenError, exceptions.UnauthorizedError),
-            (_exceptions.ForbiddenError, exceptions.UnauthorizedError),
-            (_exceptions.UnknownHTTPError, _exceptions.UnknownHTTPError),
-            # (
-            #     _exceptions.WorkflowRunLogsNotReadable,
-            #     exceptions.InvalidWorkflowRunLogsError,
-            # ),
-        ],
-    )
-    def test_exception_handling(
-        self,
-        mocked_client: MagicMock,
-        runtime: _ce_runtime.CERuntime,
-        workflow_run_id: str,
-        exception,
-        expected_exception,
-    ):
-        # Given
-        mocked_client.get_system_logs.side_effect = exception(MagicMock())
-
-        # When
-        with pytest.raises(expected_exception):
-            runtime.get_system_logs(workflow_run_id)
-
-
 class TestListWorkspaces:
     def test_happy_path(
         self,

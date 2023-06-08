@@ -1123,6 +1123,7 @@ class TestGetWorkflowLogs:
                 ],
             },
             env_setup=[],
+            system=[],
             other=[],
         )
 
@@ -1619,16 +1620,3 @@ class TestHTTPErrors:
             runtime.stop_workflow_run("hello-there-abc123-r000")
         for telltale in telltales:
             assert telltale in str(exc_info)
-
-
-class TestUnsupportedMethods:
-    @staticmethod
-    @pytest.mark.parametrize(
-        "method",
-        [
-            _qe_runtime.QERuntime.get_system_logs,
-        ],
-    )
-    def test_raises(runtime, method):
-        with pytest.raises(NotImplementedError):
-            method(runtime)

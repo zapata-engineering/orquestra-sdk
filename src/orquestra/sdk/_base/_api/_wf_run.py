@@ -425,17 +425,6 @@ class WorkflowRun:
         """
         return self._runtime.get_workflow_logs(wf_run_id=self.run_id)
 
-    def get_system_logs(self) -> t.List[str]:
-        """
-        Unstable: this API will change.
-
-        Returns all available system logs printed during execution of this workflow run.
-
-        Returns:
-            A list of log lines printed when running this workflow.
-        """
-        return self._runtime.get_system_logs(wf_run_id=self.run_id)
-
     # TODO: ORQSDK-617 add filtering ability for the users
     def get_tasks(self) -> t.Set[TaskRun]:
         wf_run_model = self.get_status_model()

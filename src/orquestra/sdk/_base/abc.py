@@ -145,17 +145,6 @@ class RuntimeInterface(ABC, LogReader):
         """
         raise NotImplementedError()
 
-    # TODO: 852 change to WorkflowLogs?
-    def get_system_logs(self, wf_run_id: WorkflowRunId) -> t.List[str]:
-        """
-        Reads all available system logs printed during execution of this workflow run.
-
-        Returns:
-            Log lines printed when running this workflow. If the workflow didn't
-            produce any logs this should be an empty list.
-        """
-        raise NotImplementedError()
-
     @abstractmethod
     def get_workflow_project(self, wf_run_id: WorkflowRunId):
         """

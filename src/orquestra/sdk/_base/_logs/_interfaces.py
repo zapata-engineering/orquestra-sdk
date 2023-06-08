@@ -27,6 +27,11 @@ class WorkflowLogs:
     Logs related to setting up execution environment.
     """
 
+    system: t.Sequence[str]
+    """
+    Logs relating to the execution environment.
+    """
+
     other: t.Sequence[str]
     """
     Log lines that don't match any other category we support at the moment. If this

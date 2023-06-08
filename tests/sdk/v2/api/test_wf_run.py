@@ -161,9 +161,6 @@ class TestWorkflowRun:
             itertools.repeat(DEFAULT),
         )
 
-        # getting wf run system logs
-        runtime.get_system_logs.return_value = ["woohoo!\n", "another\n", "line\n"]
-
         # got getting task run artifacts
         runtime.get_available_outputs.return_value = {
             "task_run1": serde.result_from_artifact("woohoo!", ir.ArtifactFormat.AUTO),
@@ -611,6 +608,11 @@ class TestWorkflowRun:
                     # executed yet, so we don't return it.
                 },
                 env_setup=[],
+                system=[
+                    "<sys log sentinel 1>",
+                    "<sys log sentinel 2>",
+                    "<sys log sentinel 3>",
+                ],
                 other=[],
             )
 
@@ -627,26 +629,13 @@ class TestWorkflowRun:
             assert len(logs.per_task[expected_inv]) == 1
             assert logs.per_task[expected_inv][0] == "woohoo!\n"
 
-    class TestGetSystemLogs:
-        @staticmethod
-        def test_happy_path(run):
-            logs = run.get_system_logs()
+            assert len(logs.system) == 3
 
-            assert len(logs) == 3
-            assert logs == ["woohoo!\n", "another\n", "line\n"]
-
-    class TestGetConfig:
-        @staticmethod
-        def test_happy_path():
-            config = _api.RuntimeConfig.in_process()
-            wf = wf_pass_tuple().run(config=config)
-
-            assert wf.config == config
-
-        @staticmethod
-        def test_no_config_run():
-            with pytest.raises(FutureWarning):
-                wf_pass_tuple().run()
+            assert logs.system == [
+                "<sys log sentinel 1>",
+                "<sys log sentinel 2>",
+                "<sys log sentinel 3>",
+            ]
 
     class TestStop:
         @staticmethod

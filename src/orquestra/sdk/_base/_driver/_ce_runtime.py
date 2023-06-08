@@ -435,6 +435,7 @@ class CERuntime(RuntimeInterface):
         """
         try:
             messages = self._client.get_workflow_run_logs(wf_run_id)
+            system_logs = self._client._get_system_logs(wf_run_id)
         except (_exceptions.InvalidWorkflowRunID, _exceptions.WorkflowRunNotFound) as e:
             raise exceptions.WorkflowRunNotFoundError(
                 f"Workflow run with id `{wf_run_id}` not found"
@@ -475,39 +476,9 @@ class CERuntime(RuntimeInterface):
         return WorkflowLogs(
             per_task={"UNKNOWN TASK INV ID": task_logs},
             env_setup=env_logs,
+            system=system_logs,
             other=other_logs,
         )
-
-    def get_system_logs(self, wf_run_id: WorkflowRunId) -> List[str]:
-        """
-        Get the system workflow logs.
-
-        Args:
-            wf_run_id: the ID of a workflow run
-
-        Raises:
-            WorkflowRunNotFound: if the workflow run cannot be found
-            UnauthorizedError: if the remote cluster rejects the token
-
-        Returns:
-            A list of log lines corresponding generated during the run.
-        """
-        try:
-            return self._client.get_system_logs(wf_run_id)
-        except (_exceptions.InvalidWorkflowRunID, _exceptions.WorkflowRunNotFound) as e:
-            raise exceptions.WorkflowRunNotFoundError(
-                f"Workflow run with id `{wf_run_id}` not found"
-            ) from e
-        except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
-            raise exceptions.UnauthorizedError(
-                f"Could not access system logs for workflow run with id `{wf_run_id}`. "
-                "- the authorization token was rejected by the remote cluster."
-            ) from e
-        except _exceptions.WorkflowRunLogsNotReadable as e:
-            raise exceptions.InvalidWorkflowRunLogsError(
-                f"Failed to decode system logs for workflow run with id `{wf_run_id}`. "
-                "Please report this as a bug."
-            ) from e
 
     def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
         raise NotImplementedError()
