@@ -7,12 +7,14 @@ Tests that validate parsing CLI groups and commands.
 """
 
 import sys
-from unittest.mock import Mock
+from unittest.mock import ANY, Mock, create_autospec
 
 import pytest
 
 from orquestra.sdk._base.cli._dorq import _entry
+from orquestra.sdk._base.cli._dorq._login import _login
 from orquestra.sdk._base.cli._dorq._workflow import _list
+from orquestra.sdk.schema.configs import RuntimeName
 
 
 @pytest.fixture()
@@ -242,3 +244,33 @@ class TestList:
                 ]
             )
             mock_exit.assert_called_with(0)
+
+
+class TestLogin:
+    @pytest.fixture
+    def mock_login_action(self, monkeypatch: pytest.MonkeyPatch):
+        mock_exit = Mock()
+        monkeypatch.setattr(sys, "exit", mock_exit)
+        action_mock = create_autospec(_login.Action.on_cmd_call)
+        monkeypatch.setattr(_login.Action, "on_cmd_call", action_mock)
+        return action_mock
+
+    @pytest.mark.parametrize(
+        "flag, expected_runtime",
+        (
+            # Default
+            ([], RuntimeName.CE_REMOTE),
+            # Options
+            (["--ce"], RuntimeName.CE_REMOTE),
+            (["--qe"], RuntimeName.QE_REMOTE),
+        ),
+    )
+    def test_with_flag(self, entrypoint, mock_login_action, flag, expected_runtime):
+        # Given
+        entrypoint(["login", "-c", "test"] + flag)
+
+        # When
+        _entry.main()
+
+        # Then
+        mock_login_action.assert_called_with(ANY, ANY, ANY, ANY, expected_runtime)

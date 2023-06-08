@@ -422,10 +422,10 @@ def login(config: str, server: str, token: t.Optional[str], ce: bool, qe: bool):
     from ._login._login import Action
 
     runtime_name: RemoteRuntime
-    if ce:
-        runtime_name = RuntimeName.CE_REMOTE
-    else:
+    if qe:
         runtime_name = RuntimeName.QE_REMOTE
+    else:
+        runtime_name = RuntimeName.CE_REMOTE
 
     action = Action()
     action.on_cmd_call(config, server, token, runtime_name)

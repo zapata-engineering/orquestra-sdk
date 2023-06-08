@@ -3,6 +3,7 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+* Compute Engine is now the default when logging in
 
 🔥 *Features*
 
