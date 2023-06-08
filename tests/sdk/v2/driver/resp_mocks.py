@@ -21,8 +21,6 @@ from orquestra.sdk.schema.ir import ArtifactFormat, WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult
 from orquestra.sdk.schema.workflow_run import RunStatus, TaskRun
 
-from .data.get_wf_logs_response.messages import make_expected_messages
-
 # --- Helpers ---
 # These helpers are used to reduce code duplication when creating test responses
 
@@ -278,7 +276,6 @@ def make_get_wf_run_system_logs_response():
     As make_get_wf_run_system_logs_response(), but returns bytes that can be decoded.
     """
     return (DATA_DIR / "get_wf_system_logs_response" / "sys_logs.tar.gz").read_bytes()
-
 
 
 def make_get_wf_run_logs_response() -> bytes:

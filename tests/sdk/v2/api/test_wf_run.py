@@ -637,6 +637,19 @@ class TestWorkflowRun:
                 "<sys log sentinel 3>",
             ]
 
+    class TestGetConfig:
+        @staticmethod
+        def test_happy_path():
+            config = _api.RuntimeConfig.in_process()
+            wf = wf_pass_tuple().run(config=config)
+
+            assert wf.config == config
+
+        @staticmethod
+        def test_no_config_run():
+            with pytest.raises(FutureWarning):
+                wf_pass_tuple().run()
+
     class TestStop:
         @staticmethod
         def test_happy_path():

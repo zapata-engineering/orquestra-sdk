@@ -4,8 +4,7 @@
 """
 Tests for orquestra.sdk._base._driver._client.
 """
-import re
-from typing import Any, Dict, Iterable, Sequence
+from typing import Any, Dict
 from unittest.mock import create_autospec
 
 import numpy as np
@@ -1616,7 +1615,6 @@ class TestClient:
                     default_status_code=200,
                 )
 
-=======
             class TestDecoding:
                 """
                 Tests that verify that we can correctly decode the API response and
@@ -1659,7 +1657,6 @@ class TestClient:
                     # Then
                     unique_filenames = {m.ray_filename for m in messages}
                     assert len(unique_filenames) == 7
-
 
             @staticmethod
             def test_params_encoding(
