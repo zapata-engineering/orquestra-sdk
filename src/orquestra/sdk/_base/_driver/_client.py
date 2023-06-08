@@ -21,7 +21,7 @@ import requests
 from requests import codes
 
 from orquestra.sdk import ProjectRef
-from orquestra.sdk._ray._ray_logs import K8sEventLog, SystemLogSourceType, WFLog
+from orquestra.sdk._ray._ray_logs import SystemLogSourceType
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
@@ -32,6 +32,7 @@ from orquestra.sdk.schema.workflow_run import (
 )
 
 from . import _exceptions, _models
+from ._models import K8sEventLog
 
 API_ACTIONS = {
     # Workflow Definitions

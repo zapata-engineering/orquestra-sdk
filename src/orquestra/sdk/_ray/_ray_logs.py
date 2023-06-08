@@ -53,58 +53,6 @@ class SystemLogSourceType(Enum):
     K8S_EVENT = "K8S_EVENT"
 
 
-class K8sEventLogContainerInfoStatus(pydantic.BaseModel):
-    state: str
-    reason: t.Optional[str]
-    message: t.Optional[str]
-
-
-class K8sEventLogContainerInfo(pydantic.BaseModel):
-    name: str
-    status: K8sEventLogContainerInfoStatus
-
-
-class K8sEventLogPodConditions(pydantic.BaseModel):
-    type: str
-    status: str
-    reason: t.Optional[str]
-    message: t.Optional[str]
-
-
-class K8sEventLog(pydantic.BaseModel):
-    """A system-level log line produced by a K8S event."""
-
-    name: str
-    namespace: str
-    event: str
-    phase: str
-    podConditions: t.Optional[t.List[K8sEventLogPodConditions]]
-    containerInfo: t.Optional[t.List[K8sEventLogContainerInfo]]
-
-    @property
-    def message(self) -> str:
-        str_repr = f"{self.name} {self.event} {self.phase}"
-        if self.podConditions:
-            str_repr += "\n  Pod Conditions:"
-            pclog: K8sEventLogPodConditions
-            for pclog in self.podConditions:
-                str_repr += f"\n  -- {pclog.type} {pclog.status}"
-                if pclog.reason:
-                    str_repr += f" ({pclog.reason})"
-                if pclog.message:
-                    str_repr += f": {pclog.message} "
-        if self.containerInfo:
-            str_repr += "\n  Container Information:"
-            cilog: K8sEventLogContainerInfo
-            for cilog in self.containerInfo:
-                str_repr += f"\n  -- {cilog.name} {cilog.status.state}"
-                if cilog.status.reason:
-                    str_repr += f" ({cilog.status.reason})"
-                if cilog.status.message:
-                    str_repr += f": {cilog.status.message} "
-        return str_repr
-
-
 # endregion
 
 
