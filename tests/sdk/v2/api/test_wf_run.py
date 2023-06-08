@@ -653,7 +653,28 @@ class TestWorkflowRun:
             run.stop()
 
             # Then
-            runtime.stop_workflow_run.assert_called_with(run_id)
+            runtime.stop_workflow_run.assert_called_with(run_id, force=None)
+
+        @staticmethod
+        @pytest.mark.parametrize(
+            "force",
+            (True, False),
+        )
+        def test_force_stop(force):
+            # Given
+            run_id = "wf.1"
+            wf_def = Mock()
+            runtime = Mock()
+            config = Mock()
+            run = _api.WorkflowRun(
+                run_id=run_id, wf_def=wf_def, runtime=runtime, config=config
+            )
+
+            # When
+            run.stop(force=force)
+
+            # Then
+            runtime.stop_workflow_run.assert_called_with(run_id, force=force)
 
         @staticmethod
         @pytest.mark.parametrize(

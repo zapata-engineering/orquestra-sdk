@@ -473,9 +473,12 @@ class WFRunFilterResolver:
             # The user has passed in one or more state arguments, iterate through them
             # and check that they're valid states.
             for state in states:
-                try:
-                    _ = State(state)
-                except ValueError:
+                s = State(state)
+
+                # If the state the user passed is not the same as we parsed, then this
+                # is an invalid state.
+                # This allows users to still ask for workflows in UNKNOWN states.
+                if state != s.value:
                     _invalid_states.append(state)
                 else:
                     _selected_states.append(state)

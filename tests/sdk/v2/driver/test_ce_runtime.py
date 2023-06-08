@@ -861,7 +861,29 @@ class TestStopWorkflowRun:
         # When
         runtime.stop_workflow_run(workflow_run_id)
         # Then
-        mocked_client.terminate_workflow_run.assert_called_once_with(workflow_run_id)
+        mocked_client.terminate_workflow_run.assert_called_once_with(
+            workflow_run_id, None
+        )
+
+    @pytest.mark.parametrize(
+        "force",
+        (True, False),
+    )
+    def test_with_force(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        workflow_run_id: str,
+        force: bool,
+    ):
+        # Given
+        mocked_client.terminate_workflow_run.return_value = None
+        # When
+        runtime.stop_workflow_run(workflow_run_id, force=force)
+        # Then
+        mocked_client.terminate_workflow_run.assert_called_once_with(
+            workflow_run_id, force
+        )
 
     def test_unknown_http(
         self,

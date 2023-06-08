@@ -105,8 +105,7 @@ selecting a function from the ones available in 'module'.
 @PROJECT_OPTION
 @cloup.option(
     "--force",
-    is_flag=True,
-    default=False,
+    default=None,
     help=(
         "If passed, submits the workflow without confirmation even if there are "
         "uncommitted changes."
@@ -208,15 +207,21 @@ def wf_logs(
 @workflow.command()
 @cloup.argument("wf_run_id", required=False)
 @CONFIG_OPTION
-def stop(wf_run_id: t.Optional[str], config: t.Optional[str]):
+@cloup.option(
+    "--force/--no-force",
+    is_flag=True,
+    default=None,
+    help="Will forcefully terminate a workflow, "
+    "without waiting for it to gracefully exit.",
+)
+def stop(wf_run_id: t.Optional[str], config: t.Optional[str], force: t.Optional[bool]):
     """
     Stops a running workflow.
     """
-
     from ._workflow._stop import Action
 
     action = Action()
-    action.on_cmd_call(wf_run_id, config)
+    action.on_cmd_call(wf_run_id, config, force)
 
 
 @workflow.command()
