@@ -8,7 +8,6 @@ import pytest
 
 from orquestra.sdk import Project, Workspace, exceptions
 from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _models
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._testing._example_wfs import (
     my_workflow,
     workflow_parametrised_with_resources,
