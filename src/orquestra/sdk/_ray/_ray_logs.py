@@ -149,4 +149,5 @@ class DirectRayReader:
         return WorkflowLogs(
             per_task=logs_dict,
             env_setup=env_setup,
+            other=[],
         )

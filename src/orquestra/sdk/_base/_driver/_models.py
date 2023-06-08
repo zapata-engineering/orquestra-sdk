@@ -6,7 +6,7 @@ Internal models for the workflow driver API
 """
 from datetime import datetime
 from enum import Enum
-from typing import Generic, List, Mapping, Optional, TypeVar
+from typing import Generic, List, Mapping, NamedTuple, NewType, Optional, TypeVar
 
 import pydantic
 from pydantic.generics import GenericModel
@@ -358,3 +358,76 @@ class ProjectDetail(CommonResourceMeta, ResourceIdentifier):
 
 ListWorkspacesResponse = List[WorkspaceDetail]
 ListProjectResponse = List[ProjectDetail]
+
+
+# --- Logs ---
+
+# CE endpoints for logs return a compressed archive. Inside, there's a single file. In
+# it, there's a sequence of Fluent Bit "events" split into newline-separated "sections".
+# Each "section" is JSON-decodable into a list of "events".
+#
+# Each "event" is a pair of [timestamp, message].
+#
+# The timestamp is a float unix epoch timestamp of the time when the log line was
+# *indexed* by the Platform-side log service. This is different from the time when the
+# log line was emitted.
+#
+# The message contains a single line from a file produced by Ray + some metadata about
+# the log source.
+#
+# The CE API returns a single archived file called "step-logs". After unarchiving, this
+# file contains newline-separated chunks. Each chunk is a JSON-encoded list of events.
+
+
+RayFilename = NewType("RayFilename", str)
+
+
+class Message(pydantic.BaseModel):
+    """
+    Represents a single line indexed by the server side log service.
+
+    Based on:
+    https://github.com/zapatacomputing/workflow-driver/blob/972aaa3ca75780a52d01872bc294be419a761209/openapi/src/resources/workflow-run-logs.yaml#L25.
+
+    The name is borrowed from Fluent Bit nomenclature:
+    https://docs.fluentbit.io/manual/concepts/key-concepts#event-format.
+    """
+
+    log: str
+    """
+    Single line content.
+    """
+
+    ray_filename: RayFilename
+    """
+    Server-side file path of the indexed file.
+    """
+
+    tag: str
+    """
+    An identifier in the form of "workflow.logs.ray.<workflow run ID>".
+    """
+
+
+class Event(NamedTuple):
+    """
+    A pair of ``[timestamp, message]``.
+
+    Based on:
+    https://github.com/zapatacomputing/workflow-driver/blob/972aaa3ca75780a52d01872bc294be419a761209/openapi/src/resources/workflow-run-logs.yaml#L18
+    """
+
+    timestamp: float
+    """
+    Unix timestamp in seconds with fraction for the moment when a log line is exported
+    from Ray system to Orquestra. It does not necessarily correspond to the particular
+    time that the message is logged by Ray runtime.
+    """
+
+    message: Message
+    """
+    A single indexed log line.
+    """
+
+
+Section = List[Event]

@@ -8,7 +8,6 @@ import pytest
 
 from orquestra.sdk import Project, Workspace, exceptions
 from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _models
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._testing._example_wfs import (
     my_workflow,
     workflow_parametrised_with_resources,
@@ -1093,9 +1092,6 @@ class TestListWorkflowRuns:
 
 
 class TestGetWorkflowLogs:
-    @pytest.mark.xfail(
-        reason="Until ORQSDK-777 is done, we're ignoring task invocation ids to avoid splitting up sdk and ray logs."  # noqa: E501
-    )
     def test_happy_path(
         self,
         mocked_client: MagicMock,
@@ -1103,10 +1099,38 @@ class TestGetWorkflowLogs:
         workflow_run_id: str,
     ):
         # Given
+        tag = "shouldnt-matter"
         wf_logs = [
-            Mock(wf_run_id="<wf id sentinel 1>", message="<message sentinel 1>"),
-            Mock(wf_run_id="<wf id sentinel 1>", message="<message sentinel 2>"),
-            Mock(wf_run_id="<wf id sentinel 2>", message="<message sentinel 3>"),
+            _models.Message(
+                log="line 1",
+                ray_filename=_models.RayFilename(
+                    "/tmp/ray/session_latest/logs/worker-b4584f711ed56477c7e7c0ea4b16"
+                    "717e36c35dd13ae66b6430a3e5a8-01000000-178.err"
+                ),
+                tag=tag,
+            ),
+            _models.Message(
+                log="line 2",
+                ray_filename=_models.RayFilename(
+                    "/tmp/ray/session_latest/logs/worker-b4584f711ed56477c7e7c0ea4b16"
+                    "717e36c35dd13ae66b6430a3e5a8-01000000-178.out"
+                ),
+                tag=tag,
+            ),
+            _models.Message(
+                log="line 3",
+                ray_filename=_models.RayFilename(
+                    "/tmp/ray/session_latest/logs/something_else.log"
+                ),
+                tag=tag,
+            ),
+            _models.Message(
+                log="line 4",
+                ray_filename=_models.RayFilename(
+                    "/tmp/ray/session_latest/logs/runtime_env_setup-01000000.log"
+                ),
+                tag=tag,
+            ),
         ]
         mocked_client.get_workflow_run_logs.return_value = wf_logs
 
@@ -1115,46 +1139,15 @@ class TestGetWorkflowLogs:
 
         # Then
         mocked_client.get_workflow_run_logs.assert_called_once_with(workflow_run_id)
-        assert logs == {
-            "<wf id sentinel 1>": ["<message sentinel 1>", "<message sentinel 2>"],
-            "<wf id sentinel 2>": ["<message sentinel 3>"],
+        # TODO: update the expected task inv IDs when working on
+        # https://zapatacomputing.atlassian.net/browse/ORQSDK-840.
+        assert logs.per_task == {
+            "UNKNOWN TASK INV ID": ["line 1", "line 2"],
         }
 
-    def test_ignore_task_inv_id(
-        self,
-        mocked_client: MagicMock,
-        runtime: _ce_runtime.CERuntime,
-        workflow_run_id: str,
-    ):
-        """
-        TODO: This test covers a stopgap measure that will no longer be needed after
-        ORQSDK-777. Remove it as soon as possible.
-        """
-        # Given
-        wf_logs = [
-            "<message sentinel 1>",
-            "<message sentinel 2>",
-            "<message sentinel 3>",
-            "<message sentinel 4>",
-        ]
-        mocked_client.get_workflow_run_logs.return_value = wf_logs
+        assert logs.env_setup == ["line 4"]
 
-        # When
-        logs = runtime.get_workflow_logs(workflow_run_id)
-
-        # Then
-        mocked_client.get_workflow_run_logs.assert_called_once_with(workflow_run_id)
-        assert logs == WorkflowLogs(
-            per_task={
-                "UNKNOWN TASK INV ID": [
-                    "<message sentinel 1>",
-                    "<message sentinel 2>",
-                    "<message sentinel 3>",
-                    "<message sentinel 4>",
-                ]
-            },
-            env_setup=[],
-        )
+        assert logs.other == ["line 3"]
 
     @pytest.mark.parametrize(
         "exception, expected_exception",

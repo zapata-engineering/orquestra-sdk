@@ -12,6 +12,7 @@ from typing import Dict, List, Optional, Sequence, Union
 from orquestra.sdk import Project, ProjectRef, Workspace, exceptions
 from orquestra.sdk._base import _retry, serde
 from orquestra.sdk._base._db import WorkflowDB
+from orquestra.sdk._base._logs import _regrouping
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.kubernetes.quantity import parse_quantity
@@ -433,7 +434,7 @@ class CERuntime(RuntimeInterface):
             ...
         """
         try:
-            logs: List[str] = self._client.get_workflow_run_logs(wf_run_id)
+            messages = self._client.get_workflow_run_logs(wf_run_id)
         except (_exceptions.InvalidWorkflowRunID, _exceptions.WorkflowRunNotFound) as e:
             raise exceptions.WorkflowRunNotFoundError(
                 f"Workflow run with id `{wf_run_id}` not found"
@@ -449,9 +450,32 @@ class CERuntime(RuntimeInterface):
                 "Please report this as a bug."
             ) from e
 
+        task_logs = []
+        env_logs = []
+        other_logs = []
+
+        for m in messages:
+            if _regrouping.WORKER_FILE_PATTERN.match(m.ray_filename) is not None:
+                task_logs.append(m.log)
+            elif _regrouping.ENV_SETUP_FILE_PATTERN.match(m.ray_filename) is not None:
+                env_logs.append(m.log)
+            else:
+                # Reasons for the "other" logs: future proofness and empathy. The server
+                # might return events from more files in the future. We want to let the
+                # user see it even this version of the SDK doesn't know how to
+                # categorize it. Noisy data is better than no data when the user is
+                # trying to find a bug.
+
+                # TODO: group "other" log lines by original filename. Otherwise we risk
+                # interleaved lines from multiple files. This is gonna be much easier
+                # to implement after we do
+                # https://zapatacomputing.atlassian.net/browse/ORQSDK-840.
+                other_logs.append(m.log)
+
         return WorkflowLogs(
-            per_task={"UNKNOWN TASK INV ID": logs},
-            env_setup=[],
+            per_task={"UNKNOWN TASK INV ID": task_logs},
+            env_setup=env_logs,
+            other=other_logs,
         )
 
     def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):

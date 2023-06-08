@@ -727,7 +727,7 @@ class TestWorkflowRunRepo:
                 }
 
                 mock_wf_run.get_logs.return_value = WorkflowLogs(
-                    per_task=logs_dict, env_setup=[]
+                    per_task=logs_dict, env_setup=[], other=[]
                 )
 
                 repo = _repos.WorkflowRunRepo()

@@ -38,6 +38,7 @@
 * Auto-select and highlight current workspace and project when using `auto` config in CLI in studio
 * `orquestra-sdk-base` CPU container image has a 20% size reduction.
 * Added `State` enum to the base `orquestra.sdk` package for easier filtering task runs.
+* Logs fetched from CE are now split into "task" and "env setup" categories.
 
 📃 *Docs*
 * Update resource management guide for Compute Engine
