@@ -9,7 +9,7 @@ SDK_REQUIREMENT ?= "git+https://github.com/zapatacomputing/orquestra-workflow-sd
 build-base:
 	@echo "Building base image with SDK version $(SDK_REQUIREMENT)"
 	DOCKER_BUILDKIT=1 docker build -t $(IMAGE_NAME):$(IMAGE_TAG) -f Dockerfile . \
-		--build-arg SDK_REQUIREMENT=$(SDK_REQUIREMENT)
+		--build-arg "SDK_REQUIREMENT=$(SDK_REQUIREMENT)"
 
 #####################
 # Build the sdk cuda image
@@ -20,5 +20,5 @@ build-base:
 build-cuda:
 	@echo "Building cuda image with SDK version $(SDK_REQUIREMENT)"
 	docker build -t $(IMAGE_NAME):$(IMAGE_TAG)-cuda -f cuda.Dockerfile . \
-		--build-arg SDK_REQUIREMENT=$(SDK_REQUIREMENT) \
+		--build-arg "SDK_REQUIREMENT=$(SDK_REQUIREMENT)" \
 		--platform linux/amd64
