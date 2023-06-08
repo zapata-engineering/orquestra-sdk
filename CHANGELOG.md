@@ -24,6 +24,7 @@
 * Add prompters to `orq wf submit` command for CE runtime if workspace and project weren't passed explicitly
 * `orquestra-sdk-base` CPU container image has a 20% size reduction.
 * Added `State` enum to the base `orquestra.sdk` package for easier filtering task runs.
+* Logs fetched from CE are now split into "task" and "env setup" categories.
 
 🥷 *Internal*
 

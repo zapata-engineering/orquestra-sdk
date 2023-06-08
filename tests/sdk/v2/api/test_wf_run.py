@@ -602,7 +602,7 @@ class TestWorkflowRun:
             invs = sample_task_inv_ids
             log_reader = create_autospec(LogReader)
             log_reader.get_workflow_logs.return_value = WorkflowLogs(
-                {
+                per_task={
                     invs[0]: ["woohoo!\n"],
                     invs[1]: ["another\n", "line\n"],
                     # This task invocation was executed, but it produced no logs.
@@ -610,7 +610,8 @@ class TestWorkflowRun:
                     # There's also 4th task invocation in the workflow def, it wasn't
                     # executed yet, so we don't return it.
                 },
-                [],
+                env_setup=[],
+                other=[],
             )
 
             run._runtime = log_reader

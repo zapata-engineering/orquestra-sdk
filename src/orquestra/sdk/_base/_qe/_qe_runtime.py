@@ -821,7 +821,7 @@ class QERuntime(RuntimeInterface):
         # and we probably won't implement it. QE is going to be deprecated _soon_
         # anyway.
         env_logs: List[str] = []
-        return WorkflowLogs(per_task=task_logs, env_setup=env_logs)
+        return WorkflowLogs(per_task=task_logs, env_setup=env_logs, other=[])
 
     def get_system_logs(self, *args, **kwargs):
         raise NotImplementedError("This functionality isn't available for 'QE' runtime")

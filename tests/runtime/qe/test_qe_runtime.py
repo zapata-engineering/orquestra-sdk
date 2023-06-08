@@ -1123,6 +1123,7 @@ class TestGetWorkflowLogs:
                 ],
             },
             env_setup=[],
+            other=[],
         )
 
     def test_invalid_id(self, monkeypatch, runtime, mocked_responses):
