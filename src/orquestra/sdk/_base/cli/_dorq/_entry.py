@@ -211,8 +211,11 @@ def wf_logs(
     "--force/--no-force",
     is_flag=True,
     default=None,
-    help="Will forcefully terminate a workflow, "
-    "without waiting for it to gracefully exit.",
+    help="""
+Will forcefully terminate a workflow, without waiting for it to gracefully exit.
+If neither `--force` nor `--no-force` is passed, the runtime will determine if the
+workflow should be forcefully stopped.
+    """,
 )
 def stop(wf_run_id: t.Optional[str], config: t.Optional[str], force: t.Optional[bool]):
     """
