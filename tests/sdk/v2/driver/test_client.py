@@ -20,6 +20,7 @@ from orquestra.sdk._base._driver._models import (
     Message,
     RayHeadNodeEventLog,
     Resources,
+    SystemLogSourceType,
 )
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema.ir import WorkflowDef
@@ -1799,6 +1800,7 @@ class TestClient:
             def test_logs_decode(
                 endpoint_mocker, client: DriverClient, workflow_run_id: str
             ):
+                # GIVEN
                 endpoint_mocker(
                     body=resp_mocks.make_get_wf_run_system_logs_response(),
                     match=[
@@ -1808,34 +1810,23 @@ class TestClient:
                     ],
                 )
 
-                sys_logs = client._get_system_logs(workflow_run_id)
+                # WHEN
+                sys_logs = client.get_system_logs(workflow_run_id)
 
-                assert len(sys_logs)
-                assert sys_logs[0] == K8sEventLog(
-                    tag="workflow.logs.system.hello_orquestra_wf-ZrioL-r000",
-                    log={
-                        "name": "wf-run-92ae97be-6f19-43dc-9c21-29153cb55f81",
-                        "namespace": "ws-0-3abenjamin-2emummery-40zapatacomputing-2ecom",  # noqa:E501
-                        "event": "ADDED",
-                        "phase": "Pending",
-                        "podConditions": None,
-                        "containerInfo": None,
-                    },
+                # THEN
+                assert len(sys_logs) == 144
+
+                unique_tags = {m.tag for m in sys_logs}
+                assert len(unique_tags) == 1
+                assert (
+                    list(unique_tags)[0]
+                    == "workflow.logs.system.hello_orquestra_wf-ZrioL-r000"
                 )
 
-                assert sys_logs[35] == RayHeadNodeEventLog(
-                    tag="workflow.logs.system.hello_orquestra_wf-ZrioL-r000",
-                    log="\x1b[2m\x1b[33m(raylet)\x1b[0m E0602 08:50:41.315081740     140 fork_posix.cc:76]           Other threads are currently calling into gRPC, skipping fork() handlers",  # noqa:E501
-                )
-
-                assert sys_logs[71] == RayHeadNodeEventLog(
-                    tag="workflow.logs.system.hello_orquestra_wf-ZrioL-r000",
-                    log="    note: This error originates from a subprocess, and is likely not a problem with pip.",  # noqa:E501
-                )
-                assert sys_logs[107] == RayHeadNodeEventLog(
-                    tag="workflow.logs.system.hello_orquestra_wf-ZrioL-r000",
-                    log="\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m Command '['/tmp/ray/session_2023-06-02_08-50-29_944743_10/runtime_resources/pip/5e83a2cad736e67605dd0a40b34d623957c7f9f8/virtualenv/bin/python', '-m', 'pip', 'install', '--disable-pip-version-check', '--no-cache-dir', '-r', '/tmp/ray/session_2023-06-02_08-50-29_944743_10/runtime_resources/pip/5e83a2cad736e67605dd0a40b34d623957c7f9f8/requirements.txt']' returned non-zero exit status 1.",  # noqa:E501
-                )
+                source_types = [m.source_type for m in sys_logs]
+                assert source_types.count(SystemLogSourceType.K8S_EVENT) == 13
+                assert source_types.count(SystemLogSourceType.RAY_HEAD_NODE) == 131
+                assert source_types.count(SystemLogSourceType.RAY_WORKER_NODE) == 0
 
             @staticmethod
             def test_params_encoding(
