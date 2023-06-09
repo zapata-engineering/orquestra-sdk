@@ -653,7 +653,7 @@ class DriverClient:
 
         # Decompress data
         try:
-            unzipped: bytes = zlib.decompress(resp.content, 16 + zlib.MAX_WBITS)
+            unzipped: bytes = zlib.decompress(resp.content, 16)
         except zlib.error as e:
             raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id) from e
 
