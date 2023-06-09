@@ -694,7 +694,7 @@ class DriverClient:
 
     def _get_system_logs(
         self, wf_run_id: _models.WorkflowRunID
-    ) -> List[_models.SysMessage]:
+    ) -> List[_models.SysLog]:
         """
         Get the logs of a workflow run from the workflow driver.
 
