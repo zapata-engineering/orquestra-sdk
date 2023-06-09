@@ -9,7 +9,6 @@ import typing as t
 
 # from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
 from pathlib import Path
 
 import pydantic
@@ -40,20 +39,6 @@ class WFLog(pydantic.BaseModel):
     task_inv_id: t.Optional[TaskInvocationId]
     # ID of the task that was run when this line was produced.
     task_run_id: t.Optional[TaskRunId]
-
-
-# region: CE system logs
-
-
-class SystemLogSourceType(Enum):
-    """Types of sources that can emit system logs."""
-
-    RAY_HEAD_NODE = "RAY_HEAD_NODE"
-    RAY_WORKER_NODE = "RAY_WORKER_NODE"
-    K8S_EVENT = "K8S_EVENT"
-
-
-# endregion
 
 
 def _parse_obj_or_none(model_class, json_dict):

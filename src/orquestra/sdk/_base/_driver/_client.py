@@ -9,8 +9,6 @@ Implemented API spec:
 """
 
 import io
-import json
-import warnings
 import zlib
 from tarfile import TarFile
 from typing import Generic, List, Mapping, Optional, TypeVar, Union
@@ -21,7 +19,6 @@ import requests
 from requests import codes
 
 from orquestra.sdk import ProjectRef
-from orquestra.sdk._ray._ray_logs import SystemLogSourceType
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
@@ -726,7 +723,7 @@ class DriverClient:
 
         # Decompress data
         try:
-            unzipped: bytes = zlib.decompress(resp.content, 16 + zlib.MAX_WBITS)
+            unzipped: bytes = zlib.decompress(resp.content, 16)
         except zlib.error as e:
             raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id) from e
 
@@ -734,44 +731,16 @@ class DriverClient:
         assert untarred is not None
         decoded = untarred.read().decode()
 
-        # Parse the decoded data as logs
-        logs = []
-        for section in decoded.split("\n"):
-            if len(section) < 1:
+        messages = []
+        for section_str in decoded.split("\n"):
+            if len(section_str) < 1:
                 continue
-            for log in json.loads(section):
-                # Check that the source type is something that we expect.
-                try:
-                    source_type = SystemLogSourceType(log[1]["source_type"])
-                except ValueError as e:
-                    raise NotImplementedError(
-                        f"{log[1]['source_type']} is not a recognised system log "
-                        "source type."
-                    ) from e
+            events = pydantic.parse_raw_as(_models.SysSection, section_str)
 
-                if source_type in [
-                    SystemLogSourceType.RAY_HEAD_NODE,
-                    SystemLogSourceType.RAY_WORKER_NODE,
-                ]:
-                    # Logs from RAY_HEAD_NODE or RAY_WORKER_LOAD are strings
-                    logs.append(log[1]["log"])
-                elif source_type in [SystemLogSourceType.K8S_EVENT]:
-                    # Logs from K8S_EVENT are json objects.
-                    try:
-                        interpreted_log = K8sEventLog.parse_obj(log[1]["log"])
-                        logs.append(interpreted_log.message)
-                    except pydantic.ValidationError:
-                        warnings.warn(
-                            f"The following {source_type} system log entry could not "
-                            f"be parsed:\n{log[1]['log']}\nPlease report this as a bug."
-                        )
-                        logs.append(log[1]["log"])
-                else:
-                    raise NotImplementedError(
-                        "No logging scheme is defined for source type {source_type}"
-                    )
+            for event in events:
+                messages.append(event.message.log)
 
-        return logs
+        return messages
 
     def list_workspaces(self):
         """

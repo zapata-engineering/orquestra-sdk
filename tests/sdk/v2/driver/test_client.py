@@ -1810,23 +1810,23 @@ class TestClient:
 
                 assert len(sys_logs)
                 assert (
-                    sys_logs[0]
+                    str(sys_logs[0])
                     == "wf-run-92ae97be-6f19-43dc-9c21-29153cb55f81 ADDED Pending"
                 )
                 assert (
-                    sys_logs[35]
+                    str(sys_logs[35])
                     == "\x1b[2m\x1b[33m(raylet)\x1b[0m E0602 08:50:41.315081740     140 fork_posix.cc:76]           Other threads are currently calling into gRPC, skipping fork() handlers"  # noqa: E501
                 )
                 assert (
-                    sys_logs[71]
+                    str(sys_logs[71])
                     == "    note: This error originates from a subprocess, and is likely not a problem with pip."  # noqa: E501
                 )
                 assert (
-                    sys_logs[107]
+                    str(sys_logs[107])
                     == "\x1b[2m\x1b[36m(WorkflowManagementActor pid=215)\x1b[0m Command '['/tmp/ray/session_2023-06-02_08-50-29_944743_10/runtime_resources/pip/5e83a2cad736e67605dd0a40b34d623957c7f9f8/virtualenv/bin/python', '-m', 'pip', 'install', '--disable-pip-version-check', '--no-cache-dir', '-r', '/tmp/ray/session_2023-06-02_08-50-29_944743_10/runtime_resources/pip/5e83a2cad736e67605dd0a40b34d623957c7f9f8/requirements.txt']' returned non-zero exit status 1."  # noqa: E501
                 )
                 assert (
-                    sys_logs[143]
+                    str(sys_logs[143])
                     == "wf-run-92ae97be-6f19-43dc-9c21-29153cb55f81 DELETED Succeeded\n  Pod Conditions:\n  -- Initialized True (PodCompleted)\n  -- Ready False (PodCompleted)\n  -- ContainersReady False (PodCompleted)\n  -- PodScheduled True\n  Container Information:\n  -- fluent-bit Terminated: Exit code: 0 \n  -- linkerd-proxy Terminated: Exit code: 0 \n  -- workflow-run Terminated: Exit code: 0 "  # noqa: E501
                 )
 

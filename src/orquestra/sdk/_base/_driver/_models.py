@@ -6,10 +6,21 @@ Internal models for the workflow driver API
 """
 from datetime import datetime
 from enum import Enum
-from typing import Generic, List, Mapping, NamedTuple, NewType, Optional, TypeVar
+from typing import (
+    Generic,
+    List,
+    Literal,
+    Mapping,
+    NamedTuple,
+    NewType,
+    Optional,
+    TypeVar,
+    Union,
+)
 
 import pydantic
 from pydantic.generics import GenericModel
+from typing_extensions import Annotated
 
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.workflow_run import (
@@ -360,58 +371,6 @@ ListWorkspacesResponse = List[WorkspaceDetail]
 ListProjectResponse = List[ProjectDetail]
 
 
-class K8sEventLogContainerInfoStatus(pydantic.BaseModel):
-    state: str
-    reason: Optional[str]
-    message: Optional[str]
-
-
-class K8sEventLogContainerInfo(pydantic.BaseModel):
-    name: str
-    status: K8sEventLogContainerInfoStatus
-
-
-class K8sEventLogPodConditions(pydantic.BaseModel):
-    type: str
-    status: str
-    reason: Optional[str]
-    message: Optional[str]
-
-
-class K8sEventLog(pydantic.BaseModel):
-    """A system-level log line produced by a K8S event."""
-
-    name: str
-    namespace: str
-    event: str
-    phase: str
-    podConditions: Optional[List[K8sEventLogPodConditions]]
-    containerInfo: Optional[List[K8sEventLogContainerInfo]]
-
-    @property
-    def message(self) -> str:
-        str_repr = f"{self.name} {self.event} {self.phase}"
-        if self.podConditions:
-            str_repr += "\n  Pod Conditions:"
-            pclog: K8sEventLogPodConditions
-            for pclog in self.podConditions:
-                str_repr += f"\n  -- {pclog.type} {pclog.status}"
-                if pclog.reason:
-                    str_repr += f" ({pclog.reason})"
-                if pclog.message:
-                    str_repr += f": {pclog.message} "
-        if self.containerInfo:
-            str_repr += "\n  Container Information:"
-            cilog: K8sEventLogContainerInfo
-            for cilog in self.containerInfo:
-                str_repr += f"\n  -- {cilog.name} {cilog.status.state}"
-                if cilog.status.reason:
-                    str_repr += f" ({cilog.status.reason})"
-                if cilog.status.message:
-                    str_repr += f": {cilog.status.message} "
-        return str_repr
-
-
 # --- Logs ---
 
 # CE endpoints for logs return a compressed archive. Inside, there's a single file. In
@@ -483,3 +442,123 @@ class Event(NamedTuple):
 
 
 Section = List[Event]
+
+# --- System Logs ---
+
+
+class SystemLogSourceType(str, Enum):
+    """Types of sources that can emit system logs."""
+
+    RAY_HEAD_NODE = "RAY_HEAD_NODE"
+    RAY_WORKER_NODE = "RAY_WORKER_NODE"
+    K8S_EVENT = "K8S_EVENT"
+
+
+class K8sEventLogContainerInfoStatus(pydantic.BaseModel):
+    state: str
+    reason: Optional[str]
+    message: Optional[str]
+
+
+class K8sEventLogContainerInfo(pydantic.BaseModel):
+    name: str
+    status: K8sEventLogContainerInfoStatus
+
+
+class K8sEventLogPodConditions(pydantic.BaseModel):
+    type: str
+    status: str
+    reason: Optional[str]
+    message: Optional[str]
+
+
+class K8sEventLogContent(pydantic.BaseModel):
+    name: str
+    namespace: str
+    event: str
+    phase: str
+    podConditions: Optional[List[K8sEventLogPodConditions]]
+    containerInfo: Optional[List[K8sEventLogContainerInfo]]
+
+    def __str__(self) -> str:
+        str_repr = f"{self.name} {self.event} {self.phase}"
+        if self.podConditions:
+            str_repr += "\n  Pod Conditions:"
+            pclog: K8sEventLogPodConditions
+            for pclog in self.podConditions:
+                str_repr += f"\n  -- {pclog.type} {pclog.status}"
+                if pclog.reason:
+                    str_repr += f" ({pclog.reason})"
+                if pclog.message:
+                    str_repr += f": {pclog.message} "
+        if self.containerInfo:
+            str_repr += "\n  Container Information:"
+            cilog: K8sEventLogContainerInfo
+            for cilog in self.containerInfo:
+                str_repr += f"\n  -- {cilog.name} {cilog.status.state}"
+                if cilog.status.reason:
+                    str_repr += f" ({cilog.status.reason})"
+                if cilog.status.message:
+                    str_repr += f": {cilog.status.message} "
+        return str_repr
+
+
+class K8sEventLog(pydantic.BaseModel):
+    """A system-level log line produced by a K8S event."""
+
+    tag: str
+
+    log: K8sEventLogContent
+
+    source_type: Literal[SystemLogSourceType.K8S_EVENT] = SystemLogSourceType.K8S_EVENT
+
+
+class RayHeadNodeEventLog(pydantic.BaseModel):
+    """A system-level log line produced by a Ray head node event."""
+
+    tag: str
+
+    log: str
+
+    source_type: Literal[
+        SystemLogSourceType.RAY_HEAD_NODE
+    ] = SystemLogSourceType.RAY_HEAD_NODE
+
+
+class RayWorkerNodeEventLog(pydantic.BaseModel):
+    """A system-level log line produced by a Ray head node event."""
+
+    tag: str
+
+    log: str
+
+    source_type: Literal[
+        SystemLogSourceType.RAY_WORKER_NODE
+    ] = SystemLogSourceType.RAY_WORKER_NODE
+
+
+SysLog = Annotated[
+    Union[K8sEventLog, RayHeadNodeEventLog, RayWorkerNodeEventLog],
+    pydantic.Field(discriminator="source_type"),
+]
+
+
+class SysEvent(NamedTuple):
+    """
+    A pair of ``[timestamp, syslog]``.
+
+    Based on:
+    https://github.com/zapatacomputing/workflow-driver/blob/972aaa3ca75780a52d01872bc294be419a761209/openapi/src/resources/workflow-run-logs.yaml#L18
+    """
+
+    timestamp: float
+    """
+    Unix timestamp in seconds with fraction for the moment when a log line is exported
+    from system to Orquestra. It does not necessarily correspond to the particular
+    time that the message is logged by the system.
+    """
+
+    message: SysLog
+
+
+SysSection = List[SysEvent]
