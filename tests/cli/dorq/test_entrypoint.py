@@ -251,7 +251,7 @@ class TestLogin:
     def mock_login_action(self, monkeypatch: pytest.MonkeyPatch):
         mock_exit = Mock()
         monkeypatch.setattr(sys, "exit", mock_exit)
-        action_mock = create_autospec(_login.Action.on_cmd_call)
+        action_mock = Mock()
         monkeypatch.setattr(_login.Action, "on_cmd_call", action_mock)
         return action_mock
 
@@ -273,4 +273,6 @@ class TestLogin:
         _entry.main()
 
         # Then
-        mock_login_action.assert_called_with(ANY, ANY, ANY, ANY, expected_runtime)
+        mock_login_action.assert_called_with(
+            config=ANY, url=ANY, token=ANY, runtime_name=expected_runtime
+        )
