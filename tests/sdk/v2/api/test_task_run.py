@@ -113,8 +113,6 @@ class TestTaskRun:
 
             # Then
             assert task_run.task_invocation_id == inv_id
-            assert task_run.module is not None
-            assert "task_run_workflow_defs" in task_run.module
             assert task_run.fn_name == return_num.__name__
             assert task_run.workflow_run_id == wf_run_id
 

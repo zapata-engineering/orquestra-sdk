@@ -412,7 +412,7 @@ class TestFlattenGraph:
         dep_import = wf.imports[task.dependency_import_ids[0]]
 
         # main assertions
-        assert isinstance(source_import, ir.LocalImport)
+        assert isinstance(source_import, ir.InlineImport)
         assert isinstance(dep_import, ir.GitImport)
 
     def test_setting_invocation_metadata(self):
@@ -700,7 +700,6 @@ class TestWorkflowsTasksProperties:
                 task_def_model = wf_def.tasks[inv.task_id]
                 task_def_obj = dispatch.locate_fn_ref(task_def_model.fn_ref)
                 # We assume that `fn_ref` points to a @task() decorated function.
-                assert isinstance(task_def_obj, _dsl.TaskDef)
 
                 if task_def_obj._output_metadata.is_subscriptable:
                     # n + 1 artifacts for n-output task def:
@@ -801,17 +800,15 @@ class TestWorkflowsTasksProperties:
 
 CAPITALIZE_TASK_DEF = ir.TaskDef(
     id=AnyMatchingStr(r"task-capitalize-\w{10}"),
-    fn_ref=ir.ModuleFunctionRef(
-        module="tests.sdk.v2.test_traversal",
+    fn_ref=ir.InlineFunctionRef(
         function_name="capitalize",
-        file_path="tests/sdk/v2/test_traversal.py",
-        line_number=AnyPositiveInt(),
+        encoded_function=[AnyMatchingStr(".*")],
     ),
     output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
     parameters=[
         ir.TaskParameter(name="text", kind=ir.ParameterKind.POSITIONAL_OR_KEYWORD)
     ],
-    source_import_id=AnyMatchingStr(r"local-\w{10}"),
+    source_import_id=AnyMatchingStr(r"inline-import-\w{1}"),
     custom_image=None,
 )
 
@@ -846,15 +843,13 @@ GIT_TASK_DEF = ir.TaskDef(
 
 GENERATE_GRAPH_TASK_DEF = ir.TaskDef(
     id=AnyMatchingStr(r"task-generate-graph-\w{10}"),
-    fn_ref=ir.ModuleFunctionRef(
-        module="tests.sdk.v2.test_traversal",
+    fn_ref=ir.InlineFunctionRef(
         function_name="generate_graph",
-        file_path="tests/sdk/v2/test_traversal.py",
-        line_number=AnyPositiveInt(),
+        encoded_function=[AnyMatchingStr(r".*")],  # dont test actual encoding here
     ),
     output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
     parameters=[],
-    source_import_id=AnyMatchingStr(r"local-\w{10}"),
+    source_import_id=AnyMatchingStr(r"inline-import-\w{1}"),
     dependency_import_ids=[
         AnyMatchingStr(r"git-\w{10}_github_com_zapatacomputing_orquestra_workflow_sdk")
     ],
@@ -863,17 +858,16 @@ GENERATE_GRAPH_TASK_DEF = ir.TaskDef(
 
 PYTHON_IMPORTS_MANUAL_TASK_DEF = ir.TaskDef(
     id=AnyMatchingStr(r"task-python-imports-manual-\w{10}"),
-    fn_ref=ir.ModuleFunctionRef(
-        module="tests.sdk.v2.test_traversal",
+    fn_ref=ir.InlineFunctionRef(
         function_name="python_imports_manual",
-        file_path="tests/sdk/v2/test_traversal.py",
-        line_number=AnyPositiveInt(),
+        encoded_function=[AnyMatchingStr(r".*")],
+        type="INLINE_FUNCTION_REF",
     ),
     output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
     parameters=[
         ir.TaskParameter(name="text", kind=ir.ParameterKind.POSITIONAL_OR_KEYWORD)
     ],
-    source_import_id=AnyMatchingStr(r"local-\w{10}"),
+    source_import_id=AnyMatchingStr(r"inline-import-\w{1}"),
     dependency_import_ids=[AnyMatchingStr(r"python-import-\w{10}")],
     custom_image=None,
 )

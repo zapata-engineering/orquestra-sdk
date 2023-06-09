@@ -178,17 +178,6 @@ def task_no_source():
     pass
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3, 8),
-    reason="__code__.replace() is available from Python 3.8",
-)
-def test_task_no_linenumber_if_source_inaccessible():
-    task_no_source.__code__ = task_no_source.__code__.replace(co_filename="fake")
-    local_task = _dsl.task(task_no_source)
-    assert isinstance(local_task._fn_ref, _dsl.ModuleFunctionRef)
-    assert local_task._fn_ref.line_number is None
-
-
 @pytest.mark.parametrize("num_outputs", [1, 100, 2])
 def test_returning_multiple_outputs_from_tasks(num_outputs):
     @sdk.task(n_outputs=num_outputs)
@@ -510,9 +499,7 @@ def test_artifact_node_custom_names():
         assert len(warns.list) == 1
 
 
-def test_default_for_interactive_mode(monkeypatch):
-    monkeypatch.setattr(_dsl, "_is_interactive", lambda: True)
-
+def test_default_import_type(monkeypatch):
     @_dsl.task
     def task():
         ...
@@ -523,21 +510,6 @@ def test_default_for_interactive_mode(monkeypatch):
 
     # type comparison to check if in interactive mode default is INLINE
     assert type(task._source_import) is type(inline_task._source_import)  # noqa
-
-
-def test_default_for_non_interactive_mode(monkeypatch):
-    monkeypatch.setattr(_dsl, "_is_interactive", lambda: False)
-
-    @_dsl.task
-    def task():
-        ...
-
-    @_dsl.task(source_import=_dsl.LocalImport("__main__"))
-    def local_task():
-        ...
-
-    # type comparison to check if in  non-interactive mode default is INLINE
-    assert type(task._source_import) is type(local_task._source_import)  # noqa
 
 
 @pytest.mark.parametrize(
@@ -593,35 +565,6 @@ def test_python_imports_deps(python_imports, expected_req, raises):
         # concat name of requirement with its specifier
         parsed = map(lambda x: str(x), python_imports.resolved())
         assert list(parsed) == expected_req
-
-
-class TestRefToMain:
-    @pytest.mark.parametrize(
-        "workflow_defs_file, raises",
-        [
-            (
-                "workflow_defs.py",
-                pytest.raises(sdk.exceptions.InvalidTaskDefinitionError),
-            ),
-            ("workflow_defs_no_raise.py", do_not_raise()),
-        ],
-    )
-    def test_ref_to_main_in_task(self, workflow_defs_file, raises):
-        path_to_workflows = (
-            os.path.dirname(os.path.abspath(__file__)) + "/data/sample_project/"
-        )
-        # add path to locate helper imports
-        sys.path.append(path_to_workflows)
-        # prepare file to be executed as __main__
-        loader = importlib.machinery.SourceFileLoader(
-            "__main__", path_to_workflows + workflow_defs_file
-        )
-        spec = importlib.util.spec_from_loader(loader.name, loader)
-        assert spec is not None
-        mod = importlib.util.module_from_spec(spec)
-
-        with raises:
-            loader.exec_module(mod)
 
 
 def test_python_310_importlib_abc_bug():
