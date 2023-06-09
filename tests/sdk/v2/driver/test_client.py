@@ -1842,7 +1842,7 @@ class TestClient:
                     ],
                 )
 
-                _ = client._get_system_logs(workflow_run_id)
+                _ = client.get_system_logs(workflow_run_id)
 
                 # The assertion is done by mocked_responses
 
@@ -1857,7 +1857,7 @@ class TestClient:
                 )
 
                 with pytest.raises(_exceptions.InvalidWorkflowRunID):
-                    _ = client._get_system_logs(workflow_run_id)
+                    _ = client.get_system_logs(workflow_run_id)
 
             @staticmethod
             def test_not_found(
@@ -1870,7 +1870,7 @@ class TestClient:
                 )
 
                 with pytest.raises(_exceptions.WorkflowRunLogsNotFound):
-                    _ = client._get_system_logs(workflow_run_id)
+                    _ = client.get_system_logs(workflow_run_id)
 
             @staticmethod
             def test_zlib_error(
@@ -1886,7 +1886,7 @@ class TestClient:
                 )
 
                 with pytest.raises(_exceptions.WorkflowRunLogsNotReadable):
-                    _ = client._get_system_logs(workflow_run_id)
+                    _ = client.get_system_logs(workflow_run_id)
 
             @staticmethod
             def test_sets_auth(
@@ -1901,7 +1901,7 @@ class TestClient:
                     ],
                 )
 
-                _ = client._get_system_logs(workflow_run_id)
+                _ = client.get_system_logs(workflow_run_id)
 
                 # The assertion is done by mocked_responses
 
@@ -1916,7 +1916,7 @@ class TestClient:
                 )
 
                 with pytest.raises(_exceptions.InvalidTokenError):
-                    _ = client._get_system_logs(workflow_run_id)
+                    _ = client.get_system_logs(workflow_run_id)
 
             @staticmethod
             def test_forbidden(
@@ -1929,7 +1929,7 @@ class TestClient:
                 )
 
                 with pytest.raises(_exceptions.ForbiddenError):
-                    _ = client._get_system_logs(workflow_run_id)
+                    _ = client.get_system_logs(workflow_run_id)
 
             @staticmethod
             def test_unknown_error(
@@ -1942,7 +1942,7 @@ class TestClient:
                 )
 
                 with pytest.raises(_exceptions.UnknownHTTPError):
-                    _ = client._get_system_logs(workflow_run_id)
+                    _ = client.get_system_logs(workflow_run_id)
 
         class TestTaskRunLogs:
             @staticmethod
