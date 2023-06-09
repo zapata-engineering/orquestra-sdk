@@ -543,7 +543,7 @@ SysLog = Annotated[
 ]
 
 
-class SysEvent(NamedTuple):
+class SysMessage(NamedTuple):
     """
     A pair of ``[timestamp, syslog]``.
 
@@ -561,4 +561,4 @@ class SysEvent(NamedTuple):
     message: SysLog
 
 
-SysSection = List[SysEvent]
+SysSection = List[SysMessage]

@@ -823,7 +823,6 @@ class QERuntime(RuntimeInterface):
         env_logs: List[str] = []
         return WorkflowLogs(per_task=task_logs, env_setup=env_logs, system=[], other=[])
 
-
     def stop_workflow_run(self, run_id: WorkflowRunId) -> None:
         """Terminates a workflow run.
 

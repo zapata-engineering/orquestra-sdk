@@ -692,7 +692,9 @@ class DriverClient:
         # TODO: unzip, get logs (ORQSDK-654)
         return resp.content
 
-    def _get_system_logs(self, wf_run_id: _models.WorkflowRunID) -> List[str]:
+    def _get_system_logs(
+        self, wf_run_id: _models.WorkflowRunID
+    ) -> List[_models.SysMessage]:
         """
         Get the logs of a workflow run from the workflow driver.
 
@@ -738,7 +740,7 @@ class DriverClient:
             events = pydantic.parse_raw_as(_models.SysSection, section_str)
 
             for event in events:
-                messages.append(event.message.log)
+                messages.append(event.message)
 
         return messages
 
