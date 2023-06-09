@@ -132,6 +132,12 @@ class StateResponse(str, Enum):
     SUCCEEDED = "SUCCEEDED"
     TERMINATED = "TERMINATED"
     FAILED = "FAILED"
+    KILLED = "KILLED"
+    UNKNOWN = "UNKNOWN"
+
+    @classmethod
+    def _missing_(cls, _):
+        return cls.UNKNOWN
 
 
 class RunStatusResponse(pydantic.BaseModel):
@@ -274,6 +280,15 @@ class GetWorkflowRunResponse(pydantic.BaseModel):
     """
 
     data: WorkflowRunResponse
+
+
+class TerminateWorkflowRunRequest(pydantic.BaseModel):
+    """
+    Implements:
+        https://github.com/zapatacomputing/workflow-driver/blob/873437f8157226c451220306a6ce90c80e8c8f9e/openapi/src/resources/workflow-run-terminate.yaml#L12
+    """
+
+    force: Optional[bool]
 
 
 # --- Workflow Artifacts ---

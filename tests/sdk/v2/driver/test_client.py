@@ -694,6 +694,32 @@ class TestClient:
                 )
 
             @staticmethod
+            def test_unknown_workflow_state(
+                endpoint_mocker,
+                mock_get_workflow_def,
+                client: DriverClient,
+                workflow_run_id: str,
+                workflow_def_id: str,
+                workflow_run_status: RunStatus,
+                workflow_run_tasks,
+            ):
+                response_json = resp_mocks.make_get_wf_run_response(
+                    id_=workflow_run_id,
+                    workflow_def_id=workflow_def_id,
+                    status=workflow_run_status,
+                    task_runs=workflow_run_tasks,
+                )
+                response_json["data"]["status"]["state"] = "NEW STATE!"
+
+                endpoint_mocker(
+                    json=response_json,
+                )
+
+                wf_run = client.get_workflow_run(workflow_run_id)
+
+                assert wf_run.status.state == State.UNKNOWN
+
+            @staticmethod
             def test_sets_auth(
                 endpoint_mocker,
                 mock_get_workflow_def,
