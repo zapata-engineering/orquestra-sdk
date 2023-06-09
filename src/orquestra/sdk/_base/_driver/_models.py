@@ -459,61 +459,15 @@ class SystemLogSourceType(str, Enum):
         return cls.UNKNOWN
 
 
-class K8sEventLogContainerInfoStatus(pydantic.BaseModel):
-    state: str
-    reason: Optional[str]
-    message: Optional[str]
-
-
-class K8sEventLogContainerInfo(pydantic.BaseModel):
-    name: str
-    status: K8sEventLogContainerInfoStatus
-
-
-class K8sEventLogPodConditions(pydantic.BaseModel):
-    type: str
-    status: str
-    reason: Optional[str]
-    message: Optional[str]
-
-
-class K8sEventLogContent(pydantic.BaseModel):
-    name: str
-    namespace: str
-    event: str
-    phase: str
-    podConditions: Optional[List[K8sEventLogPodConditions]]
-    containerInfo: Optional[List[K8sEventLogContainerInfo]]
-
-    def __str__(self) -> str:
-        str_repr = f"{self.name} {self.event} {self.phase}"
-        if self.podConditions:
-            str_repr += "\n  Pod Conditions:"
-            pclog: K8sEventLogPodConditions
-            for pclog in self.podConditions:
-                str_repr += f"\n  -- {pclog.type} {pclog.status}"
-                if pclog.reason:
-                    str_repr += f" ({pclog.reason})"
-                if pclog.message:
-                    str_repr += f": {pclog.message} "
-        if self.containerInfo:
-            str_repr += "\n  Container Information:"
-            cilog: K8sEventLogContainerInfo
-            for cilog in self.containerInfo:
-                str_repr += f"\n  -- {cilog.name} {cilog.status.state}"
-                if cilog.status.reason:
-                    str_repr += f" ({cilog.status.reason})"
-                if cilog.status.message:
-                    str_repr += f": {cilog.status.message} "
-        return str_repr
-
-
 class K8sEventLog(pydantic.BaseModel):
     """A system-level log line produced by a K8S event."""
 
     tag: str
 
-    log: K8sEventLogContent
+    log: dict
+    """
+    The keys in this dictionary are determined by Kubernetes.
+    """
 
     source_type: Literal[SystemLogSourceType.K8S_EVENT] = SystemLogSourceType.K8S_EVENT
 
