@@ -15,6 +15,7 @@
 🥷 *Internal*
 
 📃 *Docs*
+* Fix broken "Dependency Installation" docs.
 
 ## v0.50.0
 
