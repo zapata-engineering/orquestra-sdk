@@ -452,6 +452,11 @@ class SystemLogSourceType(str, Enum):
     RAY_HEAD_NODE = "RAY_HEAD_NODE"
     RAY_WORKER_NODE = "RAY_WORKER_NODE"
     K8S_EVENT = "K8S_EVENT"
+    UNKNOWN = "UNKNOWN"
+
+    @classmethod
+    def _missing_(cls, *args, **kwargs):
+        return cls.UNKNOWN
 
 
 class K8sEventLogContainerInfoStatus(pydantic.BaseModel):
@@ -537,10 +542,23 @@ class RayWorkerNodeEventLog(pydantic.BaseModel):
     ] = SystemLogSourceType.RAY_WORKER_NODE
 
 
-SysLog = Annotated[
-    Union[K8sEventLog, RayHeadNodeEventLog, RayWorkerNodeEventLog],
-    pydantic.Field(discriminator="source_type"),
-]
+class UnknownEventLog(pydantic.BaseModel):
+    """Fallback option - the event type is unknown, so display the message as a str."""
+
+    tag: str
+
+    log: str
+
+    source_type: Literal[SystemLogSourceType.UNKNOWN] = SystemLogSourceType.UNKNOWN
+
+
+SysLog = (
+    Annotated[
+        Union[K8sEventLog, RayHeadNodeEventLog, RayWorkerNodeEventLog, UnknownEventLog],
+        pydantic.Field(discriminator="source_type"),
+    ]
+    | UnknownEventLog
+)
 
 
 class SysMessage(NamedTuple):
