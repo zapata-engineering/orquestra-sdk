@@ -548,7 +548,7 @@ class SysMessage(NamedTuple):
     A pair of ``[timestamp, syslog]``.
 
     Based on:
-    https://github.com/zapatacomputing/workflow-driver/blob/972aaa3ca75780a52d01872bc294be419a761209/openapi/src/resources/workflow-run-logs.yaml#L18
+    https://github.com/zapatacomputing/workflow-driver/blob/92d9ff32189c580fd0a2ff6eec03cc977fd01502/openapi/src/resources/workflow-run-system-logs.yaml#L2
     """
 
     timestamp: float
