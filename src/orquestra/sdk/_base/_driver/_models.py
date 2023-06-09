@@ -506,13 +506,10 @@ class UnknownEventLog(pydantic.BaseModel):
     source_type: Literal[SystemLogSourceType.UNKNOWN] = SystemLogSourceType.UNKNOWN
 
 
-SysLog = (
-    Annotated[
-        Union[K8sEventLog, RayHeadNodeEventLog, RayWorkerNodeEventLog, UnknownEventLog],
-        pydantic.Field(discriminator="source_type"),
-    ]
-    | UnknownEventLog
-)
+SysLog = Annotated[
+    Union[K8sEventLog, RayHeadNodeEventLog, RayWorkerNodeEventLog, UnknownEventLog],
+    pydantic.Field(discriminator="source_type"),
+]
 
 
 class SysMessage(NamedTuple):
