@@ -606,11 +606,86 @@ class TestWorkflowRun:
                     ([State.SUCCEEDED, State.FAILED], 3),
                 ],
             )
-            def test_filter_by_state(run, state, n_expected_results):
+            def test_filter_by_single_state(run, state, n_expected_results):
                 # When
                 tasks = run.get_tasks(state=state)
 
                 # Then
+                assert len(tasks) == n_expected_results
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "fn_name, n_expected_results",
+                [("join_strings", 1), ("capitalize", 2), ("not a task name", 0)],
+            )
+            def test_filter_by_function_name(run, fn_name, n_expected_results):
+                tasks = run.get_tasks(task_fn_name=fn_name)
+                assert len(tasks) == n_expected_results
+                for task in tasks:
+                    assert task.fn_name == fn_name
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "fn_name, n_expected_results",
+                [
+                    (".*", 3),
+                    ("^join_strings$", 1),
+                ],
+            )
+            def test_filter_by_regex_function_name(run, fn_name, n_expected_results):
+                tasks = run.get_tasks(task_fn_name=fn_name)
+                assert len(tasks) == n_expected_results
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "run_id, n_expected_results",
+                [
+                    ("task_run1", 1),
+                    ("task_run1", 1),
+                    ("task_run1", 1),
+                    ("not a task run id", 0),
+                ],
+            )
+            def test_filter_by_run_id(run, run_id, n_expected_results):
+                tasks = run.get_tasks(task_run_id=run_id)
+                assert len(tasks) == n_expected_results
+                for task in tasks:
+                    assert task.task_run_id == run_id
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "run_id, n_expected_results", [("^task_run", 3), ("^task_run$", 0)]
+            )
+            def test_filter_by_regex_run_id(run, run_id, n_expected_results):
+                tasks = run.get_tasks(task_run_id=run_id)
+                assert len(tasks) == n_expected_results
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "inv_id, n_expected_results",
+                [
+                    ("invocation-0-task-capitalize", 1),
+                    ("invocation-1-task-join-strings", 1),
+                    ("invocation-2-task-capitalize", 1),
+                    ("not an invocation id", 0),
+                ],
+            )
+            def test_filter_by_inv_id(run, inv_id, n_expected_results):
+                tasks = run.get_tasks(task_invocation_id=inv_id)
+                assert len(tasks) == n_expected_results
+                for task in tasks:
+                    assert task.task_invocation_id == inv_id
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "inv_id, n_expected_results",
+                [
+                    (r"invocation-\d-task-capitalize", 2),
+                    (".*", 3),
+                ],
+            )
+            def test_filter_by_regex_inv_id(run, inv_id, n_expected_results):
+                tasks = run.get_tasks(task_invocation_id=inv_id)
                 assert len(tasks) == n_expected_results
 
     class TestGetLogs:
