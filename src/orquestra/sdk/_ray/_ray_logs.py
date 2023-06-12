@@ -141,7 +141,7 @@ class DirectRayReader:
             for log in user_logs
             if log.wf_run_id == wf_run_id and log.task_inv_id == task_inv_id
         ]
-        return [log.message for log in task_logs]
+        return [log.json() for log in task_logs]
 
     def get_workflow_logs(self, wf_run_id: WorkflowRunId) -> WorkflowLogs:
         user_logs = self._get_user_log_lines()
@@ -154,7 +154,7 @@ class DirectRayReader:
             if log.task_inv_id is None:
                 continue
 
-            logs_dict.setdefault(log.task_inv_id, []).append(log.message)
+            logs_dict.setdefault(log.task_inv_id, []).append(log.json())
 
         env_setup = self._get_env_setup_lines()
 

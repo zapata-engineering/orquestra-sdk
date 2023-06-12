@@ -236,7 +236,22 @@ class TestDirectRayReader:
 
                 # Then
                 assert logs.per_task == {
-                    "invocation-1-task-add-with-log": ["hello, there!"]
+                    "invocation-1-task-add-with-log": [
+                        json.dumps(
+                            {
+                                "timestamp": "2023-06-12T12:46:55.381839+00:00",
+                                "level": "INFO",
+                                "filename": "_example_wfs.py:283",
+                                "message": "hello, there!",
+                                "wf_run_id": "wf.wf_using_python_imports.8a4d9e7",
+                                "task_inv_id": "invocation-1-task-add-with-log",
+                                "task_run_id": (
+                                    "wf.wf_using_python_imports.8a4d9e7"
+                                    "@invocation-1-task-add-with-log.f7e22"
+                                ),
+                            }
+                        ),
+                    ]
                 }
 
             @staticmethod
@@ -287,7 +302,22 @@ class TestDirectRayReader:
             )
 
             # Then
-            assert logs == ["hello, there!"]
+            assert logs == [
+                json.dumps(
+                    {
+                        "timestamp": "2023-06-12T12:46:55.381839+00:00",
+                        "level": "INFO",
+                        "filename": "_example_wfs.py:283",
+                        "message": "hello, there!",
+                        "wf_run_id": "wf.wf_using_python_imports.8a4d9e7",
+                        "task_inv_id": "invocation-1-task-add-with-log",
+                        "task_run_id": (
+                            "wf.wf_using_python_imports.8a4d9e7"
+                            "@invocation-1-task-add-with-log.f7e22"
+                        ),
+                    }
+                ),
+            ]
 
         @staticmethod
         @pytest.mark.parametrize(
