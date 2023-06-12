@@ -505,8 +505,6 @@ class WorkflowRun:
             An iterable of TaskRuns
         """
 
-        print(state)
-
         wf_run_model: WorkflowRunModel = self.get_status_model()
         tasks = {
             TaskRun(
