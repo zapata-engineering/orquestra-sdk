@@ -6,8 +6,10 @@ Unit tests for ``orquestra.sdk._base._logs._regrouping``.
 """
 
 from pathlib import Path
-from orquestra.sdk._base._logs import _regrouping
+
 import pytest
+
+from orquestra.sdk._base._logs import _regrouping
 
 
 class TestIsWorker:
@@ -90,17 +92,11 @@ class TestIsEnvSetup:
                 id="relative-timestamp",
             ),
             pytest.param(
-                Path(
-                    "session_latest/logs/"
-                    "runtime_env_setup-01000000.log"
-                ),
+                Path("session_latest/logs/runtime_env_setup-01000000.log"),
                 id="relative-latest",
             ),
             pytest.param(
-                Path(
-                    "/tmp/ray/session_latest/logs/"
-                    "runtime_env_setup-01000000.log"
-                ),
+                Path("/tmp/ray/session_latest/logs/runtime_env_setup-01000000.log"),
                 id="absolute-ce",
             ),
             pytest.param(

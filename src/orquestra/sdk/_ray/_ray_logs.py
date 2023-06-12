@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pydantic
 
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._logs import _regrouping
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRunId
 
