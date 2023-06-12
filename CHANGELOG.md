@@ -23,6 +23,7 @@
 
 🚨 *Breaking Changes*
 * `WorkflowRun.get_logs()` now returns a data structure with logs split into categories.
+* Local workflow database has changed format: downgrading from v0.50.0 will require user intervention.
 
 🔥 *Features*
 * Add .project property to WorkflowRun to get the info about workspace and project of running workflow
