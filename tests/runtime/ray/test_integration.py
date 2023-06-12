@@ -674,10 +674,6 @@ class Test3rdPartyLibraries:
         # Then
         assert wf_result == (JSONResult(value=("2")),)
 
-        # TODO: move it to a separate test
-        logs = runtime.get_workflow_logs(run_id)
-        assert logs.env_setup == "FIXME"
-
         # this package should be only used inside ray env
         with pytest.raises(ModuleNotFoundError):
             import piccup  # type: ignore # noqa
