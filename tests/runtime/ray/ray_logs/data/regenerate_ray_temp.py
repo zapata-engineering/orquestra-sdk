@@ -7,6 +7,9 @@ A script for regenerating the recorded logs in the "./ray_temp" dir.
 Prerequirements:
     * Delete ``~/.orquestra/ray`` to start with a clean state
     * ``orq up``
+
+Warning: always review the log file contents before committing them to git. They
+might contain sensitive information!
 """
 
 import os
@@ -51,6 +54,33 @@ def main():
         target_is_directory=True,
     )
     os.chdir(original_cwd)
+
+    test_logs_dir = TEST_RAY_TEMP / "session_latest" / "logs"
+
+    print("Removing log files we don't care about in tests:")
+    # We're using 'glob' even for concrete paths with no need for `{}` or `*` because it
+    # allows us to skip already non-existing paths.
+    for delete_path in [
+        *test_logs_dir.glob("events"),
+        *test_logs_dir.glob("old"),
+        *test_logs_dir.glob("dashboard{.err,.log}"),
+        *test_logs_dir.glob("dashboard_agent.log"),
+        *test_logs_dir.glob("debug_state.txt"),
+        *test_logs_dir.glob("debug_state_gcs.txt"),
+        *test_logs_dir.glob("gcs_server{.err,.out}"),
+        *test_logs_dir.glob("log_monitor{.err,.log}"),
+        *test_logs_dir.glob("monitor{.err,.out,.log}"),
+        *test_logs_dir.glob("python-core-worker-*_*.log"),
+        *test_logs_dir.glob("raylet{.err,.out}"),
+    ]:
+
+        print(f"- {delete_path}")
+        try:
+            # 1. Assume the path is a directory.
+            shutil.rmtree(delete_path)
+        except NotADirectoryError:
+            # 2. Not a directory? It's a single file then.
+            os.remove(delete_path)
 
 
 if __name__ == "__main__":
