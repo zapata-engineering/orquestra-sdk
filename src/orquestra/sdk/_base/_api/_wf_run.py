@@ -466,10 +466,10 @@ class WorkflowRun:
                 if task_run_model.status.state not in states:
                     return False
 
-            if task_run_id and not re.search(task_run_id, task_run_model.id):
+            if task_run_id and not re.match(task_run_id, task_run_model.id):
                 return False
 
-            if task_invocation_id and not re.search(
+            if task_invocation_id and not re.match(
                 task_invocation_id, task_run_model.invocation_id
             ):
                 return False
@@ -483,7 +483,7 @@ class WorkflowRun:
             """
             Filters that can applied to orquestra.sdk._base._api._task_run.TaskRun.
             """
-            if task_fn_name and not re.search(task_fn_name, task_run.fn_name):
+            if task_fn_name and not re.match(task_fn_name, task_run.fn_name):
                 return False
             return True
 
