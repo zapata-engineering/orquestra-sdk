@@ -14,6 +14,7 @@ from pathlib import Path
 import pydantic
 
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
+from orquestra.sdk._base._logs import _regrouping
 from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRunId
 
@@ -67,9 +68,9 @@ def parse_log_line(raw_line: bytes) -> t.Optional[WFLog]:
     return _parse_obj_or_none(WFLog, json_obj)
 
 
-def _iter_log_paths(ray_temp: Path, glob: str) -> t.Iterator[Path]:
+def _iter_logs_paths(ray_temp: Path) -> t.Iterator[Path]:
     seen_paths: t.MutableSet[Path] = set()
-    for file_path in ray_temp.glob(glob):
+    for file_path in ray_temp.glob("session_*/logs/*"):
         real_path = file_path.resolve()
         if real_path in seen_paths:
             continue
@@ -80,11 +81,11 @@ def _iter_log_paths(ray_temp: Path, glob: str) -> t.Iterator[Path]:
 
 
 def iter_user_log_paths(ray_temp: Path) -> t.Iterator[Path]:
-    return _iter_log_paths(ray_temp, glob="session_*/logs/worker*[.err|.out]")
+    return filter(_regrouping.is_worker, _iter_logs_paths(ray_temp))
 
 
 def iter_env_log_paths(ray_temp: Path) -> t.Iterator[Path]:
-    return _iter_log_paths(ray_temp, glob="session_*/logs/runtime_env_setup-*.log")
+    return filter(_regrouping.is_env_setup, _iter_logs_paths(ray_temp))
 
 
 def _iter_log_lines(paths: t.Iterable[Path]) -> t.Iterator[bytes]:
