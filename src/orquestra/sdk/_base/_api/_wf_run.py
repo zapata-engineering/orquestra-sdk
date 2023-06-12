@@ -437,8 +437,8 @@ class WorkflowRun:
         self,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
         task_fn_name: t.Optional[str] = None,
-        task_run_id: t.Optional[str] = None,
-        task_invocation_id: t.Optional[str] = None,
+        task_run_id: t.Optional[t.Union[str, TaskRunId]] = None,
+        task_invocation_id: t.Optional[t.Union[str, ir.TaskInvocationId]] = None,
     ) -> t.Set[TaskRun]:
         """
         Returns TaskRun representations of the tasks executed as part of this workflow.
@@ -450,9 +450,8 @@ class WorkflowRun:
         def matches_model_filters(
             task_run_model: TaskRunModel,
             state: t.Optional[t.Union[State, t.List[State]]] = None,
-            task_fn_name: t.Optional[str] = None,
-            task_run_id: t.Optional[str] = None,
-            task_invocation_id: t.Optional[str] = None,
+            task_run_id: t.Optional[t.Union[str, TaskRunId]] = None,
+            task_invocation_id: t.Optional[t.Union[str, ir.TaskInvocationId]] = None,
         ) -> bool:
             """
             Filters that can be applied to orquestra.sdk.schema.workflow_run.TaskRun
