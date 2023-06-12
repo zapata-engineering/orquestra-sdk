@@ -443,6 +443,18 @@ class WorkflowRun:
         """
         Returns TaskRun representations of the tasks executed as part of this workflow.
 
+        Args:
+            state: If specified, only tasks with matching states will be returned.
+            task_fn_name: A function name, or regex string matching the desired
+                function name(s). If specified, only tasks with matching function names
+                will be returned.
+            task_run_id: A task run ID, or regex string matching the desired task run
+                ID(s). If specified, only tasks with matching task run IDs will be
+                returned.
+            task_invocation_id: A task invocation ID, or regex string matching the
+                desired task invocation ID(s). If specified, only tasks with matching
+                task invocation IDs will be returned.
+
         Returns:
             An iterable of TaskRuns
         """
