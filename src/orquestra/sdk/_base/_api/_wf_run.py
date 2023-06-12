@@ -435,6 +435,7 @@ class WorkflowRun:
 
     def get_tasks(
         self,
+        *,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
         function_name: t.Optional[str] = None,
         task_run_id: t.Optional[t.Union[str, TaskRunId]] = None,
