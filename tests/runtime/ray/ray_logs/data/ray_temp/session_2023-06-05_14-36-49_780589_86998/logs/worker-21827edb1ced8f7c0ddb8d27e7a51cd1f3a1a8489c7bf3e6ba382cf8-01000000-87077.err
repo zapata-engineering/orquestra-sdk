@@ -1,0 +1,3 @@
+:job_id:01000000
+:task_name:_workflow_task_executor_remote
+2023-06-05 14:43:29,121	INFO task_executor.py:78 -- Task status [RUNNING]	[wf.wf_using_python_imports.9a3f556@invocation-0-task-task-with-python-imports]

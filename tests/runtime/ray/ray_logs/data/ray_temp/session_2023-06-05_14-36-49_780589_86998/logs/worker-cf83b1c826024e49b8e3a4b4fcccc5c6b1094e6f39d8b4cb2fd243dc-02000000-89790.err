@@ -1,0 +1,2 @@
+2023-06-05 14:55:46,065	INFO task_executor.py:78 -- Task status [RUNNING]	[wf.wf_using_python_imports.f417983@orquestra.sdk._ray._build_workflow._make_ray_dag_node.locals._ray_remote]
+2023-06-05 14:55:46,086	INFO task_executor.py:78 -- Task status [RUNNING]	[wf.wf_using_python_imports.f417983@orquestra.sdk._ray._build_workflow.make_ray_dag.locals.handle_data_aggregation_error]

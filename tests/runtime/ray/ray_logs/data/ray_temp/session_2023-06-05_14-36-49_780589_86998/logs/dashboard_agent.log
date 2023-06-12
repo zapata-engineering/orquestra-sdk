@@ -1,0 +1,43 @@
+2023-06-05 14:36:54,576	INFO agent.py:105 -- Parent pid is 87006
+2023-06-05 14:36:54,577	INFO agent.py:131 -- Dashboard agent grpc address: 127.0.0.1:54990
+2023-06-05 14:36:54,579	INFO utils.py:112 -- Get all modules by type: DashboardAgentModule
+2023-06-05 14:36:54,949	INFO utils.py:145 -- Available modules: [<class 'ray.dashboard.modules.event.event_agent.EventAgent'>, <class 'ray.dashboard.modules.healthz.healthz_agent.HealthzAgent'>, <class 'ray.dashboard.modules.job.job_agent.JobAgent'>, <class 'ray.dashboard.modules.log.log_agent.LogAgent'>, <class 'ray.dashboard.modules.log.log_agent.LogAgentV1Grpc'>, <class 'ray.dashboard.modules.reporter.reporter_agent.ReporterAgent'>, <class 'ray.dashboard.modules.runtime_env.runtime_env_agent.RuntimeEnvAgent'>, <class 'ray.dashboard.modules.serve.serve_agent.ServeAgent'>]
+2023-06-05 14:36:54,950	INFO agent.py:160 -- Loading DashboardAgentModule: <class 'ray.dashboard.modules.event.event_agent.EventAgent'>
+2023-06-05 14:36:54,950	INFO event_agent.py:38 -- Event agent cache buffer size: 10240
+2023-06-05 14:36:54,950	INFO agent.py:160 -- Loading DashboardAgentModule: <class 'ray.dashboard.modules.healthz.healthz_agent.HealthzAgent'>
+2023-06-05 14:36:54,951	INFO agent.py:160 -- Loading DashboardAgentModule: <class 'ray.dashboard.modules.job.job_agent.JobAgent'>
+2023-06-05 14:36:54,951	INFO agent.py:160 -- Loading DashboardAgentModule: <class 'ray.dashboard.modules.log.log_agent.LogAgent'>
+2023-06-05 14:36:54,954	INFO agent.py:160 -- Loading DashboardAgentModule: <class 'ray.dashboard.modules.log.log_agent.LogAgentV1Grpc'>
+2023-06-05 14:36:54,954	INFO agent.py:160 -- Loading DashboardAgentModule: <class 'ray.dashboard.modules.reporter.reporter_agent.ReporterAgent'>
+2023-06-05 14:36:54,958	INFO agent.py:160 -- Loading DashboardAgentModule: <class 'ray.dashboard.modules.runtime_env.runtime_env_agent.RuntimeEnvAgent'>
+2023-06-05 14:36:54,959	INFO agent.py:160 -- Loading DashboardAgentModule: <class 'ray.dashboard.modules.serve.serve_agent.ServeAgent'>
+2023-06-05 14:36:54,960	INFO agent.py:165 -- Loaded 8 modules.
+2023-06-05 14:36:54,964	INFO http_server_agent.py:74 -- Dashboard agent http address: 127.0.0.1:52365
+2023-06-05 14:36:54,964	INFO http_server_agent.py:81 -- <ResourceRoute [GET] <PlainResource  /api/local_raylet_healthz> -> <function HealthzAgent.health_check at 0x10a287b80>
+2023-06-05 14:36:54,964	INFO http_server_agent.py:81 -- <ResourceRoute [OPTIONS] <PlainResource  /api/local_raylet_healthz> -> <bound method _PreflightHandler._preflight_handler of <aiohttp_cors.cors_config._CorsConfigImpl object at 0x1146ab670>>
+2023-06-05 14:36:54,964	INFO http_server_agent.py:81 -- <ResourceRoute [POST] <PlainResource  /api/job_agent/jobs/> -> <function JobAgent.submit_job at 0x10a2c4280>
+2023-06-05 14:36:54,964	INFO http_server_agent.py:81 -- <ResourceRoute [OPTIONS] <PlainResource  /api/job_agent/jobs/> -> <bound method _PreflightHandler._preflight_handler of <aiohttp_cors.cors_config._CorsConfigImpl object at 0x1146ab670>>
+2023-06-05 14:36:54,964	INFO http_server_agent.py:81 -- <ResourceRoute [POST] <DynamicResource  /api/job_agent/jobs/{job_or_submission_id}/stop> -> <function JobAgent.stop_job at 0x10a2c5670>
+2023-06-05 14:36:54,965	INFO http_server_agent.py:81 -- <ResourceRoute [OPTIONS] <DynamicResource  /api/job_agent/jobs/{job_or_submission_id}/stop> -> <bound method _PreflightHandler._preflight_handler of <aiohttp_cors.cors_config._CorsConfigImpl object at 0x1146ab670>>
+2023-06-05 14:36:54,965	INFO http_server_agent.py:81 -- <ResourceRoute [DELETE] <DynamicResource  /api/job_agent/jobs/{job_or_submission_id}> -> <function JobAgent.delete_job at 0x10a2c5820>
+2023-06-05 14:36:54,965	INFO http_server_agent.py:81 -- <ResourceRoute [OPTIONS] <DynamicResource  /api/job_agent/jobs/{job_or_submission_id}> -> <bound method _PreflightHandler._preflight_handler of <aiohttp_cors.cors_config._CorsConfigImpl object at 0x1146ab670>>
+2023-06-05 14:36:54,965	INFO http_server_agent.py:81 -- <ResourceRoute [GET] <DynamicResource  /api/job_agent/jobs/{job_or_submission_id}/logs> -> <function JobAgent.get_job_logs at 0x10a2c59d0>
+2023-06-05 14:36:54,965	INFO http_server_agent.py:81 -- <ResourceRoute [OPTIONS] <DynamicResource  /api/job_agent/jobs/{job_or_submission_id}/logs> -> <bound method _PreflightHandler._preflight_handler of <aiohttp_cors.cors_config._CorsConfigImpl object at 0x1146ab670>>
+2023-06-05 14:36:54,965	INFO http_server_agent.py:81 -- <ResourceRoute [GET] <DynamicResource  /api/job_agent/jobs/{job_or_submission_id}/logs/tail> -> <function JobAgent.tail_job_logs at 0x10a2c5b80>
+2023-06-05 14:36:54,965	INFO http_server_agent.py:81 -- <ResourceRoute [OPTIONS] <DynamicResource  /api/job_agent/jobs/{job_or_submission_id}/logs/tail> -> <bound method _PreflightHandler._preflight_handler of <aiohttp_cors.cors_config._CorsConfigImpl object at 0x1146ab670>>
+2023-06-05 14:36:54,965	INFO http_server_agent.py:81 -- <ResourceRoute [GET] <PlainResource  /api/ray/version> -> <function ServeAgent.get_version at 0x114619a60>
+2023-06-05 14:36:54,965	INFO http_server_agent.py:81 -- <ResourceRoute [OPTIONS] <PlainResource  /api/ray/version> -> <bound method _PreflightHandler._preflight_handler of <aiohttp_cors.cors_config._CorsConfigImpl object at 0x1146ab670>>
+2023-06-05 14:36:54,966	INFO http_server_agent.py:81 -- <ResourceRoute [GET] <PlainResource  /api/serve/deployments/> -> <function ServeAgent.get_all_deployments at 0x114619af0>
+2023-06-05 14:36:54,966	INFO http_server_agent.py:81 -- <ResourceRoute [OPTIONS] <PlainResource  /api/serve/deployments/> -> <bound method _PreflightHandler._preflight_handler of <aiohttp_cors.cors_config._CorsConfigImpl object at 0x1146ab670>>
+2023-06-05 14:36:54,966	INFO http_server_agent.py:81 -- <ResourceRoute [GET] <PlainResource  /api/serve/deployments/status> -> <function ServeAgent.get_all_deployment_statuses at 0x114619ca0>
+2023-06-05 14:36:54,966	INFO http_server_agent.py:81 -- <ResourceRoute [OPTIONS] <PlainResource  /api/serve/deployments/status> -> <bound method _PreflightHandler._preflight_handler of <aiohttp_cors.cors_config._CorsConfigImpl object at 0x1146ab670>>
+2023-06-05 14:36:54,966	INFO http_server_agent.py:81 -- <ResourceRoute [DELETE] <PlainResource  /api/serve/deployments/> -> <function ServeAgent.delete_serve_application at 0x114619e50>
+2023-06-05 14:36:54,966	INFO http_server_agent.py:81 -- <ResourceRoute [PUT] <PlainResource  /api/serve/deployments/> -> <function ServeAgent.put_all_deployments at 0x11461f040>
+2023-06-05 14:36:54,966	INFO http_server_agent.py:81 -- <ResourceRoute [OPTIONS] <PlainResource  /api/serve/deployments/> -> <bound method _PreflightHandler._preflight_handler of <aiohttp_cors.cors_config._CorsConfigImpl object at 0x1146ab670>>
+2023-06-05 14:36:54,966	INFO http_server_agent.py:81 -- <ResourceRoute [GET] <StaticResource  /logs -> PosixPath('/Users/alex/.orquestra/ray/session_2023-06-05_14-36-49_780589_86998/logs')> -> <bound method StaticResource._handle of <StaticResource  /logs -> PosixPath('/Users/alex/.orquestra/ray/session_2023-06-05_14-36-49_780589_86998/logs')>>
+2023-06-05 14:36:54,966	INFO http_server_agent.py:81 -- <ResourceRoute [OPTIONS] <StaticResource  /logs -> PosixPath('/Users/alex/.orquestra/ray/session_2023-06-05_14-36-49_780589_86998/logs')> -> <bound method _PreflightHandler._preflight_handler of <aiohttp_cors.cors_config._CorsConfigImpl object at 0x1146ab670>>
+2023-06-05 14:36:54,966	INFO http_server_agent.py:82 -- Registered 23 routes.
+2023-06-05 14:36:54,973	INFO event_agent.py:56 -- Report events to 127.0.0.1:54171
+2023-06-05 14:36:54,973	INFO event_utils.py:132 -- Monitor events logs modified after 1685966814.8417978 on /Users/alex/.orquestra/ray/session_2023-06-05_14-36-49_780589_86998/logs/events, the source types are all.
+2023-06-05 14:45:37,249	INFO metrics_agent.py:245 -- Metrics from a worker (650ccc136d759dd52dd5cbc81e78b39ad47af2799615743a8331d654) is cleaned up due to timeout. Time since last report 122.48993919999992s
+2023-06-05 14:45:37,249	INFO metrics_agent.py:245 -- Metrics from a worker (21827edb1ced8f7c0ddb8d27e7a51cd1f3a1a8489c7bf3e6ba382cf8) is cleaned up due to timeout. Time since last report 122.48701442999999s
