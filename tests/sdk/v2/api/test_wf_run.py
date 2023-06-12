@@ -619,7 +619,7 @@ class TestWorkflowRun:
                 [("join_strings", 1), ("capitalize", 2), ("not a task name", 0)],
             )
             def test_filter_by_function_name(run, fn_name, n_expected_results):
-                tasks = run.get_tasks(task_fn_name=fn_name)
+                tasks = run.get_tasks(function_name=fn_name)
                 assert len(tasks) == n_expected_results
                 for task in tasks:
                     assert task.fn_name == fn_name
@@ -633,7 +633,7 @@ class TestWorkflowRun:
                 ],
             )
             def test_filter_by_regex_function_name(run, fn_name, n_expected_results):
-                tasks = run.get_tasks(task_fn_name=fn_name)
+                tasks = run.get_tasks(function_name=fn_name)
                 assert len(tasks) == n_expected_results
 
             @staticmethod
