@@ -436,7 +436,7 @@ class WorkflowRun:
     def get_tasks(
         self,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
-        task_fn_name: t.Optional[str] = None,
+        function_name: t.Optional[str] = None,
         task_run_id: t.Optional[t.Union[str, TaskRunId]] = None,
         task_invocation_id: t.Optional[t.Union[str, ir.TaskInvocationId]] = None,
     ) -> t.Set[TaskRun]:
@@ -445,7 +445,7 @@ class WorkflowRun:
 
         Args:
             state: If specified, only tasks with matching states will be returned.
-            task_fn_name: A function name, or regex string matching the desired
+            function_name: A function name, or regex string matching the desired
                 function name(s). If specified, only tasks with matching function names
                 will be returned.
             task_run_id: A task run ID, or regex string matching the desired task run
@@ -518,7 +518,7 @@ class WorkflowRun:
         return {
             task
             for task in tasks
-            if matches_run_filters(task, task_fn_name=task_fn_name)
+            if matches_run_filters(task, task_fn_name=function_name)
         }
 
 
