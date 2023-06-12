@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2021-2022 Zapata Computing Inc.
+# © Copyright 2021-2023 Zapata Computing Inc.
 ################################################################################
 """
 Interfaces exposed by orquestra-sdk.
@@ -113,7 +113,9 @@ class RuntimeInterface(ABC, LogReader):
         raise NotImplementedError()
 
     @abstractmethod
-    def stop_workflow_run(self, workflow_run_id: WorkflowRunId) -> None:
+    def stop_workflow_run(
+        self, workflow_run_id: WorkflowRunId, *, force: t.Optional[bool] = None
+    ) -> None:
         """Stops a workflow run.
 
         Raises:

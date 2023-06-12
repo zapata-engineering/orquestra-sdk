@@ -311,7 +311,7 @@ class TestDirectRayReader:
                 pytest.param(
                     "wf.1",
                     [],
-                    WorkflowLogs(per_task={}, env_setup=[]),
+                    WorkflowLogs(per_task={}, env_setup=[], system=[], other=[]),
                     id="no_parsed_logs",
                 ),
                 pytest.param(
@@ -346,7 +346,7 @@ class TestDirectRayReader:
                         ),
                     ],
                     WorkflowLogs(
-                        {
+                        per_task={
                             "inv1": [
                                 '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "hello there!", "wf_run_id": "wf.1", "task_inv_id": "inv1", "task_run_id": "wf.1@inv1"}',  # noqa: E501
                                 '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "general kenobi!", "wf_run_id": "wf.1", "task_inv_id": "inv1", "task_run_id": "wf.1@inv1"}',  # noqa: E501
@@ -355,7 +355,9 @@ class TestDirectRayReader:
                                 '{"timestamp": "2023-02-09T11:26:07.099382+00:00", "level": "INFO", "filename": "_log_adapter.py:138", "message": "and another one", "wf_run_id": "wf.1", "task_inv_id": "inv2", "task_run_id": "wf.1@inv2"}',  # noqa: E501
                             ],
                         },
-                        [],
+                        env_setup=[],
+                        system=[],
+                        other=[],
                     ),
                     id="matching_wf_run",
                 ),
@@ -372,7 +374,7 @@ class TestDirectRayReader:
                             task_run_id=None,
                         )
                     ],
-                    WorkflowLogs(per_task={}, env_setup=[]),
+                    WorkflowLogs(per_task={}, env_setup=[], system=[], other=[]),
                     id="no_task_ids",
                 ),
                 pytest.param(
@@ -388,7 +390,7 @@ class TestDirectRayReader:
                             task_run_id="wf.2@inv2",
                         )
                     ],
-                    WorkflowLogs(per_task={}, env_setup=[]),
+                    WorkflowLogs(per_task={}, env_setup=[], system=[], other=[]),
                     id="other_wf_run",
                 ),
             ],

@@ -599,7 +599,7 @@ class TestWorkflowRun:
             invs = sample_task_inv_ids
             log_reader = create_autospec(LogReader)
             log_reader.get_workflow_logs.return_value = WorkflowLogs(
-                {
+                per_task={
                     invs[0]: ["woohoo!\n"],
                     invs[1]: ["another\n", "line\n"],
                     # This task invocation was executed, but it produced no logs.
@@ -607,7 +607,13 @@ class TestWorkflowRun:
                     # There's also 4th task invocation in the workflow def, it wasn't
                     # executed yet, so we don't return it.
                 },
-                [],
+                env_setup=[],
+                system=[
+                    "<sys log sentinel 1>",
+                    "<sys log sentinel 2>",
+                    "<sys log sentinel 3>",
+                ],
+                other=[],
             )
 
             run._runtime = log_reader
@@ -622,6 +628,14 @@ class TestWorkflowRun:
             assert expected_inv in logs.per_task
             assert len(logs.per_task[expected_inv]) == 1
             assert logs.per_task[expected_inv][0] == "woohoo!\n"
+
+            assert len(logs.system) == 3
+
+            assert logs.system == [
+                "<sys log sentinel 1>",
+                "<sys log sentinel 2>",
+                "<sys log sentinel 3>",
+            ]
 
     class TestGetConfig:
         @staticmethod
@@ -652,7 +666,28 @@ class TestWorkflowRun:
             run.stop()
 
             # Then
-            runtime.stop_workflow_run.assert_called_with(run_id)
+            runtime.stop_workflow_run.assert_called_with(run_id, force=None)
+
+        @staticmethod
+        @pytest.mark.parametrize(
+            "force",
+            (True, False),
+        )
+        def test_force_stop(force):
+            # Given
+            run_id = "wf.1"
+            wf_def = Mock()
+            runtime = Mock()
+            config = Mock()
+            run = _api.WorkflowRun(
+                run_id=run_id, wf_def=wf_def, runtime=runtime, config=config
+            )
+
+            # When
+            run.stop(force=force)
+
+            # Then
+            runtime.stop_workflow_run.assert_called_with(run_id, force=force)
 
         @staticmethod
         @pytest.mark.parametrize(

@@ -313,9 +313,15 @@ class WorkflowRun:
 
         return status
 
-    def stop(self):
+    def stop(self, *, force: t.Optional[bool] = None):
         """
         Asks the runtime to stop the workflow run.
+
+        Args:
+            force: Asks the runtime to terminate the workflow without waiting for the
+                workflow to gracefully exit.
+                By default, this behavior is up to the runtime, but can be overridden
+                with True/False.
 
         Raises:
             orquestra.sdk.exceptions.UnauthorizedError: when communication with runtime
@@ -324,7 +330,7 @@ class WorkflowRun:
                 attempt failed
         """
         try:
-            self._runtime.stop_workflow_run(self.run_id)
+            self._runtime.stop_workflow_run(self.run_id, force=force)
         except (UnauthorizedError, WorkflowRunCanNotBeTerminated):
             raise
 

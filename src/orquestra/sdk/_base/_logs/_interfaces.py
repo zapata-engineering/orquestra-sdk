@@ -23,6 +23,22 @@ class WorkflowLogs:
     """
 
     env_setup: t.Sequence[str]
+    """
+    Logs related to setting up execution environment.
+    """
+
+    system: t.Sequence[str]
+    """
+    Logs relating to the execution environment.
+    """
+
+    other: t.Sequence[str]
+    """
+    Log lines that don't match any other category we support at the moment. If this
+    contains useful information, please consider upgrading with
+    ``pip install --uprade orquestra-sdk`` or report your use case to the SDK Team at
+    Zapata Computing.
+    """
 
 
 class LogReader(t.Protocol):
