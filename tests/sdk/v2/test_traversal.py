@@ -700,7 +700,7 @@ class TestWorkflowsTasksProperties:
                 task_def_model = wf_def.tasks[inv.task_id]
                 task_def_obj = dispatch.locate_fn_ref(task_def_model.fn_ref)
                 # We assume that `fn_ref` points to a @task() decorated function.
-
+                assert hasattr(task_def_obj, "_output_metadata")
                 if task_def_obj._output_metadata.is_subscriptable:
                     # n + 1 artifacts for n-output task def:
                     # - one artifact for each output to handle unpacking
