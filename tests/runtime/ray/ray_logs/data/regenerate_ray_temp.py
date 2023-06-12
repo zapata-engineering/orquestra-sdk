@@ -71,6 +71,7 @@ def main():
         *test_logs_dir.glob("monitor.???"),
         *test_logs_dir.glob("python-core-worker-*_*.log"),
         *test_logs_dir.glob("raylet.???"),
+        *test_logs_dir.glob("ray_client_server.???"),
     ]:
 
         print(f"- {delete_path}")
