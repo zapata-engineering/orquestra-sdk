@@ -17,6 +17,7 @@ from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospe
 import pytest
 
 from orquestra.sdk._base import _api, _workflow, serde
+from orquestra.sdk._base._api._task_run import TaskRun
 from orquestra.sdk._base._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
 from orquestra.sdk._base._logs._interfaces import LogReader, WorkflowLogs
@@ -575,6 +576,148 @@ class TestWorkflowRun:
                 "inv2": (21, 38),
             }
 
+    class TestTaskFilters:
+        class TestTaskMatchesSchemaFilters:
+            @pytest.fixture
+            @staticmethod
+            def schema_task_run():
+                task = create_autospec(TaskRunModel)
+                task.id = "<id sentinel>"
+                task.invocation_id = "<inv id sentinel>"
+                task.status = create_autospec(RunStatus)
+                task.status.state = State.SUCCEEDED
+                return task
+
+            @staticmethod
+            def test_no_filters(schema_task_run):
+                assert _api.WorkflowRun._task_matches_schema_filters(schema_task_run)
+
+            @staticmethod
+            def test_matching_state(schema_task_run):
+                assert _api.WorkflowRun._task_matches_schema_filters(
+                    schema_task_run, state=State.SUCCEEDED
+                )
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "state", [state for state in State if state != State.SUCCEEDED]
+            )
+            def test_conflicting_state(schema_task_run, state):
+                assert not _api.WorkflowRun._task_matches_schema_filters(
+                    schema_task_run, state=state
+                )
+
+            @staticmethod
+            @pytest.mark.parametrize("task_run_id", ["<id sentinel>", ".*"])
+            def test_matching_task_run_id(schema_task_run, task_run_id):
+                assert _api.WorkflowRun._task_matches_schema_filters(
+                    schema_task_run, task_run_id=task_run_id
+                )
+
+            @staticmethod
+            @pytest.mark.parametrize("task_run_id", ["foo", "<id sentinel"])
+            def test_conflicting_task_run_id(schema_task_run, task_run_id):
+                assert not _api.WorkflowRun._task_matches_schema_filters(
+                    schema_task_run, task_run_id=task_run_id
+                )
+
+            @staticmethod
+            @pytest.mark.parametrize("task_inv_id", ["<inv id sentinel>", ".*"])
+            def test_matching_task_inv_id(schema_task_run, task_inv_id):
+                assert _api.WorkflowRun._task_matches_schema_filters(
+                    schema_task_run, task_invocation_id=task_inv_id
+                )
+
+            @staticmethod
+            @pytest.mark.parametrize("task_inv_id", ["foo", "<inv id sentinel"])
+            def test_conflicting_task_inv_id(schema_task_run, task_inv_id):
+                assert not _api.WorkflowRun._task_matches_schema_filters(
+                    schema_task_run, task_invocation_id=task_inv_id
+                )
+
+            @staticmethod
+            @pytest.mark.parametrize("state", [None, State.SUCCEEDED])
+            @pytest.mark.parametrize("task_run_id", [None, "<id sentinel>", ".*"])
+            @pytest.mark.parametrize(
+                "task_invocation_id", [None, "<inv id sentinel>", ".*"]
+            )
+            def test_multiple_matching_filters(
+                schema_task_run, state, task_run_id, task_invocation_id
+            ):
+                assert _api.WorkflowRun._task_matches_schema_filters(
+                    schema_task_run,
+                    state=state,
+                    task_run_id=task_run_id,
+                    task_invocation_id=task_invocation_id,
+                )
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "state", [state for state in State if state != State.SUCCEEDED]
+            )
+            @pytest.mark.parametrize("task_run_id", [None, "foo", "<id sentinel"])
+            @pytest.mark.parametrize(
+                "task_invocation_id", [None, "foo", "<inv id sentinel"]
+            )
+            def test_multiple_conflicting_filters(
+                schema_task_run, state, task_run_id, task_invocation_id
+            ):
+                assert not _api.WorkflowRun._task_matches_schema_filters(
+                    schema_task_run,
+                    state=state,
+                    task_run_id=task_run_id,
+                    task_invocation_id=task_invocation_id,
+                )
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "state, task_run_id, task_invocation_id",
+                [
+                    (State.SUCCEEDED, "<id sentinel>", "foo"),
+                    (State.SUCCEEDED, "foo", "<inv id sentinel>"),
+                    (State.WAITING, "<id sentinel>", "<inv id sentinel>"),
+                ],
+            )
+            def test_mix_of_matching_and_conflicting_filters(
+                schema_task_run, state, task_run_id, task_invocation_id
+            ):
+                assert not _api.WorkflowRun._task_matches_schema_filters(
+                    schema_task_run,
+                    state=state,
+                    task_run_id=task_run_id,
+                    task_invocation_id=task_invocation_id,
+                )
+
+        class TestTaskMatchesAPIFilters:
+            @pytest.fixture
+            @staticmethod
+            def api_task_run():
+                task = create_autospec(TaskRun)
+                task.fn_name = "<function name sentinel>"
+                return task
+
+            @staticmethod
+            def test_no_filters(api_task_run):
+                assert _api.WorkflowRun._task_matches_api_filters(api_task_run)
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "function_name", ["<function name sentinel>", ".*"]
+            )
+            def test_matching_function_name(api_task_run, function_name):
+                assert _api.WorkflowRun._task_matches_api_filters(
+                    api_task_run, task_fn_name=function_name
+                )
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "function_name", ["<function name sentinel", "foo"]
+            )
+            def test_conflicting_function_name(api_task_run, function_name):
+                assert not _api.WorkflowRun._task_matches_api_filters(
+                    api_task_run, task_fn_name=function_name
+                )
+
     class TestGetTasks:
         @staticmethod
         def test_get_tasks_from_started_workflow(run):
@@ -654,7 +797,7 @@ class TestWorkflowRun:
 
             @staticmethod
             @pytest.mark.parametrize(
-                "run_id, n_expected_results", [("^task_run", 3), ("^task_run$", 0)]
+                "run_id, n_expected_results", [("task_run.", 3), ("task_run", 0)]
             )
             def test_filter_by_regex_run_id(run, run_id, n_expected_results):
                 tasks = run.get_tasks(task_run_id=run_id)
