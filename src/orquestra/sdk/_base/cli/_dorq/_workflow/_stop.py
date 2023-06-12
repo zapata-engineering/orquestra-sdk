@@ -44,15 +44,21 @@ class Action:
         self._presenter = presenter
 
     def on_cmd_call(
-        self, wf_run_id: t.Optional[WorkflowRunId], config: t.Optional[ConfigName]
+        self,
+        wf_run_id: t.Optional[WorkflowRunId],
+        config: t.Optional[ConfigName],
+        force: t.Optional[bool],
     ):
         try:
-            self._on_cmd_call_with_exceptions(wf_run_id, config)
+            self._on_cmd_call_with_exceptions(wf_run_id, config, force)
         except Exception as e:
             self._presenter.show_error(e)
 
     def _on_cmd_call_with_exceptions(
-        self, wf_run_id: t.Optional[WorkflowRunId], config: t.Optional[ConfigName]
+        self,
+        wf_run_id: t.Optional[WorkflowRunId],
+        config: t.Optional[ConfigName],
+        force: t.Optional[bool],
     ):
         """
         Implementation of the command action. Doesn't catch exceptions.
@@ -63,7 +69,7 @@ class Action:
         resolved_id = self._wf_run_resolver.resolve_id(wf_run_id, resolved_config)
 
         try:
-            self._wf_run_repo.stop(resolved_id, resolved_config)
+            self._wf_run_repo.stop(resolved_id, resolved_config, force)
         except (exceptions.UnauthorizedError, exceptions.WorkflowRunCanNotBeTerminated):
             # Other exception types aren't expected to be raised here.
             raise

@@ -260,7 +260,9 @@ class InProcessRuntime(abc.RuntimeInterface):
             ),
         )
 
-    def stop_workflow_run(self, workflow_run_id: WfRunId):
+    def stop_workflow_run(
+        self, workflow_run_id: WfRunId, *, force: t.Optional[bool] = None
+    ):
         if workflow_run_id in self._output_store:
             # Noop. If a client happens to call this method the workflow is already
             # stopped, by definition of the InProcessRuntime. If the user is running

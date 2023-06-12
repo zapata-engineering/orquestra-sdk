@@ -331,14 +331,16 @@ class CERuntime(RuntimeInterface):
         # https://zapatacomputing.atlassian.net/browse/ORQSDK-694
         return task_run_id.split("@")[-1]
 
-    def stop_workflow_run(self, workflow_run_id: WorkflowRunId) -> None:
+    def stop_workflow_run(
+        self, workflow_run_id: WorkflowRunId, *, force: Optional[bool] = None
+    ) -> None:
         """Stops a workflow run.
 
         Raises:
             WorkflowRunCanNotBeTerminated if workflow run is cannot be terminated.
         """
         try:
-            self._client.terminate_workflow_run(workflow_run_id)
+            self._client.terminate_workflow_run(workflow_run_id, force)
         except _exceptions.WorkflowRunNotFound:
             raise exceptions.WorkflowRunNotFoundError(
                 f"Workflow run with id `{workflow_run_id}` not found"

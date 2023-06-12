@@ -443,9 +443,15 @@ class DriverClient:
 
         return parsed_response.data.to_ir(workflow_def.workflow)
 
-    def terminate_workflow_run(self, wf_run_id: _models.WorkflowRunID):
+    def terminate_workflow_run(
+        self, wf_run_id: _models.WorkflowRunID, force: Optional[bool] = None
+    ):
         """
         Asks the workflow driver to terminate a workflow run
+
+        Args:
+            wf_run_id: the workflow to terminate
+            force: if the workflow should be forcefully terminated
 
         Raises:
             WorkflowRunNotFound: see the exception's docstring
@@ -457,6 +463,7 @@ class DriverClient:
         resp = self._post(
             API_ACTIONS["terminate_workflow_run"].format(wf_run_id),
             body_params=None,
+            query_params=_models.TerminateWorkflowRunRequest(force=force).dict(),
         )
 
         if resp.status_code == codes.NOT_FOUND:

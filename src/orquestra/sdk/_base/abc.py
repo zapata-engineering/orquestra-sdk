@@ -113,7 +113,9 @@ class RuntimeInterface(ABC, LogReader):
         raise NotImplementedError()
 
     @abstractmethod
-    def stop_workflow_run(self, workflow_run_id: WorkflowRunId) -> None:
+    def stop_workflow_run(
+        self, workflow_run_id: WorkflowRunId, *, force: t.Optional[bool] = None
+    ) -> None:
         """Stops a workflow run.
 
         Raises:

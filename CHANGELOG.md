@@ -6,6 +6,7 @@
 * Compute Engine is now the default when logging in
 
 🔥 *Features*
+* Force stop workflow runs via the CLI or Python API
 
 👩‍🔬 *Experimental*
 
