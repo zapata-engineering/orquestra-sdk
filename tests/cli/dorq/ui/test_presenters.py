@@ -11,6 +11,7 @@ import pytest
 
 from orquestra import sdk
 from orquestra.sdk._base import serde
+from orquestra.sdk._base._spaces._structs import Project, Workspace
 from orquestra.sdk._base.cli._dorq._ui import _errors
 from orquestra.sdk._base.cli._dorq._ui import _models as ui_models
 from orquestra.sdk._base.cli._dorq._ui import _presenters
@@ -464,3 +465,147 @@ class TestWorkflowRunPresenter:
 
         expected = expected_path.read_text()
         assert captured.out == expected
+
+
+class TestPromptPresenter:
+    class TestWorkspacesList:
+        def test_workspaces_list_to_prompt_no_studio(self):
+            # given
+            workspace1 = Workspace("id1", "name1")
+            workspace2 = Workspace("id2", "name2")
+            workspace3 = Workspace("id3", "name3")
+            workspace_list = [workspace1, workspace2, workspace3]
+            presenter = _presenters.PromptPresenter()
+
+            # when
+            labels, workspaces = presenter.workspaces_list_to_prompt(
+                workspaces=workspace_list
+            )
+
+            assert workspaces == workspace_list
+            assert "id1" in labels[0]
+            assert "name1" in labels[0]
+            assert "id2" in labels[1]
+            assert "name2" in labels[1]
+            assert "id3" in labels[2]
+            assert "name3" in labels[2]
+
+        def test_workspace_list_to_prompt_studio_auto(self, monkeypatch):
+            current_workspace_id = "id3"
+            monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", current_workspace_id)
+            workspace1 = Workspace("id1", "name1")
+            workspace2 = Workspace("id2", "name2")
+            workspace3 = Workspace(current_workspace_id, "name3")
+
+            workspace_list = [workspace1, workspace2, workspace3]
+            presenter = _presenters.PromptPresenter()
+
+            # when
+            labels, workspaces = presenter.workspaces_list_to_prompt(
+                workspaces=workspace_list, config_name="auto"
+            )
+
+            # current workspace should be the 1st one in the list
+            assert workspaces == [workspace3, workspace1, workspace2]
+            assert current_workspace_id in labels[0]
+            assert "name3" in labels[0]
+            assert "CURRENT WORKSPACE" in labels[0]
+
+            assert "id1" in labels[1]
+            assert "name1" in labels[1]
+
+            assert "id2" in labels[2]
+            assert "name2" in labels[2]
+
+        def test_workspace_list_to_prompt_studio_not_auto(self, monkeypatch):
+            current_workspace_id = "id3"
+            monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", current_workspace_id)
+            workspace1 = Workspace("id1", "name1")
+            workspace2 = Workspace("id2", "name2")
+            workspace3 = Workspace(current_workspace_id, "name3")
+
+            workspace_list = [workspace1, workspace2, workspace3]
+            presenter = _presenters.PromptPresenter()
+
+            # when
+            labels, workspaces = presenter.workspaces_list_to_prompt(
+                workspaces=workspace_list, config_name="different_config"
+            )
+
+            assert workspaces == workspace_list
+            assert "id1" in labels[0]
+            assert "name1" in labels[0]
+            assert "id2" in labels[1]
+            assert "name2" in labels[1]
+            assert "id3" in labels[2]
+            assert "name3" in labels[2]
+
+    class TestProjectList:
+        def test_project_list_to_prompt_no_studio(self):
+            # given
+            project1 = Project("id1", "ws", "name1")
+            project2 = Project("id2", "ws", "name2")
+            project3 = Project("id3", "ws", "name3")
+            project_list = [project1, project2, project3]
+            presenter = _presenters.PromptPresenter()
+
+            # when
+            labels, projects = presenter.project_list_to_prompt(project_list)
+
+            assert projects == project_list
+            assert "id1" in labels[0]
+            assert "name1" in labels[0]
+            assert "id2" in labels[1]
+            assert "name2" in labels[1]
+            assert "id3" in labels[2]
+            assert "name3" in labels[2]
+
+        def test_workspace_list_to_prompt_studio_auto(self, monkeypatch):
+            current_project_id = "id3"
+            monkeypatch.setenv("ORQ_CURRENT_PROJECT", current_project_id)
+            project1 = Project("id1", "ws", "name1")
+            project2 = Project("id2", "ws", "name2")
+            project3 = Project(current_project_id, "ws", "name3")
+
+            project_list = [project1, project2, project3]
+            presenter = _presenters.PromptPresenter()
+
+            # when
+            labels, projects = presenter.project_list_to_prompt(
+                project_list, config_name="auto"
+            )
+
+            # current project should be the 1st one in the list
+            assert projects == [project3, project1, project2]
+            assert current_project_id in labels[0]
+            assert "name3" in labels[0]
+            assert "CURRENT PROJECT" in labels[0]
+
+            assert "id1" in labels[1]
+            assert "name1" in labels[1]
+
+            assert "id2" in labels[2]
+            assert "name2" in labels[2]
+
+        def test_workspace_list_to_prompt_studio_not_auto(self, monkeypatch):
+            current_project_id = "id3"
+            monkeypatch.setenv("ORQ_CURRENT_PROJECT", current_project_id)
+            project1 = Project("id1", "ws", "name1")
+            project2 = Project("id2", "ws", "name2")
+            project3 = Project(current_project_id, "ws", "name3")
+
+            project_list = [project1, project2, project3]
+            presenter = _presenters.PromptPresenter()
+
+            # when
+            labels, projects = presenter.project_list_to_prompt(
+                project_list, config_name="different_config"
+            )
+
+            assert projects == project_list
+            assert "id1" in labels[0]
+            assert "name1" in labels[0]
+            assert "id2" in labels[1]
+            assert "name2" in labels[1]
+            assert "id3" in labels[2]
+            assert "name3" in labels[2]

@@ -9,6 +9,12 @@ import pytest
 import orquestra.sdk as sdk
 from orquestra.sdk._base._testing import _connections
 
+# Ray mishandles log file handlers and we get "_io.FileIO [closed]"
+# unraisable exceptions. Last tested with Ray 2.4.0.
+pytestmark = pytest.mark.filterwarnings(
+    "ignore::pytest.PytestUnraisableExceptionWarning"
+)
+
 
 @sdk.task
 def sum_tuple_numbers(numbers: tuple):
@@ -40,9 +46,6 @@ class TestRunningLocalInBackground:
 
     class TestTwoStepForm:
         @staticmethod
-        # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
-        # unraisable exceptions. Last tested with Ray 2.2.0.
-        @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_single_run(
             patch_config_location, ray, monkeypatch, tmp_path, mock_workflow_db_location
         ):
@@ -54,14 +57,15 @@ class TestRunningLocalInBackground:
 
             assert results == 3
 
-    class TestShorthand:
+    class TestStartFromIR:
         @staticmethod
         def test_single_run(
             patch_config_location, ray, monkeypatch, tmp_path, mock_workflow_db_location
         ):
             monkeypatch.setattr(Path, "cwd", Mock(return_value=tmp_path))
-
-            run = wf_pass_tuple().run(sdk.RuntimeConfig.ray())
+            run = sdk.WorkflowRun.start_from_ir(
+                wf_pass_tuple().model, sdk.RuntimeConfig.ray()
+            )
             run.wait_until_finished()
             results = run.get_results()
 
@@ -69,9 +73,6 @@ class TestRunningLocalInBackground:
 
     class TestReconnectToPreviousRun:
         @staticmethod
-        # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
-        # unraisable exceptions. Last tested with Ray 2.2.0.
-        @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_custom_save_locations(
             patch_config_location,
             ray,

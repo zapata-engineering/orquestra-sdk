@@ -9,6 +9,7 @@ import itertools
 import json
 import time
 import typing as t
+import warnings
 from contextlib import suppress as do_not_raise
 from datetime import timedelta
 from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospec
@@ -18,12 +19,14 @@ import pytest
 from orquestra.sdk._base import _api, _workflow, serde
 from orquestra.sdk._base._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
+from orquestra.sdk._base._logs._interfaces import LogReader, WorkflowLogs
 from orquestra.sdk._base._spaces._api import list_projects, list_workspaces
 from orquestra.sdk._base._spaces._structs import ProjectRef, Workspace
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import (
     ProjectInvalidError,
     UnauthorizedError,
+    VersionMismatch,
     WorkflowRunCanNotBeTerminated,
     WorkflowRunNotFinished,
     WorkflowRunNotFoundError,
@@ -120,7 +123,14 @@ class TestWorkflowRun:
 
     @staticmethod
     @pytest.fixture
-    def mock_runtime(sample_wf_def):
+    def sample_task_inv_ids(sample_wf_def) -> t.List[ir.TaskInvocationId]:
+        wf_def_model = sample_wf_def.model
+        task_invs = wf_def_model.task_invocations.values()
+        return [inv.id for inv in task_invs]
+
+    @staticmethod
+    @pytest.fixture
+    def mock_runtime(sample_task_inv_ids):
         runtime = create_autospec(RuntimeInterface, name="runtime")
         # For getting workflow ID
         runtime.create_workflow_run.return_value = "wf_pass_tuple-1"
@@ -160,31 +170,22 @@ class TestWorkflowRun:
         runtime.get_workflow_project.return_value = ProjectRef(
             workspace_id="ws", project_id="proj"
         )
-        wf_def_model = sample_wf_def.model
-        task_invs = list(wf_def_model.task_invocations.values())
-        # Get logs, the runtime interface returns invocation IDs
-        runtime.get_workflow_logs.return_value = {
-            task_invs[0].id: ["woohoo!\n"],
-            task_invs[1].id: ["another\n", "line\n"],
-            # This task invocation was executed, but it produced no logs.
-            task_invs[2].id: [],
-            # There's also 4th task invocation in the workflow def, it wasn't executed
-            # yet, so we don't return it.
-        }
+        invs = sample_task_inv_ids
+
         running_wf_run_model.task_runs = [
             TaskRunModel(
                 id="task_run1",
-                invocation_id=task_invs[0].id,
+                invocation_id=invs[0],
                 status=RunStatus(state=State.SUCCEEDED),
             ),
             TaskRunModel(
                 id="task_run2",
-                invocation_id=task_invs[1].id,
+                invocation_id=invs[1],
                 status=RunStatus(state=State.FAILED),
             ),
             TaskRunModel(
                 id="task_run3",
-                invocation_id=task_invs[2].id,
+                invocation_id=invs[2],
                 status=RunStatus(state=State.FAILED),
             ),
         ]
@@ -303,6 +304,7 @@ class TestWorkflowRun:
                                 workflow_run_id=run_id,
                                 config_name=config_name,
                                 workflow_def=wf_pass_tuple().model,
+                                is_qe=False,
                             )
                         ),
                     )
@@ -352,6 +354,32 @@ class TestWorkflowRun:
                         # When
                         _ = _api.WorkflowRun.by_id(run_id=run_id)
 
+    class TestStartFromIR:
+        @pytest.fixture
+        def wf_ir_def(self, sample_wf_def):
+            return sample_wf_def.model
+
+        @pytest.mark.parametrize(
+            "config", ["in_process", _api.RuntimeConfig.in_process()]
+        )
+        def test_happy_path(self, wf_ir_def, config):
+            wf_run = _api.WorkflowRun.start_from_ir(wf_ir_def, config)
+
+            assert wf_run.get_results() == ("Hellothere", "Generalkenobi")
+
+        def test_wrong_config_type(self, wf_ir_def):
+            with pytest.raises(TypeError):
+                _api.WorkflowRun.start_from_ir(wf_ir_def, 123)  # type: ignore
+
+        def test_different_runtime(self, wf_ir_def, mock_runtime):
+            mock_config = MagicMock(_api.RuntimeConfig)
+            mock_config._runtime_name = "runtime_name"
+            mock_config._get_runtime.return_value = mock_runtime
+
+            wf_run = _api.WorkflowRun.start_from_ir(wf_ir_def, mock_config)
+
+            assert wf_run.run_id == "wf_pass_tuple-1"
+
     class TestGetStatus:
         @staticmethod
         def test_returns_status_from_runtime(run, mock_runtime):
@@ -368,6 +396,52 @@ class TestWorkflowRun:
             model = run.get_status_model()
 
             assert model.status.state == run.get_status()
+
+        @staticmethod
+        def test_happy_path():
+            # Given
+            run_id = "wf.1"
+            wf_def = Mock()
+            config = Mock()
+            runtime = Mock()
+            run = _api.WorkflowRun(
+                run_id=run_id, wf_def=wf_def, runtime=runtime, config=config
+            )
+
+            # When
+            run.get_status_model()
+
+            # Then
+            runtime.get_workflow_run_status.assert_called_with(run_id)
+
+        @staticmethod
+        def test_suppresses_versionmismatch_warnings():
+            # Given
+            run_id = "wf.1"
+            wf_def = Mock()
+            config = Mock()
+            runtime = Mock()
+
+            def raise_warnings(*args, **kwargs):
+                warnings.warn("a warning that should not be suppressed")
+                warnings.warn(VersionMismatch("foo", Mock(), None))
+                warnings.warn(VersionMismatch("foo", Mock(), None))
+
+            runtime.get_workflow_run_status.side_effect = raise_warnings
+
+            run = _api.WorkflowRun(
+                run_id=run_id, wf_def=wf_def, runtime=runtime, config=config
+            )
+
+            # When
+            with pytest.warns(Warning) as record:
+                run.get_status_model()
+
+            # Then
+            assert len(record) == 1
+            assert str(record[0].message) == str(
+                UserWarning("a warning that should not be suppressed")
+            )
 
     class TestWaitUntilFinished:
         class TestHappyPath:
@@ -541,17 +615,48 @@ class TestWorkflowRun:
 
     class TestGetLogs:
         @staticmethod
-        def test_happy_path(run):
+        def test_happy_path(run: _api.WorkflowRun, sample_task_inv_ids):
             # Given
+            invs = sample_task_inv_ids
+            log_reader = create_autospec(LogReader)
+            log_reader.get_workflow_logs.return_value = WorkflowLogs(
+                per_task={
+                    invs[0]: ["woohoo!\n"],
+                    invs[1]: ["another\n", "line\n"],
+                    # This task invocation was executed, but it produced no logs.
+                    invs[2]: [],
+                    # There's also 4th task invocation in the workflow def, it wasn't
+                    # executed yet, so we don't return it.
+                },
+                env_setup=[],
+                system=[
+                    "<sys log sentinel 1>",
+                    "<sys log sentinel 2>",
+                    "<sys log sentinel 3>",
+                ],
+                other=[],
+            )
+
+            run._runtime = log_reader
+
             # When
             logs = run.get_logs()
 
             # Then
-            assert len(logs) == 3
+            assert len(logs.per_task) == 3
+
             expected_inv = "invocation-0-task-capitalize"
-            assert expected_inv in logs
-            assert len(logs[expected_inv]) == 1
-            assert logs[expected_inv][0] == "woohoo!\n"
+            assert expected_inv in logs.per_task
+            assert len(logs.per_task[expected_inv]) == 1
+            assert logs.per_task[expected_inv][0] == "woohoo!\n"
+
+            assert len(logs.system) == 3
+
+            assert logs.system == [
+                "<sys log sentinel 1>",
+                "<sys log sentinel 2>",
+                "<sys log sentinel 3>",
+            ]
 
     class TestGetConfig:
         @staticmethod
@@ -582,7 +687,28 @@ class TestWorkflowRun:
             run.stop()
 
             # Then
-            runtime.stop_workflow_run.assert_called_with(run_id)
+            runtime.stop_workflow_run.assert_called_with(run_id, force=None)
+
+        @staticmethod
+        @pytest.mark.parametrize(
+            "force",
+            (True, False),
+        )
+        def test_force_stop(force):
+            # Given
+            run_id = "wf.1"
+            wf_def = Mock()
+            runtime = Mock()
+            config = Mock()
+            run = _api.WorkflowRun(
+                run_id=run_id, wf_def=wf_def, runtime=runtime, config=config
+            )
+
+            # When
+            run.stop(force=force)
+
+            # Then
+            runtime.stop_workflow_run.assert_called_with(run_id, force=force)
 
         @staticmethod
         @pytest.mark.parametrize(
@@ -802,6 +928,27 @@ class TestListWorkflows:
             state=None,
             workspace="env_workspace",
             project="env_project",
+        )
+
+    @staticmethod
+    def test_suppresses_versionmismatch_warnings(mock_config_runtime):
+        # Given
+        def raise_warnings(*args, **kwargs):
+            warnings.warn("a warning that should not be suppressed")
+            warnings.warn(VersionMismatch("foo", Mock(), None))
+            warnings.warn(VersionMismatch("foo", Mock(), None))
+            return [Mock(), Mock(), Mock()]
+
+        mock_config_runtime.list_workflow_runs.side_effect = raise_warnings
+
+        # When
+        with pytest.warns(Warning) as record:
+            _ = _api.list_workflow_runs("mocked_config")
+
+        # Then
+        assert len(record) == 1
+        assert str(record[0].message) == str(
+            UserWarning("a warning that should not be suppressed")
         )
 
 

@@ -1,15 +1,26 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
 Internal models for the workflow driver API
 """
 from datetime import datetime
 from enum import Enum
-from typing import Generic, List, Mapping, Optional, TypeVar
+from typing import (
+    Generic,
+    List,
+    Literal,
+    Mapping,
+    NamedTuple,
+    NewType,
+    Optional,
+    TypeVar,
+    Union,
+)
 
 import pydantic
 from pydantic.generics import GenericModel
+from typing_extensions import Annotated
 
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.workflow_run import (
@@ -132,6 +143,12 @@ class StateResponse(str, Enum):
     SUCCEEDED = "SUCCEEDED"
     TERMINATED = "TERMINATED"
     FAILED = "FAILED"
+    KILLED = "KILLED"
+    UNKNOWN = "UNKNOWN"
+
+    @classmethod
+    def _missing_(cls, _):
+        return cls.UNKNOWN
 
 
 class RunStatusResponse(pydantic.BaseModel):
@@ -276,6 +293,15 @@ class GetWorkflowRunResponse(pydantic.BaseModel):
     data: WorkflowRunResponse
 
 
+class TerminateWorkflowRunRequest(pydantic.BaseModel):
+    """
+    Implements:
+        https://github.com/zapatacomputing/workflow-driver/blob/873437f8157226c451220306a6ce90c80e8c8f9e/openapi/src/resources/workflow-run-terminate.yaml#L12
+    """
+
+    force: Optional[bool]
+
+
 # --- Workflow Artifacts ---
 
 
@@ -358,3 +384,165 @@ class ProjectDetail(CommonResourceMeta, ResourceIdentifier):
 
 ListWorkspacesResponse = List[WorkspaceDetail]
 ListProjectResponse = List[ProjectDetail]
+
+
+# --- Logs ---
+
+# CE endpoints for logs return a compressed archive. Inside, there's a single file. In
+# it, there's a sequence of Fluent Bit "events" split into newline-separated "sections".
+# Each "section" is JSON-decodable into a list of "events".
+#
+# Each "event" is a pair of [timestamp, message].
+#
+# The timestamp is a float unix epoch timestamp of the time when the log line was
+# *indexed* by the Platform-side log service. This is different from the time when the
+# log line was emitted.
+#
+# The message contains a single line from a file produced by Ray + some metadata about
+# the log source.
+#
+# The CE API returns a single archived file called "step-logs". After unarchiving, this
+# file contains newline-separated chunks. Each chunk is a JSON-encoded list of events.
+
+
+RayFilename = NewType("RayFilename", str)
+
+
+class Message(pydantic.BaseModel):
+    """
+    Represents a single line indexed by the server side log service.
+
+    Based on:
+    https://github.com/zapatacomputing/workflow-driver/blob/972aaa3ca75780a52d01872bc294be419a761209/openapi/src/resources/workflow-run-logs.yaml#L25.
+
+    The name is borrowed from Fluent Bit nomenclature:
+    https://docs.fluentbit.io/manual/concepts/key-concepts#event-format.
+    """
+
+    log: str
+    """
+    Single line content.
+    """
+
+    ray_filename: RayFilename
+    """
+    Server-side file path of the indexed file.
+    """
+
+    tag: str
+    """
+    An identifier in the form of "workflow.logs.ray.<workflow run ID>".
+    """
+
+
+class Event(NamedTuple):
+    """
+    A pair of ``[timestamp, message]``.
+
+    Based on:
+    https://github.com/zapatacomputing/workflow-driver/blob/972aaa3ca75780a52d01872bc294be419a761209/openapi/src/resources/workflow-run-logs.yaml#L18
+    """
+
+    timestamp: float
+    """
+    Unix timestamp in seconds with fraction for the moment when a log line is exported
+    from Ray system to Orquestra. It does not necessarily correspond to the particular
+    time that the message is logged by Ray runtime.
+    """
+
+    message: Message
+    """
+    A single indexed log line.
+    """
+
+
+Section = List[Event]
+
+# --- System Logs ---
+
+
+class SystemLogSourceType(str, Enum):
+    """Types of sources that can emit system logs."""
+
+    RAY_HEAD_NODE = "RAY_HEAD_NODE"
+    RAY_WORKER_NODE = "RAY_WORKER_NODE"
+    K8S_EVENT = "K8S_EVENT"
+    UNKNOWN = "UNKNOWN"
+
+    @classmethod
+    def _missing_(cls, *args, **kwargs):
+        return cls.UNKNOWN
+
+
+class K8sEventLog(pydantic.BaseModel):
+    """A system-level log line produced by a K8S event."""
+
+    tag: str
+
+    log: dict
+    """
+    The keys in this dictionary are determined by Kubernetes.
+    """
+
+    source_type: Literal[SystemLogSourceType.K8S_EVENT] = SystemLogSourceType.K8S_EVENT
+
+
+class RayHeadNodeEventLog(pydantic.BaseModel):
+    """A system-level log line produced by a Ray head node event."""
+
+    tag: str
+
+    log: str
+
+    source_type: Literal[
+        SystemLogSourceType.RAY_HEAD_NODE
+    ] = SystemLogSourceType.RAY_HEAD_NODE
+
+
+class RayWorkerNodeEventLog(pydantic.BaseModel):
+    """A system-level log line produced by a Ray head node event."""
+
+    tag: str
+
+    log: str
+
+    source_type: Literal[
+        SystemLogSourceType.RAY_WORKER_NODE
+    ] = SystemLogSourceType.RAY_WORKER_NODE
+
+
+class UnknownEventLog(pydantic.BaseModel):
+    """Fallback option - the event type is unknown, so display the message as a str."""
+
+    tag: str
+
+    log: str
+
+    source_type: Literal[SystemLogSourceType.UNKNOWN] = SystemLogSourceType.UNKNOWN
+
+
+SysLog = Annotated[
+    Union[K8sEventLog, RayHeadNodeEventLog, RayWorkerNodeEventLog, UnknownEventLog],
+    pydantic.Field(discriminator="source_type"),
+]
+
+
+class SysMessage(NamedTuple):
+    """
+    A pair of ``[timestamp, syslog]``.
+
+    Based on:
+    https://github.com/zapatacomputing/workflow-driver/blob/92d9ff32189c580fd0a2ff6eec03cc977fd01502/openapi/src/resources/workflow-run-system-logs.yaml#L2
+    """
+
+    timestamp: float
+    """
+    Unix timestamp in seconds with fraction for the moment when a log line is exported
+    from system to Orquestra. It does not necessarily correspond to the particular
+    time that the message is logged by the system.
+    """
+
+    message: SysLog
+
+
+SysSection = List[SysMessage]

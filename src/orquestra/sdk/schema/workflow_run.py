@@ -28,6 +28,12 @@ class State(enum.Enum):
     TERMINATED = "TERMINATED"
     FAILED = "FAILED"
     ERROR = "ERROR"
+    KILLED = "KILLED"
+    UNKNOWN = "UNKNOWN"
+
+    @classmethod
+    def _missing_(cls, _):
+        return cls.UNKNOWN
 
 
 class RunStatus(BaseModel):

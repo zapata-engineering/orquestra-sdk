@@ -26,6 +26,7 @@ class TestAction:
         # CLI inputs
         wf_run_id = "<wf run ID sentinel>"
         config = "<config sentinel>"
+        force = False
 
         # Resolved values
         resolved_id = "<resolved ID>"
@@ -49,7 +50,7 @@ class TestAction:
         )
 
         # When
-        action.on_cmd_call(wf_run_id=wf_run_id, config=config)
+        action.on_cmd_call(wf_run_id=wf_run_id, config=config, force=force)
 
         # Then
         # We should pass input CLI args to config resolver.
@@ -59,7 +60,7 @@ class TestAction:
         wf_run_resolver.resolve_id.assert_called_with(wf_run_id, resolved_config)
 
         # We should pass resolved values to run repo.
-        wf_run_repo.stop.assert_called_with(resolved_id, resolved_config)
+        wf_run_repo.stop.assert_called_with(resolved_id, resolved_config, force)
         # We should pass resolved ID to presenter.
         presenter.show_stopped_wf_run.assert_called_with(resolved_id)
 
@@ -70,6 +71,7 @@ class TestAction:
         # CLI inputs
         wf_run_id = "<wf run ID sentinel>"
         config = "<config sentinel>"
+        force = False
 
         # Mocks
         presenter = Mock()
@@ -89,7 +91,7 @@ class TestAction:
         )
 
         # When
-        action.on_cmd_call(wf_run_id, config)
+        action.on_cmd_call(wf_run_id, config, force)
 
         # Then
         # We expect telling the user about the error.

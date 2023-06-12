@@ -12,6 +12,8 @@ from pathlib import Path
 import click
 import cloup
 
+from orquestra.sdk.schema.configs import RemoteRuntime, RuntimeName
+
 from . import _cli_logs
 
 # Adds '-h' alias for '--help'
@@ -103,8 +105,7 @@ selecting a function from the ones available in 'module'.
 @PROJECT_OPTION
 @cloup.option(
     "--force",
-    is_flag=True,
-    default=False,
+    default=None,
     help=(
         "If passed, submits the workflow without confirmation even if there are "
         "uncommitted changes."
@@ -206,15 +207,24 @@ def wf_logs(
 @workflow.command()
 @cloup.argument("wf_run_id", required=False)
 @CONFIG_OPTION
-def stop(wf_run_id: t.Optional[str], config: t.Optional[str]):
+@cloup.option(
+    "--force/--no-force",
+    is_flag=True,
+    default=None,
+    help="""
+Will forcefully terminate a workflow, without waiting for it to gracefully exit.
+If neither `--force` nor `--no-force` is passed, the runtime will determine if the
+workflow should be forcefully stopped.
+    """,
+)
+def stop(wf_run_id: t.Optional[str], config: t.Optional[str], force: t.Optional[bool]):
     """
     Stops a running workflow.
     """
-
     from ._workflow._stop import Action
 
     action = Action()
-    action.on_cmd_call(wf_run_id, config)
+    action.on_cmd_call(wf_run_id, config, force)
 
 
 @workflow.command()
@@ -405,20 +415,30 @@ server_config_group = cloup.OptionGroup(
     help="User Token to given server. To generate token, use this command without -t"
     "option first",
 )
-@cloup.option(
-    "--ce",
-    is_flag=True,
-    default=False,
-    help="Log in to Compute Engine. If not passed, will log in to Quantum Engine",
+@cloup.option_group(
+    "Remote Environment",
+    cloup.option(
+        "--qe", is_flag=True, default=False, help="Log in to Quantum Engine. (Default)"
+    ),
+    cloup.option("--ce", is_flag=True, default=False, help="Log in to Compute Engine."),
+    constraint=cloup.constraints.mutually_exclusive,
 )
-def login(config: str, server: str, token: t.Optional[str], ce: bool):
+def login(config: str, server: str, token: t.Optional[str], ce: bool, qe: bool):
     """
     Login in to remote cluster
     """
     from ._login._login import Action
 
+    runtime_name: RemoteRuntime
+    if qe:
+        runtime_name = RuntimeName.QE_REMOTE
+    else:
+        runtime_name = RuntimeName.CE_REMOTE
+
     action = Action()
-    action.on_cmd_call(config, server, token, ce)
+    action.on_cmd_call(
+        config=config, url=server, token=token, runtime_name=runtime_name
+    )
 
 
 def main():

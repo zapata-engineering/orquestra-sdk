@@ -10,8 +10,9 @@ import warnings
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 
-from orquestra.sdk import ProjectRef, exceptions
+from orquestra.sdk import exceptions
 from orquestra.sdk._base import abc
+from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
@@ -151,7 +152,9 @@ class InProcessRuntime(abc.RuntimeInterface):
         }
         for id, secret in workflow_def.secret_nodes.items():
             consts[id] = secrets.get(
-                secret.secret_name, config_name=secret.secret_config
+                secret.secret_name,
+                config_name=secret.secret_config,
+                workspace_id=secret.workspace_id,
             )
         # We'll store artifacts for this run here.
         self._artifact_store[run_id] = {}
@@ -257,7 +260,9 @@ class InProcessRuntime(abc.RuntimeInterface):
             ),
         )
 
-    def stop_workflow_run(self, workflow_run_id: WfRunId):
+    def stop_workflow_run(
+        self, workflow_run_id: WfRunId, *, force: t.Optional[bool] = None
+    ):
         if workflow_run_id in self._output_store:
             # Noop. If a client happens to call this method the workflow is already
             # stopped, by definition of the InProcessRuntime. If the user is running

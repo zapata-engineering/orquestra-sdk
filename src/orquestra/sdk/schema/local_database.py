@@ -19,3 +19,4 @@ class StoredWorkflowRun(BaseModel):
     workflow_run_id: WorkflowRunId
     config_name: str
     workflow_def: WorkflowDef
+    is_qe: bool

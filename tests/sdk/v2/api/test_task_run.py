@@ -6,12 +6,13 @@ Tests for orquestra.sdk._base._api._task_run.
 """
 
 import typing as t
-from unittest.mock import MagicMock, Mock, create_autospec
+from unittest.mock import Mock, create_autospec
 
 import pytest
 
 import orquestra.sdk as sdk
 from orquestra.sdk._base import _api, _workflow, serde
+from orquestra.sdk._base._logs._interfaces import LogReader
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk._ray import _dag
 from orquestra.sdk.exceptions import TaskRunNotFound
@@ -40,7 +41,7 @@ class TestTaskRun:
     @staticmethod
     @pytest.fixture
     def mock_runtime(sample_wf_def):
-        runtime = MagicMock(RuntimeInterface)
+        runtime = create_autospec(RuntimeInterface)
 
         wf_def_model = sample_wf_def.model
         task_invs = list(wf_def_model.task_invocations.values())
@@ -50,17 +51,17 @@ class TestTaskRun:
             TaskRunModel(
                 id="task_run1",
                 invocation_id=task_invs[0].id,
-                status=RunStatus(state=State.SUCCEEDED),
+                status=RunStatus(state=State.SUCCEEDED, start_time=None, end_time=None),
             ),
             TaskRunModel(
                 id="task_run2",
                 invocation_id=task_invs[1].id,
-                status=RunStatus(state=State.FAILED),
+                status=RunStatus(state=State.FAILED, start_time=None, end_time=None),
             ),
             TaskRunModel(
                 id="task_run3",
                 invocation_id=task_invs[2].id,
-                status=RunStatus(state=State.FAILED),
+                status=RunStatus(state=State.FAILED, start_time=None, end_time=None),
             ),
         ]
         runtime.get_workflow_run_status.return_value = wf_run_model
@@ -156,18 +157,21 @@ class TestTaskRun:
 
     class TestGetLogs:
         @staticmethod
-        def test_returns_plain_list(task_runs: t.Sequence[_api.TaskRun], mock_runtime):
+        def test_returns_plain_list(task_runs: t.Sequence[_api.TaskRun]):
             """
             Methods in RuntimeInterface return logs nested in dictionaries.
             _api.TaskRun.get_logs() should return a list of log lines.
             """
             # Given
-            mock_runtime.get_task_logs.side_effect = [
+            reader = create_autospec(LogReader)
+            reader.get_task_logs.side_effect = [
                 ["woohoo!"],
                 ["another", "line"],
                 # This task invocation was executed, but it produced no logs.
                 [],
             ]
+            for task_run in task_runs:
+                task_run._runtime = reader
 
             # When
             log_lists = [task_run.get_logs() for task_run in task_runs]
@@ -385,7 +389,10 @@ class TestTaskRun:
                     "wf_single_task_with_secret_parent",
                     [
                         ir.SecretNode(
-                            id="secret-0", secret_name="test", secret_config=None
+                            id="secret-0",
+                            secret_name="test",
+                            secret_config=None,
+                            workspace_id=None,
                         )
                     ],
                     {},
@@ -456,7 +463,7 @@ class TestTaskRun:
             # find the task with 1 arg and 1 kwarg. 2nd task that finished
             second_inv_2 = self._find_task_by_args_and_kwargs_number(1, 1, wf_def)
 
-            runtime = MagicMock(RuntimeInterface)
+            runtime = create_autospec(RuntimeInterface)
             runtime_outputs = {
                 first_inv_id: serde.result_from_artifact(15, ir.ArtifactFormat.AUTO),
                 second_inv_2: serde.result_from_artifact(25, ir.ArtifactFormat.AUTO),
@@ -501,7 +508,7 @@ class TestTaskRun:
             # find the task with 1 arg and 1 kwarg args. 2nd task with that finished
             second_inv_id = self._find_task_by_args_and_kwargs_number(1, 0, wf_def)
 
-            runtime = MagicMock(RuntimeInterface)
+            runtime = create_autospec(RuntimeInterface)
             runtime_outputs = {
                 first_inv_id: serde.result_from_artifact(
                     (21, 36), ir.ArtifactFormat.AUTO
