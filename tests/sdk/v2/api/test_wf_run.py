@@ -608,6 +608,11 @@ class TestWorkflowRun:
                     # executed yet, so we don't return it.
                 },
                 env_setup=[],
+                system=[
+                    "<sys log sentinel 1>",
+                    "<sys log sentinel 2>",
+                    "<sys log sentinel 3>",
+                ],
                 other=[],
             )
 
@@ -623,6 +628,14 @@ class TestWorkflowRun:
             assert expected_inv in logs.per_task
             assert len(logs.per_task[expected_inv]) == 1
             assert logs.per_task[expected_inv][0] == "woohoo!\n"
+
+            assert len(logs.system) == 3
+
+            assert logs.system == [
+                "<sys log sentinel 1>",
+                "<sys log sentinel 2>",
+                "<sys log sentinel 3>",
+            ]
 
     class TestGetConfig:
         @staticmethod

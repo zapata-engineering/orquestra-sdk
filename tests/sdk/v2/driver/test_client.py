@@ -1,11 +1,10 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
 Tests for orquestra.sdk._base._driver._client.
 """
-import re
-from typing import Any, Dict, Iterable, Sequence
+from typing import Any, Dict
 from unittest.mock import create_autospec
 
 import numpy as np
@@ -17,8 +16,11 @@ from orquestra.sdk._base._driver import _exceptions
 from orquestra.sdk._base._driver._client import DriverClient, Paginated
 from orquestra.sdk._base._driver._models import (
     GetWorkflowDefResponse,
+    K8sEventLog,
     Message,
+    RayHeadNodeEventLog,
     Resources,
+    SystemLogSourceType,
 )
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema.ir import WorkflowDef
@@ -1802,6 +1804,171 @@ class TestClient:
 
                 with pytest.raises(_exceptions.UnknownHTTPError):
                     _ = client.get_workflow_run_logs(workflow_run_id)
+
+        class TestSystemLogs:
+            @staticmethod
+            @pytest.fixture
+            def endpoint_mocker(endpoint_mocker_base, base_uri: str):
+                """
+                Returns a helper for mocking requests. Assumes that most of the tests
+                inside this class contain a very similar set up.
+                """
+
+                return endpoint_mocker_base(
+                    responses.GET,
+                    f"{base_uri}/api/workflow-run-logs/system",
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/92d9ff32189c580fd0a2ff6eec03cc977fd01502/openapi/src/resources/workflow-run-system-logs.yaml
+                    default_status_code=200,
+                )
+
+            @staticmethod
+            def test_logs_decode(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                # GIVEN
+                endpoint_mocker(
+                    body=resp_mocks.make_get_wf_run_system_logs_response(),
+                    match=[
+                        responses.matchers.query_param_matcher(
+                            {"workflowRunId": workflow_run_id}
+                        )
+                    ],
+                )
+
+                # WHEN
+                sys_logs = client.get_system_logs(workflow_run_id)
+
+                # THEN
+                assert len(sys_logs) == 144
+
+                unique_tags = {m.tag for m in sys_logs}
+                assert len(unique_tags) == 1
+                assert (
+                    list(unique_tags)[0]
+                    == "workflow.logs.system.hello_orquestra_wf-ZrioL-r000"
+                )
+
+                source_types = [m.source_type for m in sys_logs]
+                assert source_types.count(SystemLogSourceType.K8S_EVENT) == 13
+                assert source_types.count(SystemLogSourceType.RAY_HEAD_NODE) == 131
+                assert source_types.count(SystemLogSourceType.RAY_WORKER_NODE) == 0
+
+            @staticmethod
+            def test_params_encoding(
+                endpoint_mocker, client: DriverClient, workflow_run_id
+            ):
+                """Veriefies the params are correctly senf to the server."""
+                endpoint_mocker(
+                    body=resp_mocks.make_get_wf_run_system_logs_response(),
+                    match=[
+                        responses.matchers.query_param_matcher(
+                            {"workflowRunId": workflow_run_id}
+                        )
+                    ],
+                )
+
+                _ = client.get_system_logs(workflow_run_id)
+
+                # The assertion is done by mocked_responses
+
+            @staticmethod
+            def test_invalid_id(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/2ea0f3fa410bbbc9a1b7fcffbda155aa84c4e0bd/openapi/src/resources/workflow-run-system-logs.yaml#L111
+                    status=400,
+                )
+
+                with pytest.raises(_exceptions.InvalidWorkflowRunID):
+                    _ = client.get_system_logs(workflow_run_id)
+
+            @staticmethod
+            def test_not_found(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/2ea0f3fa410bbbc9a1b7fcffbda155aa84c4e0bd/openapi/src/resources/workflow-run-system-logs.yaml#L121
+                    status=404,
+                )
+
+                with pytest.raises(_exceptions.WorkflowRunLogsNotFound):
+                    _ = client.get_system_logs(workflow_run_id)
+
+            @staticmethod
+            def test_zlib_error(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    body=b"invalid bytes",
+                    match=[
+                        responses.matchers.query_param_matcher(
+                            {"workflowRunId": workflow_run_id}
+                        )
+                    ],
+                )
+
+                with pytest.raises(_exceptions.WorkflowRunLogsNotReadable):
+                    _ = client.get_system_logs(workflow_run_id)
+
+            @staticmethod
+            def test_sets_auth(
+                endpoint_mocker, client: DriverClient, token: str, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    body=resp_mocks.make_get_wf_run_system_logs_response(),
+                    match=[
+                        responses.matchers.header_matcher(
+                            {"Authorization": f"Bearer {token}"}
+                        )
+                    ],
+                )
+
+                _ = client.get_system_logs(workflow_run_id)
+
+                # The assertion is done by mocked_responses
+
+            @staticmethod
+            def test_unauthorized(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/2ea0f3fa410bbbc9a1b7fcffbda155aa84c4e0bd/openapi/src/resources/workflow-run-system-logs.yaml#L117
+                    status=401,
+                )
+
+                with pytest.raises(_exceptions.InvalidTokenError):
+                    _ = client.get_system_logs(workflow_run_id)
+
+            @staticmethod
+            def test_forbidden(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/2ea0f3fa410bbbc9a1b7fcffbda155aa84c4e0bd/openapi/src/resources/workflow-run-system-logs.yaml#L119
+                    status=403,
+                )
+
+                with pytest.raises(_exceptions.ForbiddenError):
+                    _ = client.get_system_logs(workflow_run_id)
+
+            @staticmethod
+            def test_unknown_error(
+                endpoint_mocker, client: DriverClient, workflow_run_id: str
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/2ea0f3fa410bbbc9a1b7fcffbda155aa84c4e0bd/openapi/src/resources/workflow-run-system-logs.yaml#L131
+                    status=500,
+                )
+
+                with pytest.raises(_exceptions.UnknownHTTPError):
+                    _ = client.get_system_logs(workflow_run_id)
 
         class TestTaskRunLogs:
             @staticmethod

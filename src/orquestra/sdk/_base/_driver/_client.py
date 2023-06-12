@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
 Code for accessing the Workflow Driver API.
@@ -9,7 +9,6 @@ Implemented API spec:
 """
 
 import io
-import json
 import zlib
 from tarfile import TarFile
 from typing import Generic, List, Mapping, Optional, TypeVar, Union
@@ -30,6 +29,7 @@ from orquestra.sdk.schema.workflow_run import (
 )
 
 from . import _exceptions, _models
+from ._models import K8sEventLog
 
 API_ACTIONS = {
     # Workflow Definitions
@@ -51,6 +51,7 @@ API_ACTIONS = {
     # Logs
     "get_workflow_run_logs": "/api/workflow-run-logs",
     "get_task_run_logs": "/api/task-run-logs",
+    "get_workflow_run_system_logs": "/api/workflow-run-logs/system",
     # Login
     "get_login_url": "/api/login",
     # Workspaces
@@ -656,7 +657,7 @@ class DriverClient:
 
         # Decompress data
         try:
-            unzipped: bytes = zlib.decompress(resp.content, 16 + zlib.MAX_WBITS)
+            unzipped: bytes = zlib.decompress(resp.content, 16)
         except zlib.error as e:
             raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id) from e
 
@@ -697,6 +698,56 @@ class DriverClient:
 
         # TODO: unzip, get logs (ORQSDK-654)
         return resp.content
+
+    def get_system_logs(self, wf_run_id: _models.WorkflowRunID) -> List[_models.SysLog]:
+        """
+        Get the logs of a workflow run from the workflow driver.
+
+        Raises:
+            ForbiddenError: see the exception's docstring
+            InvalidTokenError: see the exception's docstring
+            InvalidWorkflowRunID: see the exception's docstring
+            WorkflowRunLogsNotFound: see the exception's docstring
+            WorkflowRunLogsNotReadable: see the exception's docstring
+            UnknownHTTPError: see the exception's docstring
+            NotImplementedError: when a log object's source_type is not a recognised
+                value, or is a value for a schema has not been defined.
+        """
+        resp = self._get(
+            API_ACTIONS["get_workflow_run_system_logs"],
+            query_params=_models.GetWorkflowRunLogsRequest(
+                workflowRunId=wf_run_id
+            ).dict(),
+        )
+
+        # Handle errors
+        if resp.status_code == codes.NOT_FOUND:
+            raise _exceptions.WorkflowRunLogsNotFound(wf_run_id)
+        elif resp.status_code == codes.BAD_REQUEST:
+            raise _exceptions.InvalidWorkflowRunID(wf_run_id)
+
+        _handle_common_errors(resp)
+
+        # Decompress data
+        try:
+            unzipped: bytes = zlib.decompress(resp.content, 16)
+        except zlib.error as e:
+            raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id) from e
+
+        untarred = TarFile(fileobj=io.BytesIO(unzipped)).extractfile("step-logs")
+        assert untarred is not None
+        decoded = untarred.read().decode()
+
+        messages = []
+        for section_str in decoded.split("\n"):
+            if len(section_str) < 1:
+                continue
+            events = pydantic.parse_raw_as(_models.SysSection, section_str)
+
+            for event in events:
+                messages.append(event.message)
+
+        return messages
 
     def list_workspaces(self):
         """

@@ -30,6 +30,7 @@
 * Add `--qe` flag to `orq login`, this is the default so there is no change in behavior.
 * Bump Ray version to 2.4.0
 * New API method `WorkflowRun.start_from_ir()` that allows to start workflow run having only IR object
+* The WorkflowLogs object returned from `WorkflowRun.get_logs()` now includes Compute Engine system logs for workflow runs using CE.
 
 🐛 *Bug Fixes*
 * Secrets with workspaces now work inside workflow functions and for personal access tokens in `GithubImport`.
@@ -42,6 +43,7 @@
 * `orquestra-sdk-base` CPU container image has a 20% size reduction.
 * Added `State` enum to the base `orquestra.sdk` package for easier filtering task runs.
 * Logs fetched from CE are now split into "task" and "env setup" categories.
+
 
 📃 *Docs*
 * Update resource management guide for Compute Engine

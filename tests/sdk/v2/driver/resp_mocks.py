@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
 Recorded HTTP response data. Extracted from the test file because this usually
@@ -269,6 +269,13 @@ def make_get_wf_run_result_legacy_response(result_obj: Any):
 
 
 DATA_DIR = Path(__file__).parent / "data"
+
+
+def make_get_wf_run_system_logs_response():
+    """
+    As make_get_wf_run_system_logs_response(), but returns bytes that can be decoded.
+    """
+    return (DATA_DIR / "get_wf_system_logs_response" / "sys_logs.tar.gz").read_bytes()
 
 
 def make_get_wf_run_logs_response() -> bytes:

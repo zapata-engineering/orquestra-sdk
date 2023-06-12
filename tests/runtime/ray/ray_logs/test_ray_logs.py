@@ -311,7 +311,7 @@ class TestDirectRayReader:
                 pytest.param(
                     "wf.1",
                     [],
-                    WorkflowLogs(per_task={}, env_setup=[], other=[]),
+                    WorkflowLogs(per_task={}, env_setup=[], system=[], other=[]),
                     id="no_parsed_logs",
                 ),
                 pytest.param(
@@ -356,6 +356,7 @@ class TestDirectRayReader:
                             ],
                         },
                         env_setup=[],
+                        system=[],
                         other=[],
                     ),
                     id="matching_wf_run",
@@ -373,7 +374,7 @@ class TestDirectRayReader:
                             task_run_id=None,
                         )
                     ],
-                    WorkflowLogs(per_task={}, env_setup=[], other=[]),
+                    WorkflowLogs(per_task={}, env_setup=[], system=[], other=[]),
                     id="no_task_ids",
                 ),
                 pytest.param(
@@ -389,7 +390,7 @@ class TestDirectRayReader:
                             task_run_id="wf.2@inv2",
                         )
                     ],
-                    WorkflowLogs(per_task={}, env_setup=[], other=[]),
+                    WorkflowLogs(per_task={}, env_setup=[], system=[], other=[]),
                     id="other_wf_run",
                 ),
             ],

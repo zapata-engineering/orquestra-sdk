@@ -1,4 +1,5 @@
-# © Copyright 2022 Zapata Computing Inc.
+################################################################################
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 import base64
 import copy
@@ -1122,6 +1123,7 @@ class TestGetWorkflowLogs:
                 ],
             },
             env_setup=[],
+            system=[],
             other=[],
         )
 

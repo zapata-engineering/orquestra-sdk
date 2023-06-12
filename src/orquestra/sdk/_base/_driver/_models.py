@@ -1,15 +1,26 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
 Internal models for the workflow driver API
 """
 from datetime import datetime
 from enum import Enum
-from typing import Generic, List, Mapping, NamedTuple, NewType, Optional, TypeVar
+from typing import (
+    Generic,
+    List,
+    Literal,
+    Mapping,
+    NamedTuple,
+    NewType,
+    Optional,
+    TypeVar,
+    Union,
+)
 
 import pydantic
 from pydantic.generics import GenericModel
+from typing_extensions import Annotated
 
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.workflow_run import (
@@ -446,3 +457,92 @@ class Event(NamedTuple):
 
 
 Section = List[Event]
+
+# --- System Logs ---
+
+
+class SystemLogSourceType(str, Enum):
+    """Types of sources that can emit system logs."""
+
+    RAY_HEAD_NODE = "RAY_HEAD_NODE"
+    RAY_WORKER_NODE = "RAY_WORKER_NODE"
+    K8S_EVENT = "K8S_EVENT"
+    UNKNOWN = "UNKNOWN"
+
+    @classmethod
+    def _missing_(cls, *args, **kwargs):
+        return cls.UNKNOWN
+
+
+class K8sEventLog(pydantic.BaseModel):
+    """A system-level log line produced by a K8S event."""
+
+    tag: str
+
+    log: dict
+    """
+    The keys in this dictionary are determined by Kubernetes.
+    """
+
+    source_type: Literal[SystemLogSourceType.K8S_EVENT] = SystemLogSourceType.K8S_EVENT
+
+
+class RayHeadNodeEventLog(pydantic.BaseModel):
+    """A system-level log line produced by a Ray head node event."""
+
+    tag: str
+
+    log: str
+
+    source_type: Literal[
+        SystemLogSourceType.RAY_HEAD_NODE
+    ] = SystemLogSourceType.RAY_HEAD_NODE
+
+
+class RayWorkerNodeEventLog(pydantic.BaseModel):
+    """A system-level log line produced by a Ray head node event."""
+
+    tag: str
+
+    log: str
+
+    source_type: Literal[
+        SystemLogSourceType.RAY_WORKER_NODE
+    ] = SystemLogSourceType.RAY_WORKER_NODE
+
+
+class UnknownEventLog(pydantic.BaseModel):
+    """Fallback option - the event type is unknown, so display the message as a str."""
+
+    tag: str
+
+    log: str
+
+    source_type: Literal[SystemLogSourceType.UNKNOWN] = SystemLogSourceType.UNKNOWN
+
+
+SysLog = Annotated[
+    Union[K8sEventLog, RayHeadNodeEventLog, RayWorkerNodeEventLog, UnknownEventLog],
+    pydantic.Field(discriminator="source_type"),
+]
+
+
+class SysMessage(NamedTuple):
+    """
+    A pair of ``[timestamp, syslog]``.
+
+    Based on:
+    https://github.com/zapatacomputing/workflow-driver/blob/92d9ff32189c580fd0a2ff6eec03cc977fd01502/openapi/src/resources/workflow-run-system-logs.yaml#L2
+    """
+
+    timestamp: float
+    """
+    Unix timestamp in seconds with fraction for the moment when a log line is exported
+    from system to Orquestra. It does not necessarily correspond to the particular
+    time that the message is logged by the system.
+    """
+
+    message: SysLog
+
+
+SysSection = List[SysMessage]

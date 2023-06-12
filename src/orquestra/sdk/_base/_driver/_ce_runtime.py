@@ -437,6 +437,7 @@ class CERuntime(RuntimeInterface):
         """
         try:
             messages = self._client.get_workflow_run_logs(wf_run_id)
+            sys_messages = self._client.get_system_logs(wf_run_id)
         except (_exceptions.InvalidWorkflowRunID, _exceptions.WorkflowRunNotFound) as e:
             raise exceptions.WorkflowRunNotFoundError(
                 f"Workflow run with id `{wf_run_id}` not found"
@@ -476,6 +477,7 @@ class CERuntime(RuntimeInterface):
 
         return WorkflowLogs(
             per_task={"UNKNOWN TASK INV ID": task_logs},
+            system=[str(m.log) for m in sys_messages],
             env_setup=env_logs,
             other=other_logs,
         )

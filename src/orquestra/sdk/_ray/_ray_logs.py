@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
 Class to get logs from Ray for particular Workflow, both historical and live.
@@ -149,5 +149,6 @@ class DirectRayReader:
         return WorkflowLogs(
             per_task=logs_dict,
             env_setup=env_setup,
+            system=[],
             other=[],
         )
