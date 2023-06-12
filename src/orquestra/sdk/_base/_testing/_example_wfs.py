@@ -149,7 +149,7 @@ def wf_using_inline_imports():
 
 
 @sdk.task(dependency_imports=[sdk.GithubImport("alexjuda/piccup", git_ref="master")])
-def task_with_git_import():
+def task_with_git_import():  # pragma: no cover
     import piccup  # type: ignore # noqa
 
     # return whatever - make sure it just doesn't assert on import
