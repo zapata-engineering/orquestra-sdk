@@ -36,13 +36,13 @@ class TestIterUserLogPaths:
 
         # Then
         paths = list(paths_iter)
-        # There are logs for 10 workers with separate files for stdout and stderr.
+        # There are logs for 5 workers with separate files for stdout and stderr.
         # There's also a directory symlink (session_latest) but it shouldn't cause us to
         # read the same logs twice.
-        assert len(paths) == 20
-        assert len([p for p in paths if "worker" in p.stem]) == 20
-        assert len([p for p in paths if p.suffix == ".err"]) == 10
-        assert len([p for p in paths if p.suffix == ".out"]) == 10
+        assert len(paths) == 10
+        assert len([p for p in paths if "worker" in p.stem]) == 10
+        assert len([p for p in paths if p.suffix == ".err"]) == 5
+        assert len([p for p in paths if p.suffix == ".out"]) == 5
 
 
 class TestIterEnvLogPaths:
@@ -212,6 +212,11 @@ class TestParseUserLogLine:
         assert parsed == expected
 
 
+def _existing_wf_run_id():
+    # Assumption: this is the run ID of the workflow that produced the logs.
+    return "wf.wf_using_python_imports.8a4d9e7"
+
+
 class TestDirectRayReader:
     """
     Unit tests for ``DirectRayReader``.
@@ -225,10 +230,9 @@ class TestDirectRayReader:
             def test_happy_path():
                 # Given
                 reader = _ray_logs.DirectRayReader(ray_temp=TEST_RAY_TEMP)
-                wf_run_id = "wf.wf_using_python_imports.9a3f556"
 
                 # When
-                logs = reader.get_workflow_logs(wf_run_id)
+                logs = reader.get_workflow_logs(_existing_wf_run_id())
 
                 # Then
                 assert logs.per_task == {
@@ -251,7 +255,7 @@ class TestDirectRayReader:
         @pytest.mark.parametrize(
             "wf_run_id",
             [
-                pytest.param("wf.wf_using_python_imports.9a3f556", id="valid_id"),
+                pytest.param(_existing_wf_run_id(), id="valid_id"),
                 pytest.param("doesnt-exist", id="invalid_id"),
             ],
         )
@@ -275,11 +279,12 @@ class TestDirectRayReader:
         def test_happy_path():
             # Given
             reader = _ray_logs.DirectRayReader(ray_temp=TEST_RAY_TEMP)
-            wf_run_id = "wf.wf_using_python_imports.9a3f556"
             task_inv_id = "invocation-1-task-add-with-log"
 
             # When
-            logs = reader.get_task_logs(wf_run_id, task_inv_id)
+            logs = reader.get_task_logs(
+                wf_run_id=_existing_wf_run_id(), task_inv_id=task_inv_id
+            )
 
             # Then
             assert logs == ["hello, there!"]
@@ -293,7 +298,7 @@ class TestDirectRayReader:
                     pytest.param("invocation-1-task-add-with-log", id="valid_id"),
                 ),
                 (
-                    pytest.param("wf.wf_using_python_imports.9a3f556", id="valid_id"),
+                    pytest.param(_existing_wf_run_id(), id="valid_id"),
                     pytest.param("nope", id="invalid_id"),
                 ),
                 (
