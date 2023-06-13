@@ -504,26 +504,26 @@ class WorkflowRun:
         """
 
         wf_run_model: WorkflowRunModel = self.get_status_model()
-        tasks = {
-            TaskRun(
-                task_run_id=task_run_model.id,
-                task_invocation_id=task_run_model.invocation_id,
-                workflow_run_id=self.run_id,
-                runtime=self._runtime,
-                wf_def=self._wf_def,
-            )
-            for task_run_model in wf_run_model.task_runs
+
+        return {
+            task
+            for task_model in wf_run_model.task_runs
             if self._task_matches_schema_filters(
-                task_run_model,
+                task_model,
                 state=state,
                 task_run_id=task_run_id,
                 task_invocation_id=task_invocation_id,
             )
-        }
-        return {
-            task
-            for task in tasks
-            if self._task_matches_api_filters(task, task_fn_name=function_name)
+            and self._task_matches_api_filters(
+                task := TaskRun(
+                    task_run_id=task_model.id,
+                    task_invocation_id=task_model.invocation_id,
+                    workflow_run_id=self.run_id,
+                    runtime=self._runtime,
+                    wf_def=self._wf_def,
+                ),
+                task_fn_name=function_name,
+            )
         }
 
 
