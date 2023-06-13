@@ -527,8 +527,9 @@ class WorkflowRun:
             ):
                 continue
             tasks.add(task)
-        
+
         return tasks
+
 
 def list_workflow_runs(
     config: t.Union[ConfigName, "RuntimeConfig"],
