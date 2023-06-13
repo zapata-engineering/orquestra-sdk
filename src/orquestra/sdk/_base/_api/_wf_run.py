@@ -456,8 +456,6 @@ class WorkflowRun:
         if task_run_id and not re.compile(task_run_id).fullmatch(task_run_model.id):
             return False
 
-        print(task_invocation_id, type(task_invocation_id))
-        print(task_run_model.invocation_id, type(task_run_model.invocation_id))
         if task_invocation_id and not re.compile(task_invocation_id).fullmatch(
             task_run_model.invocation_id
         ):

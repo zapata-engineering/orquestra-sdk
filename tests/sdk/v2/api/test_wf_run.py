@@ -12,7 +12,7 @@ import typing as t
 import warnings
 from contextlib import suppress as do_not_raise
 from datetime import timedelta
-from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospec
+from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, call, create_autospec
 
 import pytest
 
@@ -737,99 +737,64 @@ class TestWorkflowRun:
 
         class TestFiltering:
             @staticmethod
+            @pytest.mark.parametrize("state", [None, "<state sentinel>"])
+            @pytest.mark.parametrize("task_run_id", [None, "<task run id sentinel>"])
             @pytest.mark.parametrize(
-                "state, n_expected_results",
-                [
-                    (State.WAITING, 0),
-                    (State.RUNNING, 0),
-                    (State.SUCCEEDED, 1),
-                    (State.TERMINATED, 0),
-                    (State.FAILED, 2),
-                    (State.ERROR, 0),
-                    ([State.SUCCEEDED, State.FAILED], 3),
-                ],
+                "task_invocation_id", [None, "<task inv id sentinel>"]
             )
-            def test_filter_by_single_state(run, state, n_expected_results):
+            @pytest.mark.parametrize(
+                "task_function_name", [None, "<task fn name sentinel>"]
+            )
+            def test_argument_passing(
+                run, state, task_run_id, task_invocation_id, task_function_name
+            ):
+                # Given
+                run._task_matches_schema_filters = Mock(return_value=True)
+                run._task_matches_api_filters = Mock(return_value=True)
+
                 # When
-                tasks = run.get_tasks(state=state)
+                _ = run.get_tasks(
+                    state=state,
+                    task_run_id=task_run_id,
+                    task_invocation_id=task_invocation_id,
+                    function_name=task_function_name,
+                )
 
                 # Then
-                assert len(tasks) == n_expected_results
+                assert run._task_matches_schema_filters.call_count == 3
+                for mock_call in run._task_matches_schema_filters.call_args_list:
+                    assert mock_call[1]["state"] == state
+                    assert mock_call[1]["task_run_id"] == task_run_id
+                    assert mock_call[1]["task_invocation_id"] == task_invocation_id
+                assert run._task_matches_api_filters.call_count == 3
+                for mock_call in run._task_matches_api_filters.call_args_list:
+                    assert mock_call[1]["task_fn_name"] == task_function_name
 
             @staticmethod
             @pytest.mark.parametrize(
-                "fn_name, n_expected_results",
-                [("join_strings", 1), ("capitalize", 2), ("not a task name", 0)],
+                "schema_filter, api_filter, n_expected_tasks",
+                [([True, False, True], [True, True, True], 2)],
             )
-            def test_filter_by_function_name(run, fn_name, n_expected_results):
-                tasks = run.get_tasks(function_name=fn_name)
-                assert len(tasks) == n_expected_results
-                for task in tasks:
-                    assert task.fn_name == fn_name
+            def test_filters_tasks(run, schema_filter, api_filter, n_expected_tasks):
+                # Given
+                run._task_matches_schema_filters = Mock(side_effect=schema_filter)
+                run._task_matches_api_filters = Mock(side_effect=api_filter)
+
+                # When
+                tasks = run.get_tasks()
+
+                # Then
+                assert len(tasks) == n_expected_tasks
 
             @staticmethod
-            @pytest.mark.parametrize(
-                "fn_name, n_expected_results",
-                [
-                    (".*", 3),
-                    ("^join_strings$", 1),
-                ],
-            )
-            def test_filter_by_regex_function_name(run, fn_name, n_expected_results):
-                tasks = run.get_tasks(function_name=fn_name)
-                assert len(tasks) == n_expected_results
+            def test_returns_empty_set_for_no_matching_tasks(run):
+                run._task_matches_schema_filters = Mock(return_value=False)
+                run._task_matches_api_filters = Mock(return_value=False)
 
-            @staticmethod
-            @pytest.mark.parametrize(
-                "run_id, n_expected_results",
-                [
-                    ("task_run1", 1),
-                    ("task_run1", 1),
-                    ("task_run1", 1),
-                    ("not a task run id", 0),
-                ],
-            )
-            def test_filter_by_run_id(run, run_id, n_expected_results):
-                tasks = run.get_tasks(task_run_id=run_id)
-                assert len(tasks) == n_expected_results
-                for task in tasks:
-                    assert task.task_run_id == run_id
+                tasks = run.get_tasks()
 
-            @staticmethod
-            @pytest.mark.parametrize(
-                "run_id, n_expected_results", [("task_run.", 3), ("task_run", 0)]
-            )
-            def test_filter_by_regex_run_id(run, run_id, n_expected_results):
-                tasks = run.get_tasks(task_run_id=run_id)
-                assert len(tasks) == n_expected_results
-
-            @staticmethod
-            @pytest.mark.parametrize(
-                "inv_id, n_expected_results",
-                [
-                    ("invocation-0-task-capitalize", 1),
-                    ("invocation-1-task-join-strings", 1),
-                    ("invocation-2-task-capitalize", 1),
-                    ("not an invocation id", 0),
-                ],
-            )
-            def test_filter_by_inv_id(run, inv_id, n_expected_results):
-                tasks = run.get_tasks(task_invocation_id=inv_id)
-                assert len(tasks) == n_expected_results
-                for task in tasks:
-                    assert task.task_invocation_id == inv_id
-
-            @staticmethod
-            @pytest.mark.parametrize(
-                "inv_id, n_expected_results",
-                [
-                    (r"invocation-\d-task-capitalize", 2),
-                    (".*", 3),
-                ],
-            )
-            def test_filter_by_regex_inv_id(run, inv_id, n_expected_results):
-                tasks = run.get_tasks(task_invocation_id=inv_id)
-                assert len(tasks) == n_expected_results
+                # Then
+                assert tasks == set()
 
     class TestGetLogs:
         @staticmethod
