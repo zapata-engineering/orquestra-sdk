@@ -108,7 +108,7 @@ The details of individual tasks can be accessed via the workflow run's ``get_tas
     :end-before: >> end get tasks
     :language: python
 
-By default, this method returns all of the tasks in the workflow, however for large workflows it can be necessary to filter this list.
+This method returns a set that, by default, contains all of the tasks in the workflow. However for large workflows it can be necessary to filter the tasks.
 
 The following filters are currently supported:
 * state
