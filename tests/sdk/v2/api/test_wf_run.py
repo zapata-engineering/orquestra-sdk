@@ -579,8 +579,7 @@ class TestWorkflowRun:
     class TestTaskFilters:
         class TestTaskMatchesSchemaFilters:
             @pytest.fixture
-            @staticmethod
-            def schema_task_run():
+            def schema_task_run(self):
                 task = create_autospec(TaskRunModel)
                 task.id = "<id sentinel>"
                 task.invocation_id = "<inv id sentinel>"
