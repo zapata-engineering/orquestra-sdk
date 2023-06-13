@@ -689,8 +689,7 @@ class TestWorkflowRun:
 
         class TestTaskMatchesAPIFilters:
             @pytest.fixture
-            @staticmethod
-            def api_task_run():
+            def api_task_run(self):
                 task = create_autospec(TaskRun)
                 task.fn_name = "<function name sentinel>"
                 return task
