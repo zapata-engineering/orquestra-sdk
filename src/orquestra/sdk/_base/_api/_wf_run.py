@@ -505,27 +505,30 @@ class WorkflowRun:
 
         wf_run_model: WorkflowRunModel = self.get_status_model()
 
-        return {
-            task
-            for task_model in wf_run_model.task_runs
-            if self._task_matches_schema_filters(
+        tasks = set()
+        for task_model in wf_run_model.task_runs:
+            if not self._task_matches_schema_filters(
                 task_model,
                 state=state,
                 task_run_id=task_run_id,
                 task_invocation_id=task_invocation_id,
+            ):
+                continue
+            task = TaskRun(
+                task_run_id=task_model.id,
+                task_invocation_id=task_model.invocation_id,
+                workflow_run_id=self.run_id,
+                runtime=self._runtime,
+                wf_def=self._wf_def,
             )
-            and self._task_matches_api_filters(
-                task := TaskRun(
-                    task_run_id=task_model.id,
-                    task_invocation_id=task_model.invocation_id,
-                    workflow_run_id=self.run_id,
-                    runtime=self._runtime,
-                    wf_def=self._wf_def,
-                ),
+            if not self._task_matches_api_filters(
+                task,
                 task_fn_name=function_name,
-            )
-        }
-
+            ):
+                continue
+            tasks.add(task)
+        
+        return tasks
 
 def list_workflow_runs(
     config: t.Union[ConfigName, "RuntimeConfig"],
