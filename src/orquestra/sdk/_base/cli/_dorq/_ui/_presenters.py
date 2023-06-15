@@ -256,10 +256,10 @@ class ConfigPresenter:
                 colalign=("left",),
                 tablefmt="plain",
                 headers=[
-                    click.style("Name", underline=True),
+                    click.style("Config Name", underline=True),
                     click.style("Runtime", underline=True),
                     click.style("Server URI", underline=True),
-                    click.style("Active Login", underline=True),
+                    click.style("Current Token", underline=True),
                 ],
             ),
         )
