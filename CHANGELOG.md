@@ -14,6 +14,7 @@
 🐛 *Bug Fixes*
 
 💅 *Improvements*
+* When using `GitHubImport`, better error messages are raised when a value is passed to `personal_access_token` that is not a `sdk.Secret()`.
 
 🥷 *Internal*
 
