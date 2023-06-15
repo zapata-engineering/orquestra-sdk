@@ -19,7 +19,7 @@ from tabulate import tabulate
 
 from orquestra.sdk._base import _services, serde
 from orquestra.sdk.schema import responses
-from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
+from orquestra.sdk.schema.configs import ConfigName, RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.workflow_run import (
     TaskInvocationId,
@@ -231,7 +231,7 @@ class ConfigPresenter:
     def print_configs_list(
         self,
         configs: t.Sequence[RuntimeConfiguration],
-        status: t.Mapping[RuntimeName, bool],
+        status: t.Mapping[ConfigName, bool],
         message: t.Optional[str] = "Stored configs:",
     ):
         """
