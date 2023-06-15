@@ -450,12 +450,14 @@ def test_github_import_is_git_import_with_auth(username, personal_access_token):
 class TestGithubImportRaisesTypeErrorForNonSecretPAT:
     @staticmethod
     def test_str_pat():
+        # note: we disable mypy checking here as we're explicitly looking for how a
+        # case where we pass an argument with the wrong type is handled.
         with pytest.raises(TypeError) as e:
             _ = _dsl.GithubImport(
                 "zapatacomputing/orquestra-workflow-sdk",
                 "main",
                 username="foo",
-                personal_access_token="bar",
+                personal_access_token="bar",  # type: ignore
             )
         assert (
             e.exconly()
