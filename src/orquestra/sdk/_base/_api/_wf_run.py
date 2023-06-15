@@ -26,6 +26,8 @@ from ...schema import ir
 from ...schema.configs import ConfigName
 from ...schema.local_database import StoredWorkflowRun
 from ...schema.workflow_run import ProjectId, State
+from ...schema.workflow_run import TaskRun as TaskRunModel
+from ...schema.workflow_run import TaskRunId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
 from .. import serde
@@ -431,20 +433,102 @@ class WorkflowRun:
         """
         return self._runtime.get_workflow_logs(wf_run_id=self.run_id)
 
-    # TODO: ORQSDK-617 add filtering ability for the users
-    def get_tasks(self) -> t.Set[TaskRun]:
-        wf_run_model = self.get_status_model()
+    @classmethod
+    def _task_matches_schema_filters(
+        cls,
+        task_run_model: TaskRunModel,
+        state: t.Optional[t.Union[State, t.List[State]]] = None,
+        task_run_id: t.Optional[t.Union[str, TaskRunId]] = None,
+        task_invocation_id: t.Optional[t.Union[str, ir.TaskInvocationId]] = None,
+    ) -> bool:
+        """
+        Filters that can be applied to orquestra.sdk.schema.workflow_run.TaskRun
+        """
+        if state:
+            states: t.List[State]
+            if isinstance(state, State):
+                states = [state]
+            else:
+                states = state
+            if task_run_model.status.state not in states:
+                return False
 
-        return {
-            TaskRun(
-                task_run_id=task_run_model.id,
-                task_invocation_id=task_run_model.invocation_id,
+        if task_run_id and not re.compile(task_run_id).fullmatch(task_run_model.id):
+            return False
+
+        if task_invocation_id and not re.compile(task_invocation_id).fullmatch(
+            task_run_model.invocation_id
+        ):
+            return False
+
+        return True
+
+    @classmethod
+    def _task_matches_api_filters(
+        cls,
+        task_run: TaskRun,
+        task_fn_name: t.Optional[str] = None,
+    ) -> bool:
+        """
+        Filters that can applied to orquestra.sdk._base._api._task_run.TaskRun.
+        """
+        if task_fn_name and not re.compile(task_fn_name).fullmatch(task_run.fn_name):
+            return False
+        return True
+
+    def get_tasks(
+        self,
+        *,
+        state: t.Optional[t.Union[State, t.List[State]]] = None,
+        function_name: t.Optional[str] = None,
+        task_run_id: t.Optional[t.Union[str, TaskRunId]] = None,
+        task_invocation_id: t.Optional[t.Union[str, ir.TaskInvocationId]] = None,
+    ) -> t.Set[TaskRun]:
+        """
+        Returns TaskRun representations of the tasks executed as part of this workflow.
+
+        Args:
+            state: If specified, only tasks with matching states will be returned.
+            function_name: A function name, or regex string matching the desired
+                function name(s). If specified, only tasks with matching function names
+                will be returned.
+            task_run_id: A task run ID, or regex string matching the desired task run
+                ID(s). If specified, only tasks with matching task run IDs will be
+                returned.
+            task_invocation_id: A task invocation ID, or regex string matching the
+                desired task invocation ID(s). If specified, only tasks with matching
+                task invocation IDs will be returned.
+
+        Returns:
+            An iterable of TaskRuns
+        """
+
+        wf_run_model: WorkflowRunModel = self.get_status_model()
+
+        tasks = set()
+        for task_model in wf_run_model.task_runs:
+            if not self._task_matches_schema_filters(
+                task_model,
+                state=state,
+                task_run_id=task_run_id,
+                task_invocation_id=task_invocation_id,
+            ):
+                continue
+            task = TaskRun(
+                task_run_id=task_model.id,
+                task_invocation_id=task_model.invocation_id,
                 workflow_run_id=self.run_id,
                 runtime=self._runtime,
                 wf_def=self._wf_def,
             )
-            for task_run_model in wf_run_model.task_runs
-        }
+            if not self._task_matches_api_filters(
+                task,
+                task_fn_name=function_name,
+            ):
+                continue
+            tasks.add(task)
+
+        return tasks
 
 
 def list_workflow_runs(
