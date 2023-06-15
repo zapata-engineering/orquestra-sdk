@@ -2,7 +2,11 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 """
-A script for regenerating the recorded logs in the "./ray_temp" dir.
+A script for regenerating the recorded logs in the "./ray_temp" dir. The
+recorded logs are used as inputs for tests.
+
+This file is a developer-only utility. It automates updating the test inputs,
+e.g. after moving to a different Ray version.
 
 Prerequirements:
     * Delete ``~/.orquestra/ray`` to start with a clean state

@@ -7,7 +7,6 @@ as possible, because it's slow to run. Please consider using unit tests and
 RuntimeInterface mocks instead of extending this file.
 """
 import json
-import re
 import time
 import typing as t
 from pathlib import Path
