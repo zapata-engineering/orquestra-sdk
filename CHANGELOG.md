@@ -14,6 +14,7 @@
 🐛 *Bug Fixes*
 
 💅 *Improvements*
+* `wf_run.get_logs().env_setup` now contains task dependency installation logs when running on the local `ray` runtime.
 
 🥷 *Internal*
 
