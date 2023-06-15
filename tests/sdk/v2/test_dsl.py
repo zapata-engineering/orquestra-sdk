@@ -567,6 +567,35 @@ def test_python_imports_deps(python_imports, expected_req, raises):
         assert list(parsed) == expected_req
 
 
+class TestRefToMain:
+    @pytest.mark.parametrize(
+        "workflow_defs_file, raises",
+        [
+            (
+                "workflow_defs.py",
+                pytest.raises(sdk.exceptions.InvalidTaskDefinitionError),
+            ),
+            ("workflow_defs_no_raise.py", do_not_raise()),
+        ],
+    )
+    def test_ref_to_main_in_task(self, workflow_defs_file, raises):
+        path_to_workflows = (
+            os.path.dirname(os.path.abspath(__file__)) + "/data/sample_project/"
+        )
+        # add path to locate helper imports
+        sys.path.append(path_to_workflows)
+        # prepare file to be executed as __main__
+        loader = importlib.machinery.SourceFileLoader(
+            "__main__", path_to_workflows + workflow_defs_file
+        )
+        spec = importlib.util.spec_from_loader(loader.name, loader)
+        assert spec is not None
+        mod = importlib.util.module_from_spec(spec)
+
+        with raises:
+            loader.exec_module(mod)
+
+
 def test_python_310_importlib_abc_bug():
     """
     In Python 3.10, there seems to be a bug in importlib that causes `importlib.abc` to

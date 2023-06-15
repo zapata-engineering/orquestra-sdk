@@ -6,7 +6,7 @@ import helpers  # type: ignore
 import orquestra.sdk as sdk
 
 
-@sdk.task
+@sdk.task(source_import=sdk.GithubImport(repo="my_repo"))
 def capitalize_task(text):
     return helpers.capitalize_helper(text)
 
