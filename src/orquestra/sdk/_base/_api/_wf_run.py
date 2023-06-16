@@ -400,16 +400,12 @@ class WorkflowRun:
 
         return results
 
-    def get_results_serialized(self, wait: bool = False) -> t.Sequence[t.Any]:
+    def get_results_serialized(self, wait: bool = False) -> t.Sequence[WorkflowResult]:
         """
         Retrieves workflow results in serialized form.
 
-        A workflow function is expected to return task outputs
-        (ArtifactFutures) or constants (10, "hello", etc.). This method returns values
-        of these. The order is dictated by the return statement in the workflow
-        function, for example `return a, b, c` means this function returns (a, b, c).
-        See also:
-        https://refactored-disco-d576cb73.pages.github.io/docs/runtime/guides/workflow-syntax.html
+        Result value is a sequence of WorkflowResult objects where each can be
+        deserialized separately
 
         Args:
             wait:  whether or not to wait for workflow run completion.
