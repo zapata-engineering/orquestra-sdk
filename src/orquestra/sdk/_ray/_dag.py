@@ -466,7 +466,9 @@ class RayRuntime(RuntimeInterface):
             )
         )
 
-    def stop_workflow_run(self, workflow_run_id: WorkflowRunId) -> None:
+    def stop_workflow_run(
+        self, workflow_run_id: WorkflowRunId, *, force: t.Optional[bool] = None
+    ) -> None:
         # cancel doesn't throw exceptions on non-existing runs... using this as
         # a workaround to inform client of an error
         try:

@@ -5,6 +5,7 @@
 Utilities for presenting human-readable text output from dorq commands. These are
 mostly adapters over the corq's formatters.
 """
+import os
 import pprint
 import sys
 import typing as t
@@ -17,7 +18,7 @@ from typing import Iterable, Iterator, List, Sequence
 import click
 from tabulate import tabulate
 
-from orquestra.sdk._base import _services, serde
+from orquestra.sdk._base import _config, _env, _services, serde
 from orquestra.sdk.schema import responses
 from orquestra.sdk.schema.configs import ConfigName, RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.ir import ArtifactFormat
@@ -346,20 +347,50 @@ class PromptPresenter:
 
         return wfs, tabulated_labels
 
-    def workspaces_list_to_prompt(self, workspaces):
+    def workspaces_list_to_prompt(self, workspaces, config_name=None):
         # Create labels of workspaces that are printed by prompter
         # Label is <display_name> <id> tabulated nicely to create good-looking
         # table
         labels = [[ws.name, ws.workspace_id] for ws in workspaces]
+
+        if config_name == _config.AUTO_CONFIG_NAME:
+            try:
+                curr_ws = os.environ[_env.CURRENT_WORKSPACE_ENV]
+                for index, label in enumerate(labels):
+                    if label[1] == curr_ws:
+                        label.append("(CURRENT WORKSPACE)")
+                        # put current workspace at the top of the list so it is
+                        # auto-selected
+                        labels.insert(0, labels.pop(index))
+                        workspaces = workspaces[:]
+                        workspaces.insert(0, workspaces.pop(index))
+                        break
+            except KeyError:
+                pass
+
         tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
 
-        return tabulated_labels
+        return tabulated_labels, workspaces
 
-    def project_list_to_prompt(self, projects):
+    def project_list_to_prompt(self, projects, config_name=None):
         # Create labels of projects that are printed by prompter
         # Label is <display_name> <id> tabulated nicely to create good-looking
         # table
-        labels = [[ws.name, ws.project_id] for ws in projects]
+        labels = [[p.name, p.project_id] for p in projects]
+        if config_name == _config.AUTO_CONFIG_NAME:
+            try:
+                curr_proj = os.environ[_env.CURRENT_PROJECT_ENV]
+                for index, label in enumerate(labels):
+                    if label[1] == curr_proj:
+                        label.append("(CURRENT PROJECT)")
+                        # put current project at the top of the list so it is
+                        # auto-selected
+                        labels.insert(0, labels.pop(index))
+                        projects = projects[:]
+                        projects.insert(0, projects.pop(index))
+                        break
+            except KeyError:
+                pass
         tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
 
-        return tabulated_labels
+        return tabulated_labels, projects

@@ -189,7 +189,9 @@ class WorkflowRunRepo:
 
         return wf_run.run_id
 
-    def stop(self, wf_run_id: WorkflowRunId, config_name: ConfigName):
+    def stop(
+        self, wf_run_id: WorkflowRunId, config_name: ConfigName, force: t.Optional[bool]
+    ):
         """
         Raises:
             orquestra.sdk.exceptions.UnauthorizedError: when communication with runtime
@@ -200,7 +202,7 @@ class WorkflowRunRepo:
         wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
 
         try:
-            return wf_run.stop()
+            return wf_run.stop(force=force)
         except (exceptions.UnauthorizedError, exceptions.WorkflowRunCanNotBeTerminated):
             # Other exception types aren't expected to be raised here.
             raise

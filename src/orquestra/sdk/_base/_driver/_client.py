@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
 Code for accessing the Workflow Driver API.
@@ -9,7 +9,6 @@ Implemented API spec:
 """
 
 import io
-import json
 import zlib
 from tarfile import TarFile
 from typing import Generic, List, Mapping, Optional, TypeVar, Union
@@ -20,7 +19,6 @@ import requests
 from requests import codes
 
 from orquestra.sdk import ProjectRef
-from orquestra.sdk._ray._ray_logs import WFLog
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
@@ -31,6 +29,7 @@ from orquestra.sdk.schema.workflow_run import (
 )
 
 from . import _exceptions, _models
+from ._models import K8sEventLog
 
 API_ACTIONS = {
     # Workflow Definitions
@@ -52,6 +51,7 @@ API_ACTIONS = {
     # Logs
     "get_workflow_run_logs": "/api/workflow-run-logs",
     "get_task_run_logs": "/api/task-run-logs",
+    "get_workflow_run_system_logs": "/api/workflow-run-logs/system",
     # Login
     "get_login_url": "/api/login",
     # Workspaces
@@ -443,9 +443,15 @@ class DriverClient:
 
         return parsed_response.data.to_ir(workflow_def.workflow)
 
-    def terminate_workflow_run(self, wf_run_id: _models.WorkflowRunID):
+    def terminate_workflow_run(
+        self, wf_run_id: _models.WorkflowRunID, force: Optional[bool] = None
+    ):
         """
         Asks the workflow driver to terminate a workflow run
+
+        Args:
+            wf_run_id: the workflow to terminate
+            force: if the workflow should be forcefully terminated
 
         Raises:
             WorkflowRunNotFound: see the exception's docstring
@@ -457,6 +463,7 @@ class DriverClient:
         resp = self._post(
             API_ACTIONS["terminate_workflow_run"].format(wf_run_id),
             body_params=None,
+            query_params=_models.TerminateWorkflowRunRequest(force=force).dict(),
         )
 
         if resp.status_code == codes.NOT_FOUND:
@@ -618,7 +625,9 @@ class DriverClient:
 
     # --- Workflow Logs ---
 
-    def get_workflow_run_logs(self, wf_run_id: _models.WorkflowRunID) -> List[str]:
+    def get_workflow_run_logs(
+        self, wf_run_id: _models.WorkflowRunID
+    ) -> List[_models.Message]:
         """
         Gets the logs of a workflow run from the workflow driver
 
@@ -648,7 +657,7 @@ class DriverClient:
 
         # Decompress data
         try:
-            unzipped: bytes = zlib.decompress(resp.content, 16 + zlib.MAX_WBITS)
+            unzipped: bytes = zlib.decompress(resp.content, 16)
         except zlib.error as e:
             raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id) from e
 
@@ -657,23 +666,17 @@ class DriverClient:
         decoded = untarred.read().decode()
 
         # Parse the decoded data as logs
-        # TODO: index by taskinvocationID rather than workflowrunID [ORQSDK-777]
-        logs = []
-        for section in decoded.split("\n"):
-            if len(section) < 1:
+        messages = []
+        for section_str in decoded.split("\n"):
+            if len(section_str) < 1:
                 continue
-            for log in json.loads(section):
-                try:
-                    # Orquestra logs are jsonable - where we can we parse these and
-                    # extract the useful information
-                    interpreted_log = WFLog.parse_raw(log[1]["log"])
-                    logs.append(interpreted_log.message)
-                except pydantic.ValidationError:
-                    # If the log isn't jsonable (i.e. it comes from Ray) we just return
-                    # plain log content.
-                    logs.append(log[1]["log"])
 
-        return logs
+            events = pydantic.parse_raw_as(_models.Section, section_str)
+
+            for event in events:
+                messages.append(event.message)
+
+        return messages
 
     def get_task_run_logs(self, task_run_id: _models.TaskRunID) -> bytes:
         """
@@ -695,6 +698,56 @@ class DriverClient:
 
         # TODO: unzip, get logs (ORQSDK-654)
         return resp.content
+
+    def get_system_logs(self, wf_run_id: _models.WorkflowRunID) -> List[_models.SysLog]:
+        """
+        Get the logs of a workflow run from the workflow driver.
+
+        Raises:
+            ForbiddenError: see the exception's docstring
+            InvalidTokenError: see the exception's docstring
+            InvalidWorkflowRunID: see the exception's docstring
+            WorkflowRunLogsNotFound: see the exception's docstring
+            WorkflowRunLogsNotReadable: see the exception's docstring
+            UnknownHTTPError: see the exception's docstring
+            NotImplementedError: when a log object's source_type is not a recognised
+                value, or is a value for a schema has not been defined.
+        """
+        resp = self._get(
+            API_ACTIONS["get_workflow_run_system_logs"],
+            query_params=_models.GetWorkflowRunLogsRequest(
+                workflowRunId=wf_run_id
+            ).dict(),
+        )
+
+        # Handle errors
+        if resp.status_code == codes.NOT_FOUND:
+            raise _exceptions.WorkflowRunLogsNotFound(wf_run_id)
+        elif resp.status_code == codes.BAD_REQUEST:
+            raise _exceptions.InvalidWorkflowRunID(wf_run_id)
+
+        _handle_common_errors(resp)
+
+        # Decompress data
+        try:
+            unzipped: bytes = zlib.decompress(resp.content, 16)
+        except zlib.error as e:
+            raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id) from e
+
+        untarred = TarFile(fileobj=io.BytesIO(unzipped)).extractfile("step-logs")
+        assert untarred is not None
+        decoded = untarred.read().decode()
+
+        messages = []
+        for section_str in decoded.split("\n"):
+            if len(section_str) < 1:
+                continue
+            events = pydantic.parse_raw_as(_models.SysSection, section_str)
+
+            for event in events:
+                messages.append(event.message)
+
+        return messages
 
     def list_workspaces(self):
         """

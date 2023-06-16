@@ -6,12 +6,12 @@ import helpers  # type: ignore
 import orquestra.sdk as sdk
 
 
-@sdk.task()
+@sdk.task
 def capitalize_task(text):
     return helpers.capitalize_helper(text)
 
 
-@sdk.workflow(default_source_import=sdk.InlineImport())
+@sdk.workflow
 def sample_workflow():
     return [capitalize_task("sample")]
 

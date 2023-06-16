@@ -1,0 +1,8 @@
+:job_id:01000000
+:task_name:_workflow_task_executor_remote
+2023-06-12 14:46:55,342	INFO task_executor.py:78 -- Task status [RUNNING]	[wf.wf_using_python_imports.8a4d9e7@invocation-1-task-add-with-log]
+{"timestamp": "2023-06-12T12:46:55.381839+00:00", "level": "INFO", "filename": "_example_wfs.py:283", "message": "hello, there!", "wf_run_id": "wf.wf_using_python_imports.8a4d9e7", "task_inv_id": "invocation-1-task-add-with-log", "task_run_id": "wf.wf_using_python_imports.8a4d9e7@invocation-1-task-add-with-log.f7e22"}
+:task_name:_workflow_task_executor_remote
+2023-06-12 14:47:42,508	INFO task_executor.py:78 -- Task status [RUNNING]	[wf.wf_using_python_imports.8a4d9e7@orquestra.sdk._ray._build_workflow._make_ray_dag_node.locals._ray_remote]
+:task_name:_workflow_task_executor_remote
+2023-06-12 14:47:42,520	INFO task_executor.py:78 -- Task status [RUNNING]	[wf.wf_using_python_imports.8a4d9e7@orquestra.sdk._ray._build_workflow.make_ray_dag.locals.handle_data_aggregation_error]

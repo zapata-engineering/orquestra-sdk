@@ -46,9 +46,9 @@ to see how.
 Using the Image on Compute Engine
 ---------------------------------
 
-You can run workflows that use custom images only on Compute Engine and not on Quantum Engine or locally. You
-need to request more than one node for your workflow as Compute Engine supports custom images only on clustered mode
-which is activated when more than one node is requested for a workflow.
+.. note::
+
+    You can run workflows that use custom images only on Compute Engine and not on Quantum Engine or locally.
 
 When you use a custom image, ``nodes`` workflow resource indicates the maximum number of nodes that may be allocated
 with the custom image, if needed. For example, if you use two different custom images for your tasks and specify ``nodes=4``

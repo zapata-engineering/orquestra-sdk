@@ -3,7 +3,31 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+* Compute Engine is now the default when logging in
+* InlineImport() is now always default source_import for tasks
+
+🔥 *Features*
+* Force stop workflow runs via the CLI or Python API
+* `WorkflowRun.get_tasks()` supports filtering tasks by state, function name, task run ID and task invocation ID.
+* Add `--list` option to `orq login` that displays the stored remote logins, which runtimes they are using, and whether their access tokens are up to date.
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+* `wf_run.get_logs().env_setup` now contains task dependency installation logs when running on the local `ray` runtime.
+
+🥷 *Internal*
+
+📃 *Docs*
+* Fix broken "Dependency Installation" docs.
+
+## v0.50.0
+
+🚨 *Breaking Changes*
 * `WorkflowRun.get_logs()` now returns a data structure with logs split into categories.
+* Local workflow database has changed format: downgrading from v0.50.0 will require user intervention.
 
 🔥 *Features*
 * Add .project property to WorkflowRun to get the info about workspace and project of running workflow
@@ -11,9 +35,11 @@
 * Add `--qe` flag to `orq login`, this is the default so there is no change in behavior.
 * Bump Ray version to 2.4.0
 * New API method `WorkflowRun.start_from_ir()` that allows to start workflow run having only IR object
-* Add `--list` option to `orq login` that displays the stored remote logins, which runtimes they are using, and whether their access tokens are up to date.
 
 👩‍🔬 *Experimental*
+=======
+* The WorkflowLogs object returned from `WorkflowRun.get_logs()` now includes Compute Engine system logs for workflow runs using CE.
+
 
 🐛 *Bug Fixes*
 * Secrets with workspaces now work inside workflow functions and for personal access tokens in `GithubImport`.
@@ -22,10 +48,11 @@
 
 💅 *Improvements*
 * Add prompters to `orq wf submit` command for CE runtime if workspace and project weren't passed explicitly
+* Auto-select and highlight current workspace and project when using `auto` config in CLI in studio
 * `orquestra-sdk-base` CPU container image has a 20% size reduction.
 * Added `State` enum to the base `orquestra.sdk` package for easier filtering task runs.
+* Logs fetched from CE are now split into "task" and "env setup" categories.
 
-🥷 *Internal*
 
 📃 *Docs*
 * Update resource management guide for Compute Engine
