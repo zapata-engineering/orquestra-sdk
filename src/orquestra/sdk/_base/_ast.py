@@ -108,13 +108,7 @@ class _ReturnExprVisitor(ast.NodeVisitor):
             self._fail_single(node, "Cannot infer number of outputs with unpacking")
             return
 
-        n_elements = len(node.keys)
-        if n_elements == 0:
-            # Empty dict counts as a single output, similarly to void functions
-            # having a single `None` output.
-            self.outputs.add(_AstReturnMetadata(is_subscriptable=False, n_outputs=1))
-        else:
-            self.outputs.add(_AstReturnMetadata(is_subscriptable=False, n_outputs=1))
+        self.outputs.add(_AstReturnMetadata(is_subscriptable=False, n_outputs=1))
 
     def generic_visit(self, node):
         self._fail_single(node, f"Assuming a single output for node {repr(type(node))}")

@@ -937,7 +937,7 @@ class TestDictReturnValue:
     """
 
     def test_dict_as_task_return_value(self, runtime: _dag.RayRuntime):
-        @sdk.task(source_import=sdk.InlineImport())
+        @sdk.task
         def returns_dict():
             return {"a": "b", "c": "d"}
 
