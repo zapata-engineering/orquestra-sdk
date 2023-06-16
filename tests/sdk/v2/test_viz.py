@@ -21,7 +21,7 @@ class TestWfDefGraph:
         assert graph.nodes1 == [
             _viz.Node(
                 id="invocation-0-task-inc",
-                caption=["tests.sdk.v2.sample_wfs.inc():17", "invocation-0-task-inc"],
+                caption=["[inlined].inc()", "invocation-0-task-inc"],
             ),
             _viz.Node(
                 id="invocation-1-task-inc-2",
@@ -30,13 +30,13 @@ class TestWfDefGraph:
             _viz.Node(
                 id="invocation-2-task-integer-division",
                 caption=[
-                    "tests.sdk.v2.sample_wfs.integer_division():27",
+                    "[inlined].integer_division()",
                     "invocation-2-task-integer-division",
                 ],
             ),
             _viz.Node(
                 id="invocation-3-task-add",
-                caption=["tests.sdk.v2.sample_wfs.add():12", "invocation-3-task-add"],
+                caption=["[inlined].add()", "invocation-3-task-add"],
             ),
         ]
 

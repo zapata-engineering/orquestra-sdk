@@ -854,10 +854,12 @@ def test_task_code_unavailable_at_building_dag(runtime: _dag.RayRuntime):
     wf_def = _example_wfs.greet_wf.model
     task_id = list(wf_def.tasks.keys())[0]
 
-    # ignoring mypy, this is supposed to be module fn repo
-    wf_def.tasks[task_id].fn_ref.module = "nope"  # type: ignore
+    # ignoring mypy, this is supposed to be inline fn
+    wf_def.tasks[task_id].fn_ref.encoded_function = ["nope"]  # type: ignore
 
     # when
+    # If this fails it means we try to deserialize function at DAG-create time
+    # which is bad
     wf_id = runtime.create_workflow_run(wf_def, None)
     _wait_to_finish_wf(wf_id, runtime)
 
