@@ -12,6 +12,7 @@
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
+* Fix Ray WFs failing caused by any task returning dict defined in return statement
 
 💅 *Improvements*
 
