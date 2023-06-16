@@ -145,13 +145,13 @@ def GithubImport(
     ):
         if isinstance(personal_access_token, str):
             errmsg = (
-                f'You passed a string as `personal_access_token = "..."`. '
+                'You passed a string as `personal_access_token = "..."`. '
                 'Please pass `personal_access_token = sdk.Secret(name="...")` instead. '
                 "It might seem verbose, but it's a precaution against committing "
                 "plain-text credentials to your git repo, or leaking secret values as "
                 "part of the workflow definition."
                 "\nSuggested fix:\n"
-                f'  personal_access_token = sdk.Secret(name="{personal_access_token}")'
+                '  personal_access_token = sdk.Secret(name="paste secret name here")'
             )
         else:
             errmsg = (
