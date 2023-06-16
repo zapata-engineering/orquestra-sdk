@@ -261,8 +261,8 @@ class TestNOutputsByNodeType:
             val2 = "val2"
             return {"key1": "val1", "key2": val2}
 
-        assert _a_task._output_metadata.n_outputs == 2
-        assert _a_task._output_metadata.is_subscriptable
+        assert _a_task._output_metadata.n_outputs == 1
+        assert not _a_task._output_metadata.is_subscriptable
 
     def test_starred_dict(self):
         @sdk.task
