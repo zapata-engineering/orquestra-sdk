@@ -54,16 +54,6 @@ nosetests.xml
 *.mo
 *.pot
 
-# Django stuff:
-*.log
-db.sqlite3
-db.sqlite3-journal
-local_settings.py
-
-# Flask stuff:
-.webassets-cache
-instance/
-
 # Scrapy stuff:
 .scrapy
 

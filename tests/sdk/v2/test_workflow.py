@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 import orquestra.sdk as sdk
-from orquestra.sdk._base import _workflow, loader
+from orquestra.sdk._base import _traversal, _workflow, loader
 from orquestra.sdk._base._dsl import InvalidPlaceholderInCustomTaskNameError
 from orquestra.sdk.exceptions import WorkflowSyntaxError
 from orquestra.sdk.schema import ir
@@ -130,7 +130,8 @@ class TestModelsSerializeProperly:
         with pytest.raises(NotImplementedError):
             _parametrized_workflow.model
 
-    def test_call_and_model_are_same_for_non_parametrized_workflows(self):
+    def test_call_and_model_are_same_for_non_parametrized_workflows(self, monkeypatch):
+        monkeypatch.setattr(_traversal, "_global_inline_import_identifier", lambda: 0)
         called = _simple_workflow()
         model = _simple_workflow.model
         assert called.model == model

@@ -4,6 +4,7 @@
 
 🚨 *Breaking Changes*
 * Compute Engine is now the default when logging in
+* InlineImport() is now always default source_import for tasks
 
 🔥 *Features*
 * Force stop workflow runs via the CLI or Python API
@@ -15,6 +16,7 @@
 
 💅 *Improvements*
 * When using `GitHubImport`, better error messages are raised when a value is passed to `personal_access_token` that is not a `sdk.Secret()`.
+* `wf_run.get_logs().env_setup` now contains task dependency installation logs when running on the local `ray` runtime.
 
 🥷 *Internal*
 

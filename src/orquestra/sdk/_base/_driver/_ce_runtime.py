@@ -458,9 +458,10 @@ class CERuntime(RuntimeInterface):
         other_logs = []
 
         for m in messages:
-            if _regrouping.WORKER_FILE_PATTERN.match(m.ray_filename) is not None:
+            path = Path(m.ray_filename)
+            if _regrouping.is_worker(path=path):
                 task_logs.append(m.log)
-            elif _regrouping.ENV_SETUP_FILE_PATTERN.match(m.ray_filename) is not None:
+            elif _regrouping.is_env_setup(path=path):
                 env_logs.append(m.log)
             else:
                 # Reasons for the "other" logs: future proofness and empathy. The server
