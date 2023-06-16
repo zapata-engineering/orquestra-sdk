@@ -25,6 +25,7 @@ from ...exceptions import (
 from ...schema import ir
 from ...schema.configs import ConfigName
 from ...schema.local_database import StoredWorkflowRun
+from ...schema.responses import WorkflowResult
 from ...schema.workflow_run import ProjectId, State
 from ...schema.workflow_run import TaskRun as TaskRunModel
 from ...schema.workflow_run import TaskRunId
@@ -399,6 +400,42 @@ class WorkflowRun:
 
         return results
 
+    def get_results_serialized(self, wait: bool = False) -> t.Sequence[t.Any]:
+        """
+        Retrieves workflow results in serialized form.
+
+        A workflow function is expected to return task outputs
+        (ArtifactFutures) or constants (10, "hello", etc.). This method returns values
+        of these. The order is dictated by the return statement in the workflow
+        function, for example `return a, b, c` means this function returns (a, b, c).
+        See also:
+        https://refactored-disco-d576cb73.pages.github.io/docs/runtime/guides/workflow-syntax.html
+
+        Args:
+            wait:  whether or not to wait for workflow run completion.
+                   Uses the default options for waiting, use `wait_until_finished()` for
+                   more control.
+
+        Raises:
+            WorkflowRunNotFinished: when the workflow run has not finished and `wait` is
+                                   False
+            WorkflowRunNotSucceeded: when the workflow is no longer executing, but it did not
+                succeed.
+        """  # noqa 501
+        if wait:
+            self.wait_until_finished()
+
+        if (state := self.get_status()) not in COMPLETED_STATES:
+            raise WorkflowRunNotFinished(
+                f"Workflow run with id {self.run_id} has not finished. "
+                f"Current state: {state}",
+                state,
+            )
+        try:
+            return self._runtime.get_workflow_run_outputs_non_blocking(self.run_id)
+        except WorkflowRunNotSucceeded:
+            raise
+
     def get_artifacts(self) -> t.Mapping[ir.TaskInvocationId, t.Any]:
         """
         Unstable: this API will change.
@@ -423,6 +460,23 @@ class WorkflowRun:
             inv_id: serde.deserialize(inv_output)
             for inv_id, inv_output in inv_outputs.items()
         }
+
+    def get_artifacts_serialized(
+        self,
+    ) -> t.Mapping[ir.TaskInvocationId, WorkflowResult]:
+        """
+        Unstable: this API will change.
+
+        Returns values calculated by this workflow's tasks in serialized form.
+        If a given task hasn't succeeded yet, the mapping won't
+        contain the corresponding entry.
+
+        Returns:
+            A dictionary with an entry for each task run in the workflow. The key is the
+                task's invocation ID. The value is whatever the task returned
+                in serialized form
+        """
+        return self._runtime.get_available_outputs(self.run_id)
 
     def get_logs(self) -> WorkflowLogs:
         """
