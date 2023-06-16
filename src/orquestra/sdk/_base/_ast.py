@@ -114,9 +114,7 @@ class _ReturnExprVisitor(ast.NodeVisitor):
             # having a single `None` output.
             self.outputs.add(_AstReturnMetadata(is_subscriptable=False, n_outputs=1))
         else:
-            self.outputs.add(
-                _AstReturnMetadata(is_subscriptable=True, n_outputs=n_elements)
-            )
+            self.outputs.add(_AstReturnMetadata(is_subscriptable=False, n_outputs=1))
 
     def generic_visit(self, node):
         self._fail_single(node, f"Assuming a single output for node {repr(type(node))}")

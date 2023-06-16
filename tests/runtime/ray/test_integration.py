@@ -884,3 +884,32 @@ class TestGetCurrentIDs:
 
         # Then
         assert ids == (None, None, None)
+
+
+@pytest.mark.slow
+class TestDictReturnValue:
+    """
+    Tasks that had dicts in return statement used to cause WF failures.
+    This test might look trivial bul unless AST code was majorly refactored,
+    please abstain from removing it (also refer to git history for the fix itself)
+    """
+
+    def test_dict_as_task_return_value(self, runtime: _dag.RayRuntime):
+        @sdk.task(source_import=sdk.InlineImport())
+        def returns_dict():
+            return {"a": "b", "c": "d"}
+
+        @sdk.workflow
+        def wf():
+            return returns_dict()
+
+        wf_model = wf().model
+
+        # When
+        # The function-under-test is called inside the workflow.
+        wf_run_id = runtime.create_workflow_run(wf_model, None)
+        _wait_to_finish_wf(wf_run_id, runtime)
+
+        # Precondition
+        wf_run = runtime.get_workflow_run_status(wf_run_id)
+        assert wf_run.status.state == State.SUCCEEDED
