@@ -11,6 +11,7 @@
 * Add `--qe` flag to `orq login`, this is the default so there is no change in behavior.
 * Bump Ray version to 2.4.0
 * New API method `WorkflowRun.start_from_ir()` that allows to start workflow run having only IR object
+* Add `--list` option to `orq login` that displays the stored remote logins, which runtimes they are using, and whether their access tokens are up to date.
 
 👩‍🔬 *Experimental*
 
