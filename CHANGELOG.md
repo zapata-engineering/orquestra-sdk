@@ -13,6 +13,7 @@
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
+* Fix Ray WFs failing caused by any task returning dict defined in return statement
 
 💅 *Improvements*
 * `wf_run.get_logs().env_setup` now contains task dependency installation logs when running on the local `ray` runtime.
