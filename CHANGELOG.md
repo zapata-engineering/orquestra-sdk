@@ -4,6 +4,7 @@
 
 🚨 *Breaking Changes*
 * Compute Engine is now the default when logging in
+* InlineImport() is now always default source_import for tasks
 
 🔥 *Features*
 * Force stop workflow runs via the CLI or Python API

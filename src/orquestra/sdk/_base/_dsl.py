@@ -547,13 +547,9 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
         if self._use_default_source_import:
             if wf_default_source_import:
                 self._source_import = wf_default_source_import
-            # Set the default Import based on if the session is interactive
-            elif _is_interactive():
-                self._source_import = InlineImport()
             else:
-                self._source_import = LocalImport(
-                    module=self.__sdk_task_body.__module__
-                )
+                self._source_import = InlineImport()
+
         self._resolve_fn_ref()
 
     def _resolve_fn_ref(self):
@@ -880,14 +876,6 @@ def _get_fn_line_number(fn):
     except OSError:
         line_number = None
     return line_number
-
-
-def _is_interactive():
-    # This seems to be a "good" way of checking if this code is being run in an
-    # interactive session, i.e. Jupyter notebook, interactive REPL, etc.
-    import __main__ as main
-
-    return not hasattr(main, "__file__")
 
 
 def get_fn_ref(fn) -> FunctionRef:
