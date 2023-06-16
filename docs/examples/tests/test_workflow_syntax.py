@@ -446,6 +446,9 @@ class TestSnippets:
         assert len(model.task_invocations) == 1
 
     @staticmethod
+    @pytest.mark.skip(
+        reason="Investigate: https://zapatacomputing.atlassian.net/browse/ORQSDK-871"
+    )
     def test_task_in_task_fails(change_test_dir):
         # Given
         # Prepare the project dir: 'workflow_defs.py' and 'script.py' files

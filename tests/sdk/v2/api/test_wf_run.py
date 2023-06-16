@@ -16,7 +16,7 @@ from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, call, create_a
 
 import pytest
 
-from orquestra.sdk._base import _api, _workflow, serde
+from orquestra.sdk._base import _api, _traversal, _workflow, serde
 from orquestra.sdk._base._api._task_run import TaskRun
 from orquestra.sdk._base._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
@@ -1243,6 +1243,7 @@ class TestProjectId:
         expected,
         monkeypatch,
     ):
+        monkeypatch.setattr(_traversal, "_global_inline_import_identifier", lambda: 0)
         workflow_create_mock = Mock()
         monkeypatch.setattr(
             InProcessRuntime, "create_workflow_run", workflow_create_mock
