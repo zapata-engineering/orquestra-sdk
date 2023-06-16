@@ -452,7 +452,7 @@ class TestGithubImportRaisesTypeErrorForNonSecretPAT:
             e.exconly()
             == """TypeError: You passed a string as `personal_access_token = "..."`. Please pass `personal_access_token = sdk.Secret(name="...")` instead. It might seem verbose, but it's a precaution against committing plain-text credentials to your git repo, or leaking secret values as part of the workflow definition.
 Suggested fix:
-  personal_access_token = sdk.Secret(name="bar")"""  # noqa: E501
+  personal_access_token = sdk.Secret(name="paste secret name here")"""  # noqa: E501
         )
 
     @staticmethod
