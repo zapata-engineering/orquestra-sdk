@@ -396,7 +396,6 @@ class GroupWithDefaultCommand(cloup.Group, DefaultGroup):
 
     def get_help(self, ctx) -> str:
         # Hack to get the help for `orq login` to make sense
-        print(dir(super()))
         sub = super().get_help(ctx).split("\n")
         return auth.get_help(ctx) + "\n\n" + "\n".join(sub[sub.index("Commands:") :])
 
@@ -412,14 +411,7 @@ server_config_group = cloup.OptionGroup(
 )
 
 
-class HiddenSubCommand(cloup.Command):
-    ...
-
-    def get_usage(self, ctx) -> str:
-        return "HERE"
-
-
-@login.command(cls=HiddenSubCommand, hidden=True)
+@login.command(hidden=True)
 @server_config_group.option(
     "-c", "--config", required=False, help="The name of an existing configureation."
 )
