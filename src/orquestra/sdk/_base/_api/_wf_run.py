@@ -392,15 +392,15 @@ class WorkflowRun:
         of these. The order is dictated by the return statement in the workflow
         function, for example `return a, b, c` means this function returns (a, b, c).
         See also:
-        https://refactored-disco-d576cb73.pages.github.io/docs/runtime/guides/workflow-syntax.html
+        https://docs.orquestra.io/docs/core/sdk/guides/workflow-syntax.html/workflow-syntax.html
 
         Args:
             wait:  whether or not to wait for workflow run completion.
-                   Uses the default options for waiting, use `wait_until_finished()` for
+                   Uses the default options for waiting, use ``wait_until_finished()`` for
                    more control.
 
         Raises:
-            WorkflowRunNotFinished: when the workflow run has not finished and `wait` is
+            WorkflowRunNotFinished: when the workflow run has not finished and ``wait`` is
                                    False
             WorkflowRunNotSucceeded: when the workflow is no longer executing, but it did not
                 succeed.
