@@ -125,14 +125,6 @@ class CERuntime(RuntimeInterface):
         else:
             resources = _get_max_resources(workflow_def)
 
-        if project:
-            available_workspace_ids = [wf.workspace_id for wf in self.list_workspaces()]
-            if project.workspace_id not in available_workspace_ids:
-                raise exceptions.ProjectInvalidError(
-                    f"Invalid workspace id provided: {project.workspace_id}\n"
-                    f"Available workspaces: {available_workspace_ids}"
-                )
-
         try:
             workflow_def_id = self._client.create_workflow_def(workflow_def, project)
 
@@ -148,7 +140,17 @@ class CERuntime(RuntimeInterface):
             raise exceptions.WorkflowRunNotStarted(
                 "Unable to start the workflow run."
             ) from e
-        except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
+        except _exceptions.ForbiddenError as e:
+            if project:
+                raise exceptions.ProjectInvalidError(
+                    f"Unable to start the workflow run "
+                    f"invalid workspace: {project.workspace_id}"
+                ) from e
+            else:
+                raise exceptions.UnauthorizedError(
+                    "Unable to start the workflow run "
+                ) from e
+        except _exceptions.InvalidTokenError as e:
             raise exceptions.UnauthorizedError(
                 "Unable to start the workflow run "
                 "- the authorization token was rejected by the remote cluster."
