@@ -370,11 +370,16 @@ def _(imp: _dsl.PythonImports, import_hash: str):
 _global_inline_import_counter: int = 0
 
 
-@_make_import_id.register
-def _(imp: _dsl.InlineImport, import_hash: str):
+def _global_inline_import_identifier():
     global _global_inline_import_counter
     _global_inline_import_counter += 1
-    return f"inline-import-{_global_inline_import_counter}"
+    return _global_inline_import_counter
+
+
+@_make_import_id.register
+def inline_import(imp: _dsl.InlineImport, import_hash: str):
+    id = _global_inline_import_identifier()
+    return f"inline-import-{id}"
 
 
 def _make_import_model(imp: _dsl.Import):

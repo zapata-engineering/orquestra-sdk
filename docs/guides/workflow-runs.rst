@@ -97,3 +97,49 @@ or, if you don't need the RuntimeConfig object accessible in your script, loadin
     :start-after: >> Tutorial code snippet: run workflow with stored config - short version
     :end-before: >> end run workflow with stored config - short version
     :language: python
+
+Accessing Individual Tasks
+--------------------------
+
+The details of individual tasks can be accessed via the workflow run's ``get_tasks()`` method:
+
+.. literalinclude:: ../examples/quickstart.py
+    :start-after: >> Tutorial code snippet: get tasks
+    :end-before: >> end get tasks
+    :language: python
+
+This method returns a set that, by default, contains all of the tasks in the workflow. However for large workflows it can be necessary to filter the tasks.
+
+The following filters are currently supported:
+* state
+* function name
+* task run ID
+* task invocation ID
+
+These can be specified as keyword arguments to ``get_tasks()``:
+
+.. literalinclude:: ../examples/quickstart.py
+    :start-after: >> Tutorial code snippet: simple filter tasks
+    :end-before: >> end simple filter tasks
+    :language: python
+
+More flexible filtering can be achieved by specifying additional states:
+
+.. literalinclude:: ../examples/quickstart.py
+    :start-after: >> Tutorial code snippet: multiple states
+    :end-before: >> end multiple states
+    :language: python
+
+or by using regex matching to specify function name, task run ID, or task invocation ID:
+
+.. literalinclude:: ../examples/quickstart.py
+    :start-after: >> Tutorial code snippet: regex filters
+    :end-before: >> end regex filters
+    :language: python
+
+Multiple filters can be specified simultaneously. Only tasks that meet all of the filter requirements will be returned.
+
+.. literalinclude:: ../examples/quickstart.py
+    :start-after: >> Tutorial code snippet: complex filter tasks
+    :end-before: >> end complex filter tasks
+    :language: python

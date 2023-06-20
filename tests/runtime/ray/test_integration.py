@@ -651,6 +651,10 @@ class Test3rdPartyLibraries:
 
     @staticmethod
     def test_git_import_inside_ray(monkeypatch, runtime: _dag.RayRuntime):
+        """
+        Verifies we can run tasks with GitImport dependencies not available at the time
+        of workflow submit time.
+        """
         # Given
         # This package should not be installed before running test
         with pytest.raises(ModuleNotFoundError):
@@ -692,14 +696,16 @@ class TestRayRuntimeErrors:
             _ = method(runtime, run_id)
 
 
+def _run_and_await_wf(
+    runtime: RuntimeInterface, wf: ir.WorkflowDef, timeout: float = 10.0
+) -> WorkflowRunId:
+    run_id = runtime.create_workflow_run(wf, project=None)
+    _wait_to_finish_wf(run_id, runtime, timeout=timeout)
+
+    return run_id
+
+
 @pytest.mark.slow
-@pytest.mark.parametrize(
-    "wf,tell_tale",
-    [
-        (_example_wfs.wf_with_log(msg="hello, there!").model, "hello, there!"),
-        (_example_wfs.exception_wf.model, "ZeroDivisionError: division by zero"),
-    ],
-)
 class TestDirectRayReader:
     """
     Verifies that our code can read log files produced by Ray.
@@ -709,39 +715,75 @@ class TestDirectRayReader:
     The tests' boundary: `[DirectRayReader]-[task code]`
     """
 
-    @staticmethod
-    def run_and_await_wf(
-        runtime: RuntimeInterface, wf: ir.WorkflowDef
-    ) -> WorkflowRunId:
-        run_id = runtime.create_workflow_run(wf, None)
-        _wait_to_finish_wf(run_id, runtime)
-
-        return run_id
-
-    def test_get_workflow_logs(self, shared_ray_conn, runtime, wf, tell_tale: str):
-        """
-        Submit a workflow, wait for it to finish, get wf logs, look for the test
-        message.
-        """
-        # Given
-        ray_params = shared_ray_conn
-        wf_run_id = self.run_and_await_wf(runtime, wf)
-        reader = _ray_logs.DirectRayReader(Path(ray_params._temp_dir))
-
-        # When
-        logs = reader.get_workflow_logs(wf_run_id=wf_run_id)
-
-        # Then
-        log_lines_joined = "".join(
-            log_line
-            for task_log_lines in logs.per_task.values()
-            for log_line in task_log_lines
+    class TestGetWorkflowLogs:
+        @staticmethod
+        @pytest.mark.parametrize(
+            "wf,tell_tale",
+            [
+                (_example_wfs.wf_with_log(msg="hello, there!").model, "hello, there!"),
+                (
+                    _example_wfs.exception_wf.model,
+                    "ZeroDivisionError: division by zero",
+                ),
+            ],
         )
+        def test_per_task_content(
+            shared_ray_conn, runtime, wf: ir.WorkflowDef, tell_tale: str
+        ):
+            """
+            Submit a workflow, wait for it to finish, get wf logs, look for the test
+            message.
+            """
+            # Given
+            ray_params = shared_ray_conn
+            wf_run_id = _run_and_await_wf(runtime, wf)
+            reader = _ray_logs.DirectRayReader(Path(ray_params._temp_dir))
 
-        assert tell_tale in log_lines_joined
+            # When
+            logs = reader.get_workflow_logs(wf_run_id=wf_run_id)
 
+            # Then
+            log_lines_joined = "".join(
+                log_line
+                for task_log_lines in logs.per_task.values()
+                for log_line in task_log_lines
+            )
+
+            assert tell_tale in log_lines_joined
+
+        @staticmethod
+        def test_env_setup_content(shared_ray_conn, runtime: _dag.RayRuntime):
+            """
+            Submit a workflow, wait for it to finish, get wf logs, look into env set up.
+            """
+            # Given
+            ray_params = shared_ray_conn
+            wf_def = _example_wfs.wf_using_python_imports(
+                log_message="hello, there!"
+            ).model
+            # This workflow includes setting up specialized venv by Ray, so it's slow.
+            wf_run_id = _run_and_await_wf(runtime, wf_def, timeout=10.0 * 60)
+            reader = _ray_logs.DirectRayReader(Path(ray_params._temp_dir))
+
+            # When
+            logs = reader.get_workflow_logs(wf_run_id=wf_run_id)
+
+            # Then
+            assert len(logs.env_setup) > 0
+
+            for tell_tale in ["Cloning virtualenv", "'pip', 'install'"]:
+                assert len([line for line in logs.env_setup if tell_tale in line]) > 0
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "wf,tell_tale",
+        [
+            (_example_wfs.wf_with_log(msg="hello, there!").model, "hello, there!"),
+            (_example_wfs.exception_wf.model, "ZeroDivisionError: division by zero"),
+        ],
+    )
     def test_get_task_logs(
-        self, shared_ray_conn, runtime, wf: ir.WorkflowDef, tell_tale: str
+        shared_ray_conn, runtime, wf: ir.WorkflowDef, tell_tale: str
     ):
         """
         Submit a workflow, wait for it to finish, get task logs, look for the test
@@ -751,7 +793,7 @@ class TestDirectRayReader:
         ray_params = shared_ray_conn
         reader = _ray_logs.DirectRayReader(Path(ray_params._temp_dir))
         all_inv_ids = list(wf.task_invocations.keys())
-        wf_run_id = self.run_and_await_wf(runtime, wf)
+        wf_run_id = _run_and_await_wf(runtime, wf)
 
         # When
         log_lines = reader.get_task_logs(
@@ -812,10 +854,12 @@ def test_task_code_unavailable_at_building_dag(runtime: _dag.RayRuntime):
     wf_def = _example_wfs.greet_wf.model
     task_id = list(wf_def.tasks.keys())[0]
 
-    # ignoring mypy, this is supposed to be module fn repo
-    wf_def.tasks[task_id].fn_ref.module = "nope"  # type: ignore
+    # ignoring mypy, this is supposed to be inline fn
+    wf_def.tasks[task_id].fn_ref.encoded_function = ["nope"]  # type: ignore
 
     # when
+    # If this fails it means we try to deserialize function at DAG-create time
+    # which is bad
     wf_id = runtime.create_workflow_run(wf_def, None)
     _wait_to_finish_wf(wf_id, runtime)
 
@@ -884,3 +928,32 @@ class TestGetCurrentIDs:
 
         # Then
         assert ids == (None, None, None)
+
+
+@pytest.mark.slow
+class TestDictReturnValue:
+    """
+    Tasks that had dicts in return statement used to cause WF failures.
+    This test might look trivial bul unless AST code was majorly refactored,
+    please abstain from removing it (also refer to git history for the fix itself)
+    """
+
+    def test_dict_as_task_return_value(self, runtime: _dag.RayRuntime):
+        @sdk.task
+        def returns_dict():
+            return {"a": "b", "c": "d"}
+
+        @sdk.workflow
+        def wf():
+            return returns_dict()
+
+        wf_model = wf().model
+
+        # When
+        # The function-under-test is called inside the workflow.
+        wf_run_id = runtime.create_workflow_run(wf_model, None)
+        _wait_to_finish_wf(wf_run_id, runtime)
+
+        # Precondition
+        wf_run = runtime.get_workflow_run_status(wf_run_id)
+        assert wf_run.status.state == State.SUCCEEDED

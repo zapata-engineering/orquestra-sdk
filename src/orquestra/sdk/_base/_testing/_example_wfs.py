@@ -49,14 +49,6 @@ def multioutput_task():
     return "Zapata", "Computing"
 
 
-@sdk.task(dependency_imports=[sdk.GithubImport("alexjuda/piccup", git_ref="master")])
-def task_with_git_import():
-    import piccup  # type: ignore # noqa
-
-    # return whatever - make sure it just doesn't assert on import
-    return 2
-
-
 @sdk.workflow
 def complicated_wf():
     first_name = "emiliano"
@@ -156,9 +148,31 @@ def wf_using_inline_imports():
     return [full_name, company_cap]
 
 
+@sdk.task(dependency_imports=[sdk.GithubImport("alexjuda/piccup", git_ref="master")])
+def task_with_git_import():  # pragma: no cover
+    import piccup  # type: ignore # noqa
+
+    # return whatever - make sure it just doesn't assert on import
+    return 2
+
+
 @sdk.workflow
 def wf_using_git_imports():
     return [task_with_git_import()]
+
+
+@sdk.task(dependency_imports=[sdk.PythonImports("polars")])
+def task_with_python_imports() -> int:
+    import polars  # type: ignore # noqa
+
+    df = polars.DataFrame({"text": ["hello", "there"]})
+
+    return len(df)
+
+
+@sdk.workflow
+def wf_using_python_imports(log_message: str):
+    return [add_with_log(21, 37, msg=log_message), task_with_python_imports()]
 
 
 @sdk.task

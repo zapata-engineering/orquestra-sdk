@@ -14,7 +14,7 @@ For convenience the table below summarises which importer should be used in vari
       - Runtime
       - Notes
     * - GitHub repo
-      - ``GitHubImport``
+      - ``GithubImport``
       - remote
       - On Compute Engine, secrets can be used to access private repos.
     * - Non-GitHub git repo
@@ -37,16 +37,17 @@ For convenience the table below summarises which importer should be used in vari
 Good Practice
 -------------
 
-For workflows running remotely the ``GitHubImport`` importer should be used unless there is a specific reason to do otherwise (i.e. the code is hosted somewhere other than GitHub). ``GitImport.infer()`` is highly user-specific and so should never be used in a collaborative context.
+For workflows running remotely the ``GithubImport`` importer should be used unless there is a specific reason to do otherwise (i.e. the code is hosted somewhere other than GitHub). ``GitImport.infer()`` is highly user-specific and so should never be used in a collaborative context.
 
 For workflows running locally, the task decorator can typically be used without specifying the source importer as the SDK will set this appropriately for the context:
 
 .. code-block:: python
+
     @sdk.task
     def my_task():
         pass
 
-will perform a local import unless running in a Jupyter Notebook (or other interactive session) in which case am inline import will be performed.
+will perform a local import unless running in a Jupyter Notebook (or other interactive session) in which case an inline import will be performed.
 
 
 Source vs Dependency
@@ -61,7 +62,7 @@ For illustration, the following example specifies a task that imports its source
     import orquestra.sdk as sdk
 
     @sdk.task(
-        source_import = sdk.GitHubImport(
+        source_import = sdk.GithubImport(
             "zapatacomputing/my_source_repo",
             git_ref = "feat/my-experimental-feature",
         ),
@@ -80,27 +81,29 @@ How sources and dependencies are treated depends on the runtime.
 
 The examples below omit ``dependency_imports`` for clarity as the usage of an importer is identical regardless of whether it is importing a source or a dependency.
 
-``GitHubImport``
+``GithubImport``
 ----------------
 
-The ``GitHubImport`` importer is the preferred option where the source or dependency is stored in a GitHub repo. The following minimal example shows a source import from a (fictional) repo located at ``https://github.com/zapatacomputing/my_source_repo``.
+The ``GithubImport`` importer is the preferred option where the source or dependency is stored in a GitHub repo. The following minimal example shows a source import from a (fictional) repo located at ``https://github.com/zapatacomputing/my_source_repo``.
 
 .. code-block:: python
+
     import orquestra.sdk as sdk
 
     @sdk.task(
-        source_import=sdk.GitHubImport("zapatacomputing/my_source_repo")
+        source_import=sdk.GithubImport("zapatacomputing/my_source_repo")
     )
     def demo_task():
         pass
 
-By default ``GitHubImport`` will clone the ``main`` branch of the repo. For additional control a git reference (branch name, tag, or commit) may be specified:
+By default ``GithubImport`` will clone the ``main`` branch of the repo. For additional control a git reference (branch name, tag, or commit) may be specified:
 
 .. code-block:: python
+
     import orquestra.sdk as sdk
 
     @sdk.task(
-        source_import=sdk.GitHubImport(
+        source_import=sdk.GithubImport(
             "zapatacomputing/my_source_repo",
             git_ref = "feat/my-feature-branch",
         )
@@ -110,20 +113,21 @@ By default ``GitHubImport`` will clone the ``main`` branch of the repo. For addi
 
 The contents of the repo are pip installed at execution time.
 
-``GitHubImport`` from a private repo
+``GithubImport`` from a private repo
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``GitHubImport`` importer supports using the ``sdk.Secret`` functionality to allow runtimes to import from private repos when using the Compute Engine runtime. To use this functionality, the following steps must be carried out:
+The ``GithubImport`` importer supports using the ``sdk.Secret`` functionality to allow runtimes to import from private repos when using the Compute Engine runtime. To use this functionality, the following steps must be carried out:
 
 1. Create a personal access token (PAT) in GitHub with permission to access the private repo.
 2. Create a new secret in Orquestra Portal containing the PAT. For this example we have named our secret "my_pat".
-3. Use the name of the Orquestra Portal secret to specify the ``personal_access_token`` argument for your import.
+3. Use the name of the Orquestra Portal secret to specify the ``personal_access_token`` argument for your import and use the ``username`` argument to supply your username.
 
 .. code-block:: python
+
     import orquestra.sdk as sdk
 
     @sdk.task(
-        source_import=sdk.GitHubImport(
+        source_import=sdk.GithubImport(
             "zapatacomputing/my_source_repo",
             git_ref = "feat/my-feature-branch",
             username = "my-github-username",
@@ -138,9 +142,10 @@ The PAT is retrieved from Orquestra Portal at run time, and installation of the 
 ``GitImport``
 -------------
 
-For sources or dependencies stored in a git repo that is hosted somewhere other than GitHub, the ``GitImport`` importer should be used. Unlike ``GitHubImport`` this requires the full URL of the repo.
+For sources or dependencies stored in a git repo that is hosted somewhere other than GitHub, the ``GitImport`` importer should be used. Unlike ``GithubImport`` this requires the full URL of the repo.
 
 .. code-block:: python
+
     import orquestra.sdk as sdk
 
     @sdk.task(
@@ -152,7 +157,7 @@ For sources or dependencies stored in a git repo that is hosted somewhere other 
     def demo_task():
         pass
 
-As in the case of ``GitHubImport``, the code imported from the repo is pip installed at execution time.
+As in the case of ``GithubImport``, the code imported from the repo is pip installed at execution time.
 
 ``GitImport.infer``
 ~~~~~~~~~~~~~~~~~~~
@@ -160,6 +165,7 @@ As in the case of ``GitHubImport``, the code imported from the repo is pip insta
 The ``GitImport.infer`` importer is a shortcut for ``GitImport`` that tries to extrapolate the URL and reference from a local clone of the repo. It takes as its argument the path to a local git repo with, optionally, a git reference. The path should be relative to the current working directory from which the workflow is submitted. During traversal, the `origin` remote of the specified repo will be used to infer the URL. Thereafter this functions identically to a ``GitImport`` call.
 
 .. code-block:: python
+
     import orquestra.sdk as sdk
 
     @sdk.task(
@@ -168,7 +174,7 @@ The ``GitImport.infer`` importer is a shortcut for ``GitImport`` that tries to e
     def demo_task():
         pass
 
-This utility can save time during prototyping, however its dependence on the individual user's filesystem makes it unsuitable for collaborative projects. These should use a fully specified ``GitImport`` or ``GitHubImport`` instead.
+This utility can save time during prototyping, however its dependence on the individual user's filesystem makes it unsuitable for collaborative projects. These should use a fully specified ``GitImport`` or ``GithubImport`` instead.
 
 
 ``PythonImports``
@@ -181,6 +187,7 @@ The required modules can be specified as arguments to the importer, or listed in
 The examples below use ``PythonImports`` as the source importer for consistency with the other examples in this section. In actual usage, however, Python imports will most likely be a dependency rather than a source.
 
 .. code-block:: python
+
     import orquestra.sdk as sdk
 
     # Individually specified as arguments

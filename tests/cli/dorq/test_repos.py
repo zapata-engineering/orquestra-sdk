@@ -354,6 +354,7 @@ class TestWorkflowRunRepo:
                 # Given
                 run_id = "wf.1"
                 config_name = "<config sentinel>"
+                force = False
 
                 wf_run = Mock()
                 wf_run.stop.side_effect = exc
@@ -367,7 +368,7 @@ class TestWorkflowRunRepo:
                 # Validate passing exception
                 with pytest.raises(type(exc)):
                     # When
-                    _ = repo.stop(run_id, config_name)
+                    _ = repo.stop(run_id, config_name, force)
 
                 # Then
                 # Validate passing args
@@ -727,7 +728,7 @@ class TestWorkflowRunRepo:
                 }
 
                 mock_wf_run.get_logs.return_value = WorkflowLogs(
-                    per_task=logs_dict, env_setup=[]
+                    per_task=logs_dict, env_setup=[], system=[], other=[]
                 )
 
                 repo = _repos.WorkflowRunRepo()
@@ -1528,6 +1529,7 @@ class TestWorkflowDefRepoIntegration:
                 "exception_wf",
                 "wf_using_inline_imports",
                 "wf_using_git_imports",
+                "wf_using_python_imports",
                 "serial_wf_with_slow_middle_task",
                 "infinite_workflow",
                 "serial_wf_with_file_triggers",
