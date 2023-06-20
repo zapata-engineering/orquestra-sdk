@@ -1270,7 +1270,7 @@ class TestSpacesResolver:
 
             # Then
             # We expect prompt for selecting config.
-            presenter.workspaces_list_to_prompt.assert_called_with(workspaces, config)
+            presenter.workspaces_list_to_prompt.assert_called_with(workspaces)
             prompter.choice.assert_called_with(
                 [(labels[0], ws1), (labels[1], ws2)], message="Workspace"
             )
@@ -1335,7 +1335,7 @@ class TestSpacesResolver:
 
             # Then
             # We expect prompt for selecting config.
-            presenter.project_list_to_prompt.assert_called_with(projects, config)
+            presenter.project_list_to_prompt.assert_called_with(projects)
             prompter.choice.assert_called_with(
                 [(labels[0], p1), (labels[1], p2)], message="Projects"
             )
@@ -1375,7 +1375,7 @@ class TestSpacesResolver:
 
             # Then
             # We expect prompt for selecting config.
-            presenter.project_list_to_prompt.assert_called_with(projects, config)
+            presenter.project_list_to_prompt.assert_called_with(projects)
             prompter.choice.assert_called_with(
                 [(labels[0], p1), (labels[1], p2), ("All", None)], message="Projects"
             )

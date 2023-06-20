@@ -218,7 +218,7 @@ class WorkflowDef(Generic[_R]):
         assert runtime is not None
 
         _project: Optional[ProjectRef] = resolve_studio_project_ref(
-            workspace_id, project_id, _config.name
+            workspace_id, project_id
         )
 
         # The DirtyGitRepo warning can be raised here.

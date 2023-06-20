@@ -469,7 +469,7 @@ class TestWorkflowRunPresenter:
 
 class TestPromptPresenter:
     class TestWorkspacesList:
-        def test_workspaces_list_to_prompt_no_studio(self):
+        def test_workspaces_list_to_prompt(self):
             # given
             workspace1 = Workspace("id1", "name1")
             workspace2 = Workspace("id2", "name2")
@@ -490,7 +490,7 @@ class TestPromptPresenter:
             assert "id3" in labels[2]
             assert "name3" in labels[2]
 
-        def test_workspace_list_to_prompt_studio_auto(self, monkeypatch):
+        def test_workspace_list_to_prompt_venv_set(self, monkeypatch):
             current_workspace_id = "id3"
             monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", current_workspace_id)
             workspace1 = Workspace("id1", "name1")
@@ -502,7 +502,7 @@ class TestPromptPresenter:
 
             # when
             labels, workspaces = presenter.workspaces_list_to_prompt(
-                workspaces=workspace_list, config_name="auto"
+                workspaces=workspace_list
             )
 
             # current workspace should be the 1st one in the list
@@ -517,31 +517,8 @@ class TestPromptPresenter:
             assert "id2" in labels[2]
             assert "name2" in labels[2]
 
-        def test_workspace_list_to_prompt_studio_not_auto(self, monkeypatch):
-            current_workspace_id = "id3"
-            monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", current_workspace_id)
-            workspace1 = Workspace("id1", "name1")
-            workspace2 = Workspace("id2", "name2")
-            workspace3 = Workspace(current_workspace_id, "name3")
-
-            workspace_list = [workspace1, workspace2, workspace3]
-            presenter = _presenters.PromptPresenter()
-
-            # when
-            labels, workspaces = presenter.workspaces_list_to_prompt(
-                workspaces=workspace_list, config_name="different_config"
-            )
-
-            assert workspaces == workspace_list
-            assert "id1" in labels[0]
-            assert "name1" in labels[0]
-            assert "id2" in labels[1]
-            assert "name2" in labels[1]
-            assert "id3" in labels[2]
-            assert "name3" in labels[2]
-
     class TestProjectList:
-        def test_project_list_to_prompt_no_studio(self):
+        def test_project_list_to_prompt(self):
             # given
             project1 = Project("id1", "ws", "name1")
             project2 = Project("id2", "ws", "name2")
@@ -560,7 +537,7 @@ class TestPromptPresenter:
             assert "id3" in labels[2]
             assert "name3" in labels[2]
 
-        def test_workspace_list_to_prompt_studio_auto(self, monkeypatch):
+        def test_workspace_list_to_prompt_env_set(self, monkeypatch):
             current_project_id = "id3"
             monkeypatch.setenv("ORQ_CURRENT_PROJECT", current_project_id)
             project1 = Project("id1", "ws", "name1")
@@ -571,9 +548,7 @@ class TestPromptPresenter:
             presenter = _presenters.PromptPresenter()
 
             # when
-            labels, projects = presenter.project_list_to_prompt(
-                project_list, config_name="auto"
-            )
+            labels, projects = presenter.project_list_to_prompt(project_list)
 
             # current project should be the 1st one in the list
             assert projects == [project3, project1, project2]
@@ -586,26 +561,3 @@ class TestPromptPresenter:
 
             assert "id2" in labels[2]
             assert "name2" in labels[2]
-
-        def test_workspace_list_to_prompt_studio_not_auto(self, monkeypatch):
-            current_project_id = "id3"
-            monkeypatch.setenv("ORQ_CURRENT_PROJECT", current_project_id)
-            project1 = Project("id1", "ws", "name1")
-            project2 = Project("id2", "ws", "name2")
-            project3 = Project(current_project_id, "ws", "name3")
-
-            project_list = [project1, project2, project3]
-            presenter = _presenters.PromptPresenter()
-
-            # when
-            labels, projects = presenter.project_list_to_prompt(
-                project_list, config_name="different_config"
-            )
-
-            assert projects == project_list
-            assert "id1" in labels[0]
-            assert "name1" in labels[0]
-            assert "id2" in labels[1]
-            assert "name2" in labels[1]
-            assert "id3" in labels[2]
-            assert "name3" in labels[2]

@@ -15,7 +15,6 @@ from ._structs import ProjectRef
 def resolve_studio_project_ref(
     workspace_id: Optional[WorkspaceId],
     project_id: Optional[ProjectId],
-    config_name: Optional[str],
 ) -> Optional[ProjectRef]:
     # Passed explicitly
     if workspace_id and project_id:
@@ -26,10 +25,6 @@ def resolve_studio_project_ref(
             "Invalid project ID. Either explicitly pass workspace_id "
             "and project_id, or omit both"
         )
-
-    # Infer workspace and project from studio ONLY when using "auto" config-name
-    if config_name is None or config_name != AUTO_CONFIG_NAME:
-        return None
 
     # Currently no way to figure out workspace and projects without env vars
     try:

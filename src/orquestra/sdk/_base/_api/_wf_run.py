@@ -169,7 +169,8 @@ class WorkflowRun:
         assert runtime is not None
 
         _project: t.Optional[ProjectRef] = resolve_studio_project_ref(
-            workspace_id, project_id, _config.name
+            workspace_id,
+            project_id,
         )
 
         wf_run = cls._start(
@@ -489,7 +490,8 @@ def list_workflow_runs(
     # If user wasn't specific with workspace and project, we might want to resolve it
     if workspace is None and project is None:
         if _project := resolve_studio_project_ref(
-            workspace, project, resolved_config.name
+            workspace,
+            project,
         ):
             workspace = _project.workspace_id
             project = _project.project_id
