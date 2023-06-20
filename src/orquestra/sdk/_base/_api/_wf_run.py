@@ -351,55 +351,6 @@ class WorkflowRun:
             warnings.filterwarnings("ignore", category=VersionMismatch)
             return self._runtime.get_workflow_run_status(self.run_id)
 
-    def get_results(self, wait: bool = False) -> t.Sequence[t.Any]:
-        """
-        Retrieves workflow results, as returned by the workflow function.
-
-        A workflow function is expected to return task outputs
-        (ArtifactFutures) or constants (10, "hello", etc.). This method returns values
-        of these. The order is dictated by the return statement in the workflow
-        function, for example `return a, b, c` means this function returns (a, b, c).
-        See also:
-        https://refactored-disco-d576cb73.pages.github.io/docs/runtime/guides/workflow-syntax.html
-
-        Args:
-            wait:  whether or not to wait for workflow run completion.
-                   Uses the default options for waiting, use `wait_until_finished()` for
-                   more control.
-
-        Raises:
-            WorkflowRunNotFinished: when the workflow run has not finished and `wait` is
-                                   False
-            WorkflowRunNotSucceeded: when the workflow is no longer executing, but it did not
-                succeed.
-        """  # noqa 501
-        if wait:
-            self.wait_until_finished()
-
-        if (state := self.get_status()) not in COMPLETED_STATES:
-            raise WorkflowRunNotFinished(
-                f"Workflow run with id {self.run_id} has not finished. "
-                f"Current state: {state}",
-                state,
-            )
-        try:
-            results = (
-                *(
-                    serde.deserialize(o)
-                    for o in self._runtime.get_workflow_run_outputs_non_blocking(
-                        self.run_id
-                    )
-                ),
-            )
-        except WorkflowRunNotSucceeded:
-            raise
-
-        # If we only get one result back, return it directly rather than as a sequence
-        if len(results) == 1:
-            return results[0]
-
-        return results
-
     def get_results_serialized(self, wait: bool = False) -> t.Sequence[WorkflowResult]:
         """
         Retrieves workflow results in serialized form.
@@ -432,30 +383,40 @@ class WorkflowRun:
         except WorkflowRunNotSucceeded:
             raise
 
-    def get_artifacts(self) -> t.Mapping[ir.TaskInvocationId, t.Any]:
+    def get_results(self, wait: bool = False) -> t.Sequence[t.Any]:
         """
-        Unstable: this API will change.
+        Retrieves workflow results, as returned by the workflow function.
 
-        Returns values calculated by this workflow's tasks. If a given task hasn't
-        succeeded yet, the mapping won't contain the corresponding entry.
+        A workflow function is expected to return task outputs
+        (ArtifactFutures) or constants (10, "hello", etc.). This method returns values
+        of these. The order is dictated by the return statement in the workflow
+        function, for example `return a, b, c` means this function returns (a, b, c).
+        See also:
+        https://refactored-disco-d576cb73.pages.github.io/docs/runtime/guides/workflow-syntax.html
 
-        Returns:
-            A dictionary with an entry for each task run in the workflow. The key is the
-                task's invocation ID. The value is whatever the task returned. If the
-                task has 1 output, it's the dict entry's value. If the tasks has n
-                outputs, the dict entry's value is a n-tuple.
-        """
-        # NOTE: this is a possible place for improvement. If future runtime APIs support
-        # getting a subset of artifacts, we should use them here.
-        inv_outputs = self._runtime.get_available_outputs(self.run_id)
+        Args:
+            wait:  whether or not to wait for workflow run completion.
+                   Uses the default options for waiting, use `wait_until_finished()` for
+                   more control.
 
-        # The output shape differs across runtimes when the workflow functions returns a
-        # single, packed future. See more in:
-        # https://zapatacomputing.atlassian.net/browse/ORQSDK-801
-        return {
-            inv_id: serde.deserialize(inv_output)
-            for inv_id, inv_output in inv_outputs.items()
-        }
+        Raises:
+            WorkflowRunNotFinished: when the workflow run has not finished and `wait` is
+                                   False
+            WorkflowRunNotSucceeded: when the workflow is no longer executing, but it did not
+                succeed.
+        """  # noqa 501
+        try:
+            serialized_results = self.get_results_serialized(wait=wait)
+        except WorkflowRunNotSucceeded:
+            raise
+
+        results = (*(serde.deserialize(o) for o in serialized_results),)
+
+        # If we only get one result back, return it directly rather than as a sequence
+        if len(results) == 1:
+            return results[0]
+
+        return results
 
     def get_artifacts_serialized(
         self,
@@ -473,6 +434,31 @@ class WorkflowRun:
                 in serialized form
         """
         return self._runtime.get_available_outputs(self.run_id)
+
+    def get_artifacts(self) -> t.Mapping[ir.TaskInvocationId, t.Any]:
+        """
+        Unstable: this API will change.
+
+        Returns values calculated by this workflow's tasks. If a given task hasn't
+        succeeded yet, the mapping won't contain the corresponding entry.
+
+        Returns:
+            A dictionary with an entry for each task run in the workflow. The key is the
+                task's invocation ID. The value is whatever the task returned. If the
+                task has 1 output, it's the dict entry's value. If the tasks has n
+                outputs, the dict entry's value is a n-tuple.
+        """
+        # NOTE: this is a possible place for improvement. If future runtime APIs support
+        # getting a subset of artifacts, we should use them here.
+        inv_outputs = self.get_artifacts_serialized()
+
+        # The output shape differs across runtimes when the workflow functions returns a
+        # single, packed future. See more in:
+        # https://zapatacomputing.atlassian.net/browse/ORQSDK-801
+        return {
+            inv_id: serde.deserialize(inv_output)
+            for inv_id, inv_output in inv_outputs.items()
+        }
 
     def get_logs(self) -> WorkflowLogs:
         """
