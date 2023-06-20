@@ -9,6 +9,7 @@
 🔥 *Features*
 * Force stop workflow runs via the CLI or Python API
 * `WorkflowRun.get_tasks()` supports filtering tasks by state, function name, task run ID and task invocation ID.
+* 2 new methods added to public API of `WorkflowRun`: `get_artifacts_serialized()` and `get_results_serialized()`
 
 👩‍🔬 *Experimental*
 
