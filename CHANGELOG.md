@@ -22,6 +22,7 @@
 
 📃 *Docs*
 * Fix broken "Dependency Installation" docs.
+* "Remote Workflows" updated to describe logging in with a specific runtime, and reflect the current login process (automatic opening of login page, copying of token).
 
 ## v0.50.0
 
