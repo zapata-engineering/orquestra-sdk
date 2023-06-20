@@ -13,6 +13,7 @@
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
+* Fix Ray WFs failing caused by any task returning dict defined in return statement
 
 💅 *Improvements*
 * When using `GitHubImport`, better error messages are raised when a value is passed to `personal_access_token` that is not a `sdk.Secret()`.
