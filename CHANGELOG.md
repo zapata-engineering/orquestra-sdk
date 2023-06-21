@@ -9,6 +9,7 @@
 🔥 *Features*
 * Force stop workflow runs via the CLI or Python API
 * `WorkflowRun.get_tasks()` supports filtering tasks by state, function name, task run ID and task invocation ID.
+* 2 new methods added to public API of `WorkflowRun`: `get_artifacts_serialized()` and `get_results_serialized()`
 
 👩‍🔬 *Experimental*
 
@@ -16,6 +17,7 @@
 * Fix Ray WFs failing caused by any task returning dict defined in return statement
 
 💅 *Improvements*
+* When using `GitHubImport`, better error messages are raised when a value is passed to `personal_access_token` that is not a `sdk.Secret()`.
 * `wf_run.get_logs().env_setup` now contains task dependency installation logs when running on the local `ray` runtime.
 
 🥷 *Internal*
