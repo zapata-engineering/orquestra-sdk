@@ -3,6 +3,23 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+
+🔥 *Features*
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+
+## v0.51.0
+
+🚨 *Breaking Changes*
 * Compute Engine is now the default when logging in
 * InlineImport() is now always default source_import for tasks
 
