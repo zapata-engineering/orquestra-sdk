@@ -17,7 +17,7 @@ from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base._testing import _example_wfs, _ipc
 from orquestra.sdk._base.abc import RuntimeInterface
-from orquestra.sdk._ray import _client, _dag, _ray_logs
+from orquestra.sdk._ray import _build_workflow, _client, _dag, _ray_logs
 from orquestra.sdk.schema import configs, ir
 from orquestra.sdk.schema.responses import JSONResult
 from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
@@ -879,13 +879,13 @@ class TestGetCurrentIDs:
         @sdk.task(source_import=sdk.InlineImport())
         def dump_ids():
             # Separate import just to avoid weird global state passing via closure.
-            import orquestra.sdk._ray._dag
+            import orquestra.sdk._ray._build_workflow
 
             (
                 wf_run_id,
                 task_inv_id,
                 task_run_id,
-            ) = orquestra.sdk._ray._dag.get_current_ids()
+            ) = orquestra.sdk._ray._build_workflow.get_current_ids()
 
             ids_dict = {
                 "wf_run_id": wf_run_id,
@@ -924,7 +924,7 @@ class TestGetCurrentIDs:
 
     def test_outside_workflow(self):
         # When
-        ids = _dag.get_current_ids()
+        ids = _build_workflow.get_current_ids()
 
         # Then
         assert ids == (None, None, None)

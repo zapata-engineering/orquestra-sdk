@@ -277,10 +277,7 @@ def exception_wf_with_multiple_values():
 
 @sdk.task
 def add_with_log(a, b, msg: str):
-    import orquestra.sdk._base._log_adapter
-
-    logger = orquestra.sdk._base._log_adapter.workflow_logger()
-    logger.info(msg)
+    print(msg)
     return a + b
 
 
