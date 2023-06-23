@@ -286,6 +286,36 @@ class WFRunResolver:
 
         return selected_run
 
+    def resolve_log_switches(
+        self, task: bool, system: bool, env_setup: bool
+    ) -> t.Tuple[bool, bool, bool]:
+        """
+        Resolve the switches for various types of logs.
+
+        Each switch controls whether a specific type of log is shown. If any of the
+        switches are active we assume that the user has specified what they want and we
+        don't interfere. If none are active we prompt the user to select one log type,
+        or all of them.
+        """
+
+        if task or system or env_setup:
+            return task, system, env_setup
+
+        switches: dict = {name: False for name in ["per task", "system", "env setup"]}
+        assert len(switches) == 3
+        log_type = self._prompter.choice(
+            ["all"] + [key for key in switches.keys()],
+            message="Log type",
+            default="all",
+        )
+
+        if log_type == "all":
+            return True, True, True
+
+        switches[log_type] = True
+
+        return switches["per task"], switches["system"], switches["env setup"]
+
 
 class TaskInvIDResolver:
     """

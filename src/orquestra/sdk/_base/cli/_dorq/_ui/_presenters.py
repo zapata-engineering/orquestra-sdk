@@ -63,8 +63,15 @@ class WrappedCorqOutputPresenter:
     def show_stopped_wf_run(self, wf_run_id: WorkflowRunId):
         click.echo(f"Workflow run {wf_run_id} stopped.")
 
-    def show_dumped_wf_logs(self, path: Path):
-        click.echo(f"Workflow logs saved at {path}")
+    def show_dumped_wf_logs(self, path: Path, log_type: t.Optional[str] = None):
+        """
+        Tell the user where logs have been saved.
+
+        Args:
+            path: The path to the dump file.
+            log_type: additional information identify the type of logs saved.
+        """
+        click.echo(f"Workflow {log_type + ' ' if log_type else ''}logs saved at {path}")
 
     @staticmethod
     def _format_log_dict(logs: t.Mapping[TaskInvocationId, t.Sequence[str]]):
@@ -74,21 +81,42 @@ class WrappedCorqOutputPresenter:
             for line in (f"task-invocation-id: {invocation_id}", *invocation_lines)
         ]
 
-    def show_logs(self, logs: t.Mapping[TaskInvocationId, t.Sequence[str]]):
+    def show_logs(
+        self,
+        logs: t.Union[t.Mapping[TaskInvocationId, t.Sequence[str]], t.Sequence[str]],
+        log_type: t.Optional[str] = None,
+    ):
+        """
+        Present logs to the user.
+        """
+        _logs: t.Sequence[str]
+        if isinstance(logs, t.Mapping):
+            _logs = self._format_log_dict(logs)
+        else:
+            _logs = logs
         resp = responses.GetLogsResponse(
             meta=responses.ResponseMetadata(
                 success=True,
                 code=responses.ResponseStatusCode.OK,
                 message="Successfully got workflow run logs.",
             ),
-            logs=self._format_log_dict(logs),
+            logs=_logs,
         )
+
+        if log_type:
+            _log_type = log_type + " logs"
+            click.echo(f"=== {_log_type.upper()} " + "=" * (75 - len(_log_type)))
         per_command.pretty_print_response(resp, project_dir=None)
+        if log_type:
+            click.echo("=" * 80 + "\n\n")
 
     def show_error(self, exception: Exception):
         status_code = _errors.pretty_print_exception(exception)
 
         sys.exit(status_code.value)
+
+    def show_message(self, message: str):
+        click.echo(message=message)
 
 
 class ArtifactPresenter:

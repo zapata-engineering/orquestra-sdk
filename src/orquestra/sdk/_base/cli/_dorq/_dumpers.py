@@ -82,27 +82,39 @@ class LogsDumper:
     Writes logs to files.
     """
 
+    @staticmethod
+    def _get_logs_file(
+        dir_path: Path, wf_run_id: WorkflowRunId, suffix: t.Optional[str] = None
+    ) -> Path:
+        dir_path.mkdir(parents=True, exist_ok=True)
+        if suffix:
+            return dir_path / f"{wf_run_id}_{suffix.lower().replace(' ', '_')}.log"
+        return dir_path / f"{wf_run_id}.log"
+
     def dump(
         self,
-        logs: t.Mapping[TaskInvocationId, t.Sequence[str]],
+        logs: t.Union[t.Mapping[TaskInvocationId, t.Sequence[str]], t.Sequence[str]],
         wf_run_id: WorkflowRunId,
         dir_path: Path,
+        log_type: t.Optional[str] = None,
     ) -> Path:
         """
-        Save logs from wf into a file
+        Save logs from wf into a file.
 
         Creates missing directories. Generates filenames based on ``wf_run_id``
         No standard errors are expected to be raised.
         """
-        dir_path.mkdir(parents=True, exist_ok=True)
-
-        logs_file = dir_path / f"{wf_run_id}.log"
+        logs_file = self._get_logs_file(dir_path, wf_run_id, suffix=log_type)
 
         with logs_file.open("w") as f:
-            for task_invocation in logs:
-                f.write(f"Logs for task invocation: {task_invocation}:\n\n")
-                for log in logs[task_invocation]:
+            if isinstance(logs, t.Mapping):
+                for task_invocation in logs:
+                    f.write(f"Logs for task invocation: {task_invocation}:\n\n")
+                    for log in logs[task_invocation]:
+                        f.write(log + "\n")
+                    f.write("\n\n")
+            else:
+                for log in logs:
                     f.write(log + "\n")
-                f.write("\n\n")
 
         return logs_file

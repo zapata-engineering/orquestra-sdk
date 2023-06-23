@@ -653,6 +653,53 @@ class TestWFRunResolver:
             # Resolver should return the user's choice.
             assert resolved_run == selected_run
 
+    class TestResolveLogSwitches:
+        @staticmethod
+        @pytest.mark.parametrize(
+            "switches",
+            [
+                (False, False, True),
+                (False, True, False),
+                (False, True, True),
+                (True, False, False),
+                (True, False, True),
+                (True, True, False),
+                (True, True, True),
+            ],
+        )
+        def test_returns_unchanged_if_one_or_more_switches_are_set(switches):
+            prompter = create_autospec(_prompts.Prompter)
+            resolver = _arg_resolvers.WFRunResolver(
+                wf_run_repo=create_autospec(_repos.WorkflowRunRepo), prompter=prompter
+            )
+            assert resolver.resolve_log_switches(*switches) == switches
+            prompter.choice.assert_not_called()
+
+        @staticmethod
+        @pytest.mark.parametrize(
+            "user_choice, expected_output",
+            [
+                ("per-task", (True, False, False)),
+                ("system", (False, True, False)),
+                ("env_setup", (False, False, True)),
+                ("all", (True, True, True)),
+            ],
+        )
+        def test_prompts_user_if_not_switches_set(user_choice, expected_output):
+            prompter = create_autospec(_prompts.Prompter)
+            prompter.choice.return_value = user_choice
+            resolver = _arg_resolvers.WFRunResolver(
+                wf_run_repo=create_autospec(_repos.WorkflowRunRepo), prompter=prompter
+            )
+            out = resolver.resolve_log_switches(False, False, False)
+
+            assert out == expected_output
+            prompter.choice.assert_called_once_with(
+                ["all", "per-task", "system", "env_setup"],
+                message="Log type",
+                default="all",
+            )
+
 
 class TestTaskInvIDResolver:
     """

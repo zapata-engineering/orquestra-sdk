@@ -64,7 +64,7 @@ class TestWrappedCorqOutputPresenter:
             assert response_model.workflow_runs[0].id == wf_run_id
 
         @staticmethod
-        def test_show_logs(monkeypatch):
+        def test_show_logs_with_dict(monkeypatch):
             # Given
             pretty_print_mock = Mock()
             monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
@@ -82,6 +82,23 @@ class TestWrappedCorqOutputPresenter:
             response_model = called_args[0]
             assert task_logs[0] in response_model.logs
             assert task_invocation in response_model.logs[0]
+
+        @staticmethod
+        def test_show_logs_with_sequence(monkeypatch):
+            # Given
+            pretty_print_mock = Mock()
+            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
+            logs = ["my_log"]
+
+            presenter = _presenters.WrappedCorqOutputPresenter()
+
+            # When
+            presenter.show_logs(logs)
+
+            # Then
+            called_args = pretty_print_mock.call_args.args
+            response_model = called_args[0]
+            assert logs[0] in response_model.logs
 
     class TestPrinting:
         """

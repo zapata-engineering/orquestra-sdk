@@ -5,6 +5,7 @@
 Code for 'orq workflow logs'.
 """
 import typing as t
+import warnings
 from pathlib import Path
 
 from orquestra.sdk.schema.configs import ConfigName
@@ -47,12 +48,18 @@ class Action:
         wf_run_id: t.Optional[WorkflowRunId],
         config: t.Optional[ConfigName],
         download_dir: t.Optional[Path],
+        task: bool,
+        system: bool,
+        env_setup: bool,
     ):
         try:
             self._on_cmd_call_with_exceptions(
                 wf_run_id=wf_run_id,
                 download_dir=download_dir,
                 config=config,
+                task=task,
+                system=system,
+                env_setup=env_setup,
             )
         except Exception as e:
             self._presenter.show_error(e)
@@ -62,6 +69,9 @@ class Action:
         wf_run_id: t.Optional[WorkflowRunId],
         config: t.Optional[ConfigName],
         download_dir: t.Optional[Path],
+        task: bool,
+        system: bool,
+        env_setup: bool,
     ):
         # The order of resolving config and run ID is important. It dictates the flow
         # user sees, and possible choices in the prompts.
@@ -69,16 +79,36 @@ class Action:
         resolved_wf_run_id = self._wf_run_resolver.resolve_id(
             wf_run_id, resolved_config
         )
+        (
+            resolved_task_switch,
+            resolved_system_switch,
+            resolved_env_setup_switch,
+        ) = self._wf_run_resolver.resolve_log_switches(task, system, env_setup)
+
         logs = self._wf_run_repo.get_wf_logs(
             wf_run_id=resolved_wf_run_id, config_name=resolved_config
         )
 
-        if download_dir is not None:
-            dump_path = self._dumper.dump(
-                logs=logs,
-                wf_run_id=resolved_wf_run_id,
-                dir_path=download_dir,
-            )
-            self._presenter.show_dumped_wf_logs(dump_path)
-        else:
-            self._presenter.show_logs(logs)
+        for switch, log, identifier in zip(
+            [resolved_task_switch, resolved_system_switch, resolved_env_setup_switch],
+            [logs.per_task, logs.system, logs.env_setup],
+            ["per task", "system", "env setup"],
+        ):
+            if not switch:
+                continue
+
+            if len(log) < 1:
+                warnings.warn(f"No {identifier} logs found.", category=UserWarning)
+                continue
+
+            if download_dir:
+                dump_path = self._dumper.dump(
+                    logs=log,
+                    wf_run_id=resolved_wf_run_id,
+                    dir_path=download_dir,
+                    log_type=identifier,
+                )
+
+                self._presenter.show_dumped_wf_logs(dump_path, log_type=identifier)
+            else:
+                self._presenter.show_logs(log, log_type=identifier)
