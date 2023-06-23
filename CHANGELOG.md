@@ -3,6 +3,9 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+* Removed `RuntimeConfig.load_default()`
+* Removed any support for default configuration
+* `sdk.secret` functions will no longer use default configuration from local runtimes. Config has to be passed explicitly unless running on remote cluster
 
 🔥 *Features*
 

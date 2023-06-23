@@ -10,6 +10,8 @@ from pathlib import Path
 
 from packaging.version import parse as parse_version
 
+from orquestra.sdk._base._factory import build_runtime_from_config
+
 from ...exceptions import (
     ConfigFileNotFoundError,
     ConfigNameNotFoundError,
@@ -224,7 +226,6 @@ class RuntimeConfig:
         Returns:
             Runtime: The runtime specified by the configuration.
         """
-
         _project_dir: Path = Path(project_dir or Path.cwd())
 
         runtime_options = {}
@@ -234,13 +235,14 @@ class RuntimeConfig:
             except AttributeError:
                 continue
 
-        return _build_runtime(
-            _project_dir,
-            RuntimeConfiguration(
-                config_name=str(self._name),
-                runtime_name=self._runtime_name,
-                runtime_options=runtime_options,
-            ),
+        runtime_configuration = RuntimeConfiguration(
+            config_name=str(self._name),
+            runtime_name=self._runtime_name,
+            runtime_options=runtime_options,
+        )
+
+        return build_runtime_from_config(
+            project_dir=_project_dir, config=runtime_configuration
         )
 
     # region LOADING FROM FILE
@@ -249,10 +251,6 @@ class RuntimeConfig:
         cls,
     ) -> list:
         """List previously saved configurations.
-
-        Args:
-            config_save_file: The path to the config file from which to read. If
-                omitted, the default config file will be used.
 
         Returns:
             list: list of configurations within the save file.
@@ -329,23 +327,6 @@ class RuntimeConfig:
         config._config_save_file = _config_save_file
 
         return config
-
-    @classmethod
-    def load_default(
-        cls,
-    ) -> "RuntimeConfig":
-        """Load the default configuration from a file.
-
-        Args:
-            config_save_file (optional): The path to the file in which configurations
-                are stored. If omitted, the default file location is used.
-
-        Returns:
-            RuntimeConfig: The configuration as loaded from the file.
-        """
-
-        config_data: RuntimeConfiguration = _config.read_config(None)
-        return cls._config_from_runtimeconfiguration(config_data)
 
     @classmethod
     def _config_from_runtimeconfiguration(
@@ -487,33 +468,6 @@ def migrate_config_file():
     )
     for config_name in changed:
         print(f" - {config_name}")
-
-
-def _build_runtime(
-    project_dir: Path, runtime_configuration: RuntimeConfiguration
-) -> RuntimeInterface:  # pragma: no cover - tested in runtime repo.
-    """
-    Extracted from RuntimeConfig._get_runtime() to be able to mock in unit tests.
-
-    Hopefully we'll be able to get rid of this when we merge SDK and Runtime repos.
-    """
-    import orquestra.sdk._base._factory  # type: ignore
-
-    try:
-        return orquestra.sdk._base._factory.build_runtime_from_config(
-            project_dir=project_dir, config=runtime_configuration
-        )
-    except KeyError as e:
-        outstr = (
-            f"Runtime configuration '{runtime_configuration.config_name}' "
-            f"lacks the required field '{e}'."
-        )
-        if e == "temp_dir":
-            outstr += (
-                " You may need to migrate your config file using "
-                "`sdk.migrate_config_file()`"
-            )
-        raise RuntimeConfigError(outstr) from e
 
 
 def _resolve_config(
