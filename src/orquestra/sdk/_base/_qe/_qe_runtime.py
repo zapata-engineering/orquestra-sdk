@@ -596,7 +596,7 @@ class QERuntime(RuntimeInterface):
             workflow_def=workflow_def,
             is_qe=True,
         )
-        with WorkflowDB.open_project_db(self._project_dir) as db:
+        with WorkflowDB.open_db() as db:
             db.save_workflow_run(wf_run)
 
         return workflow_run_id
@@ -614,7 +614,7 @@ class QERuntime(RuntimeInterface):
                 found in the local database.
         """
         try:
-            with WorkflowDB.open_project_db(self._project_dir) as db:
+            with WorkflowDB.open_db() as db:
                 try:
                     wf_run = db.get_workflow_run(workflow_run_id)
                 except exceptions.WorkflowNotFoundError:
@@ -666,7 +666,7 @@ class QERuntime(RuntimeInterface):
             A list of objects given by the "output_ids" inside the workflow definition
         """
         try:
-            with WorkflowDB.open_project_db(self._project_dir) as db:
+            with WorkflowDB.open_db() as db:
                 wf_run = db.get_workflow_run(workflow_run_id)
         except sqlite3.OperationalError as e:
             raise exceptions.NotFoundError(workflow_run_id) from e
@@ -721,7 +721,7 @@ class QERuntime(RuntimeInterface):
              a dictionary of:
                  task invocation IDs: value returned from each invocation
         """
-        with WorkflowDB.open_project_db(self._project_dir) as db:
+        with WorkflowDB.open_db() as db:
             wf_run = db.get_workflow_run(workflow_run_id)
         wf_def = wf_run.workflow_def
         # Return dict contains return values for task invocation
@@ -888,7 +888,7 @@ class QERuntime(RuntimeInterface):
         now = datetime.now(timezone.utc)
 
         # Grab the workflows we know about from the DB
-        with WorkflowDB.open_project_db(self._project_dir) as db:
+        with WorkflowDB.open_db() as db:
             stored_runs = db.get_workflow_runs_list(
                 config_name=self._config.config_name
             )

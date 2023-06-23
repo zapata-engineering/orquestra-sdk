@@ -349,38 +349,6 @@ class TestRuntimeConfiguration:
                         "auto",
                     )
 
-    class TestLoadDefault:
-        @staticmethod
-        def test_with_default_file_path(tmp_default_config_json):
-            config = api_cfg.RuntimeConfig.load_default()
-
-            default_config_params = TEST_CONFIGS_DICT[
-                TEST_CONFIG_JSON["default_config_name"]
-            ]
-            assert config.name == default_config_params["config_name"]
-            assert config._runtime_name == default_config_params["runtime_name"]
-
-            config_uri = config.uri  # type: ignore
-            assert config_uri == default_config_params["runtime_options"]["uri"]
-
-            assert config.token == default_config_params["runtime_options"]["token"]
-
-        @staticmethod
-        def test_with_custom_file_path(tmp_config_json, monkeypatch):
-            monkeypatch.setenv("ORQ_CONFIG_PATH", str(tmp_config_json))
-            config = api_cfg.RuntimeConfig.load_default()
-
-            default_config_params = TEST_CONFIGS_DICT[
-                TEST_CONFIG_JSON["default_config_name"]
-            ]
-            assert config.name == default_config_params["config_name"]
-            assert config._runtime_name == default_config_params["runtime_name"]
-
-            config_uri = config.uri  # type: ignore
-            assert config_uri == default_config_params["runtime_options"]["uri"]
-
-            assert config.token == default_config_params["runtime_options"]["token"]
-
 
 @pytest.mark.parametrize(
     "input_config_file, expected_output_config_file, expected_stdout",
