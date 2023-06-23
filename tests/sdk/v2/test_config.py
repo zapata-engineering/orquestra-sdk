@@ -32,25 +32,6 @@ from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 from .data.configs import TEST_CONFIG_JSON
 
 
-class TestSavePartialConfig:
-    """
-    Tests for _config.save_partial_config()
-    """
-
-    @staticmethod
-    @pytest.mark.parametrize("resolved_config_name", ["local", "in_process", "ray"])
-    def test_saving_local(resolved_config_name, monkeypatch, patch_config_location):
-        # We want to ensure the 'local' and 'in_process' configs are resolved
-        monkeypatch.setattr(_config, "_resolve_config_name", Mock(resolved_config_name))
-
-        with pytest.raises(ValueError):
-            _config.update_config(
-                config_name="w/e",
-                runtime_name=None,
-                new_runtime_options=None,
-            )
-
-
 class TestResolveRuntimeOptionsForWriting:
     @staticmethod
     def test_returns_builtins_if_name_is_builtin():
@@ -81,16 +62,6 @@ class TestResolveRuntimeNameForWriting:
         )
 
         assert resolved_runtime_name == stub_prev_config.runtime_name
-
-
-class TestResolveConfigNameForWriting:
-    @staticmethod
-    def test_raises_exception_if_name_is_builtin():
-        builtin_name = _config.BUILT_IN_CONFIG_NAME
-
-        with pytest.raises(ValueError) as exc_info:
-            _config._resolve_config_name_for_writing(builtin_name)
-        assert f"Can't write {builtin_name}, it's a reserved name" in str(exc_info)
 
 
 class TestResolveConfigFileForReading:

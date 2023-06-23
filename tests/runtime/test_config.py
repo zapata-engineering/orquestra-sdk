@@ -24,23 +24,6 @@ from orquestra.sdk._base import _config
 from orquestra.sdk.schema.configs import RuntimeName
 
 
-class TestSavePartialConfig:
-    """
-    Tests for _config.save_partial_config()
-    """
-
-    def test_saving_local(self, monkeypatch, patch_config_location):
-        # We wanna ensure the 'local' was resolved
-        monkeypatch.setattr(_config, "_resolve_config_name", Mock("local"))
-
-        with pytest.raises(ValueError):
-            _config.update_config(
-                config_name="w/e",
-                runtime_name=None,
-                new_runtime_options=None,
-            )
-
-
 class TestProperties:
     """
     Tests focused on testing properties of the config, not specific output values.
