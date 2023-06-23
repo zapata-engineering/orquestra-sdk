@@ -5,6 +5,7 @@
 🚨 *Breaking Changes*
 * Compute Engine is now the default when logging in
 * InlineImport() is now always default source_import for tasks
+* `orq wf logs` now supports `--task`, `--system` and `--env-setup` flags to control which logs are shown / downloaded. If none of these flags are set, the user is prompted for a choice of log types, with the default being `all`.
 
 🔥 *Features*
 * Force stop workflow runs via the CLI or Python API
