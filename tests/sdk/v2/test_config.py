@@ -64,6 +64,14 @@ class TestResolveRuntimeNameForWriting:
         assert resolved_runtime_name == stub_prev_config.runtime_name
 
 
+class TestSaveOrUpdate:
+    @staticmethod
+    @pytest.mark.parametrize("config_name", ["in_process", "ray"])
+    def test_throws_when_special_config_used(config_name):
+        with pytest.raises(ValueError):
+            _config.save_or_update(config_name, "w/e", {})
+
+
 class TestResolveConfigFileForReading:
     @staticmethod
     def test_returns_none_for_nonexistant_file_default_location(patch_config_location):
