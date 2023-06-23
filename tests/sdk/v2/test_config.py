@@ -398,23 +398,6 @@ class TestReadConfigNames:
         assert _config.read_config_names() == []
 
 
-FAKE_TIME = datetime.datetime(1605, 11, 5, 0, 0, 0)
-
-
-@pytest.fixture
-def patch_datetime_now(monkeypatch):
-    class mydatetime:
-        @classmethod
-        def now(cls):
-            return FAKE_TIME
-
-        @classmethod
-        def today(cls):
-            return FAKE_TIME
-
-    monkeypatch.setattr(datetime, "datetime", mydatetime)
-
-
 class TestNameGeneration:
     class TestRuntimeDatetimeNaming:
         @staticmethod

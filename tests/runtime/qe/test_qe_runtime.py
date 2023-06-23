@@ -17,7 +17,7 @@ import responses
 
 import orquestra.sdk as sdk
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import _db, serde
+from orquestra.sdk._base import _dates, _db, serde
 from orquestra.sdk._base._conversions._yaml_exporter import (
     pydantic_to_yaml,
     workflow_to_yaml,
@@ -1404,12 +1404,9 @@ class TestListWorkflowRuns:
         type(mock_status.status).start_time = PropertyMock(
             side_effect=[
                 None,
-                datetime.datetime.now(datetime.timezone.utc)
-                - datetime.timedelta(seconds=5),
-                datetime.datetime.now(datetime.timezone.utc)
-                - datetime.timedelta(seconds=5),
-                datetime.datetime.now(datetime.timezone.utc)
-                - datetime.timedelta(days=4),
+                _dates.now() - datetime.timedelta(seconds=5),
+                _dates.now() - datetime.timedelta(seconds=5),
+                _dates.now() - datetime.timedelta(days=4),
             ]
         )
         monkeypatch.setattr(
@@ -1428,12 +1425,9 @@ class TestListWorkflowRuns:
         type(mock_status.status).start_time = PropertyMock(
             side_effect=[
                 None,
-                datetime.datetime.now(datetime.timezone.utc)
-                - datetime.timedelta(seconds=5),
-                datetime.datetime.now(datetime.timezone.utc)
-                - datetime.timedelta(seconds=5),
-                datetime.datetime.now(datetime.timezone.utc)
-                - datetime.timedelta(days=4),
+                _dates.now() - datetime.timedelta(seconds=5),
+                _dates.now() - datetime.timedelta(seconds=5),
+                _dates.now() - datetime.timedelta(days=4),
             ]
         )
         monkeypatch.setattr(

@@ -16,6 +16,7 @@
 💅 *Improvements*
 
 🥷 *Internal*
+* Refactored `datetime` and timezone handling.
 
 📃 *Docs*
 
