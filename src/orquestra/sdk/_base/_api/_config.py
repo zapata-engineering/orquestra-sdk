@@ -241,21 +241,9 @@ class RuntimeConfig:
             runtime_options=runtime_options,
         )
 
-        try:
-            return build_runtime_from_config(
-                project_dir=_project_dir, config=runtime_configuration
-            )
-        except KeyError as e:
-            outstr = (
-                f"Runtime configuration '{runtime_configuration.config_name}' "
-                f"lacks the required field '{e}'."
-            )
-            if e == "temp_dir":
-                outstr += (
-                    " You may need to migrate your config file using "
-                    "`sdk.migrate_config_file()`"
-                )
-            raise RuntimeConfigError(outstr) from e
+        return build_runtime_from_config(
+            project_dir=_project_dir, config=runtime_configuration
+        )
 
     # region LOADING FROM FILE
     @classmethod
