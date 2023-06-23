@@ -45,7 +45,7 @@ class TestSavePartialConfig:
 
         with pytest.raises(ValueError):
             _config.update_config(
-                config_name=None,
+                config_name="w/e",
                 runtime_name=None,
                 new_runtime_options=None,
             )

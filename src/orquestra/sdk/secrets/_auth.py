@@ -25,7 +25,7 @@ def _authorize_with_passport() -> t.Optional[SecretsClient]:
     return SecretsClient.from_token(base_uri=BASE_URI, token=passport_token)
 
 
-def _read_config_opts(config_name: t.Optional[ConfigName]):
+def _read_config_opts(config_name: ConfigName):
     try:
         cfg = _config.read_config(config_name=config_name)
     except exceptions.ConfigNameNotFoundError:
@@ -35,7 +35,7 @@ def _read_config_opts(config_name: t.Optional[ConfigName]):
 
 
 def _authorize_with_config(
-    config_name: t.Optional[ConfigName],
+    config_name: ConfigName,
 ) -> SecretsClient:
     try:
         opts = _read_config_opts(config_name)
@@ -56,6 +56,11 @@ def authorized_client(config_name: t.Optional[ConfigName]) -> SecretsClient:
     # added here.
     if (passport_client := _authorize_with_passport()) is not None:
         return passport_client
+
+    if config_name is None:
+        raise exceptions.ConfigNameNotFoundError(
+            "Please provide config name while accessing the secrets locally"
+        )
 
     try:
         return _authorize_with_config(config_name)

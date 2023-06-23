@@ -368,7 +368,7 @@ def save_or_update(config_name, runtime_name, runtime_options):
 
 
 def write_config(
-    config_name: Optional[str],
+    config_name: str,
     runtime_name: Union[RuntimeName, str],
     runtime_options: dict,
 ) -> Tuple[RuntimeConfiguration, Path]:
