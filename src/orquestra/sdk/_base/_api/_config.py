@@ -226,7 +226,6 @@ class RuntimeConfig:
         Returns:
             Runtime: The runtime specified by the configuration.
         """
-
         _project_dir: Path = Path(project_dir or Path.cwd())
 
         runtime_options = {}
@@ -244,7 +243,7 @@ class RuntimeConfig:
 
         try:
             return build_runtime_from_config(
-                project_dir=project_dir, config=runtime_configuration
+                project_dir=_project_dir, config=runtime_configuration
             )
         except KeyError as e:
             outstr = (
