@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 from __future__ import annotations
 
@@ -83,8 +83,8 @@ class Secret(NamedTuple):
     # This matches the behaviour of `sdk.secrets.get` where the config name is used to
     # get a secret when running locally.
     config_name: Optional[str] = None
-    # Workspace ID is used by local and remote runtimes to fetch a secret from a specfic
-    # workspace.
+    # Workspace ID is used by local and remote runtimes to fetch a secret from a
+    # specific workspace.
     workspace_id: Optional[str] = None
 
 
@@ -133,7 +133,32 @@ def GithubImport(
     username: Optional[str] = None,
     personal_access_token: Optional[Secret] = None,
 ):
-    """Helper to create GitImports from Github repos"""
+    """
+    Helper to create GitImports from Github repos.
+
+    Raises:
+        TypeError: when a value that is not a `sdk.Secret` is passed as
+            `personal_access_token`.
+    """
+    if personal_access_token is not None and not isinstance(
+        personal_access_token, Secret
+    ):
+        if isinstance(personal_access_token, str):
+            errmsg = (
+                'You passed a string as `personal_access_token = "..."`. '
+                'Please pass `personal_access_token = sdk.Secret(name="...")` instead. '
+                "It might seem verbose, but it's a precaution against committing "
+                "plain-text credentials to your git repo, or leaking secret values as "
+                "part of the workflow definition."
+                "\nSuggested fix:\n"
+                '  personal_access_token = sdk.Secret(name="paste secret name here")'
+            )
+        else:
+            errmsg = (
+                "`personal_access_token` must be of type `sdk.Secret`, "
+                f"not {type(personal_access_token).__name__}."
+            )
+        raise TypeError(errmsg)
     return GitImportWithAuth(
         repo_url=f"https://github.com/{repo}.git",
         git_ref=git_ref,
