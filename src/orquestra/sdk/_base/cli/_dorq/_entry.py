@@ -186,15 +186,15 @@ def wf_results(
 @CONFIG_OPTION
 @DOWNLOAD_DIR_OPTION
 @cloup.option(
-    "--task/--no-task", is_flag=True, default=False, help="Show per-task logs."
+    "--task/--no-task", is_flag=True, default=None, help="Show per-task logs."
 )
 @cloup.option(
-    "--system/--no-system", is_flag=True, default=False, help="Show system-level logs."
+    "--system/--no-system", is_flag=True, default=None, help="Show system-level logs."
 )
 @cloup.option(
     "--env-setup/--no-env-setup",
     is_flag=True,
-    default=False,
+    default=None,
     help="Show env-setup logs.",
 )
 def wf_logs(

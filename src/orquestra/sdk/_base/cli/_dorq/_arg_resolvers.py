@@ -7,10 +7,12 @@ resolve the information from other sources. This module contains the CLI argumen
 resolution logic extracted as components reusable across similar CLI commands.
 """
 import typing as t
+import warnings
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _services
 from orquestra.sdk._base._config import IN_PROCESS_CONFIG_NAME
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema.configs import ConfigName
 from orquestra.sdk.schema.ir import TaskInvocationId
@@ -222,6 +224,8 @@ class WFRunResolver:
     Resolves value of `wf_run_id` based on `config`.
     """
 
+    LOG_TYPES = ["per task", "system", "env setup"]
+
     def __init__(
         self,
         wf_run_repo=_repos.WorkflowRunRepo(),
@@ -287,8 +291,12 @@ class WFRunResolver:
         return selected_run
 
     def resolve_log_switches(
-        self, task: bool, system: bool, env_setup: bool
-    ) -> t.Tuple[bool, bool, bool]:
+        self,
+        task: t.Optional[bool],
+        system: t.Optional[bool],
+        env_setup: t.Optional[bool],
+        logs: WorkflowLogs,
+    ) -> t.Tuple[bool, ...]:
         """
         Resolve the switches for various types of logs.
 
@@ -297,24 +305,55 @@ class WFRunResolver:
         don't interfere. If none are active we prompt the user to select one log type,
         or all of them.
         """
+        switch_values = [task, system, env_setup]
+        log_availibility = [
+            len(logs.per_task) >= 1,
+            len(logs.system) >= 1,
+            len(logs.env_setup) >= 1,
+        ]
 
-        if task or system or env_setup:
-            return task, system, env_setup
+        # If the user has set one or more switches to True, check them against the
+        # availability and unset any that can't be fulfilled. We assume that any unset
+        # switches are intended to be false.
+        if True in switch_values:
+            ret = [bool(value) for value in switch_values]
+            for i, value in enumerate(ret):
+                if value and not log_availibility[i]:
+                    warnings.warn(
+                        f"No {self.LOG_TYPES[i]} logs are available for this workflow"
+                    )
+                    ret[i] = False
+            return tuple(ret)
 
-        switches: dict = {name: False for name in ["per task", "system", "env setup"]}
-        assert len(switches) == 3
-        log_type = self._prompter.choice(
-            ["all"] + [key for key in switches.keys()],
-            message="Log type",
+        # If the user has not set any switches, or has only set switches to False,
+        # prompt them to choose from the available logs they haven't already ruled out.
+        valid_switches = [
+            switch_name
+            for switch_name, switch_value, log_available in zip(
+                self.LOG_TYPES, switch_values, log_availibility
+            )
+            if log_available and switch_value is None
+        ]
+        switches_dict: dict = {name: False for name in self.LOG_TYPES}
+
+        choice = self._prompter.choice(
+            valid_switches,
+            message="available logs",
             default="all",
+            allow_all=True,
         )
 
-        if log_type == "all":
-            return True, True, True
+        if choice == "all":
+            for switch in valid_switches:
+                switches_dict[switch] = True
+        else:
+            switches_dict[choice] = True
 
-        switches[log_type] = True
-
-        return switches["per task"], switches["system"], switches["env setup"]
+        return (
+            switches_dict["per task"],
+            switches_dict["system"],
+            switches_dict["env setup"],
+        )
 
 
 class TaskInvIDResolver:

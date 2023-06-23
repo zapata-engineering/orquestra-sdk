@@ -48,9 +48,9 @@ class Action:
         wf_run_id: t.Optional[WorkflowRunId],
         config: t.Optional[ConfigName],
         download_dir: t.Optional[Path],
-        task: bool,
-        system: bool,
-        env_setup: bool,
+        task: t.Optional[bool],
+        system: t.Optional[bool],
+        env_setup: t.Optional[bool],
     ):
         try:
             self._on_cmd_call_with_exceptions(
@@ -69,9 +69,9 @@ class Action:
         wf_run_id: t.Optional[WorkflowRunId],
         config: t.Optional[ConfigName],
         download_dir: t.Optional[Path],
-        task: bool,
-        system: bool,
-        env_setup: bool,
+        task: t.Optional[bool],
+        system: t.Optional[bool],
+        env_setup: t.Optional[bool],
     ):
         # The order of resolving config and run ID is important. It dictates the flow
         # user sees, and possible choices in the prompts.
@@ -79,15 +79,22 @@ class Action:
         resolved_wf_run_id = self._wf_run_resolver.resolve_id(
             wf_run_id, resolved_config
         )
+
+        # Get the available logs
+        logs = self._wf_run_repo.get_wf_logs(
+            wf_run_id=resolved_wf_run_id, config_name=resolved_config
+        )
+
+        # Resolve the log type switches. This must happen after getting the logs as we
+        # need to check against which logs are available.
+        resolved_task_switch: bool
+        resolved_system_switch: bool
+        resolved_env_setup_switch: bool
         (
             resolved_task_switch,
             resolved_system_switch,
             resolved_env_setup_switch,
-        ) = self._wf_run_resolver.resolve_log_switches(task, system, env_setup)
-
-        logs = self._wf_run_repo.get_wf_logs(
-            wf_run_id=resolved_wf_run_id, config_name=resolved_config
-        )
+        ) = self._wf_run_resolver.resolve_log_switches(task, system, env_setup, logs)
 
         for switch, log, identifier in zip(
             [resolved_task_switch, resolved_system_switch, resolved_env_setup_switch],

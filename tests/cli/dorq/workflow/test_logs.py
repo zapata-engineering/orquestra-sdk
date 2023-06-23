@@ -51,7 +51,7 @@ class TestAction:
             logs.system = ["sys_log_1", "sys_log_2"]
             logs.env_setup = ["env_log_1", "env_log_2"]
             logs.other = []
-            wf_run_repo.get_wf_logs.return_value = logs
+            wf_run_repo.get_wf_logs = Mock(return_value=logs)
 
             config_resolver = create_autospec(WFConfigResolver)
             config_resolver.resolve.return_value = resolved_config
@@ -115,7 +115,10 @@ class TestAction:
 
             # The log switches should be passed to the wf logs switches resolver
             action._wf_run_resolver.resolve_log_switches.assert_called_once_with(
-                "<task sentinel>", "<system sentinel>", "<env sentinel>"
+                "<task sentinel>",
+                "<system sentinel>",
+                "<env sentinel>",
+                action._wf_run_repo.get_wf_logs.return_value,
             )
 
             # We expect printing the workflow run returned from the repo.
@@ -191,7 +194,10 @@ class TestAction:
 
             # The log switches should be passed to the wf logs switches resolver
             action._wf_run_resolver.resolve_log_switches.assert_called_once_with(
-                "<task sentinel>", "<system sentinel>", "<env sentinel>"
+                "<task sentinel>",
+                "<system sentinel>",
+                "<env sentinel>",
+                action._wf_run_repo.get_wf_logs.return_value,
             )
 
             # Expect dumping logs to the FS
