@@ -132,11 +132,8 @@ class TestAuthorizedClient:
             there's no passport env variable.
             """
             # When
-            client = _auth.authorized_client(config_name=None)
-
-            # Then
-            assert client._base_uri == uri
-            assert client._session.headers["Authorization"] == f"Bearer {token}"
+            with pytest.raises(exceptions.ConfigNameNotFoundError):
+                _auth.authorized_client(config_name=None)
 
         @staticmethod
         def test_missing_config_name(patch_config_location):

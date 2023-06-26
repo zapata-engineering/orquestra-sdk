@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2021-2022 Zapata Computing Inc.
+# © Copyright 2021-2023 Zapata Computing Inc.
 ################################################################################
 import importlib.machinery
 import importlib.util
@@ -418,7 +418,7 @@ def test_deferred_git_import_resolved(my_fake_repo_setup):
     "username,personal_access_token",
     [
         (None, None),
-        ("emiliano_zapata", _dsl.Secret("my_secret")),
+        ("emiliano_zapata", _dsl.Secret("my_secret", workspace_id="ws")),
     ],
 )
 def test_github_import_is_git_import_with_auth(username, personal_access_token):
@@ -434,6 +434,51 @@ def test_github_import_is_git_import_with_auth(username, personal_access_token):
         username=username,
         auth_secret=personal_access_token,
     )
+
+
+def test_warns_when_no_workspace_provided():
+    with pytest.warns(FutureWarning):
+        _dsl.GithubImport(
+            "zapatacomputing/orquestra-workflow-sdk",
+            "main",
+            username="UN",
+            personal_access_token=sdk.Secret("MY PAT"),
+        )
+
+
+class TestGithubImportRaisesTypeErrorForNonSecretPAT:
+    @staticmethod
+    def test_str_pat():
+        # note: we disable mypy checking here as we're explicitly looking for how a
+        # case where we pass an argument with the wrong type is handled.
+        with pytest.raises(TypeError) as e:
+            _ = _dsl.GithubImport(
+                "zapatacomputing/orquestra-workflow-sdk",
+                "main",
+                username="foo",
+                personal_access_token="bar",  # type: ignore
+            )
+        assert (
+            e.exconly()
+            == """TypeError: You passed a string as `personal_access_token = "..."`. Please pass `personal_access_token = sdk.Secret(name="...")` instead. It might seem verbose, but it's a precaution against committing plain-text credentials to your git repo, or leaking secret values as part of the workflow definition.
+Suggested fix:
+  personal_access_token = sdk.Secret(name="paste secret name here")"""  # noqa: E501
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize("pat, pat_type", [(0, "int"), (0.1, "float")])
+    def test_non_secret_pat(pat, pat_type):
+        with pytest.raises(TypeError) as e:
+            _ = _dsl.GithubImport(
+                "zapatacomputing/orquestra-workflow-sdk",
+                "main",
+                username="foo",
+                personal_access_token=pat,
+            )
+        assert (
+            e.exconly()
+            == f"TypeError: `personal_access_token` must be of type `sdk.Secret`, not {pat_type}."  # noqa: E501
+        )
 
 
 @pytest.mark.parametrize(

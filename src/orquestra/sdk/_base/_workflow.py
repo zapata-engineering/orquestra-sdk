@@ -160,7 +160,7 @@ class WorkflowDef(Generic[_R]):
 
     def run(
         self,
-        config: Optional[Union[_api.RuntimeConfig, str]] = None,
+        config: Union[_api.RuntimeConfig, str],
         project_dir: Optional[Union[str, Path]] = None,
         workspace_id: Optional[WorkspaceId] = None,
         project_id: Optional[ProjectId] = None,
@@ -184,19 +184,6 @@ class WorkflowDef(Generic[_R]):
             ProjectInvalidError: when only 1 out of project and workspace is passed
 
         """
-        # This exists for users who have gotten used to doing `run()`. Once this has
-        # been released, the following release should make config a required argument
-        # and remove this check.
-        if config is None:
-            raise FutureWarning(
-                "Please specify the runtime configuration for this run. "
-                "The built in `local` and `in_process` configurations can be used by "
-                'calling `run("local")` and `run("in_process")` respectively. '
-                "User defined configurations can be specified by providing the name "
-                "under which they are saved, or passing in the RuntimeConfig object "
-                "directly. "
-            )
-
         _config: _api.RuntimeConfig
         if isinstance(config, _api.RuntimeConfig):
             _config = config
@@ -218,7 +205,7 @@ class WorkflowDef(Generic[_R]):
         assert runtime is not None
 
         _project: Optional[ProjectRef] = resolve_studio_project_ref(
-            workspace_id, project_id, _config.name
+            workspace_id, project_id
         )
 
         # The DirtyGitRepo warning can be raised here.

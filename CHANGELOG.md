@@ -3,19 +3,46 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
-* Compute Engine is now the default when logging in
-* InlineImport() is now always default source_import for tasks
+* Removed `RuntimeConfig.load_default()`
+* Removed any support for default configuration
+* `sdk.secret` functions will no longer use default configuration from local runtimes. Config has to be passed explicitly unless running on remote cluster
+* Add `--list` option to `orq login` that displays the stored remote logins, which runtimes they are using, and whether their access tokens are up to date.
 
 🔥 *Features*
-* Force stop workflow runs via the CLI or Python API
-* `WorkflowRun.get_tasks()` supports filtering tasks by state, function name, task run ID and task invocation ID.
-* Add `--list` option to `orq login` that displays the stored remote logins, which runtimes they are using, and whether their access tokens are up to date.
+* Adding `FutureWarning` when accessing CE Secrets without specifying Workspace.
+* Users can use `ORQ_CURRENT_PROJECT` and `ORQ_CURRENT_WORKSPACE` env variables to set default workspace and project for their interactions with CE.
 
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
 
 💅 *Improvements*
+
+🥷 *Internal*
+* Refactored `datetime` and timezone handling.
+
+📃 *Docs*
+* "Remote Workflows" updated to describe logging in with a specific runtime, and reflect the current login process (automatic opening of login page, copying of token).
+
+
+## v0.51.0
+
+🚨 *Breaking Changes*
+* Compute Engine is now the default when logging in
+* `InlineImport()` is now always default `source_import` for tasks
+
+🔥 *Features*
+* Force stop workflow runs via the CLI or Python API
+* `WorkflowRun.get_tasks()` supports filtering tasks by state, function name, task run ID and task invocation ID.
+
+👩‍🔬 *Experimental*
+* 2 new methods added to public API of `WorkflowRun`: `get_artifacts_serialized()` and `get_results_serialized()`
+
+🐛 *Bug Fixes*
+* Fix Ray WFs failing caused by any task returning dict defined in return statement
+
+💅 *Improvements*
+* When using `GithubImport`, better error messages are raised when a value is passed to `personal_access_token` that is not a `sdk.Secret()`.
 * `wf_run.get_logs().env_setup` now contains task dependency installation logs when running on the local `ray` runtime.
 
 🥷 *Internal*

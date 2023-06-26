@@ -35,6 +35,7 @@ from orquestra.sdk.exceptions import (
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeName
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
+from orquestra.sdk.schema.responses import JSONResult
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
 
@@ -526,6 +527,43 @@ class TestWorkflowRun:
             assert results == "woohoo!"
             assert mock_runtime.get_workflow_run_status.call_count == 1
 
+    class TestGetResultsSerialized:
+        @staticmethod
+        def test_raises_exception_if_workflow_not_finished(run):
+            # Given
+            # When
+            with pytest.raises(WorkflowRunNotFinished) as exc_info:
+                run.get_results_serialized()
+            # Then
+            assert (
+                "Workflow run with id wf_pass_tuple-1 has not finished. "
+                "Current state: State.RUNNING"
+            ) in str(exc_info)
+
+        @staticmethod
+        @pytest.mark.slow
+        def test_waits_when_wait_is_true(run, mock_runtime):
+            # Given
+            # When
+            results = run.get_results_serialized(wait=True)
+            # Then
+            assert mock_runtime.get_workflow_run_status.call_count >= 1
+            assert results is not None
+            assert isinstance(results[0], JSONResult)
+            assert results[0].value == '"woohoo!"'
+
+        @staticmethod
+        def test_waits_when_wait_is_explicitly_false(run, mock_runtime):
+            # Remove RUNNING in mock
+            mock_runtime.get_workflow_run_status.side_effect = None
+            # Given
+            # When
+            results = run.get_results_serialized(wait=False)
+            # Then
+            assert results is not None
+            assert isinstance(results[0], JSONResult)
+            assert results[0].value == '"woohoo!"'
+
     class TestGetArtifacts:
         @staticmethod
         def test_handling_n_outputs():
@@ -575,6 +613,33 @@ class TestWorkflowRun:
                 "inv1": 42,
                 "inv2": (21, 38),
             }
+
+    class TestGetArtifactsSerialized:
+        @staticmethod
+        def test_serialized_artifacts():
+            # Given
+            runtime = create_autospec(RuntimeInterface)
+
+            values = {
+                "inv1": serde.result_from_artifact(42, ir.ArtifactFormat.AUTO),
+                "inv2": serde.result_from_artifact((21, 38), ir.ArtifactFormat.AUTO),
+            }
+
+            runtime.get_available_outputs.return_value = values
+
+            wf_def = create_autospec(ir.WorkflowDef)
+
+            wf_run = _api.WorkflowRun(
+                run_id="wf.1",
+                wf_def=wf_def,
+                runtime=runtime,
+            )
+
+            # When
+            artifacts_dict = wf_run.get_artifacts_serialized()
+
+            # Then
+            assert artifacts_dict == values
 
     class TestTaskFilters:
         class TestTaskMatchesSchemaFilters:
@@ -846,11 +911,6 @@ class TestWorkflowRun:
             wf = wf_pass_tuple().run(config=config)
 
             assert wf.config == config
-
-        @staticmethod
-        def test_no_config_run():
-            with pytest.raises(FutureWarning):
-                wf_pass_tuple().run()
 
     class TestStop:
         @staticmethod

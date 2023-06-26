@@ -5,11 +5,11 @@
 Tests for repos. Isolated unit tests unless explicitly named as integration.
 """
 
+import datetime
 import json
 import sys
 import typing as t
 import warnings
-from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import Mock, create_autospec
 
@@ -18,7 +18,7 @@ import requests
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import _db
+from orquestra.sdk._base import _dates, _db
 from orquestra.sdk._base._config import SPECIAL_CONFIG_NAME_DICT
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
@@ -37,26 +37,8 @@ from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ... import reloaders
 from ...sdk.v2.data.configs import TEST_CONFIG_JSON
 
-INSTANT_1 = datetime(
-    2023,
-    2,
-    24,
-    7,
-    26,
-    7,
-    704015,
-    tzinfo=timezone(timedelta(hours=1)),
-)
-INSTANT_2 = datetime(
-    2023,
-    2,
-    24,
-    7,
-    28,
-    37,
-    123,
-    tzinfo=timezone(timedelta(hours=1)),
-)
+INSTANT_1 = _dates.from_comps(2023, 2, 24, 7, 26, 7, 704015, utc_hour_offset=1)
+INSTANT_2 = _dates.from_comps(2023, 2, 24, 7, 28, 37, 123, utc_hour_offset=1)
 
 
 class TestWorkflowRunRepo:
@@ -1099,7 +1081,7 @@ class TestSummaryRepo:
                         ],
                         status=RunStatus(
                             state=State.RUNNING,
-                            start_time=INSTANT_1 + timedelta(seconds=30),
+                            start_time=INSTANT_1 + datetime.timedelta(seconds=30),
                         ),
                     ),
                     WorkflowRunModel(
@@ -1121,7 +1103,7 @@ class TestSummaryRepo:
                             workflow_run_id="wf.2",
                             status="RUNNING",
                             tasks_succeeded="1/2",
-                            start_time=INSTANT_1 + timedelta(seconds=30),
+                            start_time=INSTANT_1 + datetime.timedelta(seconds=30),
                         ),
                     ],
                 ),
@@ -1134,7 +1116,7 @@ class TestSummaryRepo:
                         task_runs=[],
                         status=RunStatus(
                             state=State.RUNNING,
-                            start_time=INSTANT_1 + timedelta(seconds=30),
+                            start_time=INSTANT_1 + datetime.timedelta(seconds=30),
                         ),
                     ),
                     WorkflowRunModel(
@@ -1156,7 +1138,7 @@ class TestSummaryRepo:
                             workflow_run_id="wf.2",
                             status="RUNNING",
                             tasks_succeeded="0/0",
-                            start_time=INSTANT_1 + timedelta(seconds=30),
+                            start_time=INSTANT_1 + datetime.timedelta(seconds=30),
                         ),
                     ],
                 ),

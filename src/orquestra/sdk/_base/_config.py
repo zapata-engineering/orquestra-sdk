@@ -305,18 +305,6 @@ def _resolve_prev_config_entry_for_writing(
         return EMPTY_CONFIG_FILE.configs.get(new_config_name)
 
 
-def _resolve_config_name_for_writing(
-    config_name: Optional[str],
-    prev_config_file: Optional[RuntimeConfigurationFile] = None,
-) -> str:
-    resolved_config_name = _resolve_config_name(config_name, prev_config_file)
-
-    if resolved_config_name in SPECIAL_CONFIG_NAME_DICT:
-        raise ValueError(f"Can't write {config_name}, it's a reserved name")
-
-    return resolved_config_name
-
-
 def _validate_runtime_options(
     runtime_name: RuntimeName,
     runtime_options: Optional[Mapping[str, Any]] = None,
@@ -364,6 +352,9 @@ def _validate_runtime_options(
 
 
 def save_or_update(config_name, runtime_name, runtime_options):
+    if config_name in SPECIAL_CONFIG_NAME_DICT:
+        raise ValueError(f"Can't update {config_name}, it's a reserved name")
+
     if config_name in read_config_names():
         update_config(config_name, runtime_name, runtime_options)
     else:
@@ -371,7 +362,7 @@ def save_or_update(config_name, runtime_name, runtime_options):
 
 
 def write_config(
-    config_name: Optional[str],
+    config_name: str,
     runtime_name: Union[RuntimeName, str],
     runtime_options: dict,
 ) -> Tuple[RuntimeConfiguration, Path]:
@@ -379,8 +370,7 @@ def write_config(
     Write a new configuration to the file.
 
     Args:
-        config_name: The name under which to save the configuration. If set to None, a
-            unique name will be generated for the config.
+        config_name: The name under which to save the configuration.
         runtime_name: The runtime to which this configuration relates.
         runtime_options: The runtime options contained within this configuration.
 
@@ -400,23 +390,17 @@ def write_config(
     )
 
     with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME):
-        # Get the config name to save under - either the user-defined one, or an auto
-        # generated one if the config_name parameter is None. Either way we need to
-        # pass it through _resolve_config_name_for_writing() as this handles the
-        # protected names like 'local'.
-        resolved_config_name: ConfigName = _resolve_config_name_for_writing(config_name)
-
         resolved_prev_config_file = _resolve_config_file_for_writing()
 
         new_config_file = _resolve_new_config_file(
-            resolved_config_name,
+            config_name,
             resolved_runtime_name,
             resolved_runtime_options,
             resolved_prev_config_file,
         )
 
         saved_config = RuntimeConfiguration(
-            config_name=resolved_config_name,
+            config_name=config_name,
             runtime_name=resolved_runtime_name,
             runtime_options=resolved_runtime_options,
         )
@@ -428,7 +412,7 @@ def write_config(
 
 
 def update_config(
-    config_name: Optional[ConfigName] = None,
+    config_name: ConfigName,
     runtime_name: Optional[RuntimeName] = None,
     new_runtime_options: Optional[Mapping[str, Any]] = None,
 ) -> Tuple[RuntimeConfiguration, Path]:
@@ -437,12 +421,11 @@ def update_config(
     the config file under `~/.orquestra/config.json`.
 
     Note that a single config file has multiple "entry" configurations, a
-    reserved "local", and a "default" one.
+    reserved "local"
 
     Args:
         config_name: A config file has multiple "entry" configurations. This
-            tells which entry we want to update. If `None`, this will be
-            inferred from the "default config name" stored in the file.
+            tells which entry we want to update.
         runtime_name: if not None, it will be stored under the appropriate config entry.
         new_runtime_options: if not None, any entries in this dictionary will
             be added to the config entry's runtime options. The remaining
@@ -460,43 +443,38 @@ def update_config(
         KeyError:
             - if one or more runtime options are not valid for this runtime.
     """
-
     with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME):
         # We need to retain a lock because we save the config file at the end
         # of this function.
 
         resolved_prev_config_file = _resolve_config_file_for_writing()
 
-        resolved_config_name = _resolve_config_name_for_writing(
-            config_name, resolved_prev_config_file
-        )
-
         resolved_prev_config_entry = _resolve_prev_config_entry_for_writing(
-            resolved_prev_config_file, resolved_config_name
+            resolved_prev_config_file, config_name
         )
 
         resolved_runtime_name = _resolve_runtime_name_for_writing(
-            runtime_name, resolved_prev_config_entry, resolved_config_name
+            runtime_name, resolved_prev_config_entry, config_name
         )
 
         resolved_runtime_options = _validate_runtime_options(
             resolved_runtime_name,
             _resolve_runtime_options_for_writing(
                 new_runtime_options,
-                resolved_config_name,
+                config_name,
                 resolved_prev_config_entry,
             ),
         )
 
         new_config_file = _resolve_new_config_file(
-            resolved_config_name,
+            config_name,
             resolved_runtime_name,
             resolved_runtime_options,
             resolved_prev_config_file,
         )
 
         return RuntimeConfiguration(
-            config_name=resolved_config_name,
+            config_name=config_name,
             runtime_name=resolved_runtime_name,
             runtime_options=resolved_runtime_options,
         ), _save_config_file(new_config_file)
@@ -508,34 +486,6 @@ def _resolve_config_file_for_reading() -> Optional[RuntimeConfigurationFile]:
             return _open_config_file()
     except exceptions.ConfigFileNotFoundError:
         return None
-
-
-def _resolve_config_name_for_reading(
-    config_name: Optional[str], config_file: Optional[RuntimeConfigurationFile]
-) -> str:
-    return _resolve_config_name(config_name, config_file)
-
-
-def _resolve_config_name(
-    config_name: Optional[str], config_file: Optional[RuntimeConfigurationFile]
-) -> str:
-    """Turns out we can reuse this logic for both reading and writing"""
-    if config_name in SPECIAL_CONFIG_NAME_DICT:
-        # the built-in hardcoded value
-        return config_name
-    elif config_name is not None:
-        # the caller passed it in explicitly
-        return config_name
-    elif config_file is not None:
-        # Caller didn't pass config name. The config file exists, and we're
-        # using the default value.
-        return config_file.default_config_name
-    else:
-        # config_name == None & config_file == None
-        raise ValueError(
-            "Couldn't resolve an appropriate config name to read the "
-            "configuration from. Please pass it explicitly."
-        )
 
 
 def _resolve_config_entry_for_reading(
@@ -562,7 +512,6 @@ def _resolve_config_entry_for_reading(
     # Deal with special cases
     if config_name in SPECIAL_CONFIG_NAME_DICT:
         return _handle_config_name_special_cases(config_name)
-
     # Handle missing file or config not in file
     if config_file is None:
         raise exceptions.ConfigFileNotFoundError("Could not locate config file.")
@@ -606,7 +555,7 @@ def _generate_cluster_uri_name(uri: str) -> str:
 
 
 def read_config(
-    config_name: Optional[str],
+    config_name: str,
 ) -> RuntimeConfiguration:
     """
     Reads a runtime configuration from the configuration file
@@ -614,9 +563,6 @@ def read_config(
     Arguments:
         config_name: the name of the configuration to read
             - if it's 'local': this function returns the hardcoded local configuration
-            - if it's None: this function returns the configuration set as the
-              default one. The default configuration can be user-specified
-              (read from the file) or a hardcoded, "local" one.
 
     Returns:
         a runtime configuration
@@ -626,38 +572,16 @@ def read_config(
             config matching `config_name` exists.
     """
     resolved_config_file = _resolve_config_file_for_reading()
-    resolved_config_name = _resolve_config_name_for_reading(
-        config_name, resolved_config_file
-    )
     resolved_config_entry = _resolve_config_entry_for_reading(
-        resolved_config_name, resolved_config_file
+        config_name, resolved_config_file
     )
 
     return resolved_config_entry
 
 
-def read_default_config_name() -> str:
-    """
-    Reads a default configuration name from the configuration file, or returns
-    the built-in default ("local").
-    """
-
-    try:
-        with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME):
-            config_file = _open_config_file()
-    except (exceptions.ConfigFileNotFoundError, FileNotFoundError):
-        return BUILT_IN_CONFIG_NAME
-
-    return config_file.default_config_name
-
-
 def read_config_names() -> List[str]:
     """
     Reads the names of all configurations stored in the configuration file.
-
-    Arguments:
-        config_file_path: the path to the file where the configurations are saved. If
-            omitted, the default file location is used.
 
     Returns:
         list: a list of strings, each containing the name of a saved configuration. If
@@ -685,10 +609,6 @@ def _read_config_names() -> List[str]:
     filelock for the config file. If you aren't wrapping the call to this function in
     `with filelock...`, you should probably be using `read_config_names` instead.
 
-    Arguments:
-        config_file_path: the path to the file where the configurations are saved. If
-            omitted, the default file location is used.
-
     Returns:
         list: a list of strings, each containing the name of a saved configuration. If
             the file does not exist, returns an empty list.
@@ -703,24 +623,3 @@ def _read_config_names() -> List[str]:
     ):
         return []
     return [name for name in config_file.configs]
-
-
-def update_default_config_name(default_config_name: str):
-    """
-    Sets the "default_config_name" field in the user config. Creates the config
-    file if it didn't exist already. Isn't expected to raise any exceptions.
-
-    Args:
-        default_config_name: the name of the configuration to update
-    """
-
-    with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME):
-        prev_config_file = _resolve_config_file_for_writing()
-
-        if prev_config_file is not None:
-            new_config_file = prev_config_file.copy(deep=True)
-        else:
-            new_config_file = EMPTY_CONFIG_FILE.copy(deep=True)
-
-        new_config_file.default_config_name = default_config_name
-        _save_config_file(new_config_file)
