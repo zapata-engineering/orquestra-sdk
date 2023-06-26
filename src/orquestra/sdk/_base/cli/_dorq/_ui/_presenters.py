@@ -243,11 +243,19 @@ class ConfigPresenter:
             tabulate(
                 [
                     [
+                        # show config name
                         click.style(config.config_name, bold=True),
+                        #
+                        # show runtime name, colour coded blue for CE and green for QE
                         click.style(config.runtime_name, fg="blue")
                         if config.runtime_name == RuntimeName.CE_REMOTE
                         else click.style(config.runtime_name, fg="green"),
+                        #
+                        # show cluster URI
                         config.runtime_options["uri"],
+                        #
+                        # show a green tick if the token is current, and a red cross if
+                        # it is not.
                         click.style("\u2713", fg="green")
                         if status[config.config_name]
                         else click.style("\u2A09", fg="red"),
