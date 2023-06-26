@@ -59,32 +59,21 @@ def from_unix_time(epoch_seconds: float) -> Instant:
 
 
 def from_comps(
-    year,
-    month,
-    day,
-    hour,
-    minute,
-    second,
-    microsecond,
-    utc_hour_offset: int,
+    *args,
+    utc_hour_offset,
+    **kwargs,
 ) -> Instant:
     """
-    Builds an instant from from timezone-local date components.
+    Builds an instant from from timezone-local date components. Uses the same components
+    as ``datetime.datetime(...)``, apart from ``tzinfo``.
     """
-    # I wanted to use `*args` instead of enumerating all the components one-by-one but I
-    # couldn't appease mypy errors.
-    return Instant(
-        datetime(
-            year,
-            month,
-            day,
-            hour,
-            minute,
-            second,
-            microsecond,
-            tzinfo=timezone(timedelta(hours=utc_hour_offset)),
-        )
-    )
+
+    new_kwargs: t.Dict[str, t.Any] = {
+        **kwargs,
+        "tzinfo": timezone(timedelta(hours=utc_hour_offset)),
+    }
+
+    return Instant(datetime(*args, **new_kwargs))
 
 
 def utc_from_comps(*args, **kwargs) -> Instant:
