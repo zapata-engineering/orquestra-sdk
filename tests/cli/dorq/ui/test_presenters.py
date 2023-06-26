@@ -490,7 +490,7 @@ class TestPromptPresenter:
             assert "id3" in labels[2]
             assert "name3" in labels[2]
 
-        def test_workspace_list_to_prompt_venv_set(self, monkeypatch):
+        def test_workspace_list_to_prompt_env_var_set(self, monkeypatch):
             current_workspace_id = "id3"
             monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", current_workspace_id)
             workspace1 = Workspace("id1", "name1")
