@@ -7,7 +7,7 @@ foot.
 """
 
 import typing as t
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 # Timezone-aware datetime. Represents an unambiguous time instant.
 Instant = t.NewType("Instant", datetime)
@@ -56,3 +56,41 @@ def from_unix_time(epoch_seconds: float) -> Instant:
     timezone-aware datetime object.
     """
     return Instant(datetime.fromtimestamp(epoch_seconds, timezone.utc))
+
+
+def from_comps(
+    year,
+    month,
+    day,
+    hour,
+    minute,
+    second,
+    microsecond,
+    utc_hour_offset: int,
+) -> Instant:
+    """
+    Builds an instant from from timezone-local date components.
+    """
+    # I wanted to use `*args` instead of enumerating all the components one-by-one but I
+    # couldn't appease mypy errors.
+    return Instant(
+        datetime(
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            second,
+            microsecond,
+            tzinfo=timezone(timedelta(hours=utc_hour_offset)),
+        )
+    )
+
+
+def utc_from_comps(*args, **kwargs) -> Instant:
+    """
+    Builds an timezone-aware instant from specific date components. The components
+    should be in UTC.
+    """
+    new_kwargs = {**kwargs, "utc_hour_offset": 0}
+    return from_comps(*args, **new_kwargs)

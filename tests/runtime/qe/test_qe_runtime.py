@@ -673,7 +673,7 @@ class TestGetAvailableOutputs:
 
 
 def _utc_instant(*args) -> _dates.Instant:
-    return _dates.Instant(datetime.datetime(*args, tzinfo=datetime.timezone.utc))
+    return _dates.utc_from_comps(*args)
 
 
 class TestGetWorkflowRunStatus:

@@ -1,11 +1,9 @@
 ################################################################################
 # © Copyright 2022 Zapata Computing Inc.
 ################################################################################
-import datetime
-
 import pytest
 
-from orquestra.sdk._base._dates import Instant
+from orquestra.sdk._base._dates import Instant, utc_from_comps
 from orquestra.sdk._base._qe._qe_runtime import parse_date_or_none
 
 
@@ -51,7 +49,7 @@ def test_with_invalid_date_str(date_str: str):
 
 
 def _utc_instant(*args) -> Instant:
-    return Instant(datetime.datetime(*args, tzinfo=datetime.timezone.utc))
+    return utc_from_comps(*args)
 
 
 @pytest.mark.parametrize(

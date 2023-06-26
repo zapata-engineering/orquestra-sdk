@@ -19,7 +19,7 @@ import requests
 from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _db
-from orquestra.sdk._base._dates import Instant
+from orquestra.sdk._base import _dates
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._qe._client import QEClient
@@ -38,17 +38,8 @@ from ... import reloaders
 from ...sdk.v2.data.configs import TEST_CONFIG_JSON
 
 
-def _instant(*args, utc_offset: int) -> Instant:
-    return Instant(
-        datetime.datetime(
-            *args,
-            tzinfo=datetime.timezone(datetime.timedelta(hours=utc_offset)),
-        )
-    )
-
-
-INSTANT_1 = _instant(2023, 2, 24, 7, 26, 7, 704015, utc_offset=1)
-INSTANT_2 = _instant(2023, 2, 24, 7, 28, 37, 123, utc_offset=1)
+INSTANT_1 = _dates.from_comps(2023, 2, 24, 7, 26, 7, 704015, utc_hour_offset=1)
+INSTANT_2 = _dates.from_comps(2023, 2, 24, 7, 28, 37, 123, utc_hour_offset=1)
 
 
 class TestWorkflowRunRepo:
