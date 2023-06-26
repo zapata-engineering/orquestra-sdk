@@ -6,13 +6,13 @@ UI models. Common data structures between the "data" and "view" layers.
 
 Classes here are containers for information we show to the users in the CLI UI.
 Ideally, most data transformations would be already done (like counting the number of
-inished tasks) but should be easy to assert on in tests (e.g. we prefer ``datetime``
+inished tasks) but should be easy to assert on in tests (e.g. we prefer ``Instant``
 objects instead of date strings).
 """
-import datetime
 import typing as t
 from dataclasses import dataclass
 
+from orquestra.sdk._base._dates import Instant
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.workflow_run import RunStatus, WorkflowRunId
 
@@ -52,6 +52,6 @@ class WFList:
         workflow_run_id: str
         status: str
         tasks_succeeded: str
-        start_time: t.Optional[datetime.datetime]
+        start_time: t.Optional[Instant]
 
     wf_rows: t.Sequence[WFRow]

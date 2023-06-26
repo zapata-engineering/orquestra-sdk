@@ -11,14 +11,14 @@ import sys
 import typing as t
 import webbrowser
 from contextlib import contextmanager
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, Iterator, List, Sequence
 
 import click
 from tabulate import tabulate
 
-from orquestra.sdk._base import _config, _env, _services, serde
+from orquestra.sdk._base import _config, _dates, _env, _services, serde
+from orquestra.sdk._base._dates import Instant
 from orquestra.sdk.schema import responses
 from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.workflow_run import (
@@ -222,7 +222,7 @@ class LoginPresenter:
         return webbrowser.open(url)
 
 
-def _format_datetime(dt: t.Optional[datetime]) -> str:
+def _format_datetime(dt: t.Optional[Instant]) -> str:
     return dt.astimezone().replace(tzinfo=None).ctime() if dt else ""
 
 
@@ -294,7 +294,7 @@ class PromptPresenter:
             wfs,
             key=lambda wf: wf.status.start_time
             if wf.status.start_time
-            else datetime.fromtimestamp(0).replace(tzinfo=timezone.utc),
+            else _dates.from_unix_time(0),
             reverse=True,
         )
 
