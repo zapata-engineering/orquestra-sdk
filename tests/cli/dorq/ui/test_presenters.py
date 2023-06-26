@@ -11,6 +11,7 @@ import pytest
 
 from orquestra import sdk
 from orquestra.sdk._base import serde
+from orquestra.sdk._base._dates import Instant
 from orquestra.sdk._base._spaces._structs import Project, Workspace
 from orquestra.sdk._base.cli._dorq._ui import _errors
 from orquestra.sdk._base.cli._dorq._ui import _models as ui_models
@@ -367,26 +368,30 @@ class TestLoginPresenter:
 DATA_DIR = Path(__file__).parent / "data"
 
 
-UTC_INSTANT = datetime(2023, 2, 24, 12, 26, 7, 704015, tzinfo=timezone.utc)
-ET_INSTANT_1 = datetime(
-    2023,
-    2,
-    24,
-    7,
-    26,
-    7,
-    704015,
-    tzinfo=timezone.utc,
+UTC_INSTANT = Instant(datetime(2023, 2, 24, 12, 26, 7, 704015, tzinfo=timezone.utc))
+ET_INSTANT_1 = Instant(
+    datetime(
+        2023,
+        2,
+        24,
+        7,
+        26,
+        7,
+        704015,
+        tzinfo=timezone.utc,
+    )
 )
-ET_INSTANT_2 = datetime(
-    2023,
-    2,
-    24,
-    7,
-    28,
-    37,
-    123,
-    tzinfo=timezone.utc,
+ET_INSTANT_2 = Instant(
+    datetime(
+        2023,
+        2,
+        24,
+        7,
+        28,
+        37,
+        123,
+        tzinfo=timezone.utc,
+    )
 )
 
 

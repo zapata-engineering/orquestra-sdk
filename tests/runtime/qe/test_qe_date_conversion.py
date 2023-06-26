@@ -1,10 +1,9 @@
 ################################################################################
 # © Copyright 2022 Zapata Computing Inc.
 ################################################################################
-import datetime
-
 import pytest
 
+from orquestra.sdk._base._dates import Instant, utc_from_comps
 from orquestra.sdk._base._qe._qe_runtime import parse_date_or_none
 
 
@@ -49,35 +48,39 @@ def test_with_invalid_date_str(date_str: str):
         parse_date_or_none(date_str)
 
 
+def _utc_instant(*args) -> Instant:
+    return utc_from_comps(*args)
+
+
 @pytest.mark.parametrize(
-    "date_str, expected_datetime",
+    "date_str, expected",
     [
         # RFC3339
         (
             "2006-01-02T15:04:05Z",
-            datetime.datetime(2006, 1, 2, 15, 4, 5, 0, datetime.timezone.utc),
+            _utc_instant(2006, 1, 2, 15, 4, 5, 0),
         ),
         (
             "1989-12-13T00:00:00Z",
-            datetime.datetime(1989, 12, 13, 0, 0, 0, 0, datetime.timezone.utc),
+            _utc_instant(1989, 12, 13, 0, 0, 0, 0),
         ),
         # RFC3339Nano
         (
             "2006-01-02T15:04:05.999999999Z",
-            datetime.datetime(2006, 1, 2, 15, 4, 5, 999999, datetime.timezone.utc),
+            _utc_instant(2006, 1, 2, 15, 4, 5, 999999),
         ),
         (
             "2006-01-02T15:04:05.999999Z",
-            datetime.datetime(2006, 1, 2, 15, 4, 5, 999999, datetime.timezone.utc),
+            _utc_instant(2006, 1, 2, 15, 4, 5, 999999),
         ),
         (
             "1989-12-13T00:00:00.198922Z",
-            datetime.datetime(1989, 12, 13, 0, 0, 0, 198922, datetime.timezone.utc),
+            _utc_instant(1989, 12, 13, 0, 0, 0, 198922),
         ),
     ],
 )
-def test_with_zulu(date_str: str, expected_datetime: datetime.datetime):
-    assert parse_date_or_none(date_str) == expected_datetime
+def test_with_zulu(date_str: str, expected: Instant):
+    assert parse_date_or_none(date_str) == expected
 
 
 @pytest.mark.parametrize(

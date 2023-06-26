@@ -16,11 +16,8 @@ where:
 The current solution for this is to focus on testing the layer that's close to
 the user. It's a lot easier to figure out appropriate behavior this way.
 """
-import datetime
-import json
 import typing as t
 from pathlib import Path
-from unittest.mock import Mock
 
 import filelock
 import pytest
@@ -396,23 +393,6 @@ class TestReadConfigNames:
     @staticmethod
     def test_no_file(patch_config_location):
         assert _config.read_config_names() == []
-
-
-FAKE_TIME = datetime.datetime(1605, 11, 5, 0, 0, 0)
-
-
-@pytest.fixture
-def patch_datetime_now(monkeypatch):
-    class mydatetime:
-        @classmethod
-        def now(cls):
-            return FAKE_TIME
-
-        @classmethod
-        def today(cls):
-            return FAKE_TIME
-
-    monkeypatch.setattr(datetime, "datetime", mydatetime)
 
 
 class TestNameGeneration:

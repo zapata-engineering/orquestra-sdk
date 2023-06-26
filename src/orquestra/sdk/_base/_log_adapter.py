@@ -8,8 +8,8 @@ Log adapter adds a workflow context to logs, Workflow ID and Task ID.
 import json
 import logging
 import typing as t
-from datetime import datetime, timezone
 
+from orquestra.sdk._base import _dates
 from orquestra.sdk._base._api._task_run import current_run_ids
 from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRunId
@@ -64,8 +64,8 @@ class ISOFormatter(logging.Formatter):
         Example output: ``2023-02-02T11:45:21.504754+00:00``
         """
         utc_timestamp = record.created
-        instant = datetime.fromtimestamp(utc_timestamp, timezone.utc)
-        return instant.isoformat()
+        instant = _dates.from_unix_time(utc_timestamp)
+        return _dates.local_isoformat(instant)
 
 
 def _make_logger(

@@ -4,7 +4,6 @@
 """
 Internal models for the workflow driver API
 """
-from datetime import datetime
 from enum import Enum
 from typing import (
     Generic,
@@ -22,6 +21,7 @@ import pydantic
 from pydantic.generics import GenericModel
 from typing_extensions import Annotated
 
+from orquestra.sdk._base._dates import Instant
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.workflow_run import (
     ProjectId,
@@ -99,7 +99,7 @@ class GetWorkflowDefResponse(pydantic.BaseModel):
     """
 
     id: WorkflowDefID
-    created: datetime
+    created: Instant
     owner: str
     workflow: WorkflowDef
     workspaceId: WorkspaceId
@@ -158,8 +158,8 @@ class RunStatusResponse(pydantic.BaseModel):
     """
 
     state: StateResponse
-    startTime: Optional[datetime]
-    endTime: Optional[datetime]
+    startTime: Optional[Instant]
+    endTime: Optional[Instant]
 
     def to_ir(self) -> RunStatus:
         return RunStatus(
