@@ -6,14 +6,18 @@ Single place to handle datetimes and timezones without shooting yourself in the
 foot.
 """
 
+import typing as t
 from datetime import datetime, timezone
 
+# Timezone-aware datetime. Represents an unambiguous time instant.
+Instant = t.NewType("Instant", datetime)
 
-def now() -> datetime:
+
+def now() -> Instant:
     """
     Generates a timezone-aware current instant. The timezone is set to UTC.
     """
-    return datetime.now(timezone.utc)
+    return Instant(datetime.now(timezone.utc))
 
 
 def local_isoformat(instant: datetime) -> str:
@@ -28,15 +32,15 @@ def local_isoformat(instant: datetime) -> str:
     return local_instant.isoformat()
 
 
-def from_isoformat(formatted: str) -> datetime:
+def from_isoformat(formatted: str) -> Instant:
     instant = datetime.fromisoformat(formatted.replace("Z", "+00:00"))
     if instant.tzinfo is None:
         raise ValueError("We only work with timezone-aware datetimes")
 
-    return instant
+    return Instant(instant)
 
 
-def unix_time(instant: datetime) -> float:
+def unix_time(instant: Instant) -> float:
     """
     Generates a timezone-aware datetime object from a UNIX epoch timestamp (UTC seconds
     since 1970).
@@ -46,9 +50,9 @@ def unix_time(instant: datetime) -> float:
     return instant.timestamp()
 
 
-def from_unix_time(epoch_seconds: float) -> datetime:
+def from_unix_time(epoch_seconds: float) -> Instant:
     """
     Parses a unix epoch timestamp (UTC seconds since 1970) into a
     timezone-aware datetime object.
     """
-    return datetime.fromtimestamp(epoch_seconds, timezone.utc)
+    return Instant(datetime.fromtimestamp(epoch_seconds, timezone.utc))

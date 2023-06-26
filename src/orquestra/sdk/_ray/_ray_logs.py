@@ -6,13 +6,11 @@ Class to get logs from Ray for particular Workflow, both historical and live.
 """
 import json
 import typing as t
-
-# from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 
 import pydantic
 
+from orquestra.sdk._base._dates import Instant
 from orquestra.sdk._base._logs import _regrouping
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk.schema.ir import TaskInvocationId
@@ -28,7 +26,7 @@ class WFLog(pydantic.BaseModel):
     """
 
     # Timezone-aware date+time.
-    timestamp: datetime
+    timestamp: Instant
     # Log level name, consistent with Python logging.
     level: str
     filename: str

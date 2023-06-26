@@ -10,13 +10,14 @@ from pathlib import Path
 
 import pytest
 
+from orquestra.sdk._base._dates import Instant
 from orquestra.sdk._ray import _ray_logs
 
 DATA_DIR = Path(__file__).parent / "data"
 TEST_RAY_TEMP = DATA_DIR / "ray_temp"
 
 
-SAMPLE_TIMESTAMP = datetime(2023, 2, 9, 11, 26, 7, 99382, tzinfo=timezone.utc)
+SAMPLE_TIMESTAMP = Instant(datetime(2023, 2, 9, 11, 26, 7, 99382, tzinfo=timezone.utc))
 
 
 class TestIterUserLogPaths:

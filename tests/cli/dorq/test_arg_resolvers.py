@@ -2,7 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 import typing as t
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import Mock, create_autospec
 
 import pytest

@@ -13,7 +13,7 @@ import os
 import re
 import typing as t
 import warnings
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from pathlib import Path
 
 import pydantic
@@ -47,7 +47,9 @@ from ._client import RayClient
 from ._wf_metadata import InvUserMetadata, WfUserMetadata, pydatic_to_json_dict
 
 
-def _instant_from_timestamp(unix_timestamp: t.Optional[float]) -> t.Optional[datetime]:
+def _instant_from_timestamp(
+    unix_timestamp: t.Optional[float],
+) -> t.Optional[_dates.Instant]:
     if unix_timestamp is None:
         return None
     return _dates.from_unix_time(unix_timestamp)

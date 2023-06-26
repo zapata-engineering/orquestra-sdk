@@ -2,14 +2,13 @@
 # © Copyright 2022 Zapata Computing Inc.
 ################################################################################
 import json
-from datetime import datetime
 from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
 
 import orquestra.sdk as sdk
-from orquestra.sdk._base import _db
+from orquestra.sdk._base import _dates, _db
 from orquestra.sdk._base.cli._dorq._ui._corq_format import per_command
 from orquestra.sdk.schema import local_database, responses, workflow_run
 
@@ -22,8 +21,8 @@ OK_META = responses.ResponseMetadata(
 
 OK_STATUS = workflow_run.RunStatus(
     state=workflow_run.State.SUCCEEDED,
-    start_time=datetime.fromisoformat("2022-07-19T09:59:03.144368+00:00"),
-    end_time=datetime.fromisoformat("2022-07-19T09:59:03.159318+00:00"),
+    start_time=_dates.from_isoformat("2022-07-19T09:59:03.144368+00:00"),
+    end_time=_dates.from_isoformat("2022-07-19T09:59:03.159318+00:00"),
 )
 
 

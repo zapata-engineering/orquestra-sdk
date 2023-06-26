@@ -90,7 +90,11 @@ class TestUnixTime:
     @staticmethod
     def test_tz_naive():
         # Given
-        instant = datetime.fromtimestamp(1687528083)
+        dt = datetime.fromtimestamp(1687528083)
+        # Instant is supposed to represent only timezone-aware datetimes. This test case
+        # deliberately uses timezone-naive object. Casting it to Instant anyway prevents
+        # typechecker errors.
+        instant = _dates.Instant(dt)
 
         # Then
         with pytest.raises(ValueError):

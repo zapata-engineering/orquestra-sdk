@@ -9,10 +9,10 @@ structure here is JSON-serializable.
 
 import enum
 import typing as t
-from datetime import datetime
 
 from pydantic import BaseModel
 
+from orquestra.sdk._base._dates import Instant
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 
 WorkflowRunId = str
@@ -38,8 +38,8 @@ class State(enum.Enum):
 
 class RunStatus(BaseModel):
     state: State
-    start_time: t.Optional[datetime]
-    end_time: t.Optional[datetime]
+    start_time: t.Optional[Instant]
+    end_time: t.Optional[Instant]
 
 
 class TaskRun(BaseModel):
