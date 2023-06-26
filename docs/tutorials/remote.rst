@@ -7,16 +7,18 @@ Prerequisites
 =============
 
 #. You've :doc:`installed Orquestra Workflow SDK<installing-macos-linux>`.
-#. You have access to remote QE cluster
+#. You have access to remote Orquestra cluster. Specifically you will require:
+    * The email address and password for your Orquestra Account.
+    * The URL of your Orquestra Cluster
+
+If you do not have these, reach out to your point of contact at Zapata.
 
 .. _cli_remote_login:
 
-Log In to Your Orquestra Account
+Log In to an Orquestra Cluster
 ================================
 
-
-Before running a remote workflow, you will need to know the email address and password for your Orquestra account as well as the URL of your Orquestra cluster.
-If you do not have these, reach out to your point of contact at Zapata.
+Before running a workflow remotely, you will need to log in to your Orquestra Cluster, and select the runtime that will execute the workflow.
 
 .. only:: internal
 
@@ -26,29 +28,19 @@ If you do not have these, reach out to your point of contact at Zapata.
 
 Run the command below to log in to an Orquestra cluster (using the appropriate cluster URL):
 
-
 .. code:: bash
 
-    orq login -s https://<cluster-name>.orquestra.io
+    orq login -s <cluster URL> [<runtime>]
 
-This command will provide you a login URL and a prompt to provide a token.
-Open the URL in your browser (command + double-click on macOS).
-Click on the "Login with Orquestra" button.
+Where the ``cluster URL`` is the URL of your Orquestra Cluster.
+If specified, ``runtime`` may be either ``--ce`` (Compute Engine) or ``--qe`` (Quantum Engine).
+If the runtime is not specified, the the Compute Engine runtime will be used.
 
-.. image:: images/orq-login-landing-page.png
-    :width: 75%
-    :align: center
-
-
+This command will open the login URL in your default browser.
 You will then be able to log in using your username and password.
-After logging in, click the "Grant Access" button as shown below.
-
-.. image:: images/orq-login-grant-access.png
-    :width: 75%
-    :align: center
 
 The webpage will now provide you with a token.
-Click the "Copy" button to copy it as shown below.
+This should be automatically copied to the terminal, completing the login, however if it is not you will need to click the "Copy" button to copy it as shown below, and paste the token.
 
 .. image:: images/orq-login-copy-token.png
     :width: 75%
@@ -67,8 +59,8 @@ Token and URI should be stored in local configuration file. To do this, execute 
 
 .. warning::
 
-    Under no circumstances you should commit configuration file or token itself to any git repository
-    or anywhere else when anyone could see it.
+    Under no circumstances should you commit the configuration file or token itself to any git
+    repository or anywhere else when anyone could see it.
 
 Create the Workflow Definition
 ==============================

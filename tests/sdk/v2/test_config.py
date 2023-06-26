@@ -32,25 +32,6 @@ from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 from .data.configs import TEST_CONFIG_JSON
 
 
-class TestSavePartialConfig:
-    """
-    Tests for _config.save_partial_config()
-    """
-
-    @staticmethod
-    @pytest.mark.parametrize("resolved_config_name", ["local", "in_process", "ray"])
-    def test_saving_local(resolved_config_name, monkeypatch, patch_config_location):
-        # We want to ensure the 'local' and 'in_process' configs are resolved
-        monkeypatch.setattr(_config, "_resolve_config_name", Mock(resolved_config_name))
-
-        with pytest.raises(ValueError):
-            _config.update_config(
-                config_name=None,
-                runtime_name=None,
-                new_runtime_options=None,
-            )
-
-
 class TestResolveRuntimeOptionsForWriting:
     @staticmethod
     def test_returns_builtins_if_name_is_builtin():
@@ -83,14 +64,12 @@ class TestResolveRuntimeNameForWriting:
         assert resolved_runtime_name == stub_prev_config.runtime_name
 
 
-class TestResolveConfigNameForWriting:
+class TestSaveOrUpdate:
     @staticmethod
-    def test_raises_exception_if_name_is_builtin():
-        builtin_name = _config.BUILT_IN_CONFIG_NAME
-
-        with pytest.raises(ValueError) as exc_info:
-            _config._resolve_config_name_for_writing(builtin_name, None)
-        assert f"Can't write {builtin_name}, it's a reserved name" in str(exc_info)
+    @pytest.mark.parametrize("config_name", ["in_process", "ray"])
+    def test_throws_when_special_config_used(config_name):
+        with pytest.raises(ValueError):
+            _config.save_or_update(config_name, "w/e", {})
 
 
 class TestResolveConfigFileForReading:
@@ -104,17 +83,6 @@ class TestResolveConfigFileForReading:
     ):
         monkeypatch.setenv("ORQ_CONFIG_PATH", str(tmp_path / "test.file"))
         assert _config._resolve_config_file_for_reading() is None
-
-
-class TestResolveConfigName:
-    @staticmethod
-    def test_raises_exception_if_cannot_resolve_name():
-        with pytest.raises(ValueError) as exc_info:
-            _config._resolve_config_name(None, None)
-        assert (
-            "Couldn't resolve an appropriate config name to read the "
-            "configuration from. Please pass it explicitly."
-        ) in str(exc_info)
 
 
 class TestResolveConfigEntryForReading:
@@ -142,55 +110,6 @@ class TestGenerateConfigName:
         assert "QE and CE runtime configurations must have a 'URI' value set." in str(
             exc_info
         )
-
-
-class TestReadDefaultConfigName:
-    @staticmethod
-    def test_happy_path(patch_config_location):
-        test_config_name = "test_name"
-        with open(patch_config_location / "config.json", "w") as f:
-            json.dump(
-                {
-                    "version": "0.0.0",
-                    "configs": {},
-                    "default_config_name": test_config_name,
-                },
-                f,
-            )
-
-        assert _config.read_default_config_name() == test_config_name
-
-    @staticmethod
-    def test_returns_builtins_if_no_file_found(patch_config_location):
-        assert _config.read_default_config_name() == _config.BUILT_IN_CONFIG_NAME
-
-
-class TestUpdateDefaultConfigName:
-    @staticmethod
-    def test_no_previous_config_file(patch_config_location):
-        _config.update_default_config_name("hello there")
-
-        with open(patch_config_location / "config.json", "r") as f:
-            data = json.load(f)
-        assert data["default_config_name"] == "hello there"
-
-    @staticmethod
-    def test_with_previous_config_file(patch_config_location):
-        with open(patch_config_location / "config.json", "w") as f:
-            json.dump(
-                {
-                    "version": "0.0.0",
-                    "configs": {},
-                    "default_config_name": "hello there",
-                },
-                f,
-            )
-
-        _config.update_default_config_name("general kenobi")
-
-        with open(patch_config_location / "config.json", "r") as f:
-            data = json.load(f)
-        assert data["default_config_name"] == "general kenobi"
 
 
 class TestValidateRuntimeOptions:
