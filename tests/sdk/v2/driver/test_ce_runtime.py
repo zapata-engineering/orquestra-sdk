@@ -8,6 +8,8 @@ import pytest
 
 from orquestra.sdk import Project, Workspace, exceptions
 from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _models
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
+from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing._example_wfs import (
     my_workflow,
     workflow_parametrised_with_resources,
@@ -279,6 +281,20 @@ class TestCreateWorkflowRun:
             # When
             with pytest.raises(exceptions.UnauthorizedError):
                 _ = runtime.create_workflow_run(my_workflow.model, None)
+
+        def test_invalid_project(
+            self,
+            mocked_client: MagicMock,
+            runtime: _ce_runtime.CERuntime,
+        ):
+            # Given
+            mocked_client.create_workflow_def.side_effect = _exceptions.ForbiddenError
+
+            # When
+            with pytest.raises(exceptions.ProjectInvalidError):
+                _ = runtime.create_workflow_run(
+                    my_workflow.model, ProjectRef(workspace_id="a", project_id="b")
+                )
 
     class TestWorkflowRunFailure:
         @pytest.fixture

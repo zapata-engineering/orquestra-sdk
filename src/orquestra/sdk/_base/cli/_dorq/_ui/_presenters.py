@@ -303,50 +303,50 @@ class PromptPresenter:
 
         return wfs, tabulated_labels
 
-    def workspaces_list_to_prompt(self, workspaces, config_name=None):
+    def workspaces_list_to_prompt(self, workspaces):
         # Create labels of workspaces that are printed by prompter
         # Label is <display_name> <id> tabulated nicely to create good-looking
         # table
         labels = [[ws.name, ws.workspace_id] for ws in workspaces]
 
-        if config_name == _config.AUTO_CONFIG_NAME:
-            try:
-                curr_ws = os.environ[_env.CURRENT_WORKSPACE_ENV]
-                for index, label in enumerate(labels):
-                    if label[1] == curr_ws:
-                        label.append("(CURRENT WORKSPACE)")
-                        # put current workspace at the top of the list so it is
-                        # auto-selected
-                        labels.insert(0, labels.pop(index))
-                        workspaces = workspaces[:]
-                        workspaces.insert(0, workspaces.pop(index))
-                        break
-            except KeyError:
-                pass
+        try:
+            curr_ws = os.environ[_env.CURRENT_WORKSPACE_ENV]
+            for index, label in enumerate(labels):
+                if label[1] == curr_ws:
+                    label.append("(CURRENT WORKSPACE)")
+                    # put current workspace at the top of the list so it is
+                    # auto-selected
+                    labels.insert(0, labels.pop(index))
+                    workspaces = workspaces[:]
+                    workspaces.insert(0, workspaces.pop(index))
+                    break
+        except KeyError:
+            pass
 
         tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
 
         return tabulated_labels, workspaces
 
-    def project_list_to_prompt(self, projects, config_name=None):
+    def project_list_to_prompt(self, projects):
         # Create labels of projects that are printed by prompter
         # Label is <display_name> <id> tabulated nicely to create good-looking
         # table
         labels = [[p.name, p.project_id] for p in projects]
-        if config_name == _config.AUTO_CONFIG_NAME:
-            try:
-                curr_proj = os.environ[_env.CURRENT_PROJECT_ENV]
-                for index, label in enumerate(labels):
-                    if label[1] == curr_proj:
-                        label.append("(CURRENT PROJECT)")
-                        # put current project at the top of the list so it is
-                        # auto-selected
-                        labels.insert(0, labels.pop(index))
-                        projects = projects[:]
-                        projects.insert(0, projects.pop(index))
-                        break
-            except KeyError:
-                pass
+
+        try:
+            curr_proj = os.environ[_env.CURRENT_PROJECT_ENV]
+            for index, label in enumerate(labels):
+                if label[1] == curr_proj:
+                    label.append("(CURRENT PROJECT)")
+                    # put current project at the top of the list so it is
+                    # auto-selected
+                    labels.insert(0, labels.pop(index))
+                    projects = projects[:]
+                    projects.insert(0, projects.pop(index))
+                    break
+        except KeyError:
+            pass
+
         tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
 
         return tabulated_labels, projects
