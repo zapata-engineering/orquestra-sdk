@@ -17,7 +17,7 @@ import responses
 
 import orquestra.sdk as sdk
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import _db, serde
+from orquestra.sdk._base import _dates, _db, serde
 from orquestra.sdk._base._conversions._yaml_exporter import (
     pydantic_to_yaml,
     workflow_to_yaml,
@@ -672,6 +672,10 @@ class TestGetAvailableOutputs:
         assert result["invocation-0-task-make-greeting-message"] == expected_inv_0
 
 
+def _utc_instant(*args) -> _dates.Instant:
+    return _dates.utc_from_comps(*args)
+
+
 class TestGetWorkflowRunStatus:
     def test_happy_path(self, monkeypatch, runtime, mocked_responses):
         _get_workflow_run = Mock(
@@ -700,12 +704,8 @@ class TestGetWorkflowRunStatus:
                     invocation_id="invocation-1-task-multi-output-test",
                     status=RunStatus(
                         state=State.SUCCEEDED,
-                        start_time=datetime.datetime(
-                            1989, 12, 13, 9, 3, 49, tzinfo=datetime.timezone.utc
-                        ),
-                        end_time=datetime.datetime(
-                            1989, 12, 13, 9, 4, 28, tzinfo=datetime.timezone.utc
-                        ),
+                        start_time=_utc_instant(1989, 12, 13, 9, 3, 49),
+                        end_time=_utc_instant(1989, 12, 13, 9, 4, 28),
                     ),
                 ),
                 TaskRun(
@@ -713,23 +713,15 @@ class TestGetWorkflowRunStatus:
                     invocation_id="invocation-0-task-make-greeting-message",
                     status=RunStatus(
                         state=State.SUCCEEDED,
-                        start_time=datetime.datetime(
-                            1989, 12, 13, 9, 4, 29, tzinfo=datetime.timezone.utc
-                        ),
-                        end_time=datetime.datetime(
-                            1989, 12, 13, 9, 5, 8, tzinfo=datetime.timezone.utc
-                        ),
+                        start_time=_utc_instant(1989, 12, 13, 9, 4, 29),
+                        end_time=_utc_instant(1989, 12, 13, 9, 5, 8),
                     ),
                 ),
             ],
             status=RunStatus(
                 state=State.SUCCEEDED,
-                start_time=datetime.datetime(
-                    1989, 12, 13, 9, 3, 49, tzinfo=datetime.timezone.utc
-                ),
-                end_time=datetime.datetime(
-                    1989, 12, 13, 9, 5, 14, tzinfo=datetime.timezone.utc
-                ),
+                start_time=_utc_instant(1989, 12, 13, 9, 3, 49),
+                end_time=_utc_instant(1989, 12, 13, 9, 5, 14),
             ),
         )
 
@@ -878,12 +870,8 @@ class TestGetWorkflowRunStatus:
                     invocation_id="invocation-1-task-multi-output-test",
                     status=RunStatus(
                         state=State.SUCCEEDED,
-                        start_time=datetime.datetime(
-                            1989, 12, 13, 9, 3, 49, tzinfo=datetime.timezone.utc
-                        ),
-                        end_time=datetime.datetime(
-                            1989, 12, 13, 9, 4, 28, tzinfo=datetime.timezone.utc
-                        ),
+                        start_time=_utc_instant(1989, 12, 13, 9, 3, 49),
+                        end_time=_utc_instant(1989, 12, 13, 9, 4, 28),
                     ),
                 ),
                 TaskRun(
@@ -891,23 +879,15 @@ class TestGetWorkflowRunStatus:
                     invocation_id="invocation-0-task-make-greeting-message",
                     status=RunStatus(
                         state=State.SUCCEEDED,
-                        start_time=datetime.datetime(
-                            1989, 12, 13, 9, 4, 29, tzinfo=datetime.timezone.utc
-                        ),
-                        end_time=datetime.datetime(
-                            1989, 12, 13, 9, 5, 8, tzinfo=datetime.timezone.utc
-                        ),
+                        start_time=_utc_instant(1989, 12, 13, 9, 4, 29),
+                        end_time=_utc_instant(1989, 12, 13, 9, 5, 8),
                     ),
                 ),
             ],
             status=RunStatus(
                 state=State.SUCCEEDED,
-                start_time=datetime.datetime(
-                    1989, 12, 13, 9, 3, 49, tzinfo=datetime.timezone.utc
-                ),
-                end_time=datetime.datetime(
-                    1989, 12, 13, 9, 5, 14, tzinfo=datetime.timezone.utc
-                ),
+                start_time=_utc_instant(1989, 12, 13, 9, 3, 49),
+                end_time=_utc_instant(1989, 12, 13, 9, 5, 14),
             ),
         )
 
@@ -1404,12 +1384,9 @@ class TestListWorkflowRuns:
         type(mock_status.status).start_time = PropertyMock(
             side_effect=[
                 None,
-                datetime.datetime.now(datetime.timezone.utc)
-                - datetime.timedelta(seconds=5),
-                datetime.datetime.now(datetime.timezone.utc)
-                - datetime.timedelta(seconds=5),
-                datetime.datetime.now(datetime.timezone.utc)
-                - datetime.timedelta(days=4),
+                _dates.now() - datetime.timedelta(seconds=5),
+                _dates.now() - datetime.timedelta(seconds=5),
+                _dates.now() - datetime.timedelta(days=4),
             ]
         )
         monkeypatch.setattr(
@@ -1428,12 +1405,9 @@ class TestListWorkflowRuns:
         type(mock_status.status).start_time = PropertyMock(
             side_effect=[
                 None,
-                datetime.datetime.now(datetime.timezone.utc)
-                - datetime.timedelta(seconds=5),
-                datetime.datetime.now(datetime.timezone.utc)
-                - datetime.timedelta(seconds=5),
-                datetime.datetime.now(datetime.timezone.utc)
-                - datetime.timedelta(days=4),
+                _dates.now() - datetime.timedelta(seconds=5),
+                _dates.now() - datetime.timedelta(seconds=5),
+                _dates.now() - datetime.timedelta(days=4),
             ]
         )
         monkeypatch.setattr(

@@ -9,6 +9,7 @@
 
 🔥 *Features*
 * Adding `FutureWarning` when accessing CE Secrets without specifying Workspace.
+* Users can use `ORQ_CURRENT_PROJECT` and `ORQ_CURRENT_WORKSPACE` env variables to set default workspace and project for their interactions with CE.
 
 👩‍🔬 *Experimental*
 
@@ -17,8 +18,10 @@
 💅 *Improvements*
 
 🥷 *Internal*
+* Refactored `datetime` and timezone handling.
 
 📃 *Docs*
+* "Remote Workflows" updated to describe logging in with a specific runtime, and reflect the current login process (automatic opening of login page, copying of token).
 
 
 ## v0.51.0
@@ -43,7 +46,6 @@
 
 📃 *Docs*
 * Fix broken "Dependency Installation" docs.
-* "Remote Workflows" updated to describe logging in with a specific runtime, and reflect the current login process (automatic opening of login page, copying of token).
 
 ## v0.50.0
 

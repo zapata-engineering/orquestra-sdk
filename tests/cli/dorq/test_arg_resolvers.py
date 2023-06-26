@@ -2,13 +2,14 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 import typing as t
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import Mock, create_autospec
 
 import pytest
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._base._spaces._structs import Project, ProjectRef, Workspace
+from orquestra.sdk._base import _dates
+from orquestra.sdk._base._spaces._structs import Project, Workspace
 from orquestra.sdk._base.cli._dorq import _arg_resolvers, _repos
 from orquestra.sdk._base.cli._dorq._ui import _presenters, _prompts
 from orquestra.sdk.schema.configs import RuntimeConfiguration
@@ -478,7 +479,7 @@ class TestWFRunResolver:
             User didn't pass ``wf_run_id``.
             """
             # Given
-            current_time = datetime.now().astimezone()
+            current_time = _dates.now().astimezone()
 
             def return_wf(id, time_delay_in_sec: int):
                 run = Mock()
@@ -581,7 +582,7 @@ class TestWFRunResolver:
             User didn't pass ``wf_run_id``.
             """
             # Given
-            current_time = datetime.now()
+            current_time = _dates.now().astimezone()
 
             def return_wf(id, time_delay_in_sec: int):
                 run = Mock()
@@ -1270,7 +1271,7 @@ class TestSpacesResolver:
 
             # Then
             # We expect prompt for selecting config.
-            presenter.workspaces_list_to_prompt.assert_called_with(workspaces, config)
+            presenter.workspaces_list_to_prompt.assert_called_with(workspaces)
             prompter.choice.assert_called_with(
                 [(labels[0], ws1), (labels[1], ws2)], message="Workspace"
             )
@@ -1335,7 +1336,7 @@ class TestSpacesResolver:
 
             # Then
             # We expect prompt for selecting config.
-            presenter.project_list_to_prompt.assert_called_with(projects, config)
+            presenter.project_list_to_prompt.assert_called_with(projects)
             prompter.choice.assert_called_with(
                 [(labels[0], p1), (labels[1], p2)], message="Projects"
             )
@@ -1375,7 +1376,7 @@ class TestSpacesResolver:
 
             # Then
             # We expect prompt for selecting config.
-            presenter.project_list_to_prompt.assert_called_with(projects, config)
+            presenter.project_list_to_prompt.assert_called_with(projects)
             prompter.choice.assert_called_with(
                 [(labels[0], p1), (labels[1], p2), ("All", None)], message="Projects"
             )

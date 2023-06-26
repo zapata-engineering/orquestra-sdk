@@ -11,14 +11,14 @@ import sys
 import typing as t
 import webbrowser
 from contextlib import contextmanager
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable, Iterator, List, Sequence
 
 import click
 from tabulate import tabulate
 
-from orquestra.sdk._base import _config, _env, _services, serde
+from orquestra.sdk._base import _config, _dates, _env, _services, serde
+from orquestra.sdk._base._dates import Instant
 from orquestra.sdk.schema import responses
 from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.workflow_run import (
@@ -222,7 +222,7 @@ class LoginPresenter:
         return webbrowser.open(url)
 
 
-def _format_datetime(dt: t.Optional[datetime]) -> str:
+def _format_datetime(dt: t.Optional[Instant]) -> str:
     return dt.astimezone().replace(tzinfo=None).ctime() if dt else ""
 
 
@@ -294,7 +294,7 @@ class PromptPresenter:
             wfs,
             key=lambda wf: wf.status.start_time
             if wf.status.start_time
-            else datetime.fromtimestamp(0).replace(tzinfo=timezone.utc),
+            else _dates.from_unix_time(0),
             reverse=True,
         )
 
@@ -303,50 +303,50 @@ class PromptPresenter:
 
         return wfs, tabulated_labels
 
-    def workspaces_list_to_prompt(self, workspaces, config_name=None):
+    def workspaces_list_to_prompt(self, workspaces):
         # Create labels of workspaces that are printed by prompter
         # Label is <display_name> <id> tabulated nicely to create good-looking
         # table
         labels = [[ws.name, ws.workspace_id] for ws in workspaces]
 
-        if config_name == _config.AUTO_CONFIG_NAME:
-            try:
-                curr_ws = os.environ[_env.CURRENT_WORKSPACE_ENV]
-                for index, label in enumerate(labels):
-                    if label[1] == curr_ws:
-                        label.append("(CURRENT WORKSPACE)")
-                        # put current workspace at the top of the list so it is
-                        # auto-selected
-                        labels.insert(0, labels.pop(index))
-                        workspaces = workspaces[:]
-                        workspaces.insert(0, workspaces.pop(index))
-                        break
-            except KeyError:
-                pass
+        try:
+            curr_ws = os.environ[_env.CURRENT_WORKSPACE_ENV]
+            for index, label in enumerate(labels):
+                if label[1] == curr_ws:
+                    label.append("(CURRENT WORKSPACE)")
+                    # put current workspace at the top of the list so it is
+                    # auto-selected
+                    labels.insert(0, labels.pop(index))
+                    workspaces = workspaces[:]
+                    workspaces.insert(0, workspaces.pop(index))
+                    break
+        except KeyError:
+            pass
 
         tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
 
         return tabulated_labels, workspaces
 
-    def project_list_to_prompt(self, projects, config_name=None):
+    def project_list_to_prompt(self, projects):
         # Create labels of projects that are printed by prompter
         # Label is <display_name> <id> tabulated nicely to create good-looking
         # table
         labels = [[p.name, p.project_id] for p in projects]
-        if config_name == _config.AUTO_CONFIG_NAME:
-            try:
-                curr_proj = os.environ[_env.CURRENT_PROJECT_ENV]
-                for index, label in enumerate(labels):
-                    if label[1] == curr_proj:
-                        label.append("(CURRENT PROJECT)")
-                        # put current project at the top of the list so it is
-                        # auto-selected
-                        labels.insert(0, labels.pop(index))
-                        projects = projects[:]
-                        projects.insert(0, projects.pop(index))
-                        break
-            except KeyError:
-                pass
+
+        try:
+            curr_proj = os.environ[_env.CURRENT_PROJECT_ENV]
+            for index, label in enumerate(labels):
+                if label[1] == curr_proj:
+                    label.append("(CURRENT PROJECT)")
+                    # put current project at the top of the list so it is
+                    # auto-selected
+                    labels.insert(0, labels.pop(index))
+                    projects = projects[:]
+                    projects.insert(0, projects.pop(index))
+                    break
+        except KeyError:
+            pass
+
         tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
 
         return tabulated_labels, projects

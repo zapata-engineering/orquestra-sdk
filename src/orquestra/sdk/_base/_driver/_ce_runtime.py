@@ -141,7 +141,17 @@ class CERuntime(RuntimeInterface):
             raise exceptions.WorkflowRunNotStarted(
                 "Unable to start the workflow run."
             ) from e
-        except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
+        except _exceptions.ForbiddenError as e:
+            if project:
+                raise exceptions.ProjectInvalidError(
+                    f"Unable to start the workflow run "
+                    f"invalid workspace: {project.workspace_id}"
+                ) from e
+            else:
+                raise exceptions.UnauthorizedError(
+                    "Unable to start the workflow run "
+                ) from e
+        except _exceptions.InvalidTokenError as e:
             raise exceptions.UnauthorizedError(
                 "Unable to start the workflow run "
                 "- the authorization token was rejected by the remote cluster."

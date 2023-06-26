@@ -13,7 +13,7 @@ import os
 import re
 import typing as t
 import warnings
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from pathlib import Path
 
 import pydantic
@@ -21,7 +21,7 @@ import pydantic
 from orquestra.sdk.schema.responses import WorkflowResult
 
 from .. import exceptions
-from .._base import _services, serde
+from .._base import _dates, _services, serde
 from .._base._db import WorkflowDB
 from .._base._env import RAY_GLOBAL_WF_RUN_ID_ENV
 from .._base._logs._interfaces import LogReader
@@ -47,14 +47,12 @@ from ._client import RayClient
 from ._wf_metadata import InvUserMetadata, WfUserMetadata, pydatic_to_json_dict
 
 
-def _instant_from_timestamp(unix_timestamp: t.Optional[float]) -> t.Optional[datetime]:
-    """
-    Parses a unix epoch timestamp (UTC seconds since 1970) into a
-    timezone-aware datetime object.
-    """
+def _instant_from_timestamp(
+    unix_timestamp: t.Optional[float],
+) -> t.Optional[_dates.Instant]:
     if unix_timestamp is None:
         return None
-    return datetime.fromtimestamp(unix_timestamp, timezone.utc)
+    return _dates.from_unix_time(unix_timestamp)
 
 
 def _generate_wf_run_id(wf_def: ir.WorkflowDef):
@@ -514,7 +512,7 @@ class RayRuntime(RuntimeInterface):
             raise exceptions.WorkspacesNotSupportedError(
                 "Filtering by workspace or project is not supported on Ray runtimes."
             )
-        now = datetime.now(timezone.utc)
+        now = _dates.now()
 
         if state is not None:
             if not isinstance(state, list):

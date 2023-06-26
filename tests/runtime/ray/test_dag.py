@@ -5,13 +5,14 @@
 Unit tests for orquestra.sdk._ray._dag. If you need a test against a live
 Ray connection, see tests/ray/test_integration.py instead.
 """
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from pathlib import Path
 from unittest.mock import Mock, PropertyMock, create_autospec
 
 import pytest
 
 from orquestra.sdk import exceptions
+from orquestra.sdk._base import _dates
 from orquestra.sdk._base._config import RuntimeConfiguration, RuntimeName
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base._spaces._structs import ProjectRef
@@ -19,7 +20,7 @@ from orquestra.sdk._ray import _client, _dag, _ray_logs
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import State
 
-TEST_TIME = datetime.now(timezone.utc)
+TEST_TIME = _dates.now()
 
 
 @pytest.fixture
@@ -326,9 +327,9 @@ class TestRayRuntime:
             type(mock_status.status).start_time = PropertyMock(
                 side_effect=[
                     None,
-                    datetime.now(timezone.utc) - timedelta(seconds=5),
-                    datetime.now(timezone.utc) - timedelta(seconds=5),
-                    datetime.now(timezone.utc) - timedelta(days=4),
+                    _dates.now() - timedelta(seconds=5),
+                    _dates.now() - timedelta(seconds=5),
+                    _dates.now() - timedelta(days=4),
                 ]
             )
             monkeypatch.setattr(
@@ -351,9 +352,9 @@ class TestRayRuntime:
             type(mock_status.status).start_time = PropertyMock(
                 side_effect=[
                     None,
-                    datetime.now(timezone.utc) - timedelta(seconds=5),
-                    datetime.now(timezone.utc) - timedelta(seconds=5),
-                    datetime.now(timezone.utc) - timedelta(days=4),
+                    _dates.now() - timedelta(seconds=5),
+                    _dates.now() - timedelta(seconds=5),
+                    _dates.now() - timedelta(days=4),
                 ]
             )
             monkeypatch.setattr(

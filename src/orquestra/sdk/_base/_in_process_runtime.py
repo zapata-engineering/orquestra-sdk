@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import abc
+from orquestra.sdk._base import _dates, abc
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.responses import WorkflowResult
@@ -143,7 +143,7 @@ class InProcessRuntime(abc.RuntimeInterface):
 
         run_id = self._gen_next_run_id(workflow_def)
 
-        self._start_time_store[run_id] = datetime.now(timezone.utc)
+        self._start_time_store[run_id] = _dates.now()
 
         # We deserialize the constants in one go, instead of as needed
         consts: t.Dict[ir.ConstantNodeId, t.Any] = {
@@ -194,7 +194,7 @@ class InProcessRuntime(abc.RuntimeInterface):
         )
         self._output_store[run_id] = outputs
 
-        self._end_time_store[run_id] = datetime.now(timezone.utc)
+        self._end_time_store[run_id] = _dates.now()
         self._workflow_def_store[run_id] = workflow_def
         return run_id
 
@@ -303,7 +303,7 @@ class InProcessRuntime(abc.RuntimeInterface):
             raise exceptions.WorkspacesNotSupportedError(
                 "Filtering by workspace is not supported on In Process runtimes."
             )
-        now = datetime.now(timezone.utc)
+        now = _dates.now()
 
         if state is not None:
             if not isinstance(state, list):
