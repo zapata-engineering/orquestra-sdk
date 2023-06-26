@@ -390,7 +390,7 @@ class TestTaskRun:
                             id="secret-0",
                             secret_name="test",
                             secret_config=None,
-                            workspace_id=None,
+                            workspace_id="ws",
                         )
                     ],
                     {},
