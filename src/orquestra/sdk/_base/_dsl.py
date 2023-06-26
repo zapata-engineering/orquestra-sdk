@@ -159,6 +159,13 @@ def GithubImport(
                 f"not {type(personal_access_token).__name__}."
             )
         raise TypeError(errmsg)
+    if personal_access_token is not None and isinstance(personal_access_token, Secret):
+        if Secret.workspace_id is None:
+            raise FutureWarning(
+                "Please specify workspace ID directly for accessing secrets."
+                " Support for default workspaces will be sunset in the future."
+            )
+
     return GitImportWithAuth(
         repo_url=f"https://github.com/{repo}.git",
         git_ref=git_ref,

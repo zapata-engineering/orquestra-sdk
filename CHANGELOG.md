@@ -8,6 +8,7 @@
 * `sdk.secret` functions will no longer use default configuration from local runtimes. Config has to be passed explicitly unless running on remote cluster
 
 🔥 *Features*
+* Adding `FutureWarning` when accessing CE Secrets without specifying Workspace.
 
 👩‍🔬 *Experimental*
 
