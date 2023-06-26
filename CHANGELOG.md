@@ -3,21 +3,39 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+* Removed `RuntimeConfig.load_default()`
+* Removed any support for default configuration
+* `sdk.secret` functions will no longer use default configuration from local runtimes. Config has to be passed explicitly unless running on remote cluster
+
+🔥 *Features*
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+
+## v0.51.0
+
+🚨 *Breaking Changes*
 * Compute Engine is now the default when logging in
-* InlineImport() is now always default source_import for tasks
+* `InlineImport()` is now always default `source_import` for tasks
 
 🔥 *Features*
 * Force stop workflow runs via the CLI or Python API
 * `WorkflowRun.get_tasks()` supports filtering tasks by state, function name, task run ID and task invocation ID.
 * 2 new methods added to public API of `WorkflowRun`: `get_artifacts_serialized()` and `get_results_serialized()`
 
-👩‍🔬 *Experimental*
-
 🐛 *Bug Fixes*
 * Fix Ray WFs failing caused by any task returning dict defined in return statement
 
 💅 *Improvements*
-* When using `GitHubImport`, better error messages are raised when a value is passed to `personal_access_token` that is not a `sdk.Secret()`.
+* When using `GithubImport`, better error messages are raised when a value is passed to `personal_access_token` that is not a `sdk.Secret()`.
 * `wf_run.get_logs().env_setup` now contains task dependency installation logs when running on the local `ray` runtime.
 
 🥷 *Internal*

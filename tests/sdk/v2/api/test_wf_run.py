@@ -912,11 +912,6 @@ class TestWorkflowRun:
 
             assert wf.config == config
 
-        @staticmethod
-        def test_no_config_run():
-            with pytest.raises(FutureWarning):
-                wf_pass_tuple().run()
-
     class TestStop:
         @staticmethod
         def test_happy_path():
