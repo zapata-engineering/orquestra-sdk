@@ -436,7 +436,7 @@ def test_github_import_is_git_import_with_auth(username, personal_access_token):
     )
 
 
-def test_github_import_is_git_import_with_auth():
+def test_warns_when_no_workspace_provided():
     with pytest.warns(FutureWarning):
         _dsl.GithubImport(
             "zapatacomputing/orquestra-workflow-sdk",
