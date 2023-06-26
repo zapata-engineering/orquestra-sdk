@@ -369,7 +369,7 @@ def dupe_import_wf():
 
 @_workflow.workflow
 def workflow_with_secret():
-    secret = secrets.get("my_secret", workspace_id="")
+    secret = secrets.get("my_secret", workspace_id="ws")
     return simple_task(secret)
 
 

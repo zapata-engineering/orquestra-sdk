@@ -44,13 +44,13 @@ class TestIntegrationWithClient:
             @pytest.mark.parametrize(
                 "secrets_action",
                 [
-                    lambda: sdk.secrets.get(name="some-secret", workspace_id=""),
-                    lambda: sdk.secrets.delete(name="some-secret", workspace_id=""),
-                    lambda: sdk.secrets.list(workspace_id=""),
+                    lambda: sdk.secrets.get(name="some-secret", workspace_id="ws"),
+                    lambda: sdk.secrets.delete(name="some-secret", workspace_id="ws"),
+                    lambda: sdk.secrets.list(workspace_id="ws"),
                     lambda: sdk.secrets.set(
                         name="some-secret",
                         value="You're doing great! :)",
-                        workspace_id="",
+                        workspace_id="ws",
                     ),
                 ],
             )
@@ -74,13 +74,13 @@ class TestIntegrationWithClient:
             @pytest.mark.parametrize(
                 "secrets_action",
                 [
-                    lambda: sdk.secrets.get(name="some-secret", workspace_id=""),
-                    lambda: sdk.secrets.delete(name="some-secret", workspace_id=""),
-                    lambda: sdk.secrets.list(workspace_id=""),
+                    lambda: sdk.secrets.get(name="some-secret", workspace_id="ws"),
+                    lambda: sdk.secrets.delete(name="some-secret", workspace_id="ws"),
+                    lambda: sdk.secrets.list(workspace_id="ws"),
                     lambda: sdk.secrets.set(
                         name="some-secret",
                         value="You're doing great! :)",
-                        workspace_id="",
+                        workspace_id="ws",
                     ),
                 ],
             )
