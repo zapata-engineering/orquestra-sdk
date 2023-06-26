@@ -160,7 +160,7 @@ def GithubImport(
             )
         raise TypeError(errmsg)
     if personal_access_token is not None and isinstance(personal_access_token, Secret):
-        if Secret.workspace_id is None:
+        if personal_access_token.workspace_id is None:
             warnings.warn(
                 "Please specify workspace ID directly for accessing secrets."
                 " Support for default workspaces will be sunset in the future.",

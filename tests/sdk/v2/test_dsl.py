@@ -418,7 +418,7 @@ def test_deferred_git_import_resolved(my_fake_repo_setup):
     "username,personal_access_token",
     [
         (None, None),
-        ("emiliano_zapata", _dsl.Secret("my_secret")),
+        ("emiliano_zapata", _dsl.Secret("my_secret", workspace_id="ws")),
     ],
 )
 def test_github_import_is_git_import_with_auth(username, personal_access_token):
@@ -434,6 +434,16 @@ def test_github_import_is_git_import_with_auth(username, personal_access_token):
         username=username,
         auth_secret=personal_access_token,
     )
+
+
+def test_github_import_is_git_import_with_auth():
+    with pytest.warns(FutureWarning):
+        _dsl.GithubImport(
+            "zapatacomputing/orquestra-workflow-sdk",
+            "main",
+            username="UN",
+            personal_access_token=sdk.Secret("MY PAT"),
+        )
 
 
 class TestGithubImportRaisesTypeErrorForNonSecretPAT:
