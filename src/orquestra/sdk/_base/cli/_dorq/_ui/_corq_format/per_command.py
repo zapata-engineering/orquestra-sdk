@@ -193,7 +193,7 @@ def _format_datetime(dt: t.Optional[_dates.Instant]) -> str:
         # Print empty table cell
         return ""
 
-    return _dates.local_isoformat(dt)
+    return _dates.isoformat(dt)
 
 
 def _print_single_run(run: responses.WorkflowRun, project_dir: t.Optional[str]):

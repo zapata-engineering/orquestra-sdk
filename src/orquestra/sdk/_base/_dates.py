@@ -20,16 +20,28 @@ def now() -> Instant:
     return Instant(datetime.now(timezone.utc))
 
 
-def local_isoformat(instant: datetime) -> str:
+def isoformat(instant: Instant) -> str:
     """
-    Formats the instant using ISO8601 format with explicit time zone. The instant is
-    shifted to a local timezone for human-friendliness.
+    Formats the instant using ISO8601 format with explicit time zone.
     """
     if instant.tzinfo is None:
         raise ValueError("We only work with timezone-aware datetimes")
 
+    return instant.isoformat()
+
+
+def local_isoformat(instant: Instant) -> str:
+    """
+    Formats the instant using ISO8601 format with explicit time zone. The instant is
+    shifted to a local timezone for human-friendliness.
+    """
+    # We need to check it as soon as possible. `.astimezone()` overrides empty tzinfo
+    # with local time zone.
+    if instant.tzinfo is None:
+        raise ValueError("We only work with timezone-aware datetimes")
+
     local_instant = instant.astimezone()
-    return local_instant.isoformat()
+    return isoformat(local_instant)
 
 
 def from_isoformat(formatted: str) -> Instant:
