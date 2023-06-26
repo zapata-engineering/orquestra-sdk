@@ -44,12 +44,13 @@ class TestIntegrationWithClient:
             @pytest.mark.parametrize(
                 "secrets_action",
                 [
-                    lambda: sdk.secrets.get(name="some-secret"),
-                    lambda: sdk.secrets.delete(name="some-secret"),
-                    lambda: sdk.secrets.list(),
+                    lambda: sdk.secrets.get(name="some-secret", workspace_id=""),
+                    lambda: sdk.secrets.delete(name="some-secret", workspace_id=""),
+                    lambda: sdk.secrets.list(workspace_id=""),
                     lambda: sdk.secrets.set(
                         name="some-secret",
                         value="You're doing great! :)",
+                        workspace_id="",
                     ),
                 ],
             )
@@ -73,12 +74,13 @@ class TestIntegrationWithClient:
             @pytest.mark.parametrize(
                 "secrets_action",
                 [
-                    lambda: sdk.secrets.get(name="some-secret"),
-                    lambda: sdk.secrets.delete(name="some-secret"),
-                    lambda: sdk.secrets.list(),
+                    lambda: sdk.secrets.get(name="some-secret", workspace_id=""),
+                    lambda: sdk.secrets.delete(name="some-secret", workspace_id=""),
+                    lambda: sdk.secrets.list(workspace_id=""),
                     lambda: sdk.secrets.set(
                         name="some-secret",
                         value="You're doing great! :)",
+                        workspace_id="",
                     ),
                 ],
             )
@@ -88,7 +90,7 @@ class TestIntegrationWithClient:
                 with pytest.raises(type(exc)):
                     secrets_action()
 
-    @pytest.mark.parametrize("workspace_id", ["coolest_workspace_ever", None])
+    @pytest.mark.parametrize("workspace_id", ["coolest_workspace_ever"])
     class TestPassingData:
         @staticmethod
         def test_creating(secrets_client_mock, workspace_id):

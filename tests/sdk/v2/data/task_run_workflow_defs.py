@@ -44,7 +44,7 @@ def wf_single_task_with_const_parent():
 
 @sdk.workflow
 def wf_single_task_with_secret_parent():
-    return [return_num(sdk.secrets.get("test"))]
+    return [return_num(sdk.secrets.get("test", workspace_id=""))]
 
 
 @sdk.workflow
