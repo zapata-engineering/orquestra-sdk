@@ -10,6 +10,7 @@ import typing as t
 from functools import singledispatch
 from pathlib import Path
 
+import pydantic
 from typing_extensions import assert_never
 
 from .. import exceptions, secrets
@@ -18,6 +19,7 @@ from .._base._env import (
     RAY_DOWNLOAD_GIT_IMPORTS_ENV,
     RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV,
 )
+from .._base._logs import _markers
 from ..kubernetes.quantity import parse_quantity
 from ..schema import _compat, ir, responses, workflow_run
 from . import _client, _id_gen
@@ -186,58 +188,73 @@ def _make_ray_dag_node(
 
     @client.remote
     def _ray_remote(*inner_args, **inner_kwargs):
-        if project_dir is not None:
-            dispatch.ensure_sys_paths([str(project_dir)])
-
-        if user_fn_ref is None:
-            serialization = False
-            user_fn = _aggregate_outputs
-        else:
-            serialization = True
-            user_fn = _locate_user_fn(user_fn_ref)
-
-        wrapped = ArgumentUnwrapper(
-            user_fn=user_fn,
-            args_artifact_nodes=args_artifact_nodes,
-            kwargs_artifact_nodes=kwargs_artifact_nodes,
-            deserialize=serialization,
-        )
-
         with _exec_ctx.ray():
-            logger = _log_adapter.workflow_logger()
-            try:
-                wrapped_return = wrapped(*inner_args, **inner_kwargs)
+            # We need to emit task start marker log as soon as possible. Otherwise, we
+            # risk an exception won't be visible to the user.
+            #
+            # TODO: make the IDs required and raise an error if they're not present.
+            # https://zapatacomputing.atlassian.net/browse/ORQSDK-530
+            wf_run_id, task_inv_id, _ = get_current_ids()
+            with _markers.printed_task_markers(
+                wf_run_id=wf_run_id, task_inv_id=task_inv_id
+            ):
+                try:
+                    if project_dir is not None:
+                        dispatch.ensure_sys_paths([str(project_dir)])
 
-                packed: responses.WorkflowResult = (
-                    serde.result_from_artifact(wrapped_return, ir.ArtifactFormat.AUTO)
-                    if serialization
-                    else wrapped_return
-                )
-                unpacked: t.Tuple[responses.WorkflowResult, ...]
+                    if user_fn_ref is None:
+                        serialization = False
+                        user_fn = _aggregate_outputs
+                    else:
+                        serialization = True
+                        user_fn = _locate_user_fn(user_fn_ref)
 
-                if n_outputs is not None and n_outputs > 1:
-                    unpacked = tuple(
+                    wrapped = ArgumentUnwrapper(
+                        user_fn=user_fn,
+                        args_artifact_nodes=args_artifact_nodes,
+                        kwargs_artifact_nodes=kwargs_artifact_nodes,
+                        deserialize=serialization,
+                    )
+
+                    wrapped_return = wrapped(*inner_args, **inner_kwargs)
+
+                    packed: responses.WorkflowResult = (
                         serde.result_from_artifact(
-                            wrapped_return[i], ir.ArtifactFormat.AUTO
+                            wrapped_return, ir.ArtifactFormat.AUTO
                         )
                         if serialization
-                        else wrapped_return[i]
-                        for i in range(n_outputs)
+                        else wrapped_return
                     )
-                else:
-                    unpacked = (packed,)
+                    unpacked: t.Tuple[responses.WorkflowResult, ...]
 
-                return TaskResult(
-                    packed=packed,
-                    unpacked=unpacked,
-                )
-            except Exception as e:
-                # Log the stacktrace as a single log line.
-                logger.exception(traceback.format_exc())
+                    if n_outputs is not None and n_outputs > 1:
+                        unpacked = tuple(
+                            serde.result_from_artifact(
+                                wrapped_return[i], ir.ArtifactFormat.AUTO
+                            )
+                            if serialization
+                            else wrapped_return[i]
+                            for i in range(n_outputs)
+                        )
+                    else:
+                        unpacked = (packed,)
+                    return TaskResult(
+                        packed=packed,
+                        unpacked=unpacked,
+                    )
+                except Exception as e:
+                    # pragma: no cover
+                    # This branch is tested via integration tests in a worker process.
 
-                # We need to stop further execution of this workflow. If we don't
-                # raise, Ray will think the task succeeded with a return value `None`.
-                raise e
+                    # TODO: remove this logger and the whole try/except when moving to
+                    # task markers in the local runtime.
+                    # https://zapatacomputing.atlassian.net/browse/ORQSDK-872
+                    logger = _log_adapter.workflow_logger()
+                    logger.exception(
+                        traceback.format_exception(type(e), e, e.__traceback__)
+                    )
+
+                    raise e
 
     named_remote = client.add_options(_ray_remote, **ray_options)
     dag_node = named_remote.bind(*ray_args, **ray_kwargs)
@@ -478,3 +495,46 @@ def make_ray_dag(
             return result[0]
 
     return handle_data_aggregation_error.bind(last_future)
+
+
+def get_current_ids() -> (
+    t.Tuple[
+        t.Optional[workflow_run.WorkflowRunId],
+        t.Optional[ir.TaskInvocationId],
+        t.Optional[workflow_run.TaskRunId],
+    ]
+):
+    """
+    Uses Ray context to figure out what are the IDs of the currently running workflow
+    and task.
+
+    The returned TaskInvocationID and TaskRunID are None if we weren't able to get them
+    from current Ray context.
+    """
+    # NOTE: this is tightly coupled with how we create Ray workflow DAG, how we assign
+    # IDs and metadata.
+    client = _client.RayClient()
+
+    try:
+        wf_run_id = client.get_current_workflow_id()
+    except AssertionError:
+        # Ray has an 'assert' about checking the workflow context outside of a workflow
+        return None, None, None
+
+    # We don't need to care what kind of ID it is, we only need it to get the metadata
+    # dict.
+    ray_task_name = client.get_current_task_id()
+    task_meta: dict = client.get_task_metadata(
+        workflow_id=wf_run_id, name=ray_task_name
+    )
+
+    try:
+        user_meta = InvUserMetadata.parse_obj(task_meta.get("user_metadata"))
+    except pydantic.ValidationError:
+        # This ray task wasn't annotated with InvUserMetadata. It happens when
+        # `get_current_ids()` is used from a context that's not a regular Orquestra Task
+        # run. One example is the one-off task that we use to construct Ray DAG inside a
+        # Ray worker process.
+        return wf_run_id, None, None
+
+    return wf_run_id, user_meta.task_invocation_id, user_meta.task_run_id
