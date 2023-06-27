@@ -123,17 +123,20 @@ class TestAction:
 
             # We expect printing the workflow run returned from the repo.
             if task_switch:
+                print(action._presenter.show_logs.call_args_list)
                 task_logs = action._wf_run_repo.get_wf_logs.return_value.per_task
                 action._presenter.show_logs.assert_any_call(
-                    task_logs, log_type="per task"
-                )
+                    task_logs, log_type=_logs.WorkflowLogTypeName.PER_TASK
+                ),
             if system_switch:
                 sys_logs = action._wf_run_repo.get_wf_logs.return_value.system
-                action._presenter.show_logs.assert_any_call(sys_logs, log_type="system")
+                action._presenter.show_logs.assert_any_call(
+                    sys_logs, log_type=_logs.WorkflowLogTypeName.SYSTEM
+                )
             if env_setup_switch:
                 env_setup_logs = action._wf_run_repo.get_wf_logs.return_value.env_setup
                 action._presenter.show_logs.assert_any_call(
-                    env_setup_logs, log_type="env setup"
+                    env_setup_logs, log_type=_logs.WorkflowLogTypeName.ENV_SETUP
                 )
             assert action._presenter.show_logs.call_count == sum(
                 [task_switch, system_switch, env_setup_switch]
@@ -204,18 +207,24 @@ class TestAction:
             if task_switch:
                 task_logs = action._wf_run_repo.get_wf_logs.return_value.per_task
                 action._dumper.dump.assert_any_call(
-                    task_logs, resolved_wf_run_id, download_dir, log_type="per task"
+                    task_logs,
+                    resolved_wf_run_id,
+                    download_dir,
+                    log_type=_logs.WorkflowLogTypeName.PER_TASK,
                 )
                 action._presenter.show_dumped_wf_logs.assert_any_call(
-                    dumped_path, log_type="per task"
+                    dumped_path, log_type=_logs.WorkflowLogTypeName.PER_TASK
                 )
             if system_switch:
                 sys_logs = action._wf_run_repo.get_wf_logs.return_value.system
                 action._dumper.dump.assert_any_call(
-                    sys_logs, resolved_wf_run_id, download_dir, log_type="system"
+                    sys_logs,
+                    resolved_wf_run_id,
+                    download_dir,
+                    log_type=_logs.WorkflowLogTypeName.SYSTEM,
                 )
                 action._presenter.show_dumped_wf_logs.assert_any_call(
-                    dumped_path, log_type="system"
+                    dumped_path, log_type=_logs.WorkflowLogTypeName.SYSTEM
                 )
             if env_setup_switch:
                 env_setup_logs = action._wf_run_repo.get_wf_logs.return_value.env_setup
@@ -223,10 +232,10 @@ class TestAction:
                     env_setup_logs,
                     resolved_wf_run_id,
                     download_dir,
-                    log_type="env setup",
+                    log_type=_logs.WorkflowLogTypeName.ENV_SETUP,
                 )
                 action._presenter.show_dumped_wf_logs.assert_any_call(
-                    dumped_path, log_type="env setup"
+                    dumped_path, log_type=_logs.WorkflowLogTypeName.ENV_SETUP
                 )
             assert action._dumper.dump.call_count == sum(
                 [task_switch, system_switch, env_setup_switch]

@@ -9,6 +9,7 @@ import typing as t
 from pathlib import Path
 
 from orquestra.sdk._base import serde
+from orquestra.sdk._base._logs._interfaces import WorkflowLogTypeName
 from orquestra.sdk.schema.workflow_run import TaskInvocationId, WorkflowRunId
 
 
@@ -96,7 +97,7 @@ class LogsDumper:
         logs: t.Union[t.Mapping[TaskInvocationId, t.Sequence[str]], t.Sequence[str]],
         wf_run_id: WorkflowRunId,
         dir_path: Path,
-        log_type: t.Optional[str] = None,
+        log_type: t.Optional[WorkflowLogTypeName] = None,
     ) -> Path:
         """
         Save logs from wf into a file.

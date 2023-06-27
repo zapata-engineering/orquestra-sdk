@@ -6,6 +6,7 @@ Logs-related interfaces.
 """
 import typing as t
 from dataclasses import dataclass
+from enum import Enum
 
 from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
@@ -66,3 +67,14 @@ class LogReader(t.Protocol):
         Reads all available logs printed during execution of this workflow run.
         """
         ...
+
+
+class WorkflowLogTypeName(Enum):
+    """
+    Enum for specifying the individual types of Workflow log.
+    """
+
+    PER_TASK = "per_task"
+    SYSTEM = "system"
+    ENV_SETUP = "env_setup"
+    OTHER = "other"

@@ -8,6 +8,7 @@ import typing as t
 import warnings
 from pathlib import Path
 
+from orquestra.sdk._base._logs._interfaces import WorkflowLogTypeName
 from orquestra.sdk.schema.configs import ConfigName
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
@@ -99,7 +100,11 @@ class Action:
         for switch, log, identifier in zip(
             [resolved_task_switch, resolved_system_switch, resolved_env_setup_switch],
             [logs.per_task, logs.system, logs.env_setup],
-            ["per task", "system", "env setup"],
+            [
+                WorkflowLogTypeName.PER_TASK,
+                WorkflowLogTypeName.SYSTEM,
+                WorkflowLogTypeName.ENV_SETUP,
+            ],
         ):
             if not switch:
                 continue
