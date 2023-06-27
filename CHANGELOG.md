@@ -14,8 +14,10 @@
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
+* When automated login fails, the instructions for manually logging in now show the correct runtime flag.
 
 💅 *Improvements*
+* When a new config is saved, the message shown in the CLI now includes the runtime name.
 
 🥷 *Internal*
 * Refactored `datetime` and timezone handling.
