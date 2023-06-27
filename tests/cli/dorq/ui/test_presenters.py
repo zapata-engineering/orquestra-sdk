@@ -333,14 +333,19 @@ class TestLoginPresenter:
         # Given
         url = "cool_url"
         config_name = "cool_config_name"
+        runtime_name = "cool_runtime_name"
         presenter = _presenters.LoginPresenter()
 
         # When
-        presenter.prompt_config_saved(url, config_name)
+        presenter.prompt_config_saved(url, config_name, runtime_name)
 
         # Then
         captured = capsys.readouterr()
-        assert f"Configuration name for {url} is {config_name}" in captured.out
+        assert (
+            f"Configuration name for {url} "
+            f"with runtime {runtime_name} "
+            f"is '{config_name}'" in captured.out
+        )
 
     def test_print_login_help(self, capsys):
         presenter = _presenters.LoginPresenter()
