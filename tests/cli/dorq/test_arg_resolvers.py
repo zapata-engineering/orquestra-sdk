@@ -8,6 +8,7 @@ from unittest.mock import Mock, create_autospec
 import pytest
 
 from orquestra.sdk import exceptions
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._spaces._structs import Project, ProjectRef, Workspace
 from orquestra.sdk._base.cli._dorq import _arg_resolvers, _repos
 from orquestra.sdk._base.cli._dorq._ui import _presenters, _prompts
@@ -676,7 +677,9 @@ class TestWFRunResolver:
             nothing.
             """
             # Given
-            logs = Mock(per_task=["foo"], system=["bar"], env_setup=["baz"])
+            logs = WorkflowLogs(
+                per_task=["foo"], system=["bar"], env_setup=["baz"], other=[]
+            )
             prompter = create_autospec(_prompts.Prompter)
             resolver = _arg_resolvers.WFRunResolver(
                 wf_run_repo=create_autospec(_repos.WorkflowRunRepo), prompter=prompter
@@ -713,7 +716,9 @@ class TestWFRunResolver:
             unchanged and set the remaining switches to False.
             """
             # Given
-            logs = Mock(per_task=["foo"], system=["bar"], env_setup=["baz"])
+            logs = WorkflowLogs(
+                per_task=["foo"], system=["bar"], env_setup=["baz"], other=[]
+            )
             prompter = create_autospec(_prompts.Prompter)
             resolver = _arg_resolvers.WFRunResolver(
                 wf_run_repo=create_autospec(_repos.WorkflowRunRepo), prompter=prompter
@@ -748,7 +753,9 @@ class TestWFRunResolver:
             the remaining log types they haven't ruled out.
             """
             # Given
-            logs = Mock(per_task=["foo"], system=["bar"], env_setup=["baz"])
+            logs = WorkflowLogs(
+                per_task=["foo"], system=["bar"], env_setup=["baz"], other=[]
+            )
             prompter = create_autospec(_prompts.Prompter)
             resolver = _arg_resolvers.WFRunResolver(
                 wf_run_repo=create_autospec(_repos.WorkflowRunRepo), prompter=prompter
@@ -786,7 +793,9 @@ class TestWFRunResolver:
             available. The resolved should set any unchanged switches to false
             """
             # Given
-            logs = Mock(per_task=["foo"], system=["bar"], env_setup=["baz"])
+            logs = WorkflowLogs(
+                per_task=["foo"], system=["bar"], env_setup=["baz"], other=[]
+            )
             prompter = create_autospec(_prompts.Prompter)
             resolver = _arg_resolvers.WFRunResolver(
                 wf_run_repo=create_autospec(_repos.WorkflowRunRepo), prompter=prompter
@@ -818,7 +827,9 @@ class TestWFRunResolver:
             """
             # Given
             prompter = create_autospec(_prompts.Prompter)
-            logs = Mock(per_task=["foo"], system=["bar"], env_setup=["baz"])
+            logs = WorkflowLogs(
+                per_task=["foo"], system=["bar"], env_setup=["baz"], other=[]
+            )
             prompter.choice.return_value = user_choice
             resolver = _arg_resolvers.WFRunResolver(
                 wf_run_repo=create_autospec(_repos.WorkflowRunRepo), prompter=prompter
@@ -841,28 +852,45 @@ class TestWFRunResolver:
             "logs, expected_choices",
             [
                 (
-                    Mock(per_task=["foo"], system=["bar"], env_setup=["baz"]),
+                    WorkflowLogs(
+                        per_task=["foo"], system=["bar"], env_setup=["baz"], other=[]
+                    ),
                     ["per task", "system", "env setup"],
                 ),
                 (
-                    Mock(per_task=["foo"], system=["bar"], env_setup=[]),
+                    WorkflowLogs(
+                        per_task=["foo"], system=["bar"], env_setup=[], other=[]
+                    ),
                     [
                         "per task",
                         "system",
                     ],
                 ),
                 (
-                    Mock(per_task=["foo"], system=[], env_setup=["baz"]),
+                    WorkflowLogs(
+                        per_task=["foo"], system=[], env_setup=["baz"], other=[]
+                    ),
                     ["per task", "env setup"],
                 ),
-                (Mock(per_task=["foo"], system=[], env_setup=[]), ["per task"]),
                 (
-                    Mock(per_task=[], system=["bar"], env_setup=["baz"]),
+                    WorkflowLogs(per_task=["foo"], system=[], env_setup=[], other=[]),
+                    ["per task"],
+                ),
+                (
+                    WorkflowLogs(
+                        per_task=[], system=["bar"], env_setup=["baz"], other=[]
+                    ),
                     ["system", "env setup"],
                 ),
-                (Mock(per_task=[], system=["bar"], env_setup=[]), ["system"]),
-                (Mock(per_task=[], system=[], env_setup=["baz"]), ["env setup"]),
-                (Mock(per_task=[], system=[], env_setup=[]), []),
+                (
+                    WorkflowLogs(per_task=[], system=["bar"], env_setup=[], other=[]),
+                    ["system"],
+                ),
+                (
+                    WorkflowLogs(per_task=[], system=[], env_setup=["baz"], other=[]),
+                    ["env setup"],
+                ),
+                (WorkflowLogs(per_task=[], system=[], env_setup=[], other=[]), []),
             ],
         )
         def test_choices_limited_by_availibility(logs, expected_choices: t.List[str]):
@@ -892,12 +920,16 @@ class TestWFRunResolver:
             "logs, switches, expected_choices",
             [
                 (
-                    Mock(per_task=["foo"], system=["bar"], env_setup=[]),
+                    WorkflowLogs(
+                        per_task=["foo"], system=["bar"], env_setup=[], other=[]
+                    ),
                     (False, None, None),
                     ["system"],
                 ),
                 (
-                    Mock(per_task=["foo"], system=[], env_setup=["baz"]),
+                    WorkflowLogs(
+                        per_task=["foo"], system=[], env_setup=["baz"], other=[]
+                    ),
                     (None, None, False),
                     ["per task"],
                 ),
