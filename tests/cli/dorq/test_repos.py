@@ -19,6 +19,7 @@ import requests
 from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _dates, _db
+from orquestra.sdk._base._config import SPECIAL_CONFIG_NAME_DICT
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._qe._client import QEClient
@@ -1182,6 +1183,22 @@ class TestConfigRepo:
 
             # When
             names = repo.list_config_names()
+
+            # Then
+            assert names == configs
+
+        def test_list_remote_config_names(self, monkeypatch):
+            configs = ["config1", "config2"]
+            monkeypatch.setattr(
+                sdk.RuntimeConfig,
+                "list_configs",
+                lambda: configs + [key for key in SPECIAL_CONFIG_NAME_DICT],
+            )
+
+            repo = _repos.ConfigRepo()
+
+            # When
+            names = repo.list_remote_config_names()
 
             # Then
             assert names == configs

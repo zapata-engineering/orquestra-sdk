@@ -5,7 +5,7 @@ import sys
 import typing as t
 from datetime import datetime, timezone
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, create_autospec
 
 import pytest
 
@@ -17,6 +17,7 @@ from orquestra.sdk._base.cli._dorq._ui import _errors
 from orquestra.sdk._base.cli._dorq._ui import _models as ui_models
 from orquestra.sdk._base.cli._dorq._ui import _presenters
 from orquestra.sdk._base.cli._dorq._ui._corq_format import per_command
+from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.responses import ResponseStatusCode, ServiceResponse
 from orquestra.sdk.schema.workflow_run import RunStatus, State
@@ -363,6 +364,30 @@ class TestLoginPresenter:
 
         assert browser_opened == success
         open_browser.assert_called_once_with(url)
+
+
+class TestConfigPresenter:
+    @staticmethod
+    def test_rpint_configs_list(capsys):
+        presenter = _presenters.ConfigPresenter()
+        configs = [create_autospec(RuntimeConfiguration) for _ in range(3)]
+        for i, _ in enumerate(configs):
+            configs[i].config_name = f"<config name sentinel {i}>"
+            configs[i].runtime_name = f"<runtime name sentinel {i}>"
+            configs[i].runtime_options = {"uri": f"<uri sentinel {i}>"}
+        status = {config.config_name: True for config in configs}
+        status[configs[1].config_name] = False
+
+        # When
+        presenter.print_configs_list(configs, status)
+
+        assert capsys.readouterr().out == (
+            "Stored configs:\n"
+            "Config Name               Runtime                    Server URI        Current Token\n"  # noqa: E501
+            "<config name sentinel 0>  <runtime name sentinel 0>  <uri sentinel 0>  ✓\n"
+            "<config name sentinel 1>  <runtime name sentinel 1>  <uri sentinel 1>  ⨉\n"
+            "<config name sentinel 2>  <runtime name sentinel 2>  <uri sentinel 2>  ✓\n"
+        )
 
 
 DATA_DIR = Path(__file__).parent / "data"
