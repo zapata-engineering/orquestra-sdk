@@ -70,7 +70,7 @@ class TestIterEnvLogPaths:
 
 def _existing_wf_run_id():
     # Assumption: this is the run ID of the workflow that produced the logs.
-    return "wf.wf_using_python_imports.2618433"
+    return "wf.wf_using_python_imports.1472d35"
 
 
 def _make_worker_file(tmp_path: Path, lines: t.Sequence[str]) -> Path:
