@@ -44,12 +44,13 @@ class TestIntegrationWithClient:
             @pytest.mark.parametrize(
                 "secrets_action",
                 [
-                    lambda: sdk.secrets.get(name="some-secret"),
-                    lambda: sdk.secrets.delete(name="some-secret"),
-                    lambda: sdk.secrets.list(),
+                    lambda: sdk.secrets.get(name="some-secret", workspace_id="ws"),
+                    lambda: sdk.secrets.delete(name="some-secret", workspace_id="ws"),
+                    lambda: sdk.secrets.list(workspace_id="ws"),
                     lambda: sdk.secrets.set(
                         name="some-secret",
                         value="You're doing great! :)",
+                        workspace_id="ws",
                     ),
                 ],
             )
@@ -62,6 +63,23 @@ class TestIntegrationWithClient:
                 with pytest.raises(type(exc)):
                     secrets_action()
 
+        @staticmethod
+        @pytest.mark.parametrize(
+            "secrets_action",
+            [
+                lambda: sdk.secrets.get(name="some-secret"),
+                lambda: sdk.secrets.delete(name="some-secret"),
+                lambda: sdk.secrets.list(),
+                lambda: sdk.secrets.set(
+                    name="some-secret",
+                    value="You're doing great! :)",
+                ),
+            ],
+        )
+        def test_raises_warning_no_workspace(secrets_client_mock, secrets_action):
+            with pytest.warns(FutureWarning):
+                secrets_action()
+
         class TestForwardsConfigErrors:
             @staticmethod
             @pytest.mark.parametrize(
@@ -73,12 +91,13 @@ class TestIntegrationWithClient:
             @pytest.mark.parametrize(
                 "secrets_action",
                 [
-                    lambda: sdk.secrets.get(name="some-secret"),
-                    lambda: sdk.secrets.delete(name="some-secret"),
-                    lambda: sdk.secrets.list(),
+                    lambda: sdk.secrets.get(name="some-secret", workspace_id="ws"),
+                    lambda: sdk.secrets.delete(name="some-secret", workspace_id="ws"),
+                    lambda: sdk.secrets.list(workspace_id="ws"),
                     lambda: sdk.secrets.set(
                         name="some-secret",
                         value="You're doing great! :)",
+                        workspace_id="ws",
                     ),
                 ],
             )
@@ -88,7 +107,7 @@ class TestIntegrationWithClient:
                 with pytest.raises(type(exc)):
                     secrets_action()
 
-    @pytest.mark.parametrize("workspace_id", ["coolest_workspace_ever", None])
+    @pytest.mark.parametrize("workspace_id", ["coolest_workspace_ever"])
     class TestPassingData:
         @staticmethod
         def test_creating(secrets_client_mock, workspace_id):

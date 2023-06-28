@@ -5,17 +5,19 @@ import sys
 import typing as t
 from datetime import datetime, timezone
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, create_autospec
 
 import pytest
 
 from orquestra import sdk
 from orquestra.sdk._base import serde
+from orquestra.sdk._base._dates import Instant
 from orquestra.sdk._base._spaces._structs import Project, Workspace
 from orquestra.sdk._base.cli._dorq._ui import _errors
 from orquestra.sdk._base.cli._dorq._ui import _models as ui_models
 from orquestra.sdk._base.cli._dorq._ui import _presenters
 from orquestra.sdk._base.cli._dorq._ui._corq_format import per_command
+from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.responses import ResponseStatusCode, ServiceResponse
 from orquestra.sdk.schema.workflow_run import RunStatus, State
@@ -440,29 +442,57 @@ class TestLoginPresenter:
         open_browser.assert_called_once_with(url)
 
 
+class TestConfigPresenter:
+    @staticmethod
+    def test_rpint_configs_list(capsys):
+        presenter = _presenters.ConfigPresenter()
+        configs = [create_autospec(RuntimeConfiguration) for _ in range(3)]
+        for i, _ in enumerate(configs):
+            configs[i].config_name = f"<config name sentinel {i}>"
+            configs[i].runtime_name = f"<runtime name sentinel {i}>"
+            configs[i].runtime_options = {"uri": f"<uri sentinel {i}>"}
+        status = {config.config_name: True for config in configs}
+        status[configs[1].config_name] = False
+
+        # When
+        presenter.print_configs_list(configs, status)
+
+        assert capsys.readouterr().out == (
+            "Stored configs:\n"
+            "Config Name               Runtime                    Server URI        Current Token\n"  # noqa: E501
+            "<config name sentinel 0>  <runtime name sentinel 0>  <uri sentinel 0>  ✓\n"
+            "<config name sentinel 1>  <runtime name sentinel 1>  <uri sentinel 1>  ⨉\n"
+            "<config name sentinel 2>  <runtime name sentinel 2>  <uri sentinel 2>  ✓\n"
+        )
+
+
 DATA_DIR = Path(__file__).parent / "data"
 
 
-UTC_INSTANT = datetime(2023, 2, 24, 12, 26, 7, 704015, tzinfo=timezone.utc)
-ET_INSTANT_1 = datetime(
-    2023,
-    2,
-    24,
-    7,
-    26,
-    7,
-    704015,
-    tzinfo=timezone.utc,
+UTC_INSTANT = Instant(datetime(2023, 2, 24, 12, 26, 7, 704015, tzinfo=timezone.utc))
+ET_INSTANT_1 = Instant(
+    datetime(
+        2023,
+        2,
+        24,
+        7,
+        26,
+        7,
+        704015,
+        tzinfo=timezone.utc,
+    )
 )
-ET_INSTANT_2 = datetime(
-    2023,
-    2,
-    24,
-    7,
-    28,
-    37,
-    123,
-    tzinfo=timezone.utc,
+ET_INSTANT_2 = Instant(
+    datetime(
+        2023,
+        2,
+        24,
+        7,
+        28,
+        37,
+        123,
+        tzinfo=timezone.utc,
+    )
 )
 
 
@@ -545,7 +575,7 @@ class TestWorkflowRunPresenter:
 
 class TestPromptPresenter:
     class TestWorkspacesList:
-        def test_workspaces_list_to_prompt_no_studio(self):
+        def test_workspaces_list_to_prompt(self):
             # given
             workspace1 = Workspace("id1", "name1")
             workspace2 = Workspace("id2", "name2")
@@ -566,7 +596,7 @@ class TestPromptPresenter:
             assert "id3" in labels[2]
             assert "name3" in labels[2]
 
-        def test_workspace_list_to_prompt_studio_auto(self, monkeypatch):
+        def test_workspace_list_to_prompt_env_var_set(self, monkeypatch):
             current_workspace_id = "id3"
             monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", current_workspace_id)
             workspace1 = Workspace("id1", "name1")
@@ -578,7 +608,7 @@ class TestPromptPresenter:
 
             # when
             labels, workspaces = presenter.workspaces_list_to_prompt(
-                workspaces=workspace_list, config_name="auto"
+                workspaces=workspace_list
             )
 
             # current workspace should be the 1st one in the list
@@ -593,31 +623,8 @@ class TestPromptPresenter:
             assert "id2" in labels[2]
             assert "name2" in labels[2]
 
-        def test_workspace_list_to_prompt_studio_not_auto(self, monkeypatch):
-            current_workspace_id = "id3"
-            monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", current_workspace_id)
-            workspace1 = Workspace("id1", "name1")
-            workspace2 = Workspace("id2", "name2")
-            workspace3 = Workspace(current_workspace_id, "name3")
-
-            workspace_list = [workspace1, workspace2, workspace3]
-            presenter = _presenters.PromptPresenter()
-
-            # when
-            labels, workspaces = presenter.workspaces_list_to_prompt(
-                workspaces=workspace_list, config_name="different_config"
-            )
-
-            assert workspaces == workspace_list
-            assert "id1" in labels[0]
-            assert "name1" in labels[0]
-            assert "id2" in labels[1]
-            assert "name2" in labels[1]
-            assert "id3" in labels[2]
-            assert "name3" in labels[2]
-
     class TestProjectList:
-        def test_project_list_to_prompt_no_studio(self):
+        def test_project_list_to_prompt(self):
             # given
             project1 = Project("id1", "ws", "name1")
             project2 = Project("id2", "ws", "name2")
@@ -636,7 +643,7 @@ class TestPromptPresenter:
             assert "id3" in labels[2]
             assert "name3" in labels[2]
 
-        def test_workspace_list_to_prompt_studio_auto(self, monkeypatch):
+        def test_workspace_list_to_prompt_env_set(self, monkeypatch):
             current_project_id = "id3"
             monkeypatch.setenv("ORQ_CURRENT_PROJECT", current_project_id)
             project1 = Project("id1", "ws", "name1")
@@ -647,9 +654,7 @@ class TestPromptPresenter:
             presenter = _presenters.PromptPresenter()
 
             # when
-            labels, projects = presenter.project_list_to_prompt(
-                project_list, config_name="auto"
-            )
+            labels, projects = presenter.project_list_to_prompt(project_list)
 
             # current project should be the 1st one in the list
             assert projects == [project3, project1, project2]
@@ -662,26 +667,3 @@ class TestPromptPresenter:
 
             assert "id2" in labels[2]
             assert "name2" in labels[2]
-
-        def test_workspace_list_to_prompt_studio_not_auto(self, monkeypatch):
-            current_project_id = "id3"
-            monkeypatch.setenv("ORQ_CURRENT_PROJECT", current_project_id)
-            project1 = Project("id1", "ws", "name1")
-            project2 = Project("id2", "ws", "name2")
-            project3 = Project(current_project_id, "ws", "name3")
-
-            project_list = [project1, project2, project3]
-            presenter = _presenters.PromptPresenter()
-
-            # when
-            labels, projects = presenter.project_list_to_prompt(
-                project_list, config_name="different_config"
-            )
-
-            assert projects == project_list
-            assert "id1" in labels[0]
-            assert "name1" in labels[0]
-            assert "id2" in labels[1]
-            assert "name2" in labels[1]
-            assert "id3" in labels[2]
-            assert "name3" in labels[2]

@@ -1,0 +1,8 @@
+:job_id:01000000
+:actor_name:WorkflowManagementActor
+2023-06-27 20:23:41,962	INFO workflow_executor.py:86 -- Workflow job [id=wf.wf_using_python_imports.2618433] started.
+2023-06-27 20:23:43,041	INFO workflow_executor.py:284 -- Task status [SUCCESSFUL]	[wf.wf_using_python_imports.2618433@invocation-1-task-add-with-log]
+2023-06-27 20:24:33,386	INFO workflow_executor.py:284 -- Task status [SUCCESSFUL]	[wf.wf_using_python_imports.2618433@invocation-0-task-task-with-python-imports]
+2023-06-27 20:24:33,398	INFO workflow_executor.py:284 -- Task status [SUCCESSFUL]	[wf.wf_using_python_imports.2618433@orquestra.sdk._ray._build_workflow._make_ray_dag_node.locals._ray_remote]
+2023-06-27 20:24:33,405	INFO workflow_executor.py:284 -- Task status [SUCCESSFUL]	[wf.wf_using_python_imports.2618433@orquestra.sdk._ray._build_workflow.make_ray_dag.locals.handle_data_aggregation_error]
+2023-06-27 20:24:33,407	INFO workflow_executor.py:122 -- Workflow 'wf.wf_using_python_imports.2618433' completes successfully.

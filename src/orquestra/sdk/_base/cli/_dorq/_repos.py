@@ -6,7 +6,6 @@ Repositories that encapsulate data access used by dorq commands.
 
 The "data" layer. Shouldn't directly depend on the "view" layer.
 """
-import datetime
 import importlib
 import os
 import sys
@@ -19,7 +18,7 @@ from typing_extensions import assert_never
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import _config, _db, loader
+from orquestra.sdk._base import _config, _dates, _db, loader
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._jwt import check_jwt_without_signature_verification
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
@@ -496,9 +495,7 @@ class SummaryRepo:
         wf_runs.sort(
             key=lambda wf_run: wf_run.status.start_time
             if wf_run.status.start_time
-            else datetime.datetime.fromtimestamp(0).replace(
-                tzinfo=datetime.timezone.utc
-            )
+            else _dates.from_unix_time(0)
         )
 
         return ui_models.WFList(wf_rows=[_ui_model_from_wf(wf) for wf in wf_runs])
@@ -514,6 +511,16 @@ class ConfigRepo:
             config
             for config in sdk.RuntimeConfig.list_configs()
             if config not in _config.CLI_IGNORED_CONFIGS
+        ]
+
+    def list_remote_config_names(self) -> t.Sequence[ConfigName]:
+        """
+        List config names that are not part of the local 'special cases'.
+        """
+        return [
+            config
+            for config in sdk.RuntimeConfig.list_configs()
+            if config not in _config.SPECIAL_CONFIG_NAME_DICT
         ]
 
     def store_token_in_config(self, uri: str, token: str, runtime_name: RemoteRuntime):

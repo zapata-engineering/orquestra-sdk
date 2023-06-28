@@ -14,7 +14,7 @@ import orquestra.sdk as sdk
 from orquestra.sdk._base import _api, _workflow, serde
 from orquestra.sdk._base._logs._interfaces import LogReader
 from orquestra.sdk._base.abc import RuntimeInterface
-from orquestra.sdk._ray import _dag
+from orquestra.sdk._ray import _build_workflow
 from orquestra.sdk.exceptions import TaskRunNotFound
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.workflow_run import RunStatus, State
@@ -390,7 +390,7 @@ class TestTaskRun:
                             id="secret-0",
                             secret_name="test",
                             secret_config=None,
-                            workspace_id=None,
+                            workspace_id="ws",
                         )
                     ],
                     {},
@@ -560,7 +560,7 @@ def mock_ray_context(monkeypatch):
     task_inv_id = "inv-1-generate-data"
     task_run_id = f"{wf_run_id}@{task_inv_id}"
     monkeypatch.setattr(
-        _dag,
+        _build_workflow,
         "get_current_ids",
         Mock(return_value=(wf_run_id, task_inv_id, task_run_id)),
     )

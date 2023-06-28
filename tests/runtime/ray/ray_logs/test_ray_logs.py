@@ -10,13 +10,14 @@ from pathlib import Path
 
 import pytest
 
+from orquestra.sdk._base._dates import Instant
 from orquestra.sdk._ray import _ray_logs
 
 DATA_DIR = Path(__file__).parent / "data"
 TEST_RAY_TEMP = DATA_DIR / "ray_temp"
 
 
-SAMPLE_TIMESTAMP = datetime(2023, 2, 9, 11, 26, 7, 99382, tzinfo=timezone.utc)
+SAMPLE_TIMESTAMP = Instant(datetime(2023, 2, 9, 11, 26, 7, 99382, tzinfo=timezone.utc))
 
 
 class TestIterUserLogPaths:
@@ -214,7 +215,7 @@ class TestParseUserLogLine:
 
 def _existing_wf_run_id():
     # Assumption: this is the run ID of the workflow that produced the logs.
-    return "wf.wf_using_python_imports.8a4d9e7"
+    return "wf.wf_using_python_imports.2618433"
 
 
 class TestDirectRayReader:
@@ -239,15 +240,15 @@ class TestDirectRayReader:
                     "invocation-1-task-add-with-log": [
                         json.dumps(
                             {
-                                "timestamp": "2023-06-12T12:46:55.381839+00:00",
+                                "timestamp": "2023-06-27T20:23:43.038047+02:00",
                                 "level": "INFO",
                                 "filename": "_example_wfs.py:283",
                                 "message": "hello, there!",
-                                "wf_run_id": "wf.wf_using_python_imports.8a4d9e7",
+                                "wf_run_id": "wf.wf_using_python_imports.2618433",
                                 "task_inv_id": "invocation-1-task-add-with-log",
                                 "task_run_id": (
-                                    "wf.wf_using_python_imports.8a4d9e7"
-                                    "@invocation-1-task-add-with-log.f7e22"
+                                    "wf.wf_using_python_imports.2618433"
+                                    "@invocation-1-task-add-with-log.bb726"
                                 ),
                             }
                         ),
@@ -305,15 +306,15 @@ class TestDirectRayReader:
             assert logs == [
                 json.dumps(
                     {
-                        "timestamp": "2023-06-12T12:46:55.381839+00:00",
+                        "timestamp": "2023-06-27T20:23:43.038047+02:00",
                         "level": "INFO",
                         "filename": "_example_wfs.py:283",
                         "message": "hello, there!",
-                        "wf_run_id": "wf.wf_using_python_imports.8a4d9e7",
+                        "wf_run_id": "wf.wf_using_python_imports.2618433",
                         "task_inv_id": "invocation-1-task-add-with-log",
                         "task_run_id": (
-                            "wf.wf_using_python_imports.8a4d9e7"
-                            "@invocation-1-task-add-with-log.f7e22"
+                            "wf.wf_using_python_imports.2618433"
+                            "@invocation-1-task-add-with-log.bb726"
                         ),
                     }
                 ),
