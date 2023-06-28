@@ -65,7 +65,7 @@ class TestMakeLogger:
             message = "foo"
 
             # When
-            with pytest.warns(DeprecationWarning):
+            with pytest.warns(FutureWarning):
                 _log_adapter.wfprint(message)
 
             # Then
@@ -77,7 +77,7 @@ class TestMakeLogger:
         def test_workflow_logger(capsys):
             # Given
             message = "foo"
-            with pytest.warns(DeprecationWarning):
+            with pytest.warns(FutureWarning):
                 logger = _log_adapter.workflow_logger()
 
             # When

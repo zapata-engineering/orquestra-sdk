@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
 Log adapter adds a workflow context to logs, Workflow ID and Task ID.
@@ -20,7 +20,7 @@ def make_logger():
     return logger
 
 
-def workflow_logger():
+def workflow_logger() -> logging.Logger:
     """
     Deprecated: please use the standard ``logging`` module.
 
@@ -31,7 +31,7 @@ def workflow_logger():
     """
     warnings.warn(
         "`sdk.workflow_logger()` is deprecated. Please use the standard `logging` module.",  # noqa: E501
-        DeprecationWarning,
+        FutureWarning,
     )
 
     # TODO: remove this function.
@@ -48,7 +48,7 @@ def wfprint(*values):
     """
     warnings.warn(
         "`sdk.wfprint()` is deprecated. Please use a standard `print()`.",
-        DeprecationWarning,
+        FutureWarning,
     )
 
     # TODO: remove this function.
