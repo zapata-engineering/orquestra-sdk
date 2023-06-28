@@ -4,20 +4,20 @@
 """
 Unit tests for RayLogs.
 """
-import json
-from datetime import datetime, timezone
+import typing as t
 from pathlib import Path
 
 import pytest
 
-from orquestra.sdk._base._dates import Instant
+from orquestra.sdk._base import _dates
+from orquestra.sdk._base._logs import _markers
 from orquestra.sdk._ray import _ray_logs
 
 DATA_DIR = Path(__file__).parent / "data"
 TEST_RAY_TEMP = DATA_DIR / "ray_temp"
 
 
-SAMPLE_TIMESTAMP = Instant(datetime(2023, 2, 9, 11, 26, 7, 99382, tzinfo=timezone.utc))
+SAMPLE_TIMESTAMP = _dates.utc_from_comps(2023, 2, 9, 11, 26, 7, 99382)
 
 
 class TestIterUserLogPaths:
@@ -68,154 +68,310 @@ class TestIterEnvLogPaths:
         assert len([p for p in paths if "runtime_env_setup" in p.stem]) == 1
 
 
-class TestParseUserLogLine:
-    """
-    Unit tests for ``parse_user_log_line()``.
-    Test boundary::
-        [JSON string]->[WFLog object]
-    """
-
-    @staticmethod
-    @pytest.mark.parametrize(
-        "line,expected",
-        [
-            pytest.param("", None, id="empty_line"),
-            pytest.param("{}", None, id="empty_json"),
-            pytest.param("20.37", None, id="json_scalar"),
-            pytest.param("{{}}", None, id="malformed_json"),
-            pytest.param(
-                "2023-01-31 12:44:48,991	INFO workflow_executor.py:86 -- Workflow job [id=wf.orquestra_basic_demo.48c3618] started.",  # noqa: E501
-                None,
-                id="3rd_party_log_with_queried_id",
-            ),
-            pytest.param(
-                json.dumps(
-                    {
-                        "timestamp": "2023-02-09T11:26:07.099382+00:00",
-                        "level": "INFO",
-                        "filename": "_log_adapter.py:138",
-                        "message": "hello there!",
-                        "wf_run_id": "wf",
-                        "task_run_id": "wf@inv",
-                        "task_inv_id": "inv",
-                    }
-                ),
-                _ray_logs.WFLog(
-                    timestamp=SAMPLE_TIMESTAMP,
-                    level="INFO",
-                    filename="_log_adapter.py:138",
-                    message="hello there!",
-                    wf_run_id="wf",
-                    task_inv_id="inv",
-                    task_run_id="wf@inv",
-                ),
-                id="valid_log_all_ids",
-            ),
-            pytest.param(
-                json.dumps(
-                    {
-                        "timestamp": "2023-02-09T11:26:07.099382+00:00",
-                        "level": "INFO",
-                        "filename": "_log_adapter.py:138",
-                        "message": "hello there!",
-                        "wf_run_id": "wf",
-                        "task_run_id": "wf@inv",
-                        "task_inv_id": None,
-                    }
-                ),
-                _ray_logs.WFLog(
-                    timestamp=SAMPLE_TIMESTAMP,
-                    level="INFO",
-                    filename="_log_adapter.py:138",
-                    message="hello there!",
-                    wf_run_id="wf",
-                    task_run_id="wf@inv",
-                    task_inv_id=None,
-                ),
-                id="valid_log_no_inv",
-            ),
-            pytest.param(
-                json.dumps(
-                    {
-                        "timestamp": "2023-02-09T11:26:07.099382+00:00",
-                        "level": "INFO",
-                        "filename": "_log_adapter.py:138",
-                        "message": "hello there!",
-                        "wf_run_id": "wf.1",
-                        "task_run_id": None,
-                        "task_inv_id": None,
-                    }
-                ),
-                _ray_logs.WFLog(
-                    timestamp=SAMPLE_TIMESTAMP,
-                    level="INFO",
-                    filename="_log_adapter.py:138",
-                    message="hello there!",
-                    wf_run_id="wf.1",
-                    task_inv_id=None,
-                    task_run_id=None,
-                ),
-                id="valid_log_only_wf_run_id",
-            ),
-            pytest.param(
-                json.dumps(
-                    {
-                        "timestamp": "2023-02-09T11:26:07.099382+00:00",
-                        "level": "INFO",
-                        "filename": "_log_adapter.py:138",
-                        "message": "hello there!",
-                        "wf_run_id": None,
-                        "task_run_id": None,
-                        "task_inv_id": None,
-                    }
-                ),
-                _ray_logs.WFLog(
-                    timestamp=SAMPLE_TIMESTAMP,
-                    level="INFO",
-                    filename="_log_adapter.py:138",
-                    message="hello there!",
-                    wf_run_id=None,
-                    task_inv_id=None,
-                    task_run_id=None,
-                ),
-                id="valid_log_all_null_ids",
-            ),
-            pytest.param(
-                json.dumps(
-                    {
-                        "timestamp": "2023-02-09T11:26:07.099382+00:00",
-                        "level": "INFO",
-                        "filename": "_log_adapter.py:138",
-                        "message": "hello there!",
-                    }
-                ),
-                _ray_logs.WFLog(
-                    timestamp=SAMPLE_TIMESTAMP,
-                    level="INFO",
-                    filename="_log_adapter.py:138",
-                    message="hello there!",
-                    wf_run_id=None,
-                    task_inv_id=None,
-                    task_run_id=None,
-                ),
-                id="valid_log_no_id_fields",
-            ),
-        ],
-    )
-    def test_examples(line: str, expected):
-        # Given
-        raw_line = line.encode()
-
-        # When
-        parsed = _ray_logs.parse_log_line(raw_line)
-
-        # Then
-        assert parsed == expected
-
-
 def _existing_wf_run_id():
     # Assumption: this is the run ID of the workflow that produced the logs.
     return "wf.wf_using_python_imports.2618433"
+
+
+def _make_worker_file(tmp_path: Path, lines: t.Sequence[str]) -> Path:
+    path = tmp_path / "worker.stdout"
+    with path.open("w") as f:
+        for line in lines:
+            f.write(line + "\n")
+    return path
+
+
+class TestIterTaskLogs:
+    @staticmethod
+    @pytest.fixture
+    def start_marker():
+        wf_run_id = "wf1"
+        inv_id = "inv1"
+        timestamp = _dates.from_isoformat("2005-04-25T20:37:00+00:00")
+        return _markers.TaskStartMarker(wf_run_id, inv_id, timestamp)
+
+    @staticmethod
+    @pytest.fixture
+    def end_marker():
+        wf_run_id = "wf1"
+        inv_id = "inv1"
+        timestamp = _dates.from_isoformat("2005-04-25T20:37:01+00:00")
+        return _markers.TaskEndMarker(wf_run_id, inv_id, timestamp)
+
+    @staticmethod
+    @pytest.fixture
+    def start_marker2():
+        wf_run_id = "wf1"
+        inv_id = "inv2"
+        timestamp = _dates.from_isoformat("2005-04-25T20:38:00+00:00")
+        return _markers.TaskStartMarker(wf_run_id, inv_id, timestamp)
+
+    @staticmethod
+    @pytest.fixture
+    def end_marker2():
+        wf_run_id = "wf1"
+        inv_id = "inv2"
+        timestamp = _dates.from_isoformat("2005-04-25T20:38:01+00:00")
+        return _markers.TaskEndMarker(wf_run_id, inv_id, timestamp)
+
+    @staticmethod
+    def test_empty_file(tmp_path):
+        # Given
+        path = _make_worker_file(tmp_path, lines=[])
+
+        # When
+        yields = list(_ray_logs.iter_task_logs(path))
+
+        # Then
+        assert yields == []
+
+    class TestSingleTask:
+        @staticmethod
+        def test_happy_path(tmp_path: Path, start_marker, end_marker):
+            # Given
+            path = _make_worker_file(
+                tmp_path,
+                lines=[
+                    "ray-noise",
+                    start_marker.line,
+                    "hello!",
+                    end_marker.line,
+                    "ray-noise",
+                ],
+            )
+
+            # When
+            yields = list(_ray_logs.iter_task_logs(path))
+
+            # Then
+            assert yields == [
+                (
+                    ["hello!"],
+                    start_marker.wf_run_id,
+                    start_marker.task_inv_id,
+                )
+            ]
+
+        @staticmethod
+        def test_missing_start(tmp_path: Path, end_marker):
+            # Given
+            path = _make_worker_file(
+                tmp_path,
+                lines=[
+                    "ray-noise",
+                    "hello!",
+                    end_marker.line,
+                    "ray-noise",
+                ],
+            )
+
+            # When
+            yields = list(_ray_logs.iter_task_logs(path))
+
+            # Then
+            assert yields == []
+
+        @staticmethod
+        def test_missing_end(tmp_path: Path, start_marker):
+            # Given
+            path = _make_worker_file(
+                tmp_path,
+                lines=[
+                    "ray-noise1",
+                    start_marker.line,
+                    "hello!",
+                    "ray-noise2",
+                ],
+            )
+
+            # When
+            yields = list(_ray_logs.iter_task_logs(path))
+
+            # Then
+            assert yields == [
+                (
+                    ["hello!", "ray-noise2"],
+                    start_marker.wf_run_id,
+                    start_marker.task_inv_id,
+                )
+            ]
+
+    class TestMultipleTasks:
+        @staticmethod
+        def test_happy_path(
+            tmp_path: Path, start_marker, end_marker, start_marker2, end_marker2
+        ):
+            # Given
+            path = _make_worker_file(
+                tmp_path,
+                lines=[
+                    "ray-noise1",
+                    start_marker.line,
+                    "hello1!",
+                    end_marker.line,
+                    "ray-noise2",
+                    start_marker2.line,
+                    "hello2!",
+                    end_marker2.line,
+                    "ray-noise3",
+                ],
+            )
+
+            # When
+            yields = list(_ray_logs.iter_task_logs(path))
+
+            # Then
+            assert yields == [
+                (
+                    ["hello1!"],
+                    start_marker.wf_run_id,
+                    start_marker.task_inv_id,
+                ),
+                (
+                    ["hello2!"],
+                    start_marker2.wf_run_id,
+                    start_marker2.task_inv_id,
+                ),
+            ]
+
+        @staticmethod
+        def test_missing_leading_start(
+            tmp_path: Path, end_marker, start_marker2, end_marker2
+        ):
+            # Given
+            path = _make_worker_file(
+                tmp_path,
+                lines=[
+                    "ray-noise1",
+                    # missing start marker
+                    "hello1!",
+                    end_marker.line,
+                    "ray-noise2",
+                    start_marker2.line,
+                    "hello2!",
+                    end_marker2.line,
+                    "ray-noise3",
+                ],
+            )
+
+            # When
+            yields = list(_ray_logs.iter_task_logs(path))
+
+            # Then
+            assert yields == [
+                (
+                    ["hello2!"],
+                    start_marker2.wf_run_id,
+                    start_marker2.task_inv_id,
+                ),
+            ]
+
+        @staticmethod
+        def test_missing_leading_end(
+            tmp_path: Path, start_marker, start_marker2, end_marker2
+        ):
+            # Given
+            path = _make_worker_file(
+                tmp_path,
+                lines=[
+                    "ray-noise1",
+                    start_marker.line,
+                    "hello1!",
+                    # missing end marker
+                    "ray-noise2",
+                    start_marker2.line,
+                    "hello2!",
+                    end_marker2.line,
+                    "ray-noise3",
+                ],
+            )
+
+            # When
+            yields = list(_ray_logs.iter_task_logs(path))
+
+            # Then
+            assert yields == [
+                (
+                    ["hello1!", "ray-noise2"],
+                    start_marker.wf_run_id,
+                    start_marker.task_inv_id,
+                ),
+                (
+                    ["hello2!"],
+                    start_marker2.wf_run_id,
+                    start_marker2.task_inv_id,
+                ),
+            ]
+
+        @staticmethod
+        def test_missing_trailing_start(
+            tmp_path: Path, start_marker, end_marker, end_marker2
+        ):
+            # Given
+            path = _make_worker_file(
+                tmp_path,
+                lines=[
+                    "ray-noise1",
+                    start_marker.line,
+                    "hello1!",
+                    end_marker.line,
+                    "ray-noise2",
+                    # missing start marker
+                    "hello2!",
+                    end_marker2.line,
+                    "ray-noise3",
+                ],
+            )
+
+            # When
+            yields = list(_ray_logs.iter_task_logs(path))
+
+            # Then
+            assert yields == [
+                (
+                    ["hello1!"],
+                    start_marker.wf_run_id,
+                    start_marker.task_inv_id,
+                ),
+            ]
+
+        @staticmethod
+        def test_missing_trailing_end(
+            tmp_path: Path, start_marker, end_marker, start_marker2
+        ):
+            # TODO
+            # Given
+            path = _make_worker_file(
+                tmp_path,
+                lines=[
+                    "ray-noise1",
+                    start_marker.line,
+                    "hello1!",
+                    end_marker.line,
+                    "ray-noise2",
+                    start_marker2.line,
+                    "hello2!",
+                    # missing end marker
+                    "ray-noise3",
+                ],
+            )
+
+            # When
+            yields = list(_ray_logs.iter_task_logs(path))
+
+            # Then
+            assert yields == [
+                (
+                    ["hello1!"],
+                    start_marker.wf_run_id,
+                    start_marker.task_inv_id,
+                ),
+                (
+                    ["hello2!", "ray-noise3"],
+                    start_marker2.wf_run_id,
+                    start_marker2.task_inv_id,
+                ),
+            ]
 
 
 class TestDirectRayReader:
@@ -237,22 +393,8 @@ class TestDirectRayReader:
 
                 # Then
                 assert logs.per_task == {
-                    "invocation-1-task-add-with-log": [
-                        json.dumps(
-                            {
-                                "timestamp": "2023-06-27T20:23:43.038047+02:00",
-                                "level": "INFO",
-                                "filename": "_example_wfs.py:283",
-                                "message": "hello, there!",
-                                "wf_run_id": "wf.wf_using_python_imports.2618433",
-                                "task_inv_id": "invocation-1-task-add-with-log",
-                                "task_run_id": (
-                                    "wf.wf_using_python_imports.2618433"
-                                    "@invocation-1-task-add-with-log.bb726"
-                                ),
-                            }
-                        ),
-                    ]
+                    "invocation-0-task-task-with-python-imports": [],
+                    "invocation-1-task-add-with-log": ["hello, there!"],
                 }
 
             @staticmethod
@@ -303,22 +445,7 @@ class TestDirectRayReader:
             )
 
             # Then
-            assert logs == [
-                json.dumps(
-                    {
-                        "timestamp": "2023-06-27T20:23:43.038047+02:00",
-                        "level": "INFO",
-                        "filename": "_example_wfs.py:283",
-                        "message": "hello, there!",
-                        "wf_run_id": "wf.wf_using_python_imports.2618433",
-                        "task_inv_id": "invocation-1-task-add-with-log",
-                        "task_run_id": (
-                            "wf.wf_using_python_imports.2618433"
-                            "@invocation-1-task-add-with-log.bb726"
-                        ),
-                    }
-                ),
-            ]
+            assert logs == ["hello, there!"]
 
         @staticmethod
         @pytest.mark.parametrize(

@@ -7,7 +7,7 @@ import typing as t
 
 import pytest
 
-from orquestra.sdk._ray import _ray_logs
+from orquestra.sdk._base import _log_adapter
 
 
 class TestMakeLogger:
@@ -39,42 +39,11 @@ class TestMakeLogger:
 
             return proc
 
-        def test_both_ids(self):
-            # Given
-            test_script = [
-                "from orquestra.sdk._base import _log_adapter",
-                'logger = _log_adapter._make_logger(wf_run_id="wf.1", task_inv_id="inv2", task_run_id="task_run_3")',  # noqa: E501
-                'logger.info("hello!")',
-            ]
-
-            # When
-            proc = self._run_script(test_script)
-
-            # Then
-            # Expect logs printed to stderr
-            assert proc.stdout == b""
-            assert proc.stderr != b""
-
-            lines = proc.stderr.splitlines()
-            assert len(lines) == 1
-
-            record = _ray_logs.parse_log_line(lines[0])
-            assert record is not None
-
-            # Expect timezone-aware dates
-            assert record.timestamp.tzinfo is not None
-
-            assert record.level == "INFO"
-            assert record.message == "hello!"
-            assert record.wf_run_id == "wf.1"
-            assert record.task_inv_id == "inv2"
-            assert record.task_run_id == "task_run_3"
-
         def test_no_ids(self):
             # Given
             test_script = [
                 "from orquestra.sdk._base import _log_adapter",
-                "logger = _log_adapter._make_logger(wf_run_id=None, task_inv_id=None, task_run_id=None)",  # noqa: E501
+                "logger = _log_adapter.make_logger()",  # noqa: E501
                 'logger.info("hello!")',
             ]
 
@@ -82,7 +51,6 @@ class TestMakeLogger:
             proc = self._run_script(test_script)
 
             # Then
-
             # Expect logs printed to stderr
             assert proc.stdout == b""
             assert proc.stderr != b""
@@ -90,14 +58,32 @@ class TestMakeLogger:
             lines = proc.stderr.splitlines()
             assert len(lines) == 1
 
-            record = _ray_logs.parse_log_line(lines[0])
-            assert record is not None
+    class TestUnit:
+        @staticmethod
+        def test_wfprint(capsys):
+            # Given
+            message = "foo"
 
-            # Expect timezone-aware dates
-            assert record.timestamp.tzinfo is not None
+            # When
+            with pytest.warns(DeprecationWarning):
+                _log_adapter.wfprint(message)
 
-            assert record.level == "INFO"
-            assert record.message == "hello!"
-            assert record.wf_run_id is None
-            assert record.task_inv_id is None
-            assert record.task_run_id is None
+            # Then
+            captured = capsys.readouterr()
+            assert captured.out == ""
+            assert message in captured.err
+
+        @staticmethod
+        def test_workflow_logger(capsys):
+            # Given
+            message = "foo"
+            with pytest.warns(DeprecationWarning):
+                logger = _log_adapter.workflow_logger()
+
+            # When
+            logger.info(message)
+
+            # Then
+            captured = capsys.readouterr()
+            assert captured.out == ""
+            assert message in captured.err

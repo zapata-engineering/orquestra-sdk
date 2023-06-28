@@ -11,16 +11,19 @@
 🔥 *Features*
 * Adding `FutureWarning` when accessing CE Secrets without specifying Workspace.
 * Users can use `ORQ_CURRENT_PROJECT` and `ORQ_CURRENT_WORKSPACE` env variables to set default workspace and project for their interactions with CE.
+* Local runtime now captures any logs printed to standard output and error streams when a task is running. In particular, this means plain `print()`s will be captured and reported back with `orq wf logs` or `orq task logs`.
 
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
 
 💅 *Improvements*
+* User-emitted logs are no longer wrapped in an JSON dictionary with metadata. `print("foo")` will now result in a log line `"foo"` instead of `'{"message": "foo", "timestamp": ..., "wf_run_id": ..., ...}'`
 
 🥷 *Internal*
 * Refactored `datetime` and timezone handling.
 * Orquestra runtime now emits marker logs at Orquestra task start/end.
+* Deprecated `sdk.wfprint()` and `sdk.workflow_logger()`.
 
 📃 *Docs*
 * "Remote Workflows" updated to describe logging in with a specific runtime, and reflect the current login process (automatic opening of login page, copying of token).
