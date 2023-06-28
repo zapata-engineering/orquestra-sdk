@@ -244,10 +244,13 @@ def _make_ray_dag_node(
                     )
                 except Exception as e:
                     # pragma: no cover
-                    # This branch is tested via integration tests in a worker process in
-                    # tests/runtime/ray/test_integration.py::TestDirectRayReader::TestGetWorkflowLogs
-                    # and
-                    # tests/runtime/ray/test_integration.py::TestDirectRayReader::test_get_task_logs
+                    # This branch is tested via integration tests in a separate worker
+                    # process in:
+                    # - tests/runtime/ray/test_integration.py::TestDirectRayReader
+                    #   ::TestGetWorkflowLogs::test_per_task_content
+                    #   [wf1-ZeroDivisionError: division by zero]
+                    # - tests/runtime/ray/test_integration.py::TestDirectRayReader
+                    #   ::test_get_task_logs::[wf1-ZeroDivisionError: division by zero]
 
                     # TODO: remove this logger and the whole try/except when moving to
                     # task markers in the local runtime.
