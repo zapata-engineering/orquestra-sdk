@@ -730,8 +730,10 @@ class TestWFRunResolver:
             ],
         )
         def test_only_positive_switches_set(
-            switches: t.Tuple[bool, bool, bool],
-            expected_switches: t.Tuple[bool, bool, bool],
+            switches: t.Tuple[
+                t.Optional[bool], t.Optional[bool], t.Optional[bool], t.Optional[bool]
+            ],
+            expected_switches: t.Tuple[bool, bool, bool, bool],
         ):
             """
             The user has set some, but not all, switches to True, and the log types
@@ -784,7 +786,9 @@ class TestWFRunResolver:
             ],
         )
         def test_none_or_only_negative_switches_set(
-            switches: t.Tuple[bool, bool, bool]
+            switches: t.Tuple[
+                t.Optional[bool], t.Optional[bool], t.Optional[bool], t.Optional[bool]
+            ],
         ):
             """
             The user has set some, but not all, switches to False, and all the log
@@ -912,7 +916,10 @@ class TestWFRunResolver:
             ],
         )
         def test_user_choices(
-            user_choice: str, expected_switches: t.Tuple[bool, bool, bool]
+            user_choice: t.Union[str, WorkflowLogTypeName],
+            expected_switches: t.Tuple[
+                t.Optional[bool], t.Optional[bool], t.Optional[bool], t.Optional[bool]
+            ],
         ):
             """
             The user chooses the logs type when prompted. The resolver should set the
@@ -1045,8 +1052,10 @@ class TestWFRunResolver:
             ],
         )
         def test_choices_limited_by_availibilty_and_negative_switches(
-            logs,
-            switches: t.Tuple[bool, bool, bool],
+            logs: WorkflowLogs,
+            switches: t.Tuple[
+                t.Optional[bool], t.Optional[bool], t.Optional[bool], t.Optional[bool]
+            ],
             expected_choices: t.List[WorkflowLogTypeName],
         ):
             # Given
