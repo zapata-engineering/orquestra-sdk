@@ -83,11 +83,13 @@ class WrappedCorqOutputPresenter:
 
     @singledispatchmethod
     @staticmethod
-    def _format_logs() -> t.List[str]:
+    def _format_logs(*args) -> t.List[str]:
         """
         Format the logs into a list of strings to be printed.
         """
-        ...  # pragma: no cover
+        raise NotImplementedError(
+            f"No log lines constructor for args {args}"
+        )  # pragma: no cover
 
     @_format_logs.register(dict)
     @staticmethod

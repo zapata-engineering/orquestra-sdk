@@ -121,13 +121,15 @@ class LogsDumper:
 
     @singledispatchmethod
     @staticmethod
-    def _construct_output_log_lines(self) -> t.List[str]:
+    def _construct_output_log_lines(self, *args) -> t.List[str]:
         """
         Construct a list of log lines to be printed.
 
         This method has overloads for dict and list arguments.
         """
-        ...  # pragma: no cover
+        raise NotImplementedError(
+            f"No log lines constructor for args {args}"
+        )  # pragma: no cover
 
     @_construct_output_log_lines.register(dict)
     @staticmethod
