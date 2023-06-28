@@ -95,6 +95,7 @@ class TestAction:
                 task="<task sentinel>",
                 system="<system sentinel>",
                 env_setup="<env sentinel>",
+                other="<other sentinel>",
             )
 
             # Then
@@ -120,6 +121,7 @@ class TestAction:
                 "<task sentinel>",
                 "<system sentinel>",
                 "<env sentinel>",
+                "<other sentinel>",
                 action._wf_run_repo.get_wf_logs.return_value,
             )
 
@@ -177,6 +179,7 @@ class TestAction:
                 task="<task sentinel>",
                 system="<system sentinel>",
                 env_setup="<env sentinel>",
+                other="<other sentinel>",
             )
 
             # Then
@@ -202,6 +205,7 @@ class TestAction:
                 "<task sentinel>",
                 "<system sentinel>",
                 "<env sentinel>",
+                "<other sentinel>",
                 action._wf_run_repo.get_wf_logs.return_value,
             )
 

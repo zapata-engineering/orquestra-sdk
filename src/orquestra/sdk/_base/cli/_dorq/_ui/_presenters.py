@@ -75,7 +75,7 @@ class WrappedCorqOutputPresenter:
             log_type: additional information identify the type of logs saved.
         """
         click.echo(
-            f"Workflow {log_type.name + ' ' if log_type else ''}logs saved at {path}"
+            f"Workflow {log_type.value + ' ' if log_type else ''}logs saved at {path}"
         )
 
     @staticmethod

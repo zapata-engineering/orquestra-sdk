@@ -197,13 +197,20 @@ def wf_results(
     default=None,
     help="Show env-setup logs.",
 )
+@cloup.option(
+    "--other/--no-other",
+    is_flag=True,
+    default=None,
+    help="Show logs not included in the per-task, system, or env-setup logs.",
+)
 def wf_logs(
     wf_run_id: t.Optional[str],
     config: t.Optional[str],
     download_dir: t.Optional[Path],
-    task: bool,
-    system: bool,
-    env_setup: bool,
+    task: t.Optional[bool],
+    system: t.Optional[bool],
+    env_setup: t.Optional[bool],
+    other: t.Optional[bool],
 ):
     """
     Shows logs gathered during execution of a workflow produced by all tasks.
@@ -219,6 +226,7 @@ def wf_logs(
         task=task,
         system=system,
         env_setup=env_setup,
+        other=other,
     )
 
 

@@ -52,6 +52,7 @@ class Action:
         task: t.Optional[bool],
         system: t.Optional[bool],
         env_setup: t.Optional[bool],
+        other: t.Optional[bool],
     ):
         try:
             self._on_cmd_call_with_exceptions(
@@ -61,6 +62,7 @@ class Action:
                 task=task,
                 system=system,
                 env_setup=env_setup,
+                other=other,
             )
         except Exception as e:
             self._presenter.show_error(e)
@@ -73,6 +75,7 @@ class Action:
         task: t.Optional[bool],
         system: t.Optional[bool],
         env_setup: t.Optional[bool],
+        other: t.Optional[bool],
     ):
         # The order of resolving config and run ID is important. It dictates the flow
         # user sees, and possible choices in the prompts.
@@ -90,9 +93,9 @@ class Action:
         # need to check against which logs are available.
         switches: t.Mapping[
             WorkflowLogTypeName, bool
-        ] = self._wf_run_resolver.resolve_log_switches(task, system, env_setup, logs)
-
-        print(switches)
+        ] = self._wf_run_resolver.resolve_log_switches(
+            task, system, env_setup, other, logs
+        )
 
         for log_type in switches:
             if not switches[log_type]:

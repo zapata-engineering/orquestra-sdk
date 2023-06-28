@@ -293,6 +293,7 @@ class WFRunResolver:
         task: t.Optional[bool],
         system: t.Optional[bool],
         env_setup: t.Optional[bool],
+        other: t.Optional[bool],
         logs: WorkflowLogs,
     ) -> t.Mapping[WorkflowLogTypeName, bool]:
         """
@@ -307,6 +308,7 @@ class WFRunResolver:
             WorkflowLogTypeName.PER_TASK: task,
             WorkflowLogTypeName.SYSTEM: system,
             WorkflowLogTypeName.ENV_SETUP: env_setup,
+            WorkflowLogTypeName.OTHER: other,
         }
         log_availibility: t.Mapping[WorkflowLogTypeName, bool] = {
             log_type: len(logs.get_log_type(log_type)) >= 1
@@ -324,7 +326,8 @@ class WFRunResolver:
                 if bool(user_switch_values[log_type]):
                     if not log_availibility[log_type]:
                         warnings.warn(
-                            f"No {log_type} logs are available for this workflow"
+                            f"No '{log_type.value}' logs are available "
+                            "for this workflow"
                         )
                     else:
                         ret_switch_values[log_type] = True
