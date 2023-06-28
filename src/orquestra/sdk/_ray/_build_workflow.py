@@ -213,6 +213,10 @@ def _make_ray_dag_node(
                     if serialization
                     else wrapped_return
                 )
+                assert isinstance(
+                    packed, (responses.JSONResult, responses.PickleResult)
+                ), f"Invalid output type. {type(packed) = }. {packed = }. {user_fn = }"
+
                 unpacked: t.Tuple[responses.WorkflowResult, ...]
 
                 if n_outputs is not None and n_outputs > 1:
