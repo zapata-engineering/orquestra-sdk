@@ -9,8 +9,7 @@ from orquestra.sdk._base._logs._interfaces import WorkflowLogs, WorkflowLogTypeN
 
 class TestWorkflowLogs:
     @pytest.fixture
-    @staticmethod
-    def logs():
+    def logs(self):
         per_task = {"<task inv sentinel>": ["<per task sentinel>"]}
         env_setup = ["<env setup sentinel>"]
         system = ["<system sentinel>"]
