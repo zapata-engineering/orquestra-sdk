@@ -120,11 +120,18 @@ class LogsDumper:
         return logs_file
 
     @singledispatchmethod
-    def _construct_output_log_lines(self):
+    @staticmethod
+    def _construct_output_log_lines(self) -> t.List[str]:
+        """
+        Construct a list of log lines to be printed.
+
+        This method has overloads for dict and list arguments.
+        """
         ...
 
     @_construct_output_log_lines.register(dict)
-    def _(self, logs: dict) -> t.List[str]:
+    @staticmethod
+    def _(logs: dict) -> t.List[str]:
         outlines = []
         for task_invocation in logs:
             outlines.append(f"Logs for task invocation: {task_invocation}:\n\n")
@@ -134,5 +141,6 @@ class LogsDumper:
         return outlines
 
     @_construct_output_log_lines.register(list)
-    def _(self, logs: list) -> t.List[str]:
+    @staticmethod
+    def _(logs: list) -> t.List[str]:
         return [log + "\n" for log in logs]

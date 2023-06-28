@@ -12,6 +12,7 @@ import typing as t
 import webbrowser
 from contextlib import contextmanager
 from datetime import datetime, timezone
+from functools import singledispatchmethod
 from pathlib import Path
 from typing import Iterable, Iterator, List, Sequence
 
@@ -78,13 +79,27 @@ class WrappedCorqOutputPresenter:
             f"Workflow {log_type.value + ' ' if log_type else ''}logs saved at {path}"
         )
 
+    @singledispatchmethod
     @staticmethod
-    def _format_log_dict(logs: t.Mapping[TaskInvocationId, t.Sequence[str]]):
+    def _format_logs() -> t.List[str]:
+        """
+        Format the logs into a list of strings to be printed.
+        """
+        ...
+
+    @_format_logs.register(dict)
+    @staticmethod
+    def _(logs: dict):
         return [
             line
             for invocation_id, invocation_lines in logs.items()
             for line in (f"task-invocation-id: {invocation_id}", *invocation_lines)
         ]
+
+    @_format_logs.register(list)
+    @staticmethod
+    def _(logs: list):
+        return logs
 
     def show_logs(
         self,
@@ -94,11 +109,8 @@ class WrappedCorqOutputPresenter:
         """
         Present logs to the user.
         """
-        _logs: t.Sequence[str]
-        if isinstance(logs, t.Mapping):
-            _logs = self._format_log_dict(logs)
-        else:
-            _logs = logs
+        _logs = self._format_logs(logs)
+
         resp = responses.GetLogsResponse(
             meta=responses.ResponseMetadata(
                 success=True,
