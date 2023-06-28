@@ -244,7 +244,10 @@ def _make_ray_dag_node(
                     )
                 except Exception as e:
                     # pragma: no cover
-                    # This branch is tested via integration tests in a worker process.
+                    # This branch is tested via integration tests in a worker process in
+                    # tests/runtime/ray/test_integration.py::TestDirectRayReader::TestGetWorkflowLogs
+                    # and
+                    # tests/runtime/ray/test_integration.py::TestDirectRayReader::test_get_task_logs
 
                     # TODO: remove this logger and the whole try/except when moving to
                     # task markers in the local runtime.

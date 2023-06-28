@@ -1,6 +1,14 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
+"""
+Specialized log lines we emit in Orquestra logs.
+
+
+``TaskStartMarker`` and ``TaskEndMarker`` are record types that hold the information we
+emit in the log markers. They're dataclasses and not pydantic models because we're
+not just using plain JSON: we're using prefix markers.
+"""
 import json
 import re
 import sys
@@ -17,11 +25,6 @@ ORQ_MARKER_PREFIX = "ORQ-MARKER:"
 ORQ_MARKER_PATTERN = re.compile(re.escape(ORQ_MARKER_PREFIX) + r"(.+)")
 
 
-# `TaskStartMarker` and `TaskEndMarker` are record types that hold the information we
-# emit in the log markers. They're dataclasses and not pydantic models because we're
-# not just using plain JSON: we're using prefix markers.
-
-
 @dataclass(frozen=True)
 class TaskStartMarker:
     event = "task_start"
@@ -32,7 +35,7 @@ class TaskStartMarker:
     @property
     def line(self) -> str:
         event = {
-            "event": "task_start",
+            "event": self.event,
             "timestamp": _dates.local_isoformat(self.timestamp),
             "wf_run_id": self.wf_run_id,
             "task_inv_id": self.task_inv_id,
@@ -50,7 +53,7 @@ class TaskEndMarker:
     @property
     def line(self) -> str:
         event = {
-            "event": "task_end",
+            "event": self.event,
             "timestamp": _dates.local_isoformat(self.timestamp),
             **({"wf_run_id": self.wf_run_id} if self.wf_run_id else {}),
             **({"task_inv_id": self.task_inv_id} if self.task_inv_id else {}),
@@ -62,25 +65,32 @@ Marker = t.Union[TaskStartMarker, TaskEndMarker]
 
 
 def parse_line(line: str) -> t.Optional[Marker]:
+    """
+    Attemps to interpret a single log line as a marker.
+
+    Returns:
+        - Deserialized marker object with the marker event's content.
+        - None if the line doesn't match the marker format.
+    """
     if not line.startswith(ORQ_MARKER_PREFIX):
         return None
 
     if (match := ORQ_MARKER_PATTERN.match(line)) is None:
         return None
 
-    event = json.loads(match.group(1))
+    event_dict = json.loads(match.group(1))
     try:
-        if event["event"] == TaskStartMarker.event:
+        if event_dict["event"] == TaskStartMarker.event:
             return TaskStartMarker(
-                wf_run_id=event["wf_run_id"],
-                task_inv_id=event["task_inv_id"],
-                timestamp=_dates.from_isoformat(event["timestamp"]),
+                wf_run_id=event_dict["wf_run_id"],
+                task_inv_id=event_dict["task_inv_id"],
+                timestamp=_dates.from_isoformat(event_dict["timestamp"]),
             )
-        elif event["event"] == TaskEndMarker.event:
+        elif event_dict["event"] == TaskEndMarker.event:
             return TaskEndMarker(
-                wf_run_id=event.get("wf_run_id"),
-                task_inv_id=event.get("task_inv_id"),
-                timestamp=_dates.from_isoformat(event["timestamp"]),
+                wf_run_id=event_dict.get("wf_run_id"),
+                task_inv_id=event_dict.get("task_inv_id"),
+                timestamp=_dates.from_isoformat(event_dict["timestamp"]),
             )
         else:
             return None
@@ -90,7 +100,9 @@ def parse_line(line: str) -> t.Optional[Marker]:
 
 def print_start(wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
     """
-    Emits "task start" marker to stdout and stderr. Required for task-log correlation.
+    Emits "task start" marker to stdout and stderr.
+
+    Required for task-log correlation.
     """
     now = _dates.now()
     marker = TaskStartMarker(
@@ -102,7 +114,9 @@ def print_start(wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
 
 def print_end(wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
     """
-    Emits "task end" marker to stdout and stderr. Required for task-log correlation.
+    Emits "task end" marker to stdout and stderr.
+
+    Required for task-log correlation.
     """
     now = _dates.now()
     marker = TaskEndMarker(wf_run_id=wf_run_id, task_inv_id=task_inv_id, timestamp=now)
