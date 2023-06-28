@@ -10,6 +10,7 @@ from unittest.mock import Mock, call, create_autospec
 
 import pytest
 
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs, WorkflowLogTypeName
 from orquestra.sdk._base.cli._dorq._arg_resolvers import WFConfigResolver, WFRunResolver
 from orquestra.sdk._base.cli._dorq._dumpers import LogsDumper
 from orquestra.sdk._base.cli._dorq._repos import WorkflowRunRepo
@@ -43,14 +44,15 @@ class TestAction:
             dumper = create_autospec(LogsDumper)
             wf_run_repo = create_autospec(WorkflowRunRepo)
 
-            logs = Mock()
-            logs.per_task = {
-                "task_inv1": ["my_log_1", "my_log_2"],
-                "task_inv2": ["log3"],
-            }
-            logs.system = ["sys_log_1", "sys_log_2"]
-            logs.env_setup = ["env_log_1", "env_log_2"]
-            logs.other = []
+            logs = WorkflowLogs(
+                per_task={
+                    "task_inv1": ["my_log_1", "my_log_2"],
+                    "task_inv2": ["log3"],
+                },
+                system=["sys_log_1", "sys_log_2"],
+                env_setup=["env_log_1", "env_log_2"],
+                other=[],
+            )
             wf_run_repo.get_wf_logs = Mock(return_value=logs)
 
             config_resolver = create_autospec(WFConfigResolver)
@@ -79,11 +81,11 @@ class TestAction:
             wf_run_id = "<wf run ID sentinel>"
             config = "<config sentinel>"
             download_dir = None
-            action._wf_run_resolver.resolve_log_switches.return_value = (
-                task_switch,
-                system_switch,
-                env_setup_switch,
-            )
+            action._wf_run_resolver.resolve_log_switches.return_value = {
+                WorkflowLogTypeName.PER_TASK: task_switch,
+                WorkflowLogTypeName.SYSTEM: system_switch,
+                WorkflowLogTypeName.ENV_SETUP: env_setup_switch,
+            }
 
             # When
             action.on_cmd_call(
@@ -157,11 +159,11 @@ class TestAction:
             wf_run_id = "<wf run ID sentinel>"
             config = "<config sentinel>"
             download_dir = Path("/cool/path")
-            action._wf_run_resolver.resolve_log_switches.return_value = (
-                task_switch,
-                system_switch,
-                env_setup_switch,
-            )
+            action._wf_run_resolver.resolve_log_switches.return_value = {
+                WorkflowLogTypeName.PER_TASK: task_switch,
+                WorkflowLogTypeName.SYSTEM: system_switch,
+                WorkflowLogTypeName.ENV_SETUP: env_setup_switch,
+            }
 
             # Custom mocks
             dumped_path = "<dumped path sentinel>"

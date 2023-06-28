@@ -8,7 +8,7 @@ import typing as t
 import warnings
 from pathlib import Path
 
-from orquestra.sdk._base._logs._interfaces import WorkflowLogTypeName
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs, WorkflowLogTypeName
 from orquestra.sdk.schema.configs import ConfigName
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
@@ -82,45 +82,36 @@ class Action:
         )
 
         # Get the available logs
-        logs = self._wf_run_repo.get_wf_logs(
+        logs: WorkflowLogs = self._wf_run_repo.get_wf_logs(
             wf_run_id=resolved_wf_run_id, config_name=resolved_config
         )
 
         # Resolve the log type switches. This must happen after getting the logs as we
         # need to check against which logs are available.
-        resolved_task_switch: bool
-        resolved_system_switch: bool
-        resolved_env_setup_switch: bool
-        (
-            resolved_task_switch,
-            resolved_system_switch,
-            resolved_env_setup_switch,
-        ) = self._wf_run_resolver.resolve_log_switches(task, system, env_setup, logs)
+        switches: t.Mapping[
+            WorkflowLogTypeName, bool
+        ] = self._wf_run_resolver.resolve_log_switches(task, system, env_setup, logs)
 
-        for switch, log, identifier in zip(
-            [resolved_task_switch, resolved_system_switch, resolved_env_setup_switch],
-            [logs.per_task, logs.system, logs.env_setup],
-            [
-                WorkflowLogTypeName.PER_TASK,
-                WorkflowLogTypeName.SYSTEM,
-                WorkflowLogTypeName.ENV_SETUP,
-            ],
-        ):
-            if not switch:
+        print(switches)
+
+        for log_type in switches:
+            if not switches[log_type]:
                 continue
+
+            log = logs.get_log_type(log_type)
 
             if len(log) < 1:
-                warnings.warn(f"No {identifier} logs found.", category=UserWarning)
+                warnings.warn(f"No {log_type} logs found.", category=UserWarning)
                 continue
-
+            print("HERE2")
             if download_dir:
                 dump_path = self._dumper.dump(
                     logs=log,
                     wf_run_id=resolved_wf_run_id,
                     dir_path=download_dir,
-                    log_type=identifier,
+                    log_type=log_type,
                 )
 
-                self._presenter.show_dumped_wf_logs(dump_path, log_type=identifier)
+                self._presenter.show_dumped_wf_logs(dump_path, log_type=log_type)
             else:
-                self._presenter.show_logs(log, log_type=identifier)
+                self._presenter.show_logs(log, log_type=log_type)

@@ -7,6 +7,7 @@ from unittest.mock import create_autospec
 
 import pytest
 
+from orquestra.sdk._base._logs._interfaces import WorkflowLogTypeName
 from orquestra.sdk._base.cli._dorq import _dumpers
 from orquestra.sdk.schema.ir import ArtifactFormat
 
@@ -155,7 +156,7 @@ class TestTaskOutputDumper:
 class TestLogsDumper:
     class TestGetLogsFile:
         @staticmethod
-        def test_without_suffix():
+        def test_without_log_type():
             dumper = _dumpers.LogsDumper()
             path = create_autospec(Path)
             assert (
@@ -165,21 +166,19 @@ class TestLogsDumper:
 
         @staticmethod
         @pytest.mark.parametrize(
-            "suffix, expected_suffix",
+            "log_type, expected_suffix",
             [
-                ("per task", "_per_task"),
-                ("system", "system"),
-                ("env setup", "_env_setup"),
-                ("PER TASK", "_per_task"),
-                ("sYsTeM", "system"),
+                (WorkflowLogTypeName.PER_TASK, "_per_task"),
+                (WorkflowLogTypeName.SYSTEM, "_system"),
+                (WorkflowLogTypeName.ENV_SETUP, "_env_setup"),
             ],
         )
-        def test_with_suffix(suffix, expected_suffix):
+        def test_with_suffix(log_type, expected_suffix):
             dumper = _dumpers.LogsDumper()
             path = create_autospec(Path)
             assert (
                 dumper._get_logs_file(
-                    path, wf_run_id="<wf run id sentinel>", suffix=suffix
+                    path, wf_run_id="<wf run id sentinel>", log_type=log_type
                 )
                 == path / f"<wf run id sentinel>{expected_suffix}.log"
             )

@@ -19,6 +19,7 @@ import click
 from tabulate import tabulate
 
 from orquestra.sdk._base import _config, _env, _services, serde
+from orquestra.sdk._base._logs._interfaces import WorkflowLogTypeName
 from orquestra.sdk.schema import responses
 from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.workflow_run import (
@@ -63,7 +64,9 @@ class WrappedCorqOutputPresenter:
     def show_stopped_wf_run(self, wf_run_id: WorkflowRunId):
         click.echo(f"Workflow run {wf_run_id} stopped.")
 
-    def show_dumped_wf_logs(self, path: Path, log_type: t.Optional[str] = None):
+    def show_dumped_wf_logs(
+        self, path: Path, log_type: t.Optional[WorkflowLogTypeName] = None
+    ):
         """
         Tell the user where logs have been saved.
 
@@ -71,7 +74,9 @@ class WrappedCorqOutputPresenter:
             path: The path to the dump file.
             log_type: additional information identify the type of logs saved.
         """
-        click.echo(f"Workflow {log_type + ' ' if log_type else ''}logs saved at {path}")
+        click.echo(
+            f"Workflow {log_type.name + ' ' if log_type else ''}logs saved at {path}"
+        )
 
     @staticmethod
     def _format_log_dict(logs: t.Mapping[TaskInvocationId, t.Sequence[str]]):
@@ -84,7 +89,7 @@ class WrappedCorqOutputPresenter:
     def show_logs(
         self,
         logs: t.Union[t.Mapping[TaskInvocationId, t.Sequence[str]], t.Sequence[str]],
-        log_type: t.Optional[str] = None,
+        log_type: t.Optional[WorkflowLogTypeName] = None,
     ):
         """
         Present logs to the user.
@@ -104,7 +109,7 @@ class WrappedCorqOutputPresenter:
         )
 
         if log_type:
-            _log_type = log_type + " logs"
+            _log_type = f"{log_type.value} logs".replace("_", " ")
             click.echo(f"=== {_log_type.upper()} " + "=" * (75 - len(_log_type)))
         per_command.pretty_print_response(resp, project_dir=None)
         if log_type:

@@ -6,6 +6,7 @@
 Code that stores values on disk as a result of a CLI command.
 """
 import typing as t
+from functools import singledispatchmethod
 from pathlib import Path
 
 from orquestra.sdk._base import serde
@@ -85,11 +86,15 @@ class LogsDumper:
 
     @staticmethod
     def _get_logs_file(
-        dir_path: Path, wf_run_id: WorkflowRunId, suffix: t.Optional[str] = None
+        dir_path: Path,
+        wf_run_id: WorkflowRunId,
+        log_type: t.Optional[WorkflowLogTypeName] = None,
     ) -> Path:
         dir_path.mkdir(parents=True, exist_ok=True)
-        if suffix:
-            return dir_path / f"{wf_run_id}_{suffix.lower().replace(' ', '_')}.log"
+        if log_type:
+            return (
+                dir_path / f"{wf_run_id}_{log_type.value.lower().replace(' ', '_')}.log"
+            )
         return dir_path / f"{wf_run_id}.log"
 
     def dump(
@@ -98,24 +103,36 @@ class LogsDumper:
         wf_run_id: WorkflowRunId,
         dir_path: Path,
         log_type: t.Optional[WorkflowLogTypeName] = None,
-    ) -> Path:
+    ):
         """
         Save logs from wf into a file.
 
         Creates missing directories. Generates filenames based on ``wf_run_id``
         No standard errors are expected to be raised.
         """
-        logs_file = self._get_logs_file(dir_path, wf_run_id, suffix=log_type)
+        logs_file = self._get_logs_file(dir_path, wf_run_id, log_type=log_type)
+
+        log_lines = self._construct_output_log_lines(logs)
 
         with logs_file.open("w") as f:
-            if isinstance(logs, t.Mapping):
-                for task_invocation in logs:
-                    f.write(f"Logs for task invocation: {task_invocation}:\n\n")
-                    for log in logs[task_invocation]:
-                        f.write(log + "\n")
-                    f.write("\n\n")
-            else:
-                for log in logs:
-                    f.write(log + "\n")
+            f.writelines(log_lines)
 
         return logs_file
+
+    @singledispatchmethod
+    def _construct_output_log_lines(self):
+        ...
+
+    @_construct_output_log_lines.register(dict)
+    def _(self, logs: dict) -> t.List[str]:
+        outlines = []
+        for task_invocation in logs:
+            outlines.append(f"Logs for task invocation: {task_invocation}:\n\n")
+            for log in logs[task_invocation]:
+                outlines.append(log + "\n")
+            outlines.append("\n\n")
+        return outlines
+
+    @_construct_output_log_lines.register(list)
+    def _(self, logs: list) -> t.List[str]:
+        return [log + "\n" for log in logs]
