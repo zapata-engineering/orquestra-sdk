@@ -1079,6 +1079,39 @@ class TestWFRunResolver:
                 allow_all=True,
             )
 
+        @staticmethod
+        def test_warns_if_requested_logs_unavailable():
+            logs = WorkflowLogs(
+                per_task={},
+                system=[],
+                env_setup=[],
+                other=[],
+            )
+            prompter = create_autospec(_prompts.Prompter)
+            resolver = _arg_resolvers.WFRunResolver(
+                wf_run_repo=create_autospec(_repos.WorkflowRunRepo), prompter=prompter
+            )
+            log_types = [
+                WorkflowLogTypeName.PER_TASK,
+                WorkflowLogTypeName.SYSTEM,
+                WorkflowLogTypeName.ENV_SETUP,
+                WorkflowLogTypeName.OTHER,
+            ]
+
+            with pytest.warns(UserWarning) as e:
+                resolved_switches = resolver.resolve_log_switches(
+                    True, True, True, True, logs
+                )
+
+            assert len(e.list) == 4
+            warnings = [str(w.message) for w in e.list]
+            for log_type in log_types:
+                assert resolved_switches[log_type] is False
+                assert (
+                    f"No '{log_type.value}' logs are available for this workflow"
+                    in warnings
+                )
+
 
 class TestTaskInvIDResolver:
     """

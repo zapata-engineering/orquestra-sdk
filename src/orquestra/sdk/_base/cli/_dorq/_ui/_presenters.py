@@ -85,7 +85,7 @@ class WrappedCorqOutputPresenter:
         """
         Format the logs into a list of strings to be printed.
         """
-        ...
+        ...  # pragma: no cover
 
     @_format_logs.register(dict)
     @staticmethod

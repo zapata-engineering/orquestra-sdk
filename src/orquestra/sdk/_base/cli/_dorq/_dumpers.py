@@ -127,7 +127,7 @@ class LogsDumper:
 
         This method has overloads for dict and list arguments.
         """
-        ...
+        ...  # pragma: no cover
 
     @_construct_output_log_lines.register(dict)
     @staticmethod
