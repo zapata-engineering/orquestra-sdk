@@ -26,41 +26,6 @@ from orquestra.sdk.schema.workflow_run import (
 )
 
 
-class TestInitialization:
-    @pytest.mark.parametrize("proj_dir", [".", Path(".")])
-    @pytest.mark.parametrize("verbose", [True, False])
-    def test_passing_project_dir_and_config_obj(self, proj_dir, verbose):
-        """
-        - GIVEN a CE runtime configuration
-        - WHEN creating a CERuntime instance via the constructor or factory method
-        - THEN the resulting runtime objects have the same options
-        """
-        config = RuntimeConfiguration(
-            config_name="hello",
-            runtime_name=RuntimeName.CE_REMOTE,
-            runtime_options={"uri": "http://localhost", "token": "blah"},
-        )
-
-        # when
-        rt = _ce_runtime.CERuntime(config=config, verbose=verbose)
-        rt2 = _ce_runtime.CERuntime.from_runtime_configuration(
-            project_dir=proj_dir, config=config, verbose=verbose
-        )
-
-        # then
-        assert rt._config == rt2._config  # type: ignore
-        assert rt._verbose == rt2._verbose  # type: ignore
-
-    def test_invalid_config(self):
-        config = RuntimeConfiguration(
-            config_name="hello",
-            runtime_name=RuntimeName.CE_REMOTE,
-            runtime_options={},
-        )
-        with pytest.raises(exceptions.RuntimeConfigError):
-            _ce_runtime.CERuntime(config)
-
-
 @pytest.fixture
 def mocked_client(monkeypatch: pytest.MonkeyPatch):
     mocked_client = MagicMock(spec=_client.DriverClient)

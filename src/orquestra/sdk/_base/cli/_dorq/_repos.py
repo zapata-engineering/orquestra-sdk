@@ -19,7 +19,7 @@ from typing_extensions import assert_never
 from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _config, _dates, _db, loader
-from orquestra.sdk._base._driver._client import DriverClient
+from orquestra.sdk._base._driver._client import DriverClient, ExternalUriProvider
 from orquestra.sdk._base._jwt import check_jwt_without_signature_verification
 from orquestra.sdk._base._qe import _client
 from orquestra.sdk._base._spaces._structs import ProjectRef
@@ -580,7 +580,8 @@ class RuntimeRepo:
     ):
         client: t.Union[DriverClient, _client.QEClient]
         if runtime_name == RuntimeName.CE_REMOTE:
-            client = DriverClient(base_uri=uri, session=requests.Session())
+            uri_provider = ExternalUriProvider(base_uri=uri)
+            client = DriverClient(session=requests.Session(), uri_provider=uri_provider)
         elif runtime_name == RuntimeName.QE_REMOTE:
             client = _client.QEClient(session=requests.Session(), base_uri=uri)
         else:

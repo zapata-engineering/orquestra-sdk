@@ -121,10 +121,18 @@ class TestRayRuntime:
 
     @staticmethod
     @pytest.fixture
-    def runtime_config():
+    def runtime_config(monkeypatch):
+        monkeypatch.setattr(_dag.RayRuntime, "startup", lambda *_, **__: ...)
         return RuntimeConfiguration(
             config_name="TestRayRuntime",
             runtime_name=RuntimeName.RAY_LOCAL,
+            runtime_options={
+                "address": None,
+                "log_to_driver": True,
+                "storage": None,
+                "temp_dir": None,
+                "configure_logging": None,
+            },
         )
 
     class TestReadingLogs:
@@ -396,9 +404,7 @@ class TestRayRuntime:
         # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
         # unraisable exceptions. Last tested with Ray 2.3.0.
         @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
-        def test_raises_RayNotRunningError_when_ray_not_running(
-            monkeypatch, runtime_config, tmp_path
-        ):
+        def test_raises_RayNotRunningError_when_ray_not_running(monkeypatch, tmp_path):
             # GIVEN
             monkeypatch.setattr(
                 _client.RayClient,

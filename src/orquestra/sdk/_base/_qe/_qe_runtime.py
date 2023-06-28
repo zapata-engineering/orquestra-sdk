@@ -433,29 +433,6 @@ class QERuntime(RuntimeInterface):
         session.headers["Authorization"] = f"Bearer {token}"
         self._client = _client.QEClient(session=session, base_uri=base_uri)
 
-    @classmethod
-    def from_runtime_configuration(
-        cls,
-        project_dir: Path,
-        config: RuntimeConfiguration,
-        verbose: bool = False,
-    ) -> "QERuntime":
-        """
-        Args:
-            config: contains the runtime configuration, including the name of the
-                config being used and the associated runtime options. These options
-                control how to connect to a QE cluster.
-            project_dir: the project directory, either Path-like or a string.
-                This is to (de)serialise the WorkflowDef associated with this workflow
-                run.
-            verbose: boolean, if TRUE the QERuntime is set to print information about
-                        its inner working, useful to debug
-
-        Raises:
-            orquestra.sdk.exceptions.RuntimeConfigError: when the config is invalid
-        """
-        return cls(project_dir=project_dir, config=config, verbose=verbose)
-
     def _get_task_run_logs(
         self, wf_run_id: WorkflowRunId, task_run_id: TaskRunId
     ) -> List[str]:

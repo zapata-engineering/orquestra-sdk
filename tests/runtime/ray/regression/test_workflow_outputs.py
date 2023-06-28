@@ -29,7 +29,7 @@ def runtime(tmp_path_factory: pytest.TempPathFactory, change_db_location):
         runtime_name=configs.RuntimeName.RAY_LOCAL,
     )
     client = _client.RayClient()
-    rt = _dag.RayRuntime(client, config, project_dir)
+    rt = _dag.RayRuntime(config, project_dir, client)
     yield rt
 
 

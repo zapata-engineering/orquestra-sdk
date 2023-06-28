@@ -7,7 +7,17 @@ from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 
 
 @pytest.fixture
-def runtime(mock_workflow_db_location):
+def mocked_client(monkeypatch: pytest.MonkeyPatch):
+    mocked_client = MagicMock(spec=_client.DriverClient)
+    mocked_client.from_token.return_value = mocked_client
+    monkeypatch.setattr(
+        "orquestra.sdk._base._driver._client.DriverClient", mocked_client
+    )
+    return mocked_client
+
+
+@pytest.fixture
+def runtime(mock_workflow_db_location, mocked_client):
     # Fake CE configuration
     config = RuntimeConfiguration(
         config_name="hello",
@@ -15,11 +25,11 @@ def runtime(mock_workflow_db_location):
         runtime_options={"uri": "http://localhost", "token": "blah"},
     )
     # Return a runtime object
-    return _ce_runtime.CERuntime(config)
+    return _ce_runtime.CERuntime(config, client=mocked_client)
 
 
 @pytest.fixture
-def runtime_verbose(tmp_path):
+def runtime_verbose(tmp_path, mocked_client):
     (tmp_path / ".orquestra").mkdir(exist_ok=True)
     # Fake QE configuration
     config = RuntimeConfiguration(
@@ -28,17 +38,11 @@ def runtime_verbose(tmp_path):
         runtime_options={"uri": "http://localhost", "token": "blah"},
     )
     # Return a runtime object
-    return _ce_runtime.CERuntime(config, True)
-
-
-@pytest.fixture
-def mocked_client(monkeypatch: pytest.MonkeyPatch):
-    mocked_client = MagicMock(spec=_client.DriverClient)
-    mocked_client.from_token.return_value = mocked_client
-    monkeypatch.setattr(
-        "orquestra.sdk._base._driver._client.DriverClient", mocked_client
+    return _ce_runtime.CERuntime(
+        config,
+        client=mocked_client,
+        verbose=True,
     )
-    return mocked_client
 
 
 @pytest.fixture
