@@ -1,9 +1,35 @@
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
-from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _models
+from orquestra.sdk._base._driver import _ce_runtime, _client
+from orquestra.sdk._base._factory import build_runtime_from_config
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
+
+
+@pytest.fixture
+def runtime(mock_workflow_db_location):
+    config = RuntimeConfiguration(
+        config_name="hello",
+        runtime_name=RuntimeName.CE_REMOTE,
+        runtime_options={"uri": "http://localhost", "token": "blah"},
+    )
+
+    return build_runtime_from_config(project_dir=Path.cwd(), config=config)
+
+
+@pytest.fixture
+def runtime_verbose(tmp_path):
+    (tmp_path / ".orquestra").mkdir(exist_ok=True)
+    # Fake QE configuration
+    config = RuntimeConfiguration(
+        config_name="hello",
+        runtime_name=RuntimeName.CE_REMOTE,
+        runtime_options={"uri": "http://localhost", "token": "blah"},
+    )
+    # Return a runtime object
+    return _ce_runtime.CERuntime(config, True)
 
 
 @pytest.fixture
@@ -14,35 +40,6 @@ def mocked_client(monkeypatch: pytest.MonkeyPatch):
         "orquestra.sdk._base._driver._client.DriverClient", mocked_client
     )
     return mocked_client
-
-
-@pytest.fixture
-def runtime(mock_workflow_db_location, mocked_client):
-    # Fake CE configuration
-    config = RuntimeConfiguration(
-        config_name="hello",
-        runtime_name=RuntimeName.CE_REMOTE,
-        runtime_options={"uri": "http://localhost", "token": "blah"},
-    )
-    # Return a runtime object
-    return _ce_runtime.CERuntime(config, client=mocked_client)
-
-
-@pytest.fixture
-def runtime_verbose(tmp_path, mocked_client):
-    (tmp_path / ".orquestra").mkdir(exist_ok=True)
-    # Fake QE configuration
-    config = RuntimeConfiguration(
-        config_name="hello",
-        runtime_name=RuntimeName.CE_REMOTE,
-        runtime_options={"uri": "http://localhost", "token": "blah"},
-    )
-    # Return a runtime object
-    return _ce_runtime.CERuntime(
-        config,
-        client=mocked_client,
-        verbose=True,
-    )
 
 
 @pytest.fixture
