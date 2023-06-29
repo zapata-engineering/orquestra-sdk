@@ -706,19 +706,12 @@ class TestWFRunResolver:
         @pytest.mark.parametrize(
             "switches, expected_switches",
             [
-                ((None, None, None, True), (False, False, False, True)),
-                ((None, None, True, None), (False, False, True, False)),
-                ((None, None, True, True), (False, False, True, True)),
-                ((None, True, None, None), (False, True, False, False)),
-                ((None, True, None, True), (False, True, False, True)),
-                ((None, True, True, None), (False, True, True, False)),
-                ((None, True, True, True), (False, True, True, True)),
-                ((True, None, None, True), (True, False, False, True)),
-                ((True, None, True, None), (True, False, True, False)),
-                ((True, None, True, True), (True, False, True, True)),
-                ((True, True, None, None), (True, True, False, False)),
-                ((True, True, None, True), (True, True, False, True)),
-                ((True, True, True, None), (True, True, True, False)),
+                ((per_task or None, system or None, env_setup or None, other or None), (per_task, system, env_setup, other))
+                for per_task in [True, False]
+                for system in [True, False]
+                for env_setup in [True, False]
+                for other in [True, False]
+                if any(per_task, system, env_setup, other)
             ],
         )
         def test_only_positive_switches_set(
