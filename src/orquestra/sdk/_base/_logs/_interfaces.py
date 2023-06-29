@@ -12,17 +12,6 @@ from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
 
-class WorkflowLogTypeName(Enum):
-    """
-    Enum for specifying the individual types of Workflow log.
-    """
-
-    PER_TASK = "per_task"
-    SYSTEM = "system"
-    ENV_SETUP = "env_setup"
-    OTHER = "other"
-
-
 @dataclass(frozen=True)
 class WorkflowLogs:
     per_task: t.Mapping[TaskInvocationId, t.Sequence[str]]
@@ -53,7 +42,7 @@ class WorkflowLogs:
     """
 
     def get_log_type(
-        self, log_type: WorkflowLogTypeName
+        self, log_type
     ) -> t.Union[t.Mapping[TaskInvocationId, t.Sequence[str]], t.Sequence[str]]:
         """
         Return the specified log type.
@@ -61,15 +50,25 @@ class WorkflowLogs:
         This method wraps the regular attribute getters in order to allow parametrised
         access to individual log types.
         """
-        if log_type == WorkflowLogTypeName.PER_TASK:
+        if log_type == self.WorkflowLogTypeName.PER_TASK:
             return self.per_task
-        elif log_type == WorkflowLogTypeName.SYSTEM:
+        elif log_type == self.WorkflowLogTypeName.SYSTEM:
             return self.system
-        elif log_type == WorkflowLogTypeName.ENV_SETUP:
+        elif log_type == self.WorkflowLogTypeName.ENV_SETUP:
             return self.env_setup
-        elif log_type == WorkflowLogTypeName.OTHER:
+        elif log_type == self.WorkflowLogTypeName.OTHER:
             return self.other
         raise ValueError(f"Unknown workflow log type '{log_type}'.")
+
+    class WorkflowLogTypeName(Enum):
+        """
+        Enum for specifying the individual types of Workflow log.
+        """
+
+        PER_TASK = "per_task"
+        SYSTEM = "system"
+        ENV_SETUP = "env_setup"
+        OTHER = "other"
 
 
 class LogReader(t.Protocol):

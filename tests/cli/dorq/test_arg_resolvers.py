@@ -9,7 +9,7 @@ import pytest
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _dates
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs, WorkflowLogTypeName
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._spaces._structs import Project, ProjectRef, Workspace
 from orquestra.sdk._base.cli._dorq import _arg_resolvers, _repos
 from orquestra.sdk._base.cli._dorq._ui import _presenters, _prompts
@@ -695,10 +695,10 @@ class TestWFRunResolver:
 
             # Then
             assert resolved_switches == {
-                WorkflowLogTypeName.PER_TASK: switches[0],
-                WorkflowLogTypeName.SYSTEM: switches[1],
-                WorkflowLogTypeName.ENV_SETUP: switches[2],
-                WorkflowLogTypeName.OTHER: switches[3],
+                WorkflowLogs.WorkflowLogTypeName.PER_TASK: switches[0],
+                WorkflowLogs.WorkflowLogTypeName.SYSTEM: switches[1],
+                WorkflowLogs.WorkflowLogTypeName.ENV_SETUP: switches[2],
+                WorkflowLogs.WorkflowLogTypeName.OTHER: switches[3],
             }
             prompter.choice.assert_not_called()
 
@@ -750,10 +750,10 @@ class TestWFRunResolver:
 
             # Then
             assert resolved_switches == {
-                WorkflowLogTypeName.PER_TASK: expected_switches[0],
-                WorkflowLogTypeName.SYSTEM: expected_switches[1],
-                WorkflowLogTypeName.ENV_SETUP: expected_switches[2],
-                WorkflowLogTypeName.OTHER: expected_switches[3],
+                WorkflowLogs.WorkflowLogTypeName.PER_TASK: expected_switches[0],
+                WorkflowLogs.WorkflowLogTypeName.SYSTEM: expected_switches[1],
+                WorkflowLogs.WorkflowLogTypeName.ENV_SETUP: expected_switches[2],
+                WorkflowLogs.WorkflowLogTypeName.OTHER: expected_switches[3],
             }
             prompter.choice.assert_not_called()
 
@@ -791,7 +791,7 @@ class TestWFRunResolver:
                 other=["fip"],
             )
             prompter = create_autospec(_prompts.Prompter)
-            prompter.choice.return_value = WorkflowLogTypeName.PER_TASK
+            prompter.choice.return_value = WorkflowLogs.WorkflowLogTypeName.PER_TASK
             resolver = _arg_resolvers.WFRunResolver(
                 wf_run_repo=create_autospec(_repos.WorkflowRunRepo), prompter=prompter
             )
@@ -799,10 +799,10 @@ class TestWFRunResolver:
                 (v.value, v)
                 for i, v in enumerate(
                     [
-                        WorkflowLogTypeName.PER_TASK,
-                        WorkflowLogTypeName.SYSTEM,
-                        WorkflowLogTypeName.ENV_SETUP,
-                        WorkflowLogTypeName.OTHER,
+                        WorkflowLogs.WorkflowLogTypeName.PER_TASK,
+                        WorkflowLogs.WorkflowLogTypeName.SYSTEM,
+                        WorkflowLogs.WorkflowLogTypeName.ENV_SETUP,
+                        WorkflowLogs.WorkflowLogTypeName.OTHER,
                     ]
                 )
                 if switches[i] is None
@@ -854,10 +854,10 @@ class TestWFRunResolver:
 
             # Then
             assert resolved_switches == {
-                WorkflowLogTypeName.PER_TASK: bool(switches[0]),
-                WorkflowLogTypeName.SYSTEM: bool(switches[1]),
-                WorkflowLogTypeName.ENV_SETUP: bool(switches[2]),
-                WorkflowLogTypeName.OTHER: bool(switches[3]),
+                WorkflowLogs.WorkflowLogTypeName.PER_TASK: bool(switches[0]),
+                WorkflowLogs.WorkflowLogTypeName.SYSTEM: bool(switches[1]),
+                WorkflowLogs.WorkflowLogTypeName.ENV_SETUP: bool(switches[2]),
+                WorkflowLogs.WorkflowLogTypeName.OTHER: bool(switches[3]),
             }
             prompter.choice.assert_not_called()
 
@@ -865,15 +865,21 @@ class TestWFRunResolver:
         @pytest.mark.parametrize(
             "user_choice, expected_switches",
             [
-                (WorkflowLogTypeName.PER_TASK, (True, False, False, False)),
-                (WorkflowLogTypeName.SYSTEM, (False, True, False, False)),
-                (WorkflowLogTypeName.ENV_SETUP, (False, False, True, False)),
-                (WorkflowLogTypeName.OTHER, (False, False, False, True)),
+                (
+                    WorkflowLogs.WorkflowLogTypeName.PER_TASK,
+                    (True, False, False, False),
+                ),
+                (WorkflowLogs.WorkflowLogTypeName.SYSTEM, (False, True, False, False)),
+                (
+                    WorkflowLogs.WorkflowLogTypeName.ENV_SETUP,
+                    (False, False, True, False),
+                ),
+                (WorkflowLogs.WorkflowLogTypeName.OTHER, (False, False, False, True)),
                 ("all", (True, True, True, True)),
             ],
         )
         def test_user_choices(
-            user_choice: t.Union[str, WorkflowLogTypeName],
+            user_choice: t.Union[str, WorkflowLogs.WorkflowLogTypeName],
             expected_switches: t.Tuple[
                 t.Optional[bool], t.Optional[bool], t.Optional[bool], t.Optional[bool]
             ],
@@ -902,20 +908,29 @@ class TestWFRunResolver:
 
             # Then
             assert resolved_switches == {
-                WorkflowLogTypeName.PER_TASK: expected_switches[0],
-                WorkflowLogTypeName.SYSTEM: expected_switches[1],
-                WorkflowLogTypeName.ENV_SETUP: expected_switches[2],
-                WorkflowLogTypeName.OTHER: expected_switches[3],
+                WorkflowLogs.WorkflowLogTypeName.PER_TASK: expected_switches[0],
+                WorkflowLogs.WorkflowLogTypeName.SYSTEM: expected_switches[1],
+                WorkflowLogs.WorkflowLogTypeName.ENV_SETUP: expected_switches[2],
+                WorkflowLogs.WorkflowLogTypeName.OTHER: expected_switches[3],
             }, resolved_switches
             prompter.choice.assert_called_once_with(
                 [
-                    (WorkflowLogTypeName.PER_TASK.value, WorkflowLogTypeName.PER_TASK),
-                    (WorkflowLogTypeName.SYSTEM.value, WorkflowLogTypeName.SYSTEM),
                     (
-                        WorkflowLogTypeName.ENV_SETUP.value,
-                        WorkflowLogTypeName.ENV_SETUP,
+                        WorkflowLogs.WorkflowLogTypeName.PER_TASK.value,
+                        WorkflowLogs.WorkflowLogTypeName.PER_TASK,
                     ),
-                    (WorkflowLogTypeName.OTHER.value, WorkflowLogTypeName.OTHER),
+                    (
+                        WorkflowLogs.WorkflowLogTypeName.SYSTEM.value,
+                        WorkflowLogs.WorkflowLogTypeName.SYSTEM,
+                    ),
+                    (
+                        WorkflowLogs.WorkflowLogTypeName.ENV_SETUP.value,
+                        WorkflowLogs.WorkflowLogTypeName.ENV_SETUP,
+                    ),
+                    (
+                        WorkflowLogs.WorkflowLogTypeName.OTHER.value,
+                        WorkflowLogs.WorkflowLogTypeName.OTHER,
+                    ),
                 ],
                 message="available logs",
                 default="all",
@@ -952,16 +967,16 @@ class TestWFRunResolver:
             resolver = _arg_resolvers.WFRunResolver(
                 wf_run_repo=create_autospec(_repos.WorkflowRunRepo), prompter=prompter
             )
-            prompter.choice.return_value = WorkflowLogTypeName.PER_TASK
+            prompter.choice.return_value = WorkflowLogs.WorkflowLogTypeName.PER_TASK
             expected_choices = []
             if task_choice:
-                expected_choices.append(WorkflowLogTypeName.PER_TASK)
+                expected_choices.append(WorkflowLogs.WorkflowLogTypeName.PER_TASK)
             if system_choice:
-                expected_choices.append(WorkflowLogTypeName.SYSTEM)
+                expected_choices.append(WorkflowLogs.WorkflowLogTypeName.SYSTEM)
             if env_choice:
-                expected_choices.append(WorkflowLogTypeName.ENV_SETUP)
+                expected_choices.append(WorkflowLogs.WorkflowLogTypeName.ENV_SETUP)
             if other_choice:
-                expected_choices.append(WorkflowLogTypeName.OTHER)
+                expected_choices.append(WorkflowLogs.WorkflowLogTypeName.OTHER)
 
             # When
             _ = resolver.resolve_log_switches(
@@ -994,7 +1009,7 @@ class TestWFRunResolver:
                         other=[],
                     ),
                     (False, None, None, None),
-                    [WorkflowLogTypeName.SYSTEM],
+                    [WorkflowLogs.WorkflowLogTypeName.SYSTEM],
                 ),
                 (
                     WorkflowLogs(
@@ -1004,7 +1019,7 @@ class TestWFRunResolver:
                         other=[],
                     ),
                     (None, None, False, None),
-                    [WorkflowLogTypeName.PER_TASK],
+                    [WorkflowLogs.WorkflowLogTypeName.PER_TASK],
                 ),
             ],
         )
@@ -1013,11 +1028,11 @@ class TestWFRunResolver:
             switches: t.Tuple[
                 t.Optional[bool], t.Optional[bool], t.Optional[bool], t.Optional[bool]
             ],
-            expected_choices: t.List[WorkflowLogTypeName],
+            expected_choices: t.List[WorkflowLogs.WorkflowLogTypeName],
         ):
             # Given
             prompter = create_autospec(_prompts.Prompter)
-            prompter.choice.return_value = WorkflowLogTypeName.OTHER
+            prompter.choice.return_value = WorkflowLogs.WorkflowLogTypeName.OTHER
             # choice needs to return a valid WorkflowLogTypeName since we enforced this
             # in resolve_log_switches, but we don't actually care _what_ is returned
             # for this test.
@@ -1049,10 +1064,10 @@ class TestWFRunResolver:
                 wf_run_repo=create_autospec(_repos.WorkflowRunRepo), prompter=prompter
             )
             log_types = [
-                WorkflowLogTypeName.PER_TASK,
-                WorkflowLogTypeName.SYSTEM,
-                WorkflowLogTypeName.ENV_SETUP,
-                WorkflowLogTypeName.OTHER,
+                WorkflowLogs.WorkflowLogTypeName.PER_TASK,
+                WorkflowLogs.WorkflowLogTypeName.SYSTEM,
+                WorkflowLogs.WorkflowLogTypeName.ENV_SETUP,
+                WorkflowLogs.WorkflowLogTypeName.OTHER,
             ]
 
             with pytest.warns(UserWarning) as e:

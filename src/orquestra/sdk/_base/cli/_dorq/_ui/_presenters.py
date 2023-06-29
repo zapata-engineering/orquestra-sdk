@@ -11,7 +11,6 @@ import sys
 import typing as t
 import webbrowser
 from contextlib import contextmanager
-from datetime import datetime, timezone
 from functools import singledispatchmethod
 from pathlib import Path
 from typing import Iterable, Iterator, List, Sequence
@@ -21,7 +20,7 @@ from tabulate import tabulate
 
 from orquestra.sdk._base import _config, _dates, _env, _services, serde
 from orquestra.sdk._base._dates import Instant
-from orquestra.sdk._base._logs._interfaces import WorkflowLogTypeName
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk.schema import responses
 from orquestra.sdk.schema.configs import ConfigName, RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.ir import ArtifactFormat
@@ -68,7 +67,7 @@ class WrappedCorqOutputPresenter:
         click.echo(f"Workflow run {wf_run_id} stopped.")
 
     def show_dumped_wf_logs(
-        self, path: Path, log_type: t.Optional[WorkflowLogTypeName] = None
+        self, path: Path, log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None
     ):
         """
         Tell the user where logs have been saved.
@@ -108,7 +107,7 @@ class WrappedCorqOutputPresenter:
     def show_logs(
         self,
         logs: t.Union[t.Mapping[TaskInvocationId, t.Sequence[str]], t.Sequence[str]],
-        log_type: t.Optional[WorkflowLogTypeName] = None,
+        log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None,
     ):
         """
         Present logs to the user.

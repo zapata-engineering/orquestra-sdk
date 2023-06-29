@@ -8,7 +8,7 @@ import typing as t
 import warnings
 from pathlib import Path
 
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs, WorkflowLogTypeName
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk.schema.configs import ConfigName
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
@@ -92,7 +92,7 @@ class Action:
         # Resolve the log type switches. This must happen after getting the logs as we
         # need to check against which logs are available.
         switches: t.Mapping[
-            WorkflowLogTypeName, bool
+            WorkflowLogs.WorkflowLogTypeName, bool
         ] = self._wf_run_resolver.resolve_log_switches(
             task, system, env_setup, other, logs
         )

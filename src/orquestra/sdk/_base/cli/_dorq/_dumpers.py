@@ -10,7 +10,7 @@ from functools import singledispatchmethod
 from pathlib import Path
 
 from orquestra.sdk._base import serde
-from orquestra.sdk._base._logs._interfaces import WorkflowLogTypeName
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk.schema.workflow_run import TaskInvocationId, WorkflowRunId
 
 
@@ -88,7 +88,7 @@ class LogsDumper:
     def _get_logs_file(
         dir_path: Path,
         wf_run_id: WorkflowRunId,
-        log_type: t.Optional[WorkflowLogTypeName] = None,
+        log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None,
     ) -> Path:
         dir_path.mkdir(parents=True, exist_ok=True)
         if log_type:
@@ -102,7 +102,7 @@ class LogsDumper:
         logs: t.Union[t.Mapping[TaskInvocationId, t.Sequence[str]], t.Sequence[str]],
         wf_run_id: WorkflowRunId,
         dir_path: Path,
-        log_type: t.Optional[WorkflowLogTypeName] = None,
+        log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None,
     ):
         """
         Save logs from wf into a file.

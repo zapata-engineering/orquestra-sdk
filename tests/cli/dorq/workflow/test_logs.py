@@ -10,7 +10,7 @@ from unittest.mock import Mock, call, create_autospec
 
 import pytest
 
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs, WorkflowLogTypeName
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base.cli._dorq._arg_resolvers import WFConfigResolver, WFRunResolver
 from orquestra.sdk._base.cli._dorq._dumpers import LogsDumper
 from orquestra.sdk._base.cli._dorq._repos import WorkflowRunRepo
@@ -82,9 +82,9 @@ class TestAction:
             config = "<config sentinel>"
             download_dir = None
             action._wf_run_resolver.resolve_log_switches.return_value = {
-                WorkflowLogTypeName.PER_TASK: task_switch,
-                WorkflowLogTypeName.SYSTEM: system_switch,
-                WorkflowLogTypeName.ENV_SETUP: env_setup_switch,
+                WorkflowLogs.WorkflowLogTypeName.PER_TASK: task_switch,
+                WorkflowLogs.WorkflowLogTypeName.SYSTEM: system_switch,
+                WorkflowLogs.WorkflowLogTypeName.ENV_SETUP: env_setup_switch,
             }
 
             # When
@@ -130,17 +130,18 @@ class TestAction:
                 print(action._presenter.show_logs.call_args_list)
                 task_logs = action._wf_run_repo.get_wf_logs.return_value.per_task
                 action._presenter.show_logs.assert_any_call(
-                    task_logs, log_type=_logs.WorkflowLogTypeName.PER_TASK
+                    task_logs, log_type=_logs.WorkflowLogs.WorkflowLogTypeName.PER_TASK
                 ),
             if system_switch:
                 sys_logs = action._wf_run_repo.get_wf_logs.return_value.system
                 action._presenter.show_logs.assert_any_call(
-                    sys_logs, log_type=_logs.WorkflowLogTypeName.SYSTEM
+                    sys_logs, log_type=_logs.WorkflowLogs.WorkflowLogTypeName.SYSTEM
                 )
             if env_setup_switch:
                 env_setup_logs = action._wf_run_repo.get_wf_logs.return_value.env_setup
                 action._presenter.show_logs.assert_any_call(
-                    env_setup_logs, log_type=_logs.WorkflowLogTypeName.ENV_SETUP
+                    env_setup_logs,
+                    log_type=_logs.WorkflowLogs.WorkflowLogTypeName.ENV_SETUP,
                 )
             assert action._presenter.show_logs.call_count == sum(
                 [task_switch, system_switch, env_setup_switch]
@@ -162,9 +163,9 @@ class TestAction:
             config = "<config sentinel>"
             download_dir = Path("/cool/path")
             action._wf_run_resolver.resolve_log_switches.return_value = {
-                WorkflowLogTypeName.PER_TASK: task_switch,
-                WorkflowLogTypeName.SYSTEM: system_switch,
-                WorkflowLogTypeName.ENV_SETUP: env_setup_switch,
+                WorkflowLogs.WorkflowLogTypeName.PER_TASK: task_switch,
+                WorkflowLogs.WorkflowLogTypeName.SYSTEM: system_switch,
+                WorkflowLogs.WorkflowLogTypeName.ENV_SETUP: env_setup_switch,
             }
 
             # Custom mocks
@@ -216,10 +217,11 @@ class TestAction:
                     task_logs,
                     resolved_wf_run_id,
                     download_dir,
-                    log_type=_logs.WorkflowLogTypeName.PER_TASK,
+                    log_type=_logs.WorkflowLogs.WorkflowLogTypeName.PER_TASK,
                 )
                 action._presenter.show_dumped_wf_logs.assert_any_call(
-                    dumped_path, log_type=_logs.WorkflowLogTypeName.PER_TASK
+                    dumped_path,
+                    log_type=_logs.WorkflowLogs.WorkflowLogTypeName.PER_TASK,
                 )
             if system_switch:
                 sys_logs = action._wf_run_repo.get_wf_logs.return_value.system
@@ -227,10 +229,10 @@ class TestAction:
                     sys_logs,
                     resolved_wf_run_id,
                     download_dir,
-                    log_type=_logs.WorkflowLogTypeName.SYSTEM,
+                    log_type=_logs.WorkflowLogs.WorkflowLogTypeName.SYSTEM,
                 )
                 action._presenter.show_dumped_wf_logs.assert_any_call(
-                    dumped_path, log_type=_logs.WorkflowLogTypeName.SYSTEM
+                    dumped_path, log_type=_logs.WorkflowLogs.WorkflowLogTypeName.SYSTEM
                 )
             if env_setup_switch:
                 env_setup_logs = action._wf_run_repo.get_wf_logs.return_value.env_setup
@@ -238,10 +240,11 @@ class TestAction:
                     env_setup_logs,
                     resolved_wf_run_id,
                     download_dir,
-                    log_type=_logs.WorkflowLogTypeName.ENV_SETUP,
+                    log_type=_logs.WorkflowLogs.WorkflowLogTypeName.ENV_SETUP,
                 )
                 action._presenter.show_dumped_wf_logs.assert_any_call(
-                    dumped_path, log_type=_logs.WorkflowLogTypeName.ENV_SETUP
+                    dumped_path,
+                    log_type=_logs.WorkflowLogs.WorkflowLogTypeName.ENV_SETUP,
                 )
             assert action._dumper.dump.call_count == sum(
                 [task_switch, system_switch, env_setup_switch]

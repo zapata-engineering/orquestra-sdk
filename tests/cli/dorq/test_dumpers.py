@@ -7,7 +7,7 @@ from unittest.mock import create_autospec
 
 import pytest
 
-from orquestra.sdk._base._logs._interfaces import WorkflowLogTypeName
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base.cli._dorq import _dumpers
 from orquestra.sdk.schema.ir import ArtifactFormat
 
@@ -168,9 +168,9 @@ class TestLogsDumper:
         @pytest.mark.parametrize(
             "log_type, expected_suffix",
             [
-                (WorkflowLogTypeName.PER_TASK, "_per_task"),
-                (WorkflowLogTypeName.SYSTEM, "_system"),
-                (WorkflowLogTypeName.ENV_SETUP, "_env_setup"),
+                (WorkflowLogs.WorkflowLogTypeName.PER_TASK, "_per_task"),
+                (WorkflowLogs.WorkflowLogTypeName.SYSTEM, "_system"),
+                (WorkflowLogs.WorkflowLogTypeName.ENV_SETUP, "_env_setup"),
             ],
         )
         def test_with_suffix(log_type, expected_suffix):
