@@ -64,8 +64,10 @@ class ExternalUriProvider:
     def __init__(self, base_uri):
         self._base_uri = base_uri
 
-    def provide_uri(self, action, parameters: Optional[Tuple[str, ...]] = None) -> str:
-        endpoint = ExternalUriProvider.API_ACTIONS[action]
+    def uri_for(
+        self, action_id: str, parameters: Optional[Tuple[str, ...]] = None
+    ) -> str:
+        endpoint = ExternalUriProvider.API_ACTIONS[action_id]
         if parameters:
             endpoint = endpoint.format(*parameters)
         return urljoin(self._base_uri, endpoint)
@@ -130,12 +132,12 @@ class DriverClient:
     Client for interacting with the Workflow Driver API via HTTP.
     """
 
-    def __init__(self, session: requests.Session, uri_provider):
+    def __init__(self, session: requests.Session, uri_provider: ExternalUriProvider):
         self._uri_provider = uri_provider
         self._session = session
 
     @classmethod
-    def from_token(cls, token: str, uri_provider):
+    def from_token(cls, token: str, uri_provider: ExternalUriProvider):
         """
         Args:
             token: Auth token taken from logging in.
@@ -213,7 +215,7 @@ class DriverClient:
             else None
         )
         resp = self._post(
-            self._uri_provider.provide_uri("create_workflow_def"),
+            self._uri_provider.uri_for("create_workflow_def"),
             body_params=workflow_def.dict(),
             query_params=query_params,
         )
@@ -244,7 +246,7 @@ class DriverClient:
             UnknownHTTPError: see the exception's docstring
         """
         resp = self._get(
-            self._uri_provider.provide_uri("list_workflow_defs"),
+            self._uri_provider.uri_for("list_workflow_defs"),
             query_params=_models.ListWorkflowDefsRequest(
                 pageSize=page_size,
                 pageToken=page_token,
@@ -275,7 +277,7 @@ class DriverClient:
             KeyError: if the URL couldn't be found in the response.
         """
         resp = self._get(
-            self._uri_provider.provide_uri("get_login_url"),
+            self._uri_provider.uri_for("get_login_url"),
             query_params={"port": f"{redirect_port}"},
             allow_redirects=False,
         )
@@ -299,9 +301,8 @@ class DriverClient:
             a parsed WorkflowDef
         """
         resp = self._get(
-            self._uri_provider.provide_uri(
-                "get_workflow_def",
-                parameters=workflow_def_id,
+            self._uri_provider.uri_for(
+                "get_workflow_def", parameters=(workflow_def_id,)
             ),
             query_params=None,
         )
@@ -331,9 +332,8 @@ class DriverClient:
             UnknownHTTPError: see the exception's docstring
         """
         resp = self._delete(
-            self._uri_provider.provide_uri(
-                "delete_workflow_def",
-                parameters=workflow_def_id,
+            self._uri_provider.uri_for(
+                "delete_workflow_def", parameters=(workflow_def_id,)
             ),
         )
 
@@ -359,7 +359,7 @@ class DriverClient:
             UnknownHTTPError: see the exception's docstring
         """
         resp = self._post(
-            self._uri_provider.provide_uri("create_workflow_run"),
+            self._uri_provider.uri_for("create_workflow_run"),
             body_params=_models.CreateWorkflowRunRequest(
                 workflowDefinitionID=workflow_def_id, resources=resources
             ).dict(),
@@ -397,7 +397,7 @@ class DriverClient:
         """
         # Schema: https://github.com/zapatacomputing/workflow-driver/blob/fa3eb17f1132d9c7f4960331ffe7ddbd31e02f8c/openapi/src/resources/workflow-runs.yaml#L10 # noqa: E501
         resp = self._get(
-            self._uri_provider.provide_uri("list_workflow_runs"),
+            self._uri_provider.uri_for("list_workflow_runs"),
             query_params=_models.ListWorkflowRunsRequest(
                 workflowDefinitionID=workflow_def_id,
                 pageSize=page_size,
@@ -441,10 +441,7 @@ class DriverClient:
         """
 
         resp = self._get(
-            self._uri_provider.provide_uri(
-                "get_workflow_run",
-                parameters=wf_run_id,
-            ),
+            self._uri_provider.uri_for("get_workflow_run", parameters=(wf_run_id,)),
             query_params=None,
         )
 
@@ -481,9 +478,8 @@ class DriverClient:
         """
 
         resp = self._post(
-            self._uri_provider.provide_uri(
-                "terminate_workflow_run",
-                parameters=wf_run_id,
+            self._uri_provider.uri_for(
+                "terminate_workflow_run", parameters=(wf_run_id,)
             ),
             body_params=None,
             query_params=_models.TerminateWorkflowRunRequest(force=force).dict(),
@@ -511,7 +507,7 @@ class DriverClient:
         """
 
         resp = self._get(
-            self._uri_provider.provide_uri(
+            self._uri_provider.uri_for(
                 "get_workflow_run_artifacts",
             ),
             query_params=_models.GetWorkflowRunArtifactsRequest(
@@ -547,7 +543,7 @@ class DriverClient:
         """
 
         resp = self._get(
-            self._uri_provider.provide_uri("get_artifact", parameters=(artifact_id,)),
+            self._uri_provider.uri_for("get_artifact", parameters=(artifact_id,)),
             query_params=None,
         )
 
@@ -581,7 +577,7 @@ class DriverClient:
         """
 
         resp = self._get(
-            self._uri_provider.provide_uri("get_workflow_run_results"),
+            self._uri_provider.uri_for("get_workflow_run_results"),
             query_params=_models.GetWorkflowRunResultsRequest(
                 workflowRunId=wf_run_id
             ).dict(),
@@ -615,7 +611,7 @@ class DriverClient:
         """
 
         resp = self._get(
-            self._uri_provider.provide_uri(
+            self._uri_provider.uri_for(
                 "get_workflow_run_result",
             ),
             query_params=None,
@@ -669,7 +665,7 @@ class DriverClient:
         """
 
         resp = self._get(
-            self._uri_provider.provide_uri("get_workflow_run_logs"),
+            self._uri_provider.uri_for("get_workflow_run_logs"),
             query_params=_models.GetWorkflowRunLogsRequest(
                 workflowRunId=wf_run_id
             ).dict(),
@@ -717,7 +713,7 @@ class DriverClient:
         """
 
         resp = self._get(
-            self._uri_provider.provide_uri("get_task_run_logs"),
+            self._uri_provider.uri_for("get_task_run_logs"),
             query_params=_models.GetTaskRunLogsRequest(taskRunId=task_run_id).dict(),
         )
 
@@ -742,7 +738,7 @@ class DriverClient:
                 value, or is a value for a schema has not been defined.
         """
         resp = self._get(
-            self._uri_provider.provide_uri("get_workflow_run_system_logs"),
+            self._uri_provider.uri_for("get_workflow_run_system_logs"),
             query_params=_models.GetWorkflowRunLogsRequest(
                 workflowRunId=wf_run_id
             ).dict(),
@@ -783,7 +779,7 @@ class DriverClient:
         """
 
         resp = self._get(
-            self._uri_provider.provide_uri("list_workspaces"),
+            self._uri_provider.uri_for("list_workspaces"),
             query_params=None,
         )
 
@@ -811,10 +807,7 @@ class DriverClient:
         )
 
         resp = self._get(
-            self._uri_provider.provide_uri(
-                "list_projects",
-                parameters=workspace_zri,
-            ),
+            self._uri_provider.uri_for("list_projects", parameters=(workspace_zri,)),
             query_params=None,
         )
 
@@ -842,10 +835,7 @@ class DriverClient:
         """
 
         resp = self._get(
-            self._uri_provider.provide_uri(
-                "get_workflow_run",
-                parameters=wf_run_id,
-            ),
+            self._uri_provider.uri_for("get_workflow_run", parameters=(wf_run_id,)),
             query_params=None,
         )
 

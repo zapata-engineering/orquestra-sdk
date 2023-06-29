@@ -22,7 +22,6 @@ def build_runtime_from_config(
     # Imports are deferred to cut down on the import graph for CLI latency. The
     # subgraphs for Ray and for QE are distinct, and both take a lot of time to
     # import.
-    selected_runtime: t.Type[RuntimeInterface]
     if config.runtime_name == RuntimeName.RAY_LOCAL:
         import orquestra.sdk._ray._dag
 
