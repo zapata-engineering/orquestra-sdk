@@ -29,7 +29,9 @@ def runtime_verbose(tmp_path):
         runtime_options={"uri": "http://localhost", "token": "blah"},
     )
     # Return a runtime object
-    return build_runtime_from_config(project_dir=Path.cwd(), config=config, verbose=True)
+    return build_runtime_from_config(
+        project_dir=Path.cwd(), config=config, verbose=True
+    )
 
 
 @pytest.fixture
