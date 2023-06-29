@@ -142,6 +142,14 @@ class DirectRayReader:
         )
         return [system_warning]
 
+    def _get_other_log_lines(self) -> t.Sequence[str]:
+        other_warning = (
+            "WARNING: we don't parse uncategorized logs for the local runtime. "
+            "The log files can be found in the directory "
+            "'~/.orquestra/ray/session_latest/logs."
+        )
+        return [other_warning]
+
     def get_task_logs(
         self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
     ) -> t.List[str]:
@@ -168,12 +176,12 @@ class DirectRayReader:
             logs_dict.setdefault(log.task_inv_id, []).append(log.json())
 
         env_setup = self._get_env_setup_lines()
-
         system = self._get_system_log_lines()
+        other = self._get_other_log_lines()
 
         return WorkflowLogs(
             per_task=logs_dict,
             env_setup=env_setup,
             system=system,
-            other=[],
+            other=other,
         )
