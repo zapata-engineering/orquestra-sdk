@@ -612,7 +612,7 @@ class DriverClient:
 
         resp = self._get(
             self._uri_provider.uri_for(
-                "get_workflow_run_result",
+                "get_workflow_run_result", parameters=(result_id,)
             ),
             query_params=None,
         )
