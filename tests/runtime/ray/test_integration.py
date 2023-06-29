@@ -37,6 +37,13 @@ def runtime(
     config = configs.RuntimeConfiguration(
         config_name="test-config",
         runtime_name=configs.RuntimeName.RAY_LOCAL,
+        runtime_options={
+            "address": None,
+            "log_to_driver": True,
+            "storage": None,
+            "temp_dir": None,
+            "configure_logging": None,
+        },
     )
     client = _client.RayClient()
     rt = _dag.RayRuntime(config, project_dir, client)
