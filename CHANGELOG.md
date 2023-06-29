@@ -17,6 +17,7 @@
 🐛 *Bug Fixes*
 
 💅 *Improvements*
+* API: rather then returning empty lists, ray local logs now return messages for `system` and `other` log categories that direct the user to the logs directory.
 
 🥷 *Internal*
 * Refactored `datetime` and timezone handling.
