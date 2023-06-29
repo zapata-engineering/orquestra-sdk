@@ -760,21 +760,12 @@ class TestWFRunResolver:
         @pytest.mark.parametrize(
             "switches",
             [
-                (None, None, None, None),
-                (None, None, None, False),
-                (None, None, False, None),
-                (None, None, False, False),
-                (None, False, None, None),
-                (None, False, None, False),
-                (None, False, False, None),
-                (None, False, False, False),
-                (False, None, None, None),
-                (False, None, None, False),
-                (False, None, False, None),
-                (False, None, False, False),
-                (False, False, None, None),
-                (False, False, None, False),
-                (False, False, False, None),
+                (per_task, system, env_setup, other)
+                for per_task in [None, False]
+                for system in [None, False]
+                for env_setup in [None, False]
+                for other in [None, False]
+                if any(filter(lambda flag: flag is None, [per_task, system, env_setup, other]))
             ],
         )
         def test_none_or_only_negative_switches_set(
