@@ -6,6 +6,7 @@
 * Removed `RuntimeConfig.load_default()`
 * Removed any support for default configuration
 * `sdk.secret` functions will no longer use default configuration from local runtimes. Config has to be passed explicitly unless running on remote cluster
+* Add `--list` option to `orq login` that displays the stored remote logins, which runtimes they are using, and whether their access tokens are up to date.
 
 🔥 *Features*
 * Adding `FutureWarning` when accessing CE Secrets without specifying Workspace.
@@ -21,6 +22,7 @@
 
 🥷 *Internal*
 * Refactored `datetime` and timezone handling.
+* Orquestra runtime now emits marker logs at Orquestra task start/end.
 
 📃 *Docs*
 * "Remote Workflows" updated to describe logging in with a specific runtime, and reflect the current login process (automatic opening of login page, copying of token).
@@ -35,6 +37,8 @@
 🔥 *Features*
 * Force stop workflow runs via the CLI or Python API
 * `WorkflowRun.get_tasks()` supports filtering tasks by state, function name, task run ID and task invocation ID.
+
+👩‍🔬 *Experimental*
 * 2 new methods added to public API of `WorkflowRun`: `get_artifacts_serialized()` and `get_results_serialized()`
 
 🐛 *Bug Fixes*
