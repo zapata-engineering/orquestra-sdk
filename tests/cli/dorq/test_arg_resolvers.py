@@ -824,43 +824,12 @@ class TestWFRunResolver:
         @pytest.mark.parametrize(
             "switches",
             [
-                (True, True, False, None),
-                (True, True, None, False),
-                (True, False, True, None),
-                (True, False, False, None),
-                (True, False, None, True),
-                (True, False, None, False),
-                (True, False, None, None),
-                (True, None, True, False),
-                (True, None, False, True),
-                (True, None, False, False),
-                (True, None, False, None),
-                (True, None, None, False),
-                (False, True, True, None),
-                (True, True, False, None),
-                (False, True, None, True),
-                (False, True, None, False),
-                (False, True, None, None),
-                (False, False, True, None),
-                (False, False, None, True),
-                (False, None, True, False),
-                (False, None, True, True),
-                (False, None, True, None),
-                (False, None, True, None),
-                (False, None, False, True),
-                (False, None, None, True),
-                (None, True, True, False),
-                (None, True, False, True),
-                (None, True, False, False),
-                (None, True, False, None),
-                (None, True, None, False),
-                (None, False, True, True),
-                (None, False, True, False),
-                (None, False, True, None),
-                (None, False, False, True),
-                (None, False, None, True),
-                (None, None, True, False),
-                (None, None, False, True),
+                (per_task, system, env_setup, other)
+                for per_task in [True, False, None]
+                for system in [True, False, None]
+                for env_setup in [True, False, None]
+                for other in [True, False, None]
+                if len({per_task, system, env_setup, other}) == 3
             ],
         )
         def test_mixed_switches(
