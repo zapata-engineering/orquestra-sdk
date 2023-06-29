@@ -665,7 +665,7 @@ class TestWFRunResolver:
                 for system in [True, False]
                 for env_setup in [True, False]
                 for other in [True, False]
-                if any(per_task, system, env_setup, other)
+                if any([per_task, system, env_setup, other])
             ],
         )
         def test_returns_unchanged_if_all_switches_are_set_and_all_logs_available(
@@ -706,12 +706,20 @@ class TestWFRunResolver:
         @pytest.mark.parametrize(
             "switches, expected_switches",
             [
-                ((per_task or None, system or None, env_setup or None, other or None), (per_task, system, env_setup, other))
+                (
+                    (
+                        per_task or None,
+                        system or None,
+                        env_setup or None,
+                        other or None,
+                    ),
+                    (per_task, system, env_setup, other),
+                )
                 for per_task in [True, False]
                 for system in [True, False]
                 for env_setup in [True, False]
                 for other in [True, False]
-                if any(per_task, system, env_setup, other)
+                if any([per_task, system, env_setup, other])
             ],
         )
         def test_only_positive_switches_set(
@@ -758,7 +766,11 @@ class TestWFRunResolver:
                 for system in [None, False]
                 for env_setup in [None, False]
                 for other in [None, False]
-                if any(filter(lambda flag: flag is None, [per_task, system, env_setup, other]))
+                if any(
+                    filter(
+                        lambda flag: flag is None, [per_task, system, env_setup, other]
+                    )
+                )
             ],
         )
         def test_none_or_only_negative_switches_set(
