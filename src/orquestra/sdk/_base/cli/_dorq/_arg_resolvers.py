@@ -7,10 +7,12 @@ resolve the information from other sources. This module contains the CLI argumen
 resolution logic extracted as components reusable across similar CLI commands.
 """
 import typing as t
+import warnings
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _services
 from orquestra.sdk._base._config import IN_PROCESS_CONFIG_NAME
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema.configs import ConfigName
 from orquestra.sdk.schema.ir import TaskInvocationId
@@ -284,6 +286,77 @@ class WFRunResolver:
         selected_run = self._prompter.choice(prompt_choices, message="Workflow run ID")
 
         return selected_run
+
+    def resolve_log_switches(
+        self,
+        task: t.Optional[bool],
+        system: t.Optional[bool],
+        env_setup: t.Optional[bool],
+        other: t.Optional[bool],
+        logs: WorkflowLogs,
+    ) -> t.Mapping[WorkflowLogs.WorkflowLogTypeName, bool]:
+        """
+        Resolve the switches for various types of logs.
+
+        Each switch controls whether a specific type of log is shown. If any of the
+        switches are active we assume that the user has specified what they want and we
+        don't interfere. If none are active we prompt the user to select one log type,
+        or all of them.
+        """
+        user_switch_values: t.Mapping[
+            WorkflowLogs.WorkflowLogTypeName, t.Optional[bool]
+        ] = {
+            WorkflowLogs.WorkflowLogTypeName.PER_TASK: task,
+            WorkflowLogs.WorkflowLogTypeName.SYSTEM: system,
+            WorkflowLogs.WorkflowLogTypeName.ENV_SETUP: env_setup,
+            WorkflowLogs.WorkflowLogTypeName.OTHER: other,
+        }
+        log_availibility: t.Mapping[WorkflowLogs.WorkflowLogTypeName, bool] = {
+            log_type: len(logs.get_log_type(log_type)) >= 1
+            for log_type in WorkflowLogs.WorkflowLogTypeName
+        }
+        ret_switch_values: t.Dict[WorkflowLogs.WorkflowLogTypeName, bool] = {
+            log_type: False for log_type in user_switch_values
+        }
+
+        # If the user has set one or more switches to True, check them against the
+        # availability and unset any that can't be fulfilled. We assume that any unset
+        # switches are intended to be false.
+        if True in user_switch_values.values():
+            for log_type in user_switch_values:
+                if bool(user_switch_values[log_type]):
+                    if not log_availibility[log_type]:
+                        warnings.warn(
+                            f"No '{log_type.value}' logs are available "
+                            "for this workflow"
+                        )
+                    else:
+                        ret_switch_values[log_type] = True
+            return ret_switch_values
+
+        # If the user has not set any switches, or has only set switches to False,
+        # prompt them to choose from the available logs they haven't already ruled out.
+        valid_switches: t.List[WorkflowLogs.WorkflowLogTypeName] = [
+            log_type
+            for log_type in user_switch_values
+            if log_availibility[log_type] and user_switch_values[log_type] is None
+        ]
+
+        choice: t.Union[str, WorkflowLogs.WorkflowLogTypeName] = self._prompter.choice(
+            [(switch.value, switch) for switch in valid_switches],
+            message="available logs",
+            default="all",
+            allow_all=True,
+        )
+
+        # Construct the return dict according to the user's choices.
+        if choice == "all":
+            for switch in valid_switches:
+                ret_switch_values[switch] = True
+        else:
+            ret_switch_values[WorkflowLogs.WorkflowLogTypeName(choice)] = True
+
+        return ret_switch_values
 
 
 class TaskInvIDResolver:

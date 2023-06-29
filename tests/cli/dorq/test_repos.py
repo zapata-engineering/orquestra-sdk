@@ -705,22 +705,38 @@ class TestWorkflowRunRepo:
                 # Given
                 config = "<config sentinel>"
                 wf_run_id = "<id sentinel>"
-                logs_dict = {
+                per_task_logs_dict = {
                     "inv1": ["my_log", "my_another_log"],
                     "inv2": ["and another one"],
                 }
+                env_setup_logs_list = [
+                    "<env setup log sentinel 1>",
+                    "<env setup log sentinel 2>",
+                ]
+                sys_logs_list = [
+                    "<sys log sentinel 1>",
+                    "<sys log sentinel 2>",
+                ]
 
                 mock_wf_run.get_logs.return_value = WorkflowLogs(
-                    per_task=logs_dict, env_setup=[], system=[], other=[]
+                    per_task=per_task_logs_dict,
+                    env_setup=env_setup_logs_list,
+                    system=sys_logs_list,
+                    other=[],
                 )
 
                 repo = _repos.WorkflowRunRepo()
 
                 # When
-                logs = repo.get_wf_logs(wf_run_id, config)
+                logs = repo.get_wf_logs(
+                    wf_run_id,
+                    config,
+                )
 
                 # Then
-                assert logs == logs_dict
+                assert logs.per_task == per_task_logs_dict
+                assert logs.system == sys_logs_list
+                assert logs.env_setup == env_setup_logs_list
 
             @staticmethod
             @pytest.mark.parametrize(
