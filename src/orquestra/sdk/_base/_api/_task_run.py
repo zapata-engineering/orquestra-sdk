@@ -304,9 +304,13 @@ def _get_ray_backend_ids() -> (
         WorkflowRunIDNotFoundError: When the workflow run ID can't be recovered.
     """
     # Deferred import because Ray isn't installed when running on QE.
-    import orquestra.sdk._ray._dag
+    import orquestra.sdk._ray._build_workflow
 
-    wf_run_id, task_inv_id, task_run_id = orquestra.sdk._ray._dag.get_current_ids()
+    (
+        wf_run_id,
+        task_inv_id,
+        task_run_id,
+    ) = orquestra.sdk._ray._build_workflow.get_current_ids()
 
     if wf_run_id is None:
         raise WorkflowRunIDNotFoundError("Could not recover Workflow Run ID")

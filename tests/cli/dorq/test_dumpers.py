@@ -3,9 +3,11 @@
 ################################################################################
 
 from pathlib import Path
+from unittest.mock import create_autospec
 
 import pytest
 
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base.cli._dorq import _dumpers
 from orquestra.sdk.schema.ir import ArtifactFormat
 
@@ -152,35 +154,128 @@ class TestTaskOutputDumper:
 
 
 class TestLogsDumper:
-    @staticmethod
-    def test_logs_dumper(tmp_path: Path):
-        # Given
-        log_values = ["my_logs", "next_log"]
-        task_invocation = "my_task_invocation"
-        logs = {task_invocation: log_values}
-        wf_run_id = "wf.1234"
-        wf_log_file = wf_run_id + ".log"
-        dir_path = tmp_path / "new_dir"
-        dumper = _dumpers.LogsDumper()
+    class TestGetLogsFile:
+        @staticmethod
+        def test_without_log_type():
+            dumper = _dumpers.LogsDumper()
+            path = create_autospec(Path)
+            assert (
+                dumper._get_logs_file(path, wf_run_id="<wf run id sentinel>")
+                == path / "<wf run id sentinel>.log"
+            )
 
-        # When
-        path = dumper.dump(
-            logs=logs,
-            wf_run_id=wf_run_id,
-            dir_path=dir_path,
+        @staticmethod
+        @pytest.mark.parametrize(
+            "log_type, expected_suffix",
+            [
+                (WorkflowLogs.WorkflowLogTypeName.PER_TASK, "_per_task"),
+                (WorkflowLogs.WorkflowLogTypeName.SYSTEM, "_system"),
+                (WorkflowLogs.WorkflowLogTypeName.ENV_SETUP, "_env_setup"),
+            ],
         )
+        def test_with_suffix(log_type, expected_suffix):
+            dumper = _dumpers.LogsDumper()
+            path = create_autospec(Path)
+            assert (
+                dumper._get_logs_file(
+                    path, wf_run_id="<wf run id sentinel>", log_type=log_type
+                )
+                == path / f"<wf run id sentinel>{expected_suffix}.log"
+            )
 
-        # Then
-        # Creates file
-        children = list(dir_path.iterdir())
-        assert len(children) == 1
+    class TestWritingToFile:
+        @staticmethod
+        def test_no_suffix(tmp_path: Path):
+            # Given
+            log_values = ["my_logs", "next_log"]
+            task_invocation = "my_task_invocation"
+            logs = {task_invocation: log_values}
+            wf_run_id = "wf.1234"
+            wf_log_file = wf_run_id + ".log"
+            dir_path = tmp_path / "new_dir"
+            dumper = _dumpers.LogsDumper()
 
-        # Sensible dump details
-        assert path == (dir_path / wf_log_file)
+            # When
+            path = dumper.dump(
+                logs=logs,
+                wf_run_id=wf_run_id,
+                dir_path=dir_path,
+            )
 
-        with path.open("r") as f:
-            full_logs = "".join(f.readlines())
-            for log_value in log_values:
-                # all logs should be in the file
-                assert log_value in full_logs
-            assert task_invocation in full_logs
+            # Then
+            # Creates file
+            children = list(dir_path.iterdir())
+            assert len(children) == 1
+
+            # Sensible dump details
+            assert path == (dir_path / wf_log_file)
+
+            with path.open("r") as f:
+                full_logs = "".join(f.readlines())
+                for log_value in log_values:
+                    # all logs should be in the file
+                    assert log_value in full_logs
+                assert task_invocation in full_logs
+
+        @staticmethod
+        def test_with_logs_dict(tmp_path: Path):
+            # Given
+            log_values = ["my_logs", "next_log"]
+            task_invocation = "my_task_invocation"
+            logs = {task_invocation: log_values}
+            wf_run_id = "wf.1234"
+            wf_log_file = wf_run_id + ".log"
+            dir_path = tmp_path / "new_dir"
+            dumper = _dumpers.LogsDumper()
+
+            # When
+            path = dumper.dump(
+                logs=logs,
+                wf_run_id=wf_run_id,
+                dir_path=dir_path,
+            )
+
+            # Then
+            # Creates file
+            children = list(dir_path.iterdir())
+            assert len(children) == 1
+
+            # Sensible dump details
+            assert path == (dir_path / wf_log_file)
+
+            with path.open("r") as f:
+                full_logs = "".join(f.readlines())
+                for log_value in log_values:
+                    # all logs should be in the file
+                    assert log_value in full_logs
+                assert task_invocation in full_logs
+
+        @staticmethod
+        def test_with_logs_sequence(tmp_path: Path):
+            # Given
+            logs = ["my_logs", "next_log"]
+            wf_run_id = "wf.1234"
+            wf_log_file = wf_run_id + ".log"
+            dir_path = tmp_path / "new_dir"
+            dumper = _dumpers.LogsDumper()
+
+            # When
+            path = dumper.dump(
+                logs=logs,
+                wf_run_id=wf_run_id,
+                dir_path=dir_path,
+            )
+
+            # Then
+            # Creates file
+            children = list(dir_path.iterdir())
+            assert len(children) == 1
+
+            # Sensible dump details
+            assert path == (dir_path / wf_log_file)
+
+            with path.open("r") as f:
+                full_logs = "".join(f.readlines())
+                for log_value in logs:
+                    # all logs should be in the file
+                    assert log_value in full_logs

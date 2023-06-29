@@ -21,6 +21,7 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base import _config, _dates, _db, loader
 from orquestra.sdk._base._driver._client import DriverClient, ExternalUriProvider
 from orquestra.sdk._base._jwt import check_jwt_without_signature_verification
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._qe import _client
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base.abc import ArtifactValue
@@ -375,7 +376,7 @@ class WorkflowRunRepo:
 
     def get_wf_logs(
         self, wf_run_id: WorkflowRunId, config_name: ConfigName
-    ) -> t.Mapping[TaskInvocationId, t.Sequence[str]]:
+    ) -> WorkflowLogs:
         """
         Raises:
             ConnectionError: when connection with Ray failed.
@@ -395,7 +396,7 @@ class WorkflowRunRepo:
         except (ConnectionError, exceptions.UnauthorizedError):
             raise
 
-        return logs.per_task
+        return logs
 
     def get_task_logs(
         self,

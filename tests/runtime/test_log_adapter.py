@@ -11,7 +11,7 @@ from orquestra.sdk._ray import _ray_logs
 
 
 class TestMakeLogger:
-    @pytest.mark.skip
+    @pytest.mark.slow
     class TestIntegration:
         """
         It's very difficult to verify how we arrange loggers and formatters because

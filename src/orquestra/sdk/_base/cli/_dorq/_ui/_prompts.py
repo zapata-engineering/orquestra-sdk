@@ -38,6 +38,7 @@ class Prompter:
         choices: t.Sequence[ChoiceID],
         message: str,
         default: t.Optional[str] = None,
+        allow_all: t.Optional[bool] = False,
     ) -> ChoiceID:
         ...
 
@@ -47,6 +48,7 @@ class Prompter:
         choices: t.Sequence[t.Tuple[ChoiceID, T]],
         message: str,
         default: t.Optional[str] = None,
+        allow_all: t.Optional[bool] = False,
     ) -> T:
         ...
 
@@ -55,6 +57,7 @@ class Prompter:
         choices: t.Sequence[t.Union[ChoiceID, t.Tuple[ChoiceID, T]]],
         message: str,
         default: t.Optional[str] = None,
+        allow_all: t.Optional[bool] = False,
     ) -> t.Union[ChoiceID, T]:
         """
         Presents the user a choice and returns what they selected.
@@ -86,10 +89,16 @@ class Prompter:
         if len(choices) == 1:
             return self._handle_single_option(message, choices[0])
 
+        # We may need to be able to modify the list of choices to add an 'all' option,
+        # so cast it to a list instance.
+        _choices = list(choices)
+        if allow_all:
+            _choices += ["all"]
+
         question = inquirer.List(
             SINGLE_INPUT,
             message=message,
-            choices=choices,
+            choices=_choices,
             default=default,
             carousel=True,
         )
