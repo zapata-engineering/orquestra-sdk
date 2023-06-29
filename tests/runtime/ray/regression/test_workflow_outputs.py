@@ -21,18 +21,6 @@ pytestmark = pytest.mark.filterwarnings(
 )
 
 
-@pytest.fixture(scope="module")
-def runtime(tmp_path_factory: pytest.TempPathFactory, change_db_location):
-    project_dir = tmp_path_factory.mktemp("ray-regression")
-    config = configs.RuntimeConfiguration(
-        config_name="ray-regression-config",
-        runtime_name=configs.RuntimeName.RAY_LOCAL,
-    )
-    client = _client.RayClient()
-    rt = _dag.RayRuntime(config, project_dir, client)
-    yield rt
-
-
 # Uses real Ray connection
 @pytest.mark.slow
 # We intentionally load old workflow definitions
@@ -44,6 +32,24 @@ class TestOutputs:
         storage_path = str(BASE_PATH / request.param)
         with _connections.make_ray_conn(storage_path) as ray_params:
             yield ray_params
+
+    @pytest.fixture(scope="class")
+    def runtime(self, tmp_path_factory: pytest.TempPathFactory, change_db_location):
+        project_dir = tmp_path_factory.mktemp("ray-regression")
+        config = configs.RuntimeConfiguration(
+            config_name="ray-regression-config",
+            runtime_name=configs.RuntimeName.RAY_LOCAL,
+            runtime_options={
+                "address": "auto",
+                "log_to_driver": True,
+                "storage": None,
+                "temp_dir": None,
+                "configure_logging": None,
+            },
+        )
+        client = _client.RayClient()
+        rt = _dag.RayRuntime(config, project_dir, client)
+        yield rt
 
     @pytest.mark.parametrize(
         "workflow_run_id, expected_result",
