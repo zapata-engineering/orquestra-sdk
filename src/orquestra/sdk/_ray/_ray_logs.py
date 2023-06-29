@@ -138,7 +138,7 @@ class DirectRayReader:
         system_warning = (
             "WARNING: we don't parse system logs for the local runtime. "
             "The log files can be found in the directory "
-            "'~/.orquestra/ray/session_latest/logs."
+            f"'{self._ray_temp}'"
         )
         return [system_warning]
 
@@ -146,7 +146,7 @@ class DirectRayReader:
         other_warning = (
             "WARNING: we don't parse uncategorized logs for the local runtime. "
             "The log files can be found in the directory "
-            "'~/.orquestra/ray/session_latest/logs."
+            f"'{self._ray_temp}'"
         )
         return [other_warning]
 

@@ -303,7 +303,7 @@ class TestDirectRayReader:
 
                 # Then
                 assert logs.system == [
-                    "WARNING: we don't parse system logs for the local runtime. The log files can be found in the directory '~/.orquestra/ray/session_latest/logs."  # noqa: E501
+                    f"WARNING: we don't parse system logs for the local runtime. The log files can be found in the directory '{TEST_RAY_TEMP}'"  # noqa: E501
                 ]
 
             @staticmethod
@@ -316,7 +316,7 @@ class TestDirectRayReader:
 
                 # Then
                 assert logs.other == [
-                    "WARNING: we don't parse uncategorized logs for the local runtime. The log files can be found in the directory '~/.orquestra/ray/session_latest/logs."  # noqa: E501
+                    f"WARNING: we don't parse uncategorized logs for the local runtime. The log files can be found in the directory '{TEST_RAY_TEMP}'"  # noqa: E501
                 ]
 
     class TestGetTaskLogs:
