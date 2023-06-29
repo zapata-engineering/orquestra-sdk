@@ -660,21 +660,12 @@ class TestWFRunResolver:
         @pytest.mark.parametrize(
             "switches",
             [
-                (False, False, False, True),
-                (False, False, True, False),
-                (False, False, True, True),
-                (False, True, False, False),
-                (False, True, False, True),
-                (False, True, True, False),
-                (False, True, True, True),
-                (True, False, False, False),
-                (True, False, False, True),
-                (True, False, True, False),
-                (True, False, True, True),
-                (True, True, False, False),
-                (True, True, False, True),
-                (True, True, True, False),
-                (True, True, True, True),
+                (per_task, system, env_setup, other)
+                for per_task in [True, False]
+                for system in [True, False]
+                for env_setup in [True, False]
+                for other in [True, False]
+                if any(per_task, system, env_setup, other)
             ],
         )
         def test_returns_unchanged_if_all_switches_are_set_and_all_logs_available(
