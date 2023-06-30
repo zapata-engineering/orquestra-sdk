@@ -11,6 +11,7 @@
 🔥 *Features*
 * Adding `FutureWarning` when accessing CE Secrets without specifying Workspace.
 * Users can use `ORQ_CURRENT_PROJECT` and `ORQ_CURRENT_WORKSPACE` env variables to set default workspace and project for their interactions with CE.
+* In any execution environment, users can use `sdk.mlflow.get_temp_artifacts_dir()` to get the path to a temporary directory for writing artifacts prior to uploading to MLFlow.
 
 👩‍🔬 *Experimental*
 
