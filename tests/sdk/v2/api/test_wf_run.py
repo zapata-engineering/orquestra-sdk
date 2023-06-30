@@ -841,7 +841,7 @@ class TestWorkflowRun:
             @staticmethod
             @pytest.mark.parametrize(
                 "schema_filter, api_filter, n_expected_tasks",
-                [([True, False, True], [True, True, True], 2)],
+                [([True, False, True, True], [False, True, True], 2)],
             )
             def test_filters_tasks(run, schema_filter, api_filter, n_expected_tasks):
                 # Given
