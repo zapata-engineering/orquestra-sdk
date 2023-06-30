@@ -20,21 +20,6 @@ def get_temp_artifacts_dir() -> Path:
     appropriate directory vary significantly between a workflow running locally and one
     running on a remote cluster. This function handles that complexity so that workflows
     do not need adjusting between runtimes.
-
-    TODO: move this to a tutorial
-
-    Example usage:
-    ```
-    from orquestra import sdk
-    import mlflow
-
-    artifacts_dir: Path = sdk.mlflow.get_temp_artifacts_dir()
-
-    artifact_path = artifacts_dir / "final_state_dict.pickle"
-    with artifact_path.open("wb") as f:
-        pickle.dumps(my_model.state_dict())
-    mlflow.log_artifact(artifact_path)
-    ```
     """
 
     path: Path
