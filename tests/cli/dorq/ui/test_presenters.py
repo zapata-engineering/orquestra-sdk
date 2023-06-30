@@ -66,7 +66,7 @@ class TestWrappedCorqOutputPresenter:
             assert response_model.workflow_runs[0].id == wf_run_id
 
         @staticmethod
-        def test_show_logs(monkeypatch):
+        def test_show_logs_with_dict(monkeypatch):
             # Given
             pretty_print_mock = Mock()
             monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
@@ -84,6 +84,23 @@ class TestWrappedCorqOutputPresenter:
             response_model = called_args[0]
             assert task_logs[0] in response_model.logs
             assert task_invocation in response_model.logs[0]
+
+        @staticmethod
+        def test_show_logs_with_sequence(monkeypatch):
+            # Given
+            pretty_print_mock = Mock()
+            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
+            logs = ["my_log"]
+
+            presenter = _presenters.WrappedCorqOutputPresenter()
+
+            # When
+            presenter.show_logs(logs)
+
+            # Then
+            called_args = pretty_print_mock.call_args.args
+            response_model = called_args[0]
+            assert logs[0] in response_model.logs
 
     class TestPrinting:
         """
@@ -115,6 +132,65 @@ class TestWrappedCorqOutputPresenter:
             # Then
             captured = capsys.readouterr()
             assert f"Workflow logs saved at {dummy_path}" in captured.out
+
+    class TestShowLogs:
+        @staticmethod
+        def test_with_mapped_logs(capsys):
+            # Given
+            logs = {
+                "<task invocation id sentinel>": [
+                    "<log line 1 sentinel>",
+                    "<log line 2 sentinel>",
+                ]
+            }
+            presenter = _presenters.WrappedCorqOutputPresenter()
+
+            # When
+            presenter.show_logs(logs)
+
+            # Then
+            captured = capsys.readouterr()
+            for line in [
+                "task-invocation-id: <task invocation id sentinel>",
+                "<log line 1 sentinel>",
+                "<log line 2 sentinel>",
+            ]:
+                assert line in captured.out
+            assert "=" * 80 not in captured.out
+
+        @staticmethod
+        def test_with_sequence_logs(capsys):
+            # Given
+            logs = ["<log line 1 sentinel>", "<log line 2 sentinel>"]
+            presenter = _presenters.WrappedCorqOutputPresenter()
+
+            # When
+            presenter.show_logs(logs)
+
+            # Then
+            captured = capsys.readouterr()
+            assert "<log line 1 sentinel>\n<log line 2 sentinel>\n" in captured.out
+            assert "=" * 80 not in captured.out
+
+        @staticmethod
+        def test_with_log_type(capsys):
+            # Given
+            logs = ["<log line 1 sentinel>", "<log line 2 sentinel>"]
+            log_type = Mock(value="<log type sentinel>")
+            presenter = _presenters.WrappedCorqOutputPresenter()
+
+            # When
+            presenter.show_logs(logs, log_type=log_type)
+
+            # Then
+            captured = capsys.readouterr()
+            for line in [
+                "=== <LOG TYPE SENTINEL> LOGS ===================================================",  # noqa: E501
+                "<log line 1 sentinel>",
+                "<log line 2 sentinel>",
+                "================================================================================",  # noqa: E501
+            ]:
+                assert line in captured.out
 
     @staticmethod
     def test_handling_error(monkeypatch, sys_exit_mock):

@@ -6,9 +6,11 @@
 Code that stores values on disk as a result of a CLI command.
 """
 import typing as t
+from functools import singledispatchmethod
 from pathlib import Path
 
 from orquestra.sdk._base import serde
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk.schema.workflow_run import TaskInvocationId, WorkflowRunId
 
 
@@ -82,27 +84,65 @@ class LogsDumper:
     Writes logs to files.
     """
 
+    @staticmethod
+    def _get_logs_file(
+        dir_path: Path,
+        wf_run_id: WorkflowRunId,
+        log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None,
+    ) -> Path:
+        dir_path.mkdir(parents=True, exist_ok=True)
+        if log_type:
+            return (
+                dir_path / f"{wf_run_id}_{log_type.value.lower().replace(' ', '_')}.log"
+            )
+        return dir_path / f"{wf_run_id}.log"
+
     def dump(
         self,
-        logs: t.Mapping[TaskInvocationId, t.Sequence[str]],
+        logs: t.Union[t.Mapping[TaskInvocationId, t.Sequence[str]], t.Sequence[str]],
         wf_run_id: WorkflowRunId,
         dir_path: Path,
-    ) -> Path:
+        log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None,
+    ):
         """
-        Save logs from wf into a file
+        Save logs from wf into a file.
 
         Creates missing directories. Generates filenames based on ``wf_run_id``
         No standard errors are expected to be raised.
         """
-        dir_path.mkdir(parents=True, exist_ok=True)
+        logs_file = self._get_logs_file(dir_path, wf_run_id, log_type=log_type)
 
-        logs_file = dir_path / f"{wf_run_id}.log"
+        log_lines = self._construct_output_log_lines(logs)
 
         with logs_file.open("w") as f:
-            for task_invocation in logs:
-                f.write(f"Logs for task invocation: {task_invocation}:\n\n")
-                for log in logs[task_invocation]:
-                    f.write(log + "\n")
-                f.write("\n\n")
+            f.writelines(log_lines)
 
         return logs_file
+
+    @singledispatchmethod
+    @staticmethod
+    def _construct_output_log_lines(self, *args) -> t.List[str]:
+        """
+        Construct a list of log lines to be printed.
+
+        This method has overloads for dict and list arguments.
+        """
+        raise NotImplementedError(
+            f"No log lines constructor for args {args}"
+        )  # pragma: no cover
+
+    @_construct_output_log_lines.register(dict)
+    @staticmethod
+    def _(logs: dict) -> t.List[str]:
+        outlines = []
+        for task_invocation in logs:
+            outlines.append(f"Logs for task invocation: {task_invocation}:\n\n")
+            for log in logs[task_invocation]:
+                outlines.append(log + "\n")
+            outlines.append("\n\n")
+        return outlines
+
+    @_construct_output_log_lines.register(list)
+    @staticmethod
+    def _(logs: list) -> t.List[str]:
+        return [log + "\n" for log in logs]
