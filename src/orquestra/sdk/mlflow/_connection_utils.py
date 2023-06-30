@@ -37,9 +37,15 @@ def get_temp_artifacts_dir() -> Path:
     ```
     """
 
-    # In Studio and CE there is an environment variable that points to the artifact dir.
+    path: Path
     if "ORQ_MLFLOW_ARTIFACTS_DIR" in os.environ:
-        return Path(os.environ["ORQ_MLFLOW_ARTIFACTS_DIR"])
+        # In Studio and CE there is an environment variable that points to the artifact
+        # directory.
+        path = Path(os.environ["ORQ_MLFLOW_ARTIFACTS_DIR"])
+    else:
+        # If the artifact dir envvar doesn't exist, we're probably executing locally.
+        path = DEFAULT_TEMP_ARTIFACTS_DIR
 
-    # If the artifact dir envvar doesn't exist, we're probably executing locally.
-    return DEFAULT_TEMP_ARTIFACTS_DIR
+    path.mkdir(parents=True, exist_ok=True)
+
+    return path
