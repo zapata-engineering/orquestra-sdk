@@ -6,12 +6,12 @@
 * Removed `RuntimeConfig.load_default()`
 * Removed any support for default configuration
 * `sdk.secret` functions will no longer use default configuration from local runtimes. Config has to be passed explicitly unless running on remote cluster
-* Add `--list` option to `orq login` that displays the stored remote logins, which runtimes they are using, and whether their access tokens are up to date.
 * `WorkflowDef.get_tasks()` now returns topologically sorted list of TaskRuns instead of set
 
 🔥 *Features*
 * Adding `FutureWarning` when accessing CE Secrets without specifying Workspace.
 * Users can use `ORQ_CURRENT_PROJECT` and `ORQ_CURRENT_WORKSPACE` env variables to set default workspace and project for their interactions with CE.
+* Add `--list` option to `orq login` that displays the stored remote logins, which runtimes they are using, and whether their access tokens are up to date.
 
 👩‍🔬 *Experimental*
 
