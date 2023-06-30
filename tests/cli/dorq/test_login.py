@@ -83,7 +83,9 @@ class TestAction:
         config_repo.store_token_in_config.assert_called_once_with(
             url, retrieved_token, runtime_name
         )
-        login_presenter.prompt_config_saved.assert_called_once_with(url, config_name)
+        login_presenter.prompt_config_saved.assert_called_once_with(
+            url, config_name, runtime_name
+        )
 
     @staticmethod
     def test_passed_server_no_token_server_exits_gracefully(
@@ -133,7 +135,9 @@ class TestAction:
         config_repo.store_token_in_config.assert_called_once_with(
             url, retrieved_token, runtime_name
         )
-        login_presenter.prompt_config_saved.assert_called_once_with(url, config_name)
+        login_presenter.prompt_config_saved.assert_called_once_with(
+            url, config_name, runtime_name
+        )
 
     @staticmethod
     def test_passed_server_no_token_auto_login_failed(async_sleep, runtime_name):
@@ -227,7 +231,9 @@ class TestAction:
         config_repo.store_token_in_config.assert_called_once_with(
             url, token, runtime_name
         )
-        login_presenter.prompt_config_saved.assert_called_once_with(url, config_name)
+        login_presenter.prompt_config_saved.assert_called_once_with(
+            url, config_name, runtime_name
+        )
 
     @staticmethod
     def test_passed_config_no_token(async_sleep, runtime_name):
@@ -279,7 +285,7 @@ class TestAction:
             login_url, retrieved_token, runtime_name
         )
         login_presenter.prompt_config_saved.assert_called_once_with(
-            login_url, config_name
+            login_url, config_name, runtime_name
         )
 
     @staticmethod
@@ -330,7 +336,7 @@ class TestAction:
             login_url, token, runtime_name
         )
         login_presenter.prompt_config_saved.assert_called_once_with(
-            login_url, config_name
+            login_url, config_name, runtime_name
         )
 
     @staticmethod
@@ -440,7 +446,7 @@ class TestAction:
         async_sleep.assert_called_once()
         config_resolver.resolve_stored_config_for_login.assert_called_once_with(config)
         login_presenter.prompt_config_saved.assert_called_once_with(
-            login_url, config_name
+            login_url, config_name, runtime_name
         )
         # not called
         exception_presenter.show_error.assert_not_called()

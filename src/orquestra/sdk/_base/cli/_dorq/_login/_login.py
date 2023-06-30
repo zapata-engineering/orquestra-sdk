@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
 Code for 'orq login'.
@@ -125,7 +125,7 @@ class Action:
 
     def _save_token(self, url, token, runtime_name: RemoteRuntime):
         config_name = self._config_repo.store_token_in_config(url, token, runtime_name)
-        self._login_presenter.prompt_config_saved(url, config_name)
+        self._login_presenter.prompt_config_saved(url, config_name, runtime_name)
 
     async def _get_token_from_server(
         self, url: str, runtime_name: RemoteRuntime, timeout: int
