@@ -6,21 +6,25 @@ import typing as t
 from orquestra.sdk.schema import ir
 
 Node = str
-Graph = t.Dict[Node, t.Set[Node]]
+
+# Graph uses dict with None's instead of set because dict is ordered, and set is not
+# and we need the order to be deterministic
+Graph = t.Dict[Node, t.Dict[Node, None]]
 
 
 def _invert_graph(graph: Graph) -> Graph:
     inverted: Graph = {}
     for node, deps in graph.items():
         for dep in deps:
-            inverted.setdefault(dep, set()).add(node)
+            inverted.setdefault(dep, dict())[node] = None
     return inverted
 
 
-def _root_nodes(graph: Graph) -> t.Set[Node]:
-    all_nodes = {v for node, deps in graph.items() for v in [node, *deps]}
-    needed_nodes = {dep for deps in graph.values() for dep in deps}
-    return all_nodes - needed_nodes
+def _root_nodes(graph: Graph) -> t.Dict[Node, None]:
+    all_nodes = {v: None for node, deps in graph.items() for v in [node, *deps]}
+    needed_nodes = {dep: None for deps in graph.values() for dep in deps}
+    # return all_nodes - needed_nodes
+    return {v: None for v in all_nodes.keys() if v not in needed_nodes}
 
 
 def topological_sort(graph_to_sort: Graph) -> t.List[Node]:
@@ -50,15 +54,15 @@ def topological_sort(graph_to_sort: Graph) -> t.List[Node]:
     S = _root_nodes(graph)
 
     while S:
-        n = S.pop()
+        n = S.popitem()[0]
         L.append(n)
         n_deps = list(graph.get(n, []))
         for m in n_deps:
             graph[n].remove(m)
-            inverted_graph.get(m, set()).remove(n)
+            inverted_graph.get(m, dict()).pop(n)
 
             if not inverted_graph.get(m):
-                S.add(m)
+                S[m] = None
 
     for deps in graph.values():
         if deps:
@@ -73,11 +77,11 @@ def iter_invocations_topologically(wf: ir.WorkflowDef):
     for invocation in wf.task_invocations.values():
         for arg_id in [*invocation.args_ids, *invocation.kwargs_ids.values()]:
             # We need the argument before we can run the invocation
-            graph.setdefault(arg_id, set()).add(invocation.id)
+            graph.setdefault(arg_id, dict())[invocation.id] = None
 
         for output_id in invocation.output_ids:
             # We need to run the invocation before we can have the output
-            graph.setdefault(invocation.id, set()).add(output_id)
+            graph.setdefault(invocation.id, dict())[output_id] = None
 
     sorted_node_ids = topological_sort(graph)
 
