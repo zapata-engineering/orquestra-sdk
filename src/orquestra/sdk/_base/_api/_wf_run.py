@@ -32,6 +32,7 @@ from ...schema.workflow_run import TaskRunId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
 from .. import serde
+from .._graphs import iter_invocations_topologically
 from .._in_process_runtime import InProcessRuntime
 from .._logs._interfaces import WorkflowLogs
 from .._spaces._resolver import resolve_studio_project_ref
@@ -520,7 +521,7 @@ class WorkflowRun:
         function_name: t.Optional[str] = None,
         task_run_id: t.Optional[t.Union[str, TaskRunId]] = None,
         task_invocation_id: t.Optional[t.Union[str, ir.TaskInvocationId]] = None,
-    ) -> t.Set[TaskRun]:
+    ) -> t.List[TaskRun]:
         """
         Returns TaskRun representations of the tasks executed as part of this workflow.
 
@@ -541,9 +542,17 @@ class WorkflowRun:
         """
 
         wf_run_model: WorkflowRunModel = self.get_status_model()
+        wf_ir = self._wf_def
+        sorted_invs: t.List[ir.TaskInvocation] = [
+            inv.id for inv in iter_invocations_topologically(wf_ir)
+        ]
+        sorted_task_runs = sorted(
+            wf_run_model.task_runs,
+            key=lambda task_run: sorted_invs.index(task_run.invocation_id),
+        )
 
-        tasks = set()
-        for task_model in wf_run_model.task_runs:
+        tasks = []
+        for task_model in sorted_task_runs:
             if not self._task_matches_schema_filters(
                 task_model,
                 state=state,
@@ -563,7 +572,7 @@ class WorkflowRun:
                 task_fn_name=function_name,
             ):
                 continue
-            tasks.add(task)
+            tasks.append(task)
 
         return tasks
 
