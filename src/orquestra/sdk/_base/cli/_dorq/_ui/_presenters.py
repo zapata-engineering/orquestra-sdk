@@ -245,7 +245,10 @@ class ServicePresenter:
 
 
 class LoginPresenter:
+    """User-facing presentation for the steps of the login process."""
+
     def prompt_for_login(self, login_url, url, ce):
+        """Instruct the user how to log in manually."""
         click.echo("We were unable to automatically log you in.")
         click.echo("Please login to your Orquestra account using the following URL.")
         click.echo(login_url)
@@ -254,20 +257,25 @@ class LoginPresenter:
                 "Then save the token using command: \n"
                 f"orq login -s {url} -t <paste your token here>"
             )
-            + (" --ce" if ce else "")
+            + (" --ce" if ce else " --qe")
         )
 
-    def prompt_config_saved(self, url, config_name):
-        # TODO: tell the user what runtime is being used.
+    def prompt_config_saved(self, url, config_name, runtime_name):
+        """Report that the config has been successfully saved."""
         click.echo("Token saved in config file.")
-        click.echo(f"Configuration name for {url} is {config_name}")
+        click.echo(
+            f"Configuration name for {url} with runtime {runtime_name} "
+            f"is '{config_name}'."
+        )
 
     def print_login_help(self):
+        """Direct the user to their browser for the login process."""
         click.echo(
             "Continue the login process in your web browser. Press [ctrl-c] to cancel."
         )
 
     def open_url_in_browser(self, url) -> bool:
+        """Open the login url in the user's browser."""
         return webbrowser.open(url)
 
 
