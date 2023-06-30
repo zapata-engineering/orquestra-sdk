@@ -7,9 +7,9 @@
 import os
 from pathlib import Path
 
-from orquestra.sdk._base import _env
+from orquestra.sdk._base._services import ORQUESTRA_BASE_PATH
 
-DEFAULT_TEMP_ARTIFACTS_DIR: Path = Path.home() / ".orquestra" / "mlflow" / "artifacts"
+DEFAULT_TEMP_ARTIFACTS_DIR: Path = ORQUESTRA_BASE_PATH / "mlflow" / "artifacts"
 
 
 def get_temp_artifacts_dir() -> Path:
