@@ -3,7 +3,7 @@
 ################################################################################
 """Orquestra SDK allows to define computational workflows using Python DSL."""
 
-from . import secrets
+from . import mlflow, secrets
 from ._base._api import (
     RuntimeConfig,
     TaskRun,
@@ -45,6 +45,7 @@ __all__ = [
     "Import",
     "InlineImport",
     "LocalImport",
+    "mlflow",
     "NotATaskWarning",
     "PythonImports",
     "Resources",
