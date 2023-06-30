@@ -543,13 +543,13 @@ class WorkflowRun:
 
         wf_run_model: WorkflowRunModel = self.get_status_model()
         wf_ir = self._wf_def
-        sorted_invs: t.List[ir.TaskInvocation] = [
+        sorted_invs: t.List[ir.TaskInvocationId] = [
             inv.id for inv in iter_invocations_topologically(wf_ir)
         ]
-        sorted_task_runs = sorted(
-            wf_run_model.task_runs,
-            key=lambda task_run: sorted_invs.index(task_run.invocation_id),
-        )
+        task_runs: t.Mapping[ir.TaskInvocationId, TaskRunModel] = {
+            task_run.invocation_id: task_run for task_run in wf_run_model.task_runs
+        }
+        sorted_task_runs = [task_runs[inv_id] for inv_id in sorted_invs]
 
         tasks = []
         for task_model in sorted_task_runs:
