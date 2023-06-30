@@ -190,6 +190,11 @@ class TestWorkflowRun:
                 invocation_id=invs[2],
                 status=RunStatus(state=State.FAILED),
             ),
+            TaskRunModel(
+                id="task_run4",
+                invocation_id=invs[3],
+                status=RunStatus(state=State.FAILED),
+            ),
         ]
 
         return runtime
@@ -789,7 +794,7 @@ class TestWorkflowRun:
             tasks = run.get_tasks()
 
             # Then
-            assert len(tasks) == 3
+            assert len(tasks) == 4
 
             wf_def_model = run._wf_def
             for task in tasks:
@@ -824,12 +829,12 @@ class TestWorkflowRun:
                 )
 
                 # Then
-                assert run._task_matches_schema_filters.call_count == 3
+                assert run._task_matches_schema_filters.call_count == 4
                 for mock_call in run._task_matches_schema_filters.call_args_list:
                     assert mock_call[1]["state"] == state
                     assert mock_call[1]["task_run_id"] == task_run_id
                     assert mock_call[1]["task_invocation_id"] == task_invocation_id
-                assert run._task_matches_api_filters.call_count == 3
+                assert run._task_matches_api_filters.call_count == 4
                 for mock_call in run._task_matches_api_filters.call_args_list:
                     assert mock_call[1]["task_fn_name"] == task_function_name
 
