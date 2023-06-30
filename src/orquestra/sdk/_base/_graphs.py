@@ -2,6 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 import typing as t
+from copy import copy
 
 from orquestra.sdk.schema import ir
 
@@ -42,7 +43,7 @@ def topological_sort(graph_to_sort: Graph) -> t.List[Node]:
         visited before any of the successors.
     """
     # We need a local copy because Kahn's algorithm mutates data.
-    graph = {node: set(successors) for node, successors in graph_to_sort.items()}
+    graph = {node: copy(successors) for node, successors in graph_to_sort.items()}
 
     # We'll need this to check if a node has any incoming edges/dependencies (line 9 in
     # the algorithm).
@@ -58,7 +59,7 @@ def topological_sort(graph_to_sort: Graph) -> t.List[Node]:
         L.append(n)
         n_deps = list(graph.get(n, []))
         for m in n_deps:
-            graph[n].remove(m)
+            graph[n].pop(m)
             inverted_graph.get(m, dict()).pop(n)
 
             if not inverted_graph.get(m):
