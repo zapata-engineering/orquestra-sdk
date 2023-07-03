@@ -6,10 +6,10 @@ from typing import Any, Dict, Tuple, Union
 
 import pytest
 
+from orquestra.sdk._base._config import LOCAL_RUNTIME_CONFIGURATION
 from orquestra.sdk._base._testing import _connections
 from orquestra.sdk._base.serde import deserialize
 from orquestra.sdk._ray import _client, _dag
-from orquestra.sdk.schema import configs
 
 PRODUCING_SDK_VERSIONS_TO_TEST = ["0.46.0", "0.47.0"]
 BASE_PATH = Path(__file__).parent / "data"
@@ -36,17 +36,7 @@ class TestOutputs:
     @pytest.fixture(scope="class")
     def runtime(self, tmp_path_factory: pytest.TempPathFactory, change_db_location):
         project_dir = tmp_path_factory.mktemp("ray-regression")
-        config = configs.RuntimeConfiguration(
-            config_name="ray-regression-config",
-            runtime_name=configs.RuntimeName.RAY_LOCAL,
-            runtime_options={
-                "address": "auto",
-                "log_to_driver": True,
-                "storage": None,
-                "temp_dir": None,
-                "configure_logging": None,
-            },
-        )
+        config = LOCAL_RUNTIME_CONFIGURATION
         client = _client.RayClient()
         rt = _dag.RayRuntime(config, project_dir, client)
         yield rt

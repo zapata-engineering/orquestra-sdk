@@ -13,7 +13,11 @@ import pytest
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _dates
-from orquestra.sdk._base._config import RuntimeConfiguration, RuntimeName
+from orquestra.sdk._base._config import (
+    LOCAL_RUNTIME_CONFIGURATION,
+    RuntimeConfiguration,
+    RuntimeName,
+)
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._ray import _client, _dag, _ray_logs
@@ -122,18 +126,7 @@ class TestRayRuntime:
     @staticmethod
     @pytest.fixture
     def runtime_config(monkeypatch):
-        monkeypatch.setattr(_dag.RayRuntime, "startup", lambda *_, **__: ...)
-        return RuntimeConfiguration(
-            config_name="TestRayRuntime",
-            runtime_name=RuntimeName.RAY_LOCAL,
-            runtime_options={
-                "address": None,
-                "log_to_driver": True,
-                "storage": None,
-                "temp_dir": None,
-                "configure_logging": None,
-            },
-        )
+        return LOCAL_RUNTIME_CONFIGURATION
 
     class TestReadingLogs:
         """

@@ -15,10 +15,11 @@ import pytest
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
+from orquestra.sdk._base._config import LOCAL_RUNTIME_CONFIGURATION
 from orquestra.sdk._base._testing import _example_wfs, _ipc
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk._ray import _build_workflow, _client, _dag, _ray_logs
-from orquestra.sdk.schema import configs, ir
+from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.responses import JSONResult
 from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
 
@@ -34,17 +35,7 @@ def runtime(
     shared_ray_conn, tmp_path_factory: pytest.TempPathFactory, change_db_location
 ):
     project_dir = tmp_path_factory.mktemp("ray-integration")
-    config = configs.RuntimeConfiguration(
-        config_name="test-config",
-        runtime_name=configs.RuntimeName.RAY_LOCAL,
-        runtime_options={
-            "address": None,
-            "log_to_driver": True,
-            "storage": None,
-            "temp_dir": None,
-            "configure_logging": None,
-        },
-    )
+    config = LOCAL_RUNTIME_CONFIGURATION
     client = _client.RayClient()
     rt = _dag.RayRuntime(config, project_dir, client)
     yield rt
