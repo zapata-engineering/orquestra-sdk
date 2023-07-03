@@ -126,6 +126,7 @@ class TestRayRuntime:
     @staticmethod
     @pytest.fixture
     def runtime_config(monkeypatch):
+        monkeypatch.setattr(_dag.RayRuntime, "startup", lambda *_, **__: ...)
         return LOCAL_RUNTIME_CONFIGURATION
 
     class TestReadingLogs:
