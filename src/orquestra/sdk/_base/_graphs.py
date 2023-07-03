@@ -8,7 +8,7 @@ from orquestra.sdk.schema import ir
 
 Node = str
 
-# Graph uses dict with None's instead of set because dict is ordered, and set is not
+# Graph uses dict with Nones instead of set because dict is ordered, and set is not
 # and we need the order to be deterministic
 Graph = t.Dict[Node, t.Dict[Node, None]]
 
@@ -17,7 +17,7 @@ def _invert_graph(graph: Graph) -> Graph:
     inverted: Graph = {}
     for node, deps in graph.items():
         for dep in deps:
-            # Graph uses dict with None's instead of set because dict is ordered
+            # Graph uses dict with Nones instead of set because dict is ordered
             inverted.setdefault(dep, dict())[node] = None
     return inverted
 
@@ -68,7 +68,7 @@ def topological_sort(graph_to_sort: Graph) -> t.List[Node]:
             node.pop(n)
 
             if node == {}:
-                # Graph uses dict with None's instead of set because dict is ordered
+                # Graph uses dict with Nones instead of set because dict is ordered
                 S[m] = None
 
     for deps in graph.values():
@@ -84,12 +84,12 @@ def iter_invocations_topologically(wf: ir.WorkflowDef):
     for invocation in wf.task_invocations.values():
         for arg_id in [*invocation.args_ids, *invocation.kwargs_ids.values()]:
             # We need the argument before we can run the invocation
-            # Graph uses dict with None's instead of set because dict is ordered
+            # Graph uses dict with Nones instead of set because dict is ordered
             graph.setdefault(arg_id, dict())[invocation.id] = None
 
         for output_id in invocation.output_ids:
             # We need to run the invocation before we can have the output
-            # Graph uses dict with None's instead of set because dict is ordered
+            # Graph uses dict with Nones instead of set because dict is ordered
             graph.setdefault(invocation.id, dict())[output_id] = None
 
     sorted_node_ids = topological_sort(graph)
