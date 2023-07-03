@@ -1,0 +1,5 @@
+:job_id:01000000
+:task_name:_workflow_task_executor_remote
+2023-06-28 09:47:39,854	INFO task_executor.py:78 -- Task status [RUNNING]	[wf.wf_using_python_imports.1472d35@invocation-0-task-task-with-python-imports]
+ORQ-MARKER:{"event": "task_start", "timestamp": "2023-06-28T09:47:39.861578+02:00", "wf_run_id": "wf.wf_using_python_imports.1472d35", "task_inv_id": "invocation-0-task-task-with-python-imports"}
+ORQ-MARKER:{"event": "task_end", "timestamp": "2023-06-28T09:47:40.536149+02:00", "wf_run_id": "wf.wf_using_python_imports.1472d35", "task_inv_id": "invocation-0-task-task-with-python-imports"}
