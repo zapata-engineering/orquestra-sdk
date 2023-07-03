@@ -13,6 +13,12 @@ from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
 
+class CapturedLogLines(t.NamedTuple):
+    captured_lines: t.Sequence[str]
+    workflow_run_id: WorkflowRunId
+    task_invocation_id: TaskInvocationId
+
+
 def _iter_logs_paths(ray_temp: Path) -> t.Iterator[Path]:
     seen_paths: t.MutableSet[Path] = set()
     for file_path in ray_temp.glob("session_*/logs/*"):
@@ -41,7 +47,7 @@ def _iter_log_lines(paths: t.Iterable[Path]) -> t.Iterator[bytes]:
 
 def iter_task_logs(
     worker_file_path: Path,
-) -> t.Iterator[t.Tuple[t.Sequence[str], WorkflowRunId, TaskInvocationId]]:
+) -> t.Iterator[CapturedLogLines]:
     with worker_file_path.open() as f:
         marker_context: t.Optional[_markers.TaskStartMarker] = None
         collected_lines: t.List[str] = []
@@ -53,7 +59,7 @@ def iter_task_logs(
                         # Seeing two start markers in the row: edge case when the end
                         # marker is missing. We want to return the logs to the user
                         # anyway. They might be noisy, but it's better than nothing.
-                        yield (
+                        yield CapturedLogLines(
                             collected_lines,
                             marker_context.wf_run_id,
                             marker_context.task_inv_id,
@@ -63,7 +69,7 @@ def iter_task_logs(
                     collected_lines = []
                 elif isinstance(marker, _markers.TaskEndMarker):
                     if marker_context is not None:
-                        yield (
+                        yield CapturedLogLines(
                             collected_lines,
                             marker_context.wf_run_id,
                             marker_context.task_inv_id,
@@ -79,7 +85,7 @@ def iter_task_logs(
         # If something goes wrong, eg. Ray worker crashes, the log file can end without
         # the task end marker. We wanna capture the logs anyway.
         if marker_context is not None:
-            yield (
+            yield CapturedLogLines(
                 collected_lines,
                 marker_context.wf_run_id,
                 marker_context.task_inv_id,
