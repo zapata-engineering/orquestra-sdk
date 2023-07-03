@@ -11,6 +11,10 @@
 🔥 *Features*
 * Adding `FutureWarning` when accessing CE Secrets without specifying Workspace.
 * Users can use `ORQ_CURRENT_PROJECT` and `ORQ_CURRENT_WORKSPACE` env variables to set default workspace and project for their interactions with CE.
+* Local runtime now captures any logs printed to standard output and error streams when a task is running. In particular, this means plain `print()`s will be captured and reported back with `orq wf logs` or `orq task logs`.
+
+🧟 *Deprecations*
+* Deprecated `sdk.wfprint()` and `sdk.workflow_logger()`.
 
 👩‍🔬 *Experimental*
 
@@ -20,6 +24,7 @@
 💅 *Improvements*
 * When a new config is saved, the message shown in the CLI now includes the runtime name.
 * API: rather then returning empty lists, ray local logs now return messages for `system` and `other` log categories that direct the user to the logs directory.
+* User-emitted logs are no longer wrapped in an JSON dictionary with metadata. `print("foo")` will now result in a log line `"foo"` instead of `'{"message": "foo", "timestamp": ..., "wf_run_id": ..., ...}'`
 
 🥷 *Internal*
 * Refactored `datetime` and timezone handling.
