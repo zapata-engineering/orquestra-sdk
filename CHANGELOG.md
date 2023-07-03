@@ -19,8 +19,11 @@
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
+* When automated login fails, the instructions for manually logging in now show the correct runtime flag.
 
 💅 *Improvements*
+* When a new config is saved, the message shown in the CLI now includes the runtime name.
+* API: rather then returning empty lists, ray local logs now return messages for `system` and `other` log categories that direct the user to the logs directory.
 * User-emitted logs are no longer wrapped in an JSON dictionary with metadata. `print("foo")` will now result in a log line `"foo"` instead of `'{"message": "foo", "timestamp": ..., "wf_run_id": ..., ...}'`
 
 🥷 *Internal*
@@ -35,6 +38,7 @@
 
 🚨 *Breaking Changes*
 * Compute Engine is now the default when logging in
+* `orq wf logs` now supports `--task`, `--system` and `--env-setup` flags to control which logs are shown / downloaded. If none of these flags are set, the user is prompted for a choice of log types, with the default being `all`.
 * `InlineImport()` is now always default `source_import` for tasks
 
 🔥 *Features*

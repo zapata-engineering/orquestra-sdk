@@ -409,7 +409,6 @@ class TestDirectRayReader:
                 # Then
                 assert logs.per_task == {}
 
-        @staticmethod
         @pytest.mark.parametrize(
             "wf_run_id",
             [
@@ -417,20 +416,50 @@ class TestDirectRayReader:
                 pytest.param("doesnt-exist", id="invalid_id"),
             ],
         )
-        def test_env_setup(wf_run_id: str):
-            # Given
-            reader = _ray_logs.DirectRayReader(ray_temp=TEST_RAY_TEMP)
+        class TestNonTaskLogTypes:
+            @staticmethod
+            def test_env_setup(wf_run_id: str):
+                # Given
+                reader = _ray_logs.DirectRayReader(ray_temp=TEST_RAY_TEMP)
 
-            # When
-            logs = reader.get_workflow_logs(wf_run_id)
+                # When
+                logs = reader.get_workflow_logs(wf_run_id)
 
-            # Then
-            for tell_tale in [
-                "Cloning virtualenv",
-                "'pip', 'install'",
-                "Installing python requirements",
-            ]:
-                assert len([line for line in logs.env_setup if tell_tale in line]) > 0
+                # Then
+                for tell_tale in [
+                    "Cloning virtualenv",
+                    "'pip', 'install'",
+                    "Installing python requirements",
+                ]:
+                    assert (
+                        len([line for line in logs.env_setup if tell_tale in line]) > 0
+                    )
+
+            @staticmethod
+            def test_system(wf_run_id: str):
+                # Given
+                reader = _ray_logs.DirectRayReader(ray_temp=TEST_RAY_TEMP)
+
+                # When
+                logs = reader.get_workflow_logs(wf_run_id)
+
+                # Then
+                assert logs.system == [
+                    f"WARNING: we don't parse system logs for the local runtime. The log files can be found in the directory '{TEST_RAY_TEMP}'"  # noqa: E501
+                ]
+
+            @staticmethod
+            def test_other(wf_run_id: str):
+                # Given
+                reader = _ray_logs.DirectRayReader(ray_temp=TEST_RAY_TEMP)
+
+                # When
+                logs = reader.get_workflow_logs(wf_run_id)
+
+                # Then
+                assert logs.other == [
+                    f"WARNING: we don't parse uncategorized logs for the local runtime. The log files can be found in the directory '{TEST_RAY_TEMP}'"  # noqa: E501
+                ]
 
     class TestGetTaskLogs:
         @staticmethod

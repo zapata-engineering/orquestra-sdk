@@ -11,6 +11,7 @@ import sys
 import typing as t
 import webbrowser
 from contextlib import contextmanager
+from functools import singledispatchmethod
 from pathlib import Path
 from typing import Iterable, Iterator, List, Sequence
 
@@ -19,6 +20,7 @@ from tabulate import tabulate
 
 from orquestra.sdk._base import _config, _dates, _env, _services, serde
 from orquestra.sdk._base._dates import Instant
+from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk.schema import responses
 from orquestra.sdk.schema.configs import ConfigName, RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.ir import ArtifactFormat
@@ -64,32 +66,77 @@ class WrappedCorqOutputPresenter:
     def show_stopped_wf_run(self, wf_run_id: WorkflowRunId):
         click.echo(f"Workflow run {wf_run_id} stopped.")
 
-    def show_dumped_wf_logs(self, path: Path):
-        click.echo(f"Workflow logs saved at {path}")
+    def show_dumped_wf_logs(
+        self, path: Path, log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None
+    ):
+        """
+        Tell the user where logs have been saved.
 
+        Args:
+            path: The path to the dump file.
+            log_type: additional information identify the type of logs saved.
+        """
+        click.echo(
+            f"Workflow {log_type.value + ' ' if log_type else ''}logs saved at {path}"
+        )
+
+    @singledispatchmethod
     @staticmethod
-    def _format_log_dict(logs: t.Mapping[TaskInvocationId, t.Sequence[str]]):
+    def _format_logs(*args) -> t.List[str]:
+        """
+        Format the logs into a list of strings to be printed.
+        """
+        raise NotImplementedError(
+            f"No log lines constructor for args {args}"
+        )  # pragma: no cover
+
+    @_format_logs.register(dict)
+    @staticmethod
+    def _(logs: dict):
         return [
             line
             for invocation_id, invocation_lines in logs.items()
             for line in (f"task-invocation-id: {invocation_id}", *invocation_lines)
         ]
 
-    def show_logs(self, logs: t.Mapping[TaskInvocationId, t.Sequence[str]]):
+    @_format_logs.register(list)
+    @staticmethod
+    def _(logs: list):
+        return logs
+
+    def show_logs(
+        self,
+        logs: t.Union[t.Mapping[TaskInvocationId, t.Sequence[str]], t.Sequence[str]],
+        log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None,
+    ):
+        """
+        Present logs to the user.
+        """
+        _logs = self._format_logs(logs)
+
         resp = responses.GetLogsResponse(
             meta=responses.ResponseMetadata(
                 success=True,
                 code=responses.ResponseStatusCode.OK,
                 message="Successfully got workflow run logs.",
             ),
-            logs=self._format_log_dict(logs),
+            logs=_logs,
         )
+
+        if log_type:
+            _log_type = f"{log_type.value} logs".replace("_", " ")
+            click.echo(f"=== {_log_type.upper()} " + "=" * (75 - len(_log_type)))
         per_command.pretty_print_response(resp, project_dir=None)
+        if log_type:
+            click.echo("=" * 80 + "\n\n")
 
     def show_error(self, exception: Exception):
         status_code = _errors.pretty_print_exception(exception)
 
         sys.exit(status_code.value)
+
+    def show_message(self, message: str):
+        click.echo(message=message)
 
 
 class ArtifactPresenter:
@@ -198,7 +245,10 @@ class ServicePresenter:
 
 
 class LoginPresenter:
+    """User-facing presentation for the steps of the login process."""
+
     def prompt_for_login(self, login_url, url, ce):
+        """Instruct the user how to log in manually."""
         click.echo("We were unable to automatically log you in.")
         click.echo("Please login to your Orquestra account using the following URL.")
         click.echo(login_url)
@@ -207,20 +257,25 @@ class LoginPresenter:
                 "Then save the token using command: \n"
                 f"orq login -s {url} -t <paste your token here>"
             )
-            + (" --ce" if ce else "")
+            + (" --ce" if ce else " --qe")
         )
 
-    def prompt_config_saved(self, url, config_name):
-        # TODO: tell the user what runtime is being used.
+    def prompt_config_saved(self, url, config_name, runtime_name):
+        """Report that the config has been successfully saved."""
         click.echo("Token saved in config file.")
-        click.echo(f"Configuration name for {url} is {config_name}")
+        click.echo(
+            f"Configuration name for {url} with runtime {runtime_name} "
+            f"is '{config_name}'."
+        )
 
     def print_login_help(self):
+        """Direct the user to their browser for the login process."""
         click.echo(
             "Continue the login process in your web browser. Press [ctrl-c] to cancel."
         )
 
     def open_url_in_browser(self, url) -> bool:
+        """Open the login url in the user's browser."""
         return webbrowser.open(url)
 
 

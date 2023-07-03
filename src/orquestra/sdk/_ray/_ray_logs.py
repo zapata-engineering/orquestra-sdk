@@ -114,6 +114,26 @@ class DirectRayReader:
 
         return [line.decode() for line in log_line_bytes]
 
+    def _get_system_log_lines(self) -> t.Sequence[str]:
+        # There is currently no concrete rule for which log files fall into the
+        # category of 'system'. Since the log files exist locally for the user, we
+        # simply point them to the appropriate directory rather than trying to
+        # construct the category for them.
+        system_warning = (
+            "WARNING: we don't parse system logs for the local runtime. "
+            "The log files can be found in the directory "
+            f"'{self._ray_temp}'"
+        )
+        return [system_warning]
+
+    def _get_other_log_lines(self) -> t.Sequence[str]:
+        other_warning = (
+            "WARNING: we don't parse uncategorized logs for the local runtime. "
+            "The log files can be found in the directory "
+            f"'{self._ray_temp}'"
+        )
+        return [other_warning]
+
     def get_task_logs(
         self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
     ) -> t.List[str]:
@@ -140,10 +160,12 @@ class DirectRayReader:
                 logs_dict.setdefault(task_inv_id2, []).extend(logs_batch2)
 
         env_setup = self._get_env_setup_lines()
+        system = self._get_system_log_lines()
+        other = self._get_other_log_lines()
 
         return WorkflowLogs(
             per_task=logs_dict,
             env_setup=env_setup,
-            system=[],
-            other=[],
+            system=system,
+            other=other,
         )
