@@ -189,12 +189,9 @@ class RayRuntime(RuntimeInterface):
         self,
         config: RuntimeConfiguration,
         project_dir: Path,
-        client=None,
+        client: t.Optional[RayClient] = None,
     ):
-        if client is None:
-            client = RayClient()
-
-        self._client = client
+        self._client = client or RayClient()
 
         ray_params = RayParams(
             address=config.runtime_options["address"],
