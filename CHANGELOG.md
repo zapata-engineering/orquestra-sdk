@@ -15,8 +15,10 @@
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
+* When automated login fails, the instructions for manually logging in now show the correct runtime flag.
 
 💅 *Improvements*
+* When a new config is saved, the message shown in the CLI now includes the runtime name.
 * API: rather then returning empty lists, ray local logs now return messages for `system` and `other` log categories that direct the user to the logs directory.
 
 🥷 *Internal*
