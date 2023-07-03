@@ -48,6 +48,27 @@ def _iter_log_lines(paths: t.Iterable[Path]) -> t.Iterator[bytes]:
 def iter_task_logs(
     worker_file_path: Path,
 ) -> t.Iterator[CapturedLogLines]:
+    """
+    A generator over logs contained in a Ray worker's output file
+
+    Ray workers can be reused, so this generator has to handle a number of edge cases.
+        - Happy path: a Ray worker has a single "task start" and "task end" marker.
+        - a Ray worker has multiple "task start" and "task end" markers.
+          This happens after a worker has being reused.
+        - Two (or more) "task start" markers in a row.
+          This may happen when if a worker is reused and the previous "task end" marker
+          failed.
+        - Missing "task end" marker.
+          This may happen if a worker crashes or the "task end" marker is not captured.
+
+    Args:
+        worker_file_path: The path to the output of a Ray worker.
+
+    Returns:
+        A generator that yields batches of logs relating to specific workflow runs and
+        task invocations.
+    """
+
     with worker_file_path.open() as f:
         marker_context: t.Optional[_markers.TaskStartMarker] = None
         collected_lines: t.List[str] = []
@@ -82,8 +103,8 @@ def iter_task_logs(
                 # This is a standard, non-marker line.
                 collected_lines.append(line.strip())
 
-        # If something goes wrong, eg. Ray worker crashes, the log file can end without
-        # the task end marker. We wanna capture the logs anyway.
+        # If something goes wrong, e.g. Ray worker crashes, the log file can end without
+        # the task end marker. We want to capture the logs anyway.
         if marker_context is not None:
             yield CapturedLogLines(
                 collected_lines,
