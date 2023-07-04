@@ -14,9 +14,9 @@ class TestTopologicalSort:
                 #  a─┬───┬►b─►d
                 #    └►c─┘
                 {
-                    "a": ["b", "c"],
-                    "b": ["d"],
-                    "c": ["b"],
+                    "a": {"b": None, "c": None},
+                    "b": {"d": None},
+                    "c": {"b": None},
                 },
                 ["a", "c", "b", "d"],
             ),
@@ -31,17 +31,17 @@ class TestTopologicalSort:
             #  a─┬───┬►b─►d
             #    └►c─┘
             {
-                "a": ["b", "c"],
-                "b": ["d"],
-                "c": ["b"],
+                "a": {"b": None, "c": None},
+                "b": {"d": None},
+                "c": {"b": None},
             },
             #  a─┬───┬►b─►d
             #  e─┴►c─┴►f
             {
-                "a": ["b", "c", "f"],
-                "b": ["d"],
-                "c": ["b", "f"],
-                "e": ["b", "c", "f"],
+                "a": {"b": None, "c": None, "f": None},
+                "b": {"d": None},
+                "c": {"b": None, "f": None},
+                "e": {"b": None, "c": None, "f": None},
             },
         ],
     )

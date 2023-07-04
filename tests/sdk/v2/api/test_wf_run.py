@@ -16,7 +16,7 @@ from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, call, create_a
 
 import pytest
 
-from orquestra.sdk._base import _api, _traversal, _workflow, serde
+from orquestra.sdk._base import _api, _dsl, _traversal, _workflow, serde
 from orquestra.sdk._base._api._task_run import TaskRun
 from orquestra.sdk._base._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
@@ -188,6 +188,11 @@ class TestWorkflowRun:
             TaskRunModel(
                 id="task_run3",
                 invocation_id=invs[2],
+                status=RunStatus(state=State.FAILED),
+            ),
+            TaskRunModel(
+                id="task_run4",
+                invocation_id=invs[3],
                 status=RunStatus(state=State.FAILED),
             ),
         ]
@@ -789,7 +794,7 @@ class TestWorkflowRun:
             tasks = run.get_tasks()
 
             # Then
-            assert len(tasks) == 3
+            assert len(tasks) == 4
 
             wf_def_model = run._wf_def
             for task in tasks:
@@ -824,19 +829,19 @@ class TestWorkflowRun:
                 )
 
                 # Then
-                assert run._task_matches_schema_filters.call_count == 3
+                assert run._task_matches_schema_filters.call_count == 4
                 for mock_call in run._task_matches_schema_filters.call_args_list:
                     assert mock_call[1]["state"] == state
                     assert mock_call[1]["task_run_id"] == task_run_id
                     assert mock_call[1]["task_invocation_id"] == task_invocation_id
-                assert run._task_matches_api_filters.call_count == 3
+                assert run._task_matches_api_filters.call_count == 4
                 for mock_call in run._task_matches_api_filters.call_args_list:
                     assert mock_call[1]["task_fn_name"] == task_function_name
 
             @staticmethod
             @pytest.mark.parametrize(
                 "schema_filter, api_filter, n_expected_tasks",
-                [([True, False, True], [True, True, True], 2)],
+                [([True, False, True, True], [False, True, True], 2)],
             )
             def test_filters_tasks(run, schema_filter, api_filter, n_expected_tasks):
                 # Given
@@ -857,7 +862,108 @@ class TestWorkflowRun:
                 tasks = run.get_tasks()
 
                 # Then
-                assert tasks == set()
+                assert tasks == []
+
+        class TestTasksSorted:
+            @staticmethod
+            @_dsl.task
+            def a(*_):
+                return 1
+
+            @staticmethod
+            @_dsl.task
+            def b(*_):
+                return 2
+
+            @staticmethod
+            @_dsl.task
+            def c(*_):
+                return 3
+
+            @staticmethod
+            @_dsl.task
+            def d(*_):
+                return 4
+
+            def test_linear_graph(self):
+                """
+                tests wf with graph
+                [a]
+                 |
+                [b]
+                 |
+                [c]
+                """
+
+                @_workflow.workflow
+                def simple_wf():
+                    a = self.a()
+                    b = self.b(a)
+                    return self.c(b)
+
+                wf_run = simple_wf().run("in_process")
+
+                tasks = wf_run.get_tasks()
+
+                assert tasks[0].fn_name == "a"
+                assert tasks[1].fn_name == "b"
+                assert tasks[2].fn_name == "c"
+
+            def test_non_linear_graph(self):
+                """
+                tests wf with graph
+                    [a]
+                  ___|___
+                 |       |
+                [b]     [c]
+                 |_______|
+                     |
+                    [d]
+                """
+
+                @_workflow.workflow
+                def simple_wf():
+                    a = self.a()
+                    b = self.b(a)
+                    c = self.c(a)
+                    return self.d(b, c)
+
+                wf_run = simple_wf().run("in_process")
+
+                tasks = wf_run.get_tasks()
+
+                assert tasks[0].fn_name == "a"
+                assert tasks[1].fn_name in ["b", "c"]
+                assert tasks[2].fn_name in ["b", "c"]
+                assert tasks[3].fn_name == "d"
+
+            def test_deterministic_graph(self):
+                """
+                We don't care what order graph is traversed, as long as it is
+                <deterministic> - meaning for the same wf_def we always get the same
+                order.
+                As we base our order of traversal on the deterministic logic of
+                artifacts in wf function, this test proves that changing order of
+                arguments for one function will change the order of task objects,
+                not binding us to one particular order
+                """
+
+                @_workflow.workflow
+                def wf_1():
+                    return self.a(), self.b()
+
+                @_workflow.workflow
+                def wf_2():
+                    return self.b(), self.a()
+
+                tasks_1 = wf_1().run("in_process").get_tasks()
+                tasks_2 = wf_2().run("in_process").get_tasks()
+
+                assert tasks_1[0].fn_name != tasks_2[0].fn_name
+                assert tasks_1[1].fn_name != tasks_2[1].fn_name
+
+                assert tasks_1[0].fn_name == tasks_2[1].fn_name
+                assert tasks_1[1].fn_name == tasks_2[0].fn_name
 
     class TestGetLogs:
         @staticmethod
