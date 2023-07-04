@@ -7,6 +7,7 @@
 * Removed any support for default configuration
 * `sdk.secret` functions will no longer use default configuration from local runtimes. Config has to be passed explicitly unless running on remote cluster
 * `WorkflowDef.get_tasks()` now returns topologically sorted list of `TaskRun` objects instead of set
+* `orq wf logs` now supports `--task`, `--system` and `--env-setup` flags to control which logs are shown / downloaded. If none of these flags are set, the user is prompted for a choice of log types, with the default being `all`.
 
 🔥 *Features*
 * Adding `FutureWarning` when accessing CE Secrets without specifying Workspace.
@@ -40,14 +41,11 @@
 
 🚨 *Breaking Changes*
 * Compute Engine is now the default when logging in
-* `orq wf logs` now supports `--task`, `--system` and `--env-setup` flags to control which logs are shown / downloaded. If none of these flags are set, the user is prompted for a choice of log types, with the default being `all`.
 * `InlineImport()` is now always default `source_import` for tasks
 
 🔥 *Features*
 * Force stop workflow runs via the CLI or Python API
 * `WorkflowRun.get_tasks()` supports filtering tasks by state, function name, task run ID and task invocation ID.
-
-👩‍🔬 *Experimental*
 * 2 new methods added to public API of `WorkflowRun`: `get_artifacts_serialized()` and `get_results_serialized()`
 
 🐛 *Bug Fixes*
