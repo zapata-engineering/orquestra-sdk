@@ -46,6 +46,7 @@
 * When a new config is saved, the message shown in the CLI now includes the runtime name.
 * API: rather then returning empty lists, ray local logs now return messages for `system` and `other` log categories that direct the user to the logs directory.
 * User-emitted logs are no longer wrapped in an JSON dictionary with metadata. `print("foo")` will now result in a log line `"foo"` instead of `'{"message": "foo", "timestamp": ..., "wf_run_id": ..., ...}'`
+* `sdk.current_run_ids()` now returns a `NamedTuple` called `CurrentRunIDs` to help with typing.
 
 🥷 *Internal*
 * Refactored `datetime` and timezone handling.

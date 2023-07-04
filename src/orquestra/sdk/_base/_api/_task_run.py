@@ -262,14 +262,21 @@ class TaskRun:
         return set(parents)
 
 
-def _get_argo_backend_ids() -> (
-    t.Tuple[WorkflowRunId, t.Optional[TaskInvocationId], t.Optional[TaskRunId]]
-):
+class CurrentRunIDs(t.NamedTuple):
+    workflow_run_id: WorkflowRunId
+    task_invocation_id: t.Optional[TaskInvocationId]
+    task_run_id: t.Optional[TaskRunId]
+
+
+def _get_argo_backend_ids() -> CurrentRunIDs:
     """
     Get the workflow run, task invocation, and task run IDs from Argo.
 
     Raises:
         WorkflowRunIDNotFoundError: When the workflow run ID can't be recovered.
+
+    Returns:
+        The IDs associated with the current run, in a named tuple. See: CurrentRunIDs
     """
 
     assert (
@@ -290,18 +297,19 @@ def _get_argo_backend_ids() -> (
     if len(wf_run_id) == 0:
         raise WorkflowRunIDNotFoundError("Could not recover Workflow Run ID")
 
-    return wf_run_id, task_inv_id, task_run_id
+    return CurrentRunIDs(wf_run_id, task_inv_id, task_run_id)
 
 
-def _get_ray_backend_ids() -> (
-    t.Tuple[WorkflowRunId, t.Optional[TaskInvocationId], t.Optional[TaskRunId]]
-):
+def _get_ray_backend_ids() -> CurrentRunIDs:
     """
     Get the workflow run, task invocation, and task run IDs from Ray.
 
     Raises:
         ModuleNotFoundError: when Ray isn't installed.
         WorkflowRunIDNotFoundError: When the workflow run ID can't be recovered.
+
+    Returns:
+        The IDs associated with the current run, in a named tuple. See: CurrentRunIDs
     """
     # Deferred import because Ray isn't installed when running on QE.
     import orquestra.sdk._ray._build_workflow
@@ -315,17 +323,18 @@ def _get_ray_backend_ids() -> (
     if wf_run_id is None:
         raise WorkflowRunIDNotFoundError("Could not recover Workflow Run ID")
 
-    return wf_run_id, task_inv_id, task_run_id
+    return CurrentRunIDs(wf_run_id, task_inv_id, task_run_id)
 
 
-def _get_in_process_backend_ids() -> (
-    t.Tuple[WorkflowRunId, t.Optional[TaskInvocationId], t.Optional[TaskRunId]]
-):
+def _get_in_process_backend_ids() -> CurrentRunIDs:
     """
     Get the workflow run, task invocation, and task run IDs from the In-process runtime.
 
     Raises:
         WorkflowRunIDNotFoundError: When the workflow run ID can't be recovered.
+
+    Returns:
+        The IDs associated with the current run, in a named tuple. See: CurrentRunIDs
     """
     from ..._base._in_process_runtime import get_current_in_process_ids
 
@@ -338,12 +347,10 @@ def _get_in_process_backend_ids() -> (
     if ids[0] is None:
         raise WorkflowRunIDNotFoundError("Could not recover Workflow Run ID")
 
-    return ids
+    return CurrentRunIDs(*ids)
 
 
-def current_run_ids() -> (
-    t.Tuple[WorkflowRunId, t.Optional[TaskInvocationId], t.Optional[TaskRunId]]
-):
+def current_run_ids() -> CurrentRunIDs:
     """
     Get the workflow run, task invocation, and task run IDs related to current
     execution context.
@@ -368,7 +375,7 @@ def current_run_ids() -> (
     ```
 
     Returns:
-        WorkflowRunId, TaskInvocationId, TaskRunId
+        The IDs associated with the current run, in a named tuple. See: CurrentRunIDs
 
     Raises:
         WorkflowRunIDNotFoundError: When the workflow run ID cannot be recovered.
