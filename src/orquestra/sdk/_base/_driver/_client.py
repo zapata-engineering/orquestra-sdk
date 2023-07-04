@@ -11,7 +11,7 @@ Implemented API spec:
 import io
 import zlib
 from tarfile import TarFile
-from typing import Generic, List, Mapping, Optional, TypeVar, Union
+from typing import Generic, List, Mapping, Optional, Tuple, TypeVar, Union
 from urllib.parse import urljoin
 
 import pydantic
@@ -31,33 +31,46 @@ from orquestra.sdk.schema.workflow_run import (
 from . import _exceptions, _models
 from ._models import K8sEventLog
 
-API_ACTIONS = {
-    # Workflow Definitions
-    "create_workflow_def": "/api/workflow-definitions",
-    "list_workflow_defs": "/api/workflow-definitions",
-    "get_workflow_def": "/api/workflow-definitions/{}",
-    "delete_workflow_def": "/api/workflow-definitions/{}",
-    # Workflow Runs
-    "create_workflow_run": "/api/workflow-runs",
-    "list_workflow_runs": "/api/workflow-runs",
-    "get_workflow_run": "/api/workflow-runs/{}",
-    "terminate_workflow_run": "/api/workflow-runs/{}/terminate",
-    # Artifacts
-    "get_workflow_run_artifacts": "/api/artifacts",
-    "get_artifact": "/api/artifacts/{}",
-    # Run results
-    "get_workflow_run_results": "/api/run-results",
-    "get_workflow_run_result": "/api/run-results/{}",
-    # Logs
-    "get_workflow_run_logs": "/api/workflow-run-logs",
-    "get_task_run_logs": "/api/task-run-logs",
-    "get_workflow_run_system_logs": "/api/workflow-run-logs/system",
-    # Login
-    "get_login_url": "/api/login",
-    # Workspaces
-    "list_workspaces": "/api/catalog/workspaces",
-    "list_projects": "/api/catalog/workspaces/{}/projects",
-}
+
+class ExternalUriProvider:
+    API_ACTIONS = {
+        # Workflow Definitions
+        "create_workflow_def": "/api/workflow-definitions",
+        "list_workflow_defs": "/api/workflow-definitions",
+        "get_workflow_def": "/api/workflow-definitions/{}",
+        "delete_workflow_def": "/api/workflow-definitions/{}",
+        # Workflow Runs
+        "create_workflow_run": "/api/workflow-runs",
+        "list_workflow_runs": "/api/workflow-runs",
+        "get_workflow_run": "/api/workflow-runs/{}",
+        "terminate_workflow_run": "/api/workflow-runs/{}/terminate",
+        # Artifacts
+        "get_workflow_run_artifacts": "/api/artifacts",
+        "get_artifact": "/api/artifacts/{}",
+        # Run results
+        "get_workflow_run_results": "/api/run-results",
+        "get_workflow_run_result": "/api/run-results/{}",
+        # Logs
+        "get_workflow_run_logs": "/api/workflow-run-logs",
+        "get_task_run_logs": "/api/task-run-logs",
+        "get_workflow_run_system_logs": "/api/workflow-run-logs/system",
+        # Login
+        "get_login_url": "/api/login",
+        # Workspaces
+        "list_workspaces": "/api/catalog/workspaces",
+        "list_projects": "/api/catalog/workspaces/{}/projects",
+    }
+
+    def __init__(self, base_uri):
+        self._base_uri = base_uri
+
+    def uri_for(
+        self, action_id: str, parameters: Optional[Tuple[str, ...]] = None
+    ) -> str:
+        endpoint = ExternalUriProvider.API_ACTIONS[action_id]
+        if parameters:
+            endpoint = endpoint.format(*parameters)
+        return urljoin(self._base_uri, endpoint)
 
 
 def _handle_common_errors(response: requests.Response):
@@ -119,33 +132,33 @@ class DriverClient:
     Client for interacting with the Workflow Driver API via HTTP.
     """
 
-    def __init__(self, base_uri: str, session: requests.Session):
-        self._base_uri = base_uri
+    def __init__(self, session: requests.Session, uri_provider: ExternalUriProvider):
+        self._uri_provider = uri_provider
         self._session = session
 
     @classmethod
-    def from_token(cls, base_uri: str, token: str):
+    def from_token(cls, token: str, uri_provider: ExternalUriProvider):
         """
         Args:
-            base_uri: Orquestra cluster URI, like 'https://foobar.orquestra.io'.
             token: Auth token taken from logging in.
+            uri_provider: Class that provides URIS for http requests
         """
         session = requests.Session()
         session.headers["Content-Type"] = "application/json"
         session.headers["Authorization"] = f"Bearer {token}"
-        return cls(base_uri=base_uri, session=session)
+        return cls(session=session, uri_provider=uri_provider)
 
     # --- helpers ---
 
     def _get(
         self,
-        endpoint: str,
+        uri: str,
         query_params: Optional[Mapping],
         allow_redirects: bool = True,
     ) -> requests.Response:
         """Helper method for GET requests"""
         response = self._session.get(
-            urljoin(self._base_uri, endpoint),
+            uri,
             params=query_params,
             allow_redirects=allow_redirects,
         )
@@ -154,21 +167,21 @@ class DriverClient:
 
     def _post(
         self,
-        endpoint: str,
+        uri: str,
         body_params: Optional[Mapping],
         query_params: Optional[Mapping] = None,
     ) -> requests.Response:
         """Helper method for POST requests"""
         response = self._session.post(
-            urljoin(self._base_uri, endpoint),
+            uri,
             json=body_params,
             params=query_params,
         )
         return response
 
-    def _delete(self, endpoint: str) -> requests.Response:
+    def _delete(self, uri: str) -> requests.Response:
         """Helper method for DELETE requests"""
-        response = self._session.delete(urljoin(self._base_uri, endpoint))
+        response = self._session.delete(uri)
 
         return response
 
@@ -202,7 +215,7 @@ class DriverClient:
             else None
         )
         resp = self._post(
-            API_ACTIONS["create_workflow_def"],
+            self._uri_provider.uri_for("create_workflow_def"),
             body_params=workflow_def.dict(),
             query_params=query_params,
         )
@@ -233,7 +246,7 @@ class DriverClient:
             UnknownHTTPError: see the exception's docstring
         """
         resp = self._get(
-            API_ACTIONS["list_workflow_defs"],
+            self._uri_provider.uri_for("list_workflow_defs"),
             query_params=_models.ListWorkflowDefsRequest(
                 pageSize=page_size,
                 pageToken=page_token,
@@ -264,7 +277,7 @@ class DriverClient:
             KeyError: if the URL couldn't be found in the response.
         """
         resp = self._get(
-            API_ACTIONS["get_login_url"],
+            self._uri_provider.uri_for("get_login_url"),
             query_params={"port": f"{redirect_port}"},
             allow_redirects=False,
         )
@@ -288,7 +301,9 @@ class DriverClient:
             a parsed WorkflowDef
         """
         resp = self._get(
-            API_ACTIONS["get_workflow_def"].format(workflow_def_id),
+            self._uri_provider.uri_for(
+                "get_workflow_def", parameters=(workflow_def_id,)
+            ),
             query_params=None,
         )
 
@@ -317,7 +332,9 @@ class DriverClient:
             UnknownHTTPError: see the exception's docstring
         """
         resp = self._delete(
-            API_ACTIONS["delete_workflow_def"].format(workflow_def_id),
+            self._uri_provider.uri_for(
+                "delete_workflow_def", parameters=(workflow_def_id,)
+            ),
         )
 
         if resp.status_code == codes.BAD_REQUEST:
@@ -342,7 +359,7 @@ class DriverClient:
             UnknownHTTPError: see the exception's docstring
         """
         resp = self._post(
-            API_ACTIONS["create_workflow_run"],
+            self._uri_provider.uri_for("create_workflow_run"),
             body_params=_models.CreateWorkflowRunRequest(
                 workflowDefinitionID=workflow_def_id, resources=resources
             ).dict(),
@@ -380,7 +397,7 @@ class DriverClient:
         """
         # Schema: https://github.com/zapatacomputing/workflow-driver/blob/fa3eb17f1132d9c7f4960331ffe7ddbd31e02f8c/openapi/src/resources/workflow-runs.yaml#L10 # noqa: E501
         resp = self._get(
-            API_ACTIONS["list_workflow_runs"],
+            self._uri_provider.uri_for("list_workflow_runs"),
             query_params=_models.ListWorkflowRunsRequest(
                 workflowDefinitionID=workflow_def_id,
                 pageSize=page_size,
@@ -424,7 +441,7 @@ class DriverClient:
         """
 
         resp = self._get(
-            API_ACTIONS["get_workflow_run"].format(wf_run_id),
+            self._uri_provider.uri_for("get_workflow_run", parameters=(wf_run_id,)),
             query_params=None,
         )
 
@@ -461,7 +478,9 @@ class DriverClient:
         """
 
         resp = self._post(
-            API_ACTIONS["terminate_workflow_run"].format(wf_run_id),
+            self._uri_provider.uri_for(
+                "terminate_workflow_run", parameters=(wf_run_id,)
+            ),
             body_params=None,
             query_params=_models.TerminateWorkflowRunRequest(force=force).dict(),
         )
@@ -488,7 +507,9 @@ class DriverClient:
         """
 
         resp = self._get(
-            API_ACTIONS["get_workflow_run_artifacts"],
+            self._uri_provider.uri_for(
+                "get_workflow_run_artifacts",
+            ),
             query_params=_models.GetWorkflowRunArtifactsRequest(
                 workflowRunId=wf_run_id
             ).dict(),
@@ -522,7 +543,7 @@ class DriverClient:
         """
 
         resp = self._get(
-            API_ACTIONS["get_artifact"].format(artifact_id),
+            self._uri_provider.uri_for("get_artifact", parameters=(artifact_id,)),
             query_params=None,
         )
 
@@ -556,7 +577,7 @@ class DriverClient:
         """
 
         resp = self._get(
-            API_ACTIONS["get_workflow_run_results"],
+            self._uri_provider.uri_for("get_workflow_run_results"),
             query_params=_models.GetWorkflowRunResultsRequest(
                 workflowRunId=wf_run_id
             ).dict(),
@@ -590,7 +611,10 @@ class DriverClient:
         """
 
         resp = self._get(
-            API_ACTIONS["get_workflow_run_result"].format(result_id), query_params=None
+            self._uri_provider.uri_for(
+                "get_workflow_run_result", parameters=(result_id,)
+            ),
+            query_params=None,
         )
 
         if resp.status_code == codes.NOT_FOUND:
@@ -641,7 +665,7 @@ class DriverClient:
         """
 
         resp = self._get(
-            API_ACTIONS["get_workflow_run_logs"],
+            self._uri_provider.uri_for("get_workflow_run_logs"),
             query_params=_models.GetWorkflowRunLogsRequest(
                 workflowRunId=wf_run_id
             ).dict(),
@@ -689,7 +713,7 @@ class DriverClient:
         """
 
         resp = self._get(
-            API_ACTIONS["get_task_run_logs"],
+            self._uri_provider.uri_for("get_task_run_logs"),
             query_params=_models.GetTaskRunLogsRequest(taskRunId=task_run_id).dict(),
         )
 
@@ -714,7 +738,7 @@ class DriverClient:
                 value, or is a value for a schema has not been defined.
         """
         resp = self._get(
-            API_ACTIONS["get_workflow_run_system_logs"],
+            self._uri_provider.uri_for("get_workflow_run_system_logs"),
             query_params=_models.GetWorkflowRunLogsRequest(
                 workflowRunId=wf_run_id
             ).dict(),
@@ -755,7 +779,7 @@ class DriverClient:
         """
 
         resp = self._get(
-            API_ACTIONS["list_workspaces"],
+            self._uri_provider.uri_for("list_workspaces"),
             query_params=None,
         )
 
@@ -783,7 +807,7 @@ class DriverClient:
         )
 
         resp = self._get(
-            API_ACTIONS["list_projects"].format(workspace_zri),
+            self._uri_provider.uri_for("list_projects", parameters=(workspace_zri,)),
             query_params=None,
         )
 
@@ -811,7 +835,7 @@ class DriverClient:
         """
 
         resp = self._get(
-            API_ACTIONS["get_workflow_run"].format(wf_run_id),
+            self._uri_provider.uri_for("get_workflow_run", parameters=(wf_run_id,)),
             query_params=None,
         )
 

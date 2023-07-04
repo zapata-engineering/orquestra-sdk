@@ -17,14 +17,16 @@ from .parsers import get_snippet_as_str
 class Snippets:
     @staticmethod
     def test_task_logging():
-        import orquestra.sdk as sdk
-        from orquestra.sdk import wfprint, workflow_logger
+        import logging
+
+        from orquestra import sdk
 
         @sdk.task
         def say_hello():
-            logger = workflow_logger()
-            logger.info("We're doing some quantum work here!")
-            wfprint("Another good way to use raw prints from a workflow!")
+            print("We're doing some quantum work here!")
+
+            logger = logging.getLogger(__name__)
+            logger.warning("Python logging module also can be used!")
 
         # </snippet>
         say_hello._TaskDef__sdk_task_body()
@@ -33,7 +35,7 @@ class Snippets:
     def test_logging_execution():
         from tasks import say_hello
 
-        import orquestra.sdk as sdk
+        from orquestra import sdk
 
         @sdk.workflow
         def wf():
@@ -63,9 +65,5 @@ class TestSnippets:
 
         # Then
         proc.check_returncode()
-        std_out = str(proc.stderr, "utf-8")
-        assert '"message": "We\'re doing some quantum work here!"' in std_out
-        assert (
-            '"message": "Another good way to use raw prints from a workflow!"'
-            in std_out
-        )
+        assert "We're doing some quantum work here!" in proc.stdout.decode()
+        assert "Python logging module also can be used!" in proc.stderr.decode()

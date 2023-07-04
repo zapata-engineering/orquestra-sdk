@@ -4,66 +4,19 @@
 """
 Class to get logs from Ray for particular Workflow, both historical and live.
 """
-import json
 import typing as t
 from pathlib import Path
 
-import pydantic
-
-from orquestra.sdk._base._dates import Instant
-from orquestra.sdk._base._logs import _regrouping
+from orquestra.sdk._base._logs import _markers, _regrouping
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk.schema.ir import TaskInvocationId
-from orquestra.sdk.schema.workflow_run import TaskRunId, WorkflowRunId
-
-from . import _client
+from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
 
-class WFLog(pydantic.BaseModel):
-    """
-    Log line produced inside a task run. Parsed. Coupled with the logging format set in
-    ``orquestra.sdk._base._log_adater``.
-    """
-
-    # Timezone-aware date+time.
-    timestamp: Instant
-    # Log level name, consistent with Python logging.
-    level: str
-    filename: str
-    # User-specified message string.
-    message: str
-    # ID of the workflow that was run when this line was produced.
-    wf_run_id: t.Optional[WorkflowRunId]
-    # ID of the task invocation (node inside the workflow def graph).
-    task_inv_id: t.Optional[TaskInvocationId]
-    # ID of the task that was run when this line was produced.
-    task_run_id: t.Optional[TaskRunId]
-
-
-def _parse_obj_or_none(model_class, json_dict):
-    try:
-        return model_class.parse_obj(json_dict)
-    except pydantic.error_wrappers.ValidationError:
-        return None
-
-
-def parse_log_line(raw_line: bytes) -> t.Optional[WFLog]:
-    line = raw_line.decode("utf-8", "replace").rstrip("\r\n")
-    if line.startswith(_client.LogPrefixActorName) or line.startswith(
-        _client.LogPrefixTaskName
-    ):
-        return None
-
-    try:
-        json_obj = json.loads(line)
-    except (ValueError, TypeError):
-        return None
-
-    # Fixes log lines that are valid JSON literals but not objects
-    if not isinstance(json_obj, dict):
-        return None
-
-    return _parse_obj_or_none(WFLog, json_obj)
+class CapturedLogLines(t.NamedTuple):
+    captured_lines: t.Sequence[str]
+    workflow_run_id: WorkflowRunId
+    task_invocation_id: TaskInvocationId
 
 
 def _iter_logs_paths(ray_temp: Path) -> t.Iterator[Path]:
@@ -92,6 +45,74 @@ def _iter_log_lines(paths: t.Iterable[Path]) -> t.Iterator[bytes]:
             yield from f
 
 
+def iter_task_logs(
+    worker_file_path: Path,
+) -> t.Iterator[CapturedLogLines]:
+    """
+    A generator over logs contained in a Ray worker's output file
+
+    Ray workers can be reused, so this generator has to handle a number of edge cases.
+        - Happy path: a Ray worker has a single "task start" and "task end" marker.
+        - a Ray worker has multiple "task start" and "task end" markers.
+          This happens after a worker has being reused.
+        - Two (or more) "task start" markers in a row.
+          This may happen when if a worker is reused and the previous "task end" marker
+          failed.
+        - Missing "task end" marker.
+          This may happen if a worker crashes or the "task end" marker is not captured.
+
+    Args:
+        worker_file_path: The path to the output of a Ray worker.
+
+    Returns:
+        A generator that yields batches of logs relating to specific workflow runs and
+        task invocations.
+    """
+
+    with worker_file_path.open() as f:
+        marker_context: t.Optional[_markers.TaskStartMarker] = None
+        collected_lines: t.List[str] = []
+
+        for line in f:
+            if (marker := _markers.parse_line(line)) is not None:
+                if isinstance(marker, _markers.TaskStartMarker):
+                    if marker_context is not None:
+                        # Seeing two start markers in the row: edge case when the end
+                        # marker is missing. We want to return the logs to the user
+                        # anyway. They might be noisy, but it's better than nothing.
+                        yield CapturedLogLines(
+                            collected_lines,
+                            marker_context.wf_run_id,
+                            marker_context.task_inv_id,
+                        )
+
+                    marker_context = marker
+                    collected_lines = []
+                elif isinstance(marker, _markers.TaskEndMarker):
+                    if marker_context is not None:
+                        yield CapturedLogLines(
+                            collected_lines,
+                            marker_context.wf_run_id,
+                            marker_context.task_inv_id,
+                        )
+                        collected_lines = []
+
+                    marker_context = None
+
+            else:
+                # This is a standard, non-marker line.
+                collected_lines.append(line.strip())
+
+        # If something goes wrong, e.g. Ray worker crashes, the log file can end without
+        # the task end marker. We want to capture the logs anyway.
+        if marker_context is not None:
+            yield CapturedLogLines(
+                collected_lines,
+                marker_context.wf_run_id,
+                marker_context.task_inv_id,
+            )
+
+
 class DirectRayReader:
     """
     Directly reads log files produced by Ray.
@@ -113,16 +134,6 @@ class DirectRayReader:
             ray_temp: directory where Ray keeps its data, like ``~/.orquestra/ray``.
         """
         self._ray_temp = ray_temp
-
-    def _get_user_log_lines(self) -> t.Sequence[WFLog]:
-        log_paths = iter_user_log_paths(self._ray_temp)
-        log_line_bytes = _iter_log_lines(log_paths)
-
-        return [
-            parsed_log
-            for log_line in log_line_bytes
-            if (parsed_log := parse_log_line(raw_line=log_line)) is not None
-        ]
 
     def _get_env_setup_lines(self) -> t.Sequence[str]:
         log_paths = iter_env_log_paths(self._ray_temp)
@@ -153,27 +164,27 @@ class DirectRayReader:
     def get_task_logs(
         self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
     ) -> t.List[str]:
-        user_logs = self._get_user_log_lines()
+        collected_logs: t.List[str] = []
+        for log_path in iter_user_log_paths(self._ray_temp):
+            for logs_batch2, wf_run_id2, task_inv_id2 in iter_task_logs(log_path):
+                if wf_run_id2 != wf_run_id:
+                    continue
 
-        task_logs = [
-            log
-            for log in user_logs
-            if log.wf_run_id == wf_run_id and log.task_inv_id == task_inv_id
-        ]
-        return [log.json() for log in task_logs]
+                if task_inv_id2 != task_inv_id:
+                    continue
+
+                collected_logs.extend(logs_batch2)
+        return collected_logs
 
     def get_workflow_logs(self, wf_run_id: WorkflowRunId) -> WorkflowLogs:
-        user_logs = self._get_user_log_lines()
-
+        log_paths = iter_user_log_paths(self._ray_temp)
         logs_dict: t.Dict[TaskInvocationId, t.List[str]] = {}
-        for log in user_logs:
-            if log.wf_run_id != wf_run_id:
-                continue
+        for log_path in log_paths:
+            for logs_batch2, wf_run_id2, task_inv_id2 in iter_task_logs(log_path):
+                if wf_run_id2 != wf_run_id:
+                    continue
 
-            if log.task_inv_id is None:
-                continue
-
-            logs_dict.setdefault(log.task_inv_id, []).append(log.json())
+                logs_dict.setdefault(task_inv_id2, []).extend(logs_batch2)
 
         env_setup = self._get_env_setup_lines()
         system = self._get_system_log_lines()

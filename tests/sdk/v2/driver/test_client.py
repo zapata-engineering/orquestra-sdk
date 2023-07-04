@@ -13,7 +13,11 @@ import responses
 
 import orquestra.sdk as sdk
 from orquestra.sdk._base._driver import _exceptions
-from orquestra.sdk._base._driver._client import DriverClient, Paginated
+from orquestra.sdk._base._driver._client import (
+    DriverClient,
+    ExternalUriProvider,
+    Paginated,
+)
 from orquestra.sdk._base._driver._models import (
     GetWorkflowDefResponse,
     K8sEventLog,
@@ -72,7 +76,8 @@ class TestClient:
 
     @pytest.fixture
     def client(self, base_uri, token):
-        return DriverClient.from_token(base_uri=base_uri, token=token)
+        uri_provider = ExternalUriProvider(base_uri=base_uri)
+        return DriverClient.from_token(token=token, uri_provider=uri_provider)
 
     @pytest.fixture
     def workflow_def_id(self):

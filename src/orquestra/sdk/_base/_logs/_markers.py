@@ -12,6 +12,7 @@ not just using plain JSON: we're using prefix markers.
 import json
 import re
 import sys
+import traceback
 import typing as t
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -140,11 +141,9 @@ def printed_task_markers(
 
     try:
         yield
-    # TODO: uncomment when moving to arbitrary stdout/stderr in the local runtime.
-    # https://zapatacomputing.atlassian.net/browse/ORQSDK-872
-    # except Exception as e:
-    #     traceback.print_exception(type(e), e, e.__traceback__)
-    #     raise
+    except Exception as e:
+        traceback.print_exception(type(e), e, e.__traceback__)
+        raise
     finally:
         if wf_run_id and task_inv_id:
             print_end(wf_run_id, task_inv_id)

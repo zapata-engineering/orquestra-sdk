@@ -5,7 +5,6 @@
 Translates IR workflow def into a Ray workflow.
 """
 import os
-import traceback
 import typing as t
 from functools import singledispatch
 from pathlib import Path
@@ -14,7 +13,7 @@ import pydantic
 from typing_extensions import assert_never
 
 from .. import exceptions, secrets
-from .._base import _exec_ctx, _git_url_utils, _graphs, _log_adapter, dispatch, serde
+from .._base import _exec_ctx, _git_url_utils, _graphs, dispatch, serde
 from .._base._env import (
     RAY_DOWNLOAD_GIT_IMPORTS_ENV,
     RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV,
@@ -198,69 +197,47 @@ def _make_ray_dag_node(
             with _markers.printed_task_markers(
                 wf_run_id=wf_run_id, task_inv_id=task_inv_id
             ):
-                try:
-                    if project_dir is not None:
-                        dispatch.ensure_sys_paths([str(project_dir)])
+                if project_dir is not None:
+                    dispatch.ensure_sys_paths([str(project_dir)])
 
-                    if user_fn_ref is None:
-                        serialization = False
-                        user_fn = _aggregate_outputs
-                    else:
-                        serialization = True
-                        user_fn = _locate_user_fn(user_fn_ref)
+                if user_fn_ref is None:
+                    serialization = False
+                    user_fn = _aggregate_outputs
+                else:
+                    serialization = True
+                    user_fn = _locate_user_fn(user_fn_ref)
 
-                    wrapped = ArgumentUnwrapper(
-                        user_fn=user_fn,
-                        args_artifact_nodes=args_artifact_nodes,
-                        kwargs_artifact_nodes=kwargs_artifact_nodes,
-                        deserialize=serialization,
-                    )
+                wrapped = ArgumentUnwrapper(
+                    user_fn=user_fn,
+                    args_artifact_nodes=args_artifact_nodes,
+                    kwargs_artifact_nodes=kwargs_artifact_nodes,
+                    deserialize=serialization,
+                )
 
-                    wrapped_return = wrapped(*inner_args, **inner_kwargs)
+                wrapped_return = wrapped(*inner_args, **inner_kwargs)
 
-                    packed: responses.WorkflowResult = (
+                packed: responses.WorkflowResult = (
+                    serde.result_from_artifact(wrapped_return, ir.ArtifactFormat.AUTO)
+                    if serialization
+                    else wrapped_return
+                )
+                unpacked: t.Tuple[responses.WorkflowResult, ...]
+
+                if n_outputs is not None and n_outputs > 1:
+                    unpacked = tuple(
                         serde.result_from_artifact(
-                            wrapped_return, ir.ArtifactFormat.AUTO
+                            wrapped_return[i], ir.ArtifactFormat.AUTO
                         )
                         if serialization
-                        else wrapped_return
+                        else wrapped_return[i]
+                        for i in range(n_outputs)
                     )
-                    unpacked: t.Tuple[responses.WorkflowResult, ...]
-
-                    if n_outputs is not None and n_outputs > 1:
-                        unpacked = tuple(
-                            serde.result_from_artifact(
-                                wrapped_return[i], ir.ArtifactFormat.AUTO
-                            )
-                            if serialization
-                            else wrapped_return[i]
-                            for i in range(n_outputs)
-                        )
-                    else:
-                        unpacked = (packed,)
-                    return TaskResult(
-                        packed=packed,
-                        unpacked=unpacked,
-                    )
-                except Exception as e:
-                    # pragma: no cover
-                    # This branch is tested via integration tests in a separate worker
-                    # process in:
-                    # - tests/runtime/ray/test_integration.py::TestDirectRayReader
-                    #   ::TestGetWorkflowLogs::test_per_task_content
-                    #   [wf1-ZeroDivisionError: division by zero]
-                    # - tests/runtime/ray/test_integration.py::TestDirectRayReader
-                    #   ::test_get_task_logs::[wf1-ZeroDivisionError: division by zero]
-
-                    # TODO: remove this logger and the whole try/except when moving to
-                    # task markers in the local runtime.
-                    # https://zapatacomputing.atlassian.net/browse/ORQSDK-872
-                    logger = _log_adapter.workflow_logger()
-                    logger.exception(
-                        traceback.format_exception(type(e), e, e.__traceback__)
-                    )
-
-                    raise e
+                else:
+                    unpacked = (packed,)
+                return TaskResult(
+                    packed=packed,
+                    unpacked=unpacked,
+                )
 
     named_remote = client.add_options(_ray_remote, **ray_options)
     dag_node = named_remote.bind(*ray_args, **ray_kwargs)
