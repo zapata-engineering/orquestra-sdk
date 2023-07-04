@@ -13,7 +13,11 @@ import pytest
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _dates
-from orquestra.sdk._base._config import RuntimeConfiguration, RuntimeName
+from orquestra.sdk._base._config import (
+    LOCAL_RUNTIME_CONFIGURATION,
+    RuntimeConfiguration,
+    RuntimeName,
+)
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._ray import _client, _dag, _ray_logs
@@ -121,11 +125,13 @@ class TestRayRuntime:
 
     @staticmethod
     @pytest.fixture
+    def mock_ray_startup(monkeypatch):
+        monkeypatch.setattr(_dag.RayRuntime, "startup", lambda *_, **__: ...)
+
+    @staticmethod
+    @pytest.fixture
     def runtime_config():
-        return RuntimeConfiguration(
-            config_name="TestRayRuntime",
-            runtime_name=RuntimeName.RAY_LOCAL,
-        )
+        return LOCAL_RUNTIME_CONFIGURATION
 
     class TestReadingLogs:
         """
@@ -141,6 +147,7 @@ class TestRayRuntime:
                 monkeypatch,
                 tmp_path: Path,
                 runtime_config: RuntimeConfiguration,
+                mock_ray_startup,
             ):
                 """
                 Makes a spare ``RayRuntime`` object, mocks its attributes, and verifies
@@ -174,6 +181,7 @@ class TestRayRuntime:
                 monkeypatch,
                 tmp_path: Path,
                 runtime_config: RuntimeConfiguration,
+                mock_ray_startup,
             ):
                 """
                 Makes a spare ``RayRuntime`` object, mocks its attributes, and verifies
@@ -206,7 +214,7 @@ class TestRayRuntime:
 
     class TestCreateWorkflowRun:
         def test_project_raises_warning(
-            self, client, runtime_config, tmp_path, monkeypatch
+            self, client, runtime_config, tmp_path, monkeypatch, mock_ray_startup
         ):
             monkeypatch.setattr(_dag, "make_ray_dag", Mock())
             monkeypatch.setattr(_dag, "WfUserMetadata", Mock())
@@ -225,7 +233,9 @@ class TestRayRuntime:
                 )
 
     class TestListWorkflowRuns:
-        def test_happy_path(self, client, runtime_config, monkeypatch, tmp_path):
+        def test_happy_path(
+            self, client, runtime_config, monkeypatch, tmp_path, mock_ray_startup
+        ):
             # Given
             client.list_all.return_value = [("mocked", Mock())]
             runtime = _dag.RayRuntime(
@@ -244,7 +254,7 @@ class TestRayRuntime:
             assert len(runs) == 1
 
         def test_missing_wf_in_runtime(
-            self, client, runtime_config, monkeypatch, tmp_path
+            self, client, runtime_config, monkeypatch, tmp_path, mock_ray_startup
         ):
             # Given
             client.list_all.return_value = [("mocked", Mock())]
@@ -263,7 +273,9 @@ class TestRayRuntime:
             # Then
             assert len(runs) == 0
 
-        def test_with_state(self, client, runtime_config, monkeypatch, tmp_path):
+        def test_with_state(
+            self, client, runtime_config, monkeypatch, tmp_path, mock_ray_startup
+        ):
             # Given
             client.list_all.return_value = [("mocked", Mock())] * 4
             runtime = _dag.RayRuntime(
@@ -289,7 +301,9 @@ class TestRayRuntime:
             # Then
             assert len(runs) == 2
 
-        def test_with_state_list(self, client, runtime_config, monkeypatch, tmp_path):
+        def test_with_state_list(
+            self, client, runtime_config, monkeypatch, tmp_path, mock_ray_startup
+        ):
             # Given
             client.list_all.return_value = [("mocked", Mock())] * 4
             runtime = _dag.RayRuntime(
@@ -315,7 +329,9 @@ class TestRayRuntime:
             # Then
             assert len(runs) == 2
 
-        def test_with_max_age(self, client, runtime_config, monkeypatch, tmp_path):
+        def test_with_max_age(
+            self, client, runtime_config, monkeypatch, tmp_path, mock_ray_startup
+        ):
             # Given
             client.list_all.return_value = [("mocked", Mock())] * 4
             runtime = _dag.RayRuntime(
@@ -340,7 +356,9 @@ class TestRayRuntime:
             # Then
             assert len(runs) == 3
 
-        def test_with_limit(self, client, runtime_config, monkeypatch, tmp_path):
+        def test_with_limit(
+            self, client, runtime_config, monkeypatch, tmp_path, mock_ray_startup
+        ):
             # Given
             client.list_all.return_value = [("mocked", Mock())] * 4
             runtime = _dag.RayRuntime(
@@ -374,15 +392,9 @@ class TestRayRuntime:
                 {"workspace": "<workspace sentinel>", "project": "<project sentinel>"},
             ],
         )
-        def test_raises_WorkspacesNotSupported_error_if_workspace_or_project(
-            client, runtime_config, kwargs, tmp_path
+        def test_raises_error_if_workspace_or_project(
+            client, runtime_config, kwargs, tmp_path, mock_ray_startup
         ):
-            runtime = _dag.RayRuntime(
-                client=client,
-                config=runtime_config,
-                project_dir=tmp_path,
-            )
-
             with pytest.raises(exceptions.WorkspacesNotSupportedError):
                 runtime = _dag.RayRuntime(
                     client=client,
@@ -396,9 +408,7 @@ class TestRayRuntime:
         # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
         # unraisable exceptions. Last tested with Ray 2.3.0.
         @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
-        def test_raises_RayNotRunningError_when_ray_not_running(
-            monkeypatch, runtime_config, tmp_path
-        ):
+        def test_raises_RayNotRunningError_when_ray_not_running(monkeypatch, tmp_path):
             # GIVEN
             monkeypatch.setattr(
                 _client.RayClient,

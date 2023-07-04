@@ -22,24 +22,49 @@ def build_runtime_from_config(
     # Imports are deferred to cut down on the import graph for CLI latency. The
     # subgraphs for Ray and for QE are distinct, and both take a lot of time to
     # import.
-    selected_runtime: t.Type[RuntimeInterface]
     if config.runtime_name == RuntimeName.RAY_LOCAL:
         import orquestra.sdk._ray._dag
 
-        selected_runtime = orquestra.sdk._ray._dag.RayRuntime
+        return orquestra.sdk._ray._dag.RayRuntime(
+            project_dir=project_dir,
+            config=config,
+        )
     elif config.runtime_name == RuntimeName.QE_REMOTE:
         import orquestra.sdk._base._qe._qe_runtime
 
-        selected_runtime = orquestra.sdk._base._qe._qe_runtime.QERuntime
-    elif config.runtime_name == RuntimeName.CE_REMOTE:
-        import orquestra.sdk._base._driver._ce_runtime
+        return orquestra.sdk._base._qe._qe_runtime.QERuntime(
+            project_dir=project_dir, config=config, verbose=verbose
+        )
 
-        selected_runtime = orquestra.sdk._base._driver._ce_runtime.CERuntime
+    elif config.runtime_name == RuntimeName.CE_REMOTE:
+        return _build_ce_runtime(config, verbose)
     else:
         raise exceptions.NotFoundError(f"Unknown runtime: {config.runtime_name}")
 
-    return selected_runtime.from_runtime_configuration(
-        project_dir=project_dir,
+
+def _build_ce_runtime(config: RuntimeConfiguration, verbose: bool):
+    import orquestra.sdk._base._driver._ce_runtime
+    import orquestra.sdk._base._driver._client
+
+    # We're using a reusable session to allow shared headers
+    # In the future we can store cookies, etc too.
+
+    try:
+        base_uri = config.runtime_options["uri"]
+        token = config.runtime_options["token"]
+    except KeyError as e:
+        raise exceptions.RuntimeConfigError(
+            "Invalid CE configuration. Did you login first?"
+        ) from e
+
+    uri_provider = orquestra.sdk._base._driver._client.ExternalUriProvider(base_uri)
+
+    client = orquestra.sdk._base._driver._client.DriverClient.from_token(
+        token=token, uri_provider=uri_provider
+    )
+
+    return orquestra.sdk._base._driver._ce_runtime.CERuntime(
         config=config,
+        client=client,
         verbose=verbose,
     )
