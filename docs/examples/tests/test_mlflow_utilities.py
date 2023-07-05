@@ -35,8 +35,8 @@ class Snippets:
 
 class TestSnippets:
     @staticmethod
-    def test_artifact_dir_local(monkeypatch, tmp_path):
-        monkeypatch.setattr("os.environ", {})
+    def test_artifact_dir_local(monkeypatch: MonkeyPatch, tmp_path):
+        monkeypatch.delenv("ORQ_MLFLOW_ARTIFACTS_DIR", raising=False)
         monkeypatch.setattr(
             sdk.mlflow._connection_utils, "DEFAULT_TEMP_ARTIFACTS_DIR", tmp_path
         )
@@ -45,7 +45,7 @@ class TestSnippets:
 
     @staticmethod
     def test_artifact_dir_env_var_override(monkeypatch: MonkeyPatch, tmp_path):
-        monkeypatch.setattr("os.environ", {"ORQ_MLFLOW_ARTIFACTS_DIR": str(tmp_path)})
+        monkeypatch.setenv("ORQ_MLFLOW_ARTIFACTS_DIR", str(tmp_path))
         monkeypatch.setattr(
             sdk.mlflow._connection_utils, "DEFAULT_TEMP_ARTIFACTS_DIR", "NOT/THIS/PATH"
         )
