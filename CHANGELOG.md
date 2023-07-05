@@ -12,6 +12,7 @@
 🔥 *Features*
 * Adding `FutureWarning` when accessing CE Secrets without specifying Workspace.
 * Users can use `ORQ_CURRENT_PROJECT` and `ORQ_CURRENT_WORKSPACE` env variables to set default workspace and project for their interactions with CE.
+* In any execution environment, users can use `sdk.mlflow.get_temp_artifacts_dir()` to get the path to a temporary directory for writing artifacts prior to uploading to MLFlow.
 * Add `--list` option to `orq login` that displays the stored remote logins, which runtimes they are using, and whether their access tokens are up to date.
 * Local runtime now captures any logs printed to standard output and error streams when a task is running. In particular, this means plain `print()`s will be captured and reported back with `orq wf logs` or `orq task logs`.
 
