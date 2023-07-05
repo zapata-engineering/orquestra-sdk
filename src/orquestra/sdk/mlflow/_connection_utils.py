@@ -16,7 +16,7 @@ def get_temp_artifacts_dir() -> Path:
     """
     Return a path to a temp directory that can be used to temporarily store artifacts.
 
-    Uploading artifacts to MLFlow requires them to be written locally first. Finding an
+    Uploading artifacts to MLflow requires them to be written locally first. Finding an
     appropriate directory vary significantly between a workflow running locally and one
     running on a remote cluster. This function handles that complexity so that workflows
     do not need adjusting between runtimes.
