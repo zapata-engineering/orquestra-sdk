@@ -1,6 +1,6 @@
 .. © Copyright 2023 Zapata Computing Inc.
 
-MLFlow Utilities
+MLflow Utilities
 ================
 
 Uploading Artifacts
