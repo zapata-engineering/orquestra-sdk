@@ -1,0 +1,4 @@
+:job_id:01000000
+:task_name:_workflow_task_executor_remote
+ORQ-MARKER:{"event": "task_start", "timestamp": "2023-06-28T09:47:39.861578+02:00", "wf_run_id": "wf.wf_using_python_imports.1472d35", "task_inv_id": "invocation-0-task-task-with-python-imports"}
+ORQ-MARKER:{"event": "task_end", "timestamp": "2023-06-28T09:47:40.536149+02:00", "wf_run_id": "wf.wf_using_python_imports.1472d35", "task_inv_id": "invocation-0-task-task-with-python-imports"}

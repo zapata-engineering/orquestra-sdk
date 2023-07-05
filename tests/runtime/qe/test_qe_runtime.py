@@ -416,35 +416,6 @@ def runtime_verbose(tmp_path):
     return _qe_runtime.QERuntime(config, tmp_path, True)
 
 
-class TestInitialization:
-    @pytest.mark.parametrize("proj_dir", [".", Path(".")])
-    @pytest.mark.parametrize("verbose", [True, False])
-    def test_passing_project_dir_and_config_obj(self, proj_dir, verbose):
-        """
-        - GIVEN user is calling QERuntime()
-        - WHEN project_dir and config arguments are provided
-        - THEN a RuntimeConfiguration object is returned whose properties match
-          those of the configuration returned from calling
-          from_runtime_configuration() with the same parameters
-        """
-        config = RuntimeConfiguration(
-            config_name="hello",
-            runtime_name=RuntimeName.QE_REMOTE,
-            runtime_options={"uri": "http://localhost", "token": "blah"},
-        )
-
-        # when
-        rt = _qe_runtime.QERuntime(config=config, project_dir=proj_dir, verbose=verbose)
-
-        # then
-        rt2 = _qe_runtime.QERuntime.from_runtime_configuration(
-            project_dir=proj_dir, config=config, verbose=verbose
-        )
-        assert rt._config == rt2._config
-        assert rt._project_dir == rt2._project_dir
-        assert rt._verbose == rt2._verbose
-
-
 HELLO_CONFIG = RuntimeConfiguration(
     config_name="hello",
     runtime_name=RuntimeName.QE_REMOTE,

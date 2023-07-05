@@ -60,6 +60,7 @@ class CERuntime(RuntimeInterface):
     def __init__(
         self,
         config: RuntimeConfiguration,
+        client: _client.DriverClient,
         verbose: bool = False,
     ):
         """
@@ -76,24 +77,7 @@ class CERuntime(RuntimeInterface):
         self._config = config
         self._verbose = verbose
 
-        # We're using a reusable session to allow shared headers
-        # In the future we can store cookies, etc too.
-        try:
-            base_uri = self._config.runtime_options["uri"]
-            token = self._config.runtime_options["token"]
-        except KeyError as e:
-            raise exceptions.RuntimeConfigError(
-                "Invalid CE configuration. Did you login first?"
-            ) from e
-
-        self._client = _client.DriverClient.from_token(base_uri=base_uri, token=token)
-
-    @classmethod
-    def from_runtime_configuration(
-        cls, project_dir: Path, config: RuntimeConfiguration, verbose: bool
-    ) -> "RuntimeInterface":
-        """Returns an initilaised version of the class from a runtime configuration"""
-        return cls(config, verbose)
+        self._client = client
 
     def create_workflow_run(
         self, workflow_def: WorkflowDef, project: Optional[ProjectRef]

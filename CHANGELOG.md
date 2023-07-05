@@ -6,12 +6,18 @@
 * Removed `RuntimeConfig.load_default()`
 * Removed any support for default configuration
 * `sdk.secret` functions will no longer use default configuration from local runtimes. Config has to be passed explicitly unless running on remote cluster
-* Add `--list` option to `orq login` that displays the stored remote logins, which runtimes they are using, and whether their access tokens are up to date.
+* `WorkflowDef.get_tasks()` now returns topologically sorted list of `TaskRun` objects instead of set
+* `orq wf logs` now supports `--task`, `--system` and `--env-setup` flags to control which logs are shown / downloaded. If none of these flags are set, the user is prompted for a choice of log types, with the default being `all`.
 
 🔥 *Features*
 * Adding `FutureWarning` when accessing CE Secrets without specifying Workspace.
 * Users can use `ORQ_CURRENT_PROJECT` and `ORQ_CURRENT_WORKSPACE` env variables to set default workspace and project for their interactions with CE.
 * In any execution environment, users can use `sdk.mlflow.get_temp_artifacts_dir()` to get the path to a temporary directory for writing artifacts prior to uploading to MLFlow.
+* Add `--list` option to `orq login` that displays the stored remote logins, which runtimes they are using, and whether their access tokens are up to date.
+* Local runtime now captures any logs printed to standard output and error streams when a task is running. In particular, this means plain `print()`s will be captured and reported back with `orq wf logs` or `orq task logs`.
+
+🧟 *Deprecations*
+* Deprecated `sdk.wfprint()` and `sdk.workflow_logger()`.
 
 👩‍🔬 *Experimental*
 
@@ -21,10 +27,12 @@
 💅 *Improvements*
 * When a new config is saved, the message shown in the CLI now includes the runtime name.
 * API: rather then returning empty lists, ray local logs now return messages for `system` and `other` log categories that direct the user to the logs directory.
+* User-emitted logs are no longer wrapped in an JSON dictionary with metadata. `print("foo")` will now result in a log line `"foo"` instead of `'{"message": "foo", "timestamp": ..., "wf_run_id": ..., ...}'`
 
 🥷 *Internal*
 * Refactored `datetime` and timezone handling.
 * Orquestra runtime now emits marker logs at Orquestra task start/end.
+* Redesign how we provide URIs for `CE_RUNTIME` to easily swap for internal URIs when on cluster
 
 📃 *Docs*
 * "Remote Workflows" updated to describe logging in with a specific runtime, and reflect the current login process (automatic opening of login page, copying of token).
@@ -34,14 +42,11 @@
 
 🚨 *Breaking Changes*
 * Compute Engine is now the default when logging in
-* `orq wf logs` now supports `--task`, `--system` and `--env-setup` flags to control which logs are shown / downloaded. If none of these flags are set, the user is prompted for a choice of log types, with the default being `all`.
 * `InlineImport()` is now always default `source_import` for tasks
 
 🔥 *Features*
 * Force stop workflow runs via the CLI or Python API
 * `WorkflowRun.get_tasks()` supports filtering tasks by state, function name, task run ID and task invocation ID.
-
-👩‍🔬 *Experimental*
 * 2 new methods added to public API of `WorkflowRun`: `get_artifacts_serialized()` and `get_results_serialized()`
 
 🐛 *Bug Fixes*

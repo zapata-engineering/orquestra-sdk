@@ -108,8 +108,6 @@ class TestPrintedTaskMarkers:
             assert isinstance(_markers.parse_line(lines[2]), _markers.TaskEndMarker)
 
     @staticmethod
-    # TODO: un-skip with https://zapatacomputing.atlassian.net/browse/ORQSDK-872
-    @pytest.mark.skip(reason="Ray workflow builder captures exceptions")
     def test_exception(capsys):
         # Given
         wf_run_id = "wf1"

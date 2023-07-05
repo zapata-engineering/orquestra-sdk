@@ -1,21 +1,22 @@
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
-from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _models
+from orquestra.sdk._base._driver import _ce_runtime, _client
+from orquestra.sdk._base._factory import build_runtime_from_config
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 
 
 @pytest.fixture
 def runtime(mock_workflow_db_location):
-    # Fake CE configuration
     config = RuntimeConfiguration(
         config_name="hello",
         runtime_name=RuntimeName.CE_REMOTE,
         runtime_options={"uri": "http://localhost", "token": "blah"},
     )
-    # Return a runtime object
-    return _ce_runtime.CERuntime(config)
+
+    return build_runtime_from_config(project_dir=Path.cwd(), config=config)
 
 
 @pytest.fixture
@@ -28,7 +29,9 @@ def runtime_verbose(tmp_path):
         runtime_options={"uri": "http://localhost", "token": "blah"},
     )
     # Return a runtime object
-    return _ce_runtime.CERuntime(config, True)
+    return build_runtime_from_config(
+        project_dir=Path.cwd(), config=config, verbose=True
+    )
 
 
 @pytest.fixture

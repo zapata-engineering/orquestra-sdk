@@ -41,14 +41,6 @@ class RuntimeInterface(ABC, LogReader):
     implementations related to local vs remote runs.
     """
 
-    @classmethod
-    @abstractmethod
-    def from_runtime_configuration(
-        cls, project_dir: Path, config: RuntimeConfiguration, verbose: bool
-    ) -> "RuntimeInterface":
-        """Returns an initilaised version of the class from a "Runtime options" JSON"""
-        raise NotImplementedError()
-
     @abstractmethod
     def create_workflow_run(
         self, workflow_def: WorkflowDef, project: t.Optional[ProjectRef]

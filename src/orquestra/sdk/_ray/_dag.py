@@ -187,23 +187,11 @@ JUST_IN_CASE_TIMEOUT = 10.0
 class RayRuntime(RuntimeInterface):
     def __init__(
         self,
-        client: RayClient,
         config: RuntimeConfiguration,
         project_dir: Path,
+        client: t.Optional[RayClient] = None,
     ):
-        self._client = client
-        self._config = config
-        self._project_dir = project_dir
-
-        self._log_reader: LogReader = _ray_logs.DirectRayReader(
-            _services.ray_temp_path()
-        )
-
-    @classmethod
-    def from_runtime_configuration(
-        cls, project_dir: Path, config: RuntimeConfiguration, verbose: bool
-    ) -> "RuntimeInterface":
-        client = RayClient()
+        self._client = client or RayClient()
 
         ray_params = RayParams(
             address=config.runtime_options["address"],
@@ -212,8 +200,14 @@ class RayRuntime(RuntimeInterface):
             _temp_dir=config.runtime_options["temp_dir"],
             configure_logging=config.runtime_options["configure_logging"],
         )
-        cls.startup(ray_params)
-        return RayRuntime(client=client, config=config, project_dir=project_dir)
+        self.startup(ray_params)
+
+        self._config = config
+        self._project_dir = project_dir
+
+        self._log_reader: LogReader = _ray_logs.DirectRayReader(
+            _services.ray_temp_path()
+        )
 
     @classmethod
     def startup(cls, ray_params: RayParams):
