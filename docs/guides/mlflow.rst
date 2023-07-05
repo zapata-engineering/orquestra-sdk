@@ -6,7 +6,7 @@ MLflow Utilities
 Uploading Artifacts
 -------------------
 
-Artifacts must be written to a file before being uploaded to MLFlow. Rather than manually configuring an appropriate temporary directory for creating these files, we provide the ``get_temp_artifacts_dir()`` utility. This function can be used in any runtime and will return an appropriate directory.
+Artifacts must be written to a file before being uploaded to MLflow. Rather than manually configuring an appropriate temporary directory for creating these files, we provide the ``get_temp_artifacts_dir()`` utility. This function can be used in any runtime and will return an appropriate directory.
 
 .. literalinclude:: ../examples/tests/test_mlflow_utilities.py
     :start-after: def artifacts_dir_snippet():
