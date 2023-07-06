@@ -106,7 +106,6 @@ class Action:
             if len(log) < 1:
                 warnings.warn(f"No {log_type} logs found.", category=UserWarning)
                 continue
-            print("HERE2")
             if download_dir:
                 dump_path = self._dumper.dump(
                     logs=log,
