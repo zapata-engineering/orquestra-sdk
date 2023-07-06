@@ -1,6 +1,24 @@
 # Changelog
 
 ## Unreleased
+🚨 *Breaking Changes*
+* Removed unsupported `WorkflowDef.local_run()` function
+
+🔥 *Features*
+
+🧟 *Deprecations*
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+## v0.52.0
 
 🚨 *Breaking Changes*
 * Removed `RuntimeConfig.load_default()`
