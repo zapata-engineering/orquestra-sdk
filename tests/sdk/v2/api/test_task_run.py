@@ -593,6 +593,13 @@ def mock_in_process_context(monkeypatch):
 
 
 class TestGetBackendIDs:
+    @staticmethod
+    def test_access_by_attr(mock_in_process_context):
+        ids = sdk.current_run_ids()
+        assert ids.workflow_run_id == ids[0]
+        assert ids.task_invocation_id == ids[1]
+        assert ids.task_run_id == ids[2]
+
     class TestRuntimeSpecificGetIDs:
         @staticmethod
         def test_get_argo_backend_ids(mock_argo_context):
