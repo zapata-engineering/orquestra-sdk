@@ -783,20 +783,6 @@ class TestWorkflowsTasksProperties:
             }
             assert set(wf.output_ids).issubset(task_output_ids)
 
-    @staticmethod
-    def test_local_run(
-        workflow_template: _workflow.WorkflowTemplate,
-        task_defs: t.Sequence[_dsl.TaskDef],
-        outputs: t.List,
-        expectation: ContextManager,
-    ):
-        """
-        Running the workflow in-process should produce the expected outputs.
-        """
-        wf = workflow_template
-        if outputs:
-            assert outputs == wf().local_run()
-
 
 CAPITALIZE_TASK_DEF = ir.TaskDef(
     id=AnyMatchingStr(r"task-capitalize-\w{10}"),

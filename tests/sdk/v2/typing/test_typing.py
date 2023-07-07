@@ -83,11 +83,6 @@ def shared_cache(tmp_path_factory: pytest.TempPathFactory):
             [],
         ),
         (
-            "tests/sdk/v2/typing/workflow/has_local_run.py",
-            "Success: no issues found in 1 source file",
-            [],
-        ),
-        (
             "tests/sdk/v2/typing/workflow/does_not_have_validate.py",
             'error: "WorkflowTemplate[[], Any]" has no attribute "validate"',
             [],

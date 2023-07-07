@@ -151,13 +151,6 @@ class WorkflowDef(Generic[_R]):
 
         return orquestra.sdk._base._viz.wf_def_to_graphviz(self.model)
 
-    def local_run(self) -> _R:
-        """Executes workflow as a script in a local environment."""
-        _dsl.DIRECT_EXECUTION = True
-        result = self._fn(*self._workflow_args, **self._workflow_kwargs)
-        _dsl.DIRECT_EXECUTION = False
-        return result
-
     def run(
         self,
         config: Union[_api.RuntimeConfig, str],
