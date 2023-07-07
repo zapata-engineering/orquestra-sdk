@@ -5,6 +5,7 @@
 
 from . import mlflow, secrets
 from ._base._api import (
+    CurrentRunIDs,
     RuntimeConfig,
     TaskRun,
     WorkflowRun,
@@ -70,4 +71,5 @@ __all__ = [
     "ProjectRef",
     "State",
     "Workspace",
+    "CurrentRunIDs",
 ]

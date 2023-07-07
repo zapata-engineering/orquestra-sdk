@@ -13,6 +13,7 @@
 🐛 *Bug Fixes*
 
 💅 *Improvements*
+* `sdk.current_run_ids()` now returns a `NamedTuple` called `CurrentRunIDs` to help with typing.
 
 🥷 *Internal*
 
