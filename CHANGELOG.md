@@ -14,6 +14,7 @@
 
 💅 *Improvements*
 * `sdk.current_run_ids()` now returns a `NamedTuple` called `CurrentRunIDs` to help with typing.
+* Task that requests ray-incompatible number of resources throws an error at submission time
 
 🥷 *Internal*
 
