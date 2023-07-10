@@ -15,7 +15,7 @@ import pytest
 
 import orquestra.sdk as sdk
 from orquestra.sdk._base import _dsl, loader
-from orquestra.sdk.exceptions import DirtyGitRepo
+from orquestra.sdk.exceptions import DirtyGitRepo, InvalidTaskDefinitionError
 
 DEFAULT_LOCAL_REPO_PATH = Path(__file__).parent.resolve()
 
@@ -722,3 +722,35 @@ def test_dependency_imports(dependency_imports, expected_imports):
         pass
 
     assert my_task._dependency_imports == expected_imports
+
+
+class TestInvalidResources:
+    @pytest.mark.parametrize(
+        "cpu", ["1001m", "1500m", "1.5", "2001m", "1.0001k", "1500000u"]
+    )
+    def test_invalud_cpu_resources(self, cpu):
+        @sdk.task(resources=sdk.Resources(cpu=cpu))
+        def t():
+            ...
+
+        @sdk.workflow
+        def wf():
+            return t()
+
+        with pytest.raises(InvalidTaskDefinitionError):
+            wf().model
+
+    @pytest.mark.parametrize(
+        "gpu", ["1001m", "1500m", "1.5", "2001m", "1.0001k", "1500000u", "0.15", "0.5"]
+    )
+    def test_invalud_gpu_resources(self, gpu):
+        @sdk.task(resources=sdk.Resources(gpu=gpu))
+        def t():
+            ...
+
+        @sdk.workflow
+        def wf():
+            return t()
+
+        with pytest.raises(InvalidTaskDefinitionError):
+            wf().model

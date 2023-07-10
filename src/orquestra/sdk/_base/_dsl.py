@@ -42,6 +42,7 @@ if TYPE_CHECKING:
 import wrapt  # type: ignore
 
 from ..exceptions import DirtyGitRepo, InvalidTaskDefinitionError, WorkflowSyntaxError
+from ..kubernetes.quantity import parse_quantity
 from . import _ast
 
 # ----- SDK exceptions  -----
@@ -519,14 +520,39 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
             )
             raise InvalidTaskDefinitionError(err)
 
+    def _validate_task_resources(self):
+        if self._resources:
+            if self._resources.cpu is not None:
+                cpu = parse_quantity(self._resources.cpu)
+                cpu_int = cpu.to_integral_value()
+                if cpu_int != cpu and cpu > 1:
+                    err = (
+                        f"function {self._fn_name} has CPU resource quantity larger "
+                        f"then 1, which is not a whole number. Make sure any resource "
+                        f">1 is defined as a whole number."
+                    )
+                    raise InvalidTaskDefinitionError(err)
+            if self._resources.gpu is not None:
+                try:
+                    int(self._resources.gpu)
+                except ValueError:
+                    err = (
+                        f"function {self._fn_name} has GPU resource quantity which is "
+                        "not a whole number. Make sure GPU is defined only as integer."
+                    )
+                    raise InvalidTaskDefinitionError(err)
+
     def validate_task(self):
         """Validate tasks for possible incompatibilities
 
         Raises:
             InvalidTaskDefinitionError: If task is defined in __main__module and is not
             inlined using source_import==InlineImport()
+            or
+            When invalid number of resources was requested
         """
         self._validate_task_not_in_main()
+        self._validate_task_resources()
 
     def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
