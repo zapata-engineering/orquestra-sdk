@@ -10,9 +10,11 @@ emit in the log markers. They're dataclasses and not pydantic models because we'
 not just using plain JSON: we're using prefix markers.
 """
 import json
+from pathlib import Path
 import re
 import sys
 import traceback
+import wurlitzer
 import typing as t
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -147,3 +149,26 @@ def printed_task_markers(
     finally:
         if wf_run_id and task_inv_id:
             print_end(wf_run_id, task_inv_id)
+
+
+UNKNOWN_WF_RUN_ID = "unknown-wf-run-id"
+UNKNOWN_TASK_INV_ID = "unknown-task-inv-id"
+
+
+@contextmanager
+def redirected_io(
+    logs_dir: Path,
+    wf_run_id: t.Optional[WorkflowRunId], task_inv_id: t.Optional[TaskInvocationId]
+):
+    wf_run_id = wf_run_id or UNKNOWN_WF_RUN_ID
+    task_inv_id = task_inv_id or UNKNOWN_TASK_INV_ID
+
+    out_path = logs_dir / wf_run_id / f"{task_inv_id}.out"
+    err_path = logs_dir / wf_run_id / f"{task_inv_id}.err"
+
+    (logs_dir / wf_run_id).mkdir(parents=True, exist_ok=True)
+
+    with open(out_path, "a") as out_f:
+        with open(err_path, "a") as err_f:
+            with wurlitzer.pipes(stdout=out_f, stderr=err_f):
+                yield

@@ -31,6 +31,10 @@ class Service(Protocol):
         ...
 
 
+def orquestra_logs_path():
+    return ORQUESTRA_BASE_PATH / "orq_logs"
+
+
 def ray_temp_path():
     """
     Used by RayRuntime to know where to look for the log files to read.

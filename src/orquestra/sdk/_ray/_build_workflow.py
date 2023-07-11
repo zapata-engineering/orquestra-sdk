@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pydantic
 from typing_extensions import assert_never
+import wurlitzer
 
 from .. import exceptions, secrets
 from .._base import _exec_ctx, _git_url_utils, _graphs, dispatch, serde
@@ -19,6 +20,7 @@ from .._base._env import (
     RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV,
 )
 from .._base._logs import _markers
+from .._base import _services
 from ..kubernetes.quantity import parse_quantity
 from ..schema import _compat, ir, responses, workflow_run
 from . import _client, _id_gen
@@ -194,8 +196,14 @@ def _make_ray_dag_node(
             # TODO: make the IDs required and raise an error if they're not present.
             # https://zapatacomputing.atlassian.net/browse/ORQSDK-530
             wf_run_id, task_inv_id, _ = get_current_ids()
-            with _markers.printed_task_markers(
-                wf_run_id=wf_run_id, task_inv_id=task_inv_id
+            # with _markers.printed_task_markers(
+            #     wf_run_id=wf_run_id, task_inv_id=task_inv_id
+            # ):
+
+            with _markers.redirected_io(
+                logs_dir=_services.orquestra_logs_path(),
+                wf_run_id=wf_run_id,
+                task_inv_id=task_inv_id,
             ):
                 if project_dir is not None:
                     dispatch.ensure_sys_paths([str(project_dir)])
