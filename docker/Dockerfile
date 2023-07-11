@@ -27,7 +27,7 @@ EOF
 USER 1000
 WORKDIR /home/orquestra
 
-ENV VIRTUAL_ENV=/home/orquestra/venv
+ENV VIRTUAL_ENV=/opt/orquestra/venv
 RUN python -m venv "$VIRTUAL_ENV"
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
