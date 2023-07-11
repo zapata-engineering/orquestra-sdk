@@ -89,6 +89,18 @@ Example:
 """
 
 
+# --------------------------------- MLFlow -----------------------------------
+
+ORQ_MLFLOW_CR_NAME = "ORQ_MLFLOW_CR_NAME"
+"""
+Used to set the MLFlow CR name.
+"""
+
+ORQ_MLFLOW_PORT = "ORQ_MLFLOW_PORT"
+"""
+Used to set the port for communicating with MLFlow.
+"""
+
 # ------------------------------- utilities ----------------------------------
 
 
