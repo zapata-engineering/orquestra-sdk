@@ -45,18 +45,42 @@ class FileKeepsake:
     """
 
 
-def iter_changes(paths: t.Sequence[Path]):
-    keepsakes: t.Dict[Path, FileKeepsake] = {}
-    new_keepsakes = {}
-    for file_path in paths:
-        stat = file_path.stat()
-        modified_at = stat.st_mtime_ns
-        # 2. Check if updated since last keepsake, or read full and create new keepsake
-        if (last_keepsake := keepsakes.get(file_path)) is not None:
-            if modified_at > last_keepsake.modified_at:
-                # 3. Advance pointer and read the new content
+class FileMonitor:
+    def __init__(self, paths: t.Sequence[Path]):
+        self._paths = paths
+        self._keepsakes: t.Dict[Path, FileKeepsake] = {}
+
+    def find_changes(self) -> t.Generator[t.Tuple[Path, str], None, None]:
+        """
+        Runs one round of polling for newly added lines.
+
+        Relies on "modified at" file metadata. Overrides `self._keepsakes`.
+        """
+        new_keepsakes = {}
+        for file_path in self._paths:
+            stat = file_path.stat()
+            modified_at = stat.st_mtime_ns
+            # 2. Check if updated since last keepsake, or read full and create a new
+            # keepsake.
+            if (last_keepsake := self._keepsakes.get(file_path)) is not None:
+                if modified_at > last_keepsake.modified_at:
+                    # 3. Advance pointer and read the new content
+                    with file_path.open() as f:
+                        f.seek(last_keepsake.last_position)
+                        new_content = f.read()
+                        new_position = f.tell()
+
+                    yield file_path, new_content
+
+                    new_keepsakes[file_path] = FileKeepsake(
+                        modified_at=modified_at,
+                        last_position=new_position,
+                    )
+                else:
+                    # File unmodified.
+                    new_keepsakes[file_path] = last_keepsake
+            else:
                 with file_path.open() as f:
-                    f.seek(last_keepsake.last_position)
                     new_content = f.read()
                     new_position = f.tell()
 
@@ -66,22 +90,8 @@ def iter_changes(paths: t.Sequence[Path]):
                     modified_at=modified_at,
                     last_position=new_position,
                 )
-            else:
-                # unmodified
-                new_keepsakes[file_path] = last_keepsake
-        else:
-            with file_path.open() as f:
-                new_content = f.read()
-                new_position = f.tell()
 
-            yield file_path, new_content
-
-            keepsakes[file_path] = FileKeepsake(
-                modified_at=modified_at,
-                last_position=new_position,
-            )
-
-    keepsakes = new_keepsakes
+        self._keepsakes = new_keepsakes
 
 
 def main3():
@@ -92,18 +102,20 @@ def main3():
     worker_paths = list(log_path.glob("worker-*-*-*.???"))
     print(worker_paths)
 
+    monitor = FileMonitor(worker_paths)
+
     round_counter = 0
     while True:
         print(f"Round {round_counter}")
-        for worker_path, new_content in iter_changes(worker_paths):
+        for worker_path, new_content in monitor.find_changes():
             print(f"Detected change in {worker_path}")
             print("New content:")
             print(new_content)
             print("-" * 20)
 
-        print("\n" * 10)
+        print("\n" * 3)
 
-        time.sleep(10)
+        time.sleep(4)
         round_counter += 1
 
 
