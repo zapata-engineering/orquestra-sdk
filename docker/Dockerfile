@@ -22,13 +22,16 @@ fi
 rm -rf /var/lib/apt/lists/*
 
 useradd -ms /bin/bash -d /home/orquestra orquestra --uid 1000 --gid 100
+
+mkdir -p /opt/orquestra
+chown -R 1000:100 /opt/orquestra
 EOF
 
 USER 1000
 WORKDIR /home/orquestra
 
 ENV VIRTUAL_ENV=/opt/orquestra/venv
-RUN python -m venv "$VIRTUAL_ENV"
+RUN python -m venv --system-site-packages "$VIRTUAL_ENV"
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 RUN <<EOF
