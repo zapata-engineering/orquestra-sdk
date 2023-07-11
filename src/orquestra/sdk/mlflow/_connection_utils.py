@@ -17,8 +17,8 @@ from orquestra.sdk.schema.configs import ConfigName
 
 DEFAULT_TEMP_ARTIFACTS_DIR: Path = ORQUESTRA_BASE_PATH / "mlflow" / "artifacts"
 RESOURCE_CATALOG_URI: str = "http://orquestra-resource-catalog.resource-catalog"
-DEFAULT_ORQ_MLFLOW_CR_NAME: str = "mlflow"
-DEFAULT_ORQ_MLFLOW_PORT: int = 8080
+DEFAULT_MLFLOW_CR_NAME: str = "mlflow"
+DEFAULT_MLFLOW_PORT: int = 8080
 
 
 # region: private
@@ -45,10 +45,10 @@ def _get_mlflow_domain_name_and_port() -> Tuple[str, int]:
     # env vars are set, we can remove the defaults entirely.
     mlflow_cr_name: str
     mlflow_port: int
-    if not (mlflow_cr_name := os.getenv(_env.ORQ_MLFLOW_CR_NAME)):
-        mlflow_cr_name = DEFAULT_ORQ_MLFLOW_CR_NAME
-    if not (mlflow_port := os.getenv(_env.ORQ_MLFLOW_PORT)):
-        mlflow_port = DEFAULT_ORQ_MLFLOW_PORT
+    if not (mlflow_cr_name := os.getenv(_env.MLFLOW_CR_NAME)):
+        mlflow_cr_name = DEFAULT_MLFLOW_CR_NAME
+    if not (mlflow_port := os.getenv(_env.MLFLOW_PORT)):
+        mlflow_port = DEFAULT_MLFLOW_PORT
     return mlflow_cr_name, mlflow_port
 
 
@@ -66,7 +66,7 @@ def _make_workspace_zri(workspace_id: str) -> str:
     """
     Make the workspace ZRI for the specified workspace ID.
 
-    we have to build project ZRI from some hardcoded values + workspaceId based on
+    Builds project ZRI from some hardcoded values and the workspaceId based on
     https://zapatacomputing.atlassian.net/wiki/spaces/Platform/pages/512787664/2022-09-26+Zapata+Resource+Identifiers+ZRIs
     """  # noqa: E501
     default_tenant_id = 0

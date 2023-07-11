@@ -96,14 +96,20 @@ Example:
 
 # --------------------------------- MLFlow -----------------------------------
 
-ORQ_MLFLOW_CR_NAME = "ORQ_MLFLOW_CR_NAME"
+MLFLOW_CR_NAME = "ORQ_MLFLOW_CR_NAME"
 """
 Used to set the MLFlow CR name.
 """
 
-ORQ_MLFLOW_PORT = "ORQ_MLFLOW_PORT"
+MLFLOW_PORT = "ORQ_MLFLOW_PORT"
 """
 Used to set the port for communicating with MLFlow.
+"""
+
+MLFLOW_ARTIFACTS_DIR = "ORQ_MLFLOW_ARTIFACTS_DIR"
+"""
+Used to set the temporary directory to which mlflow artifacts can be written before
+uploading.
 """
 
 # ------------------------------- utilities ----------------------------------
