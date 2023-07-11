@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 import time
 import watchfiles
 import watchdog
@@ -16,11 +17,13 @@ def main2():
     logging.basicConfig(level=logging.INFO)
     handler = watchdog.events.LoggingEventHandler()
     observer = watchdog.observers.Observer()
-    observer.schedule(handler, ".", recursive=True)
+    log_path = Path("~/.orquestra/ray/session_latest/logs").expanduser()
+    print(f"Monitoring {log_path}")
+    observer.schedule(handler, log_path, recursive=True)
     observer.start()
 
     while True:
-        time.sleep(1)
+        time.sleep(100)
 
 
 if __name__ == "__main__":
