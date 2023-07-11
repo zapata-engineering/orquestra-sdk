@@ -108,18 +108,16 @@ def get_temp_artifacts_dir() -> Path:
     do not need adjusting between runtimes.
     """
 
-    path: Path
-    if "ORQ_MLFLOW_ARTIFACTS_DIR" in os.environ:
-        # In Studio and CE there is an environment variable that points to the artifact
-        # directory.
-        path = Path(os.environ["ORQ_MLFLOW_ARTIFACTS_DIR"])
-    else:
-        # If the artifact dir envvar doesn't exist, we're probably executing locally.
-        path = DEFAULT_TEMP_ARTIFACTS_DIR
+    temp_dir_path: Path = Path(
+        os.getenv(_env.MLFLOW_ARTIFACTS_DIR) or DEFAULT_TEMP_ARTIFACTS_DIR
+    )
+    # In Studio and CE there is an environment variable that points to the artifact
+    # directory. If the artifact dir envvar doesn't exist, assume we're executing
+    # locally and use the default artifacts dir.
 
-    path.mkdir(parents=True, exist_ok=True)
+    temp_dir_path.mkdir(parents=True, exist_ok=True)
 
-    return path
+    return temp_dir_path
 
 
 def get_tracking_uri(workspace_id: str, config_name: Optional[str] = None) -> str:
