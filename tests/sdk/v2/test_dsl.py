@@ -724,7 +724,7 @@ def test_dependency_imports(dependency_imports, expected_imports):
     assert my_task._dependency_imports == expected_imports
 
 
-class TestInvalidResources:
+class TestResources:
     @pytest.mark.parametrize(
         "cpu", ["1001m", "1500m", "1.5", "2001m", "1.0001k", "1500000u"]
     )
@@ -740,10 +740,21 @@ class TestInvalidResources:
         with pytest.raises(InvalidTaskDefinitionError):
             wf().model
 
-    @pytest.mark.parametrize(
-        "gpu", ["1001m", "1500m", "1.5", "2001m", "1.0001k", "1500000u", "0.15", "0.5"]
-    )
-    def test_invalud_gpu_resources(self, gpu):
+    @pytest.mark.parametrize("cpu", ["1000m", "500m", "1.0", "3.0", "1", "1k"])
+    def test_valid_cpu_resources(self, cpu):
+        @sdk.task(resources=sdk.Resources(cpu=cpu))
+        def t():
+            ...
+
+        @sdk.workflow
+        def wf():
+            return t()
+
+        # should not raise
+        wf().model
+
+    @pytest.mark.parametrize("gpu", ["1", "1.0", "10.0"])
+    def test_valid_gpu_resources(self, gpu):
         @sdk.task(resources=sdk.Resources(gpu=gpu))
         def t():
             ...
@@ -752,5 +763,5 @@ class TestInvalidResources:
         def wf():
             return t()
 
-        with pytest.raises(InvalidTaskDefinitionError):
-            wf().model
+        # should not raise
+        wf().model

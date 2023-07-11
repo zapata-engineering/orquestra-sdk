@@ -534,11 +534,17 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
                     raise InvalidTaskDefinitionError(err)
             if self._resources.gpu is not None:
                 try:
-                    int(self._resources.gpu)
+                    int_gpu = int(float(self._resources.gpu))
+                    float_gpu = float(self._resources.gpu)
+                    if int_gpu != float_gpu:
+                        raise ValueError
+                # Value error can be either if gpus are float, or passed as some form
+                # of kubernetes-resource string, like "1000m"
                 except ValueError:
                     err = (
-                        f"function {self._fn_name} has GPU resource quantity which is "
-                        "not a whole number. Make sure GPU is defined only as integer."
+                        f"function {self._fn_name} has GPU resource quantity which "
+                        f"is not a whole number. Make sure GPU is defined only "
+                        f"as integer."
                     )
                     raise InvalidTaskDefinitionError(err)
 
