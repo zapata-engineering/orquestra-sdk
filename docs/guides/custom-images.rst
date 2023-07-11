@@ -28,6 +28,10 @@ can install any package that you need from Ubuntu repositories (by doing ``RUN a
 However, before doing so, you need to temporarily switch to the root user (via ``USER root`` directive) and
 restore back to user ``orquestra`` once you're done (``USER orquestra``).
 
+A virtual environment for the Python code is created at `/home/orquestra/venv`. Orquestra SDK and Ray modules are installed
+in this virtual environment. The `bin` directory of this virtual environment is added to the `PATH` environment variable
+as well so that you use the same Python executable in any subprocesses you might create in your code.
+
 .. note::
 
     You can use `standard OCI annotations <https://github.com/opencontainers/image-spec/blob/main/annotations.md>`_ to add metadata to your images.
