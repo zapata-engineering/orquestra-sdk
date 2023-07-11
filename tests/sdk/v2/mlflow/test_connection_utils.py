@@ -99,14 +99,14 @@ class TestGetMLFlowCRNameAndPort:
     def test_happy_path(monkeypatch: MonkeyPatch, mock_is_executing_remotely):
         # Given
         monkeypatch.setenv(MLFLOW_CR_NAME, "<mlflow cr name sentinel>")
-        monkeypatch.setenv(MLFLOW_PORT, "2266")
+        monkeypatch.setenv(MLFLOW_PORT, "<mlflow port sentinel>")
 
         # When
         name, port = sdk.mlflow._connection_utils._get_mlflow_cr_name_and_port()
 
         # Then
         assert name == "<mlflow cr name sentinel>"
-        assert port == 2266
+        assert port == "<mlflow port sentinel>"
 
     @staticmethod
     def test_defensive_assert_for_remote_only(
@@ -328,7 +328,7 @@ class TestGetTrackingURI:
             )
             # Mock the custom resource name and port envvars
             monkeypatch.setenv(MLFLOW_CR_NAME, "<mlflow cr name sentinel>")
-            monkeypatch.setenv(MLFLOW_PORT, "2266")
+            monkeypatch.setenv(MLFLOW_PORT, "<mlflow port sentinel>")
 
             # When
             tracking_url = sdk.mlflow.get_tracking_uri("<workspace id sentinel>")
@@ -336,7 +336,7 @@ class TestGetTrackingURI:
             # Then
             assert (
                 tracking_url
-                == "http://<mlflow cr name sentinel>.<namespace sentinel>:2266"
+                == "http://<mlflow cr name sentinel>.<namespace sentinel>:<mlflow port sentinel>"  # noqa: E501
             )
 
     @pytest.mark.usefixtures("mock_is_executing_locally")
@@ -379,10 +379,15 @@ class TestGetTrackingURI:
 
             # When
             with pytest.raises(ValueError) as e:
-                _ = sdk.mlflow.get_tracking_uri("<workspace id sentinel>")
+                _ = sdk.mlflow.get_tracking_uri(
+                    "<workspace id sentinel>", config_name="<config_name_sentinel>"
+                )
 
             # Then
-            assert "FOO" in e.exconly()
+            assert (
+                "The config '<config_name_sentinel>' has no URI associated with it."
+                in e.exconly()
+            )
 
 
 class TestGetTrackingToken:

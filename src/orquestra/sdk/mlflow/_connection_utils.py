@@ -44,7 +44,7 @@ def _is_executing_remoteley() -> bool:
     return True
 
 
-def _get_mlflow_cr_name_and_port() -> Tuple[str, int]:
+def _get_mlflow_cr_name_and_port() -> Tuple[str, str]:
     """
     Reads in the MLFlow custom resource name and port from environment variables.
 
@@ -66,7 +66,16 @@ def _get_mlflow_cr_name_and_port() -> Tuple[str, int]:
         _is_executing_remoteley()
     ), "This function should not be called when running locally."
 
-    return os.getenv(_env.MLFLOW_CR_NAME), int(os.getenv(_env.MLFLOW_PORT))
+    if not (cr_name := os.getenv(_env.MLFLOW_CR_NAME)):
+        raise EnvironmentError(
+            f"The '{_env.MLFLOW_CR_NAME}' environment variable is not set."
+        )
+    if not (port := os.getenv(_env.MLFLOW_PORT)):
+        raise EnvironmentError(
+            f"The '{_env.MLFLOW_PORT}' environment variable is not set."
+        )
+
+    return cr_name, port
 
 
 def _read_passport_token() -> str:
@@ -74,8 +83,15 @@ def _read_passport_token() -> str:
     Reads in the token.
 
     The file path is specified by the PASSPOT_FILE_ENV environment variable.
+
+    Raises:
+        EnvironmentError: when the PASSPORT_FILE_ENV environment variable is not set.
     """
-    return Path(os.getenv(_env.PASSPORT_FILE_ENV)).read_text()
+    if not (passport_file_path := os.getenv(_env.PASSPORT_FILE_ENV)):
+        raise EnvironmentError(
+            f"The '{_env.PASSPORT_FILE_ENV}' environment variable is not set."
+        )
+    return Path(passport_file_path).read_text()
 
 
 def _make_workspace_zri(workspace_id: str) -> str:
@@ -174,9 +190,16 @@ def get_tracking_uri(workspace_id: str, config_name: Optional[str] = None) -> st
             raise ValueError("The config_name parameter is required for local runs.")
 
         # TODO: try-except block to raise a more informative error message.
-        cluster_uri: str = sdk.RuntimeConfig.load(config_name).uri
-
-        return f"{cluster_uri}/mlflow/{workspace_id}"
+        config = sdk.RuntimeConfig.load(config_name)
+        try:
+            return f"{config.uri}/mlflow/{workspace_id}"
+        except AttributeError as e:
+            raise ValueError(
+                f"The config '{config_name}' has no URI associated with it. "
+                "In order to determine the tracking URI, the config must specify a "
+                "remote execution environment where the MLFlow instance is hosted. "
+                "Please double-check the config name and try again."
+            ) from e
 
 
 def get_tracking_token(config_name: Optional[str] = None) -> str:
