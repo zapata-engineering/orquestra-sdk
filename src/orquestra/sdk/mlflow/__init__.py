@@ -4,6 +4,10 @@
 
 """A set of Orquestra utilities relating to interacting with MLFlow."""
 
-from ._connection_utils import get_temp_artifacts_dir, get_tracking_token
+from ._connection_utils import (
+    get_temp_artifacts_dir,
+    get_tracking_token,
+    get_tracking_uri,
+)
 
-__all__ = ["get_temp_artifacts_dir", "get_temp_artifacts_dir", "get_tracking_token"]
+__all__ = ["get_temp_artifacts_dir", "get_tracking_uri", "get_tracking_token"]

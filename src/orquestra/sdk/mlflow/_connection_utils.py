@@ -5,6 +5,7 @@
 """Utilities for communicating with mlflow."""
 
 import os
+import warnings
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -17,49 +18,64 @@ from orquestra.sdk.schema.configs import ConfigName
 
 DEFAULT_TEMP_ARTIFACTS_DIR: Path = ORQUESTRA_BASE_PATH / "mlflow" / "artifacts"
 RESOURCE_CATALOG_URI: str = "http://orquestra-resource-catalog.resource-catalog"
-DEFAULT_MLFLOW_CR_NAME: str = "mlflow"
-DEFAULT_MLFLOW_PORT: int = 8080
 
 
 # region: private
-def _get_mlflow_domain_name_and_port() -> Tuple[str, int]:
+def _is_executing_remoteley() -> bool:
     """
-    Reads in the CR name and port from environment variables.
+    Determine whether the code is being executed locally, or on a cluster/studio.
+    """
+    # TODO: at present this uses the platform-specific environment variables, assuming
+    # that if all of them are set then we must be executing remotely. This assumption
+    # is not 100% - power users may set the envvars locally for fine-grained control.
+    # However, the platform will shortly be adding an envvar specifically to track
+    # whether we're executing remotely. Once that is done, this function should be
+    # updated to check that specifically. Tests should be added for this function at
+    # that time.
+    envvars = [
+        _env.PASSPORT_FILE_ENV,
+        _env.MLFLOW_CR_NAME,
+        _env.MLFLOW_PORT,
+        _env.PASSPORT_FILE_ENV,
+        _env.MLFLOW_ARTIFACTS_DIR,
+    ]
+    if None in [os.getenv(envvar) for envvar in envvars]:
+        return False
+    return True
+
+
+def _get_mlflow_cr_name_and_port() -> Tuple[str, int]:
+    """
+    Reads in the MLFlow custom resource name and port from environment variables.
 
     The environment variables are:
     - ORQ_MLFLOW_CR_NAME
     - ORQ_MLFLOW_PORT
 
-    If a variable is not set, i.e. when executing locally and the user has not
-    chosen to set them manually, returns the default value instead.
-
     Example usage:
 
     ```python
-    mlflow_cr_name, mlflow_port = _get_mlflow_domain_name_and_port()
+    mlflow_cr_name, mlflow_port = _get_mlflow_cr_name_and_port()
     ```
+
+    Raises:
+        EnvironmentError: when either of the environment variables are not set.
     """
-    # TODO: check with studio/platform to ensure that the env var names are correct.
-    # TODO: at present this function is called _only_ from a path that assumes we're
-    # executing on a cluster. If that assumption also means we can assume that these
-    # env vars are set, we can remove the defaults entirely.
-    mlflow_cr_name: str
-    mlflow_port: int
-    if not (mlflow_cr_name := os.getenv(_env.MLFLOW_CR_NAME)):
-        mlflow_cr_name = DEFAULT_MLFLOW_CR_NAME
-    if not (mlflow_port := os.getenv(_env.MLFLOW_PORT)):
-        mlflow_port = DEFAULT_MLFLOW_PORT
-    return mlflow_cr_name, mlflow_port
+
+    assert (
+        _is_executing_remoteley()
+    ), "This function should not be called when running locally."
+
+    return os.getenv(_env.MLFLOW_CR_NAME), int(os.getenv(_env.MLFLOW_PORT))
 
 
-def _read_passport_token() -> Optional[str]:
+def _read_passport_token() -> str:
     """
-    Read in the passport token environment variable, if it exists
-    """
-    if not (passport_path := os.getenv(_env.PASSPORT_FILE_ENV)):
-        return None
+    Reads in the token.
 
-    return Path(passport_path).read_text()
+    The file path is specified by the PASSPOT_FILE_ENV environment variable.
+    """
+    return Path(os.getenv(_env.PASSPORT_FILE_ENV)).read_text()
 
 
 def _make_workspace_zri(workspace_id: str) -> str:
@@ -131,17 +147,17 @@ def get_tracking_uri(workspace_id: str, config_name: Optional[str] = None) -> st
             can be omitted.
 
     Raises:
-        ValueError: When this function is called without a config name in a local
-            execution context.
+        ValueError: When this function is called in a local execution context without
+            specifying a valid non-local config name.
     """
 
-    # TODO: do we need to handle the case where a user has set the token environment
-    # variable locally?
-    # TODO: how do we handle cases where we're executing remotely, but the user
-    # provides a config name that doesn't match?
-    # TODO: do we need to worry about configs without a uri?
-    if token := _read_passport_token():
-        # Assume we're on a cluster
+    if _is_executing_remoteley():
+        if config_name is not None:
+            warnings.warn(
+                "The 'config_name' parameter is used only when executing locally, "
+                "and will be ignored."
+            )
+        token: str = _read_passport_token()
         session: Session = _make_session(token)
         workspace_zri: str = _make_workspace_zri(workspace_id)
         workspace_url: str = _make_workspace_url(RESOURCE_CATALOG_URI, workspace_zri)
@@ -149,13 +165,15 @@ def get_tracking_uri(workspace_id: str, config_name: Optional[str] = None) -> st
         resp: Response = session.get(workspace_url)
         resp.raise_for_status()
         namespace: str = resp.json()["namespace"]
-        mlflow_cr_name, mlflow_port = _get_mlflow_domain_name_and_port()
+        mlflow_cr_name, mlflow_port = _get_mlflow_cr_name_and_port()
 
         return f"http://{mlflow_cr_name}.{namespace}:{mlflow_port}"
     else:
         # Assume we're executing locally, use external URIs
         if not config_name:
             raise ValueError("The config_name parameter is required for local runs.")
+
+        # TODO: try-except block to raise a more informative error message.
         cluster_uri: str = sdk.RuntimeConfig.load(config_name).uri
 
         return f"{cluster_uri}/mlflow/{workspace_id}"
@@ -174,15 +192,21 @@ def get_tracking_token(config_name: Optional[str] = None) -> str:
         ValueError: When this function is called without a config name in a local
             execution context.
     """
-    if token := _read_passport_token():
+    if _is_executing_remoteley():
         # Assume we're on a cluster
-        return token
+        if config_name is not None:
+            warnings.warn(
+                "The 'config_name' parameter is used only when executing locally, "
+                "and will be ignored."
+            )
+        token = _read_passport_token()
     else:
         # Assume we're executing locally, use the token from the config.
         if not config_name:
             raise ValueError("The config_name parameter is required for local runs.")
         config: sdk.RuntimeConfig = sdk.RuntimeConfig.load(config_name)
-        return config.token
+        token = config.token
+    return token
 
 
 # endregion
