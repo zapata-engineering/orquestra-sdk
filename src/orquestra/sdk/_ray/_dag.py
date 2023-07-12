@@ -498,14 +498,7 @@ class RayRuntime(RuntimeInterface):
 
         Returns:
                 A list of the workflow runs
-
-        Raises:
-            WorkspacesNotSupportedError: when a workspace or project is specified.
         """
-        if workspace or project:
-            raise exceptions.WorkspacesNotSupportedError(
-                "Filtering by workspace or project is not supported on Ray runtimes."
-            )
         now = _dates.now()
 
         if state is not None:

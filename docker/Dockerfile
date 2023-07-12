@@ -21,13 +21,20 @@ fi
 
 rm -rf /var/lib/apt/lists/*
 
+useradd -ms /bin/bash -d /home/orquestra orquestra --uid 1000 --gid 100
+EOF
+
+USER 1000
+WORKDIR /home/orquestra
+
+ENV VIRTUAL_ENV=/home/orquestra/venv
+RUN python -m venv "$VIRTUAL_ENV"
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN <<EOF
 python -m pip install --no-cache-dir -U pip wheel
 python -m pip install --no-cache-dir "${SDK_REQUIREMENT}"
 EOF
-
-RUN useradd -ms /bin/bash -d /home/orquestra orquestra --uid 1000 --gid 100
-USER 1000
-WORKDIR /home/orquestra
 
 ENV RAY_STORAGE=/tmp
 # This environment variable configures the Ray runtime to download Git imports.
