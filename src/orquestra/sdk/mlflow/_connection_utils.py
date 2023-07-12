@@ -36,7 +36,6 @@ def _is_executing_remoteley() -> bool:
         _env.PASSPORT_FILE_ENV,
         _env.MLFLOW_CR_NAME,
         _env.MLFLOW_PORT,
-        _env.PASSPORT_FILE_ENV,
         _env.MLFLOW_ARTIFACTS_DIR,
     ]
     if None in [os.getenv(envvar) for envvar in envvars]:
@@ -189,7 +188,6 @@ def get_tracking_uri(workspace_id: str, config_name: Optional[str] = None) -> st
         if not config_name:
             raise ValueError("The config_name parameter is required for local runs.")
 
-        # TODO: try-except block to raise a more informative error message.
         config = sdk.RuntimeConfig.load(config_name)
         try:
             return f"{config.uri}/mlflow/{workspace_id}"
