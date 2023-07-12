@@ -40,7 +40,7 @@ TEST_CONFIGS_DICT: t.Mapping[str, t.Mapping[str, t.Any]] = {
         "runtime_name": "CE_REMOTE",
         "runtime_options": {
             "uri": "http://some_cool_uri.io",
-            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJlbWFpbCI6Im15X2hpZGRlbl9lbWFpbEBsb3ZlbHktZW1haWwuY29tIn0.HNQ4xovOEWQh7HbxmwiViVR-Xw792yXrbUDknzChncA",
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJlbWFpbCI6Im15X2hpZGRlbl9lbWFpbEBsb3ZlbHktZW1haWwuY29tIn0.HNQ4xovOEWQh7HbxmwiViVR-Xw792yXrbUDknzChncA",  # noqa
         },
     },
     "improper_token": {
@@ -48,7 +48,7 @@ TEST_CONFIGS_DICT: t.Mapping[str, t.Mapping[str, t.Any]] = {
         "runtime_name": "CE_REMOTE",
         "runtime_options": {
             "uri": "http://some_cool_uri.io",
-            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJlbWFpbCI6Im15X2hpZGRl9lbWFpbEBsb3ZlbHktZW1haWwuY29tIn0.HNQ4xovOEWQh7HbxmwiViVR-Xw792yXrbUDknzChncA",
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJlbWFpbCI6Im15X2hpZGRl9lbWFpbEBsb3ZlbHktZW1haWwuY29tIn0.HNQ4xovOEWQh7HbxmwiViVR-Xw792yXrbUDknzChncA",  # noqa
         },
     },
 }
