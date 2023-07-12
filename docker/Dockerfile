@@ -31,10 +31,11 @@ USER 1000
 WORKDIR /home/orquestra
 
 ENV VIRTUAL_ENV=/opt/orquestra/venv
-RUN python -m venv --system-site-packages "$VIRTUAL_ENV"
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+RUN python -m venv "$VIRTUAL_ENV"
 
 RUN <<EOF
+set -ex
+. "$VIRTUAL_ENV/bin/activate"
 python -m pip install --no-cache-dir -U pip wheel
 python -m pip install --no-cache-dir "${SDK_REQUIREMENT}"
 EOF
