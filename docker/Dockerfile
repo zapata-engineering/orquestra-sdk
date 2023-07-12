@@ -31,7 +31,7 @@ USER 1000
 WORKDIR /home/orquestra
 
 ENV VIRTUAL_ENV=/opt/orquestra/venv
-RUN python -m venv "$VIRTUAL_ENV"
+RUN python -m venv "$VIRTUAL_ENV" --prompt system
 
 RUN <<EOF
 set -ex
@@ -40,15 +40,10 @@ python -m pip install --no-cache-dir -U pip wheel
 python -m pip install --no-cache-dir "${SDK_REQUIREMENT}"
 EOF
 
-RUN <<EOF
-# Used for non-interactive shells
-echo "source ${VIRTUAL_ENV}/bin/activate" >> /etc/zapata/venv
-# Used for interactive shells
-echo "source ${VIRTUAL_ENV}/bin/activate" >> /home/orquestra/.bashrc
-EOF
+RUN echo "source ${VIRTUAL_ENV}/bin/activate" >> /etc/zapata/venv
 
 # This is needed to ensure that the bashrc is sourced when running
-# non-interactive shells
+# non-interactive shells (e.g. when running a startup script)
 # https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html#Bash-Startup-Files
 ENV BASH_ENV=/etc/zapata/venv
 
