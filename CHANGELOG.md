@@ -5,6 +5,7 @@
 * Removed unsupported `WorkflowDef.local_run()` function
 
 🔥 *Features*
+* Add `sdk.mlflow.get_current_user()` function to improve MLflow UI labeling
 
 🧟 *Deprecations*
 

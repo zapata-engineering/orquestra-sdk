@@ -26,3 +26,12 @@ def check_jwt_without_signature_verification(token: str):
         )
     except jwt.DecodeError:
         raise InvalidTokenError("Auth token is not a JWT. Try logging in again.")
+
+
+def get_email_from_jwt_token(token: str):
+    try:
+        token_info = jwt.decode(token, options={"verify_signature": False})
+    except jwt.DecodeError:
+        raise InvalidTokenError("Auth token is not a JWT. Try logging in again.")
+
+    return token_info["email"]
