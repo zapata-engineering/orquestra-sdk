@@ -278,3 +278,9 @@ def test_project_raises_warning(runtime, wf_def):
         _ = runtime.create_workflow_run(
             wf_def, project=ProjectRef(workspace_id="", project_id="")
         )
+
+
+class TestSupportsWorkspaces:
+    @staticmethod
+    def test_returns_false(runtime: InProcessRuntime):
+        assert not runtime.supports_workspaces

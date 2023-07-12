@@ -515,3 +515,7 @@ class CERuntime(RuntimeInterface):
 
     def get_workflow_project(self, wf_run_id: WorkflowRunId) -> ProjectRef:
         return self._client.get_workflow_project(wf_run_id)
+
+    @property
+    def supports_workspaces(self) -> bool:
+        return True

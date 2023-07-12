@@ -1565,3 +1565,9 @@ class TestHTTPErrors:
             runtime.stop_workflow_run("hello-there-abc123-r000")
         for telltale in telltales:
             assert telltale in str(exc_info)
+
+
+class TestSupportsWorkspaces:
+    @staticmethod
+    def test_returns_false(runtime: _qe_runtime.QERuntime):
+        assert not runtime.supports_workspaces

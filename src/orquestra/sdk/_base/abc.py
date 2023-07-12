@@ -13,7 +13,6 @@ This module shouldn't contain any implementation, only interface definitions.
 import typing as t
 from abc import ABC, abstractmethod
 from datetime import timedelta
-from pathlib import Path
 
 from ..exceptions import WorkspacesNotSupportedError
 from ..schema.configs import RuntimeConfiguration
@@ -38,8 +37,7 @@ ArtifactValue = t.Any
 class RuntimeInterface(ABC, LogReader):
     """
     The main abstraction for managing Orquestra workflows. Allows swapping the
-    implementations related to local vs remote runs.
-    """
+    implementations related to local vs remote runs."""
 
     @abstractmethod
     def create_workflow_run(
@@ -167,6 +165,13 @@ class RuntimeInterface(ABC, LogReader):
     @abstractmethod
     def get_workflow_logs(self, wf_run_id: WorkflowRunId) -> WorkflowLogs:
         raise NotImplementedError()
+
+    @property
+    def supports_workspaces(self) -> bool:
+        """
+        A bool that indicates whether this runtime supports workspaces and projects.
+        """
+        return False
 
 
 class WorkflowRepo(ABC):

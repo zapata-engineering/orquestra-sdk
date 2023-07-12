@@ -1,7 +1,6 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 from datetime import timedelta
-from pathlib import Path
 from unittest.mock import DEFAULT, MagicMock, Mock, call, create_autospec
 
 import pytest
@@ -1180,6 +1179,12 @@ class TestGetWorkflowLogs:
         # When
         with pytest.raises(expected_exception):
             runtime.get_workflow_logs(workflow_run_id)
+
+
+class TestSupportsWorkspaces:
+    @staticmethod
+    def test_returns_true(runtime: _ce_runtime.CERuntime):
+        assert runtime.supports_workspaces
 
 
 class TestListWorkspaces:
