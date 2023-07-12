@@ -12,6 +12,7 @@
 
 🐛 *Bug Fixes*
 * Install Python modules in a venv using a non-root user to fix errors in custom Docker images.
+* Fix listing workflows when using Ray if `ORQ_CURRENT_*` environment variables are set.
 
 💅 *Improvements*
 * `sdk.current_run_ids()` now returns a `NamedTuple` called `CurrentRunIDs` to help with typing.
