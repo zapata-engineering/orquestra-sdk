@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+import orquestra.sdk
+import orquestra.sdk._ray._dag
 import typing as t
 import logging
 from pathlib import Path
@@ -8,6 +10,8 @@ import watchdog
 import watchdog.events
 import watchdog.observers
 from pprint import pprint
+import ray
+import asyncio
 
 
 def main1():
@@ -119,5 +123,59 @@ def main3():
         round_counter += 1
 
 
+ACTOR_NAME = "orq-log-indexer"
+ACTOR_NS = "orquestra.sdk"
+
+
+def main4():
+    config = orquestra.sdk.RuntimeConfig.ray()
+    opts = config._get_runtime_options()
+    ray_params = orquestra.sdk._ray._dag.RayParams(
+        address=opts["address"],
+        log_to_driver=opts["log_to_driver"],
+        storage=opts["storage"],
+        _temp_dir=opts["temp_dir"],
+        configure_logging=opts["configure_logging"],
+    )
+    orquestra.sdk._ray._dag.RayRuntime.startup(ray_params)
+
+    # _ = LogIndexerActor.options(
+    #     name=ACTOR_NAME,
+    #     namespace=ACTOR_NS,
+    #     lifetime="detached",
+    # ).remote()
+    actor = ray.get_actor(name=ACTOR_NAME, namespace=ACTOR_NS)
+    print(actor)
+
+    # ray.kill(actor)
+
+    _ = actor.start.remote()
+
+
+@ray.remote
+class LogIndexerActor:
+    def __init__(self):
+        pass
+
+    def start(self):
+        log_path = Path("~/.orquestra/ray/session_latest/logs").expanduser()
+        print(f"Monitoring {log_path}")
+
+        worker_paths = list(log_path.glob("worker-*-*-*.???"))
+        monitor = FileMonitor(worker_paths)
+
+        round_counter = 0
+        while True:
+            print(f"Round {round_counter}")
+            for worker_path, new_content in monitor.find_changes():
+                print(f"Detected change in {worker_path}")
+                print(f"New content of length: {len(new_content)}")
+
+            print("\n" * 3)
+
+            time.sleep(4)
+            round_counter += 1
+
+
 if __name__ == "__main__":
-    main3()
+    main4()
