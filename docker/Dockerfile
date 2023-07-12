@@ -40,12 +40,15 @@ python -m pip install --no-cache-dir -U pip wheel
 python -m pip install --no-cache-dir "${SDK_REQUIREMENT}"
 EOF
 
-RUN echo "source ${VIRTUAL_ENV}/bin/activate" >> /etc/zapata/venv
+RUN <<EOF
+mkdir -p /opt/orquestra
+echo "source ${VIRTUAL_ENV}/bin/activate" >> /opt/orquestra/source-venv
+EOF
 
 # This is needed to ensure that the bashrc is sourced when running
 # non-interactive shells (e.g. when running a startup script)
 # https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html#Bash-Startup-Files
-ENV BASH_ENV=/etc/zapata/venv
+ENV BASH_ENV=/opt/orquestra/source-venv
 
 ENV RAY_STORAGE=/tmp
 # This environment variable configures the Ray runtime to download Git imports.
