@@ -5,6 +5,7 @@
 * Removed unsupported `WorkflowDef.local_run()` function
 
 🔥 *Features*
+* `sdk.mlflow.get_tracking_uri()` and `sdk.mlflow.get_tracking_token()` are now provided to give access to the MLFlow tracking information.
 
 🧟 *Deprecations*
 
