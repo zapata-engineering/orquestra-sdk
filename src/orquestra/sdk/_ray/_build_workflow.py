@@ -411,7 +411,7 @@ def make_ray_dag(
                 )
             if invocation.resources.gpu is not None:
                 # Fractional GPUs not supported currently
-                gpu = int(invocation.resources.gpu)
+                gpu = int(float(invocation.resources.gpu))
                 ray_options["num_gpus"] = gpu
 
         ray_result = _make_ray_dag_node(
