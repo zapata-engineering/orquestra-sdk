@@ -622,17 +622,18 @@ def list_workflow_runs(
 
     # Resolve config
     resolved_config: RuntimeConfig = _resolve_config(config)
+
+    # resolve runtime
+    runtime: RuntimeInterface = resolved_config._get_runtime(_project_dir)
+
     # If user wasn't specific with workspace and project, we might want to resolve it
-    if workspace is None and project is None:
+    if runtime.supports_workspaces and workspace is None and project is None:
         if _project := resolve_studio_project_ref(
             workspace,
             project,
         ):
             workspace = _project.workspace_id
             project = _project.project_id
-
-    # resolve runtime
-    runtime = resolved_config._get_runtime(_project_dir)
 
     # Grab the "workflow runs" from the runtime.
     # Note: WorkflowRun means something else in runtime land. To avoid overloading, this
