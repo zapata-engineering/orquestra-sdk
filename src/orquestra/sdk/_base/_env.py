@@ -27,22 +27,22 @@ Consumed by the Workflow SDK to set auth in remote contexts
 
 CURRENT_CLUSTER_ENV = "ORQ_CURRENT_CLUSTER"
 """
-Set by Studio to share cluster's URL
+Set by Studio and CE to share cluster's URL
 """
 
 CURRENT_WORKSPACE_ENV = "ORQ_CURRENT_WORKSPACE"
 """
-Set by Studio to share current workspace ID
+Set by Studio and CE to share current workspace ID
 """
 
 CURRENT_PROJECT_ENV = "ORQ_CURRENT_PROJECT"
 """
-Set by Studio to share current project ID
+Set by Studio and CE to share current project ID
 """
 
 CURRENT_USER_ENV = "ORQ_CURRENT_USER"
 """
-Set by Studio to share current project ID
+Set by Studio and CE to share current user
 """
 
 ORQ_VERBOSE = "ORQ_VERBOSE"

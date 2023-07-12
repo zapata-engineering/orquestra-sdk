@@ -42,6 +42,25 @@ def get_temp_artifacts_dir() -> Path:
 
 
 def get_current_user(config_name: t.Optional[str]) -> str:
+    """
+    Return current user that can be used to power MLFlow UI label
+
+    When used inside a studio or CE task, returns actively logged-in user.
+    When used locally, uses token stored inside config to figure out what username
+    was used during login.
+
+    Args:
+        config_name: config entry to use to deduce username. Ignored when used
+            in studio or inside task executed on CE runtime.
+
+    Raises:
+        orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was
+            found or when called locally without config parameter
+        orquestra.sdk.exceptions.RuntimeConfigError: when chosen config does not
+            contain token runtime option
+        orquestra.sdk.exceptions.InvalidTokenError: When token saved inside config
+            is not a valid JWT token
+    """
     if CURRENT_USER_ENV in os.environ:
         return os.environ[CURRENT_USER_ENV]
 
@@ -52,8 +71,8 @@ def get_current_user(config_name: t.Optional[str]) -> str:
         token = read_config(config_name).runtime_options["token"]
     except KeyError:
         raise RuntimeConfigError(
-            "Selected config does not have remote token configured"
-            ". Did you log in it?"
+            "Selected config does not have remote token configured. "
+            "Did you log in with it?"
         )
 
     return get_email_from_jwt_token(token)
