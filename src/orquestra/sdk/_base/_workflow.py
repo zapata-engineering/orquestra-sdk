@@ -115,6 +115,8 @@ class WorkflowDef(Generic[_R]):
                 has uncommitted changes.
             orquestra.sdk.exceptions.WorkflowSyntaxError: when there are no tasks
                 defined for this workflow.
+            orquestra.sdk.exceptions.InvalidTaskDefinitionError: when there is invalid
+                task used inside this workflow
         """
         from orquestra.sdk._base import _traversal
 

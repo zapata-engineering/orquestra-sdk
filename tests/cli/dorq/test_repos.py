@@ -1299,6 +1299,8 @@ class TestConfigRepo:
                 "test_config_no_runtime_options",
                 "test_config_qe",
                 "actual_name",
+                "proper_token",
+                "improper_token",
             }
 
         @staticmethod
