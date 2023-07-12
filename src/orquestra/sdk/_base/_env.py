@@ -40,6 +40,11 @@ CURRENT_PROJECT_ENV = "ORQ_CURRENT_PROJECT"
 Set by Studio to share current project ID
 """
 
+CURRENT_USER_ENV = "ORQ_CURRENT_USER"
+"""
+Set by Studio to share current project ID
+"""
+
 ORQ_VERBOSE = "ORQ_VERBOSE"
 """
 If set to a truthy value, enables printing debug information when running the ``orq``
