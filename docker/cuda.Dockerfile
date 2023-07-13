@@ -35,7 +35,6 @@ ENV CUQUANTUM_DIR=/opt/nvidia/cuquantum
 
 # get required tools to build qsim
 RUN <<EOF
-python -m pip install pybind11
 apt-get install --yes git
 export DEBIAN_FRONTEND=noninteractive
 apt-get install --yes cmake
@@ -58,6 +57,8 @@ RUN python -m venv "$VIRTUAL_ENV" --prompt system
 RUN <<EOF
 set -ex
 . "$VIRTUAL_ENV/bin/activate"
+
+python -m pip install pybind11
 
 git clone https://github.com/quantumlib/qsim.git
 cd qsim
