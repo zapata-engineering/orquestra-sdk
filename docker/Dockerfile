@@ -40,14 +40,10 @@ python -m pip install --no-cache-dir -U pip wheel
 python -m pip install --no-cache-dir "${SDK_REQUIREMENT}"
 EOF
 
-RUN <<EOF
-mkdir -p /opt/orquestra
-echo "source ${VIRTUAL_ENV}/bin/activate" >> /opt/orquestra/source-venv
-EOF
-
-# This is needed to ensure that the bashrc is sourced when running
+# This is needed to ensure that the virtual env is used when running
 # non-interactive shells (e.g. when running a startup script)
 # https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html#Bash-Startup-Files
+RUN echo "source ${VIRTUAL_ENV}/bin/activate" >> /opt/orquestra/source-venv
 ENV BASH_ENV=/opt/orquestra/source-venv
 
 ENV RAY_STORAGE=/tmp
