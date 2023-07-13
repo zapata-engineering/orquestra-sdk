@@ -296,13 +296,8 @@ class InProcessRuntime(abc.RuntimeInterface):
                 on this runtime.
         Returns:
                 A list of the workflow runs
-        Raises:
-            WorkspacesNotSupportedError: when a workspace or project is specified.
         """
-        if workspace or project:
-            raise exceptions.WorkspacesNotSupportedError(
-                "Filtering by workspace is not supported on In Process runtimes."
-            )
+
         now = _dates.now()
 
         if state is not None:
