@@ -39,26 +39,40 @@ python -m pip install pybind11
 apt-get install --yes git
 export DEBIAN_FRONTEND=noninteractive
 apt-get install --yes cmake
+
 rm -rf /var/lib/apt/lists/*
+
+useradd -ms /bin/bash -d /home/orquestra orquestra --uid 1000 --gid 100
+
+mkdir -p /opt/orquestra
+chown -R 1000:100 /opt/orquestra
 EOF
 
-RUN useradd -ms /bin/bash -d /home/orquestra orquestra --uid 1000 --gid 100
 USER 1000
 WORKDIR /home/orquestra
 
-ENV VIRTUAL_ENV=/home/orquestra/venv
-RUN python -m venv "$VIRTUAL_ENV"
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+ENV VIRTUAL_ENV=/opt/orquestra/venv
+RUN python -m venv "$VIRTUAL_ENV" --prompt system
 
 # install qsimcirq and orquestra SDK
 RUN <<EOF
+set -ex
+. "$VIRTUAL_ENV/bin/activate"
+
 git clone https://github.com/quantumlib/qsim.git
 cd qsim
 make clean
 make
+
 python -m pip install --no-cache-dir .
 python -m pip install --no-cache-dir "${SDK_REQUIREMENT}"
 EOF
+
+# This is needed to ensure that the virtual env is used when running
+# non-interactive shells (e.g. when running a startup script)
+# https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html#Bash-Startup-Files
+RUN echo "source ${VIRTUAL_ENV}/bin/activate" >> /opt/orquestra/source-venv
+ENV BASH_ENV=/opt/orquestra/source-venv
 
 ENV RAY_STORAGE=/tmp
 # This environment variable configures the Ray runtime to download Git imports.
