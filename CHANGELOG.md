@@ -3,6 +3,7 @@
 ## Unreleased
 🚨 *Breaking Changes*
 * Removed unsupported `WorkflowDef.local_run()` function
+* Bump Ray version to 2.5.1
 
 🔥 *Features*
 * Add `sdk.mlflow.get_current_user()` function to improve MLflow UI labeling
