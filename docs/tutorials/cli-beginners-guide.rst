@@ -115,3 +115,41 @@ You can access a list of previously submitted workflow runs using:
     orq wf list
 
 This will allow you to specify one or more configurations and display the IDs, statuses, and start times of workflow runs submitted using that configuration. This can be very helpful when trying to remember the Run ID of a workflow!
+
+Flags and Prompters
+===================
+
+Most ``orq`` commands use a prompter system to guide you through specifying the required details. For example, the ``orq wf results`` command, if called without any arguments, will prompt you for:
+
+#. The runtime configuration with which the workflow was run.
+#. The Workspace in which the workflow was run (if supported by the runtime).
+#. The Project in which the workflow was run (if supported by the runtime).
+#. The ID of the workflow the results of which are to be displayed or downloaded.
+
+Each of these stages will present a choice of the valid options. For example:
+
+.. code-block:: bash
+
+    $ orq wf results
+    [?] Runtime config: prod-d
+    > prod-d
+      moreau
+      ray
+
+    [?] Workspace: Demo  demo-7c49f2
+    > Demo                                  demo-7c49f2
+      Scratch                               scratch-6b38e1
+
+    [?] Projects - only one option is available. Proceed with Migration  migration? (Y/n): Y
+    [?] Workflow run ID: hello_orquestra_wf-7MJLb-r000
+    > hello_orquestra_wf-7MJLb-r000
+      test_demo_wf-1Ybre-r000
+      hello_orquestra_wf-uu8OM-r000
+      hello_orquestra_wf-76gJ8-r000
+      hello_orquestra_wf-BEERq-r000
+
+If you already have the information required at your disposal, you can bypass the promper system by specifying these details as flags and arguments to the initial command. For example, if we already knew the workflow run ID, we can specify this directly and skip the process of identifying it:
+
+.. code-block:: bash
+
+    $ orq wf results hello_orquestra_wf-7MJLb-r000
