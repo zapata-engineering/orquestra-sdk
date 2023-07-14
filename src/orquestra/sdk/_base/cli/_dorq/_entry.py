@@ -34,7 +34,7 @@ CONFIG_OPTION = cloup.option(
     "--config",
     required=False,
     help="""
-Name of the config used to submit workflow. Use 'in-process' for running workflow
+Name of the config used to submit workflow. Use 'in_process' for running workflow
 as local python process, 'ray' to run workflow in local ray cluster.
 To get config name for remote runtime, use orq login -s <uri> first
 """,
