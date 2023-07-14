@@ -14,6 +14,7 @@ from requests import Response, Session
 from orquestra import sdk
 from orquestra.sdk._base import _env
 from orquestra.sdk._base._services import ORQUESTRA_BASE_PATH
+from orquestra.sdk._base._spaces._api import make_workspace_url, make_workspace_zri
 from orquestra.sdk.schema.configs import ConfigName
 
 DEFAULT_TEMP_ARTIFACTS_DIR: Path = ORQUESTRA_BASE_PATH / "mlflow" / "artifacts"
@@ -25,22 +26,21 @@ def _is_executing_remoteley() -> bool:
     """
     Determine whether the code is being executed locally, or on a cluster/studio.
     """
-    # TODO: at present this uses the platform-specific environment variables, assuming
-    # that if all of them are set then we must be executing remotely. This assumption
-    # is not 100% - power users may set the envvars locally for fine-grained control.
-    # However, the platform will shortly be adding an envvar specifically to track
-    # whether we're executing remotely. Once that is done, this function should be
-    # updated to check that specifically. Tests should be added for this function at
-    # that time.
-    envvars = [
-        _env.PASSPORT_FILE_ENV,
-        _env.MLFLOW_CR_NAME,
-        _env.MLFLOW_PORT,
-        _env.MLFLOW_ARTIFACTS_DIR,
-    ]
-    if None in [os.getenv(envvar) for envvar in envvars]:
-        return False
-    return True
+    if os.getenv(_env.CURRENT_CLUSTER_ENV):
+        return True
+    else:
+        # TODO: https://zapatacomputing.atlassian.net/browse/ORQSDK-914 - this
+        # workaround exists to maintian compatibility with previous WDR versions.
+        # Future releases should remove this else block.
+        envvars = [
+            _env.PASSPORT_FILE_ENV,
+            _env.MLFLOW_CR_NAME,
+            _env.MLFLOW_PORT,
+            _env.MLFLOW_ARTIFACTS_DIR,
+        ]
+        if None not in [os.getenv(envvar) for envvar in envvars]:
+            return True
+    return False
 
 
 def _get_mlflow_cr_name_and_port() -> Tuple[str, str]:
@@ -91,27 +91,6 @@ def _read_passport_token() -> str:
             f"The '{_env.PASSPORT_FILE_ENV}' environment variable is not set."
         )
     return Path(passport_file_path).read_text()
-
-
-def _make_workspace_zri(workspace_id: str) -> str:
-    """
-    Make the workspace ZRI for the specified workspace ID.
-
-    Builds project ZRI from some hardcoded values and the workspaceId based on
-    https://zapatacomputing.atlassian.net/wiki/spaces/Platform/pages/512787664/2022-09-26+Zapata+Resource+Identifiers+ZRIs
-    """  # noqa: E501
-    default_tenant_id = 0
-    special_workspace = "system"
-    zri_type = "resource_group"
-
-    return f"zri:v1::{default_tenant_id}:{special_workspace}:{zri_type}:{workspace_id}"
-
-
-def _make_workspace_url(resource_catalog_url: str, workspace_zri: str) -> str:
-    """
-    Construct the URL for a workspace based on the resource catalog and workspace ZRI.
-    """
-    return f"{resource_catalog_url}/api/workspaces/{workspace_zri}"
 
 
 def _make_session(token) -> Session:
@@ -178,8 +157,8 @@ def get_tracking_uri(workspace_id: str, config_name: Optional[str] = None) -> st
             )
         token: str = _read_passport_token()
         session: Session = _make_session(token)
-        workspace_zri: str = _make_workspace_zri(workspace_id)
-        workspace_url: str = _make_workspace_url(RESOURCE_CATALOG_URI, workspace_zri)
+        workspace_zri: str = make_workspace_zri(workspace_id)
+        workspace_url: str = make_workspace_url(RESOURCE_CATALOG_URI, workspace_zri)
 
         resp: Response = session.get(workspace_url)
         resp.raise_for_status()

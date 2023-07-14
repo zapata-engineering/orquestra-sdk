@@ -139,33 +139,6 @@ class TestReadPassportToken:
         assert token == "<token sentinel>"
 
 
-class TestMakeWorkspaceZRI:
-    @staticmethod
-    def test_string_construction():
-        # When
-        zri = sdk.mlflow._connection_utils._make_workspace_zri(
-            "<workspace id sentinel>"
-        )
-
-        # Then
-        assert zri == "zri:v1::0:system:resource_group:<workspace id sentinel>"
-
-
-class TestMakeWorkspaceURL:
-    @staticmethod
-    def test_string_construction():
-        # When
-        url = sdk.mlflow._connection_utils._make_workspace_url(
-            "<resource catalog url sentinel>", "<workspace zri sentinel>"
-        )
-
-        # Then
-        assert (
-            url
-            == "<resource catalog url sentinel>/api/workspaces/<workspace zri sentinel>"
-        )
-
-
 class TestMakeSession:
     @staticmethod
     def test_happy_path(monkeypatch: MonkeyPatch):
