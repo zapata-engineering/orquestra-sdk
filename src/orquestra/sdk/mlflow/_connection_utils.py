@@ -5,8 +5,8 @@
 """Utilities for communicating with mlflow."""
 
 import os
-import warnings
 import typing as t
+import warnings
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -14,14 +14,13 @@ from requests import Response, Session
 
 from orquestra import sdk
 from orquestra.sdk._base import _env
-from orquestra.sdk._base._services import ORQUESTRA_BASE_PATH
-from orquestra.sdk._base._spaces._api import make_workspace_url, make_workspace_zri
-from orquestra.sdk.schema.configs import ConfigName
 from orquestra.sdk._base._config import read_config
 from orquestra.sdk._base._env import CURRENT_USER_ENV
 from orquestra.sdk._base._jwt import get_email_from_jwt_token
 from orquestra.sdk._base._services import ORQUESTRA_BASE_PATH
+from orquestra.sdk._base._spaces._api import make_workspace_url, make_workspace_zri
 from orquestra.sdk.exceptions import ConfigNameNotFoundError, RuntimeConfigError
+from orquestra.sdk.schema.configs import ConfigName
 
 DEFAULT_TEMP_ARTIFACTS_DIR: Path = ORQUESTRA_BASE_PATH / "mlflow" / "artifacts"
 RESOURCE_CATALOG_URI: str = "http://orquestra-resource-catalog.resource-catalog"
@@ -199,7 +198,8 @@ def get_tracking_uri(workspace_id: str, config_name: Optional[str] = None) -> st
 
 def get_tracking_token(config_name: Optional[str] = None) -> str:
     """
-    Get a token suitable for authorizing the MLflow client for accessing Orquestra's MLflow tracking server.
+    Get a token suitable for authorizing the MLflow client for accessing Orquestra's
+    MLflow tracking server.
 
     Args:
         config_name: The name of a stored configuration specifying the execution
@@ -262,5 +262,6 @@ def get_current_user(config_name: t.Optional[str]) -> str:
         )
 
     return get_email_from_jwt_token(token)
-  
+
+
 # endregion

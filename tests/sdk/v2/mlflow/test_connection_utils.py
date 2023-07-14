@@ -3,26 +3,24 @@
 ################################################################################
 
 import pathlib
+from contextlib import suppress as do_not_raise
 from typing import List
 from unittest.mock import Mock, create_autospec
 
 import pytest
 from pytest import MonkeyPatch
 from requests import Response, Session
-from contextlib import suppress as do_not_raise
-
-import pytest
 
 import orquestra.sdk.exceptions as exceptions
 from orquestra import sdk
 from orquestra.sdk._base._env import (
     CURRENT_CLUSTER_ENV,
+    CURRENT_USER_ENV,
     MLFLOW_ARTIFACTS_DIR,
     MLFLOW_CR_NAME,
     MLFLOW_PORT,
     PASSPORT_FILE_ENV,
 )
-from orquestra.sdk._base._env import CURRENT_USER_ENV
 
 
 class TestGetTempArtifactsDir:
@@ -83,7 +81,6 @@ class TestGetTempArtifactsDir:
 
             # Then
             assert dir.exists()
-
 
 
 @pytest.fixture
@@ -344,6 +341,7 @@ class TestGetTrackingToken:
                 "The config_name parameter is required for local runs." in e.exconly()
             )
 
+
 class TestGetCurrentUser:
     @pytest.mark.parametrize(
         "env_var, config_name, raises, expected_user",
@@ -377,4 +375,3 @@ class TestGetCurrentUser:
 
         with raises:
             assert expected_user == sdk.mlflow.get_current_user(config_name)
-
