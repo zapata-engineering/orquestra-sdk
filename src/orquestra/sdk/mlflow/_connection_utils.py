@@ -193,7 +193,7 @@ def get_tracking_uri(workspace_id: str, config_name: Optional[str] = None) -> st
 
 def get_tracking_token(config_name: Optional[str] = None) -> str:
     """
-    Get the MLFlow tracking token.
+    Get a token suitable for authorizing the MLflow client for accessing Orquestra's MLflow tracking server.
 
     Args:
         config_name: The name of a stored configuration specifying the execution
