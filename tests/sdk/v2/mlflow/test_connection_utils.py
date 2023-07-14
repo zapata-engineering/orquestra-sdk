@@ -9,7 +9,11 @@ from unittest.mock import Mock, create_autospec
 import pytest
 from pytest import MonkeyPatch
 from requests import Response, Session
+from contextlib import suppress as do_not_raise
 
+import pytest
+
+import orquestra.sdk.exceptions as exceptions
 from orquestra import sdk
 from orquestra.sdk._base._env import (
     CURRENT_CLUSTER_ENV,
@@ -18,6 +22,7 @@ from orquestra.sdk._base._env import (
     MLFLOW_PORT,
     PASSPORT_FILE_ENV,
 )
+from orquestra.sdk._base._env import CURRENT_USER_ENV
 
 
 class TestGetTempArtifactsDir:
@@ -78,6 +83,7 @@ class TestGetTempArtifactsDir:
 
             # Then
             assert dir.exists()
+
 
 
 @pytest.fixture
@@ -337,3 +343,38 @@ class TestGetTrackingToken:
             assert (
                 "The config_name parameter is required for local runs." in e.exconly()
             )
+
+class TestGetCurrentUser:
+    @pytest.mark.parametrize(
+        "env_var, config_name, raises, expected_user",
+        [
+            ("my_username", None, do_not_raise(), "my_username"),
+            ("my_username", "config", do_not_raise(), "my_username"),
+            # this email is encoded inside jwt token
+            (None, "proper_token", do_not_raise(), "my_hidden_email@lovely-email.com"),
+            (None, "local", pytest.raises(exceptions.RuntimeConfigError), None),
+            (None, "improper_token", pytest.raises(exceptions.InvalidTokenError), None),
+            (None, None, pytest.raises(exceptions.ConfigNameNotFoundError), None),
+            (
+                None,
+                "non_existing_config",
+                pytest.raises(exceptions.ConfigNameNotFoundError),
+                None,
+            ),
+        ],
+    )
+    def test_get_current_user(
+        self,
+        env_var,
+        config_name,
+        raises,
+        expected_user,
+        monkeypatch,
+        tmp_default_config_json,
+    ):
+        if env_var:
+            monkeypatch.setenv(CURRENT_USER_ENV, env_var)
+
+        with raises:
+            assert expected_user == sdk.mlflow.get_current_user(config_name)
+
