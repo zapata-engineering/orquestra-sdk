@@ -141,7 +141,7 @@ def get_tracking_uri(workspace_id: str, config_name: Optional[str] = None) -> st
     passing ``config_name``.
 
     Args:
-        workspace_id: ID of the workspace.
+        workspace_id: ID of the workspace. You can get it from Orquestra Portal UI.
         config_name: The name of a stored configuration specifying the execution
             environment. If this function is being executed remotely, this parameter
             can be omitted.
