@@ -153,7 +153,11 @@ def get_temp_artifacts_dir() -> Path:
 
 def get_tracking_uri(workspace_id: str, config_name: Optional[str] = None) -> str:
     """
-    Get the MLFlow tracking URI for the specified workspace.
+    Infer a URI for accessing an MLflow tracking server deployed within this workspace.
+    
+    When run within an Orquestra cluster, this function returns an "internal URI" that helps save cluster bandwidth. This works even without specifying ``config_name``.
+    
+    When run outside a cluster, this function returns an "external URI". Requires passing ``config_name``.
 
     Args:
         workspace_id: ID of the workspace.
