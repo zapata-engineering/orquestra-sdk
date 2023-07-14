@@ -133,10 +133,12 @@ def get_temp_artifacts_dir() -> Path:
 def get_tracking_uri(workspace_id: str, config_name: Optional[str] = None) -> str:
     """
     Infer a URI for accessing an MLflow tracking server deployed within this workspace.
-    
-    When run within an Orquestra cluster, this function returns an "internal URI" that helps save cluster bandwidth. This works even without specifying ``config_name``.
-    
-    When run outside a cluster, this function returns an "external URI". Requires passing ``config_name``.
+
+    When run within an Orquestra cluster, this function returns an "internal URI" that
+    helps save cluster bandwidth. This works even without specifying ``config_name``.
+
+    When run outside a cluster, this function returns an "external URI". Requires
+    passing ``config_name``.
 
     Args:
         workspace_id: ID of the workspace.
@@ -145,6 +147,8 @@ def get_tracking_uri(workspace_id: str, config_name: Optional[str] = None) -> st
             can be omitted.
 
     Raises:
+        EnvironmentError: When one or more environment variables required for
+            constructing the URI are not set.
         ValueError: When this function is called in a local execution context without
             specifying a valid non-local config name.
     """
@@ -155,15 +159,19 @@ def get_tracking_uri(workspace_id: str, config_name: Optional[str] = None) -> st
                 "The 'config_name' parameter is used only when executing locally, "
                 "and will be ignored."
             )
-        token: str = _read_passport_token()
-        session: Session = _make_session(token)
-        workspace_zri: str = make_workspace_zri(workspace_id)
-        workspace_url: str = make_workspace_url(RESOURCE_CATALOG_URI, workspace_zri)
 
-        resp: Response = session.get(workspace_url)
-        resp.raise_for_status()
-        namespace: str = resp.json()["namespace"]
-        mlflow_cr_name, mlflow_port = _get_mlflow_cr_name_and_port()
+        try:
+            token: str = _read_passport_token()
+            session: Session = _make_session(token)
+            workspace_zri: str = make_workspace_zri(workspace_id)
+            workspace_url: str = make_workspace_url(RESOURCE_CATALOG_URI, workspace_zri)
+
+            resp: Response = session.get(workspace_url)
+            resp.raise_for_status()
+            namespace: str = resp.json()["namespace"]
+            mlflow_cr_name, mlflow_port = _get_mlflow_cr_name_and_port()
+        except EnvironmentError as e:
+            raise e
 
         return f"http://{mlflow_cr_name}.{namespace}:{mlflow_port}"
     else:
