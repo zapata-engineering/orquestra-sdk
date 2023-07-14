@@ -11,4 +11,9 @@ from ._connection_utils import (
     get_tracking_uri,
 )
 
-__all__ = ["get_current_user", "get_temp_artifacts_dir", "get_tracking_uri", "get_tracking_token"]
+__all__ = [
+    "get_current_user",
+    "get_temp_artifacts_dir",
+    "get_tracking_uri",
+    "get_tracking_token",
+]
