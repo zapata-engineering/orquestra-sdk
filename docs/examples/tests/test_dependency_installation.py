@@ -4,14 +4,12 @@
 """
 Snippets and tests used in the "Dependency Installation" guide.
 """
-import io
 import typing as t
-from unittest.mock import mock_open
 
 import pytest
+
 from orquestra import sdk
 from orquestra.sdk.schema import ir
-from orquestra.sdk._base import _dsl
 
 
 class Snippets:
