@@ -36,7 +36,7 @@ The following sections give a more complete explanation of these importers and t
        * Best suited for referencing libraries available on `PyPI <https://pypi.org/>`_ like ``torch``.
      - * Can't be reliably used to refer to an unpublished, WIP projects.
 
-   * - ``GitHubImport``
+   * - ``GithubImport``
      - * Well-suited for unpublished, WIP projects.
        * More robust than ``InlineImport``---it's not prone to pickling errors.
        * Doesn't inflate the internal workflow definition representation.
@@ -47,10 +47,10 @@ The following sections give a more complete explanation of these importers and t
        * Doesn't work with tasks defined in a Jupyter notebook.
 
    * - ``GitImportWithAuth``
-     - * All pros of ``GitHubImport``.
+     - * All pros of ``GithubImport``.
        * Is likely to work with other git hostings than GitHub.
-       * Might support more complicated use cases than ``GitHubImport``.
-     - * All cons of ``GitHubImport``, apart from being GitHub-exclusive.
+       * Might support more complicated use cases than ``GithubImport``.
+     - * All cons of ``GithubImport``, apart from being GitHub-exclusive.
        * Verbose. It's easy to make a spelling mistake when specifying its parameters.
 
 
@@ -62,22 +62,24 @@ See also `Imports In Detail`_ for more info about each one.
 
 #. The defaults: ``InlineImport`` as the ``source_import`` and empty ``dependency_imports``.
 
-   .. code-block:: python
 
-      @sdk.task
-      def simple_task():
-          ...
+.. literalinclude:: ../examples/tests/test_dependency_installation.py
+    :start-after: def good_practice_defaults():
+    :end-before: </snippet>
+    :language: python
+    :dedent: 8
 
 
 #. ``PythonImports`` set as ``dependency_imports=[...]`` if your task depends on third-party libraries.
 
-   .. code-block:: python
+   .. literalinclude:: ../examples/tests/test_dependency_installation.py
+       :start-after: def good_practice_python_imports():
+       :end-before: </snippet>
+       :language: python
+       :dedent: 8
 
-      @sdk.task(dependency_imports=[sdk.PythonImports("torch~=2.0")])
-      def depends_on_torch():
-          ...
 
-#. ``GitHubImport`` as ``source_import=`` with no ``dependency_imports=`` and specify the project deps in a ``setup.cfg`` file.
+#. ``GithubImport`` as ``source_import=`` with no ``dependency_imports=`` and specify the project deps in a ``setup.cfg`` file.
    Better than (2) if you hit an edge case related to source code serialization, or when you prefer to have a clear place to specify your project dependencies, e.g. for better collaboration with other developers.
 
    .. code-block::
@@ -89,19 +91,12 @@ See also `Imports In Detail`_ for more info about each one.
           torch~=2.0
 
 
-   .. code-block:: python
+   .. literalinclude:: ../examples/tests/test_dependency_installation.py
+       :start-after: def good_practice_github_import():
+       :end-before: </snippet>
+       :language: python
+       :dedent: 8
 
-      # file: src/my_proj/tasks.py
-      @sdk.task(
-          source_import=sdk.GitHubImport(
-              "zapatacomputing/my_source_repo",
-              git_ref="feat/my-feature-branch",
-              username="my-github-username",
-              personal_access_token=sdk.Secret("my_pat"),
-          )
-      )
-      def depends_on_torch():
-          ...
 
 #. ``GitImportWithAuth`` as ``source_import=`` with no ``dependency_imports=`` and specify the project deps in a ``setup.cfg`` file.
    Safety hatch if (3) is not enough, e.g. if you need a different authorization mechanism than HTTPS.
@@ -116,17 +111,12 @@ See also `Imports In Detail`_ for more info about each one.
           torch~=2.0
 
 
-   .. code-block:: python
+   .. literalinclude:: ../examples/tests/test_dependency_installation.py
+       :start-after: def good_practice_git_import_with_auth():
+       :end-before: </snippet>
+       :language: python
+       :dedent: 8
 
-      # file: src/my_proj/tasks.py
-      @sdk.task(
-          source_import=sdk.GitImportWithImport(
-              repo_url="https://example.com/some_person/some_repo.git",
-              git_ref="feat/my-feature-branch",
-          )
-      )
-      def depends_on_torch():
-          ...
 
 Source vs Dependency
 ====================
@@ -152,7 +142,7 @@ Imports In Detail
 At workflow execution time, the function is deserialized and executed.
 
 .. literalinclude:: ../examples/tests/test_dependency_installation.py
-    :start-after: def simple_task_defaults():
+    :start-after: def good_practice_defaults():
     :end-before: </snippet>
     :language: python
     :dedent: 8
@@ -186,10 +176,10 @@ The required packages can be specified as arguments, or listed in a ``requiremen
     :dedent: 8
 
 
-``GitHubImport`` With A Private Repo
+``GithubImport`` With A Private Repo
 ------------------------------------
 
-The ``GitHubImport`` import supports using the ``sdk.Secret`` functionality to allow runtimes to import from private repos when using the Compute Engine runtime.
+The ``GithubImport`` import supports using the ``sdk.Secret`` functionality to allow runtimes to import from private repos when using the Compute Engine runtime.
 To use this functionality, the following steps must be carried out:
 
 #. Create a personal access token (PAT) in GitHub with permission to access the private repo.
@@ -213,7 +203,7 @@ The PAT is retrieved from Orquestra Portal at run time, and installation of the 
 
 
 
-``GitHubImport`` With A Public Repo
+``GithubImport`` With A Public Repo
 -----------------------------------
 
 If the repo is publicly available, the ``username`` and ``personal_access_token`` can be omitted.
@@ -233,14 +223,14 @@ The ``main`` branch will be used if you don't specify ``git_ref``.
 ---------------------
 
 For sources or dependencies stored in a git repo that is hosted somewhere other than GitHub, the ``GitImportWithAuth`` can be used.
-The `sdk.Secret` should be configured similarly as for ``GitHubImport``.
+The `sdk.Secret` should be configured similarly as for ``GithubImport``.
 
 
 .. literalinclude:: ../examples/tests/test_dependency_installation.py
-    :start-after: def git_import_with_auth():
-    :end-before: </snippet>
-    :language: python
-    :dedent: 8
+   :start-after: def good_practice_git_import_with_auth():
+   :end-before: </snippet>
+   :language: python
+   :dedent: 8
 
 
 As in the case of ``GithubImport``, the code imported from the repo is pip installed at execution time.

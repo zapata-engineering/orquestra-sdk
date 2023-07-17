@@ -13,14 +13,67 @@ from orquestra.sdk.schema import ir
 
 
 class Snippets:
+    # --- "Good Practice" section
     @staticmethod
-    def simple_task_defaults():
+    def good_practice_defaults():
         @sdk.task
         def simple_task():
             ...
 
         # </snippet>
         return simple_task
+
+    @staticmethod
+    def good_practice_python_imports():
+        @sdk.task(dependency_imports=[sdk.PythonImports("torch~=2.0")])
+        def depends_on_torch():
+            ...
+
+        # </snippet>
+        return depends_on_torch
+
+    @staticmethod
+    def good_practice_github_import():
+        # file: src/my_proj/tasks.py
+        @sdk.task(
+            source_import=sdk.GithubImport(
+                "zapatacomputing/my_source_repo",
+                git_ref="feat/my-feature-branch",
+                username="my-github-username",
+                personal_access_token=sdk.Secret("my_pat"),
+            )
+        )
+        def my_task():
+            ...
+
+        # </snippet>
+        return my_task
+
+    @staticmethod
+    def good_practice_git_import_with_auth():
+        from orquestra import sdk
+
+        @sdk.task(
+            source_import=sdk.GitImportWithAuth(
+                repo_url="https://example.com/some_person/some_repo.git",
+                git_ref="v1.0.1",
+                username="my-git-username",
+                auth_secret=sdk.Secret(
+                    "access-token",
+                    config_name="prod-d",
+                    # Orquestra Workspace where the secret is defined. You can read it
+                    # on Orquestra Portal website.
+                    workspace_id="ws1",
+                ),
+            )
+        )
+        def demo_task():
+            pass
+
+        # </snippet>
+        return demo_task
+
+    # --- "Imports In Detail" section ---
 
     @staticmethod
     def simple_task_explicit():
@@ -105,30 +158,6 @@ class Snippets:
         # </snippet>
         return demo_task
 
-    @staticmethod
-    def git_import_with_auth():
-        from orquestra import sdk
-
-        @sdk.task(
-            source_import=sdk.GitImportWithAuth(
-                repo_url="https://example.com/some_person/some_repo.git",
-                git_ref="v1.0.1",
-                username="my-git-username",
-                auth_secret=sdk.Secret(
-                    "access-token",
-                    config_name="prod-d",
-                    # Orquestra Workspace where the secret is defined. You can read it
-                    # on Orquestra Portal website.
-                    workspace_id="ws1",
-                ),
-            )
-        )
-        def demo_task():
-            pass
-
-        # </snippet>
-        return demo_task
-
 
 def _import_models(
     dsl_task,
@@ -157,18 +186,44 @@ def _import_models(
 @pytest.mark.slow
 class TestSnippets:
     @staticmethod
-    def test_simple_task_defaults():
+    def test_good_practice_defaults():
         """
         Expecting inline source import and no dependency imports.
         """
         # Given
-        task = Snippets.simple_task_defaults()
+        task = Snippets.good_practice_defaults()
 
         # When
         src_import, deps_imports = _import_models(task)
 
         # Then
         assert src_import.type == "INLINE_IMPORT"
+        assert deps_imports is None
+
+    @staticmethod
+    def test_good_practice_python_imports():
+        # Given
+        task = Snippets.good_practice_python_imports()
+
+        # When
+        src_import, deps_imports = _import_models(task)
+
+        # Then
+        assert src_import.type == "INLINE_IMPORT"
+        assert deps_imports is not None
+        assert len(deps_imports) == 1
+        assert deps_imports[0].type == "PYTHON_IMPORT"
+
+    @staticmethod
+    def test_good_practice_git_import_with_auth():
+        # Given
+        task = Snippets.good_practice_git_import_with_auth()
+
+        # When
+        src_import, deps_imports = _import_models(task)
+
+        # Then
+        assert src_import.type == "GIT_IMPORT"
         assert deps_imports is None
 
     @staticmethod
@@ -203,6 +258,7 @@ class TestSnippets:
             assert src_import.type == "INLINE_IMPORT"
             assert deps_imports is not None
             assert len(deps_imports) == 1
+            assert deps_imports[0].type == "PYTHON_IMPORT"
 
     @staticmethod
     def test_github_import_private_repo():
@@ -220,18 +276,6 @@ class TestSnippets:
     def test_github_import_public_repo():
         # Given
         task = Snippets.github_import_public_repo()
-
-        # When
-        src_import, deps_imports = _import_models(task)
-
-        # Then
-        assert src_import.type == "GIT_IMPORT"
-        assert deps_imports is None
-
-    @staticmethod
-    def test_git_import_with_aith():
-        # Given
-        task = Snippets.git_import_with_auth()
 
         # When
         src_import, deps_imports = _import_models(task)
