@@ -24,6 +24,7 @@
 
 📃 *Docs*
 * The help string for configs in the CLI now specifies the correct `in_process` rather than `in-process`.
+* The description for `config_name` in the `sdk.secrets.set` tutorial has been updated to be clearer.
 
 ## v0.52.0
 
