@@ -6,6 +6,7 @@
 * Bump Ray version to 2.5.1
 
 🔥 *Features*
+* `sdk.mlflow.get_tracking_uri()` and `sdk.mlflow.get_tracking_token()` are now provided to give access to the MLFlow tracking information.
 * Add `sdk.mlflow.get_current_user()` function to improve MLflow UI labeling
 
 🧟 *Deprecations*
