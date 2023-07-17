@@ -43,7 +43,7 @@ def _is_executing_remoteley() -> bool:
             _env.MLFLOW_PORT,
             _env.MLFLOW_ARTIFACTS_DIR,
         ]
-        if None not in [os.getenv(envvar) for envvar in envvars]:
+        if all(os.getenv(envvar) for envvar in envvars):
             return True
     return False
 
