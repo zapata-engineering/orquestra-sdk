@@ -77,6 +77,7 @@ class Snippets:
 
     @staticmethod
     def simple_task_explicit():
+        # The above is equivalent to:
         @sdk.task(source_import=sdk.InlineImport(), dependency_imports=[])
         def simple_task():
             ...
