@@ -1,11 +1,13 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
+from contextlib import nullcontext as do_not_raise
 from datetime import timedelta
 from pathlib import Path
 from unittest.mock import DEFAULT, MagicMock, Mock, call, create_autospec
 
 import pytest
 
+import orquestra.sdk as sdk
 from orquestra.sdk import Project, Workspace, exceptions
 from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _models
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
@@ -1293,3 +1295,113 @@ class TestListProjects:
         # When
         with pytest.raises(expected_exception):
             runtime.list_projects(workspace_id)
+
+
+@pytest.mark.parametrize(
+    "wf_resources, task_resources, expected_resources, raises, telltales",
+    [
+        (
+            sdk.Resources(cpu="2000m"),
+            sdk.Resources(cpu="1000m"),
+            _models.Resources(cpu="2000m"),
+            False,
+            (),
+        ),
+        (
+            sdk.Resources(cpu="2", gpu="1", memory="3000m"),
+            sdk.Resources(cpu="1000m"),
+            _models.Resources(cpu="2", gpu="1", memory="3000m"),
+            False,
+            (),
+        ),
+        (
+            sdk.Resources(cpu="2", gpu="1", memory="3000m"),
+            sdk.Resources(cpu="2", gpu="1", memory="3000m"),
+            _models.Resources(cpu="2", gpu="1", memory="3000m"),
+            False,
+            (),
+        ),
+        (
+            sdk.Resources(gpu="1"),
+            sdk.Resources(cpu="2", memory="2Gi"),  # enough resources for defaults
+            _models.Resources(gpu="1"),
+            False,
+            (),
+        ),
+        (
+            sdk.Resources(cpu="1000m"),
+            sdk.Resources(cpu="2000m"),
+            None,
+            True,
+            ("CPU",),
+        ),
+        (
+            sdk.Resources(cpu="1000m", memory="5000m", gpu="10"),
+            sdk.Resources(cpu="2000m"),
+            None,
+            True,
+            ("CPU",),
+        ),
+        (
+            sdk.Resources(nodes=3, cpu="3"),
+            sdk.Resources(cpu="3", memory="3Gi", gpu="10"),
+            None,
+            True,
+            ("Memory", "GPU"),
+        ),
+        (
+            sdk.Resources(nodes=2, cpu="3"),
+            sdk.Resources(cpu="3", memory="2Gi", gpu="10"),
+            None,
+            True,
+            ("GPU",),
+        ),
+        (
+            sdk.Resources(nodes=2, cpu="3"),
+            sdk.Resources(memory="3Gi"),
+            None,
+            True,
+            ("Memory",),
+        ),
+    ],
+)
+def test_ce_resources(
+    mocked_client: MagicMock,
+    runtime: _ce_runtime.CERuntime,
+    workflow_def_id: str,
+    workflow_run_id: str,
+    wf_resources,
+    task_resources,
+    expected_resources,
+    raises,
+    telltales,
+):
+    # given
+    @sdk.task(resources=task_resources)
+    def task():
+        return 21
+
+    @sdk.workflow(resources=wf_resources)
+    def wf():
+        return task()
+
+    mocked_client.create_workflow_def.return_value = workflow_def_id
+    mocked_client.create_workflow_run.return_value = workflow_run_id
+
+    if raises:
+        catcher = pytest.raises(exceptions.WorkflowSyntaxError)
+    else:
+        catcher = do_not_raise()
+
+    # When
+    with catcher as exec_info:
+        runtime.create_workflow_run(wf().model, None)
+
+    # Then
+    if raises:
+        assert all([telltale in str(exec_info) for telltale in telltales])
+    else:
+        mocked_client.create_workflow_run.assert_called_once_with(
+            workflow_def_id,
+            expected_resources,
+        )
