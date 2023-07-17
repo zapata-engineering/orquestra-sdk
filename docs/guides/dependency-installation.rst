@@ -62,12 +62,11 @@ See also `Imports In Detail`_ for more info about each one.
 
 #. The defaults: ``InlineImport`` as the ``source_import`` and empty ``dependency_imports``.
 
-
-.. literalinclude:: ../examples/tests/test_dependency_installation.py
-    :start-after: def good_practice_defaults():
-    :end-before: </snippet>
-    :language: python
-    :dedent: 8
+   .. literalinclude:: ../examples/tests/test_dependency_installation.py
+       :start-after: def good_practice_defaults():
+       :end-before: </snippet>
+       :language: python
+       :dedent: 8
 
 
 #. ``PythonImports`` set as ``dependency_imports=[...]`` if your task depends on third-party libraries.
