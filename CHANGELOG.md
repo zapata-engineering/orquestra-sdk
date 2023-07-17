@@ -25,6 +25,7 @@
 
 📃 *Docs*
 * The help string for configs in the CLI now specifies the correct `in_process` rather than `in-process`.
+* The workflow syntax guide now uses more precise language when discussing workflow run returns.
 
 ## v0.52.0
 
