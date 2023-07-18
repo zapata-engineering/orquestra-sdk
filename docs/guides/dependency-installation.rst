@@ -12,7 +12,7 @@ These are specified on a per-task basis by setting ``source_import=`` and ``depe
 Quick Reference
 ===============
 
-For convenience the table below summarizes which *Import* should be used in various contexts.
+For convenience, the table below summarizes which *Import* should be used in various contexts.
 The following sections give a more complete explanation of these importers and their usage.
 
 
@@ -20,10 +20,10 @@ The following sections give a more complete explanation of these importers and t
    :header-rows: 1
 
    * - Import
-     - Pros
-     - Cons
+     - For Use With
+     - Be Aware
 
-   * - Default (internally called ``InlineImport``). An analog of copying and pasting the task source code to move it to the server.
+   * - Default (internally called ``InlineImport``). An analogue of copying and pasting the task source code to move it to the server.
      - * Works out-of-the-box for simple cases.
        * Doesn't require running ``git commit && git push`` every time you edit your code.
        * Works with tasks defined in a Jupyter notebook.
@@ -31,15 +31,15 @@ The following sections give a more complete explanation of these importers and t
        * Uses pickle-like serialization under the hood. This might cause edge cases like invalid symbol resolution errors when the scenario is complicated.
        * Task source code is part of the internal workflow definition representation. It might cause hitting workflow size limits.
 
-   * - ``PythonImports``. An analog of running ``pip install ...`` on the server.
-     - * Works great as a ``dependency_imports=[...]`` addition to ``InlineImport`` to allow using 3rd-party libraries.
+   * - ``PythonImports``. An analogue of running ``pip install ...`` on the server.
+     - * Works well as a ``dependency_imports=[...]`` addition to ``InlineImport`` to allow using 3rd-party libraries.
        * Best suited for referencing libraries available on `PyPI <https://pypi.org/>`_ like ``torch``.
      - * Can't be reliably used to refer to an unpublished, WIP projects.
 
    * - ``GithubImport``
      - * Well-suited for unpublished, WIP projects.
        * More robust than ``InlineImport``---it's not prone to pickling errors.
-       * Doesn't inflate the internal workflow definition representation.
+       * Less likely to hit the workflow size limits than ``InlineImport``.
      - * Requires a setuptools-like package manifest (``pyproject.toml``/``setup.cfg``/``setup.py``, etc.)
        * Requires setting up an access token if the repo isn't public.
        * Requires committing and pushing code edits before they can be used in a remote workflow.
@@ -69,7 +69,7 @@ See also `Imports In Detail`_ for more info about each one.
        :dedent: 8
 
 
-#. ``PythonImports`` set as ``dependency_imports=[...]`` if your task depends on third-party libraries.
+#. If your task depends on third-party libraries: ``PythonImports`` set as ``dependency_imports=[...]``.
 
    .. literalinclude:: ../examples/tests/test_dependency_installation.py
        :start-after: def good_practice_python_imports():
@@ -155,7 +155,7 @@ At workflow execution time, the function is deserialized and executed.
 
 
 .. warning::
-   Don't hardcode any confidential information in the task code.
+   Do not hardcode any confidential information in the task code.
    ``InlineImport`` can leak it.
    Please use :doc:`Orquestra Secrets <../tutorials/secrets>` instead.
 
