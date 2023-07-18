@@ -25,6 +25,7 @@
 
 📃 *Docs*
 * The help string for configs in the CLI now specifies the correct `in_process` rather than `in-process`.
+* Updated "Dependency Installation" guide for current best practices.
 
 ## v0.52.0
 
