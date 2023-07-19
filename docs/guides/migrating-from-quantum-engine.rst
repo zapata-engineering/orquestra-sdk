@@ -10,11 +10,16 @@ This document covers the differences between QE and CE, and how to move to CE.
 Am I Affected?
 ==============
 
-If you're using ``orq login`` or ``orq login --qe``, you're on QE. Read this guide.
+If you're using ``orq login --qe``, you're on QE.
+Read this guide.
 
-If you're using ``orq login --ce``, you're already on CE. You can probably skip this doc.
+If you're using ``orq login`` or ``orq login --ce``, you're already on CE.
+You can probably skip this doc.
 
-Another way to check it is to run ``orq login --list``. If the "Runtime" column says "CE_REMOTE", you're all set.
+.. note:: ``orq login`` uses CE by default since the version 0.51.0.
+
+Another way to check it is to run ``orq login --list``.
+If the "Runtime" column says "CE_REMOTE", you're all set.
 
 
 Checklist
@@ -26,7 +31,7 @@ Short list:
 #. Run ``pip install -U orquestra-sdk`` frequently.
 #. Update your task and workflow "imports". More info below.
 #. Update your task and workflow "resources". More info below.
-#. When logging in, use ``orq login --ce``.
+#. When logging in, use ``orq login``.
 
 
 What's The Difference?
