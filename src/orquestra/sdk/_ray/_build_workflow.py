@@ -214,7 +214,14 @@ def _make_ray_dag_node(
                     deserialize=serialization,
                 )
 
-                wrapped_return = wrapped(*inner_args, **inner_kwargs)
+                try:
+                    wrapped_return = wrapped(*inner_args, **inner_kwargs)
+                except SystemError as e:
+                    raise EnvironmentError(
+                        "Could not deserialise data. "
+                        "This may be due to a python version mismatch. "
+                        "please try updating your python version."
+                    ) from e
 
                 packed: responses.WorkflowResult = (
                     serde.result_from_artifact(wrapped_return, ir.ArtifactFormat.AUTO)
