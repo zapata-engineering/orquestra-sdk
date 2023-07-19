@@ -1,8 +1,13 @@
+################################################################################
+# © Copyright 2023 Zapata Computing Inc.
+################################################################################
+
 import typing as t
 
 import pytest
 
 from orquestra.sdk._base._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
+from orquestra.sdk._base._spaces._api import make_workspace_url, make_workspace_zri
 from orquestra.sdk._base._spaces._resolver import resolve_studio_project_ref
 from orquestra.sdk._base._spaces._structs import ProjectRef
 
@@ -34,3 +39,28 @@ def test_studio_resolver(
         workspace_id=ws,
         project_id=proj,
     )
+
+
+class TestMakeWorkspaceZRI:
+    @staticmethod
+    def test_string_construction():
+        # When
+        zri = make_workspace_zri("<workspace id sentinel>")
+
+        # Then
+        assert zri == "zri:v1::0:system:resource_group:<workspace id sentinel>"
+
+
+class TestMakeWorkspaceURL:
+    @staticmethod
+    def test_string_construction():
+        # When
+        url = make_workspace_url(
+            "<resource catalog url sentinel>", "<workspace zri sentinel>"
+        )
+
+        # Then
+        assert (
+            url
+            == "<resource catalog url sentinel>/api/workspaces/<workspace zri sentinel>"
+        )

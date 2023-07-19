@@ -1,6 +1,11 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
+
+"""
+Global constants used to access environment variables.
+"""
+
 import os
 import typing as t
 
@@ -93,6 +98,24 @@ Example:
     ORQ_RAY_SET_CUSTOM_IMAGE_RESOURCES=1
 """
 
+
+# --------------------------------- MLFlow -----------------------------------
+
+MLFLOW_CR_NAME = "ORQ_MLFLOW_CR_NAME"
+"""
+Used to set the MLFlow CR name.
+"""
+
+MLFLOW_PORT = "ORQ_MLFLOW_PORT"
+"""
+Used to set the port for communicating with MLFlow.
+"""
+
+MLFLOW_ARTIFACTS_DIR = "ORQ_MLFLOW_ARTIFACTS_DIR"
+"""
+Used to set the temporary directory to which mlflow artifacts can be written before
+uploading.
+"""
 
 # ------------------------------- utilities ----------------------------------
 

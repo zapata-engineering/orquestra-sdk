@@ -64,7 +64,7 @@ Configurations for interaction with remote runtime are created by using the :ref
 
 Configs for remote clusters will get auto-named based on URI.
 Local ray runtime has hardcoded config name, either "local" or "ray".
-In-process runtime has also hardcoded config name, "in-process"
+In-process runtime has also hardcoded config name, "in_process"
 
 Saved configs can be listed with ``list_configs()`` and retrieved with ``load()``:
 
