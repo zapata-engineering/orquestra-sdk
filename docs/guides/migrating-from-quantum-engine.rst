@@ -294,5 +294,5 @@ To better allocate compute resources to run your tasks, please refer to :doc:`Re
 
 
 .. note::
-   It's a complex topic, and it's tricky to provide a generic migration guide ahead of time.
+   This is a complex topic, and it's tricky to provide a generic migration guide ahead of time.
    Please reach out to the SDK or Platform teams if you need help.
