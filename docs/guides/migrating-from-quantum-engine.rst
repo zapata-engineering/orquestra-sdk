@@ -66,7 +66,12 @@ What's The Difference?
 Python Version
 ==============
 
-TODO
+With QE, it was common to use Python 3.8.
+It was also possible to override the Python version by providing a custom image.
+
+CE requires using Python 3.9.
+Custom task images need to come with a Python version that matches the Ray head node, so changing the Python version isn't supported yet.
+
 
 Imports That Still Work
 =======================
