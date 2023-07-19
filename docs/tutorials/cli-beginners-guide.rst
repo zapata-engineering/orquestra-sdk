@@ -15,7 +15,8 @@ The Beginner's Guide to the Orquestra CLI
 Creating a Workflow Definition
 ==============================
 
-In order to run a workflow, it must be defined in a python file. For this guide, we'll assume that we have created a file ``workflow_defs.py`` with the following contents:
+In order to run a workflow, it must be defined in a python file.
+For this guide, we'll assume that we have created a file ``workflow_defs.py`` with the following contents:
 
 .. literalinclude:: ../examples/workflow_defs.py
     :start-after: >> Start
@@ -30,7 +31,8 @@ Running the Workflow locally
 Starting the Ray Service
 ------------------------
 
-Orquestra provides utilities to run workflows in a local Ray session. To start the Ray service, use:
+Orquestra provides utilities to run workflows in a local Ray session.
+To start the Ray service, use:
 
 .. code-block:: bash
 
@@ -63,12 +65,14 @@ Take not of the run ID that is displayed - we will need this to interact with th
 
 .. note::
 
-    ``-c local`` tells orquestra that we want to submit the workflow to run on the local Ray runtime. If this argument is omitted, the CLI will ask you to choose from a list of available configurations.
+    ``-c local`` tells orquestra that we want to submit the workflow to run on the local Ray runtime.
+    If this argument is omitted, the CLI will ask you to choose from a list of available configurations.
 
 Recovering Workflow Results
 ---------------------------
 
-Workflow results are accessible via the ``orq wf results`` command. This takes the workflow run ID as its argument, and can either display a preview of the workflow run outputs in the terminal, or write them to files.
+Workflow results are accessible via the ``orq wf results`` command.
+This takes the workflow run ID as its argument, and can either display a preview of the workflow run outputs in the terminal, or write them to files.
 
 .. code-block:: bash
 
@@ -95,7 +99,8 @@ The second writes each output to a file:
 Running the Workflow Remotely
 =============================
 
-By design, running a workflow remotely requires very little to change in comparison to running locally. The primary difference is that rather than starting a local service, you must be logged in to a cluster.
+By design, running a workflow remotely requires very little to change in comparison to running locally.
+The primary difference is that rather than starting a local service, you must be logged in to a cluster.
 
 Access to clusters is managed via the ``orq login`` command:
 
@@ -103,7 +108,9 @@ Access to clusters is managed via the ``orq login`` command:
 
     orq login -s <cluster URL> [<runtime>]
 
-Where ``SERVER URI`` is the URI of the server to log into. This will open a page in your browser where you can log in with your Orquestra credentials. For more information on handling remote authorisations, see :doc:`Remote Workflows<remote>`.
+Where ``SERVER URI`` is the URI of the server to log into.
+This will open a page in your browser where you can log in with your Orquestra credentials.
+For more information on handling remote authorisations, see :doc:`Remote Workflows<remote>`.
 
 Managing Workflow Runs
 ======================
@@ -114,12 +121,14 @@ You can access a list of previously submitted workflow runs using:
 
     orq wf list
 
-This will allow you to specify one or more configurations and display the IDs, statuses, and start times of workflow runs submitted using that configuration. This can be very helpful when trying to remember the Run ID of a workflow!
+This will allow you to specify one or more configurations and display the IDs, statuses, and start times of workflow runs submitted using that configuration.
+This can be very helpful when trying to remember the Run ID of a workflow!
 
 Flags and Prompters
 ===================
 
-Most ``orq`` commands use a prompter system to guide you through specifying the required details. For example, the ``orq wf results`` command, if called without any arguments, will prompt you for:
+Most ``orq`` commands use a prompter system to guide you through specifying the required details.
+For example, the ``orq wf results`` command, if called without any arguments, will prompt you for:
 
 #. The runtime configuration with which the workflow was run.
 #. The Workspace in which the workflow was run (if supported by the runtime).
@@ -148,7 +157,8 @@ Each of these stages will present a choice of the valid options. For example:
       hello_orquestra_wf-76gJ8-r000
       hello_orquestra_wf-BEERq-r000
 
-If you already have the information required at your disposal, you can bypass the promper system by specifying these details as flags and arguments to the initial command. For example, if we already knew the workflow run ID, we can specify this directly and skip the process of identifying it:
+If you already have the information required at your disposal, you can bypass the promper system by specifying these details as flags and arguments to the initial command.
+For example, if we already knew the workflow run ID, we can specify this directly and skip the process of identifying it:
 
 .. code-block:: bash
 
