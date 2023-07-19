@@ -58,6 +58,10 @@ What's The Difference?
    * - Loading tasks from a git repo
      - Works with bare scripts and setuptools-like packages.
      - Requires a setuptools-like package manifest (``pyproject.toml``/``setup.cfg``/``setup.py``, etc).
+   * - Compute resources
+     - Each task has dedicated compute resources.
+       Resource request for one task doesn't affect the execution of other tasks (up to the cluster's limit).
+     - Compute resources are first assigned to the workflow, and then distributed across tasks.
 
 Python Version
 ==============
@@ -276,4 +280,14 @@ There's a :doc:`detailed guide on this topic<./custom-images>`, but the images n
 Resource Requests
 =================
 
-TODO
+In CE there's a difference between *task resources* and *workflow resources*.
+If you don't change the resource requests, your workflow resources will be inferred to fit the largest task resource request.
+The largest task (by resources request) will take all the available resources, preventing other tasks from running in parallel.
+**The consequence is**: the output values will be correct, but the overall workflow execution might take longer than on QE.
+
+To better allocate compute resources to run your tasks, please refer to :doc:`Resource Management guide<resource-management>`.
+
+
+.. note::
+   It's a complex topic, and it's tricky to provide a generic migration guide ahead of time.
+   Please reach out to the SDK or Platform teams if you need help.
