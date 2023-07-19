@@ -146,7 +146,6 @@ def _import_models(
     return src_import, deps_imports
 
 
-@pytest.mark.slow
 class TestSnippets:
     @staticmethod
     @pytest.mark.parametrize("task", [Snippets.defaults(), Snippets.inline_import()])
