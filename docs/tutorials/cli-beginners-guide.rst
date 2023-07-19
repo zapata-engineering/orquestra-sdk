@@ -93,7 +93,7 @@ The second writes each output to a file:
     Artifact saved at [WF RUN ID]/wf_results/0.json as a text json file.
 
 Running the Workflow Remotely
-============================
+=============================
 
 By design, running a workflow remotely requires very little to change in comparison to running locally. The primary difference is that rather than starting a local service, you must be logged in to a cluster.
 
