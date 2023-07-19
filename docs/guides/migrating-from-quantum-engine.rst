@@ -58,6 +58,19 @@ What's The Difference?
    * - Loading tasks from a git repo
      - Works with bare scripts and setuptools-like packages.
      - Requires a setuptools-like package manifest (``pyproject.toml``/``setup.cfg``/``setup.py``, etc).
+   * - Compute resources
+     - Each task has dedicated compute resources.
+       Resource request for one task doesn't affect the execution of other tasks (up to the cluster's limit).
+     - Compute resources are first assigned to the workflow, and then distributed across tasks.
+
+Python Version
+==============
+
+With QE, it was common to use Python 3.8.
+It was also possible to override the Python version by providing a custom image.
+
+CE requires using Python 3.9.
+Custom task images need to come with a Python version that matches the Ray head node, so changing the Python version isn't supported yet.
 
 
 Imports That Still Work
@@ -267,3 +280,19 @@ GPU And Custom Images
 
 Please reach out to the SDK team if you need to use custom images on CE.
 There's a :doc:`detailed guide on this topic<./custom-images>`, but the images need to be rebuilt with every Orquestra release.
+
+
+Resource Requests
+=================
+
+In CE there's a difference between *task resources* and *workflow resources*.
+If you don't change the resource requests, your workflow resources will be inferred to fit the largest task resource request.
+The largest task (by resources request) will take all the available resources, preventing other tasks from running in parallel.
+**The consequence is**: the output values will be correct, but the overall workflow execution might take longer than on QE.
+
+To better allocate compute resources to run your tasks, please refer to :doc:`Resource Management guide<resource-management>`.
+
+
+.. note::
+   This is a complex topic, and it's tricky to provide a generic migration guide ahead of time.
+   Please reach out to the SDK or Platform teams if you need help.
