@@ -6,6 +6,7 @@
 * Bump Ray version to 2.5.1
 
 🔥 *Features*
+* `sdk.mlflow.get_tracking_uri()` and `sdk.mlflow.get_tracking_token()` are now provided to give access to the MLFlow tracking information.
 * Add `sdk.mlflow.get_current_user()` function to improve MLflow UI labeling
 * Verify if workflow resources are sufficient to run all tasks at submission time
 
@@ -25,6 +26,8 @@
 
 📃 *Docs*
 * The help string for configs in the CLI now specifies the correct `in_process` rather than `in-process`.
+* The workflow syntax guide now uses more precise language when discussing workflow run returns.
+* Updated "Dependency Installation" guide for current best practices.
 
 ## v0.52.0
 
