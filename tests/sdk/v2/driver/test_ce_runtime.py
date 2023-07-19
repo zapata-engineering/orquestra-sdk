@@ -3,6 +3,7 @@
 from contextlib import nullcontext as do_not_raise
 from datetime import timedelta
 from pathlib import Path
+from typing import ContextManager
 from unittest.mock import DEFAULT, MagicMock, Mock, call, create_autospec
 
 import pytest
@@ -10,14 +11,12 @@ import pytest
 import orquestra.sdk as sdk
 from orquestra.sdk import Project, Workspace, exceptions
 from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _models
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing._example_wfs import (
     my_workflow,
     workflow_parametrised_with_resources,
     workflow_with_different_resources,
 )
-from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, JSONResult
 from orquestra.sdk.schema.workflow_run import (
@@ -1388,13 +1387,14 @@ def test_ce_resources(
     mocked_client.create_workflow_def.return_value = workflow_def_id
     mocked_client.create_workflow_run.return_value = workflow_run_id
 
+    context: ContextManager
     if raises:
-        catcher = pytest.raises(exceptions.WorkflowSyntaxError)
+        context = pytest.raises(exceptions.WorkflowSyntaxError)
     else:
-        catcher = do_not_raise()
+        context = do_not_raise()
 
     # When
-    with catcher as exec_info:
+    with context as exec_info:
         runtime.create_workflow_run(wf().model, None)
 
     # Then

@@ -59,19 +59,19 @@ def _verify_workflow_resources(
     # https://github.com/zapatacomputing/workflow-driver/blob/1d4d0552e44cfd11238b823cbf66a33d4d2e8593/pkg/config/config.go#L22  # noqa
     default_workflow_cpu = "2"
     default_workflow_memory = "2Gi"
-    insufficient_resources = set()
+    insufficient_resources = []
     if max_resources.cpu and parse_quantity(max_resources.cpu) > parse_quantity(
         wf_resources.cpu or default_workflow_cpu
     ):
-        insufficient_resources.add("CPU")
+        insufficient_resources.append("CPU")
 
     if max_resources.memory and parse_quantity(max_resources.memory) > parse_quantity(
         wf_resources.memory or default_workflow_memory
     ):
-        insufficient_resources.add("Memory")
+        insufficient_resources.append("Memory")
 
     if max_resources.gpu and int(max_resources.gpu) > int(wf_resources.gpu or "0"):
-        insufficient_resources.add("GPU")
+        insufficient_resources.append("GPU")
 
     if insufficient_resources:
         raise exceptions.WorkflowSyntaxError(

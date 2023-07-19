@@ -7,6 +7,7 @@
 
 🔥 *Features*
 * Add `sdk.mlflow.get_current_user()` function to improve MLflow UI labeling
+* Verify if workflow resources are sufficient to run all tasks at submission time
 
 🧟 *Deprecations*
 
