@@ -59,6 +59,10 @@ What's The Difference?
      - Works with bare scripts and setuptools-like packages.
      - Requires a setuptools-like package manifest (``pyproject.toml``/``setup.cfg``/``setup.py``, etc).
 
+Python Version
+==============
+
+TODO
 
 Imports That Still Work
 =======================
@@ -267,3 +271,9 @@ GPU And Custom Images
 
 Please reach out to the SDK team if you need to use custom images on CE.
 There's a :doc:`detailed guide on this topic<./custom-images>`, but the images need to be rebuilt with every Orquestra release.
+
+
+Resource Requests
+=================
+
+TODO
