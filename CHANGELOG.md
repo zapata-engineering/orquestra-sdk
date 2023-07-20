@@ -1,6 +1,26 @@
 # Changelog
 
 ## Unreleased
+
+🚨 *Breaking Changes*
+
+🔥 *Features*
+
+🧟 *Deprecations*
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+
+##  v0.53.0
+
 🚨 *Breaking Changes*
 * Removed unsupported `WorkflowDef.local_run()` function
 * Bump Ray version to 2.5.1
@@ -10,10 +30,6 @@
 * Add `sdk.mlflow.get_current_user()` function to improve MLflow UI labeling
 * Verify if workflow resources are sufficient to run all tasks at submission time
 
-🧟 *Deprecations*
-
-👩‍🔬 *Experimental*
-
 🐛 *Bug Fixes*
 * Install Python modules in a venv using a non-root user to fix errors in custom Docker images.
 * Fix listing workflows when using Ray if `ORQ_CURRENT_*` environment variables are set.
@@ -21,8 +37,6 @@
 💅 *Improvements*
 * `sdk.current_run_ids()` now returns a `NamedTuple` called `CurrentRunIDs` to help with typing.
 * Tasks that request resources that are incompatible with Ray will throw an error at submission time.
-
-🥷 *Internal*
 
 📃 *Docs*
 * The help string for configs in the CLI now specifies the correct `in_process` rather than `in-process`.
