@@ -43,12 +43,6 @@ EOF
 # Prefer to use pip, python, and other binaries from the virtual env.
 ENV PATH="/opt/orquestra/venv/bin:$PATH"
 
-# This is needed to ensure that the virtual env is used when running
-# non-interactive shells (e.g. when running a startup script)
-# https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html#Bash-Startup-Files
-RUN echo "source ${VIRTUAL_ENV}/bin/activate" >> /opt/orquestra/source-venv
-ENV BASH_ENV=/opt/orquestra/source-venv
-
 ENV RAY_STORAGE=/tmp
 # This environment variable configures the Ray runtime to download Git imports.
 # Without this set, Git imports are ignored
