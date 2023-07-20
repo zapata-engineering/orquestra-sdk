@@ -40,10 +40,8 @@ python -m pip install --no-cache-dir -U pip wheel
 python -m pip install --no-cache-dir "${SDK_REQUIREMENT}"
 EOF
 
-# We installed some executables (like 'ray') in a virtual environment. We need to expose them when 
-# running interactive shell.
-# https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html#Bash-Startup-Files
-RUN echo "source ${VIRTUAL_ENV}/bin/activate" >> /home/orquestra/.bashrc
+# Prefer to use pip, python, and other binaries from the virtual env.
+ENV PATH="/opt/orquestra/venv/bin:$PATH"
 
 # This is needed to ensure that the virtual env is used when running
 # non-interactive shells (e.g. when running a startup script)
