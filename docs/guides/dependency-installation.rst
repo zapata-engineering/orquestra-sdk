@@ -178,7 +178,12 @@ The required packages can be specified as arguments, or listed in a ``requiremen
 ``GithubImport`` With A Private Repo
 ------------------------------------
 
-The ``GithubImport`` import supports using the ``sdk.Secret`` functionality to allow runtimes to import from private repos when using the Compute Engine runtime.
+``GithubImport`` instructs the remote runtime to load code from a git repo on GitHub.
+
+Access Token
+~~~~~~~~~~~~
+
+Accessing private git repos requires setting up an access token.
 To use this functionality, the following steps must be carried out:
 
 #. Create a personal access token (PAT) in GitHub with permission to access the private repo.
@@ -186,11 +191,28 @@ To use this functionality, the following steps must be carried out:
 #. Create a new secret in Orquestra Portal containing the PAT (open ``<cluster>.orquestra.io`` in your web browser).
    For this example we have named our secret "my_pat".
    Alternatively, you can also create the secret :doc:`using Python <../tutorials/secrets>`.
-#. Use the name of the Orquestra Portal secret to specify the ``personal_access_token`` argument for your import and use the ``username`` argument to supply your username.
+#. Use the name of the Orquestra Portal secret to specify the ``personal_access_token`` argument for your import and use the ``username`` argument to supply your GitHub account username.
 
-The contents of the repo are pip-installed at workflow execution time.
+
+Packaging
+~~~~~~~~~
 
 The following example shows a source import from a (fictional) repo located at ``https://github.com/zapatacomputing/my_source_repo``.
+The remote runtime clones the repo and pip-installs the project when the workflow is being executed.
+
+.. warning::
+   Every Python file you want to use with ``GithubImport`` needs to be part of a package.
+   Just committing the file to a git repo is not enough!
+   Visit `Setuptools user guide <https://setuptools.pypa.io/en/latest/userguide/quickstart.html>`_ for more information about setting up the package manifest for your repo.
+
+.. code-block::
+
+   # file: setup.cfg
+   [options]
+   install_requires =
+       orquestra-sdk>=0.51.0
+       torch~=2.0
+
 
 .. literalinclude:: ../examples/tests/test_dependency_installation.py
     :start-after: def github_import_private_repo():
@@ -222,7 +244,7 @@ The ``main`` branch will be used if you don't specify ``git_ref``.
 ---------------------
 
 For sources or dependencies stored in a git repo that is hosted somewhere other than GitHub, the ``GitImportWithAuth`` can be used.
-The `sdk.Secret` should be configured similarly as for ``GithubImport``.
+The ``sdk.Secret`` should be configured similarly as for ``GithubImport``.
 
 
 .. literalinclude:: ../examples/tests/test_dependency_installation.py

@@ -255,7 +255,7 @@ def stop(wf_run_id: t.Optional[str], config: t.Optional[str], force: t.Optional[
 
 
 @workflow.command()
-@cloup.option("-c", "--config", type=str, multiple=True)
+@CONFIG_OPTION
 @cloup.option(
     "-i",
     "--interactive",
@@ -274,7 +274,6 @@ def stop(wf_run_id: t.Optional[str], config: t.Optional[str], force: t.Optional[
     help="State of workflow runs to display. May be specified multiple times.",
 )
 @WORKSPACE_OPTION
-@PROJECT_OPTION
 def list(
     config: t.Optional[str],
     interactive: t.Optional[bool] = False,
@@ -282,7 +281,6 @@ def list(
     max_age: t.Optional[str] = None,
     state: t.Optional[t.List[str]] = None,
     workspace_id: t.Optional[str] = None,
-    project_id: t.Optional[str] = None,
 ):
     """
     Lists the available workflows
@@ -291,9 +289,7 @@ def list(
     from ._workflow._list import Action
 
     action = Action()
-    action.on_cmd_call(
-        config, limit, max_age, state, workspace_id, project_id, interactive
-    )
+    action.on_cmd_call(config, limit, max_age, state, workspace_id, interactive)
 
 
 # ----------- 'orq task' commands ----------
@@ -461,10 +457,10 @@ server_config_group = cloup.OptionGroup(
 )
 @cloup.option_group(
     "Remote Environment",
+    cloup.option("--qe", is_flag=True, default=False, help="Log in to Quantum Engine."),
     cloup.option(
-        "--qe", is_flag=True, default=False, help="Log in to Quantum Engine. (Default)"
+        "--ce", is_flag=True, default=False, help="Log in to Compute Engine. (Default)"
     ),
-    cloup.option("--ce", is_flag=True, default=False, help="Log in to Compute Engine."),
     constraint=cloup.constraints.mutually_exclusive,
 )
 def auth(config: str, server: str, token: t.Optional[str], ce: bool, qe: bool):

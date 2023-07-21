@@ -14,3 +14,4 @@ Guides
     custom-images
     version-compatibility
     mlflow
+    migrating-from-quantum-engine
