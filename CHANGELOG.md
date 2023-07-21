@@ -5,6 +5,7 @@
 🚨 *Breaking Changes*
 
 🔥 *Features*
+* `orq --version` or `orq -v` will now show the current SDK version.
 
 🧟 *Deprecations*
 
@@ -37,7 +38,6 @@
 💅 *Improvements*
 * `sdk.current_run_ids()` now returns a `NamedTuple` called `CurrentRunIDs` to help with typing.
 * Tasks that request resources that are incompatible with Ray will throw an error at submission time.
-* `orq --version` or `orq -v` will now show the current SDK version.
 
 📃 *Docs*
 * The help string for configs in the CLI now specifies the correct `in_process` rather than `in-process`.
