@@ -468,10 +468,10 @@ server_config_group = cloup.OptionGroup(
 )
 @cloup.option_group(
     "Remote Environment",
+    cloup.option("--qe", is_flag=True, default=False, help="Log in to Quantum Engine."),
     cloup.option(
-        "--qe", is_flag=True, default=False, help="Log in to Quantum Engine. (Default)"
+        "--ce", is_flag=True, default=False, help="Log in to Compute Engine. (Default)"
     ),
-    cloup.option("--ce", is_flag=True, default=False, help="Log in to Compute Engine."),
     constraint=cloup.constraints.mutually_exclusive,
 )
 def auth(config: str, server: str, token: t.Optional[str], ce: bool, qe: bool):

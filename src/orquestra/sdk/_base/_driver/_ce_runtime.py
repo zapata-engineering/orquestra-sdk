@@ -52,6 +52,37 @@ def _get_max_resources(workflow_def: WorkflowDef) -> _models.Resources:
     return _models.Resources(cpu=max_cpu, memory=max_memory, gpu=max_gpu, nodes=None)
 
 
+def _verify_workflow_resources(
+    wf_resources: _models.Resources, max_resources: _models.Resources
+):
+    # Default workflow CPU and memory defined on platform side, if Nones are passed
+    # https://github.com/zapatacomputing/workflow-driver/blob/1d4d0552e44cfd11238b823cbf66a33d4d2e8593/pkg/config/config.go#L22  # noqa
+    default_workflow_cpu = "2"
+    default_workflow_memory = "2Gi"
+    insufficient_resources = []
+    if max_resources.cpu and parse_quantity(max_resources.cpu) > parse_quantity(
+        wf_resources.cpu or default_workflow_cpu
+    ):
+        insufficient_resources.append("CPU")
+
+    if max_resources.memory and parse_quantity(max_resources.memory) > parse_quantity(
+        wf_resources.memory or default_workflow_memory
+    ):
+        insufficient_resources.append("Memory")
+
+    if max_resources.gpu and int(max_resources.gpu) > int(wf_resources.gpu or "0"):
+        insufficient_resources.append("GPU")
+
+    if insufficient_resources:
+        raise exceptions.WorkflowSyntaxError(
+            "Following workflow resources are "
+            "insufficient to schedule all tasks: "
+            f"{insufficient_resources}."
+            "Please increase those resources in "
+            "workflow resources and try again."
+        )
+
+
 class CERuntime(RuntimeInterface):
     """
     A runtime for communicating with the Compute Engine API endpoints
@@ -100,6 +131,8 @@ class CERuntime(RuntimeInterface):
             the workflow run ID
         """
 
+        max_invocation_resources = _get_max_resources(workflow_def)
+
         if workflow_def.resources is not None:
             resources = _models.Resources(
                 cpu=workflow_def.resources.cpu,
@@ -108,7 +141,9 @@ class CERuntime(RuntimeInterface):
                 nodes=workflow_def.resources.nodes,
             )
         else:
-            resources = _get_max_resources(workflow_def)
+            resources = max_invocation_resources
+
+        _verify_workflow_resources(resources, max_invocation_resources)
 
         try:
             workflow_def_id = self._client.create_workflow_def(workflow_def, project)
