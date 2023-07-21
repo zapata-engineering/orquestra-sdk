@@ -9,6 +9,7 @@ import datetime
 
 NOW = datetime.datetime.now()
 
+
 def return_wf_list(num_of_runs):
     wf_runs = []
     for stub_id in range(num_of_runs):
@@ -28,15 +29,10 @@ def get_status_model(wf_run_id):
 
 
 @pytest.fixture
-def fake_runtime(monkeypatch):
+def fake_list_runtime(monkeypatch):
     runtime = create_autospec(RuntimeInterface, name="runtime")
     runtime.list_workflow_runs.return_value = return_wf_list(4)
     runtime.get_workflow_run_status = get_status_model
+    monkeypatch.setattr("orquestra.sdk._base._api._config.build_runtime_from_config", create_autospec(factory.build_runtime_from_config, return_value=runtime))
 
     return runtime
-
-
-@pytest.fixture
-def mock_runtime(monkeypatch, fake_runtime):
-    monkeypatch.setattr("orquestra.sdk._base._api._config.build_runtime_from_config", create_autospec(factory.build_runtime_from_config, return_value=fake_runtime))
-    return fake_runtime
