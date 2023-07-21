@@ -34,7 +34,7 @@ CONFIG_OPTION = cloup.option(
     "--config",
     required=False,
     help="""
-Name of the config used to submit workflow. Use 'in-process' for running workflow
+Name of the config used to submit workflow. Use 'in_process' for running workflow
 as local python process, 'ray' to run workflow in local ray cluster.
 To get config name for remote runtime, use orq login -s <uri> first
 """,
@@ -461,10 +461,10 @@ server_config_group = cloup.OptionGroup(
 )
 @cloup.option_group(
     "Remote Environment",
+    cloup.option("--qe", is_flag=True, default=False, help="Log in to Quantum Engine."),
     cloup.option(
-        "--qe", is_flag=True, default=False, help="Log in to Quantum Engine. (Default)"
+        "--ce", is_flag=True, default=False, help="Log in to Compute Engine. (Default)"
     ),
-    cloup.option("--ce", is_flag=True, default=False, help="Log in to Compute Engine."),
     constraint=cloup.constraints.mutually_exclusive,
 )
 def auth(config: str, server: str, token: t.Optional[str], ce: bool, qe: bool):

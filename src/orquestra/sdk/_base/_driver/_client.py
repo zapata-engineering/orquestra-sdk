@@ -19,6 +19,7 @@ import requests
 from requests import codes
 
 from orquestra.sdk import ProjectRef
+from orquestra.sdk._base._spaces._api import make_workspace_zri
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
@@ -795,16 +796,8 @@ class DriverClient:
         """
         Gets the list of all projects in given workspace
         """
-        default_tenant_id = 0
-        special_workspace = "system"
-        zri_type = "resource_group"
 
-        # we have to build project ZRI from some hardcoded values + workspaceId
-        # based on https://zapatacomputing.atlassian.net/wiki/spaces/Platform/pages/512787664/2022-09-26+Zapata+Resource+Identifiers+ZRIs  # noqa
-        workspace_zri = (
-            f"zri:v1::{default_tenant_id}:"
-            f"{special_workspace}:{zri_type}:{workspace_id}"
-        )
+        workspace_zri = make_workspace_zri(workspace_id)
 
         resp = self._get(
             self._uri_provider.uri_for("list_projects", parameters=(workspace_zri,)),
