@@ -9,6 +9,7 @@ These tutorials will get you up and running with the Orquestra Workflow SDK. Aft
 
     installing-macos-linux
     installing-windows
+    cli-beginners-guide
     quickstart
     ray
     remote
