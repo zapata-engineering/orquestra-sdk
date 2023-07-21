@@ -51,12 +51,11 @@ class Action:
 
     def on_cmd_call(
         self,
-        config: t.Optional[t.Sequence[str]],
+        config: t.Optional[str],
         limit: t.Optional[int],
         max_age: t.Optional[str],
         state: t.Optional[t.List[str]],
         workspace_id: t.Optional[str],
-        project_id: t.Optional[str],
         interactive: t.Optional[bool] = False,
     ):
         try:
@@ -66,7 +65,6 @@ class Action:
                 max_age=max_age,
                 state=state,
                 workspace_id=workspace_id,
-                project_id=project_id,
                 interactive=interactive,
             )
         except Exception as e:
@@ -74,18 +72,16 @@ class Action:
 
     def _on_cmd_call_with_exceptions(
         self,
-        config: t.Optional[t.Sequence[str]],
+        config: t.Optional[str],
         limit: t.Optional[int],
         max_age: t.Optional[str],
         state: t.Optional[t.List[str]],
         workspace_id: t.Optional[str],
-        project_id: t.Optional[str],
         interactive: t.Optional[bool] = False,
     ):
         # Resolve Arguments
-        resolved_configs: t.Sequence[
-            ConfigName
-        ] = self._config_resolver.resolve_multiple(config)
+        resolved_config: ConfigName = self._config_resolver.resolve(config)
+
         resolved_limit = self._wf_run_filter_resolver.resolve_limit(
             limit, interactive=interactive
         )
@@ -96,40 +92,25 @@ class Action:
             state, interactive=interactive
         )
 
-        # Get wf runs for each config
-        wf_runs: t.List[WorkflowRun] = []
-        for resolved_config in resolved_configs:
-            # Resolve Workspace and Project for this config
-            workspace: t.Optional[WorkspaceId] = None
-            project: t.Optional[ProjectId] = None
+        # Resolve Workspace and Project for this config
+        workspace: t.Optional[WorkspaceId] = None
 
-            # If nethier workspace or project are specified, leave both as None.
-            if workspace_id or project_id:
-                try:
-                    workspace = self._spaces_resolver.resolve_workspace_id(
-                        resolved_config, workspace_id
-                    )
-                    project = self._spaces_resolver.resolve_project_id(
-                        resolved_config, workspace, project_id, optional=True
-                    )
-                except exceptions.WorkspacesNotSupportedError:
-                    # if handling on the runtime that doesn't support workspaces and
-                    # projects - project and workspace are already set to None, so
-                    # nothing to do.
-                    assert project is None and workspace is None, (
-                        "The project and workspace resolvers disagree about whether "
-                        "spaces are supported. Please report this as a bug."
-                    )
-                    pass
-
-            wf_runs += self._wf_run_repo.list_wf_runs(
-                resolved_config,
-                project=project,
-                workspace=workspace,
-                limit=resolved_limit,
-                max_age=resolved_max_age,
-                state=resolved_state,
+        try:
+            workspace = self._spaces_resolver.resolve_workspace_id(
+                resolved_config, workspace_id
             )
+        except exceptions.WorkspacesNotSupportedError:
+            pass
+
+        wf_runs = self._wf_run_repo.list_wf_runs(
+            resolved_config,
+            project=None,
+            workspace=workspace,
+            limit=resolved_limit,
+            max_age=resolved_max_age,
+            state=resolved_state,
+        )
+
         summary = self._summary_repo.wf_list_summary(wf_runs)
         # Display to the user
         self._presenter.show_wf_list(summary)
