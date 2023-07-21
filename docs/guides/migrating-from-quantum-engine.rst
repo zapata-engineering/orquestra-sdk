@@ -28,7 +28,7 @@ Checklist
 Short list:
 
 #. Use Python 3.9. You can check it with ``python -V``.
-#. Run ``pip install -U orquestra-sdk`` frequently.
+#. Run ``pip install -U "orquestra-sdk[all]"`` frequently.
 #. Update your task and workflow "imports". More info below.
 #. Update your task and workflow "resources". More info below.
 #. When logging in, use ``orq login``.
