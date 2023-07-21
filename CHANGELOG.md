@@ -40,6 +40,7 @@
 
 📃 *Docs*
 * The help string for configs in the CLI now specifies the correct `in_process` rather than `in-process`.
+* The description for `config_name` in the `sdk.secrets.set` tutorial has been updated to be clearer.
 * The workflow syntax guide now uses more precise language when discussing workflow run returns.
 * Updated "Dependency Installation" guide for current best practices.
 * Added "Migrating From Quantum Engine" guide.
