@@ -1,6 +1,26 @@
 # Changelog
 
 ## Unreleased
+
+🚨 *Breaking Changes*
+
+🔥 *Features*
+
+🧟 *Deprecations*
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+
+##  v0.53.0
+
 🚨 *Breaking Changes*
 * Removed unsupported `WorkflowDef.local_run()` function
 * Bump Ray version to 2.5.1
@@ -8,10 +28,7 @@
 🔥 *Features*
 * `sdk.mlflow.get_tracking_uri()` and `sdk.mlflow.get_tracking_token()` are now provided to give access to the MLFlow tracking information.
 * Add `sdk.mlflow.get_current_user()` function to improve MLflow UI labeling
-
-🧟 *Deprecations*
-
-👩‍🔬 *Experimental*
+* Verify if workflow resources are sufficient to run all tasks at submission time
 
 🐛 *Bug Fixes*
 * Install Python modules in a venv using a non-root user to fix errors in custom Docker images.
@@ -21,12 +38,12 @@
 * `sdk.current_run_ids()` now returns a `NamedTuple` called `CurrentRunIDs` to help with typing.
 * Tasks that request resources that are incompatible with Ray will throw an error at submission time.
 
-🥷 *Internal*
-
 📃 *Docs*
 * The help string for configs in the CLI now specifies the correct `in_process` rather than `in-process`.
 * The description for `config_name` in the `sdk.secrets.set` tutorial has been updated to be clearer.
+* The workflow syntax guide now uses more precise language when discussing workflow run returns.
 * Updated "Dependency Installation" guide for current best practices.
+* Added "Migrating From Quantum Engine" guide.
 
 ## v0.52.0
 
