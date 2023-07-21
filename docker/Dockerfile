@@ -40,6 +40,9 @@ python -m pip install --no-cache-dir -U pip wheel
 python -m pip install --no-cache-dir "${SDK_REQUIREMENT}"
 EOF
 
+# Prefer to use pip, python, and other binaries from the virtual env.
+ENV PATH="/opt/orquestra/venv/bin:$PATH"
+
 # This is needed to ensure that the virtual env is used when running
 # non-interactive shells (e.g. when running a startup script)
 # https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html#Bash-Startup-Files

@@ -35,7 +35,7 @@ Then, you can read and set secrets within a script or a Python REPL:
 
 ``workspace_id`` specifies the workspace id where the secret will be saved. If omitted, personal workspace will be used. You can get workspace_id from the workspace view in the web Orquestra Portal or by using list_workspace API call.
 
-``config_name`` specifies the configuration that stores the cluster URI and auth token that are used to access the secrets vault.
+``config_name`` specifies the name of a stored configuration that specifies the cluster URI and auth token that are used to access the secrets vault.
 
 
 You can also read the secret value from a local script or the REPL:
