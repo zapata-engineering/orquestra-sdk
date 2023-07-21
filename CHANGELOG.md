@@ -16,6 +16,7 @@
 🐛 *Bug Fixes*
 
 💅 *Improvements*
+* Added an informative error for situations where a mismatch in python versions between CE and the SDK cause deserialisation to fail.
 
 🥷 *Internal*
 

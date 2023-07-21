@@ -220,7 +220,7 @@ def _make_ray_dag_node(
                     raise EnvironmentError(
                         "Could not deserialise data. "
                         "This may be due to a python version mismatch. "
-                        "please try updating your python version."
+                        "Please try updating your python version."
                     ) from e
 
                 packed: responses.WorkflowResult = (
