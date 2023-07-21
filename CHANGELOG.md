@@ -3,8 +3,11 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+* `orq wf list` command does not accept `-p, --project-id` parameter anymore
+* `orq wf list` only prompts for a single config now
 
 🔥 *Features*
+* `orq wf list` properly prompts for a workspace after selecting config if option `-w` was not provided
 
 🧟 *Deprecations*
 

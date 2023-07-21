@@ -89,28 +89,6 @@ class ConfigResolver:
 
         return self._prompter.choice(valid_configs, message=message)
 
-    def resolve_multiple(
-        self, configs: t.Optional[t.Sequence[str]]
-    ) -> t.Sequence[ConfigName]:
-        if configs is not None and len(configs) > 0:
-            _check_for_in_process(configs)
-            return configs
-
-        # Prompt the user.
-        config_names = self._config_repo.list_config_names()
-        while (
-            len(
-                selected_configs := self._prompter.checkbox(
-                    config_names,
-                    message="Runtime config(s)",
-                )
-            )
-            < 1
-        ):
-            print("Please select at least one configuration.")
-
-        return selected_configs
-
 
 class WFConfigResolver:
     """
