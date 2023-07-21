@@ -15,7 +15,7 @@ def build_runtime_from_config(
     """
     Centralized place to get runtime object based on config.
 
-    There are a couple of runtime runtime integrations implemented as separate
+    There are a couple of runtime integrations implemented as separate
     classes. This factory function solves the problem of figuring out which
     class to use.
     """

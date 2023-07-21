@@ -11,6 +11,8 @@ import pytest
 
 import orquestra.sdk._base._config
 from orquestra.sdk._base import _db
+from .data.configs import TEST_CONFIG_JSON
+import json
 
 
 @pytest.fixture
@@ -19,14 +21,8 @@ def patch_config_location(tmp_path, monkeypatch):
     Makes the functions in orquestra.sdk._base._config read/write file from a
     temporary directory.
     """
-    config_location = Mock(return_value=tmp_path / "config.json")
-    monkeypatch.setattr(
-        orquestra.sdk._base._config, "_get_config_file_path", config_location
-    )
-    config_file_location = Mock(return_value=tmp_path / "config.json")
-    monkeypatch.setattr(
-        orquestra.sdk._base._config, "_get_config_file_path", config_file_location
-    )
+    config_location = tmp_path / "config.json"
+    monkeypatch.setenv("ORQ_CONFIG_PATH", str(config_location))
     return tmp_path
 
 
@@ -80,3 +76,18 @@ def patch_runtime_option_validation(monkeypatch):
     monkeypatch.setattr(
         orquestra.sdk._base._config, "_validate_runtime_options", assume_valid
     )
+
+
+@pytest.fixture
+def tmp_config_json(tmp_path):
+    json_file = tmp_path / "config.json"
+
+    with open(json_file, "w") as f:
+        json.dump(TEST_CONFIG_JSON, f)
+
+    return json_file
+
+
+@pytest.fixture
+def tmp_default_config_json(patch_config_location, tmp_config_json):
+    return patch_config_location

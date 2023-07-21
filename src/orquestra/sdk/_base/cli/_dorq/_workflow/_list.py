@@ -130,7 +130,6 @@ class Action:
                 max_age=resolved_max_age,
                 state=resolved_state,
             )
-
         summary = self._summary_repo.wf_list_summary(wf_runs)
         # Display to the user
         self._presenter.show_wf_list(summary)

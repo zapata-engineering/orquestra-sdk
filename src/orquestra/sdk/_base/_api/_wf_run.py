@@ -646,7 +646,6 @@ def list_workflow_runs(
             workspace=workspace,
             project=project,
         )
-
     # We need to convert to the public API notion of a WorkflowRun
     runs = []
     for run_status in run_statuses:

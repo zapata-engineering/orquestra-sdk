@@ -99,7 +99,6 @@ class WorkflowRunRepo:
             )
         except (ConnectionError, exceptions.UnauthorizedError):
             raise
-
         ret = [run.get_status_model() for run in wf_runs]
         return ret
 
