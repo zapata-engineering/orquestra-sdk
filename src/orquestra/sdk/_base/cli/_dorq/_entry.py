@@ -61,7 +61,11 @@ ID of the project used to submit workflow. Used only on CE runtime
 
 @cloup.group(context_settings=CLICK_CTX_SETTINGS)
 @click.version_option(
-    None, "-v", "--version", prog_name="Orquestra SDK", package_name="orquestra-sdk"
+    None,  # version number not set, click will infer it using setuptools
+    "-v",
+    "--version",
+    prog_name="Orquestra SDK",  # displayed to the user (otherwise it's just `orq`)
+    package_name="orquestra-sdk",
 )
 def dorq():
     # Normally, click would infer command name from function name. This is different,
