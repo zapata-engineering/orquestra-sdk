@@ -17,6 +17,7 @@
 🥷 *Internal*
 
 📃 *Docs*
+* Added "Beginner's Guide to the CLI"
 
 
 ##  v0.53.0
