@@ -164,3 +164,9 @@ def _(e: exceptions.InvalidTokenError) -> ResponseStatusCode:
 def _(e: exceptions.ExpiredTokenError) -> ResponseStatusCode:
     click.echo("The auth token has expired.\n" "Please try logging in again.")
     return ResponseStatusCode.UNAUTHORIZED
+
+
+@pretty_print_exception.register
+def _(e: exceptions.WorkflowRunNotStarted) -> ResponseStatusCode:
+    click.echo(e)
+    return ResponseStatusCode.INVALID_WORKFLOW_RUN

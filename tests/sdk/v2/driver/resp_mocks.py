@@ -8,7 +8,7 @@ takes a lot of lines. Kept as a Python file for some DRY-ness.
 
 
 from pathlib import Path
-from typing import Any, List
+from typing import Any, List, Optional
 
 from orquestra.sdk._base._driver._models import (
     TaskInvocationID,
@@ -126,16 +126,21 @@ def make_create_wf_def_response(id_: WorkflowDefID):
     return {"data": {"id": id_}}
 
 
-def make_error_response(message: str, detail: str):
+def make_error_response(message: str, detail: str, code: Optional[int] = None):
     """
     Based on:
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/Error.yaml
     """
 
-    return {
+    resp = {
         "message": message,
         "detail": detail,
     }
+
+    if code is not None:
+        resp["code"] = code
+
+    return resp
 
 
 # --- Workflow Runs ---
