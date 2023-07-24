@@ -15,3 +15,4 @@ Guides
     version-compatibility
     mlflow
     migrating-from-quantum-engine
+    workspace-and-project-management
