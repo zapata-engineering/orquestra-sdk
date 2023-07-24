@@ -71,16 +71,32 @@ def endpoint_mocker_base(mocked_responses):
         ("Bad request", None, None),
         ("Unsupported version: 0.1.0", None, None),
         # Expected detail format
-        ("Unsupported SDK version: 0.1.0. Supported SDK versions: [0.2.0,0.3.0]", "0.1.0", ["0.2.0", "0.3.0"]),
-        ("Unsupported SDK version: 0.1.0. Supported SDK versions: [0.2.0]", "0.1.0", ["0.2.0"]),
+        (
+            "Unsupported SDK version: 0.1.0. Supported SDK versions: [0.2.0,0.3.0]",
+            "0.1.0",
+            ["0.2.0", "0.3.0"],
+        ),
+        (
+            "Unsupported SDK version: 0.1.0. Supported SDK versions: [0.2.0]",
+            "0.1.0",
+            ["0.2.0"],
+        ),
         # Missing versions
         ("Unsupported SDK version: 0.1.0. Supported SDK versions: []", "0.1.0", None),
         ("Unsupported SDK version: . Supported SDK versions: [0.1.0]", None, ["0.1.0"]),
         # Development version
-        ("Unsupported SDK version: 0.3.1.dev9+gabc1230. Supported SDK versions: [0.2.0,0.3.0]", "0.3.1.dev9+gabc1230", ["0.2.0", "0.3.0"]),
+        (
+            "Unsupported SDK version: 0.3.1.dev9+gabc1230. Supported SDK versions: [0.2.0,0.3.0]",  # noqa: E501
+            "0.3.1.dev9+gabc1230",
+            ["0.2.0", "0.3.0"],
+        ),
     ),
 )
-def test_unsupported_version_regex(error_detail: str, expected_sdk_version: Optional[str], expected_supported_versions: Optional[List[str]]):
+def test_unsupported_version_regex(
+    error_detail: str,
+    expected_sdk_version: Optional[str],
+    expected_supported_versions: Optional[List[str]],
+):
     sdk_version, supported_versions = _match_unsupported_version(error_detail)
 
     assert sdk_version == expected_sdk_version
@@ -1035,7 +1051,7 @@ class TestClient:
                 endpoint_mocker(
                     json=resp_mocks.make_error_response(
                         message="Bad Request",
-                        detail= f"Unsupported SDK version: {submitted_version}. Supported SDK versions: {supported_versions}",
+                        detail=f"Unsupported SDK version: {submitted_version}. Supported SDK versions: {supported_versions}",  # noqa: E501
                         code=4,
                     ),
                     # Specified in:
@@ -1059,7 +1075,7 @@ class TestClient:
                 endpoint_mocker(
                     json=resp_mocks.make_error_response(
                         message="Bad Request",
-                        detail= "This message is different!",
+                        detail="This message is different!",
                         code=4,
                     ),
                     # Specified in:
@@ -1070,8 +1086,8 @@ class TestClient:
                 with pytest.raises(_exceptions.UnsupportedSDKVersion) as exc_info:
                     _ = client.create_workflow_run(workflow_def_id, resources)
 
-                assert exc_info.value.submitted_version == None
-                assert exc_info.value.supported_versions == None
+                assert exc_info.value.submitted_version is None
+                assert exc_info.value.supported_versions is None
 
             @staticmethod
             def test_sets_auth(

@@ -8,7 +8,7 @@ takes a lot of lines. Kept as a Python file for some DRY-ness.
 
 
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from orquestra.sdk._base._driver._models import (
     TaskInvocationID,
@@ -132,7 +132,7 @@ def make_error_response(message: str, detail: str, code: Optional[int] = None):
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/Error.yaml
     """
 
-    resp = {
+    resp: Dict[str, Any] = {
         "message": message,
         "detail": detail,
     }

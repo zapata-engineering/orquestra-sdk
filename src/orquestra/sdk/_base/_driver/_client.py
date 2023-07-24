@@ -30,13 +30,19 @@ from orquestra.sdk.schema.workflow_run import (
     WorkspaceId,
 )
 
-from . import _exceptions, _models
 from .._regex import VERSION_REGEX
+from . import _exceptions, _models
+
 
 def _match_unsupported_version(error_detail: str):
-    # We try to match format of the error message to parse the supported and submitted versions.
+    # We try to match format of the error message to parse the supported and
+    # submitted versions.
     # If we fail, we return None and carry on.
-    matches = re.match(rf"Unsupported SDK version: (?P<requested>{VERSION_REGEX})?\. Supported SDK versions: \[(?P<available>({VERSION_REGEX}[,]?)+)?\]", error_detail)
+    matches = re.match(
+        rf"Unsupported SDK version: (?P<requested>{VERSION_REGEX})?\. "
+        rf"Supported SDK versions: \[(?P<available>({VERSION_REGEX}[,]?)+)?\]",
+        error_detail,
+    )
     if matches is None:
         return None, None
 
@@ -46,7 +52,6 @@ def _match_unsupported_version(error_detail: str):
     available = available_match.split(",") if available_match is not None else None
 
     return requested, available
-
 
 
 class ExternalUriProvider:

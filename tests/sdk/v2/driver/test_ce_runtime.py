@@ -283,7 +283,9 @@ class TestCreateWorkflowRun:
                 _ = runtime.create_workflow_run(my_workflow.model, None)
 
         @pytest.mark.parametrize("submitted_version", (None, "0.1.0"))
-        @pytest.mark.parametrize("supported_versions", (None, ["0.1.0"], ["0.2.0", "0.3.0"]))
+        @pytest.mark.parametrize(
+            "supported_versions", (None, ["0.1.0"], ["0.2.0", "0.3.0"])
+        )
         def test_unsupported_sdk_version(
             self,
             mocked_client: MagicMock,
@@ -302,7 +304,10 @@ class TestCreateWorkflowRun:
 
             error_message = str(exc_info.value)
             assert "This is an unsupported version of orquestra-sdk.\n" in error_message
-            assert 'Try updating with `pip install -U "orquestra-sdk[all]"`' in error_message
+            assert (
+                'Try updating with `pip install -U "orquestra-sdk[all]"`'
+                in error_message
+            )
 
             if submitted_version is None:
                 assert " - Current version:" not in error_message
@@ -313,7 +318,6 @@ class TestCreateWorkflowRun:
                 assert " - Supported versions:" not in error_message
             else:
                 assert f" - Supported versions: {supported_versions}" in error_message
-
 
         def test_unknown_http(
             self, mocked_client: MagicMock, runtime: _ce_runtime.CERuntime
