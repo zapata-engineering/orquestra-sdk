@@ -64,7 +64,7 @@ ID of the project used to submit workflow. Used only on CE runtime
     None,  # version number not set, click will infer it using setuptools
     "-V",
     "--version",
-    prog_name="Orquestra SDK",  # displayed to the user (otherwise it's just `orq`)
+    prog_name="Orquestra Workflow SDK",  # displayed to the user (otherwise it's just `orq`)
     package_name="orquestra-sdk",
 )
 def dorq():
