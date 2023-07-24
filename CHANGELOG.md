@@ -5,7 +5,7 @@
 🚨 *Breaking Changes*
 
 🔥 *Features*
-* `orq --version` or `orq -v` will now show the current SDK version.
+* `orq --version` or `orq -V` will now show the current SDK version.
 
 🧟 *Deprecations*
 
