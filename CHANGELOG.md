@@ -22,6 +22,7 @@
 📃 *Docs*
 * Added "Beginner's Guide to the CLI"
 * Update migration docs to use `orquestra-sdk[all]` to ensure extras are updated.
+* Added "Workflow and Project Management" guide.
 
 
 ##  v0.53.0
