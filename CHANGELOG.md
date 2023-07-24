@@ -3,9 +3,12 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+* `orq wf list` command does not accept `-p, --project-id` parameter anymore
+* `orq wf list` only prompts for a single config now
 
 🔥 *Features*
 * `orq --version` or `orq -V` will now show the current SDK version.
+* `orq wf list` properly prompts for a workspace after selecting config if option `-w` was not provided
 
 🧟 *Deprecations*
 
@@ -18,6 +21,8 @@
 🥷 *Internal*
 
 📃 *Docs*
+* Added "Beginner's Guide to the CLI"
+* Update migration docs to use `orquestra-sdk[all]` to ensure extras are updated.
 
 
 ##  v0.53.0

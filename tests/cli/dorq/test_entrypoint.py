@@ -96,23 +96,16 @@ class TestList:
     @pytest.mark.parametrize(
         "config, expected_config",
         [
-            (["-c", "foo"], ("foo",)),
-            (["--config", "foo"], ("foo",)),
-            (
-                ["-c", "foo", "--config", "bar"],
-                (
-                    "foo",
-                    "bar",
-                ),
-            ),
-            ([], ()),
+            (["-c", "foo"], "foo"),
+            (["--config", "foo"], "foo"),
+            ([], None),
         ],
     )
     class TestListOptions:
         @staticmethod
         @pytest.mark.parametrize(
             "limit, expected_limit, max_age, expected_max_age, state, "
-            "expected_state, workspace, expected_workspace, project, expected_project",
+            "expected_state, workspace, expected_workspace",
             [
                 (
                     ["-l", "10"],
@@ -123,8 +116,6 @@ class TestList:
                     ("foobar",),
                     ["-w", "ws"],
                     "ws",
-                    ["-p", "proj"],
-                    "proj",
                 ),
                 (
                     ["--limit", "17"],
@@ -135,10 +126,17 @@ class TestList:
                     ("foobar",),
                     ["--workspace-id", "3"],
                     "3",
-                    ["--project-id", "22"],
-                    "22",
                 ),
-                ([], None, [], None, [], (), [], None, [], None),
+                (
+                    [],
+                    None,
+                    [],
+                    None,
+                    [],
+                    (),
+                    [],
+                    None,
+                ),
             ],
         )
         def test_filters(
@@ -149,13 +147,11 @@ class TestList:
             max_age,
             state,
             workspace,
-            project,
             expected_config,
             expected_limit,
             expected_max_age,
             expected_state,
             expected_workspace,
-            expected_project,
         ):
             """
             The `orq workflow list` command does some type conversion and sets some
@@ -164,13 +160,7 @@ class TestList:
             """
             # Given
             entrypoint(
-                ["workflow", "list"]
-                + config
-                + limit
-                + max_age
-                + state
-                + workspace
-                + project
+                ["workflow", "list"] + config + limit + max_age + state + workspace
             )
 
             mock_exit = Mock()
@@ -193,7 +183,6 @@ class TestList:
                     expected_max_age,
                     expected_state,
                     expected_workspace,
-                    expected_project,
                     False,
                 ]
             )
@@ -239,7 +228,6 @@ class TestList:
                     None,  # max_age
                     (),  # state
                     None,  # workspace
-                    None,  # project
                     expected_interactive,
                 ]
             )
