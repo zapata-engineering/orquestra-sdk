@@ -62,7 +62,7 @@ ID of the project used to submit workflow. Used only on CE runtime
 @cloup.group(context_settings=CLICK_CTX_SETTINGS)
 @click.version_option(
     None,  # version number not set, click will infer it using setuptools
-    "-v",
+    "-V",
     "--version",
     prog_name="Orquestra SDK",  # displayed to the user (otherwise it's just `orq`)
     package_name="orquestra-sdk",
