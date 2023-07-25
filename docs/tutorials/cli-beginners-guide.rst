@@ -8,7 +8,7 @@ The Beginner's Guide to the Orquestra CLI
 
     .. code-block::
 
-        orq -h
+        orq -V
 
     For installation instructions, see :doc:`Installing<installing-macos-linux>` or :doc:`Installing on Windows <installing-windows>`.
 
