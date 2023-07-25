@@ -175,7 +175,7 @@ def wf_results(
 
     This command tries to print a human-friendly values preview, but the output isn't
     guaranteed to be a valid parseable value. If you need the artifact value for
-    further processing, use the ``download_dir`` option or use
+    further processing, use the ``download-dir`` option or use
     ``orquestra.sdk.WorkflowRun.get_results()`` directly from Python.
     """
 
@@ -339,7 +339,7 @@ def task_results(*args, **kwargs):
 
     This command tries to print a human-friendly values preview, but the output isn't
     guaranteed to be a valid parseable value. If you need the artifact value for
-    further processing, use the ``download_dir`` option or use
+    further processing, use the ``download-dir`` option or use
     ``orquestra.sdk.WorkflowRun.get_tasks()`` and ``task.get_results()`` directly from
     Python.
     """
