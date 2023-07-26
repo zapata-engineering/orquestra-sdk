@@ -320,7 +320,7 @@ class WorkflowTemplate(Generic[_P, _R]):
         if non_task_functions:
             warnings.warn(
                 f'Functions: "{", ".join(non_task_functions)}" called in the workflow '
-                f"are not a tasks. Did you mean to decorate it with @task?",
+                f"are not tasks. Did you mean to decorate them with @task?",
                 NotATaskWarning,
             )
 

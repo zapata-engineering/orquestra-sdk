@@ -65,6 +65,8 @@ def faked_task_wf():
 def test_workflow_undecorated_task():
     with pytest.warns(_workflow.NotATaskWarning) as warnings:
         _ = undecorated_task_wf()
+
+    assert len(warnings) == 1
     warning = str(warnings[0])
     assert "undecorated" in warning
     assert "another_one" in warning
@@ -143,14 +145,14 @@ class TestModelsSerializeProperly:
         model = _simple_workflow.model
         assert called.model == model
 
-    @pytest.mark.filterwarnings('ignore:"Functions task" are not a task')
     def test_fail_if_task_def_returned(self):
         @sdk.workflow
         def _returned_task_def_workflow():
             return sdk.task()(undecorated)
 
         with pytest.raises(WorkflowSyntaxError):
-            _returned_task_def_workflow.model
+            with pytest.warns(_workflow.NotATaskWarning):
+                _returned_task_def_workflow.model
 
     @pytest.mark.filterwarnings('ignore:"Functions task" are not a task')
     def test_fail_if_task_def_passed_as_arg(self):
@@ -160,7 +162,8 @@ class TestModelsSerializeProperly:
             return _task_with_args(task)
 
         with pytest.raises(WorkflowSyntaxError):
-            _returned_task_def_workflow.model
+            with pytest.warns(_workflow.NotATaskWarning):
+                _returned_task_def_workflow.model
 
 
 @pytest.mark.parametrize(

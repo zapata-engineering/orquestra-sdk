@@ -17,7 +17,7 @@
 🐛 *Bug Fixes*
 
 💅 *Improvements*
-* Consolidate all warnings into one NotATaskWarning warning for the entire workflow
+* Consolidate all `NotATaskWarning` warnings into a single warning for each workflow.
 
 🥷 *Internal*
 
