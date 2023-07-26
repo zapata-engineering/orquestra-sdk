@@ -264,3 +264,38 @@ class TestLogin:
         mock_login_action.assert_called_with(
             config=ANY, url=ANY, token=ANY, runtime_name=expected_runtime
         )
+
+
+class TestVersion:
+    @staticmethod
+    def test_version_flag_shown_in_help(capsys, entrypoint, monkeypatch):
+        """
+        Prints help to validate that a given command is achievable.
+        """
+        # Given
+        entrypoint(["-h"])
+        mock_exit = Mock()
+        monkeypatch.setattr(sys, "exit", mock_exit)
+
+        # When
+        _entry.main()
+
+        # Then
+        captured = capsys.readouterr()
+        # We assume that a valid help string includes the command itself. This is a
+        # heuristic for validating printed help.
+        assert "-V, --version  Show the version and exit." in captured.out
+
+        # If the command isn't achievable, both argparse and click return status code 2.
+        mock_exit.assert_called_with(0)
+
+    @staticmethod
+    def test_shows_version(capsys, entrypoint, monkeypatch: pytest.MonkeyPatch):
+        entrypoint(["--version"])
+        mock_exit = Mock()
+        monkeypatch.setattr(sys, "exit", mock_exit)
+
+        _entry.main()
+
+        captured = capsys.readouterr()
+        assert captured.out.startswith("Orquestra Workflow SDK, version ")
