@@ -15,6 +15,7 @@
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
+* Fix error when calling get_artifacts() on unfinished or failed workflow
 
 💅 *Improvements*
 * Consolidate all `NotATaskWarning` warnings into a single warning for each workflow.
