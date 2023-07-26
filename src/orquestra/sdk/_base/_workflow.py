@@ -304,6 +304,7 @@ class WorkflowTemplate(Generic[_P, _R]):
         # First we check the contents of the workflow function and warn the user if we
         # find any function calls to non-tasks.
         fn_calls = _get_function_calls(self._fn)
+        non_task_functions = []
         for called_fn in fn_calls:
             if isinstance(called_fn.function, loader.FakeImportedAttribute):
                 raise RuntimeError(
@@ -314,13 +315,15 @@ class WorkflowTemplate(Generic[_P, _R]):
                 isinstance(called_fn.function, TaskDef)
                 or called_fn.function in allowed_function_calls
             ):
-                warnings.warn_explicit(
-                    f'"{called_fn.name}" is not a task. Did you mean to decorate '
-                    "it with @task?",
-                    NotATaskWarning,
-                    called_fn.source_file or "<unknown>",
-                    called_fn.line_no or 0,
-                )
+                non_task_functions.append(called_fn.name)
+
+        if non_task_functions:
+            warnings.warn(
+                f'Functions: "{", ".join(non_task_functions)}" called in the workflow '
+                f"are not tasks. Did you mean to decorate them with @task?",
+                NotATaskWarning,
+            )
+
         data_aggregation: Optional[DataAggregation]
         if self._data_aggregation is False:
             data_aggregation = DataAggregation(run=False)
