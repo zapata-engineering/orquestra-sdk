@@ -2,7 +2,6 @@
 ################################################################################
 from contextlib import nullcontext as do_not_raise
 from datetime import timedelta
-from pathlib import Path
 from typing import ContextManager, List, Optional
 from unittest.mock import DEFAULT, MagicMock, Mock, call, create_autospec
 

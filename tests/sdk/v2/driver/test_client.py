@@ -4,7 +4,6 @@
 """
 Tests for orquestra.sdk._base._driver._client.
 """
-import re
 from typing import Any, Dict, List, Optional
 from unittest.mock import create_autospec
 
