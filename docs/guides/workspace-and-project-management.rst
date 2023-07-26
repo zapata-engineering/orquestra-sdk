@@ -1,6 +1,6 @@
-================================
-Workspace and Project Management
-================================
+=======================
+Workspaces and Projects
+=======================
 
 Compute Engine (CE) organises workflow runs into ``Workspaces`` and ``projects``.
 As such, in order to submit or interact with a workflows run from the CLI, it is necessary to specify the ``Workspace`` and ``Project`` that contains it [1]_.
