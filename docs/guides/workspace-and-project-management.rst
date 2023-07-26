@@ -35,7 +35,7 @@ These are unset by default, but can be controlled using:
     export ORQ_CURRENT_WORKSPACE=my_workspace
     export ORQ_CURRENT_PROJECT=my_project
 
-These variables define a default value for the workspace and/or project that Orquestra will use unless overruled by an explicit CLI argument.
+These variables define a default value for the workspace and/or project that ``orq`` will use unless overruled by an explicit CLI argument.
 
 The "vanilla" Orquestra behavior can be restored by simply unsetting these variables:
 
