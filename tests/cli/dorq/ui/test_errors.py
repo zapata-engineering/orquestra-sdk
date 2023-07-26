@@ -94,6 +94,10 @@ class TestPrettyPrintException:
                 exceptions.RayNotRunningError(),
                 "Could not find any running Ray instance. You can use 'orq status' to check the status of the ray service. If it is not running, it can be started with the `orq up` command.",  # noqa: E501
             ),
+            (
+                exceptions.WorkflowRunNotStarted("An issue submitting the workflow"),
+                "An issue submitting the workflow",
+            ),
         ],
     )
     def tests_prints_exception_without_traceback(capsys, exc, stdout_marker: str):
