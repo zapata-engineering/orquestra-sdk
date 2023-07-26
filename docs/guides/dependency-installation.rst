@@ -122,7 +122,7 @@ Source vs Dependency
 
 The ``@sdk.task`` decorator accepts two types of import arguments---source and dependency.
 Both accept any of the import types specified here.
-The importer passed to ``source_import=`` should provide the source code for locating the task definition, while external dependencies should be specified to ``dependency_imports=``.
+The importer passed to ``source_import=`` should provide the source code for locating the task definition, while external dependencies should be specified in ``dependency_imports=``.
 
 .. note::
    The ``source`` vs ``dependency`` import distinction used to be more relevant in the past.
