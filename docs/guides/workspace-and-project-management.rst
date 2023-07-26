@@ -16,7 +16,8 @@ When you're on a local machine and you're interacting with CE, you need to speci
    Orquestra workspaces and projects are purely server-side concepts.
    There's no built-in 1:1 correspondence with a git repo or your local IDE project.
 
-There are three mechanisms by which this can be managed. In descernding order of priority these are:
+There are three mechanisms by which this can be specified.
+In descending order of priority these are:
 
 Explicit CLI Arguments
 ----------------------
