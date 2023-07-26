@@ -27,7 +27,8 @@ When interacting with CE from the CLI, managing workspaces and projects is typic
 Environment Variables
 ---------------------
 
-Where explicit arguments are not supplied, Orquestra looks for two environment variables, ``ORQ_CURRENT_WORKSPACE`` and ``ORQ_CURRENT_PROJECT``. These are unset by default, but can be controlled using:
+Where explicit arguments are not supplied, ``orq`` CLI looks for two environment variables, ``ORQ_CURRENT_WORKSPACE`` and ``ORQ_CURRENT_PROJECT``. 
+These are unset by default, but can be controlled using:
 
 .. code-block::
 
