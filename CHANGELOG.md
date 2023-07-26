@@ -7,6 +7,7 @@
 * `orq wf list` only prompts for a single config now
 
 🔥 *Features*
+* `orq --version` or `orq -V` will now show the current SDK version.
 * `orq wf list` properly prompts for a workspace after selecting config if option `-w` was not provided
 
 🧟 *Deprecations*
