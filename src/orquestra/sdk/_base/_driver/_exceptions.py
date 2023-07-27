@@ -1,9 +1,11 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
 Exception types related to the Workflow Driver API.
 """
+from typing import List, Optional
+
 import requests
 
 
@@ -34,6 +36,22 @@ class InvalidWorkflowRunRequest(Exception):
         self.message = message
         self.detail = detail
         super().__init__(message, detail)
+
+
+class UnsupportedSDKVersion(InvalidWorkflowRunRequest):
+    """
+    Raised when an unsupported Workflow SDK version is used to submit a workflow run
+    """
+
+    def __init__(
+        self, submitted_version: Optional[str], supported_versions: Optional[List[str]]
+    ):
+        self.submitted_version = submitted_version
+        self.supported_versions = supported_versions
+        super().__init__(
+            f"Unsupported Workflow SDK version: {submitted_version}",
+            f"Supported Workflow SDK versions: {supported_versions}",
+        )
 
 
 class InvalidWorkflowDefID(Exception):

@@ -9,6 +9,7 @@ Implemented API spec:
 """
 
 import io
+import re
 import zlib
 from tarfile import TarFile
 from typing import Generic, List, Mapping, Optional, Tuple, TypeVar, Union
@@ -29,8 +30,28 @@ from orquestra.sdk.schema.workflow_run import (
     WorkspaceId,
 )
 
+from .._regex import VERSION_REGEX
 from . import _exceptions, _models
-from ._models import K8sEventLog
+
+
+def _match_unsupported_version(error_detail: str):
+    # We try to match format of the error message to parse the supported and
+    # submitted versions.
+    # If we fail, we return None and carry on.
+    matches = re.match(
+        rf"Unsupported SDK version: (?P<requested>{VERSION_REGEX})?\. "
+        rf"Supported SDK versions: \[(?P<available>({VERSION_REGEX}[,]?)+)?\]",
+        error_detail,
+    )
+    if matches is None:
+        return None, None
+
+    group_matches = matches.groupdict()
+    requested = group_matches.get("requested")
+    available_match = group_matches.get("available")
+    available = available_match.split(",") if available_match is not None else None
+
+    return requested, available
 
 
 class ExternalUriProvider:
@@ -355,6 +376,7 @@ class DriverClient:
 
         Raises:
             InvalidWorkflowRunRequest: see the exception's docstring
+            UnsupportedSDKVersion: see the exception's docstring
             InvalidTokenError: see the exception's docstring
             ForbiddenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
@@ -368,6 +390,9 @@ class DriverClient:
 
         if resp.status_code == codes.BAD_REQUEST:
             error = _models.Error.parse_obj(resp.json())
+            if error.code == _models.ErrorCode.SDK_VERSION_UNSUPPORTED:
+                requested, available = _match_unsupported_version(error.detail)
+                raise _exceptions.UnsupportedSDKVersion(requested, available)
             raise _exceptions.InvalidWorkflowRunRequest(
                 message=error.message, detail=error.detail
             )
