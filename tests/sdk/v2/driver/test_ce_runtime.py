@@ -742,6 +742,7 @@ class TestGetAvailableOutputs:
             mocked_client.get_workflow_run_artifacts.return_value = {
                 f"{workflow_run_id}@task-inv-1": ["wf-art-1"],
                 f"{workflow_run_id}@task-inv-2": ["wf-art-3"],
+                f"{workflow_run_id}@task-inv-3": [],
             }
             return mocked_client
 
