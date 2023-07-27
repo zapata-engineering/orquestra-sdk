@@ -96,21 +96,23 @@ def orq_workflow_run(ray_cluster, orq_project_dir):
     yield workflow_id
 
 
-TEST_TIMEOUT = 20
+BASE_TIMEOUT = 1
+TEST_TIMEOUT = 10
+SUBMIT_TIMEOUT = 15
 
 
-@pytest.mark.expect_under(TEST_TIMEOUT)
+@pytest.mark.expect_under(BASE_TIMEOUT)
 def test_orq_help():
     _run_orq_command(["-h"])
 
 
-@pytest.mark.expect_under(TEST_TIMEOUT)
+@pytest.mark.expect_under(BASE_TIMEOUT)
 def test_orq_invalid():
     with pytest.raises(subprocess.CalledProcessError):
         _run_orq_command(["general-kenobi"])
 
 
-@pytest.mark.expect_under(TEST_TIMEOUT)
+@pytest.mark.expect_under(SUBMIT_TIMEOUT)
 def test_orq_submit_workflow_def(ray_cluster, orq_project_dir):
     _run_orq_command(["workflow", "submit", "-c", "local", "workflow_defs"])
 
