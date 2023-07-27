@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 import logging
 import re
@@ -10,14 +10,11 @@ from orquestra.sdk.schema import ir, yaml_model
 
 from ...packaging import get_installed_version
 from .. import _git_url_utils, serde
+from .._regex import SEMVER_REGEX
 from . import _ids
 
 POSSIBLE_IMPORTS = (ir.PythonImports, ir.GitImport)
 ORQ_SDK_URL = "git@github.com:zapatacomputing/orquestra-workflow-sdk.git"
-
-# From https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string  # noqa:E501
-# with addition of `\.` before prerelease to match setuptools_scm format
-SEMVER_REGEX = r"^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:[-\.](?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"  # noqa:E501
 
 
 class ImportTranslator:

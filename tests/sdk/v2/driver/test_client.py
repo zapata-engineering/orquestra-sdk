@@ -4,7 +4,7 @@
 """
 Tests for orquestra.sdk._base._driver._client.
 """
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 from unittest.mock import create_autospec
 
 import numpy as np
@@ -17,12 +17,10 @@ from orquestra.sdk._base._driver._client import (
     DriverClient,
     ExternalUriProvider,
     Paginated,
+    _match_unsupported_version,
 )
 from orquestra.sdk._base._driver._models import (
     GetWorkflowDefResponse,
-    K8sEventLog,
-    Message,
-    RayHeadNodeEventLog,
     Resources,
     SystemLogSourceType,
 )
@@ -63,6 +61,45 @@ def endpoint_mocker_base(mocked_responses):
         return _mocker
 
     return _inner
+
+
+@pytest.mark.parametrize(
+    "error_detail,expected_sdk_version,expected_supported_versions",
+    (
+        # Unexpected detail format
+        ("Bad request", None, None),
+        ("Unsupported version: 0.1.0", None, None),
+        # Expected detail format
+        (
+            "Unsupported SDK version: 0.1.0. Supported SDK versions: [0.2.0,0.3.0]",
+            "0.1.0",
+            ["0.2.0", "0.3.0"],
+        ),
+        (
+            "Unsupported SDK version: 0.1.0. Supported SDK versions: [0.2.0]",
+            "0.1.0",
+            ["0.2.0"],
+        ),
+        # Missing versions
+        ("Unsupported SDK version: 0.1.0. Supported SDK versions: []", "0.1.0", None),
+        ("Unsupported SDK version: . Supported SDK versions: [0.1.0]", None, ["0.1.0"]),
+        # Development version
+        (
+            "Unsupported SDK version: 0.3.1.dev9+gabc1230. Supported SDK versions: [0.2.0,0.3.0]",  # noqa: E501
+            "0.3.1.dev9+gabc1230",
+            ["0.2.0", "0.3.0"],
+        ),
+    ),
+)
+def test_unsupported_version_regex(
+    error_detail: str,
+    expected_sdk_version: Optional[str],
+    expected_supported_versions: Optional[List[str]],
+):
+    sdk_version, supported_versions = _match_unsupported_version(error_detail)
+
+    assert sdk_version == expected_sdk_version
+    assert supported_versions == expected_supported_versions
 
 
 class TestClient:
@@ -1000,6 +1037,56 @@ class TestClient:
 
                 with pytest.raises(_exceptions.InvalidWorkflowRunRequest):
                     _ = client.create_workflow_run(workflow_def_id, resources)
+
+            @staticmethod
+            def test_invalid_sdk_version(
+                endpoint_mocker,
+                client: DriverClient,
+                workflow_def_id: str,
+                resources: Resources,
+            ):
+                submitted_version = "0.1.0"
+                supported_versions = "[0.2.0,0.3.0]"
+                endpoint_mocker(
+                    json=resp_mocks.make_error_response(
+                        message="Bad Request",
+                        detail=f"Unsupported SDK version: {submitted_version}. Supported SDK versions: {supported_versions}",  # noqa: E501
+                        code=4,
+                    ),
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/workflow-runs.yaml#L45
+                    status=400,
+                )
+
+                with pytest.raises(_exceptions.UnsupportedSDKVersion) as exc_info:
+                    _ = client.create_workflow_run(workflow_def_id, resources)
+
+                assert exc_info.value.submitted_version == submitted_version
+                assert exc_info.value.supported_versions == ["0.2.0", "0.3.0"]
+
+            @staticmethod
+            def test_invalid_sdk_version_unparsed_fallback(
+                endpoint_mocker,
+                client: DriverClient,
+                workflow_def_id: str,
+                resources: Resources,
+            ):
+                endpoint_mocker(
+                    json=resp_mocks.make_error_response(
+                        message="Bad Request",
+                        detail="This message is different!",
+                        code=4,
+                    ),
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/workflow-runs.yaml#L45
+                    status=400,
+                )
+
+                with pytest.raises(_exceptions.UnsupportedSDKVersion) as exc_info:
+                    _ = client.create_workflow_run(workflow_def_id, resources)
+
+                assert exc_info.value.submitted_version is None
+                assert exc_info.value.supported_versions is None
 
             @staticmethod
             def test_sets_auth(

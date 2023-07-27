@@ -9,6 +9,7 @@
 🔥 *Features*
 * `orq --version` or `orq -V` will now show the current SDK version.
 * `orq wf list` properly prompts for a workspace after selecting config if option `-w` was not provided
+* Helpful error when Compute Engine rejects a workflow if the Workflow SDK version is too old.
 
 🧟 *Deprecations*
 
@@ -25,6 +26,7 @@
 * Added "Beginner's Guide to the CLI"
 * Update migration docs to use `orquestra-sdk[all]` to ensure extras are updated.
 * Added "Workspaces and Projects" guide.
+* Corrected minor typos in the dependency installation guide.
 
 
 ##  v0.53.0

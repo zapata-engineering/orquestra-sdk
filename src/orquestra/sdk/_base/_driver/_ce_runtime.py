@@ -156,6 +156,20 @@ class CERuntime(RuntimeInterface):
                 "Unable to start the workflow run "
                 "- there are errors in the workflow definition."
             ) from e
+        except _exceptions.UnsupportedSDKVersion as e:
+            raise exceptions.WorkflowRunNotStarted(
+                (
+                    "This is an unsupported version of orquestra-sdk.\n{}{}"
+                    'Try updating with `pip install -U "orquestra-sdk[all]"`'
+                ).format(
+                    ""
+                    if e.submitted_version is None
+                    else f" - Current version: {e.submitted_version}\n",
+                    ""
+                    if e.supported_versions is None
+                    else f" - Supported versions: {e.supported_versions}\n",
+                )
+            ) from e
         except _exceptions.InvalidWorkflowRunRequest as e:
             raise exceptions.WorkflowRunNotStarted(
                 "Unable to start the workflow run."

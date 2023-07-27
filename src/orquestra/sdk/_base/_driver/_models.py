@@ -4,7 +4,7 @@
 """
 Internal models for the workflow driver API
 """
-from enum import Enum
+from enum import Enum, IntEnum
 from typing import (
     Generic,
     List,
@@ -67,6 +67,20 @@ class Response(GenericModel, Generic[DataT, MetaT]):
 
 class MetaEmpty(pydantic.BaseModel):
     pass
+
+
+class ErrorCode(IntEnum):
+    """
+    Implements:
+        https://github.com/zapatacomputing/workflow-driver/blob/59eb3985151a813c69fec5a4777e8ed5c9a1f718/openapi/src/resources/workflow-runs.yaml#L59
+    """
+
+    REQUEST_BODY_INVALID_JSON = 1
+    WORKFLOW_DEF_ID_MISSING = 2
+    RESOURCE_REQUEST_INVALID = 3
+    SDK_VERSION_UNSUPPORTED = 4
+    WORKFLOW_DEF_ID_NOT_UUID = 5
+    WORKFLOW_DEF_NOT_FOUND = 6
 
 
 class Error(pydantic.BaseModel):
