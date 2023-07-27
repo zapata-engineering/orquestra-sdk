@@ -41,7 +41,7 @@ from ..abc import RuntimeInterface
 from ._config import RuntimeConfig, _resolve_config
 from ._task_run import TaskRun
 
-COMPLETED_STATES = [State.FAILED, State.TERMINATED, State.SUCCEEDED]
+COMPLETED_STATES = [State.FAILED, State.TERMINATED, State.SUCCEEDED, State.KILLED]
 
 
 class WorkflowRun:
@@ -304,7 +304,7 @@ class WorkflowRun:
             time.sleep(sleep_time)
             status = self.get_status()
 
-        if status not in [State.SUCCEEDED, State.TERMINATED, State.FAILED]:
+        if status not in COMPLETED_STATES:
             raise NotImplementedError(
                 f'Workflow run with id "{self.run_id}" '
                 f'finished with unrecognised state "{status}"'

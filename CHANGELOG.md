@@ -17,6 +17,7 @@
 
 🐛 *Bug Fixes*
 * Fix an error when calling `get_artifacts()` on unfinished or failed workflow
+* `KILLED` workflows will no longer show an error when waiting for the workflow to complete.
 
 💅 *Improvements*
 * Consolidate all `NotATaskWarning` warnings into a single warning for each workflow.
