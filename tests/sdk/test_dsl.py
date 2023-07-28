@@ -562,12 +562,12 @@ def test_default_import_type(monkeypatch):
     [
         (sdk.PythonImports(file="Nope"), "", pytest.raises(FileNotFoundError)),
         (
-            sdk.PythonImports(file="tests/sdk/v2/data/bad_requirements.txt"),
+            sdk.PythonImports(file="tests/sdk/data/bad_requirements.txt"),
             "",
             pytest.raises(pip_api.exceptions.PipError),
         ),
         (
-            sdk.PythonImports(file="tests/sdk/v2/data/requirements.txt"),
+            sdk.PythonImports(file="tests/sdk/data/requirements.txt"),
             ["joblib==1.2.0", "numpy==1.22.0"],
             do_not_raise(),
         ),
@@ -583,22 +583,18 @@ def test_default_import_type(monkeypatch):
         ),
         # conflicting requirements in file and manually passed
         (
-            sdk.PythonImports(
-                "joblib==3.1.0", file="tests/sdk/v2/data/requirements.txt"
-            ),
+            sdk.PythonImports("joblib==3.1.0", file="tests/sdk/data/requirements.txt"),
             "",
             pytest.raises(pip_api.exceptions.PipError),
         ),
         # merge manually passed requirements with those in file
         (
-            sdk.PythonImports(
-                "scipy==1.7.3", file="tests/sdk/v2/data/requirements.txt"
-            ),
+            sdk.PythonImports("scipy==1.7.3", file="tests/sdk/data/requirements.txt"),
             ["joblib==1.2.0", "numpy==1.22.0", "scipy==1.7.3"],
             do_not_raise(),
         ),
         (
-            sdk.PythonImports(file="tests/sdk/v2/data/requirements_with_extras.txt"),
+            sdk.PythonImports(file="tests/sdk/data/requirements_with_extras.txt"),
             # all features of requirement file language shown on one example
             ['requests[security,tests]==2.8.*,>=2.8.1; python_version > "2.7"'],
             do_not_raise(),

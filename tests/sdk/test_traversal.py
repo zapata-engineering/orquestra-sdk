@@ -119,7 +119,7 @@ def python_imports_manual(text: str):
 
 @_dsl.task(
     dependency_imports=[
-        _dsl.PythonImports(file="tests/sdk/v2/data/requirements_with_extras.txt")
+        _dsl.PythonImports(file="tests/sdk/data/requirements_with_extras.txt")
     ]
 )
 def python_imports_from_requirements(text: str):
@@ -815,9 +815,9 @@ CAPITALIZE_INLINE_TASK_DEF = ir.TaskDef(
 GIT_TASK_DEF = ir.TaskDef(
     id=AnyMatchingStr(r"task-git-task-\w{10}"),
     fn_ref=ir.ModuleFunctionRef(
-        module="tests.sdk.v2.test_traversal",
+        module="tests.sdk.test_traversal",
         function_name="git_task",
-        file_path="tests/sdk/v2/test_traversal.py",
+        file_path="tests/sdk/test_traversal.py",
         line_number=AnyPositiveInt(),
     ),
     output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),

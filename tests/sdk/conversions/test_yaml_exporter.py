@@ -602,7 +602,7 @@ def _make_multiple_task_outputs():
         fn_ref=model.ModuleFunctionRef(
             module="test.v2.test_traversal",
             function_name="multiple_task_outputs",
-            file_path="tests/sdk/v2/test_traversal.py",
+            file_path="tests/sdk/test_traversal.py",
             line_number=0,
             type="MODULE_FUNCTION_REF",
         ),
@@ -674,7 +674,7 @@ def _make_multiple_task_outputs_as_inputs():
         fn_ref=model.ModuleFunctionRef(
             module="test.v2.test_traversal",
             function_name="multiple_task_outputs",
-            file_path="tests/sdk/v2/test_traversal.py",
+            file_path="tests/sdk/test_traversal.py",
             line_number=0,
             type="MODULE_FUNCTION_REF",
         ),
@@ -987,7 +987,7 @@ def override_semver(monkeypatch):
     monkeypatch.setattr(_imports, "_get_package_version_tag", version_mock)
 
 
-DATA_PATH = Path("tests/sdk/v2/conversions/data")
+DATA_PATH = Path("tests/sdk/conversions/data")
 
 
 class TestWorkflowToYAML:

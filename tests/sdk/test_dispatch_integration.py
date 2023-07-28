@@ -146,7 +146,7 @@ def test_execution(monkeypatch, tmp_path, wf, expected_out, secrets_calls):
 
 class TestModuleCaching:
     module_name = "workflow_defs"
-    project_dir = "tests/sdk/v2/data/sample_project"
+    project_dir = "tests/sdk/data/sample_project"
 
     @classmethod
     def setup_class(cls):

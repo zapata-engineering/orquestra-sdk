@@ -34,8 +34,8 @@ from orquestra.sdk.schema.workflow_run import RunStatus, State
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
 from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
 
-from ... import reloaders
-from ...sdk.v2.data.configs import TEST_CONFIG_JSON
+from .. import reloaders
+from ..sdk.data.configs import TEST_CONFIG_JSON
 
 INSTANT_1 = _dates.from_comps(2023, 2, 24, 7, 26, 7, 704015, utc_hour_offset=1)
 INSTANT_2 = _dates.from_comps(2023, 2, 24, 7, 28, 37, 123, utc_hour_offset=1)
