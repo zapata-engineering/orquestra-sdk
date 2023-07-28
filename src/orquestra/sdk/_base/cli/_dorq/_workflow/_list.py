@@ -104,7 +104,6 @@ class Action:
 
         wf_runs = self._wf_run_repo.list_wf_runs(
             resolved_config,
-            project=None,
             workspace=workspace,
             limit=resolved_limit,
             max_age=resolved_max_age,

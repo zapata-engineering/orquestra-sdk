@@ -618,18 +618,24 @@ def list_workflow_runs(
             "without a workspace parameter."
         )
 
+    if project:
+        warnings.warn(
+            "`project` parameter in `list_workflow_runs` is deprecated and will be "
+            "removed in the next release.",
+            FutureWarning,
+        )
+        # Null project - it is ignored by platform anyway - left as parameter for
+        # backward compatibility only
+        project = None
+
     _project_dir = Path(project_dir or Path.cwd())
 
     # Resolve config
     resolved_config: RuntimeConfig = _resolve_config(config)
     # If user wasn't specific with workspace and project, we might want to resolve it
-    if workspace is None and project is None:
-        if _project := resolve_studio_project_ref(
-            workspace,
-            project,
-        ):
+    if workspace is None:
+        if _project := resolve_studio_project_ref(workspace, project):
             workspace = _project.workspace_id
-            project = _project.project_id
 
     # resolve runtime
     runtime = resolved_config._get_runtime(_project_dir)
@@ -644,7 +650,6 @@ def list_workflow_runs(
             max_age=_parse_max_age(max_age),
             state=state,
             workspace=workspace,
-            project=project,
         )
 
     # We need to convert to the public API notion of a WorkflowRun

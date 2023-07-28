@@ -18,27 +18,26 @@ def resolve_studio_project_ref(
 ) -> Optional[ProjectRef]:
     """
     Resolve the workspace and project IDs from the passed args or environment vars.
-
-    Raises:
-        ProjectInvalidError: when one but not both of the workspace and project id
-            arguments are specified - this is insufficient information to uniquely
-            identify a project.
     """
-    # Passed explicitly
-    if workspace_id and project_id:
-        return ProjectRef(workspace_id=workspace_id, project_id=project_id)
-    # passed explicitly only 1 value. Invalid entry
-    elif workspace_id or project_id:
-        raise ProjectInvalidError(
-            "Invalid project ID. Either explicitly pass workspace_id "
-            "and project_id, or omit both"
-        )
+    current_workspace: Optional[WorkspaceId]
+    if workspace_id:
+        current_workspace = workspace_id
+    else:
+        try:
+            current_workspace = os.environ[CURRENT_WORKSPACE_ENV]
+        except KeyError:
+            current_workspace = None
 
-    # Currently no way to figure out workspace and projects without env vars
-    try:
-        current_workspace = os.environ[CURRENT_WORKSPACE_ENV]
-        current_project = os.environ[CURRENT_PROJECT_ENV]
-    except KeyError:
+    current_project: Optional[ProjectId]
+    if project_id:
+        current_project = project_id
+    else:
+        try:
+            current_project = os.environ[CURRENT_PROJECT_ENV]
+        except KeyError:
+            current_project = None
+
+    if current_project is None and current_workspace is None:
         return None
-
-    return ProjectRef(workspace_id=current_workspace, project_id=current_project)
+    else:
+        return ProjectRef(workspace_id=current_workspace, project_id=current_project)

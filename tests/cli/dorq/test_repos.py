@@ -215,34 +215,6 @@ class TestWorkflowRunRepo:
                         config_name=config,
                     )
 
-        class TestListWFRunIDs:
-            """
-            Boundaries::
-
-                [WorkflowRunRepo]->[RayRuntime]
-                                 ->[_config]
-                                 ->[_factory]
-            """
-
-            @staticmethod
-            @pytest.mark.parametrize(
-                "exc", [ConnectionError(), exceptions.UnauthorizedError()]
-            )
-            def test_passing_errors(monkeypatch, exc):
-                # Given
-                config = "<config sentinel>"
-                ws = "<workspace sentinel>"
-                project = "<project sentinel>"
-
-                monkeypatch.setattr(sdk, "list_workflow_runs", Mock(side_effect=exc))
-
-                repo = _repos.WorkflowRunRepo()
-
-                # Then
-                with pytest.raises(type(exc)):
-                    # When
-                    _ = repo.list_wf_run_ids(config, ProjectRef(ws, project))
-
         class TestSubmit:
             @staticmethod
             def test_passes_parameters():
@@ -855,58 +827,10 @@ class TestWorkflowRunRepo:
             repo = _repos.WorkflowRunRepo()
 
             # When
-            runs = repo.list_wf_runs(config, ws, proj)
+            runs = repo.list_wf_runs(config, ws)
 
             # Then
             assert [run.id for run in runs] == stub_run_ids
-
-        @staticmethod
-        def test_list_wf_run_ids(monkeypatch):
-            """
-            Test boundary::
-
-                [WorkflowRunRepo]->[RayRuntime]
-
-            Validates that we're using runtimes factory correctly.
-            """
-
-            # Given
-            config = "ray"
-            ws = "ws"
-            proj = "proj"
-            stub_run_ids = ["wf.1", "wf.2"]
-            state = State("RUNNING")
-
-            # Make RayRuntime return the IDs we want. We don't want to submit real
-            # workflows and wait for their completion because it takes forever. It's
-            # tested already by RayRuntime-specific tests.
-            mock_wf_runs = []
-            for stub_id in stub_run_ids:
-                wf_run = Mock()
-                wf_run.get_status_model.return_value = WorkflowRunModel(
-                    id=stub_id,
-                    workflow_def=create_autospec(ir.WorkflowDef),
-                    task_runs=[],
-                    status=RunStatus(state=state, start_time=None, end_time=None),
-                )
-                mock_wf_runs.append(wf_run)
-
-            monkeypatch.setattr(
-                sdk,
-                "list_workflow_runs",
-                Mock(return_value=mock_wf_runs),
-            )
-
-            # Prevent RayRuntime from connecting to a real cluster.
-            monkeypatch.setattr(_dag.RayRuntime, "startup", Mock())
-
-            repo = _repos.WorkflowRunRepo()
-
-            # When
-            run_ids = repo.list_wf_run_ids(config, ProjectRef(ws, proj))
-
-            # Then
-            assert run_ids == stub_run_ids
 
         class TestWithInProcess:
             """

@@ -119,25 +119,13 @@ class TestAction:
             state, interactive=interactive
         )
 
-        # We should pass resolved values to run repo.
-        if is_spaces_supported:
-            wf_run_repo.list_wf_runs.assert_called_with(
-                resolved_config,
-                limit=resolved_limit,
-                max_age=resolved_max_age,
-                state=resolved_state,
-                project=None,
-                workspace=resolved_workspace,
-            )
-        else:
-            wf_run_repo.list_wf_runs.assert_called_with(
-                resolved_config,
-                limit=resolved_limit,
-                max_age=resolved_max_age,
-                state=resolved_state,
-                project=None,
-                workspace=None,
-            )
+        wf_run_repo.list_wf_runs.assert_called_with(
+            resolved_config,
+            limit=resolved_limit,
+            max_age=resolved_max_age,
+            state=resolved_state,
+            workspace=resolved_workspace if is_spaces_supported else None,
+        )
 
         # We expect printing of the workflow runs returned from the repo.
         summary_repo.wf_list_summary.assert_called_with(wf_runs)

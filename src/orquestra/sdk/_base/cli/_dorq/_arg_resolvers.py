@@ -216,28 +216,8 @@ class WFRunResolver:
     def resolve_id(
         self, wf_run_id: t.Optional[WorkflowRunId], config: ConfigName
     ) -> WorkflowRunId:
-        if wf_run_id is not None:
-            return wf_run_id
-
-        try:
-            resolved_workspace_id = self._spaces_resolver.resolve_workspace_id(config)
-            resolved_project_id = self._spaces_resolver.resolve_project_id(
-                config, workspace_id=resolved_workspace_id
-            )
-        except exceptions.WorkspacesNotSupportedError:
-            # if run on runtime that doesn't support workspaces
-            resolved_workspace_id = None
-            resolved_project_id = None
-
-        wfs = self._wf_run_repo.list_wf_runs(
-            config, workspace=resolved_workspace_id, project=resolved_project_id
-        )
-
-        wfs, tabulated_labels = self._presenter.wf_list_for_prompt(wfs)
-        prompt_choices = [(label, wf.id) for label, wf in zip(tabulated_labels, wfs)]
-        selected_id = self._prompter.choice(prompt_choices, message="Workflow run ID")
-
-        return selected_id
+        selected_run = self.resolve_run(wf_run_id, config)
+        return selected_run.id
 
     def resolve_run(
         self, wf_run_id: t.Optional[WorkflowRunId], config: ConfigName
@@ -247,16 +227,10 @@ class WFRunResolver:
 
         try:
             resolved_workspace_id = self._spaces_resolver.resolve_workspace_id(config)
-            resolved_project_id = self._spaces_resolver.resolve_project_id(
-                config, workspace_id=resolved_workspace_id
-            )
         except exceptions.WorkspacesNotSupportedError:
             resolved_workspace_id = None
-            resolved_project_id = None
 
-        runs = self._wf_run_repo.list_wf_runs(
-            config, workspace=resolved_workspace_id, project=resolved_project_id
-        )
+        runs = self._wf_run_repo.list_wf_runs(config, workspace=resolved_workspace_id)
 
         runs, tabulated_labels = self._presenter.wf_list_for_prompt(runs)
         prompt_choices = [(label, wf) for label, wf in zip(tabulated_labels, runs)]

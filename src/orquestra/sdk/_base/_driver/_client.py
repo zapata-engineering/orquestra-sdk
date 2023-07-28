@@ -411,7 +411,6 @@ class DriverClient:
         page_size: Optional[int] = None,
         page_token: Optional[str] = None,
         workspace: Optional[WorkspaceId] = None,
-        project: Optional[ProjectId] = None,
     ) -> Paginated[WorkflowRunMinimal]:
         """
         List workflow runs with a specified workflow def ID from the workflow driver
@@ -429,7 +428,6 @@ class DriverClient:
                 pageSize=page_size,
                 pageToken=page_token,
                 workspaceId=workspace,
-                projectId=project,
             ).dict(),
         )
 

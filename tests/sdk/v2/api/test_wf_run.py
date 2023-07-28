@@ -1151,7 +1151,6 @@ class TestListWorkflows:
             max_age=delta,
             state=None,
             workspace=None,
-            project=None,
         )
 
     def test_with_limit(self, mock_config_runtime):
@@ -1164,7 +1163,6 @@ class TestListWorkflows:
             max_age=None,
             state=None,
             workspace=None,
-            project=None,
         )
 
     def test_with_state(self, mock_config_runtime):
@@ -1177,7 +1175,6 @@ class TestListWorkflows:
             max_age=None,
             state=State.SUCCEEDED,
             workspace=None,
-            project=None,
         )
 
     def test_with_workspace(self, mock_config_runtime):
@@ -1193,25 +1190,6 @@ class TestListWorkflows:
             max_age=None,
             state=None,
             workspace="<workspace ID sentinel>",
-            project=None,
-        )
-
-    def test_with_workspace_and_project(self, mock_config_runtime):
-        # GIVEN
-        # WHEN
-        _ = _api.list_workflow_runs(
-            "mocked_config",
-            project="<project ID sentinel>",
-            workspace="<workspace ID sentinel>",
-        )
-
-        # THEN
-        mock_config_runtime.list_workflow_runs.assert_called_once_with(
-            limit=None,
-            max_age=None,
-            state=None,
-            workspace="<workspace ID sentinel>",
-            project="<project ID sentinel>",
         )
 
     def test_raises_exception_with_project_and_no_workspace(self, mock_config_runtime):
@@ -1237,7 +1215,6 @@ class TestListWorkflows:
         # WHEN
         _ = _api.list_workflow_runs(
             "mocked_config",
-            project="<project ID sentinel>",
             workspace="<workspace ID sentinel>",
         )
 
@@ -1247,7 +1224,6 @@ class TestListWorkflows:
             max_age=None,
             state=None,
             workspace="<workspace ID sentinel>",
-            project="<project ID sentinel>",
         )
 
     def test_in_studio_no_arguments(self, monkeypatch, mock_config_runtime):
@@ -1274,7 +1250,6 @@ class TestListWorkflows:
             max_age=None,
             state=None,
             workspace="env_workspace",
-            project="env_project",
         )
 
     @staticmethod
@@ -1300,25 +1275,23 @@ class TestListWorkflows:
 
 
 @pytest.mark.parametrize(
-    "workspace_id, project_id, workspace_env, project_env, raises, expected",
+    "workspace_id, project_id, workspace_env, project_env, expected",
     [
         (
             "a",
             "b",
             None,
             None,
-            do_not_raise(),
             ProjectRef(workspace_id="a", project_id="b"),
         ),
-        ("a", None, None, None, pytest.raises(ProjectInvalidError), None),
-        (None, "b", None, None, pytest.raises(ProjectInvalidError), None),
-        (None, None, None, None, do_not_raise(), None),
+        ("a", None, None, None, ProjectRef(workspace_id="a", project_id=None)),
+        (None, "b", None, None, ProjectRef(workspace_id=None, project_id="b")),
+        (None, None, None, None, None),
         (
             "a",
             "b",
             "env_ws",
             "env_proj",
-            do_not_raise(),
             ProjectRef(workspace_id="a", project_id="b"),
         ),
         (
@@ -1326,11 +1299,10 @@ class TestListWorkflows:
             None,
             "env_ws",
             "env_proj",
-            do_not_raise(),
             ProjectRef(workspace_id="env_ws", project_id="env_proj"),
         ),
-        (None, None, "env_ws", None, do_not_raise(), None),
-        (None, None, None, "env_proj", do_not_raise(), None),
+        (None, None, "a", None, ProjectRef(workspace_id="a", project_id=None)),
+        (None, None, None, "b", ProjectRef(workspace_id=None, project_id="b")),
     ],
 )
 class TestProjectId:
@@ -1340,7 +1312,6 @@ class TestProjectId:
         project_id,
         workspace_env,
         project_env,
-        raises,
         expected,
         monkeypatch,
     ):
@@ -1360,9 +1331,9 @@ class TestProjectId:
             InProcessRuntime, "create_workflow_run", workflow_create_mock
         )
         monkeypatch.setattr(_api._config.RuntimeConfig, "name", "auto")
-        with raises:
-            wf_def.run("in_process", workspace_id=workspace_id, project_id=project_id)
-            workflow_create_mock.assert_called_once_with(wf_def.model, expected)
+
+        wf_def.run("in_process", workspace_id=workspace_id, project_id=project_id)
+        workflow_create_mock.assert_called_once_with(wf_def.model, expected)
 
 
 class TestListWorkspaces:
