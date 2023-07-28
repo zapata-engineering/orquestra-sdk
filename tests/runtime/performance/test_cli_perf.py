@@ -96,33 +96,37 @@ def orq_workflow_run(ray_cluster, orq_project_dir):
     yield workflow_id
 
 
-BASE_TIMEOUT = 1
-TEST_TIMEOUT = 10
-SUBMIT_TIMEOUT = 15
+# This is the timeout for the basic no-op commands (orq -h)
+BASE_TIMEOUT_SEC = 1
+# This is for all commands that interact with a workflow run
+TEST_TIMEOUT_SEC = 5
+# The submit command takes longer because it imports code
+# this is variable and depends on the user's code
+SUBMIT_TIMEOUT_SEC = 8
 
 
-@pytest.mark.expect_under(BASE_TIMEOUT)
+@pytest.mark.expect_under(BASE_TIMEOUT_SEC)
 def test_orq_help():
     _run_orq_command(["-h"])
 
 
-@pytest.mark.expect_under(BASE_TIMEOUT)
+@pytest.mark.expect_under(BASE_TIMEOUT_SEC)
 def test_orq_invalid():
     with pytest.raises(subprocess.CalledProcessError):
         _run_orq_command(["general-kenobi"])
 
 
-@pytest.mark.expect_under(SUBMIT_TIMEOUT)
+@pytest.mark.expect_under(SUBMIT_TIMEOUT_SEC)
 def test_orq_submit_workflow_def(ray_cluster, orq_project_dir):
     _run_orq_command(["workflow", "submit", "-c", "local", "workflow_defs"])
 
 
-@pytest.mark.expect_under(TEST_TIMEOUT)
+@pytest.mark.expect_under(TEST_TIMEOUT_SEC)
 def test_get_workflow_run(orq_project_dir, orq_workflow_run):
     _run_orq_command(["workflow", "view", orq_workflow_run, "-c", "local"])
 
 
-@pytest.mark.expect_under(TEST_TIMEOUT)
+@pytest.mark.expect_under(TEST_TIMEOUT_SEC)
 def test_get_workflow_run_results(orq_project_dir, orq_workflow_run):
     _run_orq_command(
         [
