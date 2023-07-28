@@ -352,6 +352,9 @@ class CERuntime(RuntimeInterface):
         artifact_vals: Dict[TaskInvocationId, WorkflowResult] = {}
 
         for task_run_id, artifact_ids in artifact_map.items():
+            # No artifact available yet on the workflow driver
+            if len(artifact_ids) == 0:
+                continue
             inv_id = self._invocation_id_by_task_run_id(workflow_run_id, task_run_id)
             assert (
                 len(artifact_ids) == 1
