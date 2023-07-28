@@ -12,6 +12,7 @@
 * Helpful error when Compute Engine rejects a workflow if the Workflow SDK version is too old.
 
 🧟 *Deprecations*
+* `list_workflow_runs` project parameter was ignored anyway. It throws a warning now - will be removed in next release.
 
 👩‍🔬 *Experimental*
 
@@ -20,6 +21,7 @@
 
 💅 *Improvements*
 * Consolidate all `NotATaskWarning` warnings into a single warning for each workflow.
+* `orq wf *` and `orq task *` commands (other than `orq wf submit`) wont prompt for project parameter anymore, as it was ignored anyway 
 
 🥷 *Internal*
 

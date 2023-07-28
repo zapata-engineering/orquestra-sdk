@@ -802,7 +802,6 @@ class TestWorkflowRunRepo:
             # Given
             config = "ray"
             ws = "ws"
-            proj = "proj"
             stub_run_ids = ["wf.1", "wf.2"]
             state = State("RUNNING")
             mock_wf_runs = []
