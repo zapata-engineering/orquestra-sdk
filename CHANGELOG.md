@@ -26,6 +26,7 @@
 📃 *Docs*
 * Added "Beginner's Guide to the CLI"
 * Update migration docs to use `orquestra-sdk[all]` to ensure extras are updated.
+* Added "Workspaces and Projects" guide.
 * Corrected minor typos in the dependency installation guide.
 
 
