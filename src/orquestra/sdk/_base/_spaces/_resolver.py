@@ -16,6 +16,14 @@ def resolve_studio_project_ref(
     workspace_id: Optional[WorkspaceId],
     project_id: Optional[ProjectId],
 ) -> Optional[ProjectRef]:
+    """
+    Resolve the workspace and project IDs from the passed args or environment vars.
+
+    Raises:
+        ProjectInvalidError: when one but not both of the workspace and project id
+            arguments are specified - this is insufficient information to uniquely
+            identify a project.
+    """
     # Passed explicitly
     if workspace_id and project_id:
         return ProjectRef(workspace_id=workspace_id, project_id=project_id)

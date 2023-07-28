@@ -60,6 +60,13 @@ ID of the project used to submit workflow. Used only on CE runtime
 
 
 @cloup.group(context_settings=CLICK_CTX_SETTINGS)
+@click.version_option(
+    None,  # version number not set, click will infer it using importlib.metadata
+    "-V",
+    "--version",
+    prog_name="Orquestra Workflow SDK",  # displayed to the user
+    package_name="orquestra-sdk",
+)
 def dorq():
     # Normally, click would infer command name from function name. This is different,
     # because it's the top-level group. User-facing name depends on the entrypoint spec
@@ -168,7 +175,7 @@ def wf_results(
 
     This command tries to print a human-friendly values preview, but the output isn't
     guaranteed to be a valid parseable value. If you need the artifact value for
-    further processing, use the ``download_dir`` option or use
+    further processing, use the ``download-dir`` option or use
     ``orquestra.sdk.WorkflowRun.get_results()`` directly from Python.
     """
 
@@ -332,7 +339,7 @@ def task_results(*args, **kwargs):
 
     This command tries to print a human-friendly values preview, but the output isn't
     guaranteed to be a valid parseable value. If you need the artifact value for
-    further processing, use the ``download_dir`` option or use
+    further processing, use the ``download-dir`` option or use
     ``orquestra.sdk.WorkflowRun.get_tasks()`` and ``task.get_results()`` directly from
     Python.
     """

@@ -2,8 +2,7 @@
 ################################################################################
 from contextlib import nullcontext as do_not_raise
 from datetime import timedelta
-from pathlib import Path
-from typing import ContextManager
+from typing import ContextManager, List, Optional
 from unittest.mock import DEFAULT, MagicMock, Mock, call, create_autospec
 
 import pytest
@@ -281,6 +280,43 @@ class TestCreateWorkflowRun:
             # When
             with pytest.raises(exceptions.WorkflowRunNotStarted):
                 _ = runtime.create_workflow_run(my_workflow.model, None)
+
+        @pytest.mark.parametrize("submitted_version", (None, "0.1.0"))
+        @pytest.mark.parametrize(
+            "supported_versions", (None, ["0.1.0"], ["0.2.0", "0.3.0"])
+        )
+        def test_unsupported_sdk_version(
+            self,
+            mocked_client: MagicMock,
+            runtime: _ce_runtime.CERuntime,
+            submitted_version: Optional[str],
+            supported_versions: Optional[List[str]],
+        ):
+            # Given
+            mocked_client.create_workflow_run.side_effect = (
+                _exceptions.UnsupportedSDKVersion(submitted_version, supported_versions)
+            )
+
+            # When
+            with pytest.raises(exceptions.WorkflowRunNotStarted) as exc_info:
+                _ = runtime.create_workflow_run(my_workflow.model, None)
+
+            error_message = str(exc_info.value)
+            assert "This is an unsupported version of orquestra-sdk.\n" in error_message
+            assert (
+                'Try updating with `pip install -U "orquestra-sdk[all]"`'
+                in error_message
+            )
+
+            if submitted_version is None:
+                assert " - Current version:" not in error_message
+            else:
+                assert f" - Current version: {submitted_version}" in error_message
+
+            if supported_versions is None:
+                assert " - Supported versions:" not in error_message
+            else:
+                assert f" - Supported versions: {supported_versions}" in error_message
 
         def test_unknown_http(
             self, mocked_client: MagicMock, runtime: _ce_runtime.CERuntime
@@ -706,6 +742,7 @@ class TestGetAvailableOutputs:
             mocked_client.get_workflow_run_artifacts.return_value = {
                 f"{workflow_run_id}@task-inv-1": ["wf-art-1"],
                 f"{workflow_run_id}@task-inv-2": ["wf-art-3"],
+                f"{workflow_run_id}@task-inv-3": [],
             }
             return mocked_client
 
