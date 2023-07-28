@@ -216,8 +216,11 @@ class WFRunResolver:
     def resolve_id(
         self, wf_run_id: t.Optional[WorkflowRunId], config: ConfigName
     ) -> WorkflowRunId:
-        selected_run = self.resolve_run(wf_run_id, config)
-        return selected_run.id
+        if wf_run_id is not None:
+            return wf_run_id
+        else:
+            selected_run = self.resolve_run(None, config)
+            return selected_run.id
 
     def resolve_run(
         self, wf_run_id: t.Optional[WorkflowRunId], config: ConfigName
@@ -231,7 +234,6 @@ class WFRunResolver:
             resolved_workspace_id = None
 
         runs = self._wf_run_repo.list_wf_runs(config, workspace=resolved_workspace_id)
-
         runs, tabulated_labels = self._presenter.wf_list_for_prompt(runs)
         prompt_choices = [(label, wf) for label, wf in zip(tabulated_labels, runs)]
 

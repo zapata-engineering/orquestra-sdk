@@ -424,8 +424,8 @@ class TestWFRunResolver:
 
             prompter = create_autospec(_prompts.Prompter)
 
-            selected_id = listed_runs[0].id
-            prompter.choice.return_value = selected_id
+            selected_run = listed_runs[0]
+            prompter.choice.return_value = selected_run
             spaces_resolver = create_autospec(_arg_resolvers.SpacesResolver)
             fake_ws = "wake ws"
             if runtime_supports_workspaces:
@@ -456,15 +456,15 @@ class TestWFRunResolver:
                 [
                     (
                         "2  " + (current_time + timedelta(seconds=time_delta)).ctime(),
-                        "2",
+                        listed_runs[1],
                     ),
-                    ("1  " + current_time.ctime(), "1"),
+                    ("1  " + current_time.ctime(), listed_runs[0]),
                 ],
                 message="Workflow run ID",
             )
 
             # Resolver should return the user's choice.
-            assert resolved_id == selected_id
+            assert resolved_id == selected_run.id
 
     class TestResolveRun:
         @staticmethod
