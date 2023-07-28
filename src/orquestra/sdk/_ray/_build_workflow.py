@@ -14,6 +14,7 @@ from typing_extensions import assert_never
 
 from .. import exceptions, secrets
 from .._base import _exec_ctx, _git_url_utils, _graphs, dispatch, serde
+from .._base._driver._ce_runtime import CE_REQUIRES_PYTHON_VERSION
 from .._base._env import (
     RAY_DOWNLOAD_GIT_IMPORTS_ENV,
     RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV,
@@ -152,7 +153,16 @@ class ArgumentUnwrapper:
         for name, kwarg in wrapped_kwargs.items():
             kwargs[name] = self._unpack_argument(kwarg, name)
 
-        return self._user_fn(*args, **kwargs)
+        try:
+            ret = self._user_fn(*args, **kwargs)
+        except SystemError as e:
+            raise exceptions.PythonVersionMismatch(
+                "Could not deserialise data. "
+                "This may be due to a Python version mismatch. "
+                "If you're trying to run on CE, please ensure that your Python version "
+                f"matches {CE_REQUIRES_PYTHON_VERSION}."
+            ) from e
+        return ret
 
 
 def _make_ray_dag_node(
@@ -214,14 +224,7 @@ def _make_ray_dag_node(
                     deserialize=serialization,
                 )
 
-                try:
-                    wrapped_return = wrapped(*inner_args, **inner_kwargs)
-                except SystemError as e:
-                    raise EnvironmentError(
-                        "Could not deserialise data. "
-                        "This may be due to a python version mismatch. "
-                        "Please try updating your python version."
-                    ) from e
+                wrapped_return = wrapped(*inner_args, **inner_kwargs)
 
                 packed: responses.WorkflowResult = (
                     serde.result_from_artifact(wrapped_return, ir.ArtifactFormat.AUTO)

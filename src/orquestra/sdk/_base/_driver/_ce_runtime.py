@@ -32,6 +32,8 @@ from orquestra.sdk.schema.workflow_run import (
 
 from . import _client, _exceptions, _models
 
+CE_REQUIRES_PYTHON_VERSION: str = "3.9"
+
 
 def _get_max_resources(workflow_def: WorkflowDef) -> _models.Resources:
     max_gpu = None

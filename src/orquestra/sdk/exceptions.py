@@ -27,6 +27,12 @@ class VersionMismatch(Warning):
         self.needed = needed
 
 
+class PythonVersionMismatch(Exception):
+    """Raised when there are mismatching python versions between local and remote."""
+
+    pass
+
+
 class DirtyGitRepo(Warning):
     """Raised when there are uncommitted changes in the git repo."""
 
