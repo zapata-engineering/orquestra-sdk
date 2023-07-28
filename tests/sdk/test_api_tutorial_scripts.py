@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-BASE_PATH = Path(__file__).parent.parent.parent.parent
+BASE_PATH = Path(__file__).parent.parent.parent
 PYTHON_EXECUTABLE = python_executable = str(sys.executable)
 
 
