@@ -7,9 +7,9 @@ Unit tests for 'orq wf view' glue code.
 import typing as t
 from unittest.mock import create_autospec
 
-from orquestra.sdk._base.cli._dorq import _arg_resolvers, _repos
-from orquestra.sdk._base.cli._dorq._ui import _presenters
-from orquestra.sdk._base.cli._dorq._workflow import _view
+from orquestra.sdk._base.cli import _arg_resolvers, _repos
+from orquestra.sdk._base.cli._ui import _presenters
+from orquestra.sdk._base.cli._workflow import _view
 
 
 class TestAction:

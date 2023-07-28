@@ -12,7 +12,7 @@ from pathlib import Path
 import click
 import cloup
 
-from orquestra.sdk._base.cli._dorq._ui._click_default_group import DefaultGroup
+from orquestra.sdk._base.cli._ui._click_default_group import DefaultGroup
 from orquestra.sdk.schema.configs import RemoteRuntime, RuntimeName
 
 from . import _cli_logs

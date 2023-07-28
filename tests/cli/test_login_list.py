@@ -4,7 +4,7 @@
 
 from unittest.mock import Mock, create_autospec
 
-from orquestra.sdk._base.cli._dorq._config._list import Action
+from orquestra.sdk._base.cli._config._list import Action
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 
 

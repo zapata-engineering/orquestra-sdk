@@ -11,7 +11,7 @@ import pytest
 
 from orquestra.sdk import exceptions as exceptions
 from orquestra.sdk._base import _dates
-from orquestra.sdk._base.cli._dorq._workflow import _list
+from orquestra.sdk._base.cli._workflow import _list
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 
 

@@ -6,7 +6,7 @@ from unittest.mock import Mock
 import pytest
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._base.cli._dorq._workflow import _stop
+from orquestra.sdk._base.cli._workflow import _stop
 
 
 class TestAction:

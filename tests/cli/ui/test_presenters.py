@@ -13,10 +13,10 @@ from orquestra import sdk
 from orquestra.sdk._base import serde
 from orquestra.sdk._base._dates import Instant
 from orquestra.sdk._base._spaces._structs import Project, Workspace
-from orquestra.sdk._base.cli._dorq._ui import _errors
-from orquestra.sdk._base.cli._dorq._ui import _models as ui_models
-from orquestra.sdk._base.cli._dorq._ui import _presenters
-from orquestra.sdk._base.cli._dorq._ui._corq_format import per_command
+from orquestra.sdk._base.cli._ui import _errors
+from orquestra.sdk._base.cli._ui import _models as ui_models
+from orquestra.sdk._base.cli._ui import _presenters
+from orquestra.sdk._base.cli._ui._corq_format import per_command
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.responses import ResponseStatusCode, ServiceResponse

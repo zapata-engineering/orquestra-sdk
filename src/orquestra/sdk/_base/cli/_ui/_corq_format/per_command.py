@@ -28,9 +28,9 @@ def pretty_print_response(
             outputs. None if the CLI parser didn't define this arg.
     """
     # Deferred import for optimizing CLI start time.
-    import orquestra.sdk._base.cli._dorq._ui._corq_format.color
+    import orquestra.sdk._base.cli._ui._corq_format.color
 
-    orquestra.sdk._base.cli._dorq._ui._corq_format.color.print_colorized_json(response)
+    orquestra.sdk._base.cli._ui._corq_format.color.print_colorized_json(response)
 
 
 @pretty_print_response.register
@@ -38,13 +38,11 @@ def _print_logs(
     response: responses.GetLogsResponse,
     project_dir: t.Optional[str],
 ):
-    import orquestra.sdk._base.cli._dorq._ui._corq_format.color
+    import orquestra.sdk._base.cli._ui._corq_format.color
 
     for line in response.logs:
         if isinstance(line, pydantic.BaseModel):
-            orquestra.sdk._base.cli._dorq._ui._corq_format.color.print_colorized_json(
-                line
-            )
+            orquestra.sdk._base.cli._ui._corq_format.color.print_colorized_json(line)
         else:
             print(line)
 

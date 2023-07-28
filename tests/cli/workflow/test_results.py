@@ -8,9 +8,9 @@ Unit tests for 'orq wf results' glue code.
 from pathlib import Path
 from unittest.mock import create_autospec
 
-from orquestra.sdk._base.cli._dorq import _arg_resolvers, _dumpers, _repos
-from orquestra.sdk._base.cli._dorq._ui import _presenters
-from orquestra.sdk._base.cli._dorq._workflow import _results
+from orquestra.sdk._base.cli import _arg_resolvers, _dumpers, _repos
+from orquestra.sdk._base.cli._ui import _presenters
+from orquestra.sdk._base.cli._workflow import _results
 
 
 class TestAction:

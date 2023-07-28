@@ -12,9 +12,9 @@ from unittest.mock import Mock, create_autospec
 import pytest
 
 from orquestra.sdk._base import _services
-from orquestra.sdk._base.cli._dorq import _arg_resolvers
-from orquestra.sdk._base.cli._dorq._services import _up
-from orquestra.sdk._base.cli._dorq._ui import _presenters
+from orquestra.sdk._base.cli import _arg_resolvers
+from orquestra.sdk._base.cli._services import _up
+from orquestra.sdk._base.cli._ui import _presenters
 from orquestra.sdk.schema.responses import ServiceResponse
 
 

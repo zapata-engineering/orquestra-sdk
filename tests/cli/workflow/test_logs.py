@@ -6,16 +6,16 @@ Unit tests for 'orq wf results' glue code.
 """
 
 from pathlib import Path
-from unittest.mock import Mock, call, create_autospec
+from unittest.mock import Mock, create_autospec
 
 import pytest
 
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
-from orquestra.sdk._base.cli._dorq._arg_resolvers import WFConfigResolver, WFRunResolver
-from orquestra.sdk._base.cli._dorq._dumpers import LogsDumper
-from orquestra.sdk._base.cli._dorq._repos import WorkflowRunRepo
-from orquestra.sdk._base.cli._dorq._ui._presenters import WrappedCorqOutputPresenter
-from orquestra.sdk._base.cli._dorq._workflow import _logs
+from orquestra.sdk._base.cli._arg_resolvers import WFConfigResolver, WFRunResolver
+from orquestra.sdk._base.cli._dumpers import LogsDumper
+from orquestra.sdk._base.cli._repos import WorkflowRunRepo
+from orquestra.sdk._base.cli._ui._presenters import WrappedCorqOutputPresenter
+from orquestra.sdk._base.cli._workflow import _logs
 
 
 class TestAction:

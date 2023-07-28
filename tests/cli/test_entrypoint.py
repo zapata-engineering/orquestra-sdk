@@ -11,9 +11,9 @@ from unittest.mock import ANY, Mock, create_autospec
 
 import pytest
 
-from orquestra.sdk._base.cli._dorq import _entry
-from orquestra.sdk._base.cli._dorq._login import _login
-from orquestra.sdk._base.cli._dorq._workflow import _list
+from orquestra.sdk._base.cli import _entry
+from orquestra.sdk._base.cli._login import _login
+from orquestra.sdk._base.cli._workflow import _list
 from orquestra.sdk.schema.configs import RuntimeName
 
 

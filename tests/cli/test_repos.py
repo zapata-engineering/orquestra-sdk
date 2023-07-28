@@ -25,8 +25,8 @@ from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._qe._client import QEClient
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing import _example_wfs
-from orquestra.sdk._base.cli._dorq import _repos
-from orquestra.sdk._base.cli._dorq._ui import _models as ui_models
+from orquestra.sdk._base.cli import _repos
+from orquestra.sdk._base.cli._ui import _models as ui_models
 from orquestra.sdk._ray import _dag
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeName

@@ -8,15 +8,15 @@ Unit tests for 'orq task results' glue code.
 from pathlib import Path
 from unittest.mock import create_autospec
 
-from orquestra.sdk._base.cli._dorq._arg_resolvers import (
+from orquestra.sdk._base.cli._arg_resolvers import (
     TaskInvIDResolver,
     WFConfigResolver,
     WFRunResolver,
 )
-from orquestra.sdk._base.cli._dorq._dumpers import TaskOutputDumper
-from orquestra.sdk._base.cli._dorq._repos import WorkflowRunRepo
-from orquestra.sdk._base.cli._dorq._task import _results
-from orquestra.sdk._base.cli._dorq._ui._presenters import (
+from orquestra.sdk._base.cli._dumpers import TaskOutputDumper
+from orquestra.sdk._base.cli._repos import WorkflowRunRepo
+from orquestra.sdk._base.cli._task import _results
+from orquestra.sdk._base.cli._ui._presenters import (
     ArtifactPresenter,
     WrappedCorqOutputPresenter,
 )

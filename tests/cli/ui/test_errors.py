@@ -4,7 +4,7 @@
 import pytest
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._base.cli._dorq._ui import _errors
+from orquestra.sdk._base.cli._ui import _errors
 from orquestra.sdk.schema.workflow_run import State
 
 

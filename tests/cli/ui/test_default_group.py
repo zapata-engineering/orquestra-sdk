@@ -30,7 +30,7 @@ import click
 import pytest
 from click.testing import CliRunner
 
-from orquestra.sdk._base.cli._dorq._ui._click_default_group import DefaultGroup
+from orquestra.sdk._base.cli._ui._click_default_group import DefaultGroup
 
 
 @click.group(cls=DefaultGroup, default="foo", invoke_without_command=True)
