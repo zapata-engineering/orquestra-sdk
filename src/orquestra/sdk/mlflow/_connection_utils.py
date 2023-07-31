@@ -33,18 +33,6 @@ def _is_executing_remoteley() -> bool:
     """
     if os.getenv(_env.CURRENT_CLUSTER_ENV):
         return True
-    else:
-        # TODO: https://zapatacomputing.atlassian.net/browse/ORQSDK-914 - this
-        # workaround exists to maintian compatibility with previous WDR versions.
-        # Future releases should remove this else block.
-        envvars = [
-            _env.PASSPORT_FILE_ENV,
-            _env.MLFLOW_CR_NAME,
-            _env.MLFLOW_PORT,
-            _env.MLFLOW_ARTIFACTS_DIR,
-        ]
-        if all(os.getenv(envvar) for envvar in envvars):
-            return True
     return False
 
 
