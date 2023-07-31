@@ -8,7 +8,7 @@ It assumes you've :doc:`installed Orquestra Workflow SDK <installing-macos-linux
 Define a task and a workflow
 ============================
 
-Create a file ``workflow_defs.py`` file with the following contents [1]_:
+Create a file called ``workflow_defs.py`` with the following content [1]_:
 
 .. literalinclude:: ../examples/workflow_defs.py
     :start-after: >> Start
