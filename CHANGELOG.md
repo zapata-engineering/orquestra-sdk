@@ -29,6 +29,7 @@
 * Update migration docs to use `orquestra-sdk[all]` to ensure extras are updated.
 * Added "Workspaces and Projects" guide.
 * Corrected minor typos in the dependency installation guide.
+* Corrected unclear language in the quickstart guide.
 
 
 ##  v0.53.0
