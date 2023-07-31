@@ -47,6 +47,19 @@ from ..data.complex_serialization.workflow_defs import (
 from ..data.configs import TEST_CONFIG_JSON
 
 
+def _fake_completed_workflow(end_state: State = State.SUCCEEDED):
+    # for simulating a workflow running
+    run_model = Mock(name=f"{end_state.value} wf run model")
+
+    # We need the output ids to have a length as we use this to determine how many
+    # results we expect. We set this to 2 to avoid the special case where single
+    # return values are unpacked.
+    run_model.workflow_def.output_ids.__len__ = Mock(return_value=2)
+
+    run_model.status.state = end_state
+    return run_model
+
+
 @pytest.fixture
 def tmp_default_config_json(patch_config_location):
     json_file = patch_config_location / "config.json"
@@ -140,17 +153,9 @@ class TestWorkflowRun:
         runtime.get_workflow_run_outputs_non_blocking.return_value = (
             serde.result_from_artifact("woohoo!", ir.ArtifactFormat.AUTO),
         )
-        # for simulating a workflow running
-        succeeded_run_model = Mock(name="succeeded wf run model")
-
-        # We need the output ids to have a length as we use this to determine how many
-        # results we expect. We set this to 2 to avoid the special case where single
-        # return values are unpacked.
-        succeeded_run_model.workflow_def.output_ids.__len__ = Mock(return_value=2)
-
-        # Default value is "SUCCEEDED"
-        succeeded_run_model.status.state = State.SUCCEEDED
-        runtime.get_workflow_run_status.return_value = succeeded_run_model
+        runtime.get_workflow_run_status.return_value = _fake_completed_workflow(
+            State.SUCCEEDED
+        )
         # Use side effects to simulate a running workflow
 
         running_wf_run_model = Mock(name="running wf run model")
@@ -496,6 +501,25 @@ class TestWorkflowRun:
                 assert captured.out == ""
                 assert captured.err == ""
 
+            @staticmethod
+            @pytest.mark.parametrize(
+                "completed_state",
+                (State.SUCCEEDED, State.FAILED, State.TERMINATED, State.KILLED),
+            )
+            def test_completed_states(monkeypatch, run, mock_runtime, completed_state):
+                # Given
+                monkeypatch.setattr(time, "sleep", MagicMock())
+                mock_runtime.get_workflow_run_status.return_value = (
+                    _fake_completed_workflow(completed_state)
+                )
+
+                # When
+                s = run.wait_until_finished()
+
+                # Then
+                assert mock_runtime.get_workflow_run_status.call_count == 3
+                assert s == completed_state
+
     class TestGetResults:
         @staticmethod
         def test_raises_exception_if_workflow_not_finished(run):
@@ -511,8 +535,9 @@ class TestWorkflowRun:
 
         @staticmethod
         @pytest.mark.slow
-        def test_waits_when_wait_is_true(run, mock_runtime):
+        def test_waits_when_wait_is_true(monkeypatch, run, mock_runtime):
             # Given
+            monkeypatch.setattr(time, "sleep", MagicMock())
             # When
             results = run.get_results(wait=True)
             # Then
@@ -547,8 +572,9 @@ class TestWorkflowRun:
 
         @staticmethod
         @pytest.mark.slow
-        def test_waits_when_wait_is_true(run, mock_runtime):
+        def test_waits_when_wait_is_true(monkeypatch, run, mock_runtime):
             # Given
+            monkeypatch.setattr(time, "sleep", MagicMock())
             # When
             results = run.get_results_serialized(wait=True)
             # Then

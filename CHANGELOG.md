@@ -17,6 +17,7 @@
 
 🐛 *Bug Fixes*
 * Fix an error when calling `get_artifacts()` on unfinished or failed workflow
+* `KILLED` workflows will no longer show an error when waiting for the workflow to complete.
 
 💅 *Improvements*
 * Added an informative error for situations where a mismatch in Python versions between CE and the SDK cause deserialisation to fail.
