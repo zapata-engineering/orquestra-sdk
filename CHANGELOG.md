@@ -21,6 +21,7 @@
 
 💅 *Improvements*
 * Consolidate all `NotATaskWarning` warnings into a single warning for each workflow.
+* Remove redundant environment variable checks in MLFlow connection utils.
 
 🥷 *Internal*
 
