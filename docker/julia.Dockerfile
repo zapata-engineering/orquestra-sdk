@@ -1,5 +1,7 @@
-ARG SDK_VERSION=0.53.0
-from hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:$SDK_VERSION
+# syntax=docker/dockerfile:1.5
+ARG BASE_IMAGE_VERSION
+ARG BASE_IMAGE=hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:${BASE_IMAGE_VERSION}
+FROM ${BASE_IMAGE}
 
 USER root
 RUN apt-get update && \
@@ -13,4 +15,5 @@ RUN wget https://julialang-s3.julialang.org/bin/linux/x64/${JULIA_MINOR_VERSION}
   rm julia-${JULIA_PATCH_VERSION}-linux-x86_64.tar.gz
 
 USER orquestra
+WORKDIR /home/orquestra
 RUN julia -e 'using Pkg; Pkg.add("Jabalizer")'
