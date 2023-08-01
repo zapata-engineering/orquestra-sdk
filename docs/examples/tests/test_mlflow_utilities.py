@@ -114,17 +114,21 @@ def mocked_environ(monkeypatch):
 
 
 def _mock_config(monkeypatch, base_uri, token):
-    def _mock_read(name):
+    def _mock_load(name):
         if name == "in_process":
-            return _config.IN_PROCESS_RUNTIME_CONFIGURATION
+            return sdk.RuntimeConfig._config_from_runtimeconfiguration(
+                _config.IN_PROCESS_RUNTIME_CONFIGURATION
+            )
         else:
-            return configs.RuntimeConfiguration(
-                config_name="mocked",
-                runtime_name=configs.RuntimeName.CE_REMOTE,
-                runtime_options={"uri": base_uri, "token": token},
+            return sdk.RuntimeConfig._config_from_runtimeconfiguration(
+                configs.RuntimeConfiguration(
+                    config_name="mocked",
+                    runtime_name=configs.RuntimeName.CE_REMOTE,
+                    runtime_options={"uri": base_uri, "token": token},
+                )
             )
 
-    monkeypatch.setattr(_config, "read_config", _mock_read)
+    monkeypatch.setattr(sdk.RuntimeConfig, "load", _mock_load)
 
 
 @pytest.fixture
