@@ -11,7 +11,7 @@ include subtrees/z_quantum_actions/Makefile
 test:
 	PYTHONPATH="." $(PYTHON) -m pytest \
 		--ignore=tests/runtime/performance \
-		--ignore=tests/sdk/v2/typing \
+		--ignore=tests/sdk/typing \
 		--durations=10 \
 		docs/examples/tests \
 		tests
@@ -32,7 +32,7 @@ coverage:
 		--cov-report xml \
 		--no-cov-on-fail \
 		--ignore=tests/runtime/performance \
-		--ignore=tests/sdk/v2/typing \
+		--ignore=tests/sdk/typing \
 		--durations=10 \
 		docs/examples/tests \
 		tests \
@@ -57,7 +57,7 @@ performance:
 
 # This is NOT mypy checking, it is ensuring the Workflow SDK has correct type hints for our users
 user-typing:
-	$(PYTHON) -m pytest tests/sdk/v2/typing
+	$(PYTHON) -m pytest tests/sdk/typing
 
 
 # (override)
@@ -120,7 +120,7 @@ test-fast:
 	PYTHONPATH="." $(PYTHON) -m pytest \
 		-m "not slow" \
 		--ignore=tests/runtime/performance \
-		--ignore=tests/sdk/v2/typing \
+		--ignore=tests/sdk/typing \
 		--durations=10 \
 		docs/examples/tests \
 		tests

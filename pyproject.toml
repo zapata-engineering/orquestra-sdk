@@ -30,7 +30,7 @@ exclude = [
     # Exclude anything in an examples directory, except the docs/examples dir.
     '^(?!docs\/examples\/).*examples\/.*$',
     # Exclude our test files where we invoce mypy from pytest.
-    "tests/sdk/v2/typing"
+    "tests/sdk/typing"
 ]
 # Without this, mypy would skip typechecking functions that don't have type
 # annotations in the signature.
