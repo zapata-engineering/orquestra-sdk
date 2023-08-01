@@ -2,22 +2,22 @@ MLflow In Orquestra
 ===================
 
 Orquestra Platform comes with an `MLflow <https://mlflow.org/>`_ tracking server instance available for each workspace.
-To enable it, visit Orquestra Portal (your cluster's URL) > open a workspace > *Data* > click the *Connect* button.
+To enable it, visit Orquestra Portal (your cluster's URL), open a workspace, *Data*, and click the *Connect* button.
 
 
 .. image:: images/portal-mlflow.png
    :align: center
 
 
-Connecting From Python
-----------------------
+Connecting From Standalone Scripts
+----------------------------------
 
-MLflow provides their own `Python client library <https://pypi.org/project/mlflow/>`_.
+MLflow provides its own `Python client library <https://pypi.org/project/mlflow/>`_.
 Using a remote tracking server requires setting the tracking server URI and token.
 MLflow client expects these values to be present as environment variables.
 See also: `MLflow docs <https://mlflow.org/docs/latest/tracking.html#logging-to-a-tracking-server>`_.
 
-The Workflow SDK comes with utility functions that figure out the appropriate tracking URI and token for accessing the tracking server instance deployed on an Orquestra cluster.
+The Workflow SDK comes with utility functions that determine the appropriate tracking URI and token for accessing the tracking server instance deployed on an Orquestra cluster.
 
 .. literalinclude:: ../examples/tests/test_mlflow_utilities.py
     :start-after: def tracking_uri_token():
@@ -32,10 +32,10 @@ When used in Orquestra Studio or within a task running on CE, the utility functi
 Passing in ``workspace_id`` to ``get_tracking_uri()`` is required regardless of the execution environment.
 
 
-Connecting From A Task
-----------------------
+Connecting From Within A Task
+-----------------------------
 
-The ``mlflow`` client reads auth URI and token from environment variables.
+The ``mlflow`` client reads the auth URI and token from environment variables.
 Global state isn't retained between task runs [#f1]_, so you should set the environment variables inside each task that uses MLflow.
 
 .. literalinclude:: ../examples/tests/test_mlflow_utilities.py
@@ -53,8 +53,8 @@ Uploading Artifacts
 -------------------
 
 MLflow artifacts must be written to a file before being uploaded to an MLflow tracking server.
-The problem is: it's not always obvious what's a suitable local directory for writing such files, especially on the remote runtime.
-The Workflow SDK provides a ``get_temp_artifacts_dir()`` utility.
+However, it's not always obvious what is and is not a suitable local directory for writing such files, especially on the remote runtime.
+To address this, the Workflow SDK provides a ``get_temp_artifacts_dir()`` utility.
 This function can be used in any execution environment (local, Studio, CE) and will return an appropriate directory for storing temporary files, suitable for use with MLflow.
 
 .. literalinclude:: ../examples/tests/test_mlflow_utilities.py
