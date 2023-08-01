@@ -113,12 +113,16 @@ def mocked_environ(monkeypatch):
     yield mock_environ
 
 
-def _mock_config(monkeypatch, base_uri, token):
+def _mock_config(monkeypatch, tmp_path: Path, base_uri, token):
+    monkeypatch.setattr(
+        _config,
+        "get_config_file_path",
+        Mock(return_value=tmp_path / "shouldnt_exist.json"),
+    )
+
     def _mock_load(name):
         if name == "in_process":
-            return sdk.RuntimeConfig._config_from_runtimeconfiguration(
-                _config.IN_PROCESS_RUNTIME_CONFIGURATION
-            )
+            return sdk.RuntimeConfig.in_process()
         else:
             return sdk.RuntimeConfig._config_from_runtimeconfiguration(
                 configs.RuntimeConfiguration(
@@ -149,7 +153,7 @@ def _wf_run_with_tasks(task_defs) -> sdk.WorkflowRun:
 class TestSnippets:
     class TestTrackingURIToken:
         @staticmethod
-        def test_local(mocked_environ, monkeypatch):
+        def test_local(mocked_environ, monkeypatch, tmp_path):
             """
             Simulates using the snippets from standalone scripts or the local runtimes.
             """
@@ -157,7 +161,12 @@ class TestSnippets:
             monkeypatch.setattr(mlflow, "log_metric", Mock())
             base_uri = "https://foo.example.com"
             token = "ABC123 mocked token"
-            _mock_config(monkeypatch, base_uri=base_uri, token=token)
+            _mock_config(
+                monkeypatch=monkeypatch,
+                tmp_path=tmp_path,
+                base_uri=base_uri,
+                token=token,
+            )
 
             # When
             ws_id = Snippets.tracking_uri_token()
@@ -219,7 +228,7 @@ class TestSnippets:
 
     class TestTrackingTask:
         @staticmethod
-        def test_local(mocked_environ, monkeypatch):
+        def test_local(mocked_environ, monkeypatch, tmp_path):
             """
             Simulates using the snippets from standalone scripts or the local runtimes.
             """
@@ -227,7 +236,12 @@ class TestSnippets:
             monkeypatch.setattr(mlflow, "log_metric", Mock())
             base_uri = "https://foo.example.com"
             token = "ABC123 mocked token"
-            _mock_config(monkeypatch, base_uri=base_uri, token=token)
+            _mock_config(
+                monkeypatch=monkeypatch,
+                tmp_path=tmp_path,
+                base_uri=base_uri,
+                token=token,
+            )
 
             # When
             task1, task2 = Snippets.tracking_task()
