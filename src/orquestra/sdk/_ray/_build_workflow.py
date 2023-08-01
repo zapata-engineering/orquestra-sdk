@@ -144,6 +144,10 @@ class ArgumentUnwrapper:
             assert_never(arg)
 
     def __call__(self, *wrapped_args, **wrapped_kwargs):
+        """
+        Raises:
+            TaskWrappingError: raised when the Task cannot be correctly wrapped.
+        """
         args = []
         kwargs = {}
 
@@ -154,15 +158,9 @@ class ArgumentUnwrapper:
             kwargs[name] = self._unpack_argument(kwarg, name)
 
         try:
-            ret = self._user_fn(*args, **kwargs)
+            return self._user_fn(*args, **kwargs)
         except SystemError as e:
-            raise exceptions.PythonVersionMismatch(
-                "Could not deserialise data. "
-                "This may be due to a Python version mismatch. "
-                "If you're trying to run on CE, please ensure that your Python version "
-                f"matches {CE_REQUIRES_PYTHON_VERSION}."
-            ) from e
-        return ret
+            raise exceptions.TaskWrappingError from e
 
 
 def _make_ray_dag_node(
@@ -193,10 +191,19 @@ def _make_ray_dag_node(
         project_dir: the working directory the workflow was submitted from
         user_fn_ref: function reference for a function to be executed by Ray.
             if None - executes data aggregation step
+
+    Raises:
+        TaskWrappingError: raised from the argument unwrapper when there is an error
+            preventing wrapping the Task.
     """
 
     @client.remote
     def _ray_remote(*inner_args, **inner_kwargs):
+        """
+        Raises:
+            TaskWrappingError: raised from the argument unwrapper when there is an
+            error preventing wrapping the Task.
+        """
         with _exec_ctx.ray():
             # We need to emit task start marker log as soon as possible. Otherwise, we
             # risk an exception won't be visible to the user.
@@ -224,7 +231,10 @@ def _make_ray_dag_node(
                     deserialize=serialization,
                 )
 
-                wrapped_return = wrapped(*inner_args, **inner_kwargs)
+                try:
+                    wrapped_return = wrapped(*inner_args, **inner_kwargs)
+                except exceptions.TaskWrappingError:
+                    raise
 
                 packed: responses.WorkflowResult = (
                     serde.result_from_artifact(wrapped_return, ir.ArtifactFormat.AUTO)
@@ -249,7 +259,10 @@ def _make_ray_dag_node(
                     unpacked=unpacked,
                 )
 
-    named_remote = client.add_options(_ray_remote, **ray_options)
+    try:
+        named_remote = client.add_options(_ray_remote, **ray_options)
+    except exceptions.TaskWrappingError:
+        raise
     dag_node = named_remote.bind(*ray_args, **ray_kwargs)
 
     return dag_node
@@ -424,17 +437,20 @@ def make_ray_dag(
                 gpu = int(float(invocation.resources.gpu))
                 ray_options["num_gpus"] = gpu
 
-        ray_result = _make_ray_dag_node(
-            client=client,
-            ray_options=ray_options,
-            ray_args=pos_args,
-            ray_kwargs=kwargs,
-            args_artifact_nodes=pos_args_artifact_nodes,
-            kwargs_artifact_nodes=kwargs_artifact_nodes,
-            n_outputs=_compat.n_outputs(task_def=user_task, task_inv=invocation),
-            project_dir=project_dir,
-            user_fn_ref=user_task.fn_ref,
-        )
+        try:
+            ray_result = _make_ray_dag_node(
+                client=client,
+                ray_options=ray_options,
+                ray_args=pos_args,
+                ray_kwargs=kwargs,
+                args_artifact_nodes=pos_args_artifact_nodes,
+                kwargs_artifact_nodes=kwargs_artifact_nodes,
+                n_outputs=_compat.n_outputs(task_def=user_task, task_inv=invocation),
+                project_dir=project_dir,
+                user_fn_ref=user_task.fn_ref,
+            )
+        except exceptions.TaskWrappingError as e:
+            handle_task_wrapping_error(e, workflow_def.metadata)
 
         for output_id in invocation.output_ids:
             ray_futures[output_id] = ray_result
@@ -443,30 +459,33 @@ def make_ray_dag(
     pos_args, pos_args_artifact_nodes = _gather_args(
         workflow_def.output_ids, workflow_def, ray_futures
     )
-    last_future = _make_ray_dag_node(
-        client=client,
-        # The last step is implicit; it doesn't map to any user-defined Task
-        # Invocation. We don't need to assign any metadata to it.
-        ray_options={
-            "name": None,
-            "metadata": None,
-            "runtime_env": None,
-            "catch_exceptions": True,
-            # Set to avoid retrying when the worker crashes.
-            # See the comment with the invocation's options for more details.
-            "max_retries": 0,
-            # Custom "Ray resources" request. We don't need any for the aggregation
-            # step.
-            "resources": None,
-        },
-        ray_args=pos_args,
-        ray_kwargs={},
-        args_artifact_nodes=pos_args_artifact_nodes,
-        kwargs_artifact_nodes={},
-        n_outputs=len(pos_args),
-        project_dir=None,
-        user_fn_ref=None,
-    )
+    try:
+        last_future = _make_ray_dag_node(
+            client=client,
+            # The last step is implicit; it doesn't map to any user-defined Task
+            # Invocation. We don't need to assign any metadata to it.
+            ray_options={
+                "name": None,
+                "metadata": None,
+                "runtime_env": None,
+                "catch_exceptions": True,
+                # Set to avoid retrying when the worker crashes.
+                # See the comment with the invocation's options for more details.
+                "max_retries": 0,
+                # Custom "Ray resources" request. We don't need any for the aggregation
+                # step.
+                "resources": None,
+            },
+            ray_args=pos_args,
+            ray_kwargs={},
+            args_artifact_nodes=pos_args_artifact_nodes,
+            kwargs_artifact_nodes={},
+            n_outputs=len(pos_args),
+            project_dir=None,
+            user_fn_ref=None,
+        )
+    except exceptions.TaskWrappingError as e:
+        handle_task_wrapping_error(e, workflow_def.metadata)
 
     # Data aggregation step is run with catch_exceptions=True - so it returns tuple of
     # return value and Exception. Here the exception is caught and rethrown in more
@@ -488,6 +507,37 @@ def make_ray_dag(
             return result[0]
 
     return handle_data_aggregation_error.bind(last_future)
+
+
+def handle_task_wrapping_error(
+    exception: exceptions.TaskWrappingError, metadata: t.Optional[ir.WorkflowMetadata]
+):
+    """
+    Handle errors raised when wrapping tasks, presenting them in a more readable form.
+
+    Args:
+        exception: The exception that was raised.
+        metadata: Workflow metadata, used to determine additional context for the raised
+            exception.
+
+    Raises:
+        PythonVersionMismatchError: Raised when the current Python version does not
+            match the version required by CE, indicating that the cause of the
+            exception was a mismatch between the pickling and unpickling python version.
+        TaskWrappingError: Raised when there is no additional context to be added to
+            the exception.
+    """
+    if metadata is not None:
+        if (
+            metadata.python_version.major != CE_REQUIRES_PYTHON_VERSION.major
+            or metadata.python_version.minor != CE_REQUIRES_PYTHON_VERSION.minor
+        ):
+            raise exceptions.PythonVersionMismatchError(
+                f"CE requires Python version {CE_REQUIRES_PYTHON_VERSION.original}. "
+                f"Your current Python version is {metadata.python_version.original}. "
+                "Please update your Python version."
+            )
+    raise exception
 
 
 def get_current_ids() -> (

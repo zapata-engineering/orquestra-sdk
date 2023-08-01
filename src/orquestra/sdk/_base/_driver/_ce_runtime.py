@@ -17,7 +17,12 @@ from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.kubernetes.quantity import parse_quantity
 from orquestra.sdk.schema.configs import RuntimeConfiguration
-from orquestra.sdk.schema.ir import ArtifactFormat, TaskInvocationId, WorkflowDef
+from orquestra.sdk.schema.ir import (
+    ArtifactFormat,
+    TaskInvocationId,
+    Version,
+    WorkflowDef,
+)
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
@@ -32,7 +37,9 @@ from orquestra.sdk.schema.workflow_run import (
 
 from . import _client, _exceptions, _models
 
-CE_REQUIRES_PYTHON_VERSION: str = "3.9"
+CE_REQUIRES_PYTHON_VERSION: Version = Version(
+    original="3.9", major=3, minor=9, patch=0, is_prerelease=False
+)
 
 
 def _get_max_resources(workflow_def: WorkflowDef) -> _models.Resources:

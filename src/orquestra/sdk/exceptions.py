@@ -27,7 +27,7 @@ class VersionMismatch(Warning):
         self.needed = needed
 
 
-class PythonVersionMismatch(Exception):
+class PythonVersionMismatchError(Exception):
     """Raised when there are mismatching python versions between local and remote."""
 
     pass
@@ -208,6 +208,14 @@ class TaskInvocationNotFoundError(NotFoundError):
     def __init__(self, invocation_id: ir.TaskInvocationId):
         super().__init__()
         self.invocation_id = invocation_id
+
+
+class TaskWrappingError(Exception):
+    """
+    Raised when there is a problem wrapping a task.
+    """
+
+    pass
 
 
 class WorkflowResultsNotReadyError(NotFoundError):

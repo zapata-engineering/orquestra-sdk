@@ -7,6 +7,8 @@ from unittest.mock import ANY, Mock, call, create_autospec
 
 import pytest
 
+from orquestra.sdk import exceptions
+from orquestra.sdk._base._driver._ce_runtime import CE_REQUIRES_PYTHON_VERSION
 from orquestra.sdk._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
 )
@@ -257,6 +259,76 @@ class TestResourcesInMakeDag:
             )
 
 
+class TestErrorHandling:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "python_version, expected_exception",
+        [
+            (CE_REQUIRES_PYTHON_VERSION, exceptions.TaskWrappingError),
+            (
+                ir.Version(
+                    original="<py version sentinel",
+                    major=CE_REQUIRES_PYTHON_VERSION.major - 1,
+                    minor=CE_REQUIRES_PYTHON_VERSION.minor,
+                    patch=CE_REQUIRES_PYTHON_VERSION.patch,
+                    is_prerelease=CE_REQUIRES_PYTHON_VERSION.is_prerelease,
+                ),
+                exceptions.PythonVersionMismatchError,
+            ),
+        ],
+    )
+    def test_handles_taskwrappingerror(
+        python_version: ir.Version,
+        expected_exception: Exception,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        """
+        Depickling with the wrong python version relative to CE raises a
+        TaskWrappingError from the client. There isn't enough information in the client
+        to determine if this is uniquely due to the version. We check here that the
+        exception is raised as a PythonVersionMismatchError if the versions don't
+        match, and as a TaskWrappingError otherwise.
+        """
+
+        # Given
+        workflow = workflow_parametrised_with_resources().model
+        workflow.metadata.python_version = python_version
+        client = create_autospec(_build_workflow.RayClient)
+        client.add_options = Mock(side_effect=exceptions.TaskWrappingError)
+
+        wf_run_id = "<wf run id sentinel>"
+
+        # When
+        with pytest.raises(expected_exception):
+            _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, None)
+
+    @staticmethod
+    def test_pythonversionmismatch_message(monkeypatch: pytest.MonkeyPatch):
+        # Given
+        workflow = workflow_parametrised_with_resources().model
+
+        workflow.metadata.python_version = ir.Version(
+            original="<py version sentinel>",
+            major=CE_REQUIRES_PYTHON_VERSION.major - 1,
+            minor=CE_REQUIRES_PYTHON_VERSION.minor,
+            patch=CE_REQUIRES_PYTHON_VERSION.patch,
+            is_prerelease=CE_REQUIRES_PYTHON_VERSION.is_prerelease,
+        )
+        client = create_autospec(_build_workflow.RayClient)
+        client.add_options = Mock(side_effect=exceptions.TaskWrappingError)
+
+        wf_run_id = "<wf run id sentinel>"
+
+        # When
+        with pytest.raises(exceptions.PythonVersionMismatchError) as e:
+            _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, None)
+        assert e.exconly() == (
+            "orquestra.sdk.exceptions.PythonVersionMismatchError: CE requires "
+            "Python version 3.9. Your current Python version is <py version "
+            "sentinel>. Please update your Python version."
+        )
+
+
 class TestArgumentUnwrapper:
     @pytest.fixture
     def mock_secret_get(self, monkeypatch: pytest.MonkeyPatch):
@@ -312,6 +384,23 @@ class TestArgumentUnwrapper:
             # Then
             mock_deserialize.assert_not_called()
             fn.assert_called_with(constant_node)
+
+        def test_raises_taskwrappingerror(self, mock_deserialize):
+            # Given
+            fn = Mock(side_effect=SystemError())
+            node = ir.ConstantNodeJSON(
+                id="mocked", value="mocked", value_preview="mocked"
+            )
+            arg_unwrapper = _build_workflow.ArgumentUnwrapper(
+                user_fn=fn,
+                args_artifact_nodes={},
+                kwargs_artifact_nodes={},
+                deserialize=False,
+            )
+
+            # When
+            with pytest.raises(exceptions.TaskWrappingError):
+                _ = arg_unwrapper(node)
 
     class TestSecretNode:
         def test_deserialize(self, mock_secret_get):
