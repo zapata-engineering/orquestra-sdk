@@ -13,7 +13,7 @@
 * Helpful error when Compute Engine rejects a workflow if the Workflow SDK version is too old.
 
 🧟 *Deprecations*
-* `list_workflow_runs` project parameter was ignored anyway. It throws a warning now - will be removed in next release.
+* `list_workflow_runs`' project parameter emits a warning and will be removed in the next release. This change doesn't affect the system's behavior, the parameter was ignored anyway.
 
 👩‍🔬 *Experimental*
 

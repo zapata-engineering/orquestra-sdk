@@ -35,7 +35,7 @@ from .. import serde
 from .._graphs import iter_invocations_topologically
 from .._in_process_runtime import InProcessRuntime
 from .._logs._interfaces import WorkflowLogs
-from .._spaces._resolver import resolve_studio_project_ref
+from .._spaces._resolver import resolve_studio_ref, resolve_studio_workspace_ref
 from .._spaces._structs import ProjectRef
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig, _resolve_config
@@ -172,7 +172,7 @@ class WorkflowRun:
 
         assert runtime is not None
 
-        _project: t.Optional[ProjectRef] = resolve_studio_project_ref(
+        _project: t.Optional[ProjectRef] = resolve_studio_ref(
             workspace_id,
             project_id,
         )
@@ -628,14 +628,13 @@ def list_workflow_runs(
         # backward compatibility only
         project = None
 
+    workspace = resolve_studio_workspace_ref(workspace_id=workspace)
+
     _project_dir = Path(project_dir or Path.cwd())
 
     # Resolve config
     resolved_config: RuntimeConfig = _resolve_config(config)
     # If user wasn't specific with workspace and project, we might want to resolve it
-    if workspace is None:
-        if _project := resolve_studio_project_ref(workspace, project):
-            workspace = _project.workspace_id
 
     # resolve runtime
     runtime = resolved_config._get_runtime(_project_dir)

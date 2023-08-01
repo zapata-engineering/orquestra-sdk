@@ -9,8 +9,8 @@ from orquestra.sdk.schema.workflow_run import ProjectId, WorkspaceId
 
 @dataclass(frozen=True)
 class ProjectRef:
-    workspace_id: Optional[WorkspaceId]
-    project_id: Optional[ProjectId]
+    workspace_id: WorkspaceId
+    project_id: ProjectId
 
 
 @dataclass(frozen=True)

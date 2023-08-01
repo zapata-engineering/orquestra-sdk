@@ -61,16 +61,6 @@ class WorkflowRunRepo:
             stored_run = db.get_workflow_run(workflow_run_id=wf_run_id)
             return stored_run.config_name
 
-    # def list_wf_run_ids(
-    #     self, config: ConfigName, project: ProjectRef
-    # ) -> t.Sequence[WorkflowRunId]:
-    #     return [
-    #         run.id
-    #         for run in self.list_wf_runs(
-    #             config, project.workspace_id
-    #         )
-    #     ]
-
     def list_wf_runs(
         self,
         config: ConfigName,
