@@ -1301,23 +1301,25 @@ class TestListWorkflows:
 
 
 @pytest.mark.parametrize(
-    "workspace_id, project_id, workspace_env, project_env, expected",
+    "workspace_id, project_id, workspace_env, project_env, raises, expected",
     [
         (
             "a",
             "b",
             None,
             None,
+            do_not_raise(),
             ProjectRef(workspace_id="a", project_id="b"),
         ),
-        ("a", None, None, None, ProjectRef(workspace_id="a", project_id=None)),
-        (None, "b", None, None, ProjectRef(workspace_id=None, project_id="b")),
-        (None, None, None, None, None),
+        ("a", None, None, None, pytest.raises(ProjectInvalidError), None),
+        (None, "b", None, None, pytest.raises(ProjectInvalidError), None),
+        (None, None, None, None, do_not_raise(), None),
         (
             "a",
             "b",
             "env_ws",
             "env_proj",
+            do_not_raise(),
             ProjectRef(workspace_id="a", project_id="b"),
         ),
         (
@@ -1325,10 +1327,11 @@ class TestListWorkflows:
             None,
             "env_ws",
             "env_proj",
+            do_not_raise(),
             ProjectRef(workspace_id="env_ws", project_id="env_proj"),
         ),
-        (None, None, "a", None, ProjectRef(workspace_id="a", project_id=None)),
-        (None, None, None, "b", ProjectRef(workspace_id=None, project_id="b")),
+        (None, None, "env_ws", None, pytest.raises(ProjectInvalidError), None),
+        (None, None, None, "env_proj", pytest.raises(ProjectInvalidError), None),
     ],
 )
 class TestProjectId:
@@ -1338,6 +1341,7 @@ class TestProjectId:
         project_id,
         workspace_env,
         project_env,
+        raises,
         expected,
         monkeypatch,
     ):
@@ -1357,9 +1361,9 @@ class TestProjectId:
             InProcessRuntime, "create_workflow_run", workflow_create_mock
         )
         monkeypatch.setattr(_api._config.RuntimeConfig, "name", "auto")
-
-        wf_def.run("in_process", workspace_id=workspace_id, project_id=project_id)
-        workflow_create_mock.assert_called_once_with(wf_def.model, expected)
+        with raises:
+            wf_def.run("in_process", workspace_id=workspace_id, project_id=project_id)
+            workflow_create_mock.assert_called_once_with(wf_def.model, expected)
 
 
 class TestListWorkspaces:

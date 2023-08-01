@@ -19,7 +19,6 @@ from orquestra.sdk._base._spaces._structs import ProjectRef
         ("ws", "proj", "w/e", "w/e", ProjectRef("ws", "proj")),
         (None, None, None, None, None),
         (None, None, "my_ws", "my_proj", ProjectRef("my_ws", "my_proj")),
-        (None, None, "my_ws", None, None),
     ],
 )
 def test_studio_resolver(
