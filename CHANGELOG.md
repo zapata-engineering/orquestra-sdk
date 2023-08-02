@@ -5,6 +5,7 @@
 🚨 *Breaking Changes*
 * `orq wf list` command does not accept `-p, --project-id` parameter anymore
 * `orq wf list` only prompts for a single config now
+* Deprecated functions `sdk.wfprint()` and `sdk.workflow_logger()` have been removed.
 
 🔥 *Features*
 * `orq --version` or `orq -V` will now show the current SDK version.
@@ -30,6 +31,8 @@
 * Update migration docs to use `orquestra-sdk[all]` to ensure extras are updated.
 * Added "Workspaces and Projects" guide.
 * Corrected minor typos in the dependency installation guide.
+* Removed "Using Custom Container Images on Compute Engine" guide.
+* Extended the "MLflow" guide with sections about tracking URI and token.
 
 
 ##  v0.53.0

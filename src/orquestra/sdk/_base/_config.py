@@ -103,7 +103,7 @@ BOOLEAN_RUNTIME_OPTIONS: List[str] = ["log_to_driver", "configure_logging"]
 # endregion
 
 
-def _get_config_file_path() -> Path:
+def get_config_file_path() -> Path:
     """
     Get the absolute path to the config file.
 
@@ -131,7 +131,7 @@ def _get_config_directory() -> Path:
     Returns:
         Path: path to the parent directory.
     """
-    abs_file_path = _get_config_file_path()
+    abs_file_path = get_config_file_path()
     return abs_file_path.parent
 
 
@@ -140,7 +140,7 @@ def _ensure_directory(path: Path):
 
 
 def _open_config_file() -> RuntimeConfigurationFile:
-    config_file = _get_config_file_path()
+    config_file = get_config_file_path()
     if not config_file.exists():
         raise exceptions.ConfigFileNotFoundError(
             f"Config file {config_file} not found."
@@ -151,7 +151,7 @@ def _open_config_file() -> RuntimeConfigurationFile:
 def _save_config_file(
     config_file_contents: RuntimeConfigurationFile,
 ) -> Path:
-    config_file: Path = _get_config_file_path()
+    config_file: Path = get_config_file_path()
     config_file.write_text(data=config_file_contents.json(indent=2))
     return config_file
 
@@ -593,7 +593,7 @@ def read_config_names() -> List[str]:
     except filelock.Timeout:
         raise IOError(
             "Could not acquire the lock for the config file at "
-            f"'{_get_config_file_path()}' "
+            f"'{get_config_file_path()}' "
             "- does another function or process currently hold it? "
             "If you're calling `read_config_names` from a context that has already "
             "acquired the lock, you may want to look into using `_read_config_names` "
