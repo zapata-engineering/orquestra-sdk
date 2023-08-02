@@ -21,11 +21,7 @@ def patch_config_location(tmp_path, monkeypatch):
     """
     config_location = Mock(return_value=tmp_path / "config.json")
     monkeypatch.setattr(
-        orquestra.sdk._base._config, "_get_config_file_path", config_location
-    )
-    config_file_location = Mock(return_value=tmp_path / "config.json")
-    monkeypatch.setattr(
-        orquestra.sdk._base._config, "_get_config_file_path", config_file_location
+        orquestra.sdk._base._config, "get_config_file_path", config_location
     )
     return tmp_path
 
