@@ -40,7 +40,7 @@ Then, you can read and set secrets within a script or a Python REPL:
 ``name`` is the secret identifier.
 Secret names may include letters, numbers, and dashes, and must not start or end with a dash.
 This identifier is subsequently used to access the secret.
-Secrets are scoped to a single user account, so there's no risk you're overriding somebody else's entry.
+Secrets are scoped to a workspace, so care must be taken when managing secrets in shared workspaces.
 
 ``value`` is any string you like (up a reasonable length limit).
 
