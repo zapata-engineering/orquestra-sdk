@@ -292,6 +292,7 @@ class TestErrorHandling:
 
         # Given
         workflow = workflow_parametrised_with_resources().model
+        assert workflow.metadata is not None
         workflow.metadata.python_version = python_version
         client = create_autospec(_build_workflow.RayClient)
         client.add_options = Mock(side_effect=exceptions.TaskWrappingError)
@@ -299,7 +300,7 @@ class TestErrorHandling:
         wf_run_id = "<wf run id sentinel>"
 
         # When
-        with pytest.raises(expected_exception):
+        with pytest.raises(expected_exception):  # type: ignore
             _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, None)
 
     @staticmethod
@@ -307,7 +308,7 @@ class TestErrorHandling:
         # Given
         workflow = workflow_parametrised_with_resources().model
 
-        workflow.metadata.python_version = ir.Version(
+        workflow.metadata.python_version = ir.Version(  # type: ignore
             original="<py version sentinel>",
             major=CE_REQUIRES_PYTHON_VERSION.major - 1,
             minor=CE_REQUIRES_PYTHON_VERSION.minor,
