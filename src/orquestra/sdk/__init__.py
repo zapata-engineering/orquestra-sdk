@@ -28,7 +28,6 @@ from ._base._dsl import (
     TaskDef,
     task,
 )
-from ._base._log_adapter import wfprint, workflow_logger
 from ._base._logs._interfaces import WorkflowLogs
 from ._base._spaces._api import list_projects, list_workspaces
 from ._base._spaces._structs import Project, ProjectRef, Workspace
@@ -67,8 +66,6 @@ __all__ = [
     "secrets",
     "task",
     "workflow",
-    "workflow_logger",
-    "wfprint",
     "Project",
     "ProjectRef",
     "State",

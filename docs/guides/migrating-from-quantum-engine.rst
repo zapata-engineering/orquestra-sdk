@@ -279,7 +279,6 @@ GPU And Custom Images
 =====================
 
 Please reach out to the SDK team if you need to use custom images on CE.
-There's a :doc:`detailed guide on this topic<./custom-images>`, but the images need to be rebuilt with every Orquestra release.
 
 
 Resource Requests

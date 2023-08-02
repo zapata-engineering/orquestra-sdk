@@ -12,12 +12,7 @@ from packaging.version import parse as parse_version
 
 from orquestra.sdk._base._factory import build_runtime_from_config
 
-from ...exceptions import (
-    ConfigFileNotFoundError,
-    ConfigNameNotFoundError,
-    RuntimeConfigError,
-    UnsavedConfigChangesError,
-)
+from ...exceptions import ConfigFileNotFoundError, ConfigNameNotFoundError
 from ...schema.configs import (
     CONFIG_FILE_CURRENT_VERSION,
     ConfigName,
@@ -77,7 +72,7 @@ class RuntimeConfig:
                 f'"{runtime_name}" is not a valid runtime name. Valid names are:\n'
                 + "\n".join(f'"{x.value}"' for x in RuntimeName)
             ) from e
-        self._config_save_file = _config._get_config_file_path()
+        self._config_save_file = _config.get_config_file_path()
 
     def __str__(self) -> str:
         outstr = (
@@ -287,7 +282,7 @@ class RuntimeConfig:
             )
 
         # Get the data from the save file
-        _config_save_file = _config._get_config_file_path()
+        _config_save_file = _config.get_config_file_path()
         with open(_config_save_file, "r") as f:
             data = json.load(f)
 
@@ -420,7 +415,7 @@ class RuntimeConfig:
 def migrate_config_file():
     """Update the stored configs."""
     # resolve list of files to migrate
-    _config_file_path = _config._get_config_file_path().resolve()
+    _config_file_path = _config.get_config_file_path().resolve()
     # Load existing file contents
     with open(_config_file_path, "r") as f:
         data = json.load(f)

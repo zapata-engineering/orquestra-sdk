@@ -1,16 +1,16 @@
 ################################################################################
 # © Copyright 2021-2022 Zapata Computing Inc.
 ################################################################################
+import logging
 
 import orquestra.sdk as sdk
-from orquestra.sdk._base._log_adapter import wfprint, workflow_logger
 
 
 @sdk.task(n_outputs=1)
 def hello(n):
-    log = workflow_logger()
+    log = logging.getLogger()
     log.info("Useful work done here...")
-    wfprint(f"Hello Orquestra #{n}!")
+    print(f"Hello Orquestra #{n}!")
     return "Hello"
 
 
@@ -21,7 +21,7 @@ def hello_orquestra():
 
 @sdk.task(n_outputs=1)
 def do_something_useful():
-    log = workflow_logger()
+    log = logging.getLogger()
     log.info("Info message from do_something_useful()")
     log.warning("Warning message from do_something_useful()")
     log.error("Error message from do_something_useful()")
@@ -35,8 +35,8 @@ def hello_workflow():
 
 if __name__ == "__main__":
     print()
-    result = hello_orquestra().local_run()
+    result = hello_orquestra().run("in_process")
     print("Workflow result:", result)
     print()
-    result2 = hello_workflow().local_run()
+    result2 = hello_workflow().run("in_process")
     print("Workflow #2 result:", result2)
