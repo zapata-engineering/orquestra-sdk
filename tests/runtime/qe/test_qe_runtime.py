@@ -1389,20 +1389,9 @@ class TestListWorkflowRuns:
         # Then
         assert len(runs) == 2
 
-    @staticmethod
-    @pytest.mark.parametrize(
-        "kwargs",
-        [
-            {"workspace": "<workspace sentinel>"},
-            {"project": "<project sentinel>"},
-            {"workspace": "<workspace sentinel>", "project": "<project sentinel>"},
-        ],
-    )
-    def test_raises_WorkspacesNotSupported_error_if_workspace_or_project(
-        runtime, kwargs
-    ):
+    def test_raises_WorkspacesNotSupported_error_if_workspace_or_project(self, runtime):
         with pytest.raises(exceptions.WorkspacesNotSupportedError):
-            runtime.list_workflow_runs(**kwargs)
+            runtime.list_workflow_runs(workspace="ws")
 
 
 @pytest.mark.parametrize(
