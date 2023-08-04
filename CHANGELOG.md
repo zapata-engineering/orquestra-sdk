@@ -20,6 +20,7 @@
 
 📃 *Docs*
 * Corrected unclear language in `Secrets` docs.
+* Corrected unclear language in the quickstart guide.
 
 ## v0.54.0
 
