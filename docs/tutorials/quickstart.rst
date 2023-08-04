@@ -41,4 +41,4 @@ This means that the ``run()`` command blocks execution until the workflow run co
 The ``in_process`` execution is similar to directly calling your function in Python, and it's suitable for quick prototypes or debugging, but it doesn't show the full potential of Orquestra.
 For more advanced features, see the next tutorials in this series.
 
-.. [1] The use of the name ``workflow_defs.py`` is not a requirement. Rather, this is a convenient convention that we adopt throughout this documentation.
+.. [1] The use of the name ``workflow_defs.py`` is not a requirement. Rather, this is a convenient convention that we adopt throughout this documentation. Note that some early versions of the SDK did enforce this name, but this restriction has since been lifted.
