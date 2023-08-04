@@ -44,7 +44,7 @@ from ._dsl import (
     parse_custom_name,
 )
 from ._in_process_runtime import InProcessRuntime
-from ._spaces._resolver import resolve_studio_project_ref
+from ._spaces._resolver import resolve_studio_ref
 from ._spaces._structs import ProjectRef
 from .abc import RuntimeInterface
 
@@ -199,9 +199,7 @@ class WorkflowDef(Generic[_R]):
         # logic, the runtime should always be resolved.
         assert runtime is not None
 
-        _project: Optional[ProjectRef] = resolve_studio_project_ref(
-            workspace_id, project_id
-        )
+        _project: Optional[ProjectRef] = resolve_studio_ref(workspace_id, project_id)
 
         # The DirtyGitRepo warning can be raised here.
         wf_def_model = self.model

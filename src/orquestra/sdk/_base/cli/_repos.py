@@ -61,21 +61,10 @@ class WorkflowRunRepo:
             stored_run = db.get_workflow_run(workflow_run_id=wf_run_id)
             return stored_run.config_name
 
-    def list_wf_run_ids(
-        self, config: ConfigName, project: ProjectRef
-    ) -> t.Sequence[WorkflowRunId]:
-        return [
-            run.id
-            for run in self.list_wf_runs(
-                config, project.workspace_id, project.project_id
-            )
-        ]
-
     def list_wf_runs(
         self,
         config: ConfigName,
         workspace: t.Optional[WorkspaceId] = None,
-        project: t.Optional[ProjectId] = None,
         limit: t.Optional[int] = None,
         max_age: t.Optional[str] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
@@ -95,7 +84,6 @@ class WorkflowRunRepo:
                 max_age=max_age,
                 state=state,
                 workspace=workspace,
-                project=project,
             )
         except (ConnectionError, exceptions.UnauthorizedError):
             raise
