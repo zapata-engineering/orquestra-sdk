@@ -19,6 +19,7 @@
 🥷 *Internal*
 
 📃 *Docs*
+* Corrected unclear language in `Secrets` docs.
 
 ## v0.54.0
 
