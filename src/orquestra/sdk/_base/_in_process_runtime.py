@@ -283,7 +283,6 @@ class InProcessRuntime(abc.RuntimeInterface):
         max_age: t.Optional[timedelta] = None,
         state: t.Union[State, t.List[State], None] = None,
         workspace: t.Optional[WorkspaceId] = None,
-        project: t.Optional[ProjectId] = None,
     ) -> t.List[WorkflowRun]:
         """
         List the workflow runs, with some filters
