@@ -3,6 +3,24 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+
+🔥 *Features*
+
+🧟 *Deprecations*
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+## v0.54.0
+
+🚨 *Breaking Changes*
 * `orq wf list` command does not accept `-p, --project-id` parameter anymore
 * `orq wf list` only prompts for a single config now
 * Deprecated functions `sdk.wfprint()` and `sdk.workflow_logger()` have been removed.
@@ -12,18 +30,12 @@
 * `orq wf list` properly prompts for a workspace after selecting config if option `-w` was not provided
 * Helpful error when Compute Engine rejects a workflow if the Workflow SDK version is too old.
 
-🧟 *Deprecations*
-
-👩‍🔬 *Experimental*
-
 🐛 *Bug Fixes*
 * Fix an error when calling `get_artifacts()` on unfinished or failed workflow
 * `KILLED` workflows will no longer show an error when waiting for the workflow to complete.
 
 💅 *Improvements*
 * Consolidate all `NotATaskWarning` warnings into a single warning for each workflow.
-
-🥷 *Internal*
 
 📃 *Docs*
 * Added "Beginner's Guide to the CLI"
@@ -32,7 +44,6 @@
 * Corrected minor typos in the dependency installation guide.
 * Removed "Using Custom Container Images on Compute Engine" guide.
 * Extended the "MLflow" guide with sections about tracking URI and token.
-
 
 ##  v0.53.0
 
