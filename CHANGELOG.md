@@ -19,6 +19,7 @@
 🥷 *Internal*
 
 📃 *Docs*
+* Corrected unclear language in `Secrets` docs.
 
 ## v0.54.0
 
@@ -44,7 +45,6 @@
 * Update migration docs to use `orquestra-sdk[all]` to ensure extras are updated.
 * Added "Workspaces and Projects" guide.
 * Corrected minor typos in the dependency installation guide.
-* Corrected unclear language in `Secrets` docs.
 * Removed "Using Custom Container Images on Compute Engine" guide.
 * Extended the "MLflow" guide with sections about tracking URI and token.
 
