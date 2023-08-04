@@ -14,7 +14,8 @@
 🐛 *Bug Fixes*
 
 💅 *Improvements*
-* `orq wf *` and `orq task *` commands (other than `orq wf submit`) wont prompt for project parameter anymore, as it was ignored anyway 
+* `orq wf *` and `orq task *` commands (other than `orq wf submit`) wont prompt for project parameter anymore, as it was ignored anyway.
+* New public module: `orquestra.sdk.dates`! `orquestra.sdk.schema.workflow_run` doesn't depend on private modules now. This caused type errors.
 
 🥷 *Internal*
 

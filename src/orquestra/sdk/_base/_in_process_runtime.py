@@ -8,15 +8,14 @@ In-process implementation of the runtime interface.
 import typing as t
 import warnings
 from contextlib import contextmanager
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
-from orquestra.sdk import exceptions
-from orquestra.sdk._base import _dates, abc
+from orquestra.sdk import dates, exceptions
+from orquestra.sdk._base import abc
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
-    ProjectId,
     RunStatus,
     State,
     TaskRun,
@@ -143,7 +142,7 @@ class InProcessRuntime(abc.RuntimeInterface):
 
         run_id = self._gen_next_run_id(workflow_def)
 
-        self._start_time_store[run_id] = _dates.now()
+        self._start_time_store[run_id] = dates.now()
 
         # We deserialize the constants in one go, instead of as needed
         consts: t.Dict[ir.ConstantNodeId, t.Any] = {
@@ -194,7 +193,7 @@ class InProcessRuntime(abc.RuntimeInterface):
         )
         self._output_store[run_id] = outputs
 
-        self._end_time_store[run_id] = _dates.now()
+        self._end_time_store[run_id] = dates.now()
         self._workflow_def_store[run_id] = workflow_def
         return run_id
 
@@ -297,7 +296,7 @@ class InProcessRuntime(abc.RuntimeInterface):
                 A list of the workflow runs
         """
 
-        now = _dates.now()
+        now = dates.now()
 
         if state is not None:
             if not isinstance(state, list):

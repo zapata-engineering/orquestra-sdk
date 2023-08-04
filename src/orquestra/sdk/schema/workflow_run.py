@@ -12,7 +12,7 @@ import typing as t
 
 from pydantic import BaseModel
 
-from orquestra.sdk._base._dates import Instant
+from orquestra.sdk.dates import Instant
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 
 WorkflowRunId = str

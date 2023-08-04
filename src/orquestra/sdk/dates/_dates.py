@@ -1,10 +1,6 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Single place to handle datetimes and timezones without shooting yourself in the
-foot.
-"""
 
 import typing as t
 from datetime import datetime, timedelta, timezone
