@@ -9,8 +9,8 @@ from unittest.mock import Mock
 
 import pytest
 
+from orquestra.sdk import dates
 from orquestra.sdk import exceptions as exceptions
-from orquestra.sdk._base import _dates
 from orquestra.sdk._base.cli._workflow import _list
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 
@@ -37,8 +37,8 @@ class TestAction:
             run.id = "fake id"
             run.status = RunStatus(
                 state=State.RUNNING,
-                start_time=_dates.from_unix_time(0),
-                end_time=_dates.from_unix_time(0),
+                start_time=dates.from_unix_time(0),
+                end_time=dates.from_unix_time(0),
             )
             run.task_runs = []
             return run

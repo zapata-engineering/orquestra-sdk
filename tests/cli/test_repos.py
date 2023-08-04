@@ -17,13 +17,12 @@ import pytest
 import requests
 
 from orquestra import sdk
-from orquestra.sdk import exceptions
-from orquestra.sdk._base import _dates, _db
+from orquestra.sdk import dates, exceptions
+from orquestra.sdk._base import _db
 from orquestra.sdk._base._config import SPECIAL_CONFIG_NAME_DICT
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._qe._client import QEClient
-from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._base.cli import _repos
 from orquestra.sdk._base.cli._ui import _models as ui_models
@@ -37,8 +36,8 @@ from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
 from .. import reloaders
 from ..sdk.data.configs import TEST_CONFIG_JSON
 
-INSTANT_1 = _dates.from_comps(2023, 2, 24, 7, 26, 7, 704015, utc_hour_offset=1)
-INSTANT_2 = _dates.from_comps(2023, 2, 24, 7, 28, 37, 123, utc_hour_offset=1)
+INSTANT_1 = dates.from_comps(2023, 2, 24, 7, 26, 7, 704015, utc_hour_offset=1)
+INSTANT_2 = dates.from_comps(2023, 2, 24, 7, 28, 37, 123, utc_hour_offset=1)
 
 
 class TestWorkflowRunRepo:

@@ -16,8 +16,8 @@ import pytest
 import responses
 
 import orquestra.sdk as sdk
-from orquestra.sdk import exceptions
-from orquestra.sdk._base import _dates, _db, serde
+from orquestra.sdk import dates, exceptions
+from orquestra.sdk._base import _db, serde
 from orquestra.sdk._base._conversions._yaml_exporter import (
     pydantic_to_yaml,
     workflow_to_yaml,
@@ -643,8 +643,8 @@ class TestGetAvailableOutputs:
         assert result["invocation-0-task-make-greeting-message"] == expected_inv_0
 
 
-def _utc_instant(*args) -> _dates.Instant:
-    return _dates.utc_from_comps(*args)
+def _utc_instant(*args) -> dates.Instant:
+    return dates.utc_from_comps(*args)
 
 
 class TestGetWorkflowRunStatus:
@@ -1355,9 +1355,9 @@ class TestListWorkflowRuns:
         type(mock_status.status).start_time = PropertyMock(
             side_effect=[
                 None,
-                _dates.now() - datetime.timedelta(seconds=5),
-                _dates.now() - datetime.timedelta(seconds=5),
-                _dates.now() - datetime.timedelta(days=4),
+                dates.now() - datetime.timedelta(seconds=5),
+                dates.now() - datetime.timedelta(seconds=5),
+                dates.now() - datetime.timedelta(days=4),
             ]
         )
         monkeypatch.setattr(
@@ -1376,9 +1376,9 @@ class TestListWorkflowRuns:
         type(mock_status.status).start_time = PropertyMock(
             side_effect=[
                 None,
-                _dates.now() - datetime.timedelta(seconds=5),
-                _dates.now() - datetime.timedelta(seconds=5),
-                _dates.now() - datetime.timedelta(days=4),
+                dates.now() - datetime.timedelta(seconds=5),
+                dates.now() - datetime.timedelta(seconds=5),
+                dates.now() - datetime.timedelta(days=4),
             ]
         )
         monkeypatch.setattr(

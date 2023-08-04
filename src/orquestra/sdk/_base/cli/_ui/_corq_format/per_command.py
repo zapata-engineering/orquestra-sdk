@@ -9,7 +9,7 @@ from functools import singledispatch
 import pydantic
 import tabulate
 
-from orquestra.sdk._base import _dates
+from orquestra.sdk import dates
 from orquestra.sdk.schema import ir, responses, workflow_run
 
 
@@ -186,12 +186,12 @@ Workflow result {res_i}, returned from {fn_name}(), presented as
         print()
 
 
-def _format_datetime(dt: t.Optional[_dates.Instant]) -> str:
+def _format_datetime(dt: t.Optional[dates.Instant]) -> str:
     if dt is None:
         # Print empty table cell
         return ""
 
-    return _dates.isoformat(dt)
+    return dates.isoformat(dt)
 
 
 def _print_single_run(run: responses.WorkflowRun, project_dir: t.Optional[str]):

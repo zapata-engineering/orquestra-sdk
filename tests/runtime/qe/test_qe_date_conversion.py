@@ -3,8 +3,8 @@
 ################################################################################
 import pytest
 
-from orquestra.sdk._base._dates import Instant, utc_from_comps
 from orquestra.sdk._base._qe._qe_runtime import parse_date_or_none
+from orquestra.sdk.dates import Instant, utc_from_comps
 
 
 def test_with_none_date_str():

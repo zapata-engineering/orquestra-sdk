@@ -21,8 +21,8 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 import pydantic
 import requests
 
-from orquestra.sdk import exceptions
-from orquestra.sdk._base import _dates, serde
+from orquestra.sdk import dates, exceptions
+from orquestra.sdk._base import serde
 from orquestra.sdk._base._conversions._yaml_exporter import (
     pydantic_to_yaml,
     workflow_to_yaml,
@@ -861,7 +861,7 @@ class QERuntime(RuntimeInterface):
                 "Filtering by workspace or project is not supported on QE runtimes."
             )
 
-        now = _dates.now()
+        now = dates.now()
 
         # Grab the workflows we know about from the DB
         with WorkflowDB.open_project_db(self._project_dir) as db:

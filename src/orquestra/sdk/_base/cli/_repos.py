@@ -17,13 +17,12 @@ import requests
 from typing_extensions import assert_never
 
 from orquestra import sdk
-from orquestra.sdk import exceptions
-from orquestra.sdk._base import _config, _dates, _db, loader
+from orquestra.sdk import dates, exceptions
+from orquestra.sdk._base import _config, _db, loader
 from orquestra.sdk._base._driver._client import DriverClient, ExternalUriProvider
 from orquestra.sdk._base._jwt import check_jwt_without_signature_verification
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._base._qe import _client
-from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base.abc import ArtifactValue
 from orquestra.sdk.schema import _compat
 from orquestra.sdk.schema.configs import (
@@ -483,7 +482,7 @@ class SummaryRepo:
         wf_runs.sort(
             key=lambda wf_run: wf_run.status.start_time
             if wf_run.status.start_time
-            else _dates.from_unix_time(0)
+            else dates.from_unix_time(0)
         )
 
         return ui_models.WFList(wf_rows=[_ui_model_from_wf(wf) for wf in wf_runs])

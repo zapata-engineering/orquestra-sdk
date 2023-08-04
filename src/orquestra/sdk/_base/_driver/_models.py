@@ -21,7 +21,7 @@ import pydantic
 from pydantic.generics import GenericModel
 from typing_extensions import Annotated
 
-from orquestra.sdk._base._dates import Instant
+from orquestra.sdk.dates import Instant
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.workflow_run import (
     ProjectId,

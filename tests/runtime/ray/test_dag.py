@@ -11,12 +11,10 @@ from unittest.mock import Mock, PropertyMock, create_autospec
 
 import pytest
 
-from orquestra.sdk import exceptions
-from orquestra.sdk._base import _dates
+from orquestra.sdk import dates, exceptions
 from orquestra.sdk._base._config import (
     LOCAL_RUNTIME_CONFIGURATION,
     RuntimeConfiguration,
-    RuntimeName,
 )
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base._spaces._structs import ProjectRef
@@ -24,7 +22,7 @@ from orquestra.sdk._ray import _client, _dag, _ray_logs
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import State
 
-TEST_TIME = _dates.now()
+TEST_TIME = dates.now()
 
 
 @pytest.fixture
@@ -343,9 +341,9 @@ class TestRayRuntime:
             type(mock_status.status).start_time = PropertyMock(
                 side_effect=[
                     None,
-                    _dates.now() - timedelta(seconds=5),
-                    _dates.now() - timedelta(seconds=5),
-                    _dates.now() - timedelta(days=4),
+                    dates.now() - timedelta(seconds=5),
+                    dates.now() - timedelta(seconds=5),
+                    dates.now() - timedelta(days=4),
                 ]
             )
             monkeypatch.setattr(
@@ -370,9 +368,9 @@ class TestRayRuntime:
             type(mock_status.status).start_time = PropertyMock(
                 side_effect=[
                     None,
-                    _dates.now() - timedelta(seconds=5),
-                    _dates.now() - timedelta(seconds=5),
-                    _dates.now() - timedelta(days=4),
+                    dates.now() - timedelta(seconds=5),
+                    dates.now() - timedelta(seconds=5),
+                    dates.now() - timedelta(days=4),
                 ]
             )
             monkeypatch.setattr(

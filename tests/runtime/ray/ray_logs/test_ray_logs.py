@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from orquestra.sdk._base import _dates
+from orquestra.sdk import dates
 from orquestra.sdk._base._logs import _markers
 from orquestra.sdk._ray import _ray_logs
 
@@ -17,7 +17,7 @@ DATA_DIR = Path(__file__).parent / "data"
 TEST_RAY_TEMP = DATA_DIR / "ray_temp"
 
 
-SAMPLE_TIMESTAMP = _dates.utc_from_comps(2023, 2, 9, 11, 26, 7, 99382)
+SAMPLE_TIMESTAMP = dates.utc_from_comps(2023, 2, 9, 11, 26, 7, 99382)
 
 
 class TestIterUserLogPaths:
@@ -87,7 +87,7 @@ class TestIterTaskLogs:
     def start_marker():
         wf_run_id = "wf1"
         inv_id = "inv1"
-        timestamp = _dates.from_isoformat("2005-04-25T20:37:00+00:00")
+        timestamp = dates.from_isoformat("2005-04-25T20:37:00+00:00")
         return _markers.TaskStartMarker(wf_run_id, inv_id, timestamp)
 
     @staticmethod
@@ -95,7 +95,7 @@ class TestIterTaskLogs:
     def end_marker():
         wf_run_id = "wf1"
         inv_id = "inv1"
-        timestamp = _dates.from_isoformat("2005-04-25T20:37:01+00:00")
+        timestamp = dates.from_isoformat("2005-04-25T20:37:01+00:00")
         return _markers.TaskEndMarker(wf_run_id, inv_id, timestamp)
 
     @staticmethod
@@ -103,7 +103,7 @@ class TestIterTaskLogs:
     def start_marker2():
         wf_run_id = "wf1"
         inv_id = "inv2"
-        timestamp = _dates.from_isoformat("2005-04-25T20:38:00+00:00")
+        timestamp = dates.from_isoformat("2005-04-25T20:38:00+00:00")
         return _markers.TaskStartMarker(wf_run_id, inv_id, timestamp)
 
     @staticmethod
@@ -111,7 +111,7 @@ class TestIterTaskLogs:
     def end_marker2():
         wf_run_id = "wf1"
         inv_id = "inv2"
-        timestamp = _dates.from_isoformat("2005-04-25T20:38:01+00:00")
+        timestamp = dates.from_isoformat("2005-04-25T20:38:01+00:00")
         return _markers.TaskEndMarker(wf_run_id, inv_id, timestamp)
 
     @staticmethod

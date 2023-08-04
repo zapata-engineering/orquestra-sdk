@@ -18,8 +18,8 @@ from typing import Iterable, Iterator, List, Sequence
 import click
 from tabulate import tabulate
 
-from orquestra.sdk._base import _config, _dates, _env, _services, serde
-from orquestra.sdk._base._dates import Instant
+from orquestra.sdk import dates
+from orquestra.sdk._base import _env, _services, serde
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk.schema import responses
 from orquestra.sdk.schema.configs import ConfigName, RuntimeConfiguration, RuntimeName
@@ -329,7 +329,7 @@ class ConfigPresenter:
         )
 
 
-def _format_datetime(dt: t.Optional[Instant]) -> str:
+def _format_datetime(dt: t.Optional[dates.Instant]) -> str:
     return dt.astimezone().replace(tzinfo=None).ctime() if dt else ""
 
 
@@ -401,7 +401,7 @@ class PromptPresenter:
             wfs,
             key=lambda wf: wf.status.start_time
             if wf.status.start_time
-            else _dates.from_unix_time(0),
+            else dates.from_unix_time(0),
             reverse=True,
         )
 

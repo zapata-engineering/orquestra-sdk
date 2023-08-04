@@ -14,8 +14,8 @@ from unittest.mock import create_autospec
 import pytest
 
 from orquestra import sdk
-from orquestra.sdk import exceptions
-from orquestra.sdk._base import _dates, serde
+from orquestra.sdk import dates, exceptions
+from orquestra.sdk._base import serde
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing._example_wfs import (
@@ -234,7 +234,7 @@ class TestListWorkflowRuns:
         # Given
         run_id = runtime.create_workflow_run(wf_def, None)
         _ = runtime.create_workflow_run(wf_def, None)
-        runtime._start_time_store[run_id] = _dates.now() - timedelta(days=1)
+        runtime._start_time_store[run_id] = dates.now() - timedelta(days=1)
 
         # When
         wf_runs = runtime.list_workflow_runs(max_age=timedelta(minutes=1))

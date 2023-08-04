@@ -10,10 +10,10 @@ import sys
 
 import pytest
 
-from orquestra.sdk._base import _dates
+from orquestra.sdk import dates
 from orquestra.sdk._base._logs import _markers
 
-INSTANT = _dates.from_isoformat("2005-04-25T20:37:00+00:00")
+INSTANT = dates.from_isoformat("2005-04-25T20:37:00+00:00")
 
 
 class TestParseLine:

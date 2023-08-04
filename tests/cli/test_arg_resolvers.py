@@ -7,10 +7,9 @@ from unittest.mock import Mock, create_autospec
 
 import pytest
 
-from orquestra.sdk import exceptions
-from orquestra.sdk._base import _dates
+from orquestra.sdk import dates, exceptions
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
-from orquestra.sdk._base._spaces._structs import Project, ProjectRef, Workspace
+from orquestra.sdk._base._spaces._structs import Project, Workspace
 from orquestra.sdk._base.cli import _arg_resolvers, _repos
 from orquestra.sdk._base.cli._ui import _presenters, _prompts
 from orquestra.sdk.schema.configs import RuntimeConfiguration
@@ -402,7 +401,7 @@ class TestWFRunResolver:
             User didn't pass ``wf_run_id``.
             """
             # Given
-            current_time = _dates.now().astimezone()
+            current_time = dates.now().astimezone()
 
             def return_wf(id, time_delay_in_sec: int):
                 run = Mock()
@@ -498,7 +497,7 @@ class TestWFRunResolver:
             User didn't pass ``wf_run_id``.
             """
             # Given
-            current_time = _dates.now().astimezone()
+            current_time = dates.now().astimezone()
 
             def return_wf(id, time_delay_in_sec: int):
                 run = Mock()
