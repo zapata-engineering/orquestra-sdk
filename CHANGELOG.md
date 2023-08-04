@@ -3,6 +3,28 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+
+🔥 *Features*
+
+🧟 *Deprecations*
+* `list_workflow_runs`' project parameter emits a warning and will be removed in the next release. This change doesn't affect the system's behavior, the parameter was ignored anyway.
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+* `orq wf *` and `orq task *` commands (other than `orq wf submit`) wont prompt for project parameter anymore, as it was ignored anyway 
+
+🥷 *Internal*
+
+📃 *Docs*
+* Corrected unclear language in `Secrets` docs.
+* Corrected unclear language in the quickstart guide.
+
+## v0.54.0
+
+🚨 *Breaking Changes*
 * `orq wf list` command does not accept `-p, --project-id` parameter anymore
 * `orq wf list` only prompts for a single config now
 * Deprecated functions `sdk.wfprint()` and `sdk.workflow_logger()` have been removed.
@@ -12,10 +34,6 @@
 * `orq wf list` properly prompts for a workspace after selecting config if option `-w` was not provided
 * Helpful error when Compute Engine rejects a workflow if the Workflow SDK version is too old.
 
-🧟 *Deprecations*
-
-👩‍🔬 *Experimental*
-
 🐛 *Bug Fixes*
 * Fix an error when calling `get_artifacts()` on unfinished or failed workflow
 * `KILLED` workflows will no longer show an error when waiting for the workflow to complete.
@@ -24,8 +42,6 @@
 * Consolidate all `NotATaskWarning` warnings into a single warning for each workflow.
 * Remove redundant environment variable checks in MLFlow connection utils.
 
-🥷 *Internal*
-
 📃 *Docs*
 * Added "Beginner's Guide to the CLI"
 * Update migration docs to use `orquestra-sdk[all]` to ensure extras are updated.
@@ -33,7 +49,6 @@
 * Corrected minor typos in the dependency installation guide.
 * Removed "Using Custom Container Images on Compute Engine" guide.
 * Extended the "MLflow" guide with sections about tracking URI and token.
-
 
 ##  v0.53.0
 

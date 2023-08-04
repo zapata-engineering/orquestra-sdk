@@ -35,7 +35,7 @@ from .. import serde
 from .._graphs import iter_invocations_topologically
 from .._in_process_runtime import InProcessRuntime
 from .._logs._interfaces import WorkflowLogs
-from .._spaces._resolver import resolve_studio_project_ref
+from .._spaces._resolver import resolve_studio_ref, resolve_studio_workspace_ref
 from .._spaces._structs import ProjectRef
 from ..abc import RuntimeInterface
 from ._config import RuntimeConfig, _resolve_config
@@ -172,7 +172,7 @@ class WorkflowRun:
 
         assert runtime is not None
 
-        _project: t.Optional[ProjectRef] = resolve_studio_project_ref(
+        _project: t.Optional[ProjectRef] = resolve_studio_ref(
             workspace_id,
             project_id,
         )
@@ -618,18 +618,23 @@ def list_workflow_runs(
             "without a workspace parameter."
         )
 
+    if project:
+        warnings.warn(
+            "`project` parameter in `list_workflow_runs` is deprecated and will be "
+            "removed in the next release.",
+            FutureWarning,
+        )
+        # Null project - it is ignored by platform anyway - left as parameter for
+        # backward compatibility only
+        project = None
+
+    workspace = resolve_studio_workspace_ref(workspace_id=workspace)
+
     _project_dir = Path(project_dir or Path.cwd())
 
     # Resolve config
     resolved_config: RuntimeConfig = _resolve_config(config)
     # If user wasn't specific with workspace and project, we might want to resolve it
-    if workspace is None and project is None:
-        if _project := resolve_studio_project_ref(
-            workspace,
-            project,
-        ):
-            workspace = _project.workspace_id
-            project = _project.project_id
 
     # resolve runtime
     runtime = resolved_config._get_runtime(_project_dir)
@@ -644,7 +649,6 @@ def list_workflow_runs(
             max_age=_parse_max_age(max_age),
             state=state,
             workspace=workspace,
-            project=project,
         )
 
     # We need to convert to the public API notion of a WorkflowRun

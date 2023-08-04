@@ -837,7 +837,6 @@ class QERuntime(RuntimeInterface):
         max_age: Optional[timedelta] = None,
         state: Optional[Union[State, List[State]]] = None,
         workspace: Optional[WorkspaceId] = None,
-        project: Optional[ProjectId] = None,
     ) -> List[WorkflowRun]:
         """
         List the workflow runs, with some filters
@@ -857,7 +856,7 @@ class QERuntime(RuntimeInterface):
         Returns:
             A list of the workflow runs
         """
-        if workspace or project:
+        if workspace:
             raise exceptions.WorkspacesNotSupportedError(
                 "Filtering by workspace or project is not supported on QE runtimes."
             )

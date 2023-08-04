@@ -404,7 +404,6 @@ class CERuntime(RuntimeInterface):
         max_age: Optional[timedelta] = None,
         state: Optional[Union[State, List[State]]] = None,
         workspace: Optional[WorkspaceId] = None,
-        project: Optional[ProjectId] = None,
     ) -> List[WorkflowRunMinimal]:
         """
         List the workflow runs, with some filters
@@ -451,7 +450,6 @@ class CERuntime(RuntimeInterface):
                     page_size=page_size,
                     page_token=page_token,
                     workspace=workspace,
-                    project=project,
                 )
             except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
                 raise exceptions.UnauthorizedError(

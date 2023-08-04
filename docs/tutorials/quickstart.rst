@@ -8,7 +8,7 @@ It assumes you've :doc:`installed Orquestra Workflow SDK <installing-macos-linux
 Define a task and a workflow
 ============================
 
-Create ``workflow_defs.py`` file with the following contents:
+Create a file called ``workflow_defs.py`` with the following content [1]_:
 
 .. literalinclude:: ../examples/workflow_defs.py
     :start-after: >> Start
@@ -35,8 +35,10 @@ Now paste the following snippet into your ``python`` REPL:
 
 You're supposed to see ``Hello Orquestra!`` text in your terminal output.
 
-Running in process executes the workflow in a single thread.
+Running with ``in_process`` executes the workflow in a single thread.
 This means that the ``run()`` command blocks execution until the workflow run completes, and that results from the run will not persist if the process is terminated.
 
 The ``in_process`` execution is similar to directly calling your function in Python, and it's suitable for quick prototypes or debugging, but it doesn't show the full potential of Orquestra.
 For more advanced features, see the next tutorials in this series.
+
+.. [1] The use of the name ``workflow_defs.py`` is not a requirement. Rather, this is a convenient convention that we adopt throughout this documentation. Note that some early versions of the SDK did enforce this name, but this restriction has since been lifted.
