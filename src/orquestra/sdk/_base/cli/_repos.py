@@ -21,7 +21,7 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base import _config, _dates, _db, loader
 from orquestra.sdk._base._driver._client import DriverClient, ExternalUriProvider
 from orquestra.sdk._base._jwt import check_jwt_without_signature_verification
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs
+from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk._base.abc import ArtifactValue
 from orquestra.sdk.schema import _compat
 from orquestra.sdk.schema.configs import (
@@ -389,7 +389,7 @@ class WorkflowRunRepo:
         wf_run_id: WorkflowRunId,
         task_inv_id: TaskInvocationId,
         config_name: ConfigName,
-    ) -> t.Mapping[TaskInvocationId, t.Sequence[str]]:
+    ) -> t.Mapping[TaskInvocationId, LogOutput]:
         """
         Raises:
             orquestra.sdk.exceptions.WorkflowRunNotFoundError

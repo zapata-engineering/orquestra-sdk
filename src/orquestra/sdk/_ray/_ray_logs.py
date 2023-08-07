@@ -8,7 +8,9 @@ import typing as t
 from pathlib import Path
 
 from orquestra.sdk._base._logs import _markers, _regrouping
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs
+from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
+from orquestra.sdk._base._logs._models import Logs, LogStreamType
+from orquestra.sdk._base._services import redirected_logs_dir
 from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
@@ -113,7 +115,7 @@ def iter_task_logs(
             )
 
 
-class DirectRayReader:
+class DirectLogReader:
     """
     Directly reads log files produced by Ray.
     Implements the ``LogReader`` interface.
@@ -135,13 +137,16 @@ class DirectRayReader:
         """
         self._ray_temp = ray_temp
 
-    def _get_env_setup_lines(self) -> t.Sequence[str]:
+    def _get_env_setup_lines(self) -> LogOutput:
         log_paths = iter_env_log_paths(self._ray_temp)
         log_line_bytes = _iter_log_lines(log_paths)
 
-        return [line.decode() for line in log_line_bytes]
+        # Environment setup logs are in a combined ".log" file.
+        # This means we cannot tell which lines were stdout vs stderr
+        # For now, we'll assume all log lines are stdout.
+        return LogOutput(out=[line.decode() for line in log_line_bytes], err=[])
 
-    def _get_system_log_lines(self) -> t.Sequence[str]:
+    def _get_system_log_lines(self) -> LogOutput:
         # There is currently no concrete rule for which log files fall into the
         # category of 'system'. Since the log files exist locally for the user, we
         # simply point them to the appropriate directory rather than trying to
@@ -151,41 +156,83 @@ class DirectRayReader:
             "The log files can be found in the directory "
             f"'{self._ray_temp}'"
         )
-        return [system_warning]
+        return LogOutput(out=[], err=[system_warning])
 
-    def _get_other_log_lines(self) -> t.Sequence[str]:
+    def _get_other_log_lines(self) -> LogOutput:
         other_warning = (
             "WARNING: we don't parse uncategorized logs for the local runtime. "
             "The log files can be found in the directory "
             f"'{self._ray_temp}'"
         )
-        return [other_warning]
+        return LogOutput(out=[], err=[other_warning])
 
-    def get_task_logs(
-        self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
-    ) -> t.List[str]:
-        collected_logs: t.List[str] = []
-        for log_path in iter_user_log_paths(self._ray_temp):
-            for logs_batch2, wf_run_id2, task_inv_id2 in iter_task_logs(log_path):
-                if wf_run_id2 != wf_run_id:
-                    continue
-
-                if task_inv_id2 != task_inv_id:
-                    continue
-
-                collected_logs.extend(logs_batch2)
-        return collected_logs
-
-    def get_workflow_logs(self, wf_run_id: WorkflowRunId) -> WorkflowLogs:
+    def _get_legacy_task_logs(
+        self,
+        wf_run_id: WorkflowRunId,
+        task_inv_id_allow_list: t.Optional[t.List[TaskInvocationId]] = None,
+    ) -> t.Dict[TaskInvocationId, LogOutput]:
         log_paths = iter_user_log_paths(self._ray_temp)
-        logs_dict: t.Dict[TaskInvocationId, t.List[str]] = {}
+        logs_dict: t.Dict[TaskInvocationId, Logs] = {}
         for log_path in log_paths:
             for logs_batch2, wf_run_id2, task_inv_id2 in iter_task_logs(log_path):
                 if wf_run_id2 != wf_run_id:
                     continue
 
-                logs_dict.setdefault(task_inv_id2, []).extend(logs_batch2)
+                if (
+                    task_inv_id_allow_list is not None
+                    and task_inv_id2 not in task_inv_id_allow_list
+                ):
+                    continue
 
+                stream = LogStreamType.by_file(log_path)
+                logs_dict.setdefault(task_inv_id2, Logs()).add_lines_by_stream(
+                    stream, logs_batch2
+                )
+
+        return {
+            invocation: LogOutput(out=log_output.out, err=log_output.err)
+            for invocation, log_output in logs_dict.items()
+        }
+
+    def _get_task_logs(
+        self,
+        wf_run_id: WorkflowRunId,
+        task_inv_id_allow_list: t.Optional[t.List[TaskInvocationId]] = None,
+    ) -> t.Dict[TaskInvocationId, LogOutput]:
+        logs_dict: t.Dict[TaskInvocationId, Logs] = {}
+        wf_logs_dir = redirected_logs_dir() / wf_run_id
+        if not wf_logs_dir.exists() or not wf_logs_dir.is_dir():
+            raise FileNotFoundError("Workflow logs directory not found")
+        for log_path in wf_logs_dir.iterdir():
+            log_file_task_inv_id = log_path.stem
+            if (
+                task_inv_id_allow_list is not None
+                and log_file_task_inv_id not in task_inv_id_allow_list
+            ):
+                continue
+
+            logs_dict.setdefault(log_file_task_inv_id, Logs()).add_lines_from_file(
+                log_path
+            )
+        return {
+            invocation: LogOutput(out=log_output.out, err=log_output.err)
+            for invocation, log_output in logs_dict.items()
+        }
+
+    def get_task_logs(
+        self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
+    ) -> LogOutput:
+        try:
+            logs_dict = self._get_task_logs(wf_run_id, [task_inv_id])
+        except FileNotFoundError:
+            logs_dict = self._get_legacy_task_logs(wf_run_id, [task_inv_id])
+        return logs_dict.get(task_inv_id, LogOutput(out=[], err=[]))
+
+    def get_workflow_logs(self, wf_run_id: WorkflowRunId) -> WorkflowLogs:
+        try:
+            logs_dict = self._get_task_logs(wf_run_id)
+        except FileNotFoundError:
+            logs_dict = self._get_legacy_task_logs(wf_run_id)
         env_setup = self._get_env_setup_lines()
         system = self._get_system_log_lines()
         other = self._get_other_log_lines()

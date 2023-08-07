@@ -4,16 +4,22 @@
 
 import pytest
 
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs
+from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
+
+
+def _logs_output(name: str):
+    return LogOutput(
+        out=[f"<{name} stdout sentinel>"], err=[f"<{name} stderr sentinel>"]
+    )
 
 
 class TestWorkflowLogs:
     @pytest.fixture
     def logs(self):
-        per_task = {"<task inv sentinel>": ["<per task sentinel>"]}
-        env_setup = ["<env setup sentinel>"]
-        system = ["<system sentinel>"]
-        other = ["<other sentinel>"]
+        per_task = {"<task inv sentinel>": _logs_output("per task")}
+        env_setup = _logs_output("env setup")
+        system = _logs_output("system")
+        other = _logs_output("other")
         return WorkflowLogs(
             per_task=per_task,
             env_setup=env_setup,
