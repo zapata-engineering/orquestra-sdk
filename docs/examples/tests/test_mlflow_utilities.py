@@ -184,6 +184,7 @@ class TestSnippets:
             """
             # Given
             monkeypatch.setattr(mlflow, "log_metric", Mock())
+            monkeypatch.setenv("ORQ_CURRENT_CLUSTER", "mock orq current cluster")
 
             token = "ABC123 mocked token"
             passport_path = tmp_path / "passport.txt"
