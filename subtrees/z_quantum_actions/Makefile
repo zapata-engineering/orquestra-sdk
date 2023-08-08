@@ -35,6 +35,7 @@ $(info Python Modules Covered: $(PYTHON_MOD))
 $(info -------------------------------------------------------------------------------)
 endif
 
+# unused
 # Clean out all Pythonic cruft
 clean-default:
 	@find . -regex '^.*\(__pycache__\|\.py[co]\)$$' -delete;
@@ -47,10 +48,12 @@ clean-default:
 	@rm -f .coverage*
 	@echo Finished cleaning out pythonic cruft...
 
+# unused
 install-default: clean
 	$(PYTHON) -m pip install --upgrade pip && \
 		$(PYTHON) -m pip install .
 
+# unused
 dev-default: clean
 	$(PYTHON) -m pip install -e .[dev]
 
@@ -63,25 +66,33 @@ dev-default: clean
 # This make task is used to create new virtual environment so we want to use
 # `python3` here as it's more explicit, because $(PYTHON) would evaluate to
 # something else after executing this task, which might be confusing.
+
+# overridden
 github_actions-default:
 	${PYTHON} -m pip install --upgrade pip
 	${PYTHON} -m pip install -e '.[dev]'
 
 # flake8p is a wrapper library that runs flake8 from config in pyproject.toml
 # we can now use it instead of flake8 to lint the code
+
+# overridden
 flake8p-default: clean
 	$(PYTHON) -m flake8p --ignore=E203,E266,F401,W503 --max-line-length=88 src tests
 
+# overridden
 mypy-default: clean
 	@echo scanning files with mypy: Please be patient....
 	$(PYTHON) -m mypy src tests
 
+# overridden
 black-default: clean
 	$(PYTHON) -m black --check src tests
 
+# overridden
 isort-default: clean
 	$(PYTHON) -m isort --check src tests
 
+# overridden
 test-default:
 	$(PYTHON) -m pytest tests
 
@@ -90,6 +101,8 @@ test-default:
 # - '--cov=src' - turn on measuring code coverage. It outputs the results in a
 #    '.coverage' binary file. It's passed to other commands like
 #    'python -m coverage report'
+
+# overridden
 coverage-default:
 	$(PYTHON) -m pytest \
 		--cov=src \
@@ -100,22 +113,29 @@ coverage-default:
 
 # Reads the code coverage stats from '.coverage' file and prints a textual,
 # human-readable report to stdout.
+
+# overridden
 show-coverage-text-report-default:
 	$(PYTHON) -m coverage report --show-missing
 
 
+# overridden
 style-default: flake8p mypy black isort
 	@echo This project passes style!
 
+# unused
 muster-default: style coverage
 	@echo This project passes muster!
 
+# overridden
 build-system-deps-default:
 	:
 
 # Gets the next version of an installed package
 # Note: on CI we only run this step, this means we use the github_actions target as a dependency.
 # Because of this, we don't update the $(PYTHON) variable and have to manually build the path to our venv Python.
+
+# unused
 get-next-version-default: github_actions
 	$(PYTHON) subtrees/z_quantum_actions/bin/get_next_version.py $(PACKAGE_NAME)
 

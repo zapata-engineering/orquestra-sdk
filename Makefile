@@ -41,7 +41,7 @@ coverage:
 # Reads the code coverage stats from '.coverage' file and prints a textual,
 # human-readable report to stdout.
 #
-# (no override)
+# (override)
 show-coverage-text-report:
 	$(PYTHON) -m coverage report --show-missing
 
