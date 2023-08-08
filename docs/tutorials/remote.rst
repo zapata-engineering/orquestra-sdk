@@ -33,8 +33,7 @@ Run the command below to log in to an Orquestra cluster (using the appropriate c
     orq login -s <cluster URL> [<runtime>]
 
 Where the ``cluster URL`` is the URL of your Orquestra Cluster.
-If specified, ``runtime`` may be either ``--ce`` (Compute Engine) or ``--qe`` (Quantum Engine).
-If the runtime is not specified, the the Compute Engine runtime will be used.
+Currently, the only option for ``runtime`` is ``--ce`` (Compute Engine) and is used by default if no runtime is specified.
 
 This command will open the login URL in your default browser.
 You will then be able to log in using your username and password.

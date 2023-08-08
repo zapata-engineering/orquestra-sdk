@@ -154,7 +154,7 @@ During workflow definition time, tasks return proxy objects called ``ArtifactFut
 
     .. warning::
         Adopting this workaround creates separate nodes in the computational graph only to reshape your data structures.
-        Each task invocation has an overhead, and this might waste time, especially when running workflows on Quantum Engine.
+        Each task invocation has an overhead, and this might waste time.
         Please try workaround 1 first.
 
     .. literalinclude:: ../examples/tests/test_workflow_syntax.py

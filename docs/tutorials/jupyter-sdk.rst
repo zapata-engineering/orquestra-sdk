@@ -127,16 +127,16 @@ and pass it as an argument when creating the workflow run:
 
     ray_workflow_run = wf_hello().run(ray_config)
 
-Running Workflows with QE
+Running Workflows with CE
 =========================
 
-Running workflows with QE requires transmitting the code to the QE runtime. This can be done in one of two ways: via a Git or Github import, or an inline import. The method used is controlled by setting the ``source_import`` parameter of the task definition. Tasks defined in a Jupyter notebook will default to an inline import.
+Running workflows with CE requires transmitting the code to the CE runtime. This can be done in one of two ways: via a Git or Github import, or an inline import. The method used is controlled by setting the ``source_import`` parameter of the task definition. Tasks will default to an inline import.
 
-As with Ray, a configuration must be defined telling Orquestra what runtime should be used, and this will then be passed to as an argument to ``prepare`` or ``run`` (whichever you are using).
+As with Ray, a configuration must be defined telling Orquestra what runtime should be used, and this will then be passed to as an argument to ``run``.
 
 .. code-block:: python
 
-    qe_config = sdk.RuntimeConfig.qe(
+    ce_config = sdk.RuntimeConfig.ce(
         uri = "https://uri/of/cluster",
         token = "authorization token providing access to the cluster",
         project_dir = "path/to/dir", # Optional. Path of the project directory. Defaults to the current dir.
@@ -146,7 +146,7 @@ As with Ray, a configuration must be defined telling Orquestra what runtime shou
 Inline Import
 -------------
 
-The inline import serializes the code and sends it to QE. While this is the default for Jupyter notebooks, the code snippet below shows how you can manually express this:
+The inline import serializes the code and sends it to CE. While this is the default for Jupyter notebooks, the code snippet below shows how you can manually express this:
 
 .. code-block:: python
 
@@ -160,12 +160,12 @@ The inline import serializes the code and sends it to QE. While this is the defa
         return task_sum_numbers(numbers)
 
 .. code-block:: python
-    qe_workflow_run = wf_hello().run(qe_config)
+    ce_workflow_run = wf_hello().run(ce_config)
 
 Github Import
 -------------
 
-A Github import uses a Github repository to store the task source code. You will have to make sure the code is pushed before running on QE.
+A Github import uses a Github repository to store the task source code. You will have to make sure the code is pushed before running on CE.
 
 .. code-block:: python
 
@@ -187,4 +187,4 @@ A Github import uses a Github repository to store the task source code. You will
 
 .. code-block:: python
 
-    qe_workflow_run = wf_hello().run(qe_config)
+    ce_workflow_run = wf_hello().run(ce_config)
