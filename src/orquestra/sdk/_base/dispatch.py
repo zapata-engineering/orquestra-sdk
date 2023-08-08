@@ -122,8 +122,6 @@ def _locate_inline_fn_ref(fn_ref: ir.InlineFunctionRef) -> t.Callable:
 
 
 def ensure_sys_paths(additional_paths: t.Sequence[str]):
-    # TODO: export a yaml and put it inside smoke tests so we get early alarm
-    # when the PWD on QE changes.
     for new_path in reversed(additional_paths):
         if new_path in sys.path:
             sys.path.remove(new_path)
