@@ -15,13 +15,14 @@
 🐛 *Bug Fixes*
 
 💅 *Improvements*
-* `orq wf *` and `orq task *` commands (other than `orq wf submit`) wont prompt for project parameter anymore, as it was ignored anyway 
+* `orq wf *` and `orq task *` commands (other than `orq wf submit`) won't prompt for project parameter anymore, as it was ignored anyway
 
 🥷 *Internal*
 
 📃 *Docs*
 * Corrected unclear language in `Secrets` docs.
 * Corrected unclear language in the quickstart guide.
+* Fixed resource management doc incorrectly stating that 10k == 10^7.
 
 ## v0.54.0
 
