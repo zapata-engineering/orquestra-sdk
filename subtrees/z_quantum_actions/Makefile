@@ -35,7 +35,7 @@ $(info Python Modules Covered: $(PYTHON_MOD))
 $(info -------------------------------------------------------------------------------)
 endif
 
-# unused
+# overridden
 # Clean out all Pythonic cruft
 clean-default:
 	@find . -regex '^.*\(__pycache__\|\.py[co]\)$$' -delete;
