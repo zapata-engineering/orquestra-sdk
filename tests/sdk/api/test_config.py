@@ -20,7 +20,7 @@ from orquestra.sdk.schema.configs import CONFIG_FILE_CURRENT_VERSION, RuntimeNam
 
 from ..data.configs import TEST_CONFIG_JSON, TEST_CONFIGS_DICT
 
-VALID_RUNTIME_NAMES: list = ["RAY_LOCAL", "QE_REMOTE", "IN_PROCESS", "CE_REMOTE"]
+VALID_RUNTIME_NAMES: list = ["RAY_LOCAL", "IN_PROCESS", "CE_REMOTE"]
 VALID_CONFIG_NAMES: list = ["name_with_underscores", "name with spaces"]
 
 
@@ -55,7 +55,6 @@ class TestRuntimeConfiguration:
                 in str(exc_info.value)
             )
             assert "`RuntimeConfig.in_process()`" in str(exc_info.value)
-            assert "`RuntimeConfig.qe()`" in str(exc_info.value)
             assert "`RuntimeConfig.ray()`" in str(exc_info.value)
             assert "`RuntimeConfig.ce()`" in str(exc_info.value)
 
@@ -81,7 +80,7 @@ class TestRuntimeConfiguration:
         @pytest.fixture
         def config(self):
             config = api_cfg.RuntimeConfig(
-                "QE_REMOTE", name="test_config", bypass_factory_methods=True
+                "CE_REMOTE", name="test_config", bypass_factory_methods=True
             )
             setattr(config, "uri", "test_uri")
             setattr(config, "token", "test_token")
@@ -102,7 +101,7 @@ class TestRuntimeConfiguration:
             "runtime_name, config_name, runtime_options",
             [
                 (
-                    "QE_REMOTE",
+                    "CE_REMOTE",
                     "name_mismatch",
                     {"uri": "test_uri", "token": "test_token"},
                 ),
@@ -112,7 +111,7 @@ class TestRuntimeConfiguration:
                     {"uri": "test_uri", "token": "test_token"},
                 ),
                 (
-                    "QE_REMOTE",
+                    "CE_REMOTE",
                     "test_config",
                     {
                         "uri": "test_uri",
@@ -141,7 +140,7 @@ class TestRuntimeConfiguration:
         @staticmethod
         def test_happy_path():
             config = api_cfg.RuntimeConfig(
-                "QE_REMOTE", name="test_config", bypass_factory_methods=True
+                "CE_REMOTE", name="test_config", bypass_factory_methods=True
             )
             config.uri = "test_uri"  # type: ignore
             config.token = "test_token"
@@ -166,20 +165,6 @@ class TestRuntimeConfiguration:
 
                 assert config.name == "local"
                 assert config._runtime_name == "RAY_LOCAL"
-
-        class TestQeFactory:
-            @staticmethod
-            def test_with_minimal_args():
-                config = api_cfg.RuntimeConfig.qe(
-                    uri="https://prod-d.orquestra.io/",
-                    token="test token",
-                )
-
-                name = config.name
-                assert name == "prod-d"
-                assert config._runtime_name == "QE_REMOTE"
-                assert config.uri == "https://prod-d.orquestra.io/"  # type: ignore
-                assert config.token == "test token"
 
         class TestRemoteRayFactory:
             @staticmethod
@@ -472,21 +457,21 @@ class TestRuntimeConfiguration:
                 f" to version {CONFIG_FILE_CURRENT_VERSION}. Updated 2 entries:\n - multiple_configs_need_updating\n - this_one_too",  # NOQA E501
             ],
         ),
-        (  # Mix of QE and Ray configs - only ray should be updated.
+        (  # Mix of CE and Ray configs - only ray should be updated.
             {
                 "configs": {
-                    "mix_of_QE_and_RAY": {
+                    "mix_of_CE_and_RAY": {
                         "runtime_name": "RAY_LOCAL",
                         "runtime_options": {},
                     },
                     "update_me": {"runtime_name": "RAY_LOCAL", "runtime_options": {}},
-                    "but_not_me": {"runtime_name": "QE_REMOTE", "runtime_options": {}},
+                    "but_not_me": {"runtime_name": "CE_REMOTE", "runtime_options": {}},
                 },
                 "version": CONFIG_FILE_CURRENT_VERSION,
             },
             {
                 "configs": {
-                    "mix_of_QE_and_RAY": {
+                    "mix_of_CE_and_RAY": {
                         "runtime_name": "RAY_LOCAL",
                         "runtime_options": {
                             "temp_dir": None,
@@ -498,13 +483,13 @@ class TestRuntimeConfiguration:
                             "temp_dir": None,
                         },
                     },
-                    "but_not_me": {"runtime_name": "QE_REMOTE", "runtime_options": {}},
+                    "but_not_me": {"runtime_name": "CE_REMOTE", "runtime_options": {}},
                 },
                 "version": CONFIG_FILE_CURRENT_VERSION,
             },
             [
                 "Successfully migrated file ",
-                f" to version {CONFIG_FILE_CURRENT_VERSION}. Updated 2 entries:\n - mix_of_QE_and_RAY\n - update_me",  # NOQA E501
+                f" to version {CONFIG_FILE_CURRENT_VERSION}. Updated 2 entries:\n - mix_of_CE_and_RAY\n - update_me",  # NOQA E501
             ],
         ),
         (  # version alone needs updating
@@ -613,7 +598,7 @@ class TestUpdateSavedToken:
             cfg.update_saved_token("new token")
 
     @pytest.mark.parametrize(
-        "runtime_factory", [api_cfg.RuntimeConfig.ce, api_cfg.RuntimeConfig.qe]
+        "runtime_factory", [api_cfg.RuntimeConfig.ce]
     )
     def test_happy_path(self, runtime_factory):
         new_token = "Hi, hello"
@@ -627,7 +612,7 @@ class TestUpdateSavedToken:
         assert api_cfg.RuntimeConfig.load(cfg.name).token == new_token
 
     @pytest.mark.parametrize(
-        "runtime_factory", [api_cfg.RuntimeConfig.ce, api_cfg.RuntimeConfig.qe]
+        "runtime_factory", [api_cfg.RuntimeConfig.ce]
     )
     def test_same_token(self, runtime_factory):
         token = "Hi, hello"

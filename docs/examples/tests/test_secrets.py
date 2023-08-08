@@ -103,7 +103,7 @@ class TestSecrets:
             Mock(
                 return_value=configs.RuntimeConfiguration(
                     config_name="mocked",
-                    runtime_name=configs.RuntimeName.QE_REMOTE,
+                    runtime_name=configs.RuntimeName.CE_REMOTE,
                     runtime_options={"uri": base_uri, "token": "mocked_token"},
                 )
             ),

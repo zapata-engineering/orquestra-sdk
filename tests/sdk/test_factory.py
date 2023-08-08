@@ -4,7 +4,6 @@ import pytest
 
 from orquestra.sdk._base._driver._ce_runtime import CERuntime
 from orquestra.sdk._base._factory import build_runtime_from_config
-from orquestra.sdk._base._qe._qe_runtime import QERuntime
 from orquestra.sdk._ray._dag import RayRuntime
 from orquestra.sdk.exceptions import RuntimeConfigError
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
@@ -25,7 +24,6 @@ class TestBuildRuntimeFromConfig:
                 },
                 RayRuntime,
             ),
-            (RuntimeName.QE_REMOTE, {"uri": "blah", "token": "bla"}, QERuntime),
             (RuntimeName.CE_REMOTE, {"uri": "blah", "token": "bla"}, CERuntime),
         ],
     )
@@ -49,7 +47,6 @@ class TestBuildRuntimeFromConfig:
     @pytest.mark.parametrize(
         "config_type, runtime_options",
         [
-            (RuntimeName.QE_REMOTE, {"uri": "blah", "no_token": "bla"}),
             (RuntimeName.CE_REMOTE, {"uri": "blah", "no_token": "bla"}),
         ],
     )

@@ -1,8 +1,8 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 from enum import Enum
-from typing import Any, Dict, Literal, Union
+from typing import Any, Dict, Literal
 
 from pydantic.main import BaseModel
 
@@ -14,11 +14,10 @@ ConfigName = str
 class RuntimeName(str, Enum):
     RAY_LOCAL = "RAY_LOCAL"
     CE_REMOTE = "CE_REMOTE"
-    QE_REMOTE = "QE_REMOTE"
     IN_PROCESS = "IN_PROCESS"
 
 
-RemoteRuntime = Union[Literal[RuntimeName.CE_REMOTE], Literal[RuntimeName.QE_REMOTE]]
+RemoteRuntime = Literal[RuntimeName.CE_REMOTE]
 
 
 class RuntimeConfiguration(BaseModel):

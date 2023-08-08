@@ -22,7 +22,6 @@ from orquestra.sdk._base import _config, _dates, _db, loader
 from orquestra.sdk._base._driver._client import DriverClient, ExternalUriProvider
 from orquestra.sdk._base._jwt import check_jwt_without_signature_verification
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
-from orquestra.sdk._base._qe import _client
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base.abc import ArtifactValue
 from orquestra.sdk.schema import _compat
@@ -558,7 +557,7 @@ class SpacesRepo:
 
 class RuntimeRepo:
     """
-    Wraps access to QE/CE clients
+    Wraps access to CE clients
     """
 
     def get_login_url(
@@ -567,12 +566,10 @@ class RuntimeRepo:
         runtime_name: RemoteRuntime,
         redirect_port: int,
     ):
-        client: t.Union[DriverClient, _client.QEClient]
+        client: DriverClient
         if runtime_name == RuntimeName.CE_REMOTE:
             uri_provider = ExternalUriProvider(base_uri=uri)
             client = DriverClient(session=requests.Session(), uri_provider=uri_provider)
-        elif runtime_name == RuntimeName.QE_REMOTE:
-            client = _client.QEClient(session=requests.Session(), base_uri=uri)
         else:
             assert_never(runtime_name)
         try:

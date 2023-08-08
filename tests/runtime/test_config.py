@@ -37,7 +37,7 @@ class TestProperties:
 
         @pytest.mark.parametrize("config_name", ["custom_cfg"])
         @pytest.mark.parametrize(
-            "runtime_name", [RuntimeName.QE_REMOTE, RuntimeName.RAY_LOCAL]
+            "runtime_name", [RuntimeName.CE_REMOTE, RuntimeName.RAY_LOCAL]
         )
         @pytest.mark.parametrize("new_runtime_options", [None, {}, {"foo": "bar"}])
         def test_no_file(

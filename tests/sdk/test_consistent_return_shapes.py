@@ -12,7 +12,6 @@ Runtimes tested:
 - In process
 - ray local
 - CE
-- QE
 
 Outputs tested:
 - WF results
@@ -100,137 +99,6 @@ WORKFLOW_DEF_MULTIPLE = "\n".join(
 
 # endregion
 
-# region: QE mocking
-QE_MINIMAL_CURRENT_REPRESENTATION_SINGLE: t.Dict[str, t.Any] = {
-    "status": {
-        "phase": "Succeeded",
-        "startedAt": "1989-12-13T09:03:49Z",
-        "finishedAt": "1989-12-13T09:05:14Z",
-        "nodes": {
-            "foo": {
-                "id": "wf-id-sentinel",
-                "name": "bar",
-                "displayName": "foobar",
-                "type": "boo",
-                "templateName": "invocation-0-task-get-list",
-                "phase": "Succeeded",
-                "boundaryID": "far",
-                "startedAt": "1989-12-13T09:05:09Z",
-                "finishedAt": "1989-12-13T09:05:14Z",
-            }
-        },
-    },
-}
-QE_MINIMAL_CURRENT_REPRESENTATION_MULTIPLE: t.Dict[str, t.Any] = {
-    "status": {
-        "phase": "Succeeded",
-        "startedAt": "1989-12-13T09:03:49Z",
-        "finishedAt": "1989-12-13T09:05:14Z",
-        "nodes": {
-            "foo": {
-                "id": "wf-id-sentinel",
-                "name": "bar",
-                "displayName": "foobar",
-                "type": "boo",
-                "templateName": "invocation-0-task-get-list",
-                "phase": "Succeeded",
-                "boundaryID": "far",
-                "startedAt": "1989-12-13T09:05:09Z",
-                "finishedAt": "1989-12-13T09:05:14Z",
-            },
-            "boofar": {
-                "id": "wf-id-sentinel",
-                "name": "bar",
-                "displayName": "foobar",
-                "type": "boo",
-                "templateName": "invocation-1-task-get-list",
-                "phase": "Succeeded",
-                "boundaryID": "far",
-                "startedAt": "1989-12-13T09:05:09Z",
-                "finishedAt": "1989-12-13T09:05:14Z",
-            },
-        },
-    },
-}
-
-
-QE_STATUS_RESPONSE_SINGLE = {
-    "id": "wf-id-sentinel",
-    "status": "Succeeded",
-    "currentRepresentation": base64.standard_b64encode(
-        json.dumps(QE_MINIMAL_CURRENT_REPRESENTATION_SINGLE).encode()
-    ).decode(),
-    "completed": True,
-    "retry": "",
-    "lastModified": "1989-12-13T09:10:04.14422796Z",
-    "created": "1989-12-13T09:03:49.39478764Z",
-}
-
-QE_STATUS_RESPONSE_MULTIPLE = {
-    "id": "wf-id-sentinel",
-    "status": "Succeeded",
-    "currentRepresentation": base64.standard_b64encode(
-        json.dumps(QE_MINIMAL_CURRENT_REPRESENTATION_MULTIPLE).encode()
-    ).decode(),
-    "completed": True,
-    "retry": "",
-    "lastModified": "1989-12-13T09:10:04.14422796Z",
-    "created": "1989-12-13T09:03:49.39478764Z",
-}
-
-QE_WORKFLOW_RESULT_JSON_DICT_SINGLE = {
-    "wf-id-sentinel-foobar": {
-        "artifact-3-get-list": {
-            "serialization_format": "JSON",
-            "value": f"{wf_return_single_packed_value_vanilla()}",
-        },
-        "inputs": {},
-        "stepID": "wf-id-sentinel-foobar",
-        "stepName": "invocation-0-task-get-list",
-        "workflowId": "wf-id-sentinel",
-    },
-}
-QE_WORKFLOW_RESULT_JSON_DICT_MULTIPLE = {
-    "wf-id-sentinel-foo": {
-        "artifact-3-get-list": {
-            "serialization_format": "JSON",
-            "value": f"{wf_return_single_packed_value_vanilla()}",
-        },
-        "inputs": {},
-        "stepID": "wf-id-sentinel-foo",
-        "stepName": "invocation-0-task-get-list",
-        "workflowId": "wf-id-sentinel",
-    },
-    "wf-id-sentinel-bar": {
-        "artifact-7-get-list": {
-            "serialization_format": "JSON",
-            "value": f"{wf_return_single_packed_value_vanilla()}",
-        },
-        "inputs": {},
-        "stepID": "wf-id-sentinel-bar",
-        "stepName": "invocation-1-task-get-list",
-        "workflowId": "wf-id-sentinel",
-    },
-}
-
-
-def _make_result_bytes(results_dict) -> bytes:
-    results_file_bytes = json.dumps(results_dict).encode()
-
-    tar_buf = io.BytesIO()
-    with tarfile.open(mode="w:gz", fileobj=tar_buf) as tar:
-        # See this for creating tars in memory:
-        # https://github.com/python/cpython/issues/66404#issuecomment-1093662423
-        tar_info = tarfile.TarInfo("results.json")
-        tar_info.size = len(results_file_bytes)
-        tar.addfile(tar_info, fileobj=io.BytesIO(results_file_bytes))
-
-    tar_buf.seek(0)
-    return tar_buf.read()
-
-
-# endregion
-
 
 # region: fixtures
 @pytest.fixture(scope="module")
@@ -259,89 +127,12 @@ def mock_config_env_var(
             '      "token": "nice",\n'
             f'      "uri": "http://127.0.0.1:{httpserver.port}"\n'
             "  }\n"
-            "  },\n"
-            '    "QE": {\n'
-            '    "config_name": "QE",\n'
-            '    "runtime_name": "QE_REMOTE",\n'
-            '    "runtime_options": {\n'
-            '      "token": "nice",\n'
-            f'      "uri": "http://127.0.0.1:{httpserver.port}"\n'
-            "    }\n"
             "  }\n"
             "},\n"
             '  "default_config_name": "local"\n'
             "}\n"
         )
 
-
-@pytest.fixture
-def mock_qe_run_single(httpserver: pytest_httpserver.HTTPServer) -> str:
-    wf_id: str = "wf_id_sentinel_qe_single"
-
-    httpserver.expect_request("/v1/workflows").respond_with_data(wf_id)
-    httpserver.expect_request("/v1/workflow").respond_with_json(
-        QE_STATUS_RESPONSE_SINGLE
-    )
-    httpserver.expect_request(f"/v2/workflows/{wf_id}/result").respond_with_data(
-        _make_result_bytes(QE_WORKFLOW_RESULT_JSON_DICT_SINGLE),
-        content_type="application/x-gtar-compressed",
-    )
-    httpserver.expect_request(
-        f"/v2/workflows/{wf_id}/step/invocation-0-task-get-list/artifact/artifact-3-get-list"  # noqa: E501
-    ).respond_with_data(
-        _make_result_bytes(
-            QE_WORKFLOW_RESULT_JSON_DICT_SINGLE["wf-id-sentinel-foobar"][
-                "artifact-3-get-list"
-            ]
-        ),
-        content_type="application/x-gtar-compressed",
-    )
-    return wf_id
-
-
-@pytest.fixture
-def mock_qe_run_multiple(httpserver: pytest_httpserver.HTTPServer) -> str:
-    wf_id: str = "wf_id_sentinel_multiple"
-    httpserver.expect_request("/v1/workflows").respond_with_data(wf_id)
-    httpserver.expect_request("/v1/workflow").respond_with_json(
-        QE_STATUS_RESPONSE_MULTIPLE
-    )
-    httpserver.expect_request(f"/v2/workflows/{wf_id}/result").respond_with_data(
-        _make_result_bytes(QE_WORKFLOW_RESULT_JSON_DICT_MULTIPLE),
-        content_type="application/x-gtar-compressed",
-    )
-    httpserver.expect_request(
-        f"/v2/workflows/{wf_id}/step/invocation-0-task-get-list/artifact/artifact-3-get-list"  # noqa: E501
-    ).respond_with_data(
-        _make_result_bytes(
-            QE_WORKFLOW_RESULT_JSON_DICT_MULTIPLE["wf-id-sentinel-foo"][
-                "artifact-3-get-list"
-            ]
-        ),
-        content_type="application/x-gtar-compressed",
-    )
-    httpserver.expect_request(
-        f"/v2/workflows/{wf_id}/step/invocation-0-task-get-list/artifact/artifact-7-get-list"  # noqa: E501
-    ).respond_with_data(
-        _make_result_bytes(
-            QE_WORKFLOW_RESULT_JSON_DICT_MULTIPLE["wf-id-sentinel-bar"][
-                "artifact-7-get-list"
-            ]
-        ),
-        content_type="application/x-gtar-compressed",
-    )
-    httpserver.expect_request(
-        f"/v2/workflows/{wf_id}/step/invocation-1-task-get-list/artifact/artifact-7-get-list"  # noqa: E501
-    ).respond_with_data(
-        _make_result_bytes(
-            QE_WORKFLOW_RESULT_JSON_DICT_MULTIPLE["wf-id-sentinel-bar"][
-                "artifact-7-get-list"
-            ]
-        ),
-        content_type="application/x-gtar-compressed",
-    )
-
-    return wf_id
 
 
 @pytest.fixture
@@ -577,7 +368,6 @@ def multiple_result_vanilla():
 class TestAPI:
     @staticmethod
     def test_consistent_returns_for_single_value(
-        mock_qe_run_single,
         mock_ce_run_single,
         orq_project_dir_single,
         single_result_vanilla,
@@ -585,46 +375,38 @@ class TestAPI:
         # GIVEN
         ip_run = wf_return_single_packed_value().run(sdk.RuntimeConfig.in_process())
         ray_run = wf_return_single_packed_value().run(sdk.RuntimeConfig.ray())
-        qe_run = wf_return_single_packed_value().run(sdk.RuntimeConfig.load("QE"))
         ce_run = wf_return_single_packed_value().run(sdk.RuntimeConfig.load("CE"))
-        for run in [ip_run, ray_run, qe_run]:
+        for run in [ip_run, ray_run]:
             run.wait_until_finished()
 
         # WHEN
         results_ip = ip_run.get_results()
         results_ray = ray_run.get_results()
-        results_qe = qe_run.get_results()
         results_ce = ce_run.get_results()
 
         artifacts_ip = ip_run.get_artifacts()
         artifacts_ray = ray_run.get_artifacts()
-        artifacts_qe = qe_run.get_artifacts()
         artifacts_ce = ce_run.get_artifacts()
 
         task_outputs_ip = [t.get_outputs() for t in ip_run.get_tasks()]
         task_outputs_ray = [t.get_outputs() for t in ray_run.get_tasks()]
-        task_outputs_qe = [t.get_outputs() for t in qe_run.get_tasks()]
         task_outputs_ce = [t.get_outputs() for t in ce_run.get_tasks()]
 
         # THEN
         assert results_ip == results_ray
-        assert results_ip == results_qe
         assert results_ip == results_ce
         assert results_ip == single_result_vanilla
 
         assert artifacts_ip == artifacts_ray
-        assert artifacts_ip == artifacts_qe
         assert artifacts_ip == artifacts_ce
         assert artifacts_ip == {"invocation-0-task-get-list": single_result_vanilla}
 
         assert task_outputs_ip == task_outputs_ray
-        assert task_outputs_ip == task_outputs_qe
         assert task_outputs_ip == task_outputs_ce
         assert task_outputs_ip == [single_result_vanilla]
 
     @staticmethod
     def test_consistent_returns_for_multiple_values(
-        mock_qe_run_multiple,
         mock_ce_run_multiple,
         orq_project_dir_multiple,
         multiple_result_vanilla,
@@ -632,36 +414,30 @@ class TestAPI:
         # GIVEN
         ip_run = wf_return_multiple_packed_values().run(sdk.RuntimeConfig.in_process())
         ray_run = wf_return_multiple_packed_values().run(sdk.RuntimeConfig.ray())
-        qe_run = wf_return_multiple_packed_values().run(sdk.RuntimeConfig.load("QE"))
         ce_run = wf_return_multiple_packed_values().run(sdk.RuntimeConfig.load("CE"))
 
-        for run in [ip_run, ray_run, qe_run]:
+        for run in [ip_run, ray_run]:
             run.wait_until_finished()
 
         # WHEN
         results_ip = ip_run.get_results()
         results_ray = ray_run.get_results()
-        results_qe = qe_run.get_results()
         results_ce = ce_run.get_results()
 
         artifacts_ip = ip_run.get_artifacts()
         artifacts_ray = ray_run.get_artifacts()
-        artifacts_qe = qe_run.get_artifacts()
         artifacts_ce = ce_run.get_artifacts()
 
         task_outputs_ip = [t.get_outputs() for t in ip_run.get_tasks()]
         task_outputs_ray = [t.get_outputs() for t in ray_run.get_tasks()]
-        task_outputs_qe = [t.get_outputs() for t in qe_run.get_tasks()]
         task_outputs_ce = [t.get_outputs() for t in ce_run.get_tasks()]
 
         # THEN
         assert results_ip == results_ray
-        assert results_ip == results_qe
         assert results_ip == results_ce
         assert results_ip == multiple_result_vanilla
 
         assert artifacts_ip == artifacts_ray
-        assert artifacts_ip == artifacts_qe
         assert artifacts_ip == artifacts_ce
         assert artifacts_ip == {
             "invocation-0-task-get-list": multiple_result_vanilla[0],
@@ -669,7 +445,6 @@ class TestAPI:
         }
 
         assert task_outputs_ip == task_outputs_ray
-        assert task_outputs_ip == task_outputs_qe
         assert task_outputs_ip == task_outputs_ce
         assert task_outputs_ip == [*multiple_result_vanilla]
 
@@ -684,7 +459,6 @@ class TestAPI:
 class TestCLI:
     @staticmethod
     def test_consistent_returns_for_single_value(
-        mock_qe_run_single,
         mock_ce_run_single,
         orq_project_dir_single,
         single_result_vanilla,
@@ -692,11 +466,6 @@ class TestCLI:
         # GIVEN
         run_ray = subprocess.run(
             ["orq", "wf", "submit", "-c", "local", "workflow_defs"],
-            check=True,
-            capture_output=True,
-        )
-        run_qe = subprocess.run(
-            ["orq", "wf", "submit", "-c", "QE", "workflow_defs"],
             check=True,
             capture_output=True,
         )
@@ -711,22 +480,12 @@ class TestCLI:
         )
         assert m is not None
         run_id_ray = m.group("run_id").strip()
-        assert "Workflow submitted!" in run_qe.stdout.decode()
         assert "Workflow submitted!" in run_ce.stdout.decode()
 
         # WHEN
         results_ray = (
             subprocess.run(
                 ["orq", "wf", "results", "-c", "local", run_id_ray],
-                check=True,
-                capture_output=True,
-            )
-            .stdout.decode()
-            .split("\n")
-        )
-        results_qe = (
-            subprocess.run(
-                ["orq", "wf", "results", "-c", "QE", mock_qe_run_single],
                 check=True,
                 capture_output=True,
             )
@@ -744,10 +503,9 @@ class TestCLI:
         )
 
         # THEN
-        assert results_ray[1:] == results_qe[1:]
         assert results_ray[1:] == results_ce[1:]
-        assert [line.strip() for line in results_qe] == [
-            f"Workflow run {mock_qe_run_single} has 1 outputs.",
+        assert [line.strip() for line in results_ce] == [
+            f"Workflow run {mock_ce_run_single} has 1 outputs.",
             "",
             "Output 0. Object type: <class 'list'>",
             "Pretty printed value:",
@@ -757,7 +515,6 @@ class TestCLI:
 
     @staticmethod
     def test_consistent_returns_for_multiple_values(
-        mock_qe_run_multiple,
         mock_ce_run_multiple,
         orq_project_dir_multiple,
         multiple_result_vanilla,
@@ -767,11 +524,6 @@ class TestCLI:
         # run workflows
         run_ray = subprocess.run(
             ["orq", "wf", "submit", "-c", "local", "workflow_defs"],
-            check=True,
-            capture_output=True,
-        )
-        run_qe = subprocess.run(
-            ["orq", "wf", "submit", "-c", "QE", "workflow_defs"],
             check=True,
             capture_output=True,
         )
@@ -786,22 +538,12 @@ class TestCLI:
         )
         assert m is not None
         run_id_ray = m.group("run_id").strip()
-        assert "Workflow submitted!" in run_qe.stdout.decode()
         assert "Workflow submitted!" in run_ce.stdout.decode()
 
         # WHEN
         results_ray = (
             subprocess.run(
                 ["orq", "wf", "results", "-c", "local", run_id_ray],
-                check=True,
-                capture_output=True,
-            )
-            .stdout.decode()
-            .split("\n")
-        )
-        results_qe = (
-            subprocess.run(
-                ["orq", "wf", "results", "-c", "QE", mock_qe_run_multiple],
                 check=True,
                 capture_output=True,
             )
@@ -819,10 +561,9 @@ class TestCLI:
         )
 
         # THEN
-        assert results_ray[1:] == results_qe[1:]
         assert results_ray[1:] == results_ce[1:]
-        assert [line.strip() for line in results_qe] == [
-            f"Workflow run {mock_qe_run_multiple} has 2 outputs.",
+        assert [line.strip() for line in results_ce] == [
+            f"Workflow run {mock_ce_run_multiple} has 2 outputs.",
             "",
             "Output 0. Object type: <class 'list'>",
             "Pretty printed value:",
@@ -845,7 +586,6 @@ class TestCLI:
 class TestCLIDownloadDir:
     @staticmethod
     def test_consistent_downloads_for_single_value(
-        mock_qe_run_single,
         mock_ce_run_single,
         orq_project_dir_single,
         single_result_vanilla,
@@ -858,21 +598,21 @@ class TestCLIDownloadDir:
             check=True,
             capture_output=True,
         )
-        run_qe = subprocess.run(
-            ["orq", "wf", "submit", "-c", "QE", "workflow_defs"],
+        run_ce = subprocess.run(
+            ["orq", "wf", "submit", "-c", "CE", "workflow_defs", "-w", "ws", "-p", "p"],
             capture_output=True,
         )
 
         assert (
-            run_qe.returncode == 0
-        ), f"STDOUT: {run_qe.stdout.decode()},\n\nSTDOERR: {run_qe.stderr.decode()}"
+            run_ce.returncode == 0
+        ), f"STDOUT: {run_ce.stdout.decode()},\n\nSTDERR: {run_ce.stderr.decode()}"
 
         m = re.match(
             r"Workflow submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
         )
         assert m is not None
         run_id_ray = m.group("run_id").strip()
-        assert mock_qe_run_single in run_qe.stdout.decode()
+        assert mock_ce_run_single in run_ce.stdout.decode()
 
         # WHEN
         run_ray = subprocess.run(
@@ -889,21 +629,7 @@ class TestCLIDownloadDir:
             check=True,
             capture_output=True,
         )
-        run_qe = subprocess.run(
-            [
-                "orq",
-                "wf",
-                "results",
-                "--download-dir",
-                orq_project_dir_single,
-                "-c",
-                "QE",
-                mock_qe_run_single,
-            ],
-            check=True,
-            capture_output=True,
-        )
-        subprocess.run(
+        run_ce = subprocess.run(
             [
                 "orq",
                 "wf",
@@ -924,21 +650,15 @@ class TestCLIDownloadDir:
         ) as f:
             ray_contents = json.load(f)
         with open(
-            orq_project_dir_single + f"/{mock_qe_run_single}/wf_results/0.json", "r"
-        ) as f:
-            qe_contents = json.load(f)
-        with open(
             orq_project_dir_single + f"/{mock_ce_run_single}/wf_results/0.json", "r"
         ) as f:
             ce_contents = json.load(f)
 
-        assert ray_contents == qe_contents
         assert ray_contents == ce_contents
         assert ray_contents == single_result_vanilla
 
     @staticmethod
     def test_consistent_downloads_for_multiple_values(
-        mock_qe_run_multiple,
         mock_ce_run_multiple,
         orq_project_dir_multiple,
         multiple_result_vanilla,
@@ -953,12 +673,7 @@ class TestCLIDownloadDir:
             check=True,
             capture_output=True,
         )
-        run_qe = subprocess.run(
-            ["orq", "wf", "submit", "-c", "QE", "workflow_defs"],
-            check=True,
-            capture_output=True,
-        )
-        subprocess.run(
+        run_ce = subprocess.run(
             ["orq", "wf", "submit", "-c", "CE", "workflow_defs", "-w", "ws", "-p", "p"],
             check=True,
             capture_output=True,
@@ -969,7 +684,7 @@ class TestCLIDownloadDir:
         )
         assert m is not None
         run_id_ray = m.group("run_id").strip()
-        assert mock_qe_run_multiple in run_qe.stdout.decode()
+        assert mock_ce_run_multiple in run_ce.stdout.decode()
 
         # WHEN
         subprocess.run(
@@ -982,20 +697,6 @@ class TestCLIDownloadDir:
                 "-c",
                 "local",
                 run_id_ray,
-            ],
-            check=True,
-            capture_output=True,
-        )
-        subprocess.run(
-            [
-                "orq",
-                "wf",
-                "results",
-                "--download-dir",
-                orq_project_dir_multiple,
-                "-c",
-                "QE",
-                mock_qe_run_multiple,
             ],
             check=True,
             capture_output=True,
@@ -1024,17 +725,10 @@ class TestCLIDownloadDir:
                 ray_contents = json.load(f)
             with open(
                 orq_project_dir_multiple
-                + f"/{mock_qe_run_multiple}/wf_results/{result}.json",
-                "r",
-            ) as f:
-                qe_contents = json.load(f)
-            with open(
-                orq_project_dir_multiple
                 + f"/{mock_ce_run_multiple}/wf_results/{result}.json",
                 "r",
             ) as f:
                 ce_contents = json.load(f)
 
-            assert ray_contents == qe_contents
             assert ray_contents == ce_contents
             assert ray_contents == multiple_result_vanilla[result]

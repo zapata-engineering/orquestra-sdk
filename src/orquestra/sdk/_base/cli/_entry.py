@@ -464,23 +464,18 @@ server_config_group = cloup.OptionGroup(
 )
 @cloup.option_group(
     "Remote Environment",
-    cloup.option("--qe", is_flag=True, default=False, help="Log in to Quantum Engine."),
     cloup.option(
         "--ce", is_flag=True, default=False, help="Log in to Compute Engine. (Default)"
     ),
     constraint=cloup.constraints.mutually_exclusive,
 )
-def auth(config: str, server: str, token: t.Optional[str], ce: bool, qe: bool):
+def auth(config: str, server: str, token: t.Optional[str], ce: bool):
     """
     Log in to remote cluster
     """
     from ._login._login import Action
 
-    runtime_name: RemoteRuntime
-    if qe:
-        runtime_name = RuntimeName.QE_REMOTE
-    else:
-        runtime_name = RuntimeName.CE_REMOTE
+    runtime_name = RuntimeName.CE_REMOTE
 
     action = Action()
     action.on_cmd_call(

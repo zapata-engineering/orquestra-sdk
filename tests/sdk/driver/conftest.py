@@ -22,7 +22,7 @@ def runtime(mock_workflow_db_location):
 @pytest.fixture
 def runtime_verbose(tmp_path):
     (tmp_path / ".orquestra").mkdir(exist_ok=True)
-    # Fake QE configuration
+    # Fake CE configuration
     config = RuntimeConfiguration(
         config_name="hello",
         runtime_name=RuntimeName.CE_REMOTE,

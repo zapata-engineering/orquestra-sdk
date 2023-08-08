@@ -1,7 +1,6 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-import typing as t
 from pathlib import Path
 
 from orquestra.sdk import exceptions
@@ -20,7 +19,7 @@ def build_runtime_from_config(
     class to use.
     """
     # Imports are deferred to cut down on the import graph for CLI latency. The
-    # subgraphs for Ray and for QE are distinct, and both take a lot of time to
+    # subgraphs for Ray and for CE are distinct, and both take a lot of time to
     # import.
     if config.runtime_name == RuntimeName.RAY_LOCAL:
         import orquestra.sdk._ray._dag
@@ -29,13 +28,6 @@ def build_runtime_from_config(
             project_dir=project_dir,
             config=config,
         )
-    elif config.runtime_name == RuntimeName.QE_REMOTE:
-        import orquestra.sdk._base._qe._qe_runtime
-
-        return orquestra.sdk._base._qe._qe_runtime.QERuntime(
-            project_dir=project_dir, config=config, verbose=verbose
-        )
-
     elif config.runtime_name == RuntimeName.CE_REMOTE:
         return _build_ce_runtime(config, verbose)
     else:

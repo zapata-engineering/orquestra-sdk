@@ -247,7 +247,7 @@ class ServicePresenter:
 class LoginPresenter:
     """User-facing presentation for the steps of the login process."""
 
-    def prompt_for_login(self, login_url, url, ce):
+    def prompt_for_login(self, login_url, url):
         """Instruct the user how to log in manually."""
         click.echo("We were unable to automatically log you in.")
         click.echo("Please login to your Orquestra account using the following URL.")
@@ -257,7 +257,6 @@ class LoginPresenter:
                 "Then save the token using command: \n"
                 f"orq login -s {url} -t <paste your token here>"
             )
-            + (" --ce" if ce else " --qe")
         )
 
     def prompt_config_saved(self, url, config_name, runtime_name):
@@ -301,10 +300,8 @@ class ConfigPresenter:
                         # show config name
                         click.style(config.config_name, bold=True),
                         #
-                        # show runtime name, colour coded blue for CE and green for QE
-                        click.style(config.runtime_name, fg="blue")
-                        if config.runtime_name == RuntimeName.CE_REMOTE
-                        else click.style(config.runtime_name, fg="green"),
+                        # show runtime name, colour coded blue for CE
+                        click.style(config.runtime_name, fg="blue"),
                         #
                         # show cluster URI
                         config.runtime_options["uri"],
