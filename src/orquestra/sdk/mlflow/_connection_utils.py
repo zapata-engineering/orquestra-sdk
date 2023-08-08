@@ -20,7 +20,6 @@ from orquestra.sdk._base._jwt import get_email_from_jwt_token
 from orquestra.sdk._base._services import ORQUESTRA_BASE_PATH
 from orquestra.sdk._base._spaces._api import make_workspace_url, make_workspace_zri
 from orquestra.sdk.exceptions import ConfigNameNotFoundError, RuntimeConfigError
-from orquestra.sdk.schema.configs import ConfigName
 
 DEFAULT_TEMP_ARTIFACTS_DIR: Path = ORQUESTRA_BASE_PATH / "mlflow" / "artifacts"
 RESOURCE_CATALOG_URI: str = "http://orquestra-resource-catalog.resource-catalog"

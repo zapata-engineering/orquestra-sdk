@@ -66,5 +66,5 @@ select = [
   "W",   # pycodestyle
   "F",   # pyflakes
 ]
-ignore = ["E203","E266","F401"]
+ignore = ["E203","E266"]
 target-version = "py38"

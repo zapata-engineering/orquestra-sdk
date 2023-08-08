@@ -7,7 +7,6 @@ from typing import Optional
 from orquestra.sdk.exceptions import ProjectInvalidError
 from orquestra.sdk.schema.workflow_run import ProjectId, WorkspaceId
 
-from .._config import AUTO_CONFIG_NAME
 from .._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
 from ._structs import ProjectRef
 

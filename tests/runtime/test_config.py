@@ -16,7 +16,6 @@ where:
 The current solution for this is to focus on testing the layer that's close to
 the user. It's a lot easier to figure out appropriate behavior this way.
 """
-from unittest.mock import Mock
 
 import pytest
 

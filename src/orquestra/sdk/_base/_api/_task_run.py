@@ -2,8 +2,6 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 
-import json
-import os
 import typing as t
 from collections import namedtuple
 from itertools import chain

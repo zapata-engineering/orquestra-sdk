@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from orquestra.sdk._base._driver import _ce_runtime, _client
+from orquestra.sdk._base._driver import _client
 from orquestra.sdk._base._factory import build_runtime_from_config
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 

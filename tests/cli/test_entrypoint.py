@@ -7,7 +7,7 @@ Tests that validate parsing CLI groups and commands.
 """
 
 import sys
-from unittest.mock import ANY, Mock, create_autospec
+from unittest.mock import ANY, Mock
 
 import pytest
 

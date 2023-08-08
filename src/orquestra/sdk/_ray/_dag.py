@@ -16,7 +16,6 @@ import warnings
 from datetime import timedelta
 from pathlib import Path
 
-import pydantic
 
 from orquestra.sdk.schema.responses import WorkflowResult
 
@@ -31,12 +30,10 @@ from ..schema import ir
 from ..schema.configs import RuntimeConfiguration
 from ..schema.local_database import StoredWorkflowRun
 from ..schema.workflow_run import (
-    ProjectId,
     RunStatus,
     State,
     TaskInvocationId,
     TaskRun,
-    TaskRunId,
     WorkflowRun,
     WorkflowRunId,
     WorkspaceId,
@@ -44,7 +41,7 @@ from ..schema.workflow_run import (
 from . import _client, _id_gen, _ray_logs
 from ._build_workflow import TaskResult, make_ray_dag
 from ._client import RayClient
-from ._wf_metadata import InvUserMetadata, WfUserMetadata, pydatic_to_json_dict
+from ._wf_metadata import WfUserMetadata, pydatic_to_json_dict
 
 
 def _instant_from_timestamp(

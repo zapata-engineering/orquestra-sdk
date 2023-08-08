@@ -12,7 +12,7 @@ import typing as t
 import warnings
 from contextlib import suppress as do_not_raise
 from datetime import timedelta
-from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, call, create_autospec
+from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospec
 
 import pytest
 

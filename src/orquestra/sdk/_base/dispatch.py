@@ -1,18 +1,14 @@
 ################################################################################
 # © Copyright 2021-2023 Zapata Computing Inc.
 ################################################################################
-import copy
 import importlib
 import importlib.util
-import json
 import os
 import sys
 import typing as t
 from functools import singledispatch
-from pathlib import Path
 
-from orquestra.sdk import secrets
-from orquestra.sdk._base import _exec_ctx, serde
+from orquestra.sdk._base import serde
 from orquestra.sdk.schema import ir
 
 

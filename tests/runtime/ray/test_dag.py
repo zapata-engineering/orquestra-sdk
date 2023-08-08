@@ -16,7 +16,6 @@ from orquestra.sdk._base import _dates
 from orquestra.sdk._base._config import (
     LOCAL_RUNTIME_CONFIGURATION,
     RuntimeConfiguration,
-    RuntimeName,
 )
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base._spaces._structs import ProjectRef

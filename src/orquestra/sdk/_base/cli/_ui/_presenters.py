@@ -18,7 +18,7 @@ from typing import Iterable, Iterator, List, Sequence
 import click
 from tabulate import tabulate
 
-from orquestra.sdk._base import _config, _dates, _env, _services, serde
+from orquestra.sdk._base import _dates, _env, _services, serde
 from orquestra.sdk._base._dates import Instant
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk.schema import responses

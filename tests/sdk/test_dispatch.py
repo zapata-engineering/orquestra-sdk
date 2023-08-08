@@ -9,7 +9,6 @@ import typing as t
 import pytest
 
 from orquestra.sdk._base import dispatch
-from orquestra.sdk.examples import exportable_wf
 from orquestra.sdk.schema import ir
 
 

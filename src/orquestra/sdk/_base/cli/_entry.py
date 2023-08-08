@@ -13,7 +13,7 @@ import click
 import cloup
 
 from orquestra.sdk._base.cli._ui._click_default_group import DefaultGroup
-from orquestra.sdk.schema.configs import RemoteRuntime, RuntimeName
+from orquestra.sdk.schema.configs import RuntimeName
 
 from . import _cli_logs
 

@@ -19,15 +19,12 @@ Outputs tested:
 - task outputs
 """
 
-import base64
 import inspect
-import io
 import json
 import os
 import re
 import shutil
 import subprocess
-import tarfile
 import tempfile
 import typing as t
 from pathlib import Path
