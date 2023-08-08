@@ -3,6 +3,7 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+- QE support has been removed.
 
 🔥 *Features*
 
