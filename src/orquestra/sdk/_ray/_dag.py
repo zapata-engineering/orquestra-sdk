@@ -55,7 +55,7 @@ def _instant_from_timestamp(
     return _dates.from_unix_time(unix_timestamp)
 
 
-def _generate_wf_run_id(wf_def: ir.WorkflowDef):
+def _generate_wf_run_id(wf_def: ir.WorkflowDef, dry_run):
     """
     Implements the "tagging" design doc:
     https://zapatacomputing.atlassian.net/wiki/spaces/ORQSRUN/pages/479920161/Logging+Tagging
@@ -66,9 +66,12 @@ def _generate_wf_run_id(wf_def: ir.WorkflowDef):
     """
     wf_name = wf_def.name
     hex_str = _id_gen.gen_short_uid(char_length=7)
+    dry_run_str = "dry_run"
 
-    return f"wf.{wf_name}.{hex_str}"
-
+    if not dry_run:
+        return f"wf.{wf_name}.{hex_str}"
+    else:
+        return f"wf.{dry_run_str}.{hex_str}"
 
 if _client.WorkflowStatus is not None:
     RAY_ORQ_STATUS = {
@@ -270,8 +273,9 @@ class RayRuntime(RuntimeInterface):
         client.shutdown()
 
     def create_workflow_run(
-        self, workflow_def: ir.WorkflowDef, project: t.Optional[ProjectRef]
+        self, workflow_def: ir.WorkflowDef, project: t.Optional[ProjectRef],
     ) -> WorkflowRunId:
+        dry_run: bool = True
         if project:
             warnings.warn(
                 "Ray doesn't support project-scoped workflows. "
@@ -280,13 +284,14 @@ class RayRuntime(RuntimeInterface):
             )
 
         global_run_id = os.getenv(RAY_GLOBAL_WF_RUN_ID_ENV)
-        wf_run_id = global_run_id or _generate_wf_run_id(workflow_def)
+        wf_run_id = global_run_id or _generate_wf_run_id(workflow_def, dry_run)
 
         dag = make_ray_dag(
             self._client,
             workflow_def=workflow_def,
             workflow_run_id=wf_run_id,
             project_dir=self._project_dir,
+            dry_run=dry_run,
         )
         wf_user_metadata = WfUserMetadata(workflow_def=workflow_def)
 

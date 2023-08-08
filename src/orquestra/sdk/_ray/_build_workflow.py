@@ -81,6 +81,8 @@ class ArgumentUnwrapper:
         args_artifact_nodes: t.Mapping[int, ir.ArtifactNode],
         kwargs_artifact_nodes: t.Mapping[str, ir.ArtifactNode],
         deserialize: bool,
+        n_outputs: int,
+        dry_run: bool
     ):
         """
         Args:
@@ -101,6 +103,8 @@ class ArgumentUnwrapper:
         self._args_artifact_nodes = args_artifact_nodes
         self._kwargs_artifact_nodes = kwargs_artifact_nodes
         self._deserialize = deserialize
+        self._n_outputs = n_outputs
+        self._dry_run = dry_run
 
     def _get_metadata(self, key: t.Union[int, str]) -> t.Optional[ir.ArtifactNode]:
         if isinstance(key, int):
@@ -142,6 +146,11 @@ class ArgumentUnwrapper:
         else:
             assert_never(arg)
 
+    def _nop_fn_factory(self):
+        def nop():
+            return (None,) * self._n_outputs
+        return nop
+
     def __call__(self, *wrapped_args, **wrapped_kwargs):
         args = []
         kwargs = {}
@@ -152,7 +161,10 @@ class ArgumentUnwrapper:
         for name, kwarg in wrapped_kwargs.items():
             kwargs[name] = self._unpack_argument(kwarg, name)
 
-        return self._user_fn(*args, **kwargs)
+        if self._dry_run:
+            return self._nop_fn_factory()()
+        else:
+            return self._user_fn(*args, **kwargs)
 
 
 def _make_ray_dag_node(
@@ -165,6 +177,7 @@ def _make_ray_dag_node(
     n_outputs: t.Optional[int],
     project_dir: t.Optional[Path],
     user_fn_ref: t.Optional[ir.FunctionRef],
+    dry_run: bool,
 ) -> _client.FunctionNode:
     """
     Prepares a Ray task that fits a single ir.TaskInvocation. The result is a
@@ -212,6 +225,8 @@ def _make_ray_dag_node(
                     args_artifact_nodes=args_artifact_nodes,
                     kwargs_artifact_nodes=kwargs_artifact_nodes,
                     deserialize=serialization,
+                    dry_run=dry_run,
+                    n_outputs=n_outputs
                 )
 
                 wrapped_return = wrapped(*inner_args, **inner_kwargs)
@@ -340,7 +355,12 @@ def make_ray_dag(
     workflow_def: ir.WorkflowDef,
     workflow_run_id: workflow_run.WorkflowRunId,
     project_dir: t.Optional[Path] = None,
+    dry_run: bool = False,
 ):
+
+    if dry_run:
+        os.environ[RAY_DOWNLOAD_GIT_IMPORTS_ENV] = "1"
+
     # a mapping of "artifact ID" <-> "the ray Future needed to get the value"
     ray_futures: t.Dict[ir.ArtifactNodeId, t.Any] = {}
 
@@ -424,6 +444,7 @@ def make_ray_dag(
             n_outputs=_compat.n_outputs(task_def=user_task, task_inv=invocation),
             project_dir=project_dir,
             user_fn_ref=user_task.fn_ref,
+            dry_run=dry_run
         )
 
         for output_id in invocation.output_ids:
@@ -456,6 +477,7 @@ def make_ray_dag(
         n_outputs=len(pos_args),
         project_dir=None,
         user_fn_ref=None,
+        dry_run=dry_run
     )
 
     # Data aggregation step is run with catch_exceptions=True - so it returns tuple of
