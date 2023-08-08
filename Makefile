@@ -1,11 +1,17 @@
 ################################################################################
-# © Copyright 2021-2022 Zapata Computing Inc.
+# © Copyright 2021-2023 Zapata Computing Inc.
 ################################################################################
-include subtrees/z_quantum_actions/Makefile
 
 # We need to override test commands in 'make test' and 'make coverage' to
 # specify PYTHONPATH & install required deps. This is needed to test scripts in
 # "./bin".
+
+# Use just "python" as the interpreter for all make tasks. It will use your
+# virtual environment if you activate it before running make. You can override
+# the interpreter path like:
+# make test PYTHON=/tmp/other/python/version
+PYTHON="python"
+
 
 # (override)
 test:
@@ -15,6 +21,10 @@ test:
 		--durations=10 \
 		docs/examples/tests \
 		tests
+
+
+# Min code-test coverage measured for the whole project required for CI checks to pass.
+MIN_COVERAGE=75
 
 
 # Option explanation:
