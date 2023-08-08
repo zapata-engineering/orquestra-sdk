@@ -134,26 +134,36 @@ def mock_config_env_var(
         )
 
 
+@pytest.fixture
+def post(httpserver: pytest_httpserver.HTTPServer):
+    def _inner(endpoint: str, json: t.Dict):
+        httpserver.expect_request(endpoint, method="POST").respond_with_json(json)
+
+    return _inner
+
 
 @pytest.fixture
-def mock_ce_run_single(httpserver: pytest_httpserver.HTTPServer) -> str:
+def get(httpserver: pytest_httpserver.HTTPServer):
+    def _inner(endpoint: str, json: t.Dict):
+        httpserver.expect_request(endpoint, method="GET").respond_with_json(json)
+
+    return _inner
+
+
+@pytest.fixture
+def mock_ce_run_single(post, get) -> str:
     wf_id: str = "wf_id_sentinel_ce_single"
     wf_def_id: str = "wf_def_ce_sentinel"
     result_ids = ["result_id_sentinel_0"]
 
     # region: Start workflow
-    httpserver.expect_request("/api/workflow-definitions").respond_with_json(
-        resp_mocks.make_get_wf_def_response(
-            id_=wf_def_id, wf_def=wf_return_single_packed_value().model
-        )
+    post(
+        "/api/workflow-definitions",
+        resp_mocks.make_create_wf_def_response(id_=wf_def_id),
     )
-    httpserver.expect_request("/api/workflow-runs").respond_with_json(
-        resp_mocks.make_list_wf_run_response(
-            ids=[wf_id],
-            workflow_def_ids=[wf_def_id],
-        )
-    )
-    httpserver.expect_request("/api/workflow-runs/definitionId").respond_with_json(
+    post("/api/workflow-runs", resp_mocks.make_submit_wf_run_response(wf_id))
+    get(
+        f"/api/workflow-runs/{wf_id}",
         resp_mocks.make_get_wf_run_response(
             id_=wf_id,
             workflow_def_id=wf_def_id,
@@ -165,74 +175,58 @@ def mock_ce_run_single(httpserver: pytest_httpserver.HTTPServer) -> str:
                     status=RunStatus(state="SUCCEEDED"),
                 )
             ],
-        )
+        ),
     )
-    httpserver.expect_request(f"/api/workflow-runs/{wf_id}").respond_with_json(
-        resp_mocks.make_get_wf_run_response(
-            id_=wf_id,
-            workflow_def_id=wf_def_id,
-            status=RunStatus(state="SUCCEEDED"),
-            task_runs=[
-                TaskRun(
-                    id="foo",
-                    invocation_id="invocation-0-task-get-list",
-                    status=RunStatus(state="SUCCEEDED"),
-                )
-            ],
-        )
-    )
-    httpserver.expect_request(
-        f"/api/workflow-definitions/{wf_def_id}"
-    ).respond_with_json(
+    get(
+        f"/api/workflow-definitions/{wf_def_id}",
         resp_mocks.make_get_wf_def_response(
             id_=wf_def_id, wf_def=wf_return_single_packed_value().model
-        )
+        ),
     )
     # endregion
 
     # Get results
-    httpserver.expect_request("/api/run-results").respond_with_json(
-        {"data": result_ids}
+    get("/api/run-results", {"data": result_ids})
+
+    # We currently assume only there's a single output
+    # Let's make this explicit in the test
+    result_id = result_ids[0]
+    get(
+        f"/api/run-results/{result_id}",
+        {
+            "results": [
+                {"value": "[1, 2, 3]", "serialization_format": "JSON"},
+            ]
+        },
     )
-    for result_id in result_ids:
-        httpserver.expect_request(f"/api/run-results/{result_id}").respond_with_json(
-            {
-                "results": [
-                    {"value": "[1, 2, 3]", "serialization_format": "JSON"},
-                ]
-            }
-        )
 
     # Get artifacts
-    httpserver.expect_request("/api/artifacts").respond_with_json(
-        {"data": {"invocation-0-task-get-list": ["artifact-3-get-list"]}}
+    get(
+        "/api/artifacts",
+        {"data": {"invocation-0-task-get-list": ["artifact-3-get-list"]}},
     )
-    httpserver.expect_request("/api/artifacts/artifact-3-get-list").respond_with_json(
-        resp_mocks.make_get_wf_run_artifact_response([1, 2, 3])
+    get(
+        "/api/artifacts/artifact-3-get-list",
+        resp_mocks.make_get_wf_run_artifact_response([1, 2, 3]),
     )
 
     return wf_id
 
 
 @pytest.fixture
-def mock_ce_run_multiple(httpserver: pytest_httpserver.HTTPServer) -> str:
+def mock_ce_run_multiple(post, get) -> str:
     wf_id: str = "wf_id_sentinel_ce_multiple"
     wf_def_id: str = "wf_def_ce_multiple_sentinel"
-    result_ids = ["artifact-7-get-list", "artifact-3-get-list"]
+    result_ids = ["result_id_sentinel_0"]
 
     # region: Start workflow
-    httpserver.expect_request("/api/workflow-definitions").respond_with_json(
-        resp_mocks.make_get_wf_def_response(
-            id_=wf_def_id, wf_def=wf_return_multiple_packed_values().model
-        )
+    post(
+        "/api/workflow-definitions",
+        resp_mocks.make_create_wf_def_response(id_=wf_def_id),
     )
-    httpserver.expect_request("/api/workflow-runs").respond_with_json(
-        resp_mocks.make_list_wf_run_response(
-            ids=[wf_id],
-            workflow_def_ids=[wf_def_id],
-        )
-    )
-    httpserver.expect_request("/api/workflow-runs/definitionId").respond_with_json(
+    post("/api/workflow-runs", resp_mocks.make_submit_wf_run_response(wf_id))
+    get(
+        f"/api/workflow-runs/{wf_id}",
         resp_mocks.make_get_wf_run_response(
             id_=wf_id,
             workflow_def_id=wf_def_id,
@@ -249,66 +243,49 @@ def mock_ce_run_multiple(httpserver: pytest_httpserver.HTTPServer) -> str:
                     status=RunStatus(state="SUCCEEDED"),
                 ),
             ],
-        )
+        ),
     )
-    httpserver.expect_request(f"/api/workflow-runs/{wf_id}").respond_with_json(
-        resp_mocks.make_get_wf_run_response(
-            id_=wf_id,
-            workflow_def_id=wf_def_id,
-            status=RunStatus(state="SUCCEEDED"),
-            task_runs=[
-                TaskRun(
-                    id="foo",
-                    invocation_id="invocation-0-task-get-list",
-                    status=RunStatus(state="SUCCEEDED"),
-                ),
-                TaskRun(
-                    id="foo",
-                    invocation_id="invocation-1-task-get-list",
-                    status=RunStatus(state="SUCCEEDED"),
-                ),
-            ],
-        )
-    )
-    httpserver.expect_request(
-        f"/api/workflow-definitions/{wf_def_id}"
-    ).respond_with_json(
+    get(
+        f"/api/workflow-definitions/{wf_def_id}",
         resp_mocks.make_get_wf_def_response(
             id_=wf_def_id, wf_def=wf_return_single_packed_value().model
-        )
+        ),
     )
     # endregion
+    #
+    # # Get results
+    get("/api/run-results", {"data": result_ids})
 
-    # Get results
-    httpserver.expect_request("/api/run-results").respond_with_json(
-        {"data": ["result_id"]}
+    # We currently assume only there's a single output
+    # Let's make this explicit in the test
+    result_id = result_ids[0]
+    get(
+        f"/api/run-results/{result_id}",
+        {
+            "results": [
+                {"value": "[1, 2, 3]", "serialization_format": "JSON"},
+                {"value": "[1, 2, 3]", "serialization_format": "JSON"},
+            ]
+        },
     )
-    for result_id in result_ids:
-        httpserver.expect_request("/api/run-results/result_id").respond_with_json(
-            {
-                "results": [
-                    {"value": "[1, 2, 3]", "serialization_format": "JSON"},
-                    {"value": "[1, 2, 3]", "serialization_format": "JSON"},
-                ]
-            }
-        )
-
-    # Get artefacts
-    httpserver.expect_request("/api/artifacts").respond_with_json(
+    # Get artifacts
+    get(
+        "/api/artifacts",
         {
             "data": {
                 "invocation-0-task-get-list": ["artifact-3-get-list"],
                 "invocation-1-task-get-list": ["artifact-7-get-list"],
             }
-        }
+        },
     )
-    httpserver.expect_request("/api/artifacts/artifact-3-get-list").respond_with_json(
-        resp_mocks.make_get_wf_run_artifact_response([1, 2, 3])
+    get(
+        "/api/artifacts/artifact-3-get-list",
+        resp_mocks.make_get_wf_run_artifact_response([1, 2, 3]),
     )
-    httpserver.expect_request("/api/artifacts/artifact-7-get-list").respond_with_json(
-        resp_mocks.make_get_wf_run_artifact_response([1, 2, 3])
+    get(
+        "/api/artifacts/artifact-7-get-list",
+        resp_mocks.make_get_wf_run_artifact_response([1, 2, 3]),
     )
-
     return wf_id
 
 
