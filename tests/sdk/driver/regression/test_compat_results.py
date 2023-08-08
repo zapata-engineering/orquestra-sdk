@@ -2,11 +2,9 @@ import json
 from pathlib import Path
 from unittest.mock import Mock
 
-import pydantic
 import pytest
 
 from orquestra.sdk._base.serde import deserialize
-from orquestra.sdk.schema.responses import JSONResult, PickleResult, WorkflowResult
 
 DATA_PATH = Path(__file__).parent / "data"
 

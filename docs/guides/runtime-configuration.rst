@@ -5,10 +5,10 @@ Runtime Configuration
 
 Orquestra can support different execution environments for workflows, called
 runtimes. Currently there are three supported runtimes: local execution and
-remote execution via Compute Engine or Quantum Engine (which will be deprecated soon).
+remote execution via Compute Engine.
 
 In some cases, additional configuration options are required in order to use a
-runtime. For example, a URL is required to connect to Compute Engine or Quantum Engine.
+runtime. For example, a URL is required to connect to Compute Engine.
 Choosing a runtime and supplying options is called a *Runtime Configuration*.
 
 There is always one *Runtime Configuration* defined, called ``local``. This
@@ -59,6 +59,6 @@ Inside the configuration file, each *Runtime Configuration* is defined by:
        the CLI to reference a configuration.
    * - ``runtime_name``
      - The internal reference to the Orquestra runtime. Currently supported
-       options: ``RAY_LOCAL``, ``CE_REMOTE``, ``QE_REMOTE``.
+       options: ``RAY_LOCAL``, ``CE_REMOTE``.
    * - ``runtime_options``
      - A key-value pair of options passed to the specific runtime.

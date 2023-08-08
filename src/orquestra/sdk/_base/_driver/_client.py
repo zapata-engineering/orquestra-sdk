@@ -24,7 +24,6 @@ from orquestra.sdk._base._spaces._api import make_workspace_zri
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
-    ProjectId,
     WorkflowRun,
     WorkflowRunMinimal,
     WorkspaceId,

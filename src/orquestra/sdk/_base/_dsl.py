@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 - 2023 Zapata Computing Inc.
+# © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 from __future__ import annotations
 
@@ -1062,12 +1062,12 @@ def task(
             code by analyzing the Abstract Syntax Tree (AST).
         custom_image: tell the runtime to run this task in a docker container
             preloaded with a custom docker image. Only supported with remote workflows
-            sent to Quantum Engine and Compute Engine.
+            sent to Compute Engine.
         custom_name: changes name for invocation of this task. Supports python
             formatting in brackets {} using task parameters. Currently, supports only
             values known at submit time. If parameter is unknown at submit time (e.g.
-            result of other task) - it will be placeholded. Due to the QE limitations
-            every char that is non-alphanumeric will be changed to dash ("-").
+            result of other task) - it will be placeholded. Every character that is
+            non-alphanumeric will be changed to dash ("-").
             Also only first 128 characters of the name will be used
     """
     task_dependency_imports: Optional[Tuple[Import, ...]]

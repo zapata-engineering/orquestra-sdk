@@ -22,8 +22,6 @@ from orquestra.sdk._base import _dates, _db
 from orquestra.sdk._base._config import SPECIAL_CONFIG_NAME_DICT
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
-from orquestra.sdk._base._qe._client import QEClient
-from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing import _example_wfs
 from orquestra.sdk._base.cli import _repos
 from orquestra.sdk._base.cli._ui import _models as ui_models
@@ -1142,9 +1140,7 @@ class TestConfigRepo:
             # Then
             assert names == configs
 
-        @pytest.mark.parametrize(
-            "runtime_name", [RuntimeName.CE_REMOTE, RuntimeName.QE_REMOTE]
-        )
+        @pytest.mark.parametrize("runtime_name", [RuntimeName.CE_REMOTE])
         def test_store_token(self, monkeypatch, runtime_name):
             repo = _repos.ConfigRepo()
             uri = "funny_uri"
@@ -1220,16 +1216,14 @@ class TestConfigRepo:
                 # config entries
                 "test_config_default",
                 "test_config_no_runtime_options",
-                "test_config_qe",
+                "test_config_ce",
                 "actual_name",
                 "proper_token",
                 "improper_token",
             }
 
         @staticmethod
-        @pytest.mark.parametrize(
-            "runtime_name", [RuntimeName.CE_REMOTE, RuntimeName.QE_REMOTE]
-        )
+        @pytest.mark.parametrize("runtime_name", [RuntimeName.CE_REMOTE])
         @pytest.mark.parametrize(
             "uri, token, config_name",
             [
@@ -1285,15 +1279,13 @@ class TestConfigRepo:
 
 
 class TestRuntimeRepo:
-    @pytest.mark.parametrize(
-        "runtime_name", [RuntimeName.CE_REMOTE, RuntimeName.QE_REMOTE]
-    )
+    @pytest.mark.parametrize("runtime_name", [RuntimeName.CE_REMOTE])
     def test_return_valid_token(self, monkeypatch, runtime_name):
         # Given
         fake_login_url = "http://my_login.url"
 
         monkeypatch.setattr(
-            DriverClient if runtime_name == RuntimeName.CE_REMOTE else QEClient,
+            DriverClient,
             "get_login_url",
             lambda x, _: fake_login_url,
         )
@@ -1306,9 +1298,7 @@ class TestRuntimeRepo:
         # Then
         assert login_url == fake_login_url
 
-    @pytest.mark.parametrize(
-        "runtime_name", [RuntimeName.CE_REMOTE, RuntimeName.QE_REMOTE]
-    )
+    @pytest.mark.parametrize("runtime_name", [RuntimeName.CE_REMOTE])
     @pytest.mark.parametrize(
         "exception", [requests.ConnectionError, requests.exceptions.MissingSchema]
     )
@@ -1318,7 +1308,7 @@ class TestRuntimeRepo:
             raise exception
 
         monkeypatch.setattr(
-            DriverClient if runtime_name == RuntimeName.CE_REMOTE else QEClient,
+            DriverClient,
             "get_login_url",
             _exception,
         )

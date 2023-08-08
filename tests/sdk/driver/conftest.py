@@ -1,9 +1,13 @@
+################################################################################
+# © Copyright 2023 Zapata Computing Inc.
+################################################################################
+
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
-from orquestra.sdk._base._driver import _ce_runtime, _client
+from orquestra.sdk._base._driver import _client
 from orquestra.sdk._base._factory import build_runtime_from_config
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 
@@ -22,7 +26,7 @@ def runtime(mock_workflow_db_location):
 @pytest.fixture
 def runtime_verbose(tmp_path):
     (tmp_path / ".orquestra").mkdir(exist_ok=True)
-    # Fake QE configuration
+    # Fake CE configuration
     config = RuntimeConfiguration(
         config_name="hello",
         runtime_name=RuntimeName.CE_REMOTE,

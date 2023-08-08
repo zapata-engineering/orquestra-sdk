@@ -26,7 +26,7 @@ from typing import (
 from typing_extensions import ParamSpec
 
 import orquestra.sdk.schema.ir as ir
-from orquestra.sdk.exceptions import ConfigNameNotFoundError, WorkflowSyntaxError
+from orquestra.sdk.exceptions import WorkflowSyntaxError
 from orquestra.sdk.schema.workflow_run import ProjectId, WorkspaceId
 
 from .. import secrets

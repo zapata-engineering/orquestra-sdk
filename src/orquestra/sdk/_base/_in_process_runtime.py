@@ -8,7 +8,7 @@ In-process implementation of the runtime interface.
 import typing as t
 import warnings
 from contextlib import contextmanager
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _dates, abc
@@ -16,7 +16,6 @@ from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
-    ProjectId,
     RunStatus,
     State,
     TaskRun,

@@ -81,7 +81,7 @@ build-system-deps:
 
 # (override)
 flake8:
-	$(PYTHON) -m flake8 --ignore=E203,E266,F401,W503 --max-line-length=88 src tests docs/examples
+	$(PYTHON) -m flake8 --ignore=E203,E266,W503 --max-line-length=88 src tests docs/examples
 
 # (override)
 black:

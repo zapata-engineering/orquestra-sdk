@@ -10,7 +10,7 @@ import pytest
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _dates
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
-from orquestra.sdk._base._spaces._structs import Project, ProjectRef, Workspace
+from orquestra.sdk._base._spaces._structs import Project, Workspace
 from orquestra.sdk._base.cli import _arg_resolvers, _repos
 from orquestra.sdk._base.cli._ui import _presenters, _prompts
 from orquestra.sdk.schema.configs import RuntimeConfiguration
