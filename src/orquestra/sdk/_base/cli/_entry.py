@@ -475,11 +475,9 @@ def auth(config: str, server: str, token: t.Optional[str], ce: bool):
     """
     from ._login._login import Action
 
-    runtime_name = RuntimeName.CE_REMOTE
-
     action = Action()
     action.on_cmd_call(
-        config=config, url=server, token=token, runtime_name=runtime_name
+        config=config, url=server, token=token, runtime_name=RuntimeName.CE_REMOTE
     )
 
 

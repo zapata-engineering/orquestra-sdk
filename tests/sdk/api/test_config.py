@@ -597,9 +597,7 @@ class TestUpdateSavedToken:
             cfg = runtime_factory()
             cfg.update_saved_token("new token")
 
-    @pytest.mark.parametrize(
-        "runtime_factory", [api_cfg.RuntimeConfig.ce]
-    )
+    @pytest.mark.parametrize("runtime_factory", [api_cfg.RuntimeConfig.ce])
     def test_happy_path(self, runtime_factory):
         new_token = "Hi, hello"
         cfg = runtime_factory(uri="https://prod-d.orquestra.io/", token="test token")
@@ -611,9 +609,7 @@ class TestUpdateSavedToken:
         assert cfg.token == new_token
         assert api_cfg.RuntimeConfig.load(cfg.name).token == new_token
 
-    @pytest.mark.parametrize(
-        "runtime_factory", [api_cfg.RuntimeConfig.ce]
-    )
+    @pytest.mark.parametrize("runtime_factory", [api_cfg.RuntimeConfig.ce])
     def test_same_token(self, runtime_factory):
         token = "Hi, hello"
         cfg = runtime_factory(uri="https://prod-d.orquestra.io/", token=token)

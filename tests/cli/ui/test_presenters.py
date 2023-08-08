@@ -400,9 +400,7 @@ class TestLoginPresenter:
         )
         assert login_url in captured.out
         assert "Then save the token using command:" in captured.out
-        assert (
-            f"orq login -s {url} -t <paste your token here>" in captured.out
-        )
+        assert f"orq login -s {url} -t <paste your token here>" in captured.out
 
     def test_prompt_config_saved(self, capsys):
         # Given

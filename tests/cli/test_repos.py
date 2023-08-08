@@ -1141,9 +1141,7 @@ class TestConfigRepo:
             # Then
             assert names == configs
 
-        @pytest.mark.parametrize(
-            "runtime_name", [RuntimeName.CE_REMOTE]
-        )
+        @pytest.mark.parametrize("runtime_name", [RuntimeName.CE_REMOTE])
         def test_store_token(self, monkeypatch, runtime_name):
             repo = _repos.ConfigRepo()
             uri = "funny_uri"
@@ -1226,9 +1224,7 @@ class TestConfigRepo:
             }
 
         @staticmethod
-        @pytest.mark.parametrize(
-            "runtime_name", [RuntimeName.CE_REMOTE]
-        )
+        @pytest.mark.parametrize("runtime_name", [RuntimeName.CE_REMOTE])
         @pytest.mark.parametrize(
             "uri, token, config_name",
             [
@@ -1284,9 +1280,7 @@ class TestConfigRepo:
 
 
 class TestRuntimeRepo:
-    @pytest.mark.parametrize(
-        "runtime_name", [RuntimeName.CE_REMOTE]
-    )
+    @pytest.mark.parametrize("runtime_name", [RuntimeName.CE_REMOTE])
     def test_return_valid_token(self, monkeypatch, runtime_name):
         # Given
         fake_login_url = "http://my_login.url"
@@ -1305,9 +1299,7 @@ class TestRuntimeRepo:
         # Then
         assert login_url == fake_login_url
 
-    @pytest.mark.parametrize(
-        "runtime_name", [RuntimeName.CE_REMOTE]
-    )
+    @pytest.mark.parametrize("runtime_name", [RuntimeName.CE_REMOTE])
     @pytest.mark.parametrize(
         "exception", [requests.ConnectionError, requests.exceptions.MissingSchema]
     )
