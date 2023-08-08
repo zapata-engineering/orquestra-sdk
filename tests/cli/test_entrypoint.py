@@ -7,7 +7,7 @@ Tests that validate parsing CLI groups and commands.
 """
 
 import sys
-from unittest.mock import ANY, Mock, create_autospec
+from unittest.mock import ANY, Mock
 
 import pytest
 
@@ -248,9 +248,6 @@ class TestLogin:
         (
             # Default
             ([], RuntimeName.CE_REMOTE),
-            # Options
-            (["--ce"], RuntimeName.CE_REMOTE),
-            (["--qe"], RuntimeName.QE_REMOTE),
         ),
     )
     def test_with_flag(self, entrypoint, mock_login_action, flag, expected_runtime):

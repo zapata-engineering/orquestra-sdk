@@ -2,7 +2,7 @@
 Migrating From Quantum Engine
 =============================
 
-By August 2023, Quantum Engine (QE) is being sun set.
+Quantum Engine (QE) had been sunset, as of August 2023.
 Running workflows remotely will only work with Compute Engine (CE).
 This document covers the differences between QE and CE, and how to move to CE.
 
@@ -10,7 +10,7 @@ This document covers the differences between QE and CE, and how to move to CE.
 Am I Affected?
 ==============
 
-If you're using ``orq login --qe``, you're on QE.
+If you've previously been using ``orq login --qe``, you have been using QE.
 Read this guide.
 
 If you're using ``orq login`` or ``orq login --ce``, you're already on CE.

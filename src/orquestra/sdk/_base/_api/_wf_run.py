@@ -117,8 +117,6 @@ class WorkflowRun:
         # - Ray stores wf def for us under a metadata entry.
         # - CE will have endpoints for getting [wf def] by [wf run ID]. See:
         #   https://zapatacomputing.atlassian.net/browse/ORQP-1317
-        # - QE probably won't have endpoints for this, but the single-user limitation
-        #   will be an implementation detail of `QERuntime`.
         runtime = resolved_config._get_runtime(_project_dir)
         try:
             wf_run_model = runtime.get_workflow_run_status(run_id)
@@ -221,7 +219,7 @@ class WorkflowRun:
                 (serializable) form.
             runtime: the adapter object used to interact with the runtime to
                 submit workflow, get results, etc. Different "runtimes" like
-                Ray or Quantum Engine have corresponding classes.
+                Ray or Compute Engine have corresponding classes.
         """
 
         self._run_id = run_id

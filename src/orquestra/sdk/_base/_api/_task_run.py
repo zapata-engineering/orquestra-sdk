@@ -2,8 +2,6 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 
-import json
-import os
 import typing as t
 from collections import namedtuple
 from itertools import chain
@@ -268,38 +266,6 @@ class CurrentRunIDs(t.NamedTuple):
     task_run_id: t.Optional[TaskRunId]
 
 
-def _get_argo_backend_ids() -> CurrentRunIDs:
-    """
-    Get the workflow run, task invocation, and task run IDs from Argo.
-
-    Raises:
-        WorkflowRunIDNotFoundError: When the workflow run ID can't be recovered.
-
-    Returns:
-        The IDs associated with the current run, in a named tuple. See: CurrentRunIDs
-    """
-
-    assert (
-        "ARGO_NODE_ID" in os.environ
-    ), "The ARGO_NODE_ID environment variable is absent."
-
-    node_id = os.environ["ARGO_NODE_ID"]
-    # Argo Workflow ID is the left part of the step ID
-    # [wf-id]-[retry-number]-[step-number]
-    wf_run_id = "-".join(node_id.split("-")[:-2])
-    task_run_id = node_id
-
-    argo_template = json.loads(os.environ["ARGO_TEMPLATE"])
-    # Looks like the template name on Argo matches our task invocation ID. Not sure how
-    # good this assumption is.
-    task_inv_id = argo_template["name"]
-
-    if len(wf_run_id) == 0:
-        raise WorkflowRunIDNotFoundError("Could not recover Workflow Run ID")
-
-    return CurrentRunIDs(wf_run_id, task_inv_id, task_run_id)
-
-
 def _get_ray_backend_ids() -> CurrentRunIDs:
     """
     Get the workflow run, task invocation, and task run IDs from Ray.
@@ -311,7 +277,7 @@ def _get_ray_backend_ids() -> CurrentRunIDs:
     Returns:
         The IDs associated with the current run, in a named tuple. See: CurrentRunIDs
     """
-    # Deferred import because Ray isn't installed when running on QE.
+    # Deferred import in case Ray isn't installed
     import orquestra.sdk._ray._build_workflow
 
     (
@@ -383,9 +349,7 @@ def current_run_ids() -> CurrentRunIDs:
     """
     context = _exec_ctx.get_current_exec_context()
 
-    if context == _exec_ctx.ExecContext.PLATFORM_QE:
-        return _get_argo_backend_ids()
-    elif context == _exec_ctx.ExecContext.RAY:
+    if context == _exec_ctx.ExecContext.RAY:
         return _get_ray_backend_ids()
     elif context == _exec_ctx.ExecContext.DIRECT:
         return _get_in_process_backend_ids()

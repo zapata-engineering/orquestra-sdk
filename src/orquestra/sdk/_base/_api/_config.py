@@ -38,7 +38,6 @@ class RuntimeConfig:
         config_in_process = RuntimeConfig.in_process()
         config_ray = RuntimeConfig.ray()
         config_ce = RuntimeConfig.ce()
-        config_qe = RuntimeConfig.qe()
 
         # Create the workflow run and begin its execution
         run = wf.prepare(config_in_process)
@@ -59,7 +58,6 @@ class RuntimeConfig:
                 "Please use the appropriate factory method for your desired runtime. "
                 "Supported runtimes are:\n"
                 "`RuntimeConfig.in_process()` for in-process execution,\n"
-                "`RuntimeConfig.qe()` for Quantum Engine,\n"
                 "`RuntimeConfig.ray()` for local Ray.\n"
                 "`RuntimeConfig.ce()` for Compute Engine. \n"
             )
@@ -150,33 +148,6 @@ class RuntimeConfig:
         setattr(config, "storage", None)
         setattr(config, "temp_dir", None)
         setattr(config, "address", "auto")
-        return config
-
-    @classmethod
-    def qe(
-        cls,
-        uri: str,
-        token: str,
-    ) -> "RuntimeConfig":
-        """
-        Config for running workflows on Quantum Engine/Orquestra Platform.
-
-        Args:
-            uri: Address of the QE cluster on which to run the workflow.
-            token: Authorisation token for access to the cluster.
-        """
-        runtime_name = RuntimeName.QE_REMOTE
-        config_name = _config.generate_config_name(runtime_name, uri)
-
-        config = RuntimeConfig(
-            runtime_name,
-            name=config_name,
-            bypass_factory_methods=True,
-        )
-        setattr(config, "uri", uri)
-        setattr(config, "token", token)
-        _config.save_or_update(config_name, runtime_name, config._get_runtime_options())
-
         return config
 
     @classmethod
@@ -367,9 +338,9 @@ class RuntimeConfig:
                 clash with the provided token
         """
 
-        if self._runtime_name not in [RuntimeName.QE_REMOTE, RuntimeName.CE_REMOTE]:
+        if self._runtime_name not in [RuntimeName.CE_REMOTE]:
             raise SyntaxError(
-                "This runtime configuration does not require an authorisation token. "
+                "This runtime configuration does not require an authorization token. "
                 "Nothing has been saved."
             )
 

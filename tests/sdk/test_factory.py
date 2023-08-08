@@ -1,12 +1,15 @@
+################################################################################
+# © Copyright 2023 Zapata Computing Inc.
+################################################################################
+
 from pathlib import Path
 
 import pytest
 
 from orquestra.sdk._base._driver._ce_runtime import CERuntime
 from orquestra.sdk._base._factory import build_runtime_from_config
-from orquestra.sdk._base._qe._qe_runtime import QERuntime
 from orquestra.sdk._ray._dag import RayRuntime
-from orquestra.sdk.exceptions import RuntimeConfigError
+from orquestra.sdk.exceptions import QERemoved, RuntimeConfigError
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 
 
@@ -25,7 +28,6 @@ class TestBuildRuntimeFromConfig:
                 },
                 RayRuntime,
             ),
-            (RuntimeName.QE_REMOTE, {"uri": "blah", "token": "bla"}, QERuntime),
             (RuntimeName.CE_REMOTE, {"uri": "blah", "token": "bla"}, CERuntime),
         ],
     )
@@ -49,7 +51,6 @@ class TestBuildRuntimeFromConfig:
     @pytest.mark.parametrize(
         "config_type, runtime_options",
         [
-            (RuntimeName.QE_REMOTE, {"uri": "blah", "no_token": "bla"}),
             (RuntimeName.CE_REMOTE, {"uri": "blah", "no_token": "bla"}),
         ],
     )
@@ -61,4 +62,13 @@ class TestBuildRuntimeFromConfig:
         )
 
         with pytest.raises(RuntimeConfigError):
+            build_runtime_from_config(project_dir=Path.cwd(), config=runtime_config)
+
+    def test_qe_removed(self):
+        runtime_config = RuntimeConfiguration(
+            config_name="mock",
+            runtime_name=RuntimeName.QE_REMOTE,
+        )
+
+        with pytest.raises(QERemoved):
             build_runtime_from_config(project_dir=Path.cwd(), config=runtime_config)

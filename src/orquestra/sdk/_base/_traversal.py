@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 """Transforms a DSL-based workflow into Intermediate Representation format.
 
@@ -71,7 +71,7 @@ def _gen_id_hash(*args):
 
 
 def _make_artifact_id(source_task: _dsl.TaskDef, wf_scoped_artifact_index: int):
-    return _qe_compliant_name(
+    return _k8s_compliant_name(
         f"artifact-{wf_scoped_artifact_index}-{source_task._fn_name}"
     )
 
@@ -472,16 +472,15 @@ def _make_data_aggregation_model(data_aggregation: _dsl.DataAggregation):
     )
 
 
-def _qe_compliant_name(name: str) -> str:
-    """Make a guess of a name that's compliant with QE.
+def _k8s_compliant_name(name: str) -> str:
+    """Make a guess of a name that's compliant with k8s.
 
-    Running a workflow remotely means submitting it to Quantum Engine. QE uses
-    Kubernetes under the hood, and hence some of the IDs have constraints. See also:
+    Running a workflow remotely means submitting it to a k8s cluster.
+    We have some constraints on the naming of tasks. See also:
         - https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
         - https://zapatacomputing.atlassian.net/browse/ORQSDK-367
-        - https://docs.orquestra.io/quantum-engine/steps/#name
 
-    Based on the requirements from QE we:
+    Based on the requirements we:
     Make sure there is nothing else then [a-z0-9] and dash (-)
     Make sure that string is no longer than 128 characters long
     """
@@ -489,7 +488,7 @@ def _qe_compliant_name(name: str) -> str:
 
 
 def _make_task_id(fn_name, suffix):
-    return _qe_compliant_name(f"task-{fn_name}-{suffix}")
+    return _k8s_compliant_name(f"task-{fn_name}-{suffix}")
 
 
 def _make_parameters(parameters: t.Optional[OrderedDict]):
@@ -712,9 +711,9 @@ def _make_constant_node(
 
 def _make_invocation_id(task_name, invocation_i, custom_name):
     if custom_name is None:
-        return _qe_compliant_name(f"invocation-{invocation_i}-task-{task_name}")
+        return _k8s_compliant_name(f"invocation-{invocation_i}-task-{task_name}")
     else:
-        return _qe_compliant_name(
+        return _k8s_compliant_name(
             f"name-{custom_name}-invocation-{invocation_i}-task-{task_name}"
         )
 

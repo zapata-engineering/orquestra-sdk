@@ -130,7 +130,7 @@ def test_config_management(capsys, _examples_dir):
     )
 
     expected_outputs = [
-        "RuntimeConfiguration 'prod-d' for runtime QE_REMOTE  with parameters:",
+        "RuntimeConfiguration 'prod-d' for runtime CE_REMOTE  with parameters:",
         "- uri: https://prod-d.orquestra.io",
         "- token: my_token",
     ]

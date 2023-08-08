@@ -20,7 +20,7 @@ from orquestra.sdk.exceptions import ExpiredTokenError, InvalidTokenError
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 
 
-@pytest.mark.parametrize("runtime_name", [RuntimeName.CE_REMOTE, RuntimeName.QE_REMOTE])
+@pytest.mark.parametrize("runtime_name", [RuntimeName.CE_REMOTE])
 class TestAction:
     """
     Test boundaries::
@@ -183,9 +183,7 @@ class TestAction:
         exception_presenter.show_error.assert_not_called()
         config_repo.store_token_in_config.assert_not_called()
         login_presenter.prompt_config_saved.assert_not_called()
-        login_presenter.prompt_for_login.assert_called_once_with(
-            login_url, url, runtime_name
-        )
+        login_presenter.prompt_for_login.assert_called_once_with(login_url, url)
 
     @staticmethod
     def test_passed_server_and_token(async_sleep, runtime_name):
@@ -224,7 +222,7 @@ class TestAction:
         )
 
         # Then
-        # We should get the login url from QE
+        # We should get the login url from CE
         async_sleep.assert_not_called()
         config_resolver.resolve_stored_config_for_login.assert_not_called()
         exception_presenter.show_error.assert_not_called()
@@ -410,11 +408,7 @@ class TestAction:
 
         loaded_runtime_config = create_autospec(RuntimeConfiguration)
         loaded_runtime_config.runtime_options = {"uri": login_url}
-        loaded_runtime_config.runtime_name = (
-            RuntimeName.CE_REMOTE
-            if runtime_name == RuntimeName.QE_REMOTE
-            else RuntimeName.QE_REMOTE
-        )
+        loaded_runtime_config.runtime_name = RuntimeName.RAY_LOCAL
         loaded_runtime_config.config_name = config_name
         config_resolver.resolve_stored_config_for_login.return_value = config_name
         config_repo.read_config.return_value = loaded_runtime_config
@@ -478,11 +472,7 @@ class TestAction:
 
         loaded_runtime_config = create_autospec(RuntimeConfiguration)
         loaded_runtime_config.runtime_options = {"uri": login_url}
-        loaded_runtime_config.runtime_name = (
-            RuntimeName.CE_REMOTE
-            if runtime_name == RuntimeName.QE_REMOTE
-            else RuntimeName.QE_REMOTE
-        )
+        loaded_runtime_config.runtime_name = RuntimeName.RAY_LOCAL
         loaded_runtime_config.config_name = config_name
         config_resolver.resolve.return_value = config_name
         config_repo.read_config.return_value = loaded_runtime_config

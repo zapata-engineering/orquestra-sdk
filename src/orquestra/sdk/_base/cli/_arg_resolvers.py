@@ -13,7 +13,6 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base import _services
 from orquestra.sdk._base._config import IN_PROCESS_CONFIG_NAME
 from orquestra.sdk._base._logs._interfaces import WorkflowLogs
-from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema.configs import ConfigName
 from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import (

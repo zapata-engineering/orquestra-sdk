@@ -1,23 +1,15 @@
 ################################################################################
-# © Copyright 2021-2022 Zapata Computing Inc.
+# © Copyright 2021-2023 Zapata Computing Inc.
 ################################################################################
 import pytest
 
-from orquestra.sdk.schema import (
-    configs,
-    ir,
-    local_database,
-    responses,
-    workflow_run,
-    yaml_model,
-)
+from orquestra.sdk.schema import configs, ir, local_database, responses, workflow_run
 
 
 @pytest.mark.parametrize(
     "root_cls",
     [
         ir.WorkflowDef,
-        yaml_model.Workflow,
         workflow_run.WorkflowRun,
         responses.GetWorkflowDefResponse,
         responses.GetTaskDefResponse,

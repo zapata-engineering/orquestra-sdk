@@ -82,22 +82,13 @@ RAY_RUNTIME_OPTIONS: List[str] = [
     "temp_dir",
     "configure_logging",
 ]
-QE_RUNTIME_OPTIONS: List[str] = [
-    "uri",
-    "token",
-]
 CE_RUNTIME_OPTIONS: List[str] = [
     "uri",
     "token",
 ]
 IN_PROCESS_RUNTIME_OPTIONS: List[str] = []
 RUNTIME_OPTION_NAMES: List[str] = list(
-    set(
-        RAY_RUNTIME_OPTIONS
-        + QE_RUNTIME_OPTIONS
-        + IN_PROCESS_RUNTIME_OPTIONS
-        + CE_RUNTIME_OPTIONS
-    )
+    set(RAY_RUNTIME_OPTIONS + IN_PROCESS_RUNTIME_OPTIONS + CE_RUNTIME_OPTIONS)
 )
 BOOLEAN_RUNTIME_OPTIONS: List[str] = ["log_to_driver", "configure_logging"]
 # endregion
@@ -329,9 +320,7 @@ def _validate_runtime_options(
 
     # Get list of options for this runtime
     permitted_options: list
-    if runtime_name == RuntimeName.QE_REMOTE:
-        permitted_options = QE_RUNTIME_OPTIONS
-    elif runtime_name == RuntimeName.RAY_LOCAL:
+    if runtime_name == RuntimeName.RAY_LOCAL:
         permitted_options = RAY_RUNTIME_OPTIONS
     elif runtime_name == RuntimeName.IN_PROCESS:
         permitted_options = IN_PROCESS_RUNTIME_OPTIONS
@@ -529,13 +518,13 @@ def generate_config_name(
     """
     Generate a for the specified runtime configuration options.
 
-    QE_REMOTE configurations are named based on their cluster uri. All other
+    CE_REMOTE configurations are named based on their cluster uri. All other
     configurations have static names assigned.
     """
-    if runtime_name == RuntimeName.QE_REMOTE or runtime_name == RuntimeName.CE_REMOTE:
+    if runtime_name == RuntimeName.CE_REMOTE:
         if not uri:
             raise AttributeError(
-                "QE and CE runtime configurations must have a 'URI' value set."
+                "CE runtime configurations must have a 'URI' value set."
             )
         new_name = _generate_cluster_uri_name(uri)
     elif runtime_name == RuntimeName.RAY_LOCAL:
