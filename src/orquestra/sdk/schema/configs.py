@@ -14,6 +14,7 @@ ConfigName = str
 class RuntimeName(str, Enum):
     RAY_LOCAL = "RAY_LOCAL"
     CE_REMOTE = "CE_REMOTE"
+    QE_REMOTE = "QE_REMOTE"
     IN_PROCESS = "IN_PROCESS"
 
 

@@ -30,6 +30,11 @@ def build_runtime_from_config(
         )
     elif config.runtime_name == RuntimeName.CE_REMOTE:
         return _build_ce_runtime(config, verbose)
+    elif config.runtime_name == RuntimeName.QE_REMOTE:
+        raise exceptions.QERemoved(
+            "QE support has been removed. "
+            f"Use CE by logging in again with `orq login -c {config.config_name}`"
+        )
     else:
         raise exceptions.NotFoundError(f"Unknown runtime: {config.runtime_name}")
 

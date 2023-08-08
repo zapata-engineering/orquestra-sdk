@@ -98,6 +98,7 @@ class TestPrettyPrintException:
                 exceptions.WorkflowRunNotStarted("An issue submitting the workflow"),
                 "An issue submitting the workflow",
             ),
+            (exceptions.QERemoved("<qe removal text>"), "<qe removal text>"),
         ],
     )
     def tests_prints_exception_without_traceback(capsys, exc, stdout_marker: str):

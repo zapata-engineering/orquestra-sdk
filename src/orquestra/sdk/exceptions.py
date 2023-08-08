@@ -79,6 +79,10 @@ class LocalConfigLoginError(BaseRuntimeError):
     pass
 
 
+class QERemoved(BaseRuntimeError):
+    """Raised when attempting to use QE"""
+
+
 # Workflow Definition Errors
 class WorkflowDefinitionModuleNotFound(NotFoundError):
     """

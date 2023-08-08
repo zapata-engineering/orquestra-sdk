@@ -170,3 +170,9 @@ def _(e: exceptions.ExpiredTokenError) -> ResponseStatusCode:
 def _(e: exceptions.WorkflowRunNotStarted) -> ResponseStatusCode:
     click.echo(e)
     return ResponseStatusCode.INVALID_WORKFLOW_RUN
+
+
+@pretty_print_exception.register
+def _(e: exceptions.QERemoved) -> ResponseStatusCode:
+    click.echo(e)
+    return ResponseStatusCode.CONNECTION_ERROR

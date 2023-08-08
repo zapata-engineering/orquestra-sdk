@@ -300,8 +300,10 @@ class ConfigPresenter:
                         # show config name
                         click.style(config.config_name, bold=True),
                         #
-                        # show runtime name, colour coded blue for CE
-                        click.style(config.runtime_name, fg="blue"),
+                        # show runtime name, colour coded blue for CE and red for QE
+                        click.style(config.runtime_name, fg="blue")
+                        if config.runtime_name == RuntimeName.CE_REMOTE
+                        else click.style(config.runtime_name, fg="red"),
                         #
                         # show cluster URI
                         config.runtime_options["uri"],
