@@ -23,6 +23,7 @@ from orquestra.sdk._base._config import SPECIAL_CONFIG_NAME_DICT
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk._base._testing import _example_wfs
+from orquestra.sdk._base._testing import _reloaders
 from orquestra.sdk._base.cli import _repos
 from orquestra.sdk._base.cli._ui import _models as ui_models
 from orquestra.sdk._ray import _dag
@@ -32,7 +33,6 @@ from orquestra.sdk.schema.workflow_run import RunStatus, State
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
 from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
 
-from .. import reloaders
 from ..sdk.data.configs import TEST_CONFIG_JSON
 
 INSTANT_1 = _dates.from_comps(2023, 2, 24, 7, 26, 7, 704015, utc_hour_offset=1)
@@ -1362,7 +1362,7 @@ class TestWorkflowDefRepoIntegration:
         Prepares a directory for importing Python modules and cleans up the
         module cache afterwards.
         """
-        with reloaders.restore_loaded_modules():
+        with _reloaders.restore_loaded_modules():
             sys.path.insert(0, str(tmp_path))
 
             yield tmp_path
@@ -1423,7 +1423,7 @@ class TestWorkflowDefRepoIntegration:
 
                 repo = _repos.WorkflowDefRepo()
 
-                with reloaders.restore_loaded_modules():
+                with _reloaders.restore_loaded_modules():
                     # When
                     mod = repo.get_module_from_spec("my_pkg.my_module")
 

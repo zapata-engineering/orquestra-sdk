@@ -26,6 +26,7 @@
 * Corrected unclear language in the quickstart guide.
 * Fixed resource management doc incorrectly stating that 10k == 10^7.
 * Removed outdated references to the `wf.prepare()` method.
+* Updated Jupyter tutorial's content.
 
 ## v0.54.0
 
