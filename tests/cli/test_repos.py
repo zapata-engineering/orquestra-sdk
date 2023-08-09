@@ -1455,6 +1455,7 @@ class TestWorkflowDefRepoIntegration:
                 "complicated_wf",
                 "multioutput_wf",
                 "multioutput_task_wf",
+                "multioutput_task_failed_wf",
                 "my_workflow",
                 "exception_wf",
                 "wf_using_inline_imports",
