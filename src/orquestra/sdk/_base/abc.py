@@ -40,7 +40,7 @@ class RuntimeInterface(ABC, LogReader):
 
     @abstractmethod
     def create_workflow_run(
-        self, workflow_def: WorkflowDef, project: t.Optional[ProjectRef]
+        self, workflow_def: WorkflowDef, project: t.Optional[ProjectRef], dry_run: bool
     ) -> WorkflowRunId:
         """Schedules a workflow definition for execution
 
@@ -49,6 +49,8 @@ class RuntimeInterface(ABC, LogReader):
             project: project in which workflow is going to be executed
                 used currently only on CE runtime.
                 When omitted, WF will be scheduled at default project
+            dry_run: Run the workflow without actually executing any task code.
+                used to test infrastructure, imports dependencies etc.
         """
         raise NotImplementedError()
 

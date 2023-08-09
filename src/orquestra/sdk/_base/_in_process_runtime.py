@@ -131,7 +131,10 @@ class InProcessRuntime(abc.RuntimeInterface):
         return f"{wf_def.name}-{len(self._output_store) + 1}"
 
     def create_workflow_run(
-        self, workflow_def: ir.WorkflowDef, project: t.Optional[ProjectRef]
+        self,
+        workflow_def: ir.WorkflowDef,
+        project: t.Optional[ProjectRef],
+        dry_run: bool,
     ) -> WfRunId:
         if project:
             warnings.warn(
@@ -140,6 +143,10 @@ class InProcessRuntime(abc.RuntimeInterface):
                 category=exceptions.UnsupportedRuntimeFeature,
             )
 
+        if dry_run:
+            warnings.warn(
+                "in_process runtime doesn't support dry_run. Full workflow will run"
+            )
         run_id = self._gen_next_run_id(workflow_def)
 
         self._start_time_store[run_id] = _dates.now()

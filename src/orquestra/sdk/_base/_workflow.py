@@ -159,6 +159,7 @@ class WorkflowDef(Generic[_R]):
         project_dir: Optional[Union[str, Path]] = None,
         workspace_id: Optional[WorkspaceId] = None,
         project_id: Optional[ProjectId] = None,
+        dry_run: bool = False,
     ) -> _api.WorkflowRun:
         """
         Schedules workflow for execution.
@@ -171,7 +172,8 @@ class WorkflowDef(Generic[_R]):
                 working directory is used.
             workspace_id: ID of the workspace for workflow - supported only on CE
             project_id: ID of the project for workflow - supported only on CE
-
+            dry_run: Run the workflow without actually executing any task code.
+                used to test infrastructure, imports dependencies etc.
         Raises:
             orquestra.sdk.exceptions.DirtyGitRepo: (warning) when a task def used by
                 this workflow def has a "GitImport" and the git repo that contains it
@@ -209,6 +211,7 @@ class WorkflowDef(Generic[_R]):
             runtime=runtime,
             config=_config,
             project=_project,
+            dry_run=dry_run,
         )
         return wf_run
 

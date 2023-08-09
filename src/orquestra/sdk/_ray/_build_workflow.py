@@ -82,7 +82,7 @@ class ArgumentUnwrapper:
         kwargs_artifact_nodes: t.Mapping[str, ir.ArtifactNode],
         deserialize: bool,
         n_outputs: int,
-        dry_run: bool
+        dry_run: bool,
     ):
         """
         Args:
@@ -146,9 +146,10 @@ class ArgumentUnwrapper:
         else:
             assert_never(arg)
 
-    def _nop_fn_factory(self):
+    def _nop_function_factory(self):
         def nop():
             return (None,) * self._n_outputs
+
         return nop
 
     def __call__(self, *wrapped_args, **wrapped_kwargs):
@@ -161,8 +162,10 @@ class ArgumentUnwrapper:
         for name, kwarg in wrapped_kwargs.items():
             kwargs[name] = self._unpack_argument(kwarg, name)
 
+        # if the dry_run mode is enabled, we don't execute user function, but just
+        # empty nop function returning Nones
         if self._dry_run:
-            return self._nop_fn_factory()()
+            return self._nop_function_factory()()
         else:
             return self._user_fn(*args, **kwargs)
 
@@ -226,7 +229,7 @@ def _make_ray_dag_node(
                     kwargs_artifact_nodes=kwargs_artifact_nodes,
                     deserialize=serialization,
                     dry_run=dry_run,
-                    n_outputs=n_outputs
+                    n_outputs=n_outputs,
                 )
 
                 wrapped_return = wrapped(*inner_args, **inner_kwargs)
@@ -354,13 +357,9 @@ def make_ray_dag(
     client: RayClient,
     workflow_def: ir.WorkflowDef,
     workflow_run_id: workflow_run.WorkflowRunId,
+    dry_run: bool,
     project_dir: t.Optional[Path] = None,
-    dry_run: bool = False,
 ):
-
-    if dry_run:
-        os.environ[RAY_DOWNLOAD_GIT_IMPORTS_ENV] = "1"
-
     # a mapping of "artifact ID" <-> "the ray Future needed to get the value"
     ray_futures: t.Dict[ir.ArtifactNodeId, t.Any] = {}
 
@@ -444,7 +443,7 @@ def make_ray_dag(
             n_outputs=_compat.n_outputs(task_def=user_task, task_inv=invocation),
             project_dir=project_dir,
             user_fn_ref=user_task.fn_ref,
-            dry_run=dry_run
+            dry_run=dry_run,
         )
 
         for output_id in invocation.output_ids:
@@ -477,7 +476,7 @@ def make_ray_dag(
         n_outputs=len(pos_args),
         project_dir=None,
         user_fn_ref=None,
-        dry_run=dry_run
+        dry_run=dry_run,
     )
 
     # Data aggregation step is run with catch_exceptions=True - so it returns tuple of

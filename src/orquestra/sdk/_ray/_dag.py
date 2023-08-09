@@ -69,6 +69,7 @@ def _generate_wf_run_id(wf_def: ir.WorkflowDef, dry_run):
     else:
         return f"wf.{dry_run_str}.{hex_str}"
 
+
 if _client.WorkflowStatus is not None:
     RAY_ORQ_STATUS = {
         _client.WorkflowStatus.RUNNING: State.RUNNING,
@@ -269,9 +270,11 @@ class RayRuntime(RuntimeInterface):
         client.shutdown()
 
     def create_workflow_run(
-        self, workflow_def: ir.WorkflowDef, project: t.Optional[ProjectRef],
+        self,
+        workflow_def: ir.WorkflowDef,
+        project: t.Optional[ProjectRef],
+        dry_run: bool,
     ) -> WorkflowRunId:
-        dry_run: bool = True
         if project:
             warnings.warn(
                 "Ray doesn't support project-scoped workflows. "
