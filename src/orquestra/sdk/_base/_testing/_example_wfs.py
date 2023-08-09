@@ -49,6 +49,18 @@ def multioutput_task():
     return "Zapata", "Computing"
 
 
+@sdk.task
+def multioutput_task_failing():
+    assert False
+    return "Zapata", "Computing"
+
+
+@sdk.task(n_outputs=2)
+def multioutput_task_failing_n_outpus():
+    assert False
+    return "Zapata", "Computing"
+
+
 @sdk.workflow
 def complicated_wf():
     first_name = "emiliano"
@@ -116,6 +128,16 @@ def multioutput_task_wf():
     _, c = multioutput_task()
     d, _ = multioutput_task()
     packed = multioutput_task()
+    f, g = packed
+    return a, b, c, d, packed, f, g
+
+
+@sdk.workflow
+def multioutput_task_failed_wf():
+    a, b = multioutput_task_failing_n_outpus()
+    _, c = multioutput_task_failing_n_outpus()
+    d, _ = multioutput_task_failing()
+    packed = multioutput_task_failing()
     f, g = packed
     return a, b, c, d, packed, f, g
 

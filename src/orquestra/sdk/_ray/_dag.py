@@ -51,7 +51,7 @@ def _instant_from_timestamp(
     return _dates.from_unix_time(unix_timestamp)
 
 
-def _generate_wf_run_id(wf_def: ir.WorkflowDef, dry_run):
+def _generate_wf_run_id(wf_def: ir.WorkflowDef):
     """
     Implements the "tagging" design doc:
     https://zapatacomputing.atlassian.net/wiki/spaces/ORQSRUN/pages/479920161/Logging+Tagging
@@ -62,12 +62,8 @@ def _generate_wf_run_id(wf_def: ir.WorkflowDef, dry_run):
     """
     wf_name = wf_def.name
     hex_str = _id_gen.gen_short_uid(char_length=7)
-    dry_run_str = "dry_run"
 
-    if not dry_run:
-        return f"wf.{wf_name}.{hex_str}"
-    else:
-        return f"wf.{dry_run_str}.{hex_str}"
+    return f"wf.{wf_name}.{hex_str}"
 
 
 if _client.WorkflowStatus is not None:
@@ -283,7 +279,7 @@ class RayRuntime(RuntimeInterface):
             )
 
         global_run_id = os.getenv(RAY_GLOBAL_WF_RUN_ID_ENV)
-        wf_run_id = global_run_id or _generate_wf_run_id(workflow_def, dry_run)
+        wf_run_id = global_run_id or _generate_wf_run_id(workflow_def)
 
         dag = make_ray_dag(
             self._client,
