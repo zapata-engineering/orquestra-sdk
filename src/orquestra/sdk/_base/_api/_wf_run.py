@@ -176,7 +176,11 @@ class WorkflowRun:
         )
 
         wf_run = cls._start(
-            wf_def=wf_def, runtime=runtime, config=_config, project=_project
+            wf_def=wf_def,
+            runtime=runtime,
+            config=_config,
+            project=_project,
+            dry_run=dry_run,
         )
 
         return wf_run

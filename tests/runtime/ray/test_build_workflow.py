@@ -284,6 +284,8 @@ class TestArgumentUnwrapper:
                 args_artifact_nodes={},
                 kwargs_artifact_nodes={},
                 deserialize=True,
+                dry_run=False,
+                n_outputs=1,
             )
 
             # When
@@ -304,6 +306,8 @@ class TestArgumentUnwrapper:
                 args_artifact_nodes={},
                 kwargs_artifact_nodes={},
                 deserialize=False,
+                dry_run=False,
+                n_outputs=1,
             )
 
             # When
@@ -325,6 +329,8 @@ class TestArgumentUnwrapper:
                 args_artifact_nodes={},
                 kwargs_artifact_nodes={},
                 deserialize=True,
+                dry_run=False,
+                n_outputs=1,
             )
 
             # When
@@ -345,6 +351,8 @@ class TestArgumentUnwrapper:
                 args_artifact_nodes={},
                 kwargs_artifact_nodes={},
                 deserialize=False,
+                dry_run=False,
+                n_outputs=1,
             )
 
             # When
@@ -391,7 +399,7 @@ class TestArgumentUnwrapper:
         ):
             fn = Mock()
             arg_unwrapper = _build_workflow.ArgumentUnwrapper(
-                fn, args_artifact_nodes, {}, True
+                fn, args_artifact_nodes, {}, True, 1, False
             )
             _ = arg_unwrapper(task_result, task_result, task_result)
 
@@ -403,7 +411,7 @@ class TestArgumentUnwrapper:
         ):
             fn = Mock()
             arg_unwrapper = _build_workflow.ArgumentUnwrapper(
-                fn, {}, kwargs_artifact_nodes, True
+                fn, {}, kwargs_artifact_nodes, True, 1, False
             )
             _ = arg_unwrapper(a=task_result, b=task_result, c=task_result)
 

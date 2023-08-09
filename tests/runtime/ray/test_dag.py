@@ -228,7 +228,9 @@ class TestRayRuntime:
             )
             with pytest.warns(expected_warning=exceptions.UnsupportedRuntimeFeature):
                 runtime.create_workflow_run(
-                    Mock(), project=ProjectRef(workspace_id="", project_id="")
+                    Mock(),
+                    dry_run=False,
+                    project=ProjectRef(workspace_id="", project_id=""),
                 )
 
     class TestListWorkflowRuns:
