@@ -229,7 +229,7 @@ def _make_ray_dag_node(
                     kwargs_artifact_nodes=kwargs_artifact_nodes,
                     deserialize=serialization,
                     dry_run=dry_run,
-                    n_outputs=n_outputs,
+                    n_outputs=n_outputs if n_outputs else 1,
                 )
 
                 wrapped_return = wrapped(*inner_args, **inner_kwargs)
