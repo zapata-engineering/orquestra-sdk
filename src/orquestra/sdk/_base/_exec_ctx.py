@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 """
 Centralized place to store the information about where the code runs.
@@ -7,7 +7,7 @@ This module is likely to be used from many places. It shouldn't import any
 3rd-party libraries (like ray).
 
 The problem this module solves: our code needs to know if it's running in a standalone
-script vs a local Ray task vs task on QE vs [insert more in the future]. How to pass
+script vs a local Ray task vs [insert more in the future]. How to pass
 this information?
 
 The solution: global variable set by the runtimes just before executing task code. To
@@ -31,9 +31,6 @@ class ExecContext(Enum):
     # We're inside a Ray task. This can be managed by the Local Runtime or remote
     # Compute Engine.
     RAY = "RAY"
-
-    # We're inside a remote task running on Quantum Engine.
-    PLATFORM_QE = "PLATFORM_QE"
 
 
 # To be set by runtimes.
@@ -69,15 +66,6 @@ def ray():  # pragma: no cover - tested inside a Ray task via an integration tes
     Helper. Sets the context for running code in a task managed by Ray.
     """
     with _set_context(ExecContext.RAY):
-        yield
-
-
-@contextmanager
-def platform_qe():
-    """
-    Helper. Sets the context for running code in a remote, QE-based task.
-    """
-    with _set_context(ExecContext.PLATFORM_QE):
         yield
 
 

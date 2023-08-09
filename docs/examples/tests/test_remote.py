@@ -5,72 +5,16 @@
 Snippets and tests used in the "Remote Workflows" tutorial.
 """
 
-import base64
-import io
-import json
 import subprocess
 import sys
-import tarfile
-import typing as t
 from pathlib import Path
 
 import pytest
 import pytest_httpserver
 
+from orquestra.sdk.examples.exportable_wf import my_workflow
+
 from .parsers import get_snippet_as_str
-
-QE_MINIMAL_CURRENT_REPRESENTATION: t.Dict[str, t.Any] = {
-    "status": {
-        "phase": "Succeeded",
-        "startedAt": "1989-12-13T09:03:49Z",
-        "finishedAt": "1989-12-13T09:05:14Z",
-        "nodes": {},
-    },
-}
-
-QE_STATUS_RESPONSE = {
-    "id": "hello-there-abc123-r000",
-    "status": "Succeeded",
-    "currentRepresentation": base64.standard_b64encode(
-        json.dumps(QE_MINIMAL_CURRENT_REPRESENTATION).encode()
-    ).decode(),
-    "completed": True,
-    "retry": "",
-    "lastModified": "1989-12-13T09:10:04.14422796Z",
-    "created": "1989-12-13T09:03:49.39478764Z",
-}
-
-
-QE_WORKFLOW_RESULT_JSON_DICT = {
-    "hello-there-abc123-r000-2738763496": {
-        "artifact-0-hello-orquestra": {
-            "serialization_format": "JSON",
-            "value": '"Hello Orquestra!"',
-        },
-        "inputs": {},
-        "stepID": "hello-there-abc123-r000-2738763496",
-        "stepName": "invocation-0-task-hello-orquestra",
-        "workflowId": "hello-there-abc123-r000",
-    },
-}
-
-
-def _make_result_bytes(results_dict: t.Dict[str, t.Any]) -> bytes:
-    results_file_bytes = json.dumps(results_dict).encode()
-
-    tar_buf = io.BytesIO()
-    with tarfile.open(mode="w:gz", fileobj=tar_buf) as tar:
-        # See this for creating tars in memory:
-        # https://github.com/python/cpython/issues/66404#issuecomment-1093662423
-        tar_info = tarfile.TarInfo("results.json")
-        tar_info.size = len(results_file_bytes)
-        tar.addfile(tar_info, fileobj=io.BytesIO(results_file_bytes))
-
-    tar_buf.seek(0)
-    return tar_buf.read()
-
-
-QE_WORKFLOW_RESULT_BYTES = _make_result_bytes(QE_WORKFLOW_RESULT_JSON_DICT)
 
 
 class Snippets:
@@ -142,7 +86,7 @@ class TestSnippets:
         from orquestra import sdk
 
         monkeypatch.setenv("ORQ_CONFIG_PATH", str(tmp_path / "config.json"))
-        sdk.RuntimeConfig.qe(uri=f"http://127.0.0.1:{httpserver.port}", token="nice")
+        sdk.RuntimeConfig.ce(uri=f"http://127.0.0.1:{httpserver.port}", token="nice")
 
     @staticmethod
     @pytest.mark.dependency()
@@ -153,7 +97,12 @@ class TestSnippets:
         define_test_config,
     ):
         # Given
-        httpserver.expect_request("/v1/workflows").respond_with_data(TestSnippets.wf_id)
+        httpserver.expect_request(
+            "/api/workflow-definitions", method="POST"
+        ).respond_with_json({"data": {"id": "def_id"}})
+        httpserver.expect_request(
+            "/api/workflow-runs", method="POST"
+        ).respond_with_json({"data": {"id": TestSnippets.wf_id}})
 
         # Prepare the project dir: 'workflow_defs.py' and 'script.py' files
         src_file = Path("./execute_workflow.py")
@@ -182,11 +131,55 @@ class TestSnippets:
         define_test_config,
     ):
         # Given
-        httpserver.expect_request("/v1/workflow").respond_with_json(QE_STATUS_RESPONSE)
         httpserver.expect_request(
-            f"/v2/workflows/{TestSnippets.wf_id}/result"
-        ).respond_with_data(
-            QE_WORKFLOW_RESULT_BYTES, content_type="application/x-gtar-compressed"
+            "/api/workflow-runs/test_workflow_id", method="GET"
+        ).respond_with_json(
+            {
+                "data": {
+                    "id": "test_workflow_id",
+                    "definitionId": "def_id",
+                    "owner": "taylor.swift@zapatacomputing.com",
+                    "status": {
+                        "state": "SUCCEEDED",
+                        "start_time": "1989-12-13T09:03:49Z",
+                        "end_time": "1989-12-13T09:05:14Z",
+                    },
+                    "taskRuns": [],
+                }
+            }
+        )
+        httpserver.expect_request(
+            "/api/workflow-definitions/def_id", method="GET"
+        ).respond_with_json(
+            {
+                "data": {
+                    "id": "def_id",
+                    "created": "1989-12-13T09:03:49Z",
+                    "owner": "taylor.swift@zapatacomputing.com",
+                    "workflow": my_workflow().model.dict(),
+                    "workspaceId": "eras_tour",
+                    "project": "red",
+                    "sdkVersion": "0.22.0",
+                }
+            }
+        )
+        httpserver.expect_request(
+            "/api/run-results",
+            method="GET",
+            query_string="workflowRunId=test_workflow_id",
+        ).respond_with_json({"data": ["result1"]})
+        httpserver.expect_request(
+            "/api/run-results/result1", method="GET"
+        ).respond_with_json(
+            {
+                "results": [
+                    {
+                        "serialization_format": "JSON",
+                        "value": '"Hello Orquestra!"',
+                    }
+                ],
+                "type": "ComputeEngineWorkflowResult",
+            }
         )
 
         file_content = get_snippet_as_str(fn=Snippets.get_results)
@@ -203,6 +196,7 @@ class TestSnippets:
         proc = subprocess.run([sys.executable, str(src_file)], capture_output=True)
 
         # Then
+        print(proc.stdout.decode(), proc.stderr.decode())
         proc.check_returncode()
         std_out = str(proc.stdout, "utf-8")
         assert "Hello Orquestra!" in std_out

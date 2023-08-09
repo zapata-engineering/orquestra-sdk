@@ -3,6 +3,7 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+- QE support has been removed.
 
 🔥 *Features*
 
@@ -40,6 +41,7 @@
 
 💅 *Improvements*
 * Consolidate all `NotATaskWarning` warnings into a single warning for each workflow.
+* Remove redundant environment variable checks in MLFlow connection utils.
 
 📃 *Docs*
 * Added "Beginner's Guide to the CLI"

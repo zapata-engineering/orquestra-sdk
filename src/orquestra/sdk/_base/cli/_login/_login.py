@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 - 2023 Zapata Computing Inc.
+# © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 """
 Code for 'orq login'.
@@ -119,7 +119,7 @@ class Action:
             # We didn't get a token, this means the collector timed out or otherwise
             # couldn't receive a token
             # In this case, print out the manual instructions
-            self._login_presenter.prompt_for_login(self._login_url, url, runtime_name)
+            self._login_presenter.prompt_for_login(self._login_url, url)
             return
         self._save_token(url, self._login_server.token, runtime_name)
 

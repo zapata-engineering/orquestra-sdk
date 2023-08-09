@@ -8,7 +8,7 @@ import typing as t
 
 from orquestra.sdk import exceptions as exceptions
 from orquestra.sdk.schema.configs import ConfigName
-from orquestra.sdk.schema.workflow_run import ProjectId, WorkflowRun, WorkspaceId
+from orquestra.sdk.schema.workflow_run import WorkspaceId
 
 from .. import _arg_resolvers, _repos
 from .._ui import _presenters

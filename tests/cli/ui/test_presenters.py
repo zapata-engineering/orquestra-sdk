@@ -382,15 +382,14 @@ class TestServicesPresenter:
 
 
 class TestLoginPresenter:
-    @pytest.mark.parametrize("ce", [True, False])
-    def test_prompt_for_login(self, capsys, ce):
+    def test_prompt_for_login(self, capsys):
         # Given
         url = "cool_url"
         login_url = "cool_login_url"
         presenter = _presenters.LoginPresenter()
 
         # When
-        presenter.prompt_for_login(login_url, url, ce)
+        presenter.prompt_for_login(login_url, url)
 
         # Then
         captured = capsys.readouterr()
@@ -401,10 +400,7 @@ class TestLoginPresenter:
         )
         assert login_url in captured.out
         assert "Then save the token using command:" in captured.out
-        assert (
-            f"orq login -s {url} -t <paste your token here>" + (" --ce" if ce else "")
-            in captured.out
-        )
+        assert f"orq login -s {url} -t <paste your token here>" in captured.out
 
     def test_prompt_config_saved(self, capsys):
         # Given

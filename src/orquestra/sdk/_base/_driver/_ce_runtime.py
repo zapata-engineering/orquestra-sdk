@@ -21,7 +21,6 @@ from orquestra.sdk.schema.ir import ArtifactFormat, TaskInvocationId, WorkflowDe
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
-    ProjectId,
     State,
     TaskRunId,
     WorkflowRun,

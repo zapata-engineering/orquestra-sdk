@@ -101,12 +101,10 @@ class TestResolveConfigEntryForReading:
 
 class TestGenerateConfigName:
     @staticmethod
-    def test_raises_exception_if_qe_but_no_uri():
+    def test_raises_exception_if_ce_but_no_uri():
         with pytest.raises(AttributeError) as exc_info:
-            _config.generate_config_name(RuntimeName.QE_REMOTE, None)
-        assert "QE and CE runtime configurations must have a 'URI' value set." in str(
-            exc_info
-        )
+            _config.generate_config_name(RuntimeName.CE_REMOTE, None)
+        assert "CE runtime configurations must have a 'URI' value set." in str(exc_info)
 
 
 class TestValidateRuntimeOptions:
@@ -149,10 +147,10 @@ class TestValidateRuntimeOptions:
                 },
             ],
         )
-        def test_good_qe_options(runtime_options):
+        def test_good_ce_options(runtime_options):
             assert (
                 _config._validate_runtime_options(
-                    RuntimeName.QE_REMOTE, runtime_options
+                    RuntimeName.CE_REMOTE, runtime_options
                 )
                 == runtime_options
             )
@@ -199,7 +197,6 @@ class TestValidateRuntimeOptions:
             [
                 RuntimeName.RAY_LOCAL,
                 RuntimeName.IN_PROCESS,
-                RuntimeName.QE_REMOTE,
                 RuntimeName.CE_REMOTE,
             ],
         )
@@ -243,13 +240,13 @@ class TestValidateRuntimeOptions:
                 },
             ],
         )
-        def test_bad_qe_options(runtime_options):
+        def test_bad_ce_options(runtime_options):
             with pytest.raises(exceptions.RuntimeConfigError) as exc_info:
                 _config._validate_runtime_options(
-                    RuntimeName.QE_REMOTE, runtime_options
+                    RuntimeName.CE_REMOTE, runtime_options
                 )
             assert (
-                "'bar' is not a valid option for the QE_REMOTE runtime."
+                "'bar' is not a valid option for the CE_REMOTE runtime."
                 == exc_info.value.args[0]
             )
 
@@ -297,7 +294,6 @@ class TestValidateRuntimeOptions:
             "runtime_name",
             [
                 RuntimeName.IN_PROCESS,
-                RuntimeName.QE_REMOTE,
                 RuntimeName.RAY_LOCAL,
                 RuntimeName.CE_REMOTE,
             ],
@@ -332,7 +328,7 @@ class TestProperties:
 
         @pytest.mark.parametrize("config_name", ["custom_cfg"])
         @pytest.mark.parametrize(
-            "runtime_name", [RuntimeName.QE_REMOTE, RuntimeName.RAY_LOCAL]
+            "runtime_name", [RuntimeName.CE_REMOTE, RuntimeName.RAY_LOCAL]
         )
         @pytest.mark.parametrize("new_runtime_options", [None, {}, {"foo": "bar"}])
         def test_no_file(

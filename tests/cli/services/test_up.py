@@ -7,7 +7,7 @@ Unit tests for ``orq services up`` CLI action.
 import inspect
 import subprocess
 from contextlib import contextmanager
-from unittest.mock import Mock, create_autospec
+from unittest.mock import create_autospec
 
 import pytest
 

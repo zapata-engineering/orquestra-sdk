@@ -2,10 +2,9 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 import subprocess
-import sys
 from typing import Optional
 
-from orquestra.sdk.schema.responses import ResponseStatusCode, ServiceResponse
+from orquestra.sdk.schema.responses import ServiceResponse
 
 from .. import _arg_resolvers
 from .._ui import _presenters

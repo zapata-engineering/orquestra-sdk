@@ -5,7 +5,7 @@ import orquestra.sdk as sdk
 
 # >> Tutorial code snippet: save config
 
-config = sdk.RuntimeConfig.qe(uri="https://prod-d.orquestra.io", token="my_token")
+config = sdk.RuntimeConfig.ce(uri="https://prod-d.orquestra.io", token="my_token")
 print(config)
 
 # >> End save config
