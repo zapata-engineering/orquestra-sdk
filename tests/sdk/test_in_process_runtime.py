@@ -265,3 +265,9 @@ def test_project_raises_warning(runtime, wf_def):
         _ = runtime.create_workflow_run(
             wf_def, project=ProjectRef(workspace_id="", project_id=""), dry_run=False
         )
+
+
+def test_dry_run_raises_warning(runtime, wf_def):
+    # Given
+    with pytest.warns(expected_warning=exceptions.UnsupportedRuntimeFeature):
+        _ = runtime.create_workflow_run(wf_def, project=None, dry_run=True)

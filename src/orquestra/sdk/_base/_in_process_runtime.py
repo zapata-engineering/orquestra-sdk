@@ -145,7 +145,8 @@ class InProcessRuntime(abc.RuntimeInterface):
 
         if dry_run:
             warnings.warn(
-                "in_process runtime doesn't support dry_run. Full workflow will run"
+                "in_process runtime doesn't support dry_run. Full workflow will run",
+                category=exceptions.UnsupportedRuntimeFeature,
             )
         run_id = self._gen_next_run_id(workflow_def)
 
