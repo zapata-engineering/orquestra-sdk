@@ -134,10 +134,10 @@ class TestRayRuntime:
 
     class TestReadingLogs:
         """
-        Verifies that RayRuntime gets whatever DirectRayReader produced.
+        Verifies that RayRuntime gets whatever DirectLogReader produced.
 
         Test boundary: [RayRuntime]─┬[ServiceManager]
-                                    └[DirectRayReader]
+                                    └[DirectLogReader]
         """
 
         class TestGetWorkflowLogs:
@@ -162,7 +162,7 @@ class TestRayRuntime:
                 logs_dict = {"inv_id1": ["Hello, there!", "General Kenobi!"]}
                 get_workflow_logs = Mock(return_value=logs_dict)
                 monkeypatch.setattr(
-                    _ray_logs.DirectRayReader, "get_workflow_logs", get_workflow_logs
+                    _ray_logs.DirectLogReader, "get_workflow_logs", get_workflow_logs
                 )
 
                 wf_run_id = "wf.1"
@@ -196,7 +196,7 @@ class TestRayRuntime:
                 logs_list = ["hello", "there!"]
                 get_task_logs = Mock(return_value=logs_list)
                 monkeypatch.setattr(
-                    _ray_logs.DirectRayReader, "get_task_logs", get_task_logs
+                    _ray_logs.DirectLogReader, "get_task_logs", get_task_logs
                 )
 
                 wf_run_id = "wf.1"

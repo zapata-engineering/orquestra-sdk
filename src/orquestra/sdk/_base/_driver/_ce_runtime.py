@@ -13,7 +13,8 @@ from orquestra.sdk import Project, ProjectRef, Workspace, exceptions
 from orquestra.sdk._base import _retry, serde
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base._logs import _regrouping
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs
+from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
+from orquestra.sdk._base._logs._models import LogAccumulator, LogStreamType
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.kubernetes.quantity import parse_quantity
 from orquestra.sdk.schema.configs import RuntimeConfiguration
@@ -496,16 +497,18 @@ class CERuntime(RuntimeInterface):
                 "Please report this as a bug."
             ) from e
 
-        task_logs = []
-        env_logs = []
-        other_logs = []
+        task_logs = LogAccumulator()
+        env_logs = LogAccumulator()
+        other_logs = LogAccumulator()
+        system_logs = LogAccumulator()
 
         for m in messages:
             path = Path(m.ray_filename)
+            stream = LogStreamType.by_file(path)
             if _regrouping.is_worker(path=path):
-                task_logs.append(m.log)
+                task_logs.add_line_by_stream(stream, m.log)
             elif _regrouping.is_env_setup(path=path):
-                env_logs.append(m.log)
+                env_logs.add_line_by_stream(stream, m.log)
             else:
                 # Reasons for the "other" logs: future proofness and empathy. The server
                 # might return events from more files in the future. We want to let the
@@ -517,13 +520,18 @@ class CERuntime(RuntimeInterface):
                 # interleaved lines from multiple files. This is gonna be much easier
                 # to implement after we do
                 # https://zapatacomputing.atlassian.net/browse/ORQSDK-840.
-                other_logs.append(m.log)
+                other_logs.add_line_by_stream(stream, m.log)
+
+        for sys_m in sys_messages:
+            system_logs.add_line_by_stream(LogStreamType.STDOUT, str(sys_m.log))
 
         return WorkflowLogs(
-            per_task={"UNKNOWN TASK INV ID": task_logs},
-            system=[str(m.log) for m in sys_messages],
-            env_setup=env_logs,
-            other=other_logs,
+            per_task={
+                "UNKNOWN TASK INV ID": LogOutput(out=task_logs.out, err=task_logs.err)
+            },
+            system=LogOutput(out=system_logs.out, err=system_logs.err),
+            env_setup=LogOutput(out=env_logs.out, err=env_logs.err),
+            other=LogOutput(out=other_logs.out, err=other_logs.err),
         )
 
     def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):

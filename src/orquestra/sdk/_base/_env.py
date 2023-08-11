@@ -56,6 +56,11 @@ If set to a truthy value, enables printing debug information when running the ``
 CLI commands.
 """
 
+ORQ_TASK_RUN_LOGS_DIR = "ORQ_TASK_RUN_LOGS_DIR"
+"""
+Used to set the storage location for task logs
+"""
+
 # --------------------------------- Ray --------------------------------------
 
 RAY_TEMP_PATH_ENV = "ORQ_RAY_TEMP_PATH"

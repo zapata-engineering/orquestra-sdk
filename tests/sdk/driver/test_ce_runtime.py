@@ -8,7 +8,7 @@ from unittest.mock import DEFAULT, MagicMock, Mock, call, create_autospec
 import pytest
 
 import orquestra.sdk as sdk
-from orquestra.sdk import Project, Workspace, exceptions
+from orquestra.sdk import LogOutput, Project, Workspace, exceptions
 from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _models
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing._example_wfs import (
@@ -1169,22 +1169,40 @@ class TestGetWorkflowLogs:
                 tag=tag,
             ),
         ]
+        sys_logs = [
+            _models.K8sEventLog(tag=tag, log={"some": "values", "another": "thing"}),
+            _models.RayHeadNodeEventLog(tag=tag, log="Ray head log line"),
+            _models.RayWorkerNodeEventLog(tag=tag, log="Ray worker log line"),
+            _models.UnknownEventLog(tag=tag, log="Unknown log line"),
+        ]
         mocked_client.get_workflow_run_logs.return_value = wf_logs
+        mocked_client.get_system_logs.return_value = sys_logs
 
         # When
         logs = runtime.get_workflow_logs(workflow_run_id)
 
         # Then
+        mocked_client.get_system_logs.assert_called_once_with(workflow_run_id)
         mocked_client.get_workflow_run_logs.assert_called_once_with(workflow_run_id)
         # TODO: update the expected task inv IDs when working on
         # https://zapatacomputing.atlassian.net/browse/ORQSDK-840.
         assert logs.per_task == {
-            "UNKNOWN TASK INV ID": ["line 1", "line 2"],
+            "UNKNOWN TASK INV ID": LogOutput(out=["line 2"], err=["line 1"]),
         }
 
-        assert logs.env_setup == ["line 4"]
+        assert logs.env_setup == LogOutput(out=["line 4"], err=[])
 
-        assert logs.other == ["line 3"]
+        assert logs.system == LogOutput(
+            out=[
+                "{'some': 'values', 'another': 'thing'}",
+                "Ray head log line",
+                "Ray worker log line",
+                "Unknown log line",
+            ],
+            err=[],
+        )
+
+        assert logs.other == LogOutput(out=["line 3"], err=[])
 
     @pytest.mark.parametrize(
         "exception, expected_exception",
