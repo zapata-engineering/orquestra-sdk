@@ -189,7 +189,7 @@ class GetArtifactsResponse(BaseModel):
 
 class GetLogsResponse(BaseModel):
     meta: ResponseMetadata
-    logs: t.List[t.Union[str, BaseModel]]
+    logs: t.List[str]
 
 
 class ServiceResponse(BaseModel):

@@ -4,6 +4,7 @@
 
 🚨 *Breaking Changes*
 - QE support has been removed.
+- All log return types have been changes from `Sequence[str]` to `LogOutput` which contains an `out` and an `err` property for the standard out and standard error, respectively.
 
 🔥 *Features*
 
