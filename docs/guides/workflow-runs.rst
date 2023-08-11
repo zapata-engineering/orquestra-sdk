@@ -33,7 +33,7 @@ Note that the steps following the import of the workflow are agnostic to whether
 Results, Logs, and Artifacts
 ----------------------------
 
-Interacting with workflow runs is made possible by the WorkflowRun object and its methods. WorkflowRun objects are not intended to be instantiated directly, but are returned when a workflow run is created (i.e. when the ``prepare()`` or ``run()`` method of a workflow definition is called), or from the ``WorkflowRun.by_id()`` class method. The former case provides WorkflowRun objects for runs that were created previously in the same process, the creates WorkflowRun objects for runs created in a separate process. Runs can be identified solely by their IDs, allowing you to reconstruct the WorkflowRun of a previously started workflow as long as you know the run ID. The following example demonstrates how a separate process can get the results of a workflow run.
+Interacting with workflow runs is made possible by the WorkflowRun object and its methods. WorkflowRun objects are not intended to be instantiated directly, but are returned when a workflow run is created (i.e. when the ``run()`` method of a workflow definition is called), or from the ``WorkflowRun.by_id()`` class method. The former case provides WorkflowRun objects for runs that were created previously in the same process, the creates WorkflowRun objects for runs created in a separate process. Runs can be identified solely by their IDs, allowing you to reconstruct the WorkflowRun of a previously started workflow as long as you know the run ID. The following example demonstrates how a separate process can get the results of a workflow run.
 
 .. literalinclude:: ../examples/tests/test_local_ray.py
     :start-after: def execute_workflow():
@@ -84,14 +84,14 @@ This will display a list of the saved configs. Once the desired config is identi
 Running Workflows with Configurations
 -------------------------------------
 
-Before running a workflow with a custom configuration, the confiuration must first be saved. This configuration can then be passed to the ``prepare()`` or ``run()`` methods of the workflow definition to run the workflow:
+Before running a workflow with a custom configuration, the confiuration must first be saved. This configuration can then be passed to the ``run()`` method of the workflow definition to run the workflow:
 
 .. literalinclude:: ../examples/quickstart.py
     :start-after: >> Tutorial code snippet: run workflow with stored config - long version
     :end-before: >> end run workflow with stored config - long version
     :language: python
 
-or, if you don't need the RuntimeConfig object accessible in your script, loading the configuration can be handled by the ``run()`` or ``prepare()`` method:
+or, if you don't need the RuntimeConfig object accessible in your script, loading the configuration can be handled by the ``run()`` method:
 
 .. literalinclude:: ../examples/quickstart.py
     :start-after: >> Tutorial code snippet: run workflow with stored config - short version
