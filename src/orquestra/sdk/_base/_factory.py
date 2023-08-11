@@ -14,7 +14,7 @@ def build_runtime_from_config(
     """
     Centralized place to get runtime object based on config.
 
-    There are a couple of runtime runtime integrations implemented as separate
+    There are a couple of runtime integrations implemented as separate
     classes. This factory function solves the problem of figuring out which
     class to use.
     """
@@ -28,6 +28,9 @@ def build_runtime_from_config(
             project_dir=project_dir,
             config=config,
         )
+    elif config.runtime_name == RuntimeName.IN_PROCESS:
+        import orquestra.sdk._base._in_process_runtime
+        return orquestra.sdk._base._in_process_runtime.InProcessRuntime()
     elif config.runtime_name == RuntimeName.CE_REMOTE:
         return _build_ce_runtime(config, verbose)
     elif config.runtime_name == RuntimeName.QE_REMOTE:

@@ -152,21 +152,9 @@ class WorkflowRun:
             project_id: ID of the project for workflow - supported only on CE
 
         """
-        _config: RuntimeConfig
-        if isinstance(config, RuntimeConfig):
-            _config = config
-        elif isinstance(config, str):
-            _config = RuntimeConfig.load(config)
-        else:
-            raise TypeError(
-                f"'config' argument to `start_from_ir()` has unsupported "
-                f"type {type(config)}."
-            )
-        runtime: RuntimeInterface
-        if _config._runtime_name == "IN_PROCESS":
-            runtime = InProcessRuntime()
-        else:
-            runtime = _config._get_runtime()
+        _config = _resolve_config(config)
+
+        runtime = _config._get_runtime()
 
         assert runtime is not None
 
