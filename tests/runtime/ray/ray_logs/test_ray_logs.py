@@ -16,7 +16,7 @@ from orquestra.sdk._base._logs import _markers
 from orquestra.sdk._ray import _ray_logs
 
 DATA_DIR = Path(__file__).parent / "data"
-TEST_LEGACY_RAY_TEMP_DIR = DATA_DIR / "legacy_logs" / "ray_temp"
+TEST_RAY_TEMP = DATA_DIR / "legacy_logs" / "ray_temp"
 TEST_REDIRECTED_LOG_DIR = DATA_DIR / "redirected_logs" / "logs"
 
 
@@ -33,7 +33,7 @@ class TestIterUserLogPaths:
     @staticmethod
     def test_with_real_files():
         # Given
-        ray_temp = TEST_LEGACY_RAY_TEMP_DIR
+        ray_temp = TEST_RAY_TEMP
 
         # When
         paths_iter = _ray_logs.iter_user_log_paths(ray_temp)
@@ -59,7 +59,7 @@ class TestIterEnvLogPaths:
     @staticmethod
     def test_with_real_files():
         # Given
-        ray_temp = TEST_LEGACY_RAY_TEMP_DIR
+        ray_temp = TEST_RAY_TEMP
 
         # When
         paths_iter = _ray_logs.iter_env_log_paths(ray_temp)
@@ -387,7 +387,7 @@ class TestDirectLogReader:
     @staticmethod
     @pytest.fixture
     def reader():
-        return _ray_logs.DirectLogReader(ray_temp=TEST_LEGACY_RAY_TEMP_DIR)
+        return _ray_logs.DirectLogReader(ray_temp=TEST_RAY_TEMP)
 
     class TestGetWorkflowLogs:
         class TestLegacyPerTask:
@@ -449,7 +449,7 @@ class TestDirectLogReader:
                 assert logs.system == LogOutput(
                     out=[],
                     err=[
-                        f"WARNING: we don't parse system logs for the local runtime. The log files can be found in the directory '{TEST_LEGACY_RAY_TEMP_DIR}'"  # noqa: E501
+                        f"WARNING: we don't parse system logs for the local runtime. The log files can be found in the directory '{TEST_RAY_TEMP}'"  # noqa: E501
                     ],
                 )
 
@@ -462,7 +462,7 @@ class TestDirectLogReader:
                 assert logs.other == LogOutput(
                     out=[],
                     err=[
-                        f"WARNING: we don't parse uncategorized logs for the local runtime. The log files can be found in the directory '{TEST_LEGACY_RAY_TEMP_DIR}'"  # noqa: E501
+                        f"WARNING: we don't parse uncategorized logs for the local runtime. The log files can be found in the directory '{TEST_RAY_TEMP}'"  # noqa: E501
                     ],
                 )
 
