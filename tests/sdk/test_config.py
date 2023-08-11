@@ -16,7 +16,6 @@ where:
 The current solution for this is to focus on testing the layer that's close to
 the user. It's a lot easier to figure out appropriate behavior this way.
 """
-import typing as t
 from pathlib import Path
 
 import filelock
