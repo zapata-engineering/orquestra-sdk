@@ -53,7 +53,7 @@ class TestLogStreamType:
         assert log_stream_type == expected
 
 
-class TestLogs:
+class TestLogAccumulator:
     class TestAddByFile:
         @pytest.fixture
         def mock_file(self):
@@ -63,7 +63,7 @@ class TestLogs:
 
         def test_out(self, monkeypatch: pytest.MonkeyPatch, mock_file):
             type(mock_file).suffix = PropertyMock(return_value=".out")
-            logs = _models.Logs()
+            logs = _models.LogAccumulator()
             add_lines_by_stream = Mock(spec=logs.add_lines_by_stream)
             monkeypatch.setattr(logs, "add_lines_by_stream", add_lines_by_stream)
 
@@ -75,7 +75,7 @@ class TestLogs:
 
         def test_err(self, monkeypatch: pytest.MonkeyPatch, mock_file):
             type(mock_file).suffix = PropertyMock(return_value=".err")
-            logs = _models.Logs()
+            logs = _models.LogAccumulator()
             add_lines_by_stream = Mock(spec=logs.add_lines_by_stream)
             monkeypatch.setattr(logs, "add_lines_by_stream", add_lines_by_stream)
 
@@ -91,21 +91,21 @@ class TestLogs:
             return "some log line"
 
         def test_out(self, log_line: str):
-            logs = _models.Logs()
+            logs = _models.LogAccumulator()
 
             logs.add_line_by_stream(_models.LogStreamType.STDOUT, log_line)
 
             assert logs.out == [log_line]
 
         def test_err(self, log_line: str):
-            logs = _models.Logs()
+            logs = _models.LogAccumulator()
 
             logs.add_line_by_stream(_models.LogStreamType.STDERR, log_line)
 
             assert logs.err == [log_line]
 
         def test_append_to_out(self, log_line: str):
-            logs = _models.Logs()
+            logs = _models.LogAccumulator()
 
             logs.add_line_by_stream(_models.LogStreamType.STDOUT, log_line)
             logs.add_line_by_stream(_models.LogStreamType.STDOUT, log_line)
@@ -113,7 +113,7 @@ class TestLogs:
             assert logs.out == [log_line, log_line]
 
         def test_append_to_err(self, log_line: str):
-            logs = _models.Logs()
+            logs = _models.LogAccumulator()
 
             logs.add_line_by_stream(_models.LogStreamType.STDERR, log_line)
             logs.add_line_by_stream(_models.LogStreamType.STDERR, log_line)
@@ -126,21 +126,21 @@ class TestLogs:
             return ["line 1", "line 2"]
 
         def test_out(self, log_lines: List[str]):
-            logs = _models.Logs()
+            logs = _models.LogAccumulator()
 
             logs.add_lines_by_stream(_models.LogStreamType.STDOUT, log_lines)
 
             assert logs.out == log_lines
 
         def test_err(self, log_lines: List[str]):
-            logs = _models.Logs()
+            logs = _models.LogAccumulator()
 
             logs.add_lines_by_stream(_models.LogStreamType.STDERR, log_lines)
 
             assert logs.err == log_lines
 
         def test_append_to_out(self, log_lines: List[str]):
-            logs = _models.Logs()
+            logs = _models.LogAccumulator()
 
             logs.add_lines_by_stream(_models.LogStreamType.STDOUT, log_lines)
             logs.add_lines_by_stream(_models.LogStreamType.STDOUT, log_lines)
@@ -148,7 +148,7 @@ class TestLogs:
             assert logs.out == log_lines * 2
 
         def test_append_to_err(self, log_lines: List[str]):
-            logs = _models.Logs()
+            logs = _models.LogAccumulator()
 
             logs.add_lines_by_stream(_models.LogStreamType.STDERR, log_lines)
             logs.add_lines_by_stream(_models.LogStreamType.STDERR, log_lines)
@@ -156,9 +156,9 @@ class TestLogs:
             assert logs.err == log_lines * 2
 
     def test_access_empty_stdout(self):
-        logs = _models.Logs()
+        logs = _models.LogAccumulator()
         assert logs.out == []
 
     def test_access_empty_stderr(self):
-        logs = _models.Logs()
+        logs = _models.LogAccumulator()
         assert logs.err == []

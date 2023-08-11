@@ -14,7 +14,7 @@ from orquestra.sdk._base import _retry, serde
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base._logs import _regrouping
 from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
-from orquestra.sdk._base._logs._models import Logs, LogStreamType
+from orquestra.sdk._base._logs._models import LogAccumulator, LogStreamType
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.kubernetes.quantity import parse_quantity
 from orquestra.sdk.schema.configs import RuntimeConfiguration
@@ -497,10 +497,10 @@ class CERuntime(RuntimeInterface):
                 "Please report this as a bug."
             ) from e
 
-        task_logs = Logs()
-        env_logs = Logs()
-        other_logs = Logs()
-        system_logs = Logs()
+        task_logs = LogAccumulator()
+        env_logs = LogAccumulator()
+        other_logs = LogAccumulator()
+        system_logs = LogAccumulator()
 
         for m in messages:
             path = Path(m.ray_filename)

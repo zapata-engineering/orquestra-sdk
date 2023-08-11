@@ -22,7 +22,7 @@ class LogStreamType(Enum):
         return cls(file.suffix)
 
 
-class Logs:
+class LogAccumulator:
     def __init__(self):
         self._logs: Dict[LogStreamType, List[str]] = {}
 

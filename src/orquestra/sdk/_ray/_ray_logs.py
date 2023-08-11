@@ -9,7 +9,7 @@ from pathlib import Path
 
 from orquestra.sdk._base._logs import _markers, _regrouping
 from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
-from orquestra.sdk._base._logs._models import Logs, LogStreamType
+from orquestra.sdk._base._logs._models import LogAccumulator, LogStreamType
 from orquestra.sdk._base._services import redirected_logs_dir
 from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
@@ -172,7 +172,7 @@ class DirectLogReader:
         task_inv_id_allow_list: t.Optional[t.List[TaskInvocationId]] = None,
     ) -> t.Dict[TaskInvocationId, LogOutput]:
         log_paths = iter_user_log_paths(self._ray_temp)
-        logs_dict: t.Dict[TaskInvocationId, Logs] = {}
+        logs_dict: t.Dict[TaskInvocationId, LogAccumulator] = {}
         for log_path in log_paths:
             for logs_batch2, wf_run_id2, task_inv_id2 in iter_task_logs(log_path):
                 if wf_run_id2 != wf_run_id:
@@ -185,9 +185,9 @@ class DirectLogReader:
                     continue
 
                 stream = LogStreamType.by_file(log_path)
-                logs_dict.setdefault(task_inv_id2, Logs()).add_lines_by_stream(
-                    stream, logs_batch2
-                )
+                logs_dict.setdefault(
+                    task_inv_id2, LogAccumulator()
+                ).add_lines_by_stream(stream, logs_batch2)
 
         return {
             invocation: LogOutput(out=log_output.out, err=log_output.err)
@@ -199,7 +199,7 @@ class DirectLogReader:
         wf_run_id: WorkflowRunId,
         task_inv_id_allow_list: t.Optional[t.List[TaskInvocationId]] = None,
     ) -> t.Dict[TaskInvocationId, LogOutput]:
-        logs_dict: t.Dict[TaskInvocationId, Logs] = {}
+        logs_dict: t.Dict[TaskInvocationId, LogAccumulator] = {}
         wf_logs_dir = redirected_logs_dir() / wf_run_id
         if not wf_logs_dir.exists() or not wf_logs_dir.is_dir():
             raise FileNotFoundError("Workflow logs directory not found")
@@ -211,9 +211,9 @@ class DirectLogReader:
             ):
                 continue
 
-            logs_dict.setdefault(log_file_task_inv_id, Logs()).add_lines_from_file(
-                log_path
-            )
+            logs_dict.setdefault(
+                log_file_task_inv_id, LogAccumulator()
+            ).add_lines_from_file(log_path)
         return {
             invocation: LogOutput(out=log_output.out, err=log_output.err)
             for invocation, log_output in logs_dict.items()
