@@ -200,10 +200,10 @@ class DirectLogReader:
         task_inv_id_allow_list: t.Optional[t.List[TaskInvocationId]] = None,
     ) -> t.Dict[TaskInvocationId, LogOutput]:
         logs_dict: t.Dict[TaskInvocationId, LogAccumulator] = {}
-        wf_logs_dir = redirected_logs_dir() / wf_run_id
+        wf_logs_dir = redirected_logs_dir() / "wf" / wf_run_id
         if not wf_logs_dir.exists() or not wf_logs_dir.is_dir():
             raise FileNotFoundError("Workflow logs directory not found")
-        for log_path in wf_logs_dir.iterdir():
+        for log_path in (wf_logs_dir / "task").iterdir():
             log_file_task_inv_id = log_path.stem
             if (
                 task_inv_id_allow_list is not None
