@@ -154,8 +154,7 @@ EMPTY_CONFIG_FILE = RuntimeConfigurationFile(
 
 def _resolve_config_file() -> Optional[RuntimeConfigurationFile]:
     try:
-        with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME):
-            return _open_config_file()
+        return _open_config_file()
     except exceptions.ConfigFileNotFoundError:
         return None
 
@@ -465,7 +464,8 @@ def read_config(
             config matching `config_name` exists.
         orquestra.sdk.exceptions.ConfigFileNotFoundError: when no config file exists.
     """
-    config_file = _resolve_config_file()
+    with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME):
+        config_file = _resolve_config_file()
 
     if config_name in SPECIAL_CONFIG_NAME_DICT:
         return _handle_config_name_special_cases(config_name)

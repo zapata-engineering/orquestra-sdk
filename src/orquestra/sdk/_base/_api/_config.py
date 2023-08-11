@@ -368,7 +368,9 @@ class RuntimeConfig:
             # file, and the user has provided a new token.
             self.token = token
             _config.update_config(
-                config_name=self._name, new_runtime_options=new_runtime_options
+                config_name=self._name,
+                runtime_name=self._runtime_name,
+                new_runtime_options=new_runtime_options,
             )
             logging.info(
                 f"Updated authorisation token written to '{self._name}' "
