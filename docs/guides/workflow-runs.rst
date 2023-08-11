@@ -84,7 +84,7 @@ This will display a list of the saved configs. Once the desired config is identi
 Running Workflows with Configurations
 -------------------------------------
 
-Before running a workflow with a custom configuration, the confiuration must first be saved. This configuration can then be passed to the  ``run()`` method of the workflow definition to run the workflow:
+Before running a workflow with a custom configuration, the confiuration must first be saved. This configuration can then be passed to the ``run()`` method of the workflow definition to run the workflow:
 
 .. literalinclude:: ../examples/quickstart.py
     :start-after: >> Tutorial code snippet: run workflow with stored config - long version
