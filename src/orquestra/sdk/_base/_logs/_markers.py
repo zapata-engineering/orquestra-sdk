@@ -16,6 +16,9 @@ import traceback
 import typing as t
 from contextlib import contextmanager
 from dataclasses import dataclass
+from pathlib import Path
+
+import wurlitzer
 
 from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
@@ -24,6 +27,30 @@ from .. import _dates
 
 ORQ_MARKER_PREFIX = "ORQ-MARKER:"
 ORQ_MARKER_PATTERN = re.compile(re.escape(ORQ_MARKER_PREFIX) + r"(.+)")
+
+
+UNKNOWN_WF_RUN_ID = "unknown-wf-run-id"
+UNKNOWN_TASK_INV_ID = "unknown-task-inv-id"
+
+
+@contextmanager
+def redirected_io(
+    logs_dir: Path,
+    wf_run_id: t.Optional[WorkflowRunId],
+    task_inv_id: t.Optional[TaskInvocationId],
+):
+    wf_run_id = wf_run_id or UNKNOWN_WF_RUN_ID
+    task_inv_id = task_inv_id or UNKNOWN_TASK_INV_ID
+
+    log_path = logs_dir / "wf" / wf_run_id / "task"
+    out_path = log_path / f"{task_inv_id}.out"
+    err_path = log_path / f"{task_inv_id}.err"
+
+    log_path.mkdir(parents=True, exist_ok=True)
+
+    with open(out_path, "a") as out_f, open(err_path, "a") as err_f:
+        with wurlitzer.pipes(stdout=out_f, stderr=err_f):
+            yield
 
 
 @dataclass(frozen=True)
