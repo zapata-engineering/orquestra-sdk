@@ -33,7 +33,7 @@ Note that the steps following the import of the workflow are agnostic to whether
 Results, Logs, and Artifacts
 ----------------------------
 
-Interacting with workflow runs is made possible by the WorkflowRun object and its methods. WorkflowRun objects are not intended to be instantiated directly, but are returned when a workflow run is created (i.e. when the ``run()`` metho of a workflow definition is called), or from the ``WorkflowRun.by_id()`` class method. The former case provides WorkflowRun objects for runs that were created previously in the same process, the creates WorkflowRun objects for runs created in a separate process. Runs can be identified solely by their IDs, allowing you to reconstruct the WorkflowRun of a previously started workflow as long as you know the run ID. The following example demonstrates how a separate process can get the results of a workflow run.
+Interacting with workflow runs is made possible by the WorkflowRun object and its methods. WorkflowRun objects are not intended to be instantiated directly, but are returned when a workflow run is created (i.e. when the ``run()`` method of a workflow definition is called), or from the ``WorkflowRun.by_id()`` class method. The former case provides WorkflowRun objects for runs that were created previously in the same process, the creates WorkflowRun objects for runs created in a separate process. Runs can be identified solely by their IDs, allowing you to reconstruct the WorkflowRun of a previously started workflow as long as you know the run ID. The following example demonstrates how a separate process can get the results of a workflow run.
 
 .. literalinclude:: ../examples/tests/test_local_ray.py
     :start-after: def execute_workflow():
