@@ -30,6 +30,7 @@ def build_runtime_from_config(
         )
     elif config.runtime_name == RuntimeName.IN_PROCESS:
         import orquestra.sdk._base._in_process_runtime
+
         return orquestra.sdk._base._in_process_runtime.InProcessRuntime()
     elif config.runtime_name == RuntimeName.CE_REMOTE:
         return _build_ce_runtime(config, verbose)
