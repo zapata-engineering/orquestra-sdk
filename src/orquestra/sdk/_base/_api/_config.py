@@ -41,9 +41,6 @@ class RuntimeConfig:
 
         # Create the workflow run and begin its execution
         run = wf.run(config_in_process)
-
-        # Alternatively, to create and start in one step:
-        run = wf.run(config_in_process)
     """
 
     def __init__(
