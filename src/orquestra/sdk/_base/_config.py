@@ -8,7 +8,7 @@ See docs/runtime_configurations.rst for more information.
 import os
 import pathlib
 from pathlib import Path
-from typing import Any, List, Mapping, Optional, Tuple, Union
+from typing import Any, List, Mapping, Optional, Union
 from urllib.parse import ParseResult, urlparse
 
 import filelock
@@ -159,7 +159,7 @@ def _resolve_config_file() -> Optional[RuntimeConfigurationFile]:
         return None
 
 
-def _resolve_new_config_file(
+def _save_new_config_file(
     resolved_config_name,
     resolved_runtime_name,
     resolved_runtime_options,
@@ -179,7 +179,8 @@ def _resolve_new_config_file(
             configs={},
         )
     new_config_file.configs[resolved_config_name] = new_config_entry
-    return new_config_file
+
+    _save_config_file(new_config_file)
 
 
 def _resolve_auto_config(config_name) -> RuntimeConfiguration:
@@ -233,7 +234,6 @@ def _handle_config_name_special_cases(config_name: str) -> RuntimeConfiguration:
 
 def _resolve_runtime_options_for_writing(
     new_runtime_options: Optional[Mapping[str, Any]],
-    resolved_config_name: str,
     resolved_prev_config_entry: Optional[RuntimeConfiguration],
 ) -> dict:
     """
@@ -241,32 +241,26 @@ def _resolve_runtime_options_for_writing(
 
     If there are previously existing runtime options, updates the old set with the new
     values.
-
-    If the config name is one of the special cases, returns the hardcoded runtime
-    options for that case.
     """
-    if resolved_config_name in SPECIAL_CONFIG_NAME_DICT:
-        return _handle_config_name_special_cases(resolved_config_name).runtime_options
-    else:
-        return {
-            **(
-                # There are existing runtime options.
-                {**resolved_prev_config_entry.runtime_options}
-                if resolved_prev_config_entry is not None
-                else {}
-            ),
-            **(
-                # User wants to add new options.
-                {**new_runtime_options}
-                if new_runtime_options is not None
-                else {}
-            ),
-        }
+    return {
+        **(
+            # There are existing runtime options.
+            {**resolved_prev_config_entry.runtime_options}
+            if resolved_prev_config_entry is not None
+            else {}
+        ),
+        **(
+            # User wants to add new options.
+            {**new_runtime_options}
+            if new_runtime_options is not None
+            else {}
+        ),
+    }
 
 
 def _validate_runtime_options(
     runtime_name: RuntimeName,
-    runtime_options: Optional[Mapping[str, Any]] = None,
+    runtime_options: Mapping[str, Any],
 ) -> dict:
     """
     Check that the combination of configuration options is valid.
@@ -274,18 +268,11 @@ def _validate_runtime_options(
     Args:
         runtime_name: the intended runtime.
         runtime_options: the options to be checked.
-        require_all: If True, options are valid only if every option required for this
-            runtime is provided. If False, options are valid as long as each option
-            relates to this runtime. Defaults to False.
 
     Raises:
         RuntimeConfigError: when one or more runtime configuration options do not
             relate to the specified runtime.
     """
-    # Nothing to check, do nothing.
-    if runtime_options is None or len(runtime_options) == 0:
-        return {}
-
     # Get list of options for this runtime
     permitted_options: list
     if runtime_name == RuntimeName.RAY_LOCAL:
@@ -333,26 +320,18 @@ def write_config(
         runtime_name: The runtime to which this configuration relates.
         runtime_options: The runtime options contained within this configuration.
     """
-    # Note: we allow config_names of None rather than simply making config_name an
-    # optional parameter so that users have to _explicitely_ decline to provide a name
-    # (and thereby activate the name generation) by passing None rather than
-    # implicitly by omitting it.
-
     # Check that the runtime name is valid and that the runtime options relate to it.
-
     resolved_runtime_options = _validate_runtime_options(runtime_name, runtime_options)
 
     with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME):
         resolved_prev_config_file = _resolve_config_file()
 
-        new_config_file = _resolve_new_config_file(
+        _save_new_config_file(
             config_name,
             runtime_name,
             resolved_runtime_options,
             resolved_prev_config_file,
         )
-
-        _save_config_file(new_config_file)
 
 
 def update_config(
@@ -384,35 +363,29 @@ def update_config(
             - if one or more runtime options are not valid for this runtime.
     """
     with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME):
-        # We need to retain a lock because we save the config file at the end
-        # of this function.
+        config_file = _resolve_config_file()
 
-        resolved_prev_config_file = _resolve_config_file()
-
-        if resolved_prev_config_file is not None:
-            resolved_prev_config_entry = resolved_prev_config_file.configs.get(
-                config_name
-            )
-        else:
-            resolved_prev_config_entry = EMPTY_CONFIG_FILE.configs.get(config_name)
-
-        resolved_runtime_options = _validate_runtime_options(
-            runtime_name,
-            _resolve_runtime_options_for_writing(
-                new_runtime_options,
-                config_name,
-                resolved_prev_config_entry,
-            ),
+        resolved_prev_config_entry = (
+            config_file.configs.get(config_name)
+            if config_file
+            else EMPTY_CONFIG_FILE.configs.get(config_name)
         )
 
-        new_config_file = _resolve_new_config_file(
+        resolved_options: dict = _resolve_runtime_options_for_writing(
+            new_runtime_options,
+            resolved_prev_config_entry,
+        )
+
+        resolved_runtime_options = _validate_runtime_options(
+            runtime_name, resolved_options
+        )
+
+        _save_new_config_file(
             config_name,
             runtime_name,
             resolved_runtime_options,
-            resolved_prev_config_file,
+            config_file,
         )
-
-        _save_config_file(new_config_file)
 
 
 def generate_config_name(
@@ -494,7 +467,6 @@ def read_config_names() -> List[str]:
             return [name for name in config_file.configs]
     except (
         exceptions.ConfigFileNotFoundError,
-        FileNotFoundError,
         ValidationError,
     ):
         return []

@@ -24,41 +24,9 @@ import pytest
 
 import orquestra.sdk.exceptions as exceptions
 from orquestra.sdk._base import _config
-from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
+from orquestra.sdk.schema.configs import RuntimeName
 
 from .data.configs import TEST_CONFIG_JSON
-
-
-class TestResolveRuntimeOptionsForWriting:
-    @staticmethod
-    def test_returns_builtins_if_name_is_builtin():
-        new_runtime_options: t.Dict = {}
-        config_name = _config.BUILT_IN_CONFIG_NAME
-        stub_prev_config = RuntimeConfiguration(
-            config_name="test_config", runtime_name="RAY_LOCAL", runtime_options={}
-        )
-
-        runtime_options = _config._resolve_runtime_options_for_writing(
-            new_runtime_options,
-            config_name,
-            stub_prev_config,
-        )
-
-        assert runtime_options == _config.LOCAL_RUNTIME_CONFIGURATION.runtime_options
-
-
-class TestResolveRuntimeNameForWriting:
-    @staticmethod
-    def test_previously_stored():
-        stub_prev_config = RuntimeConfiguration(
-            config_name="test_config", runtime_name="RAY_LOCAL", runtime_options={}
-        )
-
-        resolved_runtime_name = _config._resolve_runtime_name_for_writing(
-            None, stub_prev_config, "test_config"
-        )
-
-        assert resolved_runtime_name == stub_prev_config.runtime_name
 
 
 class TestSaveOrUpdate:
@@ -69,34 +37,17 @@ class TestSaveOrUpdate:
             _config.save_or_update(config_name, "w/e", {})
 
 
-class TestResolveConfigFileForReading:
+class TestResolveConfigFile:
     @staticmethod
     def test_returns_none_for_nonexistant_file_default_location(patch_config_location):
-        assert _config._resolve_config_file_for_reading() is None
+        assert _config._resolve_config_file() is None
 
     @staticmethod
     def test_returns_none_for_nonexistant_file_custom_location(
         tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ):
         monkeypatch.setenv("ORQ_CONFIG_PATH", str(tmp_path / "test.file"))
-        assert _config._resolve_config_file_for_reading() is None
-
-
-class TestResolveConfigEntryForReading:
-    @staticmethod
-    def test_returns_builtins():
-        assert (
-            _config._resolve_config_entry_for_reading(
-                _config.BUILT_IN_CONFIG_NAME, None
-            )
-            == _config.LOCAL_RUNTIME_CONFIGURATION
-        )
-
-    @staticmethod
-    def test_raises_exception_if_config_file_not_found(patch_config_location):
-        with pytest.raises(exceptions.ConfigFileNotFoundError) as exc_info:
-            _config._resolve_config_entry_for_reading("test_config", None)
-        assert "Could not locate config file." in str(exc_info)
+        assert _config._resolve_config_file() is None
 
 
 class TestGenerateConfigName:
@@ -201,7 +152,7 @@ class TestValidateRuntimeOptions:
             ],
         )
         def test_returns_empty_dict_for_missing_input(runtime):
-            assert (_config._validate_runtime_options(runtime, None)) == {}
+            assert (_config._validate_runtime_options(runtime, {})) == {}
 
     class TestFailsForBadOptions:
         @staticmethod

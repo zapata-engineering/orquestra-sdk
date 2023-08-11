@@ -334,11 +334,9 @@ class RuntimeConfig:
             SyntaxError: When this method is called for a runtime configuration that
                 does not use an authorisation token.
             ConfigNameNotFoundError: When there is no stored token to update.
-            UnsavedConfigChangesError: When there are unsaved changes to the token that
-                clash with the provided token
         """
 
-        if self._runtime_name not in [RuntimeName.CE_REMOTE]:
+        if self._runtime_name != RuntimeName.CE_REMOTE:
             raise SyntaxError(
                 "This runtime configuration does not require an authorization token. "
                 "Nothing has been saved."
@@ -351,38 +349,21 @@ class RuntimeConfig:
         old_config = self._config_from_runtimeconfiguration(
             _config.read_config(self._name)
         )
-        if self._runtime_name != old_config._runtime_name:
-            raise ConfigNameNotFoundError(
-                f"A runtime configuration with name {self._name} exists, but relates to"
-                " a different runtime ("
-                f"this config: {self._runtime_name}, "
-                f"saved config: {old_config._runtime_name}"
-                "). Nothing has been saved. Please check the config name and try again."
-            )
 
         new_runtime_options: dict = old_config._get_runtime_options()
         new_runtime_options["token"] = token
 
-        if token != getattr(self, "token"):
-            # This is the most expected scenario - the RuntimeConfig matches the
-            # file, and the user has provided a new token.
-            self.token = token
-            _config.update_config(
-                config_name=self._name,
-                runtime_name=self._runtime_name,
-                new_runtime_options=new_runtime_options,
-            )
-            logging.info(
-                f"Updated authorisation token written to '{self._name}' "
-                f"in file '{self._config_save_file}'. "
-                "The new token is ready to be used in this runtime configuration."
-            )
-        else:  # token == self.token
-            # The new token, and stored token are all the same, nothing to do.
-            logging.info(
-                f"The specified token is already stored in '{self._name}' "
-                f"in file '{self._config_save_file}'."
-            )
+        self.token = token
+        _config.update_config(
+            config_name=self._name,
+            runtime_name=self._runtime_name,
+            new_runtime_options=new_runtime_options,
+        )
+        logging.info(
+            f"Updated authorisation token written to '{self._name}' "
+            f"in file '{self._config_save_file}'. "
+            "The new token is ready to be used in this runtime configuration."
+        )
 
 
 def migrate_config_file():
