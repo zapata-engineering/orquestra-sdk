@@ -28,6 +28,10 @@ jobs:
       matrix:
         os: ["ubuntu-latest", "windows-latest"]
         python: ["3.8", "3.9"]
+        include:
+          - os: "ubuntu-latest"
+            python: "3.9"
+            print_coverage: true
 
     timeout-minutes: 25
 
@@ -55,6 +59,7 @@ jobs:
         run: make coverage
 
       - name: Comment with code coverage
+        if: matrix.print_coverage
         uses: zapatacomputing/command-pr-comment@baca4fb9246eaaee3e47f35f296764acc394fae7
         with:
           command: make github-actions-coverage-report
