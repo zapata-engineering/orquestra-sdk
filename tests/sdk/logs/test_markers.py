@@ -10,7 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest.mock import Mock, create_autospec
+from unittest.mock import create_autospec
 
 import pytest
 
