@@ -34,7 +34,6 @@ def message():
     return "<log message>"
 
 
-@pytest.mark.requires_capture_disabled
 class TestLogRedirection:
     @pytest.fixture
     def log_dir(self):
