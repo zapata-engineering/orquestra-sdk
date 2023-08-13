@@ -10,8 +10,10 @@ import subprocess
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import create_autospec
 
 import pytest
+import wurlitzer
 
 from orquestra.sdk._base import _dates
 from orquestra.sdk._base._logs import _markers
@@ -34,12 +36,30 @@ def message():
     return "<log message>"
 
 
-class TestLogRedirection:
-    @pytest.fixture
-    def log_dir(self):
-        with TemporaryDirectory() as tmp_dir:
-            yield Path(tmp_dir)
+@pytest.fixture
+def log_dir():
+    with TemporaryDirectory() as tmp_dir:
+        yield Path(tmp_dir)
 
+
+def test_windows_skipped(
+    monkeypatch: pytest.MonkeyPatch, log_dir: Path, wf_run_id: str, task_inv_id: str
+):
+    wurlitzer_mock = create_autospec(wurlitzer.pipes)
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setattr(wurlitzer, "pipes", wurlitzer_mock)
+
+    with _markers.redirected_io(log_dir, wf_run_id, task_inv_id):
+        pass
+
+    wurlitzer_mock.assert_not_called()
+    assert not (log_dir / "wf").exists()
+
+
+@pytest.mark.skipif(
+    sys.platform.startswith("win32"), reason="Wurlitzer doesn't support Windows"
+)
+class TestLogRedirection:
     def test_stdout_redirected(
         self,
         capsys: pytest.CaptureFixture,

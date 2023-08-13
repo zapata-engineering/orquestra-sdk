@@ -12,6 +12,7 @@ JSON: we're using prefix markers.
 """
 import json
 import re
+import sys
 import traceback
 import typing as t
 from contextlib import contextmanager
@@ -42,6 +43,12 @@ def redirected_io(
 ):
     wf_run_id = wf_run_id or UNKNOWN_WF_RUN_ID
     task_inv_id = task_inv_id or UNKNOWN_TASK_INV_ID
+
+    # wurlitzer doesn't support Windows.
+    # Instead, we turn this into a no-op
+    if sys.platform.startswith("win32"):
+        yield
+        return
 
     log_path = logs_dir / "wf" / wf_run_id / "task"
     out_path = log_path / f"{task_inv_id}.out"
