@@ -47,7 +47,7 @@ def log_dir():
 def test_windows_skipped(
     monkeypatch: pytest.MonkeyPatch, log_dir: Path, wf_run_id: str, task_inv_id: str
 ):
-    import wurlitzer
+    import wurlitzer  # type: ignore
 
     wurlitzer_mock = create_autospec(wurlitzer.pipes)
     monkeypatch.setattr(sys, "platform", "win32")
