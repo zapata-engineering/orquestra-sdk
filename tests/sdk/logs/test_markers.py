@@ -10,10 +10,9 @@ import subprocess
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest.mock import create_autospec
+from unittest.mock import Mock, create_autospec
 
 import pytest
-import wurlitzer
 
 from orquestra.sdk._base import _dates
 from orquestra.sdk._base._logs import _markers
@@ -42,9 +41,14 @@ def log_dir():
         yield Path(tmp_dir)
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("win32"), reason="Wurlitzer doesn't support Windows"
+)
 def test_windows_skipped(
     monkeypatch: pytest.MonkeyPatch, log_dir: Path, wf_run_id: str, task_inv_id: str
 ):
+    import wurlitzer
+
     wurlitzer_mock = create_autospec(wurlitzer.pipes)
     monkeypatch.setattr(sys, "platform", "win32")
     monkeypatch.setattr(wurlitzer, "pipes", wurlitzer_mock)

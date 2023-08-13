@@ -19,9 +19,6 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-# wurlitzer does not have type annotations
-import wurlitzer  # type: ignore
-
 from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
@@ -46,9 +43,15 @@ def redirected_io(
 
     # wurlitzer doesn't support Windows.
     # Instead, we turn this into a no-op
+    # We need to yield to match the generator interface.
     if sys.platform.startswith("win32"):
         yield
         return
+
+    # We need to defer this import until after we're sure Windows cannot
+    # reach it.
+    # wurlitzer does not have type annotations
+    import wurlitzer  # type: ignore
 
     log_path = logs_dir / "wf" / wf_run_id / "task"
     out_path = log_path / f"{task_inv_id}.out"
