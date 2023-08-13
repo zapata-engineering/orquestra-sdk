@@ -50,7 +50,11 @@ def redirected_io(
 
     with open(out_path, "a") as out_f, open(err_path, "a") as err_f:
         with wurlitzer.pipes(stdout=out_f, stderr=err_f):
-            yield
+            try:
+                yield
+            except Exception as e:
+                traceback.print_exception(type(e), e, e.__traceback__)
+                raise
 
 
 @dataclass(frozen=True)
