@@ -5,20 +5,21 @@
 Specialized log lines we emit in Orquestra logs.
 
 
-``TaskStartMarker`` and ``TaskEndMarker`` are record types that hold the information we
-emit in the log markers. They're dataclasses and not pydantic models because we're
-not just using plain JSON: we're using prefix markers.
+``TaskStartMarker`` and ``TaskEndMarker`` are record types that were previously
+used to hold the information we emit in the log markers.
+They're dataclasses and not pydantic models because we're not just using plain
+JSON: we're using prefix markers.
 """
 import json
 import re
-import sys
 import traceback
 import typing as t
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-import wurlitzer
+# wurlitzer does not have type annotations
+import wurlitzer  # type: ignore
 
 from orquestra.sdk.schema.ir import TaskInvocationId
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
@@ -59,6 +60,10 @@ def redirected_io(
 
 @dataclass(frozen=True)
 class TaskStartMarker:
+    """
+    Deprecated: Newer workflows do not use markers.
+    """
+
     event = "task_start"
     wf_run_id: WorkflowRunId
     task_inv_id: TaskInvocationId
@@ -77,6 +82,10 @@ class TaskStartMarker:
 
 @dataclass(frozen=True)
 class TaskEndMarker:
+    """
+    Deprecated: Newer workflows do not use markers.
+    """
+
     event = "task_end"
     wf_run_id: t.Optional[WorkflowRunId]
     task_inv_id: t.Optional[TaskInvocationId]
@@ -98,7 +107,9 @@ Marker = t.Union[TaskStartMarker, TaskEndMarker]
 
 def parse_line(line: str) -> t.Optional[Marker]:
     """
-    Attemps to interpret a single log line as a marker.
+    Deprecated: Newer workflows do not use markers.
+
+    Attempts to interpret a single log line as a marker.
 
     Returns:
         - Deserialized marker object with the marker event's content.
