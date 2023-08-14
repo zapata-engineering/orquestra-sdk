@@ -5,6 +5,7 @@
 Translates IR workflow def into a Ray workflow.
 """
 import os
+import time
 import typing as t
 from functools import singledispatch
 from pathlib import Path
@@ -214,7 +215,17 @@ def _make_ray_dag_node(
                     deserialize=serialization,
                 )
 
-                wrapped_return = wrapped(*inner_args, **inner_kwargs)
+                try:
+                    wrapped_return = wrapped(*inner_args, **inner_kwargs)
+                except Exception:
+                    assert wf_run_id is not None
+                    assert task_inv_id is not None
+                    _client.save_task_postrun_metadata(
+                        wf_run_id,
+                        task_inv_id,
+                        {"end_time": time.time(), "failed": True},
+                    )
+                    raise
 
                 packed: responses.WorkflowResult = (
                     serde.result_from_artifact(wrapped_return, ir.ArtifactFormat.AUTO)

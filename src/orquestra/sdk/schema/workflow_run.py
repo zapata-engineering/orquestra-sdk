@@ -35,6 +35,15 @@ class State(enum.Enum):
     def _missing_(cls, _):
         return cls.UNKNOWN
 
+    def is_completed(self):
+        return self in (
+            self.SUCCEEDED,
+            self.TERMINATED,
+            self.FAILED,
+            self.ERROR,
+            self.KILLED,
+        )
+
 
 class RunStatus(BaseModel):
     state: State
