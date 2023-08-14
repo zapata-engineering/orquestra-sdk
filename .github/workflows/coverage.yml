@@ -28,6 +28,9 @@ jobs:
       matrix:
         os: ["ubuntu-latest", "windows-latest"]
         python: ["3.8", "3.9"]
+        # Extend the matrix with a job that prints coverage.
+        # Because { os: "ubuntu-latest", python: "3.9" } is already in the matrix,
+        # print_coverage: true is added to that job.
         include:
           - os: "ubuntu-latest"
             python: "3.9"
@@ -59,6 +62,8 @@ jobs:
         run: make coverage
 
       - name: Comment with code coverage
+        # Conditionally run this step to prevent multiple comments
+        # Occasionally, multiple jobs could post at the same time.
         if: matrix.print_coverage
         uses: zapatacomputing/command-pr-comment@baca4fb9246eaaee3e47f35f296764acc394fae7
         with:
