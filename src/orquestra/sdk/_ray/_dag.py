@@ -129,7 +129,7 @@ def _workflow_state_from_ray_meta(
         for task_meta in ray_task_metas
     )
 
-    if _client.WorkflowStatus.FAILED:
+    if wf_status == _client.WorkflowStatus.FAILED:
         # If Ray said the workflow has failed, we'll check to see if all them are
         # in a completed state.
         if all(tasks_completed):
