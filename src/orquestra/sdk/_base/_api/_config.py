@@ -40,10 +40,6 @@ class RuntimeConfig:
         config_ce = RuntimeConfig.ce()
 
         # Create the workflow run and begin its execution
-        run = wf.prepare(config_in_process)
-        run.start()
-
-        # Alternatively, to create and start in one step:
         run = wf.run(config_in_process)
     """
 
@@ -134,7 +130,7 @@ class RuntimeConfig:
     ) -> "RuntimeConfig":
         """
         Config for running workflows on Ray. Makes the SDK connect to a Ray
-        cluster when you .prepare() the workflow. Requires starting the Ray
+        cluster when you .run() the workflow. Requires starting the Ray
         cluster separately in the background via 'ray start --head
         --storage=...'.
         """
