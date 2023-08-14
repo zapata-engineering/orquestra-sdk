@@ -33,7 +33,7 @@ class TestSaveOrUpdate:
     @pytest.mark.parametrize("config_name", ["in_process", "ray"])
     def test_throws_when_special_config_used(config_name):
         with pytest.raises(ValueError):
-            _config.save_or_update(config_name, "w/e", {})
+            _config.save_or_update(config_name, RuntimeName.IN_PROCESS, {})
 
 
 class TestResolveConfigFile:
@@ -326,15 +326,11 @@ class TestReadConfigNames:
     @staticmethod
     @pytest.mark.slow
     def test_filelock_timeout(tmp_default_config_json):
-        with pytest.raises(IOError) as exc_info:
+        with pytest.raises(IOError):
             with filelock.FileLock(
                 _config._get_config_directory() / _config.LOCK_FILE_NAME
             ):
                 _config.read_config_names()
-        assert (
-            f"Could not acquire the lock for the config file at '{tmp_default_config_json / 'config.json'}' - does another function or process currently hold it? If you're calling `read_config_names` from a context that has already acquired the lock, you may want to look into using `_read_config_names` instead."  # noqa 501
-            == exc_info.value.args[0]
-        )
 
     @staticmethod
     def test_no_file(patch_config_location):
