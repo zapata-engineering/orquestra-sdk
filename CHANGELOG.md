@@ -5,6 +5,7 @@
 🚨 *Breaking Changes*
 - QE support has been removed.
 - All log return types have been changes from `Sequence[str]` to `LogOutput` which contains an `out` and an `err` property for the standard out and standard error, respectively.
+- Ray task logs are not supported on Windows.
 
 🔥 *Features*
 
@@ -17,6 +18,7 @@
 
 💅 *Improvements*
 * `orq wf *` and `orq task *` commands (other than `orq wf submit`) won't prompt for project parameter anymore, as it was ignored anyway
+* Task logs are stored in individual files vs being correlated with markers.
 
 🥷 *Internal*
 
