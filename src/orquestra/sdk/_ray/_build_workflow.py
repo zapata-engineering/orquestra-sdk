@@ -194,7 +194,7 @@ def _make_ray_dag_node(
             # TODO: make the IDs required and raise an error if they're not present.
             # https://zapatacomputing.atlassian.net/browse/ORQSDK-530
             wf_run_id, task_inv_id, _ = get_current_ids()
-            with _markers.redirected_io(
+            with _markers.capture_logs(
                 logs_dir=_services.redirected_logs_dir(),
                 wf_run_id=wf_run_id,
                 task_inv_id=task_inv_id,
