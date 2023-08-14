@@ -32,22 +32,77 @@ UNKNOWN_WF_RUN_ID = "unknown-wf-run-id"
 UNKNOWN_TASK_INV_ID = "unknown-task-inv-id"
 
 
+def print_start(wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
+    """
+    Emits "task start" marker to stdout and stderr.
+    Required for task-log correlation.
+    """
+    now = _dates.now()
+    marker = TaskStartMarker(
+        wf_run_id=wf_run_id, task_inv_id=task_inv_id, timestamp=now
+    )
+    print(marker.line)
+    print(marker.line, file=sys.stderr)
+
+
+def print_end(wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
+    """
+    Emits "task end" marker to stdout and stderr.
+    Required for task-log correlation.
+    """
+    now = _dates.now()
+    marker = TaskEndMarker(wf_run_id=wf_run_id, task_inv_id=task_inv_id, timestamp=now)
+    print(marker.line)
+    print(marker.line, file=sys.stderr)
+
+
 @contextmanager
-def redirected_io(
+def capture_logs(
     logs_dir: Path,
     wf_run_id: t.Optional[WorkflowRunId],
     task_inv_id: t.Optional[TaskInvocationId],
 ):
-    wf_run_id = wf_run_id or UNKNOWN_WF_RUN_ID
-    task_inv_id = task_inv_id or UNKNOWN_TASK_INV_ID
+    _wf_run_id = wf_run_id or UNKNOWN_WF_RUN_ID
+    _task_inv_id = task_inv_id or UNKNOWN_TASK_INV_ID
 
     # wurlitzer doesn't support Windows.
-    # Instead, we turn this into a no-op
+    # Instead, we fall back to the old marker implementation
     # We need to yield to match the generator interface.
     if sys.platform.startswith("win32"):
-        yield
-        return
+        with printed_task_markers(_wf_run_id, _task_inv_id):
+            yield
+    else:
+        with redirected_io(logs_dir, _wf_run_id, _task_inv_id):
+            yield
 
+
+@contextmanager
+def printed_task_markers(
+    wf_run_id: WorkflowRunId,
+    task_inv_id: TaskInvocationId,
+):
+    """
+    Deprecated: Newer workflows on Linux/macOS do not use this feature
+
+    Emits "task start" and "task end" markers before and after the yielded block.
+    Logs exceptions to stderr and rethrows.
+    """
+    print_start(wf_run_id, task_inv_id)
+    try:
+        yield
+    except Exception as e:
+        traceback.print_exception(type(e), e, e.__traceback__)
+        raise
+    finally:
+        print_end(wf_run_id, task_inv_id)
+
+
+@contextmanager
+def redirected_io(
+    logs_dir: Path,
+    wf_run_id: WorkflowRunId,
+    task_inv_id: TaskInvocationId,
+):
     # We need to defer this import until after we're sure Windows cannot
     # reach it.
     # wurlitzer does not have type annotations
@@ -71,7 +126,7 @@ def redirected_io(
 @dataclass(frozen=True)
 class TaskStartMarker:
     """
-    Deprecated: Newer workflows do not use markers.
+    Deprecated: Newer workflows on Linux/macOS do not use this feature
     """
 
     event = "task_start"
@@ -93,7 +148,7 @@ class TaskStartMarker:
 @dataclass(frozen=True)
 class TaskEndMarker:
     """
-    Deprecated: Newer workflows do not use markers.
+    Deprecated: Newer workflows on Linux/macOS do not use this feature
     """
 
     event = "task_end"
@@ -117,7 +172,7 @@ Marker = t.Union[TaskStartMarker, TaskEndMarker]
 
 def parse_line(line: str) -> t.Optional[Marker]:
     """
-    Deprecated: Newer workflows do not use markers.
+    Deprecated: Newer workflows on Linux/macOS do not use this feature
 
     Attempts to interpret a single log line as a marker.
 

@@ -41,23 +41,37 @@ def log_dir():
         yield Path(tmp_dir)
 
 
-@pytest.mark.skipif(
-    sys.platform.startswith("win32"), reason="Wurlitzer doesn't support Windows"
+@pytest.mark.parametrize(
+    "platform, redirected",
+    (
+        ("win32", False),
+        ("darwin", True),
+        ("linux", True),
+    ),
 )
-def test_windows_skipped(
-    monkeypatch: pytest.MonkeyPatch, log_dir: Path, wf_run_id: str, task_inv_id: str
+def test_platform_correct_log_implementation(
+    monkeypatch: pytest.MonkeyPatch,
+    log_dir: Path,
+    wf_run_id: str,
+    task_inv_id: str,
+    platform: str,
+    redirected: bool,
 ):
-    import wurlitzer  # type: ignore
+    redirected_logs = create_autospec(_markers.redirected_io)
+    marker_logs = create_autospec(_markers.printed_task_markers)
+    monkeypatch.setattr(sys, "platform", platform)
+    monkeypatch.setattr(_markers, "redirected_io", redirected_logs)
+    monkeypatch.setattr(_markers, "printed_task_markers", marker_logs)
 
-    wurlitzer_mock = create_autospec(wurlitzer.pipes)
-    monkeypatch.setattr(sys, "platform", "win32")
-    monkeypatch.setattr(wurlitzer, "pipes", wurlitzer_mock)
-
-    with _markers.redirected_io(log_dir, wf_run_id, task_inv_id):
+    with _markers.capture_logs(log_dir, wf_run_id, task_inv_id):
         pass
 
-    wurlitzer_mock.assert_not_called()
-    assert not (log_dir / "wf").exists()
+    if redirected:
+        redirected_logs.assert_called_with(log_dir, wf_run_id, task_inv_id)
+        marker_logs.assert_not_called()
+    else:
+        redirected_logs.assert_not_called()
+        marker_logs.assert_called_with(wf_run_id, task_inv_id)
 
 
 @pytest.mark.skipif(
