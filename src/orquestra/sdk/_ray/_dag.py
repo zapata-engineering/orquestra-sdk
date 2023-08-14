@@ -120,12 +120,12 @@ def _workflow_state_from_ray_meta(
     # We look at the tasks and check that all of them are in a completed
     # state.
     tasks_completed = (
-        _task_state_from_ray_meta(
+            (state := _task_state_from_ray_meta(
             wf_status,
             task_meta["stats"].get("start_time"),
             task_meta["stats"].get("end_time"),
             task_meta["stats"].get("failed"),
-        ).is_completed()
+        )).is_completed() or state == State.WAITING
         for task_meta in ray_task_metas
     )
 
