@@ -92,7 +92,7 @@ If workflow resources are not provided but task resources are provided for some 
 the overall resource requirements from the aggregated requirements of individual tasks.
 If no task or workflow resources are not provided, Compute Engine will provision one node with 2 CPUs, 2GB memory and no GPUs by default.
 
-When you request more than one nodes as part of your workflow resources, each node will have the same amount of resources that you have specified in your workflow resources.
+When you request more than one node as part of your workflow resources, each node will have the same amount of resources that you have specified in your workflow resources.
 New nodes will get created as the tasks start to run and request resources. Existing ones will be destroyed if they become idle.
 
 Tweaking the resource request may be required when your tasks spawn additional actors or remote functions to avoid deadlock, see below.
@@ -162,6 +162,6 @@ or when the task is invoked, with the ``.with_resources()`` method:
 
 My Tasks Are Stuck In WAITING State When Running on Compute Engine
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Resources that you request for your workflow needs to be larger than what you request for any individual task or the
+The resources that you request for your workflow need to be larger than what you request for any individual task or the
 total amount of resources for a group of tasks that run at the same time. Make sure you request enough resources for
 your workflow.
