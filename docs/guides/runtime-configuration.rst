@@ -4,7 +4,7 @@ Runtime Configuration
 .. decide where to expose this in the docs
 
 Orquestra can support different execution environments for workflows, called
-runtimes. Currently there are three supported runtimes: local execution and
+runtimes. Currently there are two supported runtimes: local execution via Ray, and
 remote execution via Compute Engine.
 
 In some cases, additional configuration options are required in order to use a
