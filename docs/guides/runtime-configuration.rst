@@ -55,8 +55,7 @@ Inside the configuration file, each *Runtime Configuration* is defined by:
    * - Configuration option
      - Description
    * - ``config_name``
-     - The human readable configuration name. This is what you should use in
-       the CLI to reference a configuration.
+     - The human readable configuration name. This is what you should use in the :doc:`CLI <../quickref/cli-reference>` or SDK to reference a configuration.
    * - ``runtime_name``
      - The internal reference to the Orquestra runtime. Currently supported
        options: ``RAY_LOCAL``, ``CE_REMOTE``.
