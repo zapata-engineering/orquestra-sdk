@@ -7,9 +7,11 @@ Prerequisites
 =============
 
 #. You've :doc:`installed Orquestra Workflow SDK<installing-macos-linux>`.
-#. You have access to remote Orquestra cluster. Specifically you will require:
-    * The email address and password for your Orquestra Account.
-    * The URL of your Orquestra Cluster
+#. You have access to remote Orquestra cluster.
+   Specifically you will require:
+
+   * The email address and password for your Orquestra Account.
+   * The URL of your Orquestra Cluster
 
 If you do not have these, reach out to your point of contact at Zapata.
 
@@ -60,8 +62,7 @@ To do this, execute following command:
 
 .. warning::
 
-    Under no circumstances should you commit the configuration file or token itself to any git
-    repository or anywhere else when anyone could see it.
+    Under no circumstances should you commit the configuration file or token itself to any git repository or anywhere else when anyone could see it.
 
 Create the Workflow Definition
 ==============================

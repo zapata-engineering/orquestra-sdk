@@ -59,8 +59,10 @@ In addition, a configuration contains details required for connection with the r
 
 The built-in configurations include:
 
-* ``in_process``. You can use it via ``sdk.RuntimeConfiguration.in_process()`` or by passing ``"in_process"`` whenever config is required.
-* ``ray``. You can use it via ``sdk.RuntimeConfiguration.ray()`` or by passing ``"ray"`` whenever config is required.
+* ``in_process``.
+  You can use it via ``sdk.RuntimeConfiguration.in_process()`` or by passing ``"in_process"`` whenever config is required.
+* ``ray``.
+  You can use it via ``sdk.RuntimeConfiguration.ray()`` or by passing ``"ray"`` whenever config is required.
 
 Configurations for interaction with remote runtime are created by using the :ref:`CLI for auth flow<cli_remote_login>`.
 
@@ -71,7 +73,7 @@ Configurations for interaction with remote runtime are created by using the :ref
 
 Configs for remote clusters will get auto-named based on URI.
 The Local ray runtime has hardcoded config names, either "local" or "ray".
-In-process runtime also has a hardcoded config name, "in_process"
+In-process runtime also has a hardcoded config name, "in_process".
 
 Saved configs can be listed with ``list_configs()`` and retrieved with ``load()``:
 

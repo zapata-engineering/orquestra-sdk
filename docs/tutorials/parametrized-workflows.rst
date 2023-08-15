@@ -3,7 +3,7 @@ Parametrized Workflows
 ========================
 
 This tutorial walks you through running a workflow that is parametrized.
-Example workflows given in this tutorial will be run in a local Ray instance
+Example workflows given in this tutorial will be run in a local Ray instance.
 
 Prerequisites
 =============
@@ -32,8 +32,7 @@ Execute Workflow
 ================
 
 Then, run the following snippet in your ``python`` REPL or a Python script.
-It loads your workflow definition, and executes it on local Ray cluster, waits for it to finish
-and prints out results
+It loads your workflow definition, and executes it on local Ray cluster, waits for it to finish and prints out results
 
 
 .. literalinclude:: ../examples/tests/test_parametrized_workflows.py

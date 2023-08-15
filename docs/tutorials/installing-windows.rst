@@ -32,9 +32,7 @@ You can verify if the Visual C++ Redistributable package is installed either by:
 
    .. image:: images/win-redist-picture.png
 
--  If the Visual C++ Redistributable package is not installed, it can be downloaded from `the official
-   Microsoft
-   site, <https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170#visual-studio-2015-2017-2019-and-2022>`__\
+-  If the Visual C++ Redistributable package is not installed, it can be downloaded from `the official Microsoft site, <https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170#visual-studio-2015-2017-2019-and-2022>`__\
 
 .. only:: internal
 
@@ -70,13 +68,12 @@ You can verify if the Visual C++ Redistributable package is installed either by:
     ..
 
     This command shows if the proper file is created (exists: True/False).
-    In case the path is different (not ``~/pip/pip.ini``), move the ``pip.ini`` file to the path shown, you may have to create the ``pip`` directory manually - the Python installer doesn't create it for you).
+    In case the path is different (not ``~/pip/pip.ini``), move the ``pip.ini`` file to the path shown, you may have to create the ``pip`` directory manually - the Python installer doesn't create it for you.
 
     .. warning::
         Careful with extensions!
         Windows by default hides extension of the file.
-        If you create new text file by right-clicking in the Windows file browser →
-        name it ``pip.ini`` → your file might have hidden name ``pip.ini.txt`` which won’t be detected by ``pip``.
+        If you create new text file by right-clicking in the Windows file browser → name it ``pip.ini`` → your file might have hidden name ``pip.ini.txt`` which won’t be detected by ``pip``.
         Running ``pip config debug`` will show ``exists:false``.
         Create file using cmd, powershell or enable extensions in file browser.
 
@@ -96,10 +93,9 @@ You can verify if the Visual C++ Redistributable package is installed either by:
     Or enter the password manually each time you use Nexus for packages.
 
     .. note::
-        Using Git Bash on Windows is known to hang the console during log-in
-        operation.
+        Using Git Bash on Windows is known to hang the console during log-in operation.
         There is no workaround currently.
-        Please use either cmd or Powershell
+        Please use either cmd or Powershell.
 
 Installing Orquestra Workflow SDK
 =================================
@@ -110,8 +106,7 @@ You can install the Workflow SDK with:
 
     pip install "orquestra-sdk[all]"
 
-We highly recommended installing Orquestra Workflow SDK inside a virtual environment, which can be
-easily created with ``python -m venv <venv name>``.
+We highly recommended installing Orquestra Workflow SDK inside a virtual environment, which can be easily created with ``python -m venv <venv name>``.
 
 .. warning::
 

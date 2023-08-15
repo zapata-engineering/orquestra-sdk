@@ -19,8 +19,7 @@ For installation instruction for Windows, see: :doc:`Installing on Windows <inst
 
   Update your pip configuration file
   ==================================
-  Add the lines provided by Zapata to your `pip configuration file <https://pip.pypa.io/en/stable/topics/configuration/#configuration-files>`_.
-  (You will need to create one if it does not exist already.)
+  Add the lines provided by Zapata to your `pip configuration file <https://pip.pypa.io/en/stable/topics/configuration/#configuration-files>`_ (you will need to create one if it does not exist already).
 
 
       For Zapata internal, use these lines

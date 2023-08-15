@@ -119,7 +119,8 @@ This is closely related to "dynamic graphs" concept that Orquestra currently doe
     :language: python
     :dedent: 8
 
-- Workaround: extract common code to plain Python functions and use them from within tasks. Tasks should be only invoked from a workflow function.
+- Workaround: extract common code to plain Python functions and use them from within tasks.
+  Tasks should be only invoked from a workflow function.
 
 .. literalinclude:: ../examples/tests/test_workflow_syntax.py
     :start-after: def task_in_task_workaround():

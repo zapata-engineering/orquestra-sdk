@@ -4,7 +4,8 @@ The Beginner's Guide to the Orquestra CLI
 
 .. note::
 
-    This guide assumes that you have already installed the ``orquestra-sdk``. This can be confirmed by running
+    This guide assumes that you have already installed the ``orquestra-sdk``.
+    This can be confirmed by running
 
     .. code-block::
 
