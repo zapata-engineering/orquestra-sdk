@@ -7,7 +7,8 @@ The Orquestra Workflow SDK can be used in Jupyter Notebooks!
 Setup
 =====
 
-Ensure that Jupyter in installed in your environment. With the environment active, run
+Ensure that Jupyter in installed in your environment.
+With the environment active, run
 
 .. code:: bash
 
@@ -113,7 +114,8 @@ As with tasks, workflows can be imported and used inside a notebook:
 Running Workflows with Ray
 ==========================
 
-The examples above run the workflows "in-process" (the default behaviour for ``start`` / ``run``). To run workflows using Ray, you'll need to define a configuration:
+The examples above run the workflows "in-process" (the default behaviour for ``start`` / ``run``).
+To run workflows using Ray, you'll need to define a configuration:
 
 .. code-block:: python
 
@@ -130,7 +132,10 @@ and pass it as an argument when creating the workflow run:
 Running Workflows with CE
 =========================
 
-Running workflows with CE requires transmitting the code to the CE runtime. This can be done in one of two ways: via a Git or Github import, or an inline import. The method used is controlled by setting the ``source_import`` parameter of the task definition. Tasks will default to an inline import.
+Running workflows with CE requires transmitting the code to the CE runtime.
+This can be done in one of two ways: via a Git or Github import, or an inline import.
+The method used is controlled by setting the ``source_import`` parameter of the task definition.
+Tasks will default to an inline import.
 
 As with Ray, a configuration must be defined telling Orquestra what runtime should be used, and this will then be passed to as an argument to ``run``.
 
@@ -146,7 +151,8 @@ As with Ray, a configuration must be defined telling Orquestra what runtime shou
 Inline Import
 -------------
 
-The inline import serializes the code and sends it to CE. While this is the default for Jupyter notebooks, the code snippet below shows how you can manually express this:
+The inline import serializes the code and sends it to CE.
+While this is the default for Jupyter notebooks, the code snippet below shows how you can manually express this:
 
 .. code-block:: python
 
@@ -165,7 +171,8 @@ The inline import serializes the code and sends it to CE. While this is the defa
 Github Import
 -------------
 
-A Github import uses a Github repository to store the task source code. You will have to make sure the code is pushed before running on CE.
+A Github import uses a Github repository to store the task source code.
+You will have to make sure the code is pushed before running on CE.
 
 .. code-block:: python
 

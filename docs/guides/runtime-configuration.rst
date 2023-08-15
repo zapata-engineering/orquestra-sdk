@@ -4,15 +4,19 @@ Runtime Configuration
 .. decide where to expose this in the docs
 
 Orquestra can support different execution environments for workflows, called
-runtimes. Currently there are two supported runtimes: local execution via Ray, and
+runtimes.
+Currently there are two supported runtimes: local execution via Ray, and
 remote execution via Compute Engine.
 
 In some cases, additional configuration options are required in order to use a
-runtime. For example, a URL is required to connect to Compute Engine.
+runtime.
+For example, a URL is required to connect to Compute Engine.
 Choosing a runtime and supplying options is called a *Runtime Configuration*.
 
-There is always one *Runtime Configuration* defined, called ``local``. This
-configuration option is reserved and cannot be updated or saved to. Manually
+There is always one *Runtime Configuration* defined, called ``local``.
+This
+configuration option is reserved and cannot be updated or saved to.
+Manually
 editing the configuration file will not change this reserved option.
 
 This is used by default in the CLI and executes a workflow locally with the
@@ -25,8 +29,8 @@ Configuration File
 ------------------
 
 These *Runtime Configurations* are stored in a configuration file located at
-``~/.orquestra/config.json``. The configuration file is a JSON file that is
-defined by:
+``~/.orquestra/config.json``.
+The configuration file is a JSON file that is defined by:
 
 .. list-table::
    :widths: 25 75

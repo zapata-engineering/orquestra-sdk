@@ -162,6 +162,5 @@ or when the task is invoked, with the ``.with_resources()`` method:
 
 My Tasks Are Stuck In WAITING State When Running on Compute Engine
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The resources that you request for your workflow need to be larger than what you request for any individual task or the
-total amount of resources for a group of tasks that run at the same time. Make sure you request enough resources for
-your workflow.
+The resources that you request for your workflow need to be larger than what you request for any individual task or the total amount of resources for a group of tasks that run at the same time.
+Make sure you request enough resources for your workflow.

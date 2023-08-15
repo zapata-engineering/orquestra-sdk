@@ -80,4 +80,6 @@ The workflow runs on your computer, but the secrets storage is on Orquestra Plat
 The workflow runs on Orquestra Platform, and the secrets vault is already on the same cluster.
 In this case, the SDK handles authorization for accessing secrets vault automatically.
 
-``workspace_id`` specifies the workspace id which contains the secret. If omitted, personal workspace will be used. You can get workspace_id from the workspace view in the web Orquestra Portal or by using list_workspace API call.
+``workspace_id`` specifies the workspace id which contains the secret.
+If omitted, personal workspace will be used.
+You can get workspace_id from the workspace view in the web Orquestra Portal or by using list_workspace API call.

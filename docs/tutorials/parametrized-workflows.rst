@@ -44,8 +44,8 @@ and prints out results
 
 .. warning::
 
-    Parametrized workflows can be submitted only via Python API. Currently, it is not
-    possible to submit parametrized workflows via the CLI.
+    Parametrized workflows can be submitted only via Python API.
+    Currently, it is not possible to submit parametrized workflows via the CLI.
 
 
 Get Results
@@ -65,8 +65,8 @@ Tuning Workflows Using Parameters
 =================================
 
 The biggest advantage of parametrized workflow is to run multiple versions of the same workflow
-to compare results for different inputs. This can be obtained by executing workflow with
-different input parameters in a loop as in this example:
+to compare results for different inputs.
+This can be obtained by executing workflow with different input parameters in a loop as in this example:
 
 .. literalinclude:: ../examples/tests/test_parametrized_workflows.py
     :start-after: def execute_multiple_workflows():

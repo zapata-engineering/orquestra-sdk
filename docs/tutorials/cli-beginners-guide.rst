@@ -135,7 +135,8 @@ For example, the ``orq wf results`` command, if called without any arguments, wi
 #. The Project in which the workflow was run (if supported by the runtime).
 #. The ID of the workflow the results of which are to be displayed or downloaded.
 
-Each of these stages will present a choice of the valid options. For example:
+Each of these stages will present a choice of the valid options.
+For example:
 
 .. code-block:: bash
 

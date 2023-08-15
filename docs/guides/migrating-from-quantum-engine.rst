@@ -253,7 +253,8 @@ Orquestra users often use multiple levels of nested git repos, and the result of
 When referring to a public repo, ``GitImport.infer()`` will continue to work with CE.
 However, please consider switching to an explicit :ref:`GithubImport<github-import-public>`.
 
-``GitImport.infer()`` won't be extended to support referring to private repos. Please use a :ref:`GithubImport<github-import-private>` instead.
+``GitImport.infer()`` won't be extended to support referring to private repos.
+Please use a :ref:`GithubImport<github-import-private>` instead.
 
 .. note::
    Orquestra Workflow SDK is just a Python library.

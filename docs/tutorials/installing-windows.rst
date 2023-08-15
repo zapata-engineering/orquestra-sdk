@@ -16,7 +16,8 @@ Prerequisites
 .. note::
     Remember to add Python to your path (check the box Add Python <version> to PATH)
 
-2. Install the Microsoft Visual C++ Redistributable package. This is likely already installed, unless you're working on clean machine.
+2. Install the Microsoft Visual C++ Redistributable package.
+This is likely already installed, unless you're working on clean machine.
 
 You can verify if the Visual C++ Redistributable package is installed either by:
 
@@ -69,17 +70,15 @@ You can verify if the Visual C++ Redistributable package is installed either by:
     ..
 
     This command shows if the proper file is created (exists: True/False).
-    In case the path is different (not ``~/pip/pip.ini``), move the ``pip.ini`` file
-    to the path shown, you may have to create the ``pip`` directory
-    manually - the Python installer doesn't create it for you).
+    In case the path is different (not ``~/pip/pip.ini``), move the ``pip.ini`` file to the path shown, you may have to create the ``pip`` directory manually - the Python installer doesn't create it for you).
 
     .. warning::
-        Careful with extensions! Windows by default hides extension of the file.
+        Careful with extensions!
+        Windows by default hides extension of the file.
         If you create new text file by right-clicking in the Windows file browser →
-        name it ``pip.ini`` → your file might have hidden name ``pip.ini.txt`` which
-        won’t be detected by ``pip``. Running ``pip config debug``
-        will show ``exists:false``. Create file using cmd, powershell or
-        enable extensions in file browser.
+        name it ``pip.ini`` → your file might have hidden name ``pip.ini.txt`` which won’t be detected by ``pip``.
+        Running ``pip config debug`` will show ``exists:false``.
+        Create file using cmd, powershell or enable extensions in file browser.
 
     Log in to Nexus
     ===============
@@ -98,8 +97,9 @@ You can verify if the Visual C++ Redistributable package is installed either by:
 
     .. note::
         Using Git Bash on Windows is known to hang the console during log-in
-        operation. There is no workaround currently. Please use either cmd
-        or Powershell
+        operation.
+        There is no workaround currently.
+        Please use either cmd or Powershell
 
 Installing Orquestra Workflow SDK
 =================================
@@ -122,6 +122,5 @@ easily created with ``python -m venv <venv name>``.
 
         The script orq.exe is installed in ‘C:\\<somepath>\\Python38\\Scripts’ which is not on PATH.
 
-    This will prevent ``orq`` CLI from working. To fix this, either add above path
-    to ``%PATH%``, or use a virtual environment which automatically add its own ``scripts/`` directory to
-    PATH.
+    This will prevent ``orq`` CLI from working.
+    To fix this, either add above path to ``%PATH%``, or use a virtual environment which automatically add its own ``scripts/`` directory to PATH.
