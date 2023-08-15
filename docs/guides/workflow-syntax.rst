@@ -100,9 +100,8 @@ This scenario works, but it's not recommended, so the SDK will print a "not a @t
 What doesn't work
 =================
 
-This is a list of the gotchas we've seen our users falling for.
-Some of these would be very difficult to enable given the underlying system constraints.
-Others might be solvable, but might have had low priority.
+The following are examples of common gotchas that our users have run into, and the workarounds and/or prescribed methods of achieving the desired behaviour.
+Note that many of these cases will be the subject of future work, so the behaviour documented here is liable to change.
 
 .. only:: internal
 
