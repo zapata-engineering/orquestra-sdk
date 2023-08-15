@@ -19,12 +19,14 @@
 * `orq wf *` and `orq task *` commands (other than `orq wf submit`) won't prompt for project parameter anymore, as it was ignored anyway
 
 🥷 *Internal*
+* Reformatted docs source files to put each sentence on its own line.
 
 📃 *Docs*
 * Corrected unclear language in `Secrets` docs.
 * Corrected unclear language in the quickstart guide.
 * Fixed resource management doc incorrectly stating that 10k == 10^7.
 * Removed outdated references to the `wf.prepare()` method.
+* Fixed wording and formatting issues in Resource Management, Workflow Syntax, Runtime Configuration, and Workflow Runs.
 
 ## v0.54.0
 
