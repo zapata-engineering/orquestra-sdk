@@ -35,7 +35,7 @@ Results, Logs, and Artifacts
 
 Interacting with workflow runs is made possible by the WorkflowRun object and its methods.
 WorkflowRun objects are not intended to be instantiated directly, but are returned when a workflow run is created (i.e. when the ``run()`` method of a workflow definition is called), or from the ``WorkflowRun.by_id()`` class method.
-The former case provides WorkflowRun objects for runs that were created previously in the same process, the creates WorkflowRun objects for runs created in a separate process.
+The former case provides WorkflowRun objects for runs that were created previously in the same process, the latter creates WorkflowRun objects for runs created in a separate process.
 Runs can be identified solely by their IDs, allowing you to reconstruct the WorkflowRun of a previously started workflow as long as you know the run ID.
 The following example demonstrates how a separate process can get the results of a workflow run.
 
@@ -53,13 +53,15 @@ The following example demonstrates how a separate process can get the results of
 Storing and Retrieving Configurations
 -------------------------------------
 
-Configurations control interaction with runtime backend.
+Configurations control interaction with the runtime backend.
 The choice of a configuration determines what runtime to use (in-process, local Ray, remote).
 In addition, a configuration contains details required for connection with the runtime, like cluster URL and auth token.
 
 The built-in configurations include:
+
 * ``in_process``. You can use it via ``sdk.RuntimeConfiguration.in_process()`` or by passing ``"in_process"`` whenever config is required.
 * ``ray``. You can use it via ``sdk.RuntimeConfiguration.ray()`` or by passing ``"ray"`` whenever config is required.
+
 Configurations for interaction with remote runtime are created by using the :ref:`CLI for auth flow<cli_remote_login>`.
 
 .. literalinclude:: ../examples/config_management.py
@@ -68,8 +70,8 @@ Configurations for interaction with remote runtime are created by using the :ref
     :language: python
 
 Configs for remote clusters will get auto-named based on URI.
-Local ray runtime has hardcoded config name, either "local" or "ray".
-In-process runtime has also hardcoded config name, "in_process"
+The Local ray runtime has hardcoded config names, either "local" or "ray".
+In-process runtime also has a hardcoded config name, "in_process"
 
 Saved configs can be listed with ``list_configs()`` and retrieved with ``load()``:
 
@@ -90,7 +92,7 @@ Once the desired config is identified, it can be loaded as follows:
 Running Workflows with Configurations
 -------------------------------------
 
-Before running a workflow with a custom configuration, the confiuration must first be saved.
+Before running a workflow with a custom configuration, the configuration must first be saved.
 This configuration can then be passed to the ``run()`` method of the workflow definition to run the workflow:
 
 .. literalinclude:: ../examples/quickstart.py
