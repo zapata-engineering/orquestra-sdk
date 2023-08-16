@@ -72,7 +72,7 @@ Configurations for interaction with remote runtime are created by using the :ref
     :language: python
 
 Configs for remote clusters will get auto-named based on URI.
-The Local ray runtime has hardcoded config names, either "local" or "ray".
+The local Ray runtime has hardcoded config names, either "local" or "ray".
 The in-process runtime also has a hardcoded config name, "in_process".
 
 Saved configs can be listed with ``list_configs()`` and retrieved with ``load()``:
