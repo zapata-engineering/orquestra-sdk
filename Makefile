@@ -78,27 +78,27 @@ github_actions:
 
 # Install deps required to build wheel. Used for release automation. See also:
 # https://github.com/zapatacomputing/cicd-actions/blob/67dd6765157e0baefee0dc874e0f46ccd2075657/.github/workflows/py-wheel-build-and-push.yml#L26
-.PHONY:
+.PHONY: build-system-deps
 build-system-deps:
 	$(PYTHON) -m pip install wheel
 
-.PHONY:
+.PHONY: flake8
 flake8:
 	$(PYTHON) -m flake8 --ignore=E203,E266,W503 --max-line-length=88 src tests docs/examples
 
-.PHONY:
+.PHONY: black
 black:
 	$(PYTHON) -m black --check src tests docs/examples
 
-.PHONY:
+.PHONY: isort
 isort:
 	$(PYTHON) -m isort --check src tests docs/examples
 
-.PHONY:
+.PHONY: pymarkdown
 pymarkdown:
 	$(PYTHON) -m pymarkdown scan CHANGELOG.md
 
-.PHONY:
+.PHONY: mypy
 mypy:
 	$(PYTHON) -m mypy src tests
 
