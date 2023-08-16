@@ -4,10 +4,16 @@ Using the Workflow SDK with Jupyter
 
 The Orquestra Workflow SDK can be used in Jupyter Notebooks!
 
+Prerequisites
+=============
+
+#. You've :doc:`installed Orquestra Workflow SDK<installing-macos-linux>`.
+
 Setup
 =====
 
-Ensure that Jupyter in installed in your environment. With the environment active, run
+Ensure that Jupyter in installed in your environment.
+With the environment active, run
 
 .. code:: bash
 
@@ -24,167 +30,112 @@ Jupyter Notebooks and the Orquestra Workflow SDK must be installed in the same e
 Defining tasks and workflows inside a notebook
 ==============================================
 
-Workflows and tasks can be defined within Jupyter notebooks, in the same way as in vanilla Python:
+Workflows and tasks can be defined within Jupyter notebooks, in the same way as in standard Python files:
 
-.. code-block:: python
 
-    import orquestra.sdk as sdk
+.. literalinclude:: ../examples/tests/test_jupyter_sdk.py
+    :start-after: <snippet cell_task_wf>
+    :end-before: </snippet>
+    :language: python
+    :dedent: 8
 
-    @sdk.task()
-    def task_sum_numbers(numbers: tuple):
-        return sum(numbers)
-
-    @sdk.workflow
-    def wf_sum_numbers():
-        numbers = (1, 2)
-        return task_sum_numbers(numbers)
 
 Once defined, you can run the workflow:
 
-.. code-block:: python
+.. literalinclude:: ../examples/tests/test_jupyter_sdk.py
+    :start-after: <snippet cell_wf_run>
+    :end-before: </snippet>
+    :language: python
+    :dedent: 8
 
-    workflow_run = wf_sum_numbers().run("in_process")
 
 and get the results:
 
-.. code-block:: python
-
-    assert workflow_run.get_results() == 3
-
-or, using the more verbose forms:
-
-.. code-block:: python
-
-    workflow_definition = wf_sum_numbers()
-    workflow_run = workflow_definition.prepare("in_process")
-    workflow_run.start()
-
-.. code-block:: python
-
-    workflow_run_results = workflow_run.get_results()
-    assert workflow_run_results == 3
+.. literalinclude:: ../examples/tests/test_jupyter_sdk.py
+    :start-after: <snippet cell_results>
+    :end-before: </snippet>
+    :language: python
+    :dedent: 8
 
 
-Using tasks defined in a different module
-=========================================
+.. note::
 
-Tasks that are defined in other modules can be imported and used to build workflows:
+   If you define your task in a notebook, you can only use it for building workflows in the same notebook.
+   It's a standard code reuse limitation imposed by Jupyter, unrelated to Orquestra.
+   If you'd like to reuse a task between notebooks, move it to a ``.py`` file.
 
-.. code-block:: python
 
-    from orquestra.sdk.examples.exportable_wf import make_greeting
+Using tasks defined in a different file
+=======================================
 
-.. code-block:: python
+Tasks defined in other modules can be imported and used to build and run workflows:
 
-    @sdk.workflow
-    def wf_hello():
-        wf_abc = "ABC"
-        return make_greeting("Emiliano", "Zapata", additional_message=wf_abc)
 
-Workflows that use external tasks operate identically to those defined solely in the notebook:
+.. literalinclude:: ../examples/tests/test_jupyter_sdk.py
+    :start-after: def another_task_file_tasks_py():
+    :end-before: </snippet>
+    :language: python
+    :dedent: 12
 
-.. code-block:: python
+.. literalinclude:: ../examples/tests/test_jupyter_sdk.py
+    :start-after: def another_task_file_notebook():
+    :end-before: </snippet>
+    :language: python
+    :dedent: 12
 
-    workflow_run = wf_hello().run("in_process")
 
-.. code-block:: python
+Using workflows defined in a different file
+===========================================
 
-    workflow_run_results = workflow_run.get_results()
-    assert workflow_run_results == "hello, Emiliano Zapata!ABC"
+As with tasks, workflows can be defined in a ``.py`` file and used inside a notebook:
 
-Using workflows defined in a different module
-=============================================
 
-As with tasks, workflows can be imported and used inside a notebook:
+.. literalinclude:: ../examples/tests/test_jupyter_sdk.py
+    :start-after: def another_wf_file_defs_py():
+    :end-before: </snippet>
+    :language: python
+    :dedent: 12
 
-.. code-block:: python
+.. literalinclude:: ../examples/tests/test_jupyter_sdk.py
+    :start-after: def another_wf_file_notebook():
+    :end-before: </snippet>
+    :language: python
+    :dedent: 12
 
-    from orquestra.sdk.examples.exportable_wf import my_workflow
 
-.. code-block:: python
+.. hint::
 
-    workflow_run = my_workflow().run("in_process")
+   Workflows defined in a notebook can use tasks from the same notebook or a ``.py`` file.
 
-.. code-block:: python
+   Workflows defined in a ``.py`` file can use tasks also defined in a ``.py`` file.
 
-    workflow_run_results = workflow_run.get_results()
-    assert workflow_run_results == ["hello, alex zapata!there"]
+
+.. error::
+   Workflows defined in a ``.py`` file can't use tasks defined a notebook, because Jupyter doesn't allow importing symbols from notebooks.
+
 
 Running Workflows with Ray
 ==========================
 
-The examples above run the workflows "in-process" (the default behaviour for ``start`` / ``run``). To run workflows using Ray, you'll need to define a configuration:
+The examples above run the workflows "in-process".
+To run workflows from Jupyter using Ray, simply use the ``ray`` config:
 
 .. code-block:: python
 
-    ray_config = sdk.RuntimeConfig.ray(
-        project_dir="path/to/dir", # Optional. Path of the project directory. Defaults to the current dir.
-    )
+    # in: a notebook cell
+    ray_wf_run = wf_hello().run("ray")
 
-and pass it as an argument when creating the workflow run:
 
-.. code-block:: python
+See :doc:`Running Locally with Ray <ray>` for more information.
 
-    ray_workflow_run = wf_hello().run(ray_config)
 
 Running Workflows with CE
 =========================
 
-Running workflows with CE requires transmitting the code to the CE runtime. This can be done in one of two ways: via a Git or Github import, or an inline import. The method used is controlled by setting the ``source_import`` parameter of the task definition. Tasks will default to an inline import.
+Running workflows with CE requires transmitting the task code to the CE runtime.
 
-As with Ray, a configuration must be defined telling Orquestra what runtime should be used, and this will then be passed to as an argument to ``run``.
+If your task is defined in a notebook cell, the ``@sdk.task(source_import=...)`` needs to be set to an ``InlineImport`` (the default behavior).
+Otherwise, CE won't be able to access the task code.
 
-.. code-block:: python
-
-    ce_config = sdk.RuntimeConfig.ce(
-        uri = "https://uri/of/cluster",
-        token = "authorization token providing access to the cluster",
-        project_dir = "path/to/dir", # Optional. Path of the project directory. Defaults to the current dir.
-    )
-
-
-Inline Import
--------------
-
-The inline import serializes the code and sends it to CE. While this is the default for Jupyter notebooks, the code snippet below shows how you can manually express this:
-
-.. code-block:: python
-
-    @sdk.task(source_import=sdk.InlineImport())
-    def task_sum_numbers(numbers: tuple):
-        return sum(numbers)
-
-    @sdk.workflow
-    def wf_sum_numbers():
-        numbers = (1, 2)
-        return task_sum_numbers(numbers)
-
-.. code-block:: python
-    ce_workflow_run = wf_hello().run(ce_config)
-
-Github Import
--------------
-
-A Github import uses a Github repository to store the task source code. You will have to make sure the code is pushed before running on CE.
-
-.. code-block:: python
-
-    import orquestra.sdk as sdk
-
-    @sdk.task(
-        source_import=sdk.GithubImport(
-            repo="zapatacomputing/braket-workflow-test",
-            git_ref="main",
-        )
-    )
-    def task_sum_numbers(numbers: tuple):
-        return sum(numbers)
-
-    @sdk.workflow
-    def wf_sum_numbers():
-        numbers = (1, 2)
-        return task_sum_numbers(numbers)
-
-.. code-block:: python
-
-    ce_workflow_run = wf_hello().run(ce_config)
+If your task is defined in a ``.py`` file, you can use any of the standard imports.
+Please refer to the :doc:`Dependency Installation guide<../guides/dependency-installation>` for more details about imports and CE.
