@@ -17,6 +17,7 @@
 
 💅 *Improvements*
 * `orq wf *` and `orq task *` commands (other than `orq wf submit`) won't prompt for project parameter anymore, as it was ignored anyway
+* On macOS and Linux, task logs are stored in individual files instead being correlated with markers from Ray logs.
 
 🥷 *Internal*
 
