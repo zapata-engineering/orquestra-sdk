@@ -10,7 +10,7 @@ Prerequisites
 =============
 
 
-1. Install Python (supported versions are Python 3.8.* and 3.9.*) -
+1. Install Python 3.9.
    https://www.python.org/downloads/
 
 .. note::
