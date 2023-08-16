@@ -32,7 +32,7 @@ The following sections give a more complete explanation of these importers and t
        * Uses pickle-like serialization under the hood.
          This might cause edge cases like invalid symbol resolution errors when the scenario is complicated.
        * Task source code is part of the internal workflow definition representation.
-         It might cause hitting workflow size limits.
+         It might result in hitting workflow size limits.
 
    * - ``PythonImports``.
        An analogue of running ``pip install ...`` on the server.
