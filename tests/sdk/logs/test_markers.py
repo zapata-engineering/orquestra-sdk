@@ -219,3 +219,59 @@ class TestParseLine:
 
         # Then
         assert parsed is None
+
+
+class TestPrintedTaskMarkers:
+    @staticmethod
+    def test_happy_flow(capsys):
+        # Given
+        wf_run_id = "wf1"
+        task_inv_id = "inv1"
+        message = "hello!"
+
+        # When
+        with _markers.printed_task_markers(
+            wf_run_id=wf_run_id,
+            task_inv_id=task_inv_id,
+        ):
+            print(message)
+            print(message, file=sys.stderr)
+
+        # Then
+        captured = capsys.readouterr()
+        for stream in [captured.out, captured.err]:
+            lines = stream.splitlines()
+            assert len(lines) == 3
+
+            assert isinstance(_markers.parse_line(lines[0]), _markers.TaskStartMarker)
+            assert lines[1] == message
+            assert isinstance(_markers.parse_line(lines[2]), _markers.TaskEndMarker)
+
+    @staticmethod
+    def test_exception(capsys):
+        # Given
+        wf_run_id = "wf1"
+        task_inv_id = "inv1"
+        message = "uh oh!"
+
+        # When
+        with pytest.raises(ValueError):
+            with _markers.printed_task_markers(
+                wf_run_id=wf_run_id,
+                task_inv_id=task_inv_id,
+            ):
+                raise ValueError(message)
+
+        # Then
+        captured = capsys.readouterr()
+        out_lines = captured.out.splitlines()
+        assert len(out_lines) == 2
+
+        assert isinstance(_markers.parse_line(out_lines[0]), _markers.TaskStartMarker)
+        assert isinstance(_markers.parse_line(out_lines[1]), _markers.TaskEndMarker)
+
+        err_lines = captured.err.splitlines()
+        assert len(err_lines) > 2
+
+        assert isinstance(_markers.parse_line(out_lines[0]), _markers.TaskStartMarker)
+        assert isinstance(_markers.parse_line(out_lines[-1]), _markers.TaskEndMarker)
