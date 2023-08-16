@@ -7,7 +7,7 @@ The Orquestra Workflow SDK can be used in Jupyter Notebooks!
 Prerequisites
 =============
 
-#. You've :doc:`installed Orquestra Workflow SDK<installing-macos-linux>`.
+#. You've installed Orquestra Workflow SDK (:doc:`macOS, Linux<installing-macos-linux>`, :doc:`Windows<installing-windows>`).
 
 Setup
 =====

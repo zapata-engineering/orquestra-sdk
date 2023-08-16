@@ -3,8 +3,7 @@ Installing on Windows
 =====================
 
 Installing developer packages on Windows can be a challenge.
-This tutorial is to assist anyone who wants to use the Workflow SDK
-natively on Windows.
+This tutorial is to assist anyone who wants to use the Workflow SDK natively on Windows.
 
 Prerequisites
 =============
