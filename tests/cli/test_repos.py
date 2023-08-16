@@ -22,8 +22,7 @@ from orquestra.sdk._base import _dates, _db
 from orquestra.sdk._base._config import SPECIAL_CONFIG_NAME_DICT
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
-from orquestra.sdk._base._testing import _example_wfs
-from orquestra.sdk._base._testing import _reloaders
+from orquestra.sdk._base._testing import _example_wfs, _reloaders
 from orquestra.sdk._base.cli import _repos
 from orquestra.sdk._base.cli._ui import _models as ui_models
 from orquestra.sdk._ray import _dag
