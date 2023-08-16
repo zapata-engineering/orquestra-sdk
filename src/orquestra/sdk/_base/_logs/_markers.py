@@ -66,6 +66,12 @@ def capture_logs(
     wf_run_id: t.Optional[WorkflowRunId],
     task_inv_id: t.Optional[TaskInvocationId],
 ):
+    """
+    This context manager wraps our other log management context managers.
+
+    On Windows, we use markers.
+    On macOS and Linux, we use redirected IO.
+    """
     _wf_run_id = wf_run_id or UNKNOWN_WF_RUN_ID
     _task_inv_id = task_inv_id or UNKNOWN_TASK_INV_ID
 
@@ -109,6 +115,9 @@ def redirected_io(
     wf_run_id: WorkflowRunId,
     task_inv_id: TaskInvocationId,
 ):
+    """
+    Captures stdout and stderr and writes them to their own log files.
+    """
     # We need to defer this import until after we're sure Windows cannot
     # reach it.
     # wurlitzer does not have type annotations
