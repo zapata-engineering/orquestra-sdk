@@ -25,7 +25,7 @@ Jupyter can then be run using simply
 
     jupyter notebook
 
-Jupyter Notebooks and the Orquestra Workflow SDK must be installed in the same virtual environment.
+Jupyter Notebooks and the Orquestra Workflow SDK must be installed in the same environment.
 
 Defining tasks and workflows inside a notebook
 ==============================================
