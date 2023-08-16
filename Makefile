@@ -21,7 +21,7 @@ clean:
 
 
 test:
-	PYTHONPATH="." $(PYTHON) -m pytest \
+	$(PYTHON) -m pytest \
 		--ignore=tests/runtime/performance \
 		--ignore=tests/sdk/typing \
 		--durations=10 \
@@ -40,7 +40,7 @@ MIN_COVERAGE=75
 # - '--cov-report xml' - in addition, generate an XML report and store it in
 #    coverage.xml file. It's required to upload stats to codecov.io.
 coverage:
-	PYTHONPATH="." $(PYTHON) -m pytest \
+	$(PYTHON) -m pytest \
 		--cov=src \
 		--cov-fail-under=$(MIN_COVERAGE) \
 		--cov-report xml \
@@ -111,7 +111,7 @@ style-fix:
 
 # Run tests, but discard the ones that exceptionally slow to run locally.
 test-fast:
-	PYTHONPATH="." $(PYTHON) -m pytest \
+	$(PYTHON) -m pytest \
 		-m "not slow" \
 		--ignore=tests/runtime/performance \
 		--ignore=tests/sdk/typing \
