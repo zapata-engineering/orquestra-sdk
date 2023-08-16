@@ -360,10 +360,11 @@ class GetWorkflowRunLogsRequest(pydantic.BaseModel):
 class GetTaskRunLogsRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/task-run-logs.yaml#L8
+        https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml
     """
 
-    taskRunId: TaskRunID
+    workflowRunId: WorkflowRunID
+    taskInvocationId: TaskInvocationID
 
 
 class CommonResourceMeta(pydantic.BaseModel):

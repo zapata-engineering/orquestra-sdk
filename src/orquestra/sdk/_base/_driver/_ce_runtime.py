@@ -535,7 +535,7 @@ class CERuntime(RuntimeInterface):
         )
 
     def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
-        raise NotImplementedError()
+        return self._client.get_task_run_logs(wf_run_id, task_inv_id)
 
     def list_workspaces(self):
         try:
