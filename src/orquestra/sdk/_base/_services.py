@@ -73,6 +73,10 @@ def ray_plasma_path():
 def redirected_logs_dir():
     """
     Used by log redirection to store workflow logs
+
+    By default, this is `~/.orquestra/logs` and each workflow will have log files like:
+     * `~/.orquestra/logs/wf/<wf run ID>/task/<task invocation ID>.err`
+     * `~/.orquestra/logs/wf/<wf run ID>/task/<task invocation ID>.out`
     """
     try:
         return Path(os.environ[ORQ_TASK_RUN_LOGS_DIR])

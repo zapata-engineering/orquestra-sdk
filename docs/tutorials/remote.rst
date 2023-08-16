@@ -6,12 +6,13 @@ To access more compute power - you can submit your workflow to a remote runtime.
 Prerequisites
 =============
 
-#. You've :doc:`installed Orquestra Workflow SDK<installing-macos-linux>`.
+#. You've installed Orquestra Workflow SDK (:doc:`macOS, Linux<installing-macos-linux>`, :doc:`Windows<installing-windows>`).
 #. You have access to remote Orquestra cluster.
    Specifically you will require:
 
    * The email address and password for your Orquestra Account.
-   * The URL of your Orquestra Cluster
+   * The URL of your Orquestra Cluster.
+
 
 If you do not have these, reach out to your point of contact at Zapata.
 
