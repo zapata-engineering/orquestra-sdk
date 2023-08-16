@@ -36,6 +36,8 @@ def print_start(wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
     """
     Emits "task start" marker to stdout and stderr.
     Required for task-log correlation.
+
+    See: ORQSDK-951 and ORQSDK-952 for deprecation strategy
     """
     now = _dates.now()
     marker = TaskStartMarker(
@@ -49,6 +51,8 @@ def print_end(wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
     """
     Emits "task end" marker to stdout and stderr.
     Required for task-log correlation.
+
+    See: ORQSDK-951 and ORQSDK-952 for deprecation strategy
     """
     now = _dates.now()
     marker = TaskEndMarker(wf_run_id=wf_run_id, task_inv_id=task_inv_id, timestamp=now)
@@ -83,6 +87,8 @@ def printed_task_markers(
 ):
     """
     Deprecated: Newer workflows on Linux/macOS do not use this feature
+
+    See: ORQSDK-951 and ORQSDK-952 for deprecation strategy
 
     Emits "task start" and "task end" markers before and after the yielded block.
     Logs exceptions to stderr and rethrows.
@@ -127,6 +133,8 @@ def redirected_io(
 class TaskStartMarker:
     """
     Deprecated: Newer workflows on Linux/macOS do not use this feature
+
+    See: ORQSDK-951 and ORQSDK-952 for deprecation strategy
     """
 
     event = "task_start"
@@ -149,6 +157,8 @@ class TaskStartMarker:
 class TaskEndMarker:
     """
     Deprecated: Newer workflows on Linux/macOS do not use this feature
+
+    See: ORQSDK-951 and ORQSDK-952 for deprecation strategy
     """
 
     event = "task_end"
@@ -173,6 +183,8 @@ Marker = t.Union[TaskStartMarker, TaskEndMarker]
 def parse_line(line: str) -> t.Optional[Marker]:
     """
     Deprecated: Newer workflows on Linux/macOS do not use this feature
+
+    See: ORQSDK-951 and ORQSDK-952 for deprecation strategy
 
     Attempts to interpret a single log line as a marker.
 
