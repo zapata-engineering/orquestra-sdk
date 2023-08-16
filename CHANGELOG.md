@@ -7,6 +7,7 @@
 * All log return types have been changes from `Sequence[str]` to `LogOutput` which contains an `out` and an `err` property for the standard out and standard error, respectively.
 
 🔥 *Features*
+* Task logs are now available from Compute Engine
 
 🧟 *Deprecations*
 * `list_workflow_runs`' project parameter emits a warning and will be removed in the next release. This change doesn't affect the system's behavior, the parameter was ignored anyway.

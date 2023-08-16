@@ -671,6 +671,31 @@ class DriverClient:
             return ComputeEngineWorkflowResult.parse_obj(json_response)
 
     # --- Workflow Logs ---
+    def _decode_logs(
+        self, log_bytes: bytes, wf_run_id: str, task_inv_id: Optional[str] = None
+    ) -> List[_models.Message]:
+        # Decompress data
+        try:
+            unzipped: bytes = zlib.decompress(log_bytes, 16)
+        except zlib.error as e:
+            raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id, task_inv_id) from e
+
+        untarred = TarFile(fileobj=io.BytesIO(unzipped)).extractfile("step-logs")
+        assert untarred is not None
+        decoded = untarred.read().decode()
+
+        # Parse the decoded data as logs
+        messages = []
+        for section_str in decoded.split("\n"):
+            if len(section_str) < 1:
+                continue
+
+            events = pydantic.parse_raw_as(_models.Section, section_str)
+
+            for event in events:
+                messages.append(event.message)
+
+        return messages
 
     def get_workflow_run_logs(
         self, wf_run_id: _models.WorkflowRunID
@@ -702,34 +727,20 @@ class DriverClient:
 
         _handle_common_errors(resp)
 
-        # Decompress data
-        try:
-            unzipped: bytes = zlib.decompress(resp.content, 16)
-        except zlib.error as e:
-            raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id) from e
+        return self._decode_logs(resp.content, wf_run_id)
 
-        untarred = TarFile(fileobj=io.BytesIO(unzipped)).extractfile("step-logs")
-        assert untarred is not None
-        decoded = untarred.read().decode()
-
-        # Parse the decoded data as logs
-        messages = []
-        for section_str in decoded.split("\n"):
-            if len(section_str) < 1:
-                continue
-
-            events = pydantic.parse_raw_as(_models.Section, section_str)
-
-            for event in events:
-                messages.append(event.message)
-
-        return messages
-
-    def get_task_run_logs(self, task_run_id: _models.TaskRunID) -> bytes:
+    def get_task_run_logs(
+        self,
+        wf_run_id: _models.WorkflowRunID,
+        task_inv_id: _models.TaskInvocationID,
+    ) -> List[_models.Message]:
         """
         Gets the logs of a task run from the workflow driver
 
         Raises:
+            InvalidWorkflowRunID: see the exception's docstring
+            TaskRunLogsNotFound: see the exception's docstring
+            WorkflowRunLogsNotReadable: see the exception's docstring
             InvalidTokenError: see the exception's docstring
             ForbiddenError: see the exception's docstring
             UnknownHTTPError: see the exception's docstring
@@ -737,14 +748,20 @@ class DriverClient:
 
         resp = self._get(
             self._uri_provider.uri_for("get_task_run_logs"),
-            query_params=_models.GetTaskRunLogsRequest(taskRunId=task_run_id).dict(),
+            query_params=_models.GetTaskRunLogsRequest(
+                workflowRunId=wf_run_id, taskInvocationId=task_inv_id
+            ).dict(),
         )
 
-        # TODO: Handle other errors, not specified in spec yet (ORQSDK-655)
+        # Handle errors
+        if resp.status_code == codes.NOT_FOUND:
+            raise _exceptions.TaskRunLogsNotFound(wf_run_id, task_inv_id)
+        elif resp.status_code == codes.BAD_REQUEST:
+            raise _exceptions.InvalidWorkflowRunID(wf_run_id)
+
         _handle_common_errors(resp)
 
-        # TODO: unzip, get logs (ORQSDK-654)
-        return resp.content
+        return self._decode_logs(resp.content, wf_run_id, task_inv_id)
 
     def get_system_logs(self, wf_run_id: _models.WorkflowRunID) -> List[_models.SysLog]:
         """
@@ -779,7 +796,9 @@ class DriverClient:
         try:
             unzipped: bytes = zlib.decompress(resp.content, 16)
         except zlib.error as e:
-            raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id) from e
+            raise _exceptions.WorkflowRunLogsNotReadable(
+                wf_run_id, task_invocation_id=None
+            ) from e
 
         untarred = TarFile(fileobj=io.BytesIO(unzipped)).extractfile("step-logs")
         assert untarred is not None

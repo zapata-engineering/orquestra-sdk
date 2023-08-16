@@ -156,6 +156,12 @@ class InvalidWorkflowRunLogsError(BaseRuntimeError):
     pass
 
 
+class TaskRunLogsNotFound(NotFoundError):
+    """Raised when a task run logs cannot be found, or the ID is invalid"""
+
+    pass
+
+
 class WorkflowRunNotSucceeded(BaseRuntimeError):
     """
     Raised when a succeeded workflow is required but a one in another state is found.

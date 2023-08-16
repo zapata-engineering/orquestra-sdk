@@ -360,10 +360,11 @@ class GetWorkflowRunLogsRequest(pydantic.BaseModel):
 class GetTaskRunLogsRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/task-run-logs.yaml#L8
+        https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml
     """
 
-    taskRunId: TaskRunID
+    workflowRunId: WorkflowRunID
+    taskInvocationId: TaskInvocationID
 
 
 class CommonResourceMeta(pydantic.BaseModel):
@@ -419,6 +420,7 @@ ListProjectResponse = List[ProjectDetail]
 # file contains newline-separated chunks. Each chunk is a JSON-encoded list of events.
 
 
+LogFilename = NewType("LogFilename", str)
 RayFilename = NewType("RayFilename", str)
 
 
@@ -438,7 +440,10 @@ class Message(pydantic.BaseModel):
     Single line content.
     """
 
-    ray_filename: RayFilename
+    # Pydantic v2 lets us do multiple aliases
+    # TODO: ORQSDK-956 - update Pydantic v2 and use AliasChoice
+    log_filename: Optional[LogFilename] = None
+    ray_filename: Optional[RayFilename] = None
     """
     Server-side file path of the indexed file.
     """

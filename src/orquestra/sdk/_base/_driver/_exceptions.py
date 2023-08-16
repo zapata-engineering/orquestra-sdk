@@ -149,14 +149,26 @@ class WorkflowRunLogsNotFound(Exception):
         super().__init__(workflow_run_id)
 
 
+class TaskRunLogsNotFound(Exception):
+    """
+    Raised when a Task Run's Logs cannot be found
+    """
+
+    def __init__(self, workflow_run_id: str, task_invocation_id: str):
+        self.workflow_run_id = workflow_run_id
+        self.task_invocation_id = task_invocation_id
+        super().__init__(workflow_run_id, task_invocation_id)
+
+
 class WorkflowRunLogsNotReadable(Exception):
     """
     Raised when a Workflow Run's Logs exist, but cannot be decoded.
     """
 
-    def __init__(self, workflow_run_id: str):
+    def __init__(self, workflow_run_id: str, task_invocation_id: Optional[str]):
         self.workflow_run_id = workflow_run_id
-        super().__init__(workflow_run_id)
+        self.task_invocation_id = task_invocation_id
+        super().__init__(workflow_run_id, task_invocation_id)
 
 
 class WorkflowRunArtifactNotFound(Exception):
