@@ -81,7 +81,6 @@ github_actions:
 build-system-deps:
 	$(PYTHON) -m pip install wheel
 
-
 flake8:
 	$(PYTHON) -m flake8 --ignore=E203,E266,W503 --max-line-length=88 src tests docs/examples
 
@@ -90,6 +89,9 @@ black:
 
 isort:
 	$(PYTHON) -m isort --check src tests docs/examples
+
+pymarkdown:
+	$(PYTHON) -m pymarkdown scan CHANGELOG.md
 
 mypy:
 	$(PYTHON) -m mypy src tests
@@ -101,7 +103,7 @@ mypy:
 pyright:
 	$(PYTHON) -m pyright src tests
 
-style: flake8 black isort mypy
+style: pymarkdown flake8 black isort mypy
 	@echo This project passes style!
 
 
