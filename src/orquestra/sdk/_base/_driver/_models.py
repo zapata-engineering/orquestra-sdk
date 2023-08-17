@@ -498,7 +498,8 @@ class TaskLogMessage(pydantic.BaseModel):
 
     tag: str
     """
-    An identifier in the form of "workflow.logs.ray.<workflow run ID>.<task invocation ID>".
+    An identifier in the form of:
+        "workflow.logs.ray.<workflow run ID>.<task invocation ID>"
     """
 
 

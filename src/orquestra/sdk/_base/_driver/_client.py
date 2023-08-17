@@ -12,7 +12,7 @@ import io
 import re
 import zlib
 from tarfile import TarFile
-from typing import Generic, List, Mapping, Optional, Tuple, Type, TypeVar, Union
+from typing import Generic, List, Mapping, Optional, Tuple, TypeVar, Union
 from urllib.parse import urljoin
 
 import pydantic
