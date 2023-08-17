@@ -3,6 +3,24 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+
+🔥 *Features*
+
+🧟 *Deprecations*
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+## v0.55.0
+
+🚨 *Breaking Changes*
 * Quantum Engine support has been removed.
 * All log return types have been changes from `Sequence[str]` to `LogOutput` which contains an `out` and an `err` property for the standard out and standard error, respectively.
 * Task logs on Compute Engine will now be available under the dictionary `task_logs` with the task invocation ID as the key. Task logs from workflows submitted with v0.54.0 and earlier that ran on Compute Engine will be available under "other" logs.
@@ -13,15 +31,9 @@
 🧟 *Deprecations*
 * `list_workflow_runs`' project parameter emits a warning and will be removed in the next release. This change doesn't affect the system's behavior, the parameter was ignored anyway.
 
-👩‍🔬 *Experimental*
-
-🐛 *Bug Fixes*
-
 💅 *Improvements*
 * `orq wf *` and `orq task *` commands (other than `orq wf submit`) won't prompt for project parameter anymore, as it was ignored anyway
 * On macOS and Linux, task logs are stored in individual files instead being correlated with markers from Ray logs.
-
-🥷 *Internal*
 
 📃 *Docs*
 * Corrected unclear language in `Secrets` docs.
