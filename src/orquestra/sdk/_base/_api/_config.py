@@ -415,7 +415,7 @@ def migrate_config_file():
         print(f" - {config_name}")
 
 
-def _resolve_config(
+def resolve_config(
     config: t.Union[ConfigName, "RuntimeConfig"],
 ) -> "RuntimeConfig":
     if isinstance(config, RuntimeConfig):

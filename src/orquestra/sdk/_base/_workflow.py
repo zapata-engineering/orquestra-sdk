@@ -31,7 +31,7 @@ from orquestra.sdk.schema.workflow_run import ProjectId, WorkspaceId
 
 from .. import secrets
 from . import _api, _dsl, loader
-from ._api._config import _resolve_config
+from ._api._config import resolve_config
 from ._ast import CallVisitor, NodeReference, NodeReferenceType, normalize_indents
 from ._dsl import (
     DataAggregation,
@@ -178,7 +178,7 @@ class WorkflowDef(Generic[_R]):
             ProjectInvalidError: when only 1 out of project and workspace is passed
 
         """
-        _config = _resolve_config(config)
+        _config = resolve_config(config)
 
         runtime = _config._get_runtime(project_dir)
 

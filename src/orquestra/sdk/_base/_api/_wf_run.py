@@ -37,7 +37,7 @@ from .._logs._interfaces import WorkflowLogs
 from .._spaces._resolver import resolve_studio_ref, resolve_studio_workspace_ref
 from .._spaces._structs import ProjectRef
 from ..abc import RuntimeInterface
-from ._config import RuntimeConfig, _resolve_config
+from ._config import RuntimeConfig, resolve_config
 from ._task_run import TaskRun
 
 COMPLETED_STATES = [State.FAILED, State.TERMINATED, State.SUCCEEDED, State.KILLED]
@@ -110,7 +110,7 @@ class WorkflowRun:
             except (ConfigFileNotFoundError, ConfigNameNotFoundError):
                 raise
         else:
-            resolved_config = _resolve_config(config)
+            resolved_config = resolve_config(config)
 
         # Retrieve workflow def from the runtime:
         # - Ray stores wf def for us under a metadata entry.
@@ -151,7 +151,7 @@ class WorkflowRun:
             project_id: ID of the project for workflow - supported only on CE
 
         """
-        _config = _resolve_config(config)
+        _config = resolve_config(config)
 
         runtime = _config._get_runtime()
 
@@ -618,7 +618,7 @@ def list_workflow_runs(
     _project_dir = Path(project_dir or Path.cwd())
 
     # Resolve config
-    resolved_config: RuntimeConfig = _resolve_config(config)
+    resolved_config: RuntimeConfig = resolve_config(config)
     # If user wasn't specific with workspace and project, we might want to resolve it
 
     # resolve runtime
