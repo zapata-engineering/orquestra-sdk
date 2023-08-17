@@ -3,8 +3,8 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
-- QE support has been removed.
-- All log return types have been changes from `Sequence[str]` to `LogOutput` which contains an `out` and an `err` property for the standard out and standard error, respectively.
+* QE support has been removed.
+* All log return types have been changes from `Sequence[str]` to `LogOutput` which contains an `out` and an `err` property for the standard out and standard error, respectively.
 
 🔥 *Features*
 
@@ -17,6 +17,7 @@
 
 💅 *Improvements*
 * `orq wf *` and `orq task *` commands (other than `orq wf submit`) won't prompt for project parameter anymore, as it was ignored anyway
+* On macOS and Linux, task logs are stored in individual files instead being correlated with markers from Ray logs.
 
 🥷 *Internal*
 
@@ -25,6 +26,7 @@
 * Corrected unclear language in the quickstart guide.
 * Fixed resource management doc incorrectly stating that 10k == 10^7.
 * Removed outdated references to the `wf.prepare()` method.
+* Updated Jupyter tutorial's content.
 
 ## v0.54.0
 
