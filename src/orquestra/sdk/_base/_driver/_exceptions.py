@@ -8,6 +8,14 @@ from typing import List, Optional
 
 import requests
 
+from ._models import (
+    TaskInvocationID,
+    WorkflowDefID,
+    WorkflowRunArtifactID,
+    WorkflowRunID,
+    WorkflowRunResultID,
+)
+
 
 class InvalidTokenError(Exception):
     """
@@ -62,7 +70,7 @@ class InvalidWorkflowDefID(Exception):
     parsed as a UUID, this exception will be raised.
     """
 
-    def __init__(self, workflow_def_id: str):
+    def __init__(self, workflow_def_id: WorkflowDefID):
         self.workflow_def_id = workflow_def_id
         super().__init__(workflow_def_id)
 
@@ -72,7 +80,7 @@ class InvalidWorkflowRunID(Exception):
     Raised when an invalid Workflow Run ID is sent to the Workflow Driver
     """
 
-    def __init__(self, workflow_run_id: str):
+    def __init__(self, workflow_run_id: WorkflowRunID):
         self.workflow_run_id = workflow_run_id
         super().__init__(workflow_run_id)
 
@@ -85,7 +93,7 @@ class InvalidWorkflowRunArtifactID(Exception):
     parsed as a UUID, this exception will be raised.
     """
 
-    def __init__(self, workflow_run_artifact_id: str):
+    def __init__(self, workflow_run_artifact_id: WorkflowRunArtifactID):
         self.workflow_run_artifact_id = workflow_run_artifact_id
         super().__init__(workflow_run_artifact_id)
 
@@ -98,7 +106,7 @@ class InvalidWorkflowRunResultID(Exception):
     parsed as a UUID, this exception will be raised.
     """
 
-    def __init__(self, workflow_run_result_id: str):
+    def __init__(self, workflow_run_result_id: WorkflowRunResultID):
         self.workflow_run_result_id = workflow_run_result_id
         super().__init__(workflow_run_result_id)
 
@@ -124,7 +132,7 @@ class WorkflowDefNotFound(Exception):
     Raised when a Workflow Definition cannot be found
     """
 
-    def __init__(self, workflow_def_id: str):
+    def __init__(self, workflow_def_id: WorkflowDefID):
         self.workflow_def_id = workflow_def_id
         super().__init__(workflow_def_id)
 
@@ -134,7 +142,7 @@ class WorkflowRunNotFound(Exception):
     Raised when a Workflow Run cannot be found
     """
 
-    def __init__(self, workflow_run_id: str):
+    def __init__(self, workflow_run_id: WorkflowRunID):
         self.workflow_run_id = workflow_run_id
         super().__init__(workflow_run_id)
 
@@ -144,7 +152,7 @@ class WorkflowRunLogsNotFound(Exception):
     Raised when a Workflow Run's Logs cannot be found
     """
 
-    def __init__(self, workflow_run_id: str):
+    def __init__(self, workflow_run_id: WorkflowRunID):
         self.workflow_run_id = workflow_run_id
         super().__init__(workflow_run_id)
 
@@ -154,7 +162,9 @@ class TaskRunLogsNotFound(Exception):
     Raised when a Task Run's Logs cannot be found
     """
 
-    def __init__(self, workflow_run_id: str, task_invocation_id: str):
+    def __init__(
+        self, workflow_run_id: WorkflowRunID, task_invocation_id: TaskInvocationID
+    ):
         self.workflow_run_id = workflow_run_id
         self.task_invocation_id = task_invocation_id
         super().__init__(workflow_run_id, task_invocation_id)
@@ -165,7 +175,11 @@ class WorkflowRunLogsNotReadable(Exception):
     Raised when a Workflow Run's Logs exist, but cannot be decoded.
     """
 
-    def __init__(self, workflow_run_id: str, task_invocation_id: Optional[str]):
+    def __init__(
+        self,
+        workflow_run_id: WorkflowRunID,
+        task_invocation_id: Optional[TaskInvocationID],
+    ):
         self.workflow_run_id = workflow_run_id
         self.task_invocation_id = task_invocation_id
         super().__init__(workflow_run_id, task_invocation_id)
@@ -176,7 +190,7 @@ class WorkflowRunArtifactNotFound(Exception):
     Raised when a Workflow Run Artifact cannot be found
     """
 
-    def __init__(self, workflow_run_artifact_id: str):
+    def __init__(self, workflow_run_artifact_id: WorkflowRunArtifactID):
         self.workflow_run_artifact_id = workflow_run_artifact_id
         super().__init__(workflow_run_artifact_id)
 
@@ -186,7 +200,7 @@ class WorkflowRunResultNotFound(Exception):
     Raised when a Workflow Run Result cannot be found
     """
 
-    def __init__(self, workflow_run_result_id: str):
+    def __init__(self, workflow_run_result_id: WorkflowRunResultID):
         self.workflow_run_result_id = workflow_run_result_id
         super().__init__(workflow_run_result_id)
 
