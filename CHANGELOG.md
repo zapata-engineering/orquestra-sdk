@@ -3,10 +3,12 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
-* QE support has been removed.
+* Quantum Engine support has been removed.
 * All log return types have been changes from `Sequence[str]` to `LogOutput` which contains an `out` and an `err` property for the standard out and standard error, respectively.
+* Task logs on Compute Engine will now be available under the dictionary `task_logs` with the task invocation ID as the key. Task logs from workflows submitted with v0.54.0 and earlier that ran on Compute Engine will be available under "other" logs.
 
 🔥 *Features*
+* Task logs are now available from Compute Engine.
 
 🧟 *Deprecations*
 * `list_workflow_runs`' project parameter emits a warning and will be removed in the next release. This change doesn't affect the system's behavior, the parameter was ignored anyway.

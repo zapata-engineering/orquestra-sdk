@@ -129,6 +129,10 @@ class TestClient:
         return "00000000-0000-0000-0000-000000000000"
 
     @pytest.fixture
+    def task_inv_id(self):
+        return "00000000-0000-0000-0000-000000000000"
+
+    @pytest.fixture
     def workflow_def(self):
         @sdk.task
         def task():
@@ -2075,36 +2079,47 @@ class TestClient:
                     responses.GET,
                     f"{base_uri}/api/task-run-logs",
                     # Specified in:
-                    # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/task-run-logs.yaml#L11
+                    # https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml#L12
                     default_status_code=200,
                 )
 
             @staticmethod
             def test_params_encoding(
-                endpoint_mocker, client: DriverClient, task_run_id: str
+                endpoint_mocker,
+                client: DriverClient,
+                workflow_run_id: str,
+                task_inv_id: str,
             ):
                 """
                 Verifies that params are correctly sent to the server.
                 """
                 endpoint_mocker(
-                    json=resp_mocks.make_get_task_run_logs_response(),
+                    body=resp_mocks.make_get_task_run_logs_response(),
                     match=[
+                        # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/task-run-logs.yaml#L8
                         responses.matchers.query_param_matcher(
-                            {"taskRunId": task_run_id}
+                            {
+                                "workflowRunId": workflow_run_id,
+                                "taskInvocationId": task_inv_id,
+                            }
                         )
                     ],
                 )
 
-                _ = client.get_task_run_logs(task_run_id)
+                _ = client.get_task_run_logs(workflow_run_id, task_inv_id)
 
                 # The assertion is done by mocked_responses
 
             @staticmethod
             def test_sets_auth(
-                endpoint_mocker, client: DriverClient, token: str, task_run_id: str
+                endpoint_mocker,
+                client: DriverClient,
+                token: str,
+                workflow_run_id: str,
+                task_inv_id: str,
             ):
                 endpoint_mocker(
-                    json=resp_mocks.make_get_task_run_logs_response(),
+                    body=resp_mocks.make_get_task_run_logs_response(),
                     match=[
                         responses.matchers.header_matcher(
                             {"Authorization": f"Bearer {token}"}
@@ -2112,37 +2127,80 @@ class TestClient:
                     ],
                 )
 
-                _ = client.get_task_run_logs(task_run_id)
+                _ = client.get_task_run_logs(workflow_run_id, task_inv_id)
 
                 # The assertion is done by mocked_responses
 
             @staticmethod
-            def test_unauthorized(
-                endpoint_mocker, client: DriverClient, task_run_id: str
+            def test_bad_request(
+                endpoint_mocker,
+                client: DriverClient,
+                workflow_run_id: str,
+                task_inv_id: str,
             ):
                 endpoint_mocker(
                     # Specified in:
-                    # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/task-run-logs.yaml#L18
+                    # https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml#L48
+                    status=400,
+                )
+
+                with pytest.raises(_exceptions.InvalidWorkflowRunID):
+                    _ = client.get_task_run_logs(workflow_run_id, task_inv_id)
+
+            @staticmethod
+            def test_unauthorized(
+                endpoint_mocker,
+                client: DriverClient,
+                workflow_run_id: str,
+                task_inv_id: str,
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml#L54
                     status=401,
                 )
 
                 with pytest.raises(_exceptions.InvalidTokenError):
-                    _ = client.get_task_run_logs(task_run_id)
+                    _ = client.get_task_run_logs(workflow_run_id, task_inv_id)
 
             @staticmethod
-            def test_forbidden(endpoint_mocker, client: DriverClient, task_run_id: str):
+            def test_forbidden(
+                endpoint_mocker,
+                client: DriverClient,
+                workflow_run_id: str,
+                task_inv_id: str,
+            ):
                 endpoint_mocker(
                     # Specified in:
-                    # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/task-run-logs.yaml#L20
+                    # https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml#L56
                     status=403,
                 )
 
                 with pytest.raises(_exceptions.ForbiddenError):
-                    _ = client.get_task_run_logs(task_run_id)
+                    _ = client.get_task_run_logs(workflow_run_id, task_inv_id)
+
+            @staticmethod
+            def test_not_found(
+                endpoint_mocker,
+                client: DriverClient,
+                workflow_run_id: str,
+                task_inv_id: str,
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml#L58
+                    status=404,
+                )
+
+                with pytest.raises(_exceptions.TaskRunLogsNotFound):
+                    _ = client.get_task_run_logs(workflow_run_id, task_inv_id)
 
             @staticmethod
             def test_unknown_error(
-                endpoint_mocker, client: DriverClient, task_run_id: str
+                endpoint_mocker,
+                client: DriverClient,
+                workflow_run_id: str,
+                task_inv_id: str,
             ):
                 endpoint_mocker(
                     # Specified in:
@@ -2151,7 +2209,7 @@ class TestClient:
                 )
 
                 with pytest.raises(_exceptions.UnknownHTTPError):
-                    _ = client.get_task_run_logs(task_run_id)
+                    _ = client.get_task_run_logs(workflow_run_id, task_inv_id)
 
     class TestWorkspaces:
         class TestListWorkspaces:
