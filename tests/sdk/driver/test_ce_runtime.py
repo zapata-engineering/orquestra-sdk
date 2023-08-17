@@ -1224,7 +1224,7 @@ class TestGetWorkflowLogs:
             err=[],
         )
 
-        assert logs.other == LogOutput(out=["line 3"], err=[])
+        assert logs.other == LogOutput(out=["line 2", "line 3"], err=["line 1"])
 
     def test_no_task_logs(
         self,
@@ -1261,10 +1261,7 @@ class TestGetWorkflowLogs:
         mocked_client.get_system_logs.assert_called_once_with(workflow_run_id)
         mocked_client.get_workflow_run_logs.assert_called_once_with(workflow_run_id)
 
-        # When there are no task logs, we expect to fall back to Ray worker logs
-        assert logs.per_task == {
-            "UNKNOWN TASK INV ID": LogOutput(out=["line 2"], err=["line 1"]),
-        }
+        assert logs.per_task == {}
 
         assert logs.env_setup == LogOutput(out=["line 4"], err=[])
 
@@ -1278,7 +1275,7 @@ class TestGetWorkflowLogs:
             err=[],
         )
 
-        assert logs.other == LogOutput(out=["line 3"], err=[])
+        assert logs.other == LogOutput(out=["line 2", "line 3"], err=["line 1"])
 
     @pytest.mark.parametrize(
         "exception, expected_exception, exception_args",
