@@ -1249,7 +1249,7 @@ class TestGetWorkflowLogs:
         mocked_client.get_system_logs.return_value = sys_logs
 
         # Mocking not finding any task logs at all
-        get_task_logs = Mock(side_effect=exceptions.TaskRunLogsNotFound)
+        get_task_logs = Mock(side_effect=exceptions.TaskRunLogsNotFound(workflow_run_id, Mock()))
         monkeypatch.setattr(runtime, "get_task_logs", get_task_logs)
 
         # When

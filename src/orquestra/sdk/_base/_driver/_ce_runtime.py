@@ -565,10 +565,7 @@ class CERuntime(RuntimeInterface):
         try:
             messages = self._client.get_task_run_logs(wf_run_id, task_inv_id)
         except (_exceptions.InvalidWorkflowRunID, _exceptions.TaskRunLogsNotFound) as e:
-            raise exceptions.TaskRunLogsNotFound(
-                f"Task run logs with ID `{task_inv_id}` in workflow "
-                f"`{wf_run_id}` not found"
-            ) from e
+            raise exceptions.TaskRunLogsNotFound(wf_run_id, task_inv_id) from e
         except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
             raise exceptions.UnauthorizedError(
                 f"Could not access logs for workflow run with id `{wf_run_id}`. "
