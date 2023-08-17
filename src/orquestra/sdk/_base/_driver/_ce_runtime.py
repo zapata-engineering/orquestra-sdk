@@ -583,8 +583,7 @@ class CERuntime(RuntimeInterface):
 
         task_logs = LogAccumulator()
         for m in messages:
-            path = Path(m.log_filename or "log.out")
-            stream = LogStreamType.by_file(path)
+            stream = LogStreamType.by_file(Path(m.log_filename)) if m.log_filename else LogStreamType.STDOUT
             task_logs.add_line_by_stream(stream, m.log)
         return LogOutput(out=task_logs.out, err=task_logs.err)
 
