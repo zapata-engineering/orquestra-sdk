@@ -513,7 +513,7 @@ class CERuntime(RuntimeInterface):
 
         for m in messages:
             # Default to "log.out" if no log filenames
-            path = Path(m.ray_filename or m.log_filename or "log.out")
+            path = Path(m.ray_filename)
             stream = LogStreamType.by_file(path)
             if _regrouping.is_worker(path=path):
                 ray_worker_logs.add_line_by_stream(stream, m.log)
@@ -580,7 +580,8 @@ class CERuntime(RuntimeInterface):
 
         task_logs = LogAccumulator()
         for m in messages:
-            stream = LogStreamType.by_file(Path(m.log_filename)) if m.log_filename else LogStreamType.STDOUT
+            path = Path(m.log_filename)
+            stream = LogStreamType.by_file(path)
             task_logs.add_line_by_stream(stream, m.log)
         return LogOutput(out=task_logs.out, err=task_logs.err)
 

@@ -424,7 +424,7 @@ LogFilename = NewType("LogFilename", str)
 RayFilename = NewType("RayFilename", str)
 
 
-class Message(pydantic.BaseModel):
+class WorkflowLogMessage(pydantic.BaseModel):
     """
     Represents a single line indexed by the server side log service.
 
@@ -440,10 +440,7 @@ class Message(pydantic.BaseModel):
     Single line content.
     """
 
-    # Pydantic v2 lets us do multiple aliases
-    # TODO: ORQSDK-956 - update Pydantic v2 and use AliasChoice
-    log_filename: Optional[LogFilename] = None
-    ray_filename: Optional[RayFilename] = None
+    ray_filename: RayFilename
     """
     Server-side file path of the indexed file.
     """
@@ -454,7 +451,7 @@ class Message(pydantic.BaseModel):
     """
 
 
-class Event(NamedTuple):
+class WorkflowLogEvent(NamedTuple):
     """
     A pair of ``[timestamp, message]``.
 
@@ -469,13 +466,65 @@ class Event(NamedTuple):
     time that the message is logged by Ray runtime.
     """
 
-    message: Message
+    message: WorkflowLogMessage
     """
     A single indexed log line.
     """
 
 
-Section = List[Event]
+WorkflowLogSection = List[WorkflowLogEvent]
+
+
+class TaskLogMessage(pydantic.BaseModel):
+    """
+    Represents a single line indexed by the server side log service.
+
+    Based on:
+    https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml#L16
+
+    The name is borrowed from Fluent Bit nomenclature:
+    https://docs.fluentbit.io/manual/concepts/key-concepts#event-format.
+    """
+
+    log: str
+    """
+    Single line content.
+    """
+
+    log_filename: LogFilename
+    """
+    Server-side file path of the indexed file.
+    """
+
+    tag: str
+    """
+    An identifier in the form of "workflow.logs.ray.<workflow run ID>.<task invocation ID>".
+    """
+
+
+class TaskLogEvent(NamedTuple):
+    """
+    A pair of ``[timestamp, task log message]``.
+
+    Based on:
+    https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml#L16
+    """
+
+    timestamp: float
+    """
+    Unix timestamp in seconds with fraction for the moment when a log line is exported
+    from Ray system to Orquestra. It does not necessarily correspond to the particular
+    time that the message is logged by Ray runtime.
+    """
+
+    message: TaskLogMessage
+    """
+    A single indexed log line.
+    """
+
+
+TaskLogSection = List[TaskLogEvent]
+
 
 # --- System Logs ---
 

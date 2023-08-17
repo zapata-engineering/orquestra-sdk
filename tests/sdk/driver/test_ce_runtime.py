@@ -1141,7 +1141,7 @@ class TestGetWorkflowLogs:
     @pytest.fixture
     def ray_logs(self, tag: str):
         return [
-            _models.Message(
+            _models.WorkflowLogMessage(
                 log="line 1",
                 ray_filename=_models.RayFilename(
                     "/tmp/ray/session_latest/logs/worker-b4584f711ed56477c7e7c0ea4b16"
@@ -1149,7 +1149,7 @@ class TestGetWorkflowLogs:
                 ),
                 tag=tag,
             ),
-            _models.Message(
+            _models.WorkflowLogMessage(
                 log="line 2",
                 ray_filename=_models.RayFilename(
                     "/tmp/ray/session_latest/logs/worker-b4584f711ed56477c7e7c0ea4b16"
@@ -1157,14 +1157,14 @@ class TestGetWorkflowLogs:
                 ),
                 tag=tag,
             ),
-            _models.Message(
+            _models.WorkflowLogMessage(
                 log="line 3",
                 ray_filename=_models.RayFilename(
                     "/tmp/ray/session_latest/logs/something_else.log"
                 ),
                 tag=tag,
             ),
-            _models.Message(
+            _models.WorkflowLogMessage(
                 log="line 4",
                 ray_filename=_models.RayFilename(
                     "/tmp/ray/session_latest/logs/runtime_env_setup-01000000.log"
@@ -1178,7 +1178,7 @@ class TestGetWorkflowLogs:
         mocked_client: MagicMock,
         runtime: _ce_runtime.CERuntime,
         tag: str,
-        ray_logs: List[_models.Message],
+        ray_logs: List[_models.WorkflowLogMessage],
         workflow_run_id: str,
         monkeypatch: pytest.MonkeyPatch,
     ):
@@ -1231,7 +1231,7 @@ class TestGetWorkflowLogs:
         mocked_client: MagicMock,
         runtime: _ce_runtime.CERuntime,
         tag: str,
-        ray_logs: List[_models.Message],
+        ray_logs: List[_models.WorkflowLogMessage],
         workflow_run_id: str,
         monkeypatch: pytest.MonkeyPatch,
     ):
@@ -1326,14 +1326,14 @@ class TestGetTaskLogs:
     @pytest.fixture
     def logs(self, tag: str):
         return [
-            _models.Message(
+            _models.TaskLogMessage(
                 log="line 1",
                 log_filename=_models.LogFilename(
                     "/var/task_run_logs/wf/wf-run-id/task/task-inv-id.out"
                 ),
                 tag=tag,
             ),
-            _models.Message(
+            _models.TaskLogMessage(
                 log="line 2",
                 log_filename=_models.LogFilename(
                     "/var/task_run_logs/wf/wf-run-id/task/task-inv-id.err"
@@ -1346,7 +1346,7 @@ class TestGetTaskLogs:
         self,
         mocked_client: MagicMock,
         runtime: _ce_runtime.CERuntime,
-        logs: List[_models.Message],
+        logs: List[_models.TaskLogMessage],
         workflow_run_id: str,
         task_inv_id: str,
     ):

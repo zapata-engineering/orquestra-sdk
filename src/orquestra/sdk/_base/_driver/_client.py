@@ -12,7 +12,7 @@ import io
 import re
 import zlib
 from tarfile import TarFile
-from typing import Generic, List, Mapping, Optional, Tuple, TypeVar, Union
+from typing import Generic, List, Mapping, Optional, Tuple, Type, TypeVar, Union
 from urllib.parse import urljoin
 
 import pydantic
@@ -671,35 +671,9 @@ class DriverClient:
             return ComputeEngineWorkflowResult.parse_obj(json_response)
 
     # --- Workflow Logs ---
-    def _decode_logs(
-        self, log_bytes: bytes, wf_run_id: str, task_inv_id: Optional[str] = None
-    ) -> List[_models.Message]:
-        # Decompress data
-        try:
-            unzipped: bytes = zlib.decompress(log_bytes, 16)
-        except zlib.error as e:
-            raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id, task_inv_id) from e
-
-        untarred = TarFile(fileobj=io.BytesIO(unzipped)).extractfile("step-logs")
-        assert untarred is not None
-        decoded = untarred.read().decode()
-
-        # Parse the decoded data as logs
-        messages = []
-        for section_str in decoded.split("\n"):
-            if len(section_str) < 1:
-                continue
-
-            events = pydantic.parse_raw_as(_models.Section, section_str)
-
-            for event in events:
-                messages.append(event.message)
-
-        return messages
-
     def get_workflow_run_logs(
         self, wf_run_id: _models.WorkflowRunID
-    ) -> List[_models.Message]:
+    ) -> List[_models.WorkflowLogMessage]:
         """
         Gets the logs of a workflow run from the workflow driver
 
@@ -727,13 +701,34 @@ class DriverClient:
 
         _handle_common_errors(resp)
 
-        return self._decode_logs(resp.content, wf_run_id)
+        # Decompress data
+        try:
+            unzipped: bytes = zlib.decompress(resp.content, 16)
+        except zlib.error as e:
+            raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id, None) from e
+
+        untarred = TarFile(fileobj=io.BytesIO(unzipped)).extractfile("step-logs")
+        assert untarred is not None
+        decoded = untarred.read().decode()
+
+        # Parse the decoded data as logs
+        messages = []
+        for section_str in decoded.split("\n"):
+            if len(section_str) < 1:
+                continue
+
+            events = pydantic.parse_raw_as(_models.WorkflowLogSection, section_str)
+
+            for event in events:
+                messages.append(event.message)
+
+        return messages
 
     def get_task_run_logs(
         self,
         wf_run_id: _models.WorkflowRunID,
         task_inv_id: _models.TaskInvocationID,
-    ) -> List[_models.Message]:
+    ) -> List[_models.TaskLogMessage]:
         """
         Gets the logs of a task run from the workflow driver
 
@@ -761,7 +756,28 @@ class DriverClient:
 
         _handle_common_errors(resp)
 
-        return self._decode_logs(resp.content, wf_run_id, task_inv_id)
+        # Decompress data
+        try:
+            unzipped: bytes = zlib.decompress(resp.content, 16)
+        except zlib.error as e:
+            raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id, task_inv_id) from e
+
+        untarred = TarFile(fileobj=io.BytesIO(unzipped)).extractfile("step-logs")
+        assert untarred is not None
+        decoded = untarred.read().decode()
+
+        # Parse the decoded data as logs
+        messages = []
+        for section_str in decoded.split("\n"):
+            if len(section_str) < 1:
+                continue
+
+            events = pydantic.parse_raw_as(_models.TaskLogSection, section_str)
+
+            for event in events:
+                messages.append(event.message)
+
+        return messages
 
     def get_system_logs(self, wf_run_id: _models.WorkflowRunID) -> List[_models.SysLog]:
         """
