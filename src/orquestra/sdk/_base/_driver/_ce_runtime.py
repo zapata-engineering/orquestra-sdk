@@ -502,7 +502,6 @@ class CERuntime(RuntimeInterface):
         env_logs = LogAccumulator()
         other_logs = LogAccumulator()
         system_logs = LogAccumulator()
-        ray_worker_logs = LogAccumulator()
 
         for task_inv_id in wf_def.task_invocations.keys():
             try:
@@ -516,7 +515,11 @@ class CERuntime(RuntimeInterface):
             path = Path(m.ray_filename)
             stream = LogStreamType.by_file(path)
             if _regrouping.is_worker(path=path):
-                ray_worker_logs.add_line_by_stream(stream, m.log)
+                # We previously added Ray worker logs under task logs with
+                # "UNKNOWN TASK INV".
+                # Now, we get task logs from the CE API directly and add the
+                # worker logs to "other".
+                other_logs.add_line_by_stream(stream, m.log)
             elif _regrouping.is_env_setup(path=path):
                 env_logs.add_line_by_stream(stream, m.log)
             else:
@@ -534,12 +537,6 @@ class CERuntime(RuntimeInterface):
 
         for sys_m in sys_messages:
             system_logs.add_line_by_stream(LogStreamType.STDOUT, str(sys_m.log))
-
-        # If we don't have any logs and we have ray worker logs, we should use these
-        # as the "unknown" task invocation logs. This is to ensure backwards compat
-        ray_logs = LogOutput(out=ray_worker_logs.out, err=ray_worker_logs.err)
-        if len(task_logs) == 0 and len(ray_logs) > 0:
-            task_logs["UNKNOWN TASK INV ID"] = ray_logs
 
         return WorkflowLogs(
             per_task=task_logs,
