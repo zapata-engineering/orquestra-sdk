@@ -23,7 +23,12 @@ from orquestra.sdk.schema.configs import (
     RuntimeName,
 )
 
-from ._env import CONFIG_PATH_ENV, CURRENT_CLUSTER_ENV, PASSPORT_FILE_ENV
+from ._env import (
+    CONFIG_PATH_ENV,
+    CURRENT_CLUSTER_ENV,
+    CURRENT_CONFIG_ENV,
+    PASSPORT_FILE_ENV,
+)
 
 # Why JSON?
 #  The Python TOML package is unmaintained as of 2022-02-18.
@@ -183,12 +188,8 @@ def _save_new_config_file(
     _save_config_file(new_config_file)
 
 
-def _resolve_auto_config(config_name) -> RuntimeConfiguration:
-    # if not in the Studio environment, return local Ray as auto configuration
-    if PASSPORT_FILE_ENV not in os.environ:
-        return LOCAL_RUNTIME_CONFIGURATION
+def _resolve_remote_auto_config(config_name) -> RuntimeConfiguration:
     passport_file = pathlib.Path(os.environ[PASSPORT_FILE_ENV])
-
     try:
         passport_token = Path(passport_file).read_text()
     except FileNotFoundError as e:
@@ -214,7 +215,37 @@ def _resolve_auto_config(config_name) -> RuntimeConfiguration:
         "uri": uri,
         "token": passport_token,
     }
+
     return runtime_config
+
+
+def _resolve_local_auto_config(config_env: str) -> RuntimeConfiguration:
+    # if someone sets "auto" as CURRENT_CONFIG_ENV variable, we would get into infinite
+    # recursion here.
+    if config_env == AUTO_CONFIG_NAME:
+        raise exceptions.RuntimeConfigError(
+            f"{AUTO_CONFIG_NAME} can not be the value "
+            f"of {CURRENT_CONFIG_ENV} env variable."
+        )
+    try:
+        config = read_config(config_env)
+    except (exceptions.ConfigFileNotFoundError, exceptions.ConfigNameNotFoundError):
+        raise exceptions.RuntimeConfigError(
+            f"Couldn't find the config {config_env} specified in "
+            f"{CURRENT_CONFIG_ENV} env variable."
+        )
+    return config
+
+
+def _resolve_auto_config(config_name) -> RuntimeConfiguration:
+    # On studio we short-circuit to use internal URIs
+    if is_passport_file_available():
+        return _resolve_remote_auto_config(config_name)
+
+    if CURRENT_CONFIG_ENV in os.environ:
+        return _resolve_local_auto_config(os.environ[CURRENT_CONFIG_ENV])
+
+    return LOCAL_RUNTIME_CONFIGURATION
 
 
 def _handle_config_name_special_cases(config_name: str) -> RuntimeConfiguration:
@@ -437,11 +468,12 @@ def read_config(
             config matching `config_name` exists.
         orquestra.sdk.exceptions.ConfigFileNotFoundError: when no config file exists.
     """
-    with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME):
-        config_file = _resolve_config_file()
 
     if config_name in SPECIAL_CONFIG_NAME_DICT:
         return _handle_config_name_special_cases(config_name)
+
+    with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME):
+        config_file = _resolve_config_file()
     # Handle missing file or config not in file
     if config_file is None:
         raise exceptions.ConfigFileNotFoundError("Could not locate config file.")
