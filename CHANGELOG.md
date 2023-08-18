@@ -366,7 +366,7 @@ If a task defines its own imports (either source, dependencies, or both) - it wi
 * Git URL model changed inside the IR
 * `orq up` will now configure Ray's Plasma directory
 
-*Docs*
+📃 *Docs*
 * Guide: Dependency Installation - sources, order, and best practice
 
 ## v0.43.0
@@ -469,7 +469,7 @@ for task in wf_run.get_tasks():
 * Fix getting logs from Ray after restarting the cluster, when not using Fluent.
 * `WorkflowRun.get_results()` should return a Sequence instead of an Iterable.
 
-*Internal*
+🥷 *Internal*
 
 * Allow Studio/Portal to override SDK internals.
 * Workflow run endpoints added to the workflow driver client
@@ -480,7 +480,7 @@ for task in wf_run.get_tasks():
 * Remove obsolete system deps installation to speed up tests.
 * Ignore slow tests in local development.
 
-*Docs*
+📃 *Docs*
 
 * Streamline installation & quickstart tutorials (#324)
 * Create tutorial for parametrized workflows.
