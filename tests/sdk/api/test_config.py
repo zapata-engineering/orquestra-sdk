@@ -348,11 +348,6 @@ class TestRuntimeConfiguration:
                         )
 
             class TestLocalAuto:
-                def test_on_local_env_no_default_config(self):
-                    assert api_cfg.RuntimeConfig.load(
-                        "auto"
-                    ) == api_cfg.RuntimeConfig.load("local")
-
                 def test_on_local_env_default_config(
                     self, monkeypatch, tmp_default_config_json
                 ):
@@ -396,6 +391,10 @@ class TestRuntimeConfiguration:
                     monkeypatch.setenv("ORQ_CURRENT_CONFIG", existing_config)
 
                     # then
+                    with pytest.raises(exceptions.RuntimeConfigError):
+                        api_cfg.RuntimeConfig.load("auto")
+
+                def test_on_local_env_no_default_config(self):
                     with pytest.raises(exceptions.RuntimeConfigError):
                         api_cfg.RuntimeConfig.load("auto")
 

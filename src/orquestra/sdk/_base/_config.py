@@ -241,11 +241,14 @@ def _resolve_auto_config(config_name) -> RuntimeConfiguration:
     # On studio we short-circuit to use internal URIs
     if is_passport_file_available():
         return _resolve_remote_auto_config(config_name)
-
-    if CURRENT_CONFIG_ENV in os.environ:
+    elif CURRENT_CONFIG_ENV in os.environ:
         return _resolve_local_auto_config(os.environ[CURRENT_CONFIG_ENV])
-
-    return LOCAL_RUNTIME_CONFIGURATION
+    else:
+        # we are not in the cluster, and default config env was not set. Error out
+        raise exceptions.RuntimeConfigError(
+            f"Config {config_name} only works on the studio or when the "
+            f"{CURRENT_CONFIG_ENV} env variable is set."
+        )
 
 
 def _handle_config_name_special_cases(config_name: str) -> RuntimeConfiguration:
