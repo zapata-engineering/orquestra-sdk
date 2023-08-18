@@ -433,7 +433,7 @@ for task in wf_run.get_tasks():
 
 * `sdk.WorkflowRun.by_id()` has a new positional parameter. `sdk.WorkflowRun.by_id("wf.1", "my/project/path", "my/config/path)` becomes `sdk.WorkflowRun.by_id("wf.1", project_dir="my/project/path", config_save_file="my/config/path)`
 * `in_process` runtime now executes workflows in topological order. This may be different to the order tasks were called in the workflow function.
-* Configs can no longer be named. For in-process, use "in_process" name, for local ray "ray" or "local". For QE remote - config name is auto generated based on URI (for https://prod-d.orquestra.io/ name becomes "prod-d" as an example).
+* Configs can no longer be named. For in-process, use "in_process" name, for local ray "ray" or "local". For QE remote - config name is auto generated based on URI (for `https://prod-d.orquestra.io/` name becomes "prod-d" as an example).
 * Removed ray_linked runtime.
 
 👩‍🔬 *Experimental*
