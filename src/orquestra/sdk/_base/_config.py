@@ -246,8 +246,11 @@ def _resolve_auto_config(config_name) -> RuntimeConfiguration:
     else:
         # we are not in the cluster, and default config env was not set. Error out
         raise exceptions.RuntimeConfigError(
-            f"Config {config_name} only works on the studio or when the "
-            f"{CURRENT_CONFIG_ENV} env variable is set."
+            f"Using '{config_name}' as the config name requires that "
+            f"you're using Studio or that the '{CURRENT_CONFIG_ENV}' "
+            "environment variable is set.\n"
+            "For example, if you want to use a local Ray cluster, "
+            f"set `{CURRENT_CONFIG_ENV}=local`."
         )
 
 
