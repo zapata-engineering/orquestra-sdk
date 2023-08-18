@@ -31,7 +31,6 @@ from orquestra.sdk.schema.workflow_run import ProjectId, WorkspaceId
 
 from .. import secrets
 from . import _api, _dsl, loader
-from ._api._config import resolve_config
 from ._ast import CallVisitor, NodeReference, NodeReferenceType, normalize_indents
 from ._dsl import (
     DataAggregation,
@@ -44,8 +43,6 @@ from ._dsl import (
     get_fn_ref,
     parse_custom_name,
 )
-from ._spaces._resolver import resolve_studio_ref
-from ._spaces._structs import ProjectRef
 
 
 # ----- Workflow exceptions  -----
