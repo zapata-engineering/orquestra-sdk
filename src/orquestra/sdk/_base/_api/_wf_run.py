@@ -138,6 +138,7 @@ class WorkflowRun:
         config: t.Union[RuntimeConfig, str],
         workspace_id: t.Optional[WorkspaceId] = None,
         project_id: t.Optional[ProjectId] = None,
+        project_dir: t.Optional[t.Union[str, Path]] = None,
     ):
         """
         Start workflow run from its IR representation
@@ -149,11 +150,12 @@ class WorkflowRun:
                 the name of a saved configuration.
             workspace_id: ID of the workspace for workflow - supported only on CE
             project_id: ID of the project for workflow - supported only on CE
-
+            project_dir: the path to the project directory. If omitted, the current
+                working directory is used.
         """
         _config = resolve_config(config)
 
-        runtime = _config._get_runtime()
+        runtime = _config._get_runtime(project_dir)
 
         assert runtime is not None
 

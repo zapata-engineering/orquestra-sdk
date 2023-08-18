@@ -31,7 +31,6 @@ from orquestra.sdk.schema.workflow_run import ProjectId, WorkspaceId
 
 from .. import secrets
 from . import _api, _dsl, loader
-from ._api._config import resolve_config
 from ._ast import CallVisitor, NodeReference, NodeReferenceType, normalize_indents
 from ._dsl import (
     DataAggregation,
@@ -44,8 +43,6 @@ from ._dsl import (
     get_fn_ref,
     parse_custom_name,
 )
-from ._spaces._resolver import resolve_studio_ref
-from ._spaces._structs import ProjectRef
 
 
 # ----- Workflow exceptions  -----
@@ -178,29 +175,16 @@ class WorkflowDef(Generic[_R]):
             ProjectInvalidError: when only 1 out of project and workspace is passed
 
         """
-        _config = resolve_config(config)
-
-        runtime = _config._get_runtime(project_dir)
-
-        assert runtime is not None
-
-        # In close future there will be multiple ways of figuring out the
-        # appropriate runtime to use, based on `config`. Regardless of this
-        # logic, the runtime should always be resolved.
-        assert runtime is not None
-
-        _project: Optional[ProjectRef] = resolve_studio_ref(workspace_id, project_id)
-
         # The DirtyGitRepo warning can be raised here.
         wf_def_model = self.model
 
-        wf_run = _api.WorkflowRun._start(
+        return _api.WorkflowRun.start_from_ir(
             wf_def=wf_def_model,
-            runtime=runtime,
-            config=_config,
-            project=_project,
+            config=config,
+            workspace_id=workspace_id,
+            project_id=project_id,
+            project_dir=project_dir,
         )
-        return wf_run
 
     def with_resources(
         self,

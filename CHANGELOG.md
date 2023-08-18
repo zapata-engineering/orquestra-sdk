@@ -4,6 +4,8 @@
 
 🚨 *Breaking Changes*
 
+* When `auto` config is passed from local machine, config set in `ORQ_CURRENT_CONFIG` env variable will be used. Using `auto` locally without that env variable set, will result in an error.
+
 🔥 *Features*
 
 🧟 *Deprecations*
