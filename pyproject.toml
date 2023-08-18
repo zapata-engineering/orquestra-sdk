@@ -75,6 +75,5 @@ target-version = "py38"
 # we fix the formatting. Rules reference:
 # https://github.com/jackdewinter/pymarkdown/blob/main/docs/rules.md
 plugins.md013.enabled = false
-plugins.md032.enabled = false
 plugins.md034.enabled = false
 plugins.md036.enabled = false
