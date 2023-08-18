@@ -70,7 +70,7 @@
 * Removed "Using Custom Container Images on Compute Engine" guide.
 * Extended the "MLflow" guide with sections about tracking URI and token.
 
-##  v0.53.0
+## v0.53.0
 
 🚨 *Breaking Changes*
 * Removed unsupported `WorkflowDef.local_run()` function
