@@ -261,6 +261,7 @@
 * Using secrets inside the workflow function will now work correctly on Ray
 * Fix `WorkflowDef.graph` - honor kwargs of tasks and add `aggregate_output` to show outputs
 * Fixed returning intermediate workflow values (e.g. with `orq task results`) when the task has multiple outputs and only some of them were used in the rest of the workflow function. The following should work now as expected:
+
 ```python
 @sdk.workflow
 def my_wf():
@@ -269,6 +270,7 @@ def my_wf():
     out1, out2 = all_outputs
     return b, all_outputs, out1, out2
 ```
+
 * Pickled workflow/task results should no longer cause workflows to fail inside the SDK machinery. Note: when passing a Python object between your tasks, you **must** ensure the Python dependencies are installed.
 
 💅 *Improvements*
@@ -384,6 +386,7 @@ If a task defines its own imports (either source, dependencies, or both) - it wi
   * `orq status`
   * `orq login`
 * `sdk.WorkflowRun.get_logs()` doesn't accept any arguments any more. Now, it returns all the logs produced by the tasks in the workflow. If you're interested in only a subset of your workflow's logs, please consider using one of the following filtering options:
+
 ```python
 from orquestra import sdk
 from orquestra.sdk.schema.workflow_run import State
@@ -402,6 +405,7 @@ for task in wf_run.get_tasks():
     if task.get_status() == State.FAILED:
         print(task.get_logs())
 ```
+
 * `sdk.WorkflowRun.get_artifacts()` doesn't accept any arguments any more. Now, it returns all the artifacts produced by the tasks in the workflow.
 * `sdk.TaskRun.get_logs()` returns a list of log lines produced by this task. Previously, it returned a dictionary with one entry.
 * Executing a workflow on Ray with Git imports will now install them. A known limitation is that this will only work for Git repositories that are Python packages and will fail for Git repositories that are not Python packages.
