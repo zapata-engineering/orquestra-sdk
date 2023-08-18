@@ -133,7 +133,6 @@
 📃 *Docs*
 * "Remote Workflows" updated to describe logging in with a specific runtime, and reflect the current login process (automatic opening of login page, copying of token).
 
-
 ## v0.51.0
 
 🚨 *Breaking Changes*
@@ -182,7 +181,6 @@
 * `orquestra-sdk-base` CPU container image has a 20% size reduction.
 * Added `State` enum to the base `orquestra.sdk` package for easier filtering task runs.
 * Logs fetched from CE are now split into "task" and "env setup" categories.
-
 
 📃 *Docs*
 * Update resource management guide for Compute Engine
@@ -245,7 +243,6 @@
 🥷 *Internal*
 * Switch the login URL endpoint
 * Rewrite tests to avoid hangs on Windows CI
-
 
 ## 0.47.0
 
@@ -331,10 +328,8 @@ If a task defines its own imports (either source, dependencies, or both) - it wi
 🚨 *Breaking Changes*
 * Pickling library switched to `cloudpickle` instead of `dill`. While no breakages are expected, this change may result in objects raising an error during pickling, even if they were previously able to be pickled. Please report any instances of these as bugs.
 
-
 🔥 *Features*
 * Use the requested resources from a workflow's tasks when submitting to CE
-
 
 🥷 *Internal*
 * RayRuntime can now be configured to pass resources to underlying remote functions
@@ -347,36 +342,29 @@ If a task defines its own imports (either source, dependencies, or both) - it wi
 * `GitImport` will no longer be downloaded automatically when using Ray locally. This reverts behavior to `v0.42.0`.
 * Internal configuration environment variables have changed.
 
-
 🔥 *Features*
 * Secrets can now be used inside workflow functions
 * `sdk.secrets.get("name")` will now use passport-based authorization if `ORQUESTRA_PASSPORT_FILE` environment variable is set. Otherwise, passing a valid `config_name="..."` is required.
 * Bump Ray version to 2.3
 * `GithubImport` can be used with a username and a secret referring to a "personal access token" to enable private GitHub repositories on Compute Engine. Server side support coming soon!
 
-
 👩‍🔬 *Experimental*
-
 
 🐛 *Bug Fixes*
 * Getting full logs produced by Ray workflows. Previously, the dictionary returned by `logs_dict = wf_run.get_logs()` had just a single entry: `{"logs": ["task 1 log", "task 1 log", "task 2 log", "task 2 log"]}`. Now, the dictionary has a correct shape: `{"task_invocation_id1": ["task 1 log", "task 1 log"], "task_invocation_id2": ["task 2 log", "task 2 log"]}`.
 * Getting single task logs. Previously `orq task logs` would raise an unhandled exception. Now, it prints the log lines.
 * Workflow run IDs inside logs on CE now match the expected run ID.
 
-
 💅 *Improvements*
 * `orq wf view` now shows `TaskInvocationID`s instead of `TaskRunID`s. This improves usage of `orq wf view` with other CLI commands that require passing invocation ID, like `orq task {logs,results}`.
 * `sdk.WorkflowRun.wait_until_finished()` will now print workflow status every now and then.
-
 
 🥷 *Internal*
 * Git URL model changed inside the IR
 * `orq up` will now configure Ray's Plasma directory
 
-
 *Docs*
 * Guide: Dependency Installation - sources, order, and best practice
-
 
 ## v0.43.0
 
@@ -419,7 +407,6 @@ for task in wf_run.get_tasks():
 * Executing a workflow on Ray with Git imports will now install them. A known limitation is that this will only work for Git repositories that are Python packages and will fail for Git repositories that are not Python packages.
 * The API will no longer accept `config_save_file` as optional parameters, from now on if you want to use a different config file use the `ORQ_CONFIG_PATH` environment variable.
 
-
 🔥 *Features*
 
 * `list_workflow_runs` added to the Public API. This lets you list the workflows for a given config, for example `sdk.list_workflow_runs("ray")` or `sdk.list_workflow_runs("prod-d")`.
@@ -435,7 +422,6 @@ for task in wf_run.get_tasks():
 * `sdk.WorkflowRun.get_logs()` now only returns logs produced by the user. Previously, it included internal debug messages produced by Ray.
 * Logs from workflows submitted to Ray are now always returned as JSONL lines
 
-
 ## v0.42.0
 
 🚨 *Breaking Changes*
@@ -445,14 +431,12 @@ for task in wf_run.get_tasks():
 * Configs can no longer be named. For in-process, use "in_process" name, for local ray "ray" or "local". For QE remote - config name is auto generated based on URI (for https://prod-d.orquestra.io/ name becomes "prod-d" as an example).
 * Removed ray_linked runtime.
 
-
 👩‍🔬 *Experimental*
 
 * Optional `config` param in `sdk.WorkflowRun.by_id()`. Allows access to workflows submitted by other users or from another machine, if the selected runtime supports it. Per-runtime support will be added separately.
 * New CLI command: `python -m orquestra.sdk._base.cli._dorq._entry workflow stop`.
 * New CLI commands that require `config` and `workflow_run_id` will now prompt the user for selecting value interactively.
 * New CLI commands: `python -m orquestra.sdk._base.cli._dorq._entry up|down|status` for managing local services.
-
 
 ## v0.41.0
 
@@ -498,7 +482,6 @@ for task in wf_run.get_tasks():
 * Cleanup and unify tutorials for local Ray execution
 * Cleanup and unify tutorials for remote QE execution (#341)
 * Add recipe for running VQE on quantum hardware.
-
 
 ## v0.40.0
 

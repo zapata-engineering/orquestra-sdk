@@ -74,7 +74,6 @@ target-version = "py38"
 # Our CHANGELOG.md violates all these rules. We can remove them one-by-one when
 # we fix the formatting. Rules reference:
 # https://github.com/jackdewinter/pymarkdown/blob/main/docs/rules.md
-plugins.md012.enabled = false
 plugins.md013.enabled = false
 plugins.md019.enabled = false
 plugins.md022.enabled = false
