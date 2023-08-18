@@ -5,6 +5,7 @@
 🚨 *Breaking Changes*
 
 🔥 *Features*
+
 * Allow to set default config in `ORQ_CURRENT_CONFIG` env variable which will be used locally when `auto` config is passed.
 
 🧟 *Deprecations*
