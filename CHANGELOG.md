@@ -382,19 +382,19 @@ If a task defines its own imports (either source, dependencies, or both) - it wi
 
 🚨 *Breaking Changes*
 * Brand-new `orq` CLI with simplified command tree and interactive prompts when a required argument isn't passed. New commands:
-    * `orq workflow submit`
-    * `orq workflow view`
-    * `orq workflow list`
-    * `orq workflow stop`
-    * `orq workflow logs`
-    * `orq workflow results`
-    * `orq wf` as a shorthand for `orq workflow`
-    * `orq task logs`
-    * `orq task results`
-    * `orq up`
-    * `orq down`
-    * `orq status`
-    * `orq login`
+  * `orq workflow submit`
+  * `orq workflow view`
+  * `orq workflow list`
+  * `orq workflow stop`
+  * `orq workflow logs`
+  * `orq workflow results`
+  * `orq wf` as a shorthand for `orq workflow`
+  * `orq task logs`
+  * `orq task results`
+  * `orq up`
+  * `orq down`
+  * `orq status`
+  * `orq login`
 * `sdk.WorkflowRun.get_logs()` doesn't accept any arguments any more. Now, it returns all the logs produced by the tasks in the workflow. If you're interested in only a subset of your workflow's logs, please consider using one of the following filtering options:
 ```python
 from orquestra import sdk
