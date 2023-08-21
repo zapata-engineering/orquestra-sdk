@@ -266,12 +266,12 @@ class Resources(pydantic.BaseModel):
 class CreateWorkflowRunRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/2b353476d5b0161da31584533be208611a131bdc/openapi/src/schemas/CreateWorkflowRunRequest.yaml
+        https://github.com/zapatacomputing/workflow-driver/blob/be7f293b052a0fee7b012badebef72dee02a2ebe/openapi/src/schemas/CreateWorkflowRunRequest.yaml
     """
 
     workflowDefinitionID: WorkflowDefID
     resources: Resources
-    dry_run: bool
+    dryRun: bool
 
 
 class CreateWorkflowRunResponse(pydantic.BaseModel):

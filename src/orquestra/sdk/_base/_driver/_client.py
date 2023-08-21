@@ -388,7 +388,7 @@ class DriverClient:
             body_params=_models.CreateWorkflowRunRequest(
                 workflowDefinitionID=workflow_def_id,
                 resources=resources,
-                dry_run=dry_run,
+                dryRun=dry_run,
             ).dict(),
         )
 
