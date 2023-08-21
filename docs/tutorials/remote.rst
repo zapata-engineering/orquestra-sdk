@@ -7,9 +7,12 @@ Prerequisites
 =============
 
 #. You've installed Orquestra Workflow SDK (:doc:`macOS, Linux<installing-macos-linux>`, :doc:`Windows<installing-windows>`).
-#. You have access to remote Orquestra cluster. Specifically you will require:
-    * The email address and password for your Orquestra Account.
-    * The URL of your Orquestra Cluster
+#. You have access to remote Orquestra cluster.
+   Specifically you will require:
+
+   * The email address and password for your Orquestra Account.
+   * The URL of your Orquestra Cluster.
+
 
 If you do not have these, reach out to your point of contact at Zapata.
 
@@ -23,7 +26,8 @@ Before running a workflow remotely, you will need to log in to your Orquestra Cl
 .. only:: internal
 
     .. note::
-        If you are a Zapata employee, ask your manager which cluster you should use. You can request access to a cluster through the `Zapata Cloud Support portal <https://zapatacomputing.atlassian.net/servicedesk/customer/portal/4/group/14/create/35>`_.
+        If you are a Zapata employee, ask your manager which cluster you should use.
+        You can request access to a cluster through the `Zapata Cloud Support portal <https://zapatacomputing.atlassian.net/servicedesk/customer/portal/4/group/14/create/35>`_.
 
 
 Run the command below to log in to an Orquestra cluster (using the appropriate cluster URL):
@@ -50,7 +54,8 @@ Define Configuration
 
 To work with remote clusters, Server URI and Token needs to be saved as part of the configuration.
 As Token is considered sensitive data, it is highly recommended to avoid keeping it inside any kind of repository or production code.
-Token and URI should be stored in local configuration file. To do this, execute following command:
+Token and URI should be stored in local configuration file.
+To do this, execute following command:
 
 .. code:: bash
 
@@ -58,8 +63,7 @@ Token and URI should be stored in local configuration file. To do this, execute 
 
 .. warning::
 
-    Under no circumstances should you commit the configuration file or token itself to any git
-    repository or anywhere else when anyone could see it.
+    Under no circumstances should you commit the configuration file or token itself to any git repository or anywhere else when anyone could see it.
 
 Create the Workflow Definition
 ==============================

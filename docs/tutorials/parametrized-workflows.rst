@@ -3,7 +3,7 @@ Parametrized Workflows
 ========================
 
 This tutorial walks you through running a workflow that is parametrized.
-Examples given in this tutorial will run those workflows in a local Ray instance.
+Example workflows given in this tutorial will be run in a local Ray instance.
 
 Prerequisites
 =============
@@ -17,7 +17,7 @@ Definition of Parametrized Workflow
 
 Parametrized workflow is nothing more than workflow function that accepts parameters.
 
-As an example of parametrized workflow with 1 task, you can define one as follows:
+Here is an example of a parametrized workflow with one task:
 
 .. literalinclude:: ../examples/tests/test_parametrized_workflows.py
     :start-after: def parametrized_workflow():
@@ -32,8 +32,7 @@ Execute Workflow
 ================
 
 Then, run the following snippet in your ``python`` REPL or a Python script.
-It loads your workflow definition, and executes it on local Ray cluster, waits for it to finish
-and prints out results
+It loads your workflow definition, and executes it on local Ray cluster, waits for it to finish and prints out results
 
 
 .. literalinclude:: ../examples/tests/test_parametrized_workflows.py
@@ -44,15 +43,14 @@ and prints out results
 
 .. warning::
 
-    Parametrized workflows can be submitted only via Python API. Currently, it is not
-    possible to submit parametrized workflows via the CLI.
+    Parametrized workflows can be submitted only via Python API.
+    Currently, it is not possible to submit parametrized workflows via the CLI.
 
 
 Get Results
 ===========
 The workflow is executed in the background.
-To get the calculated values, either follow the instruction in :doc:`started Ray<ray>`.
-or run the following
+To get the calculated values, run the following:
 
 .. literalinclude:: ../examples/tests/test_parametrized_workflows.py
     :start-after: def get_results():
@@ -64,9 +62,8 @@ or run the following
 Tuning Workflows Using Parameters
 =================================
 
-The biggest advantage of parametrized workflow is to run multiple versions of the same workflow
-to compare results for different inputs. This can be obtained by executing workflow with
-different input parameters in a loop as in this example:
+The biggest advantage of parametrized workflows is the ability to run multiple versions of the same workflow to compare results for different inputs.
+This can be performed by executing the workflow with different input parameters in a loop as in this example:
 
 .. literalinclude:: ../examples/tests/test_parametrized_workflows.py
     :start-after: def execute_multiple_workflows():
