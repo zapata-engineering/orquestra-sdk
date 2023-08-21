@@ -181,12 +181,12 @@ class WorkflowDef(Generic[_R]):
         wf_def_model = self.model
 
         return _api.WorkflowRun.start_from_ir(
-            wf_def = wf_def_model,
+            wf_def=wf_def_model,
             config=config,
             workspace_id=workspace_id,
             project_id=project_id,
             project_dir=project_dir,
-            dry_run = dry_run,
+            dry_run=dry_run,
         )
 
     def with_resources(
