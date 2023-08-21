@@ -5,7 +5,7 @@ import typing as t
 
 from ...schema.configs import ConfigName
 from ...schema.workflow_run import WorkspaceId
-from .._api._config import RuntimeConfig, _resolve_config
+from .._api._config import RuntimeConfig, resolve_config
 from ._structs import Project, Workspace
 
 
@@ -22,7 +22,7 @@ def list_workspaces(
         ConfigNameNotFoundError: when the named config is not found in the file.
     """
     # Resolve config
-    resolved_config = _resolve_config(config)
+    resolved_config = resolve_config(config)
 
     runtime = resolved_config._get_runtime()
 
@@ -43,7 +43,7 @@ def list_projects(
         ConfigNameNotFoundError: when the named config is not found in the file.
     """
     # Resolve config
-    resolved_config = _resolve_config(config)
+    resolved_config = resolve_config(config)
     resolved_workspace_id: str
 
     resolved_workspace_id = (

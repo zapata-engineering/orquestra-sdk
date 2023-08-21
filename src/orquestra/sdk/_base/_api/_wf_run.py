@@ -33,12 +33,11 @@ from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
 from .. import serde
 from .._graphs import iter_invocations_topologically
-from .._in_process_runtime import InProcessRuntime
 from .._logs._interfaces import WorkflowLogs
 from .._spaces._resolver import resolve_studio_ref, resolve_studio_workspace_ref
 from .._spaces._structs import ProjectRef
 from ..abc import RuntimeInterface
-from ._config import RuntimeConfig, _resolve_config
+from ._config import RuntimeConfig, resolve_config
 from ._task_run import TaskRun
 
 COMPLETED_STATES = [State.FAILED, State.TERMINATED, State.SUCCEEDED, State.KILLED]
@@ -111,7 +110,7 @@ class WorkflowRun:
             except (ConfigFileNotFoundError, ConfigNameNotFoundError):
                 raise
         else:
-            resolved_config = _resolve_config(config)
+            resolved_config = resolve_config(config)
 
         # Retrieve workflow def from the runtime:
         # - Ray stores wf def for us under a metadata entry.
@@ -139,6 +138,7 @@ class WorkflowRun:
         config: t.Union[RuntimeConfig, str],
         workspace_id: t.Optional[WorkspaceId] = None,
         project_id: t.Optional[ProjectId] = None,
+        project_dir: t.Optional[t.Union[str, Path]] = None,
     ):
         """
         Start workflow run from its IR representation
@@ -150,23 +150,12 @@ class WorkflowRun:
                 the name of a saved configuration.
             workspace_id: ID of the workspace for workflow - supported only on CE
             project_id: ID of the project for workflow - supported only on CE
-
+            project_dir: the path to the project directory. If omitted, the current
+                working directory is used.
         """
-        _config: RuntimeConfig
-        if isinstance(config, RuntimeConfig):
-            _config = config
-        elif isinstance(config, str):
-            _config = RuntimeConfig.load(config)
-        else:
-            raise TypeError(
-                f"'config' argument to `start_from_ir()` has unsupported "
-                f"type {type(config)}."
-            )
-        runtime: RuntimeInterface
-        if _config._runtime_name == "IN_PROCESS":
-            runtime = InProcessRuntime()
-        else:
-            runtime = _config._get_runtime()
+        _config = resolve_config(config)
+
+        runtime = _config._get_runtime(project_dir)
 
         assert runtime is not None
 
@@ -631,7 +620,7 @@ def list_workflow_runs(
     _project_dir = Path(project_dir or Path.cwd())
 
     # Resolve config
-    resolved_config: RuntimeConfig = _resolve_config(config)
+    resolved_config: RuntimeConfig = resolve_config(config)
     # If user wasn't specific with workspace and project, we might want to resolve it
 
     # resolve runtime
