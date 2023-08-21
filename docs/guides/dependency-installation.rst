@@ -23,15 +23,19 @@ The following sections give a more complete explanation of these importers and t
      - For Use With
      - Be Aware
 
-   * - Default (internally called ``InlineImport``). An analogue of copying and pasting the task source code to move it to the server.
+   * - Default (internally called ``InlineImport``).
+       An analogue of copying and pasting the task source code to move it to the server.
      - * Works out-of-the-box for simple cases.
        * Doesn't require running ``git commit && git push`` every time you edit your code.
        * Works with tasks defined in a Jupyter notebook.
      - * Has to be accompanied by ``dependency_imports`` if the task code depends on a third-party library.
-       * Uses pickle-like serialization under the hood. This might cause edge cases like invalid symbol resolution errors when the scenario is complicated.
-       * Task source code is part of the internal workflow definition representation. It might cause hitting workflow size limits.
+       * Uses pickle-like serialization under the hood.
+         This might cause edge cases like invalid symbol resolution errors when the scenario is complicated.
+       * Task source code is part of the internal workflow definition representation.
+         It might result in hitting workflow size limits.
 
-   * - ``PythonImports``. An analogue of running ``pip install ...`` on the server.
+   * - ``PythonImports``.
+       An analogue of running ``pip install ...`` on the server.
      - * Works well as a ``dependency_imports=[...]`` addition to ``InlineImport`` to allow using 3rd-party libraries.
        * Best suited for referencing libraries available on `PyPI <https://pypi.org/>`_ like ``torch``.
      - * Can't be reliably used to refer to an unpublished, WIP projects.
@@ -51,7 +55,8 @@ The following sections give a more complete explanation of these importers and t
        * Is likely to work with other git hostings than GitHub.
        * Might support more complicated use cases than ``GithubImport``.
      - * All cons of ``GithubImport``, apart from being GitHub-exclusive.
-       * Verbose. It's easy to make a spelling mistake when specifying its parameters.
+       * Verbose.
+         It's easy to make a spelling mistake when specifying its parameters.
 
 
 Good Practice

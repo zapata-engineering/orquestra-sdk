@@ -17,6 +17,7 @@
 💅 *Improvements*
 
 🥷 *Internal*
+* Reformatted docs source files to put each sentence on its own line.
 
 📃 *Docs*
 
@@ -43,6 +44,7 @@
 * Corrected unclear language in the quickstart guide.
 * Fixed resource management doc incorrectly stating that 10k == 10^7.
 * Removed outdated references to the `wf.prepare()` method.
+* Fixed wording and formatting issues in Resource Management, Workflow Syntax, Runtime Configuration, and Workflow Runs, and Parametrized Workflows.
 * Updated Jupyter tutorial's content.
 
 ## v0.54.0
