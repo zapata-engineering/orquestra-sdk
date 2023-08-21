@@ -727,29 +727,38 @@ def _run_and_await_wf(
 
 
 @pytest.mark.slow
-class TestDirectRayReader:
+class TestDirectLogReader:
     """
     Verifies that our code can read log files produced by Ray.
     This class tests reading Ray log files directly; it doesn't test the solution based
     on FluentBit.
 
-    The tests' boundary: `[DirectRayReader]-[task code]`
+    The tests' boundary: `[DirectLogReader]-[task code]`
     """
 
     class TestGetWorkflowLogs:
         @staticmethod
         @pytest.mark.parametrize(
-            "wf,tell_tale",
+            "wf,tell_tale_out,tell_tale_err",
             [
-                (_example_wfs.wf_with_log(msg="hello, there!").model, "hello, there!"),
+                (
+                    _example_wfs.wf_with_log(msg="hello, there!").model,
+                    "hello, there!",
+                    None,
+                ),
                 (
                     _example_wfs.exception_wf.model,
+                    None,
                     "ZeroDivisionError: division by zero",
                 ),
             ],
         )
         def test_per_task_content(
-            shared_ray_conn, runtime, wf: ir.WorkflowDef, tell_tale: str
+            shared_ray_conn,
+            runtime,
+            wf: ir.WorkflowDef,
+            tell_tale_out: t.Optional[str],
+            tell_tale_err: t.Optional[str],
         ):
             """
             Submit a workflow, wait for it to finish, get wf logs, look for the test
@@ -758,19 +767,29 @@ class TestDirectRayReader:
             # Given
             ray_params = shared_ray_conn
             wf_run_id = _run_and_await_wf(runtime, wf)
-            reader = _ray_logs.DirectRayReader(Path(ray_params._temp_dir))
+            reader = _ray_logs.DirectLogReader(Path(ray_params._temp_dir))
 
             # When
             logs = reader.get_workflow_logs(wf_run_id=wf_run_id)
 
             # Then
-            log_lines_joined = "".join(
+            stdout_lines_joined = "".join(
                 log_line
                 for task_log_lines in logs.per_task.values()
-                for log_line in task_log_lines
+                for log_line in task_log_lines.out
             )
 
-            assert tell_tale in log_lines_joined
+            stderr_lines_joined = "".join(
+                log_line
+                for task_log_lines in logs.per_task.values()
+                for log_line in task_log_lines.err
+            )
+
+            if tell_tale_out is not None:
+                assert tell_tale_out in stdout_lines_joined
+
+            if tell_tale_err is not None:
+                assert tell_tale_err in stderr_lines_joined
 
         @staticmethod
         def test_env_setup_content(shared_ray_conn, runtime: _dag.RayRuntime):
@@ -784,7 +803,7 @@ class TestDirectRayReader:
             ).model
             # This workflow includes setting up specialized venv by Ray, so it's slow.
             wf_run_id = _run_and_await_wf(runtime, wf_def, timeout=10.0 * 60)
-            reader = _ray_logs.DirectRayReader(Path(ray_params._temp_dir))
+            reader = _ray_logs.DirectLogReader(Path(ray_params._temp_dir))
 
             # When
             logs = reader.get_workflow_logs(wf_run_id=wf_run_id)
@@ -793,18 +812,32 @@ class TestDirectRayReader:
             assert len(logs.env_setup) > 0
 
             for tell_tale in ["Cloning virtualenv", "'pip', 'install'"]:
-                assert len([line for line in logs.env_setup if tell_tale in line]) > 0
+                assert (
+                    len([line for line in logs.env_setup.out if tell_tale in line]) > 0
+                )
 
     @staticmethod
     @pytest.mark.parametrize(
-        "wf,tell_tale",
+        "wf,tell_tale_out,tell_tale_err",
         [
-            (_example_wfs.wf_with_log(msg="hello, there!").model, "hello, there!"),
-            (_example_wfs.exception_wf.model, "ZeroDivisionError: division by zero"),
+            (
+                _example_wfs.wf_with_log(msg="hello, there!").model,
+                "hello, there!",
+                None,
+            ),
+            (
+                _example_wfs.exception_wf.model,
+                None,
+                "ZeroDivisionError: division by zero",
+            ),
         ],
     )
     def test_get_task_logs(
-        shared_ray_conn, runtime, wf: ir.WorkflowDef, tell_tale: str
+        shared_ray_conn,
+        runtime,
+        wf: ir.WorkflowDef,
+        tell_tale_out: t.Optional[str],
+        tell_tale_err: t.Optional[str],
     ):
         """
         Submit a workflow, wait for it to finish, get task logs, look for the test
@@ -812,18 +845,21 @@ class TestDirectRayReader:
         """
         # Given
         ray_params = shared_ray_conn
-        reader = _ray_logs.DirectRayReader(Path(ray_params._temp_dir))
+        reader = _ray_logs.DirectLogReader(Path(ray_params._temp_dir))
         all_inv_ids = list(wf.task_invocations.keys())
         wf_run_id = _run_and_await_wf(runtime, wf)
 
         # When
-        log_lines = reader.get_task_logs(
-            wf_run_id=wf_run_id, task_inv_id=all_inv_ids[0]
-        )
+        logs = reader.get_task_logs(wf_run_id=wf_run_id, task_inv_id=all_inv_ids[0])
 
         # Then
-        lines_joined = "\n".join(log_lines)
-        assert tell_tale in lines_joined
+        stdout_lines_joined = "\n".join(logs.out)
+        stderr_lines_joined = "\n".join(logs.err)
+        if tell_tale_out is not None:
+            assert tell_tale_out in stdout_lines_joined
+
+        if tell_tale_err is not None:
+            assert tell_tale_err in stderr_lines_joined
 
 
 @pytest.mark.slow
@@ -834,14 +870,14 @@ def test_ray_direct_reader_no_duplicate_lines(
     """
     This ensures that `session_latest` and `session_<current date>` are not searched
     twice.
-    This is separate to the `TestDirectRayReader` tests because searching without the
+    This is separate to the `TestDirectLogReader` tests because searching without the
     run id may show duplicate logs if different workflows print the same thing.
     """
     # Given
     wf = _example_wfs.wf_with_log("Unique log line").model
     tell_tale = "Unique log line"
     ray_params = shared_ray_conn
-    reader = _ray_logs.DirectRayReader(Path(ray_params._temp_dir))
+    reader = _ray_logs.DirectLogReader(Path(ray_params._temp_dir))
 
     run_id = runtime.create_workflow_run(wf, None, False)
     _wait_to_finish_wf(run_id, runtime)
@@ -854,7 +890,7 @@ def test_ray_direct_reader_no_duplicate_lines(
     matches = [
         tell_tale in log_line
         for task_log_lines in logs.per_task.values()
-        for log_line in task_log_lines
+        for log_line in task_log_lines.out
     ]
 
     # Assert the tell_tale was only found once

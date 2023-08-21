@@ -13,7 +13,7 @@ import pydantic
 from typing_extensions import assert_never
 
 from .. import exceptions, secrets
-from .._base import _exec_ctx, _git_url_utils, _graphs, dispatch, serde
+from .._base import _exec_ctx, _git_url_utils, _graphs, _services, dispatch, serde
 from .._base._env import (
     RAY_DOWNLOAD_GIT_IMPORTS_ENV,
     RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV,
@@ -210,8 +210,10 @@ def _make_ray_dag_node(
             # TODO: make the IDs required and raise an error if they're not present.
             # https://zapatacomputing.atlassian.net/browse/ORQSDK-530
             wf_run_id, task_inv_id, _ = get_current_ids()
-            with _markers.printed_task_markers(
-                wf_run_id=wf_run_id, task_inv_id=task_inv_id
+            with _markers.capture_logs(
+                logs_dir=_services.redirected_logs_dir(),
+                wf_run_id=wf_run_id,
+                task_inv_id=task_inv_id,
             ):
                 if project_dir is not None:
                     dispatch.ensure_sys_paths([str(project_dir)])

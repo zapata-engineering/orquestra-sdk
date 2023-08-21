@@ -7,6 +7,7 @@ from collections import namedtuple
 from itertools import chain
 
 from orquestra.sdk._base import serde
+from orquestra.sdk._base._logs._interfaces import LogOutput
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import State, TaskInvocationId
@@ -104,7 +105,7 @@ class TaskRun:
         )
         return task_run_model.status.state
 
-    def get_logs(self) -> t.List[str]:
+    def get_logs(self) -> LogOutput:
         return self._runtime.get_task_logs(
             wf_run_id=self.workflow_run_id, task_inv_id=self.task_invocation_id
         )

@@ -20,7 +20,7 @@ from tabulate import tabulate
 
 from orquestra.sdk._base import _dates, _env, _services, serde
 from orquestra.sdk._base._dates import Instant
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs
+from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk.schema import responses
 from orquestra.sdk.schema.configs import ConfigName, RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.ir import ArtifactFormat
@@ -92,21 +92,31 @@ class WrappedCorqOutputPresenter:
 
     @_format_logs.register(dict)
     @staticmethod
-    def _(logs: dict):
-        return [
-            line
-            for invocation_id, invocation_lines in logs.items()
-            for line in (f"task-invocation-id: {invocation_id}", *invocation_lines)
-        ]
+    def _(logs: dict) -> t.List[str]:
+        log_lines = []
+        for invocation_id, invocation_logs in logs.items():
+            log_lines.append(f"task-invocation-id: {invocation_id}")
+            log_lines.extend(WrappedCorqOutputPresenter._format_logs(invocation_logs))
+        return log_lines
 
     @_format_logs.register(list)
     @staticmethod
-    def _(logs: list):
+    def _(logs: list) -> t.List[str]:
         return logs
+
+    @_format_logs.register(LogOutput)
+    @staticmethod
+    def _(logs: LogOutput) -> t.List[str]:
+        output = []
+        if len(logs.out) > 0:
+            output.extend(["stdout:", *logs.out])
+        if len(logs.err) > 0:
+            output.extend(["stderr:", *logs.err])
+        return output
 
     def show_logs(
         self,
-        logs: t.Union[t.Mapping[TaskInvocationId, t.Sequence[str]], t.Sequence[str]],
+        logs: t.Union[t.Mapping[TaskInvocationId, LogOutput], LogOutput],
         log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None,
     ):
         """

@@ -13,6 +13,7 @@ from unittest.mock import mock_open, patch
 
 import pytest
 
+from orquestra.sdk import exceptions
 from orquestra.sdk._base import _config
 from orquestra.sdk._base._api import _config as api_cfg
 from orquestra.sdk.exceptions import ConfigNameNotFoundError
@@ -298,41 +299,104 @@ class TestRuntimeConfiguration:
                 )
 
         class TestAutoConfig:
-            def test_on_cluster(self, monkeypatch, tmp_path):
-                token = "the best token you have ever seen"
-                pass_file = tmp_path / "pass.port"
-                pass_file.write_text(token)
-                monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", str(pass_file))
-                monkeypatch.setenv("ORQ_CURRENT_CLUSTER", "cluster.io")
+            class TestRemoteAuto:
+                def test_on_cluster(self, monkeypatch, tmp_path):
+                    token = "the best token you have ever seen"
+                    pass_file = tmp_path / "pass.port"
+                    pass_file.write_text(token)
+                    monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", str(pass_file))
+                    monkeypatch.setenv("ORQ_CURRENT_CLUSTER", "cluster.io")
 
-                cfg = api_cfg.RuntimeConfig.load(
-                    "auto",
-                )
-
-                assert cfg.token == token
-                assert cfg.uri == "https://cluster.io"
-
-            def test_no_cluster_uri(self, tmp_path, monkeypatch):
-                token = "the best token you have ever seen"
-                pass_file = tmp_path / "pass.port"
-                pass_file.write_text(token)
-                monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", str(pass_file))
-                with pytest.raises(EnvironmentError):
-                    api_cfg.RuntimeConfig.load(
+                    cfg = api_cfg.RuntimeConfig.load(
                         "auto",
                     )
 
-            def test_on_local_env(self):
-                assert api_cfg.RuntimeConfig.load("auto") == api_cfg.RuntimeConfig.load(
-                    "local"
-                )
+                    assert cfg.token == token
+                    assert cfg.uri == "https://cluster.io"
 
-            def test_no_file(self, monkeypatch):
-                monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", "non-existing-path")
-                with pytest.raises(FileNotFoundError):
-                    api_cfg.RuntimeConfig.load(
+                def test_on_cluster_with_default_config(self, monkeypatch, tmp_path):
+                    # default config does not change behaviour on cluster
+                    token = "the best token you have ever seen"
+                    pass_file = tmp_path / "pass.port"
+                    pass_file.write_text(token)
+                    monkeypatch.setenv("ORQ_CURRENT_CONFIG", "actual_name")
+                    monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", str(pass_file))
+                    monkeypatch.setenv("ORQ_CURRENT_CLUSTER", "cluster.io")
+
+                    cfg = api_cfg.RuntimeConfig.load(
                         "auto",
                     )
+
+                    assert cfg.token == token
+                    assert cfg.uri == "https://cluster.io"
+
+                def test_no_cluster_uri(self, tmp_path, monkeypatch):
+                    token = "the best token you have ever seen"
+                    pass_file = tmp_path / "pass.port"
+                    pass_file.write_text(token)
+                    monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", str(pass_file))
+                    with pytest.raises(EnvironmentError):
+                        api_cfg.RuntimeConfig.load(
+                            "auto",
+                        )
+
+                def test_no_file(self, monkeypatch):
+                    monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", "non-existing-path")
+                    with pytest.raises(FileNotFoundError):
+                        api_cfg.RuntimeConfig.load(
+                            "auto",
+                        )
+
+            class TestLocalAuto:
+                def test_on_local_env_default_config(
+                    self, monkeypatch, tmp_default_config_json
+                ):
+                    # given
+                    existing_config = "actual_name"
+                    monkeypatch.setenv("ORQ_CURRENT_CONFIG", existing_config)
+
+                    # when
+                    config = api_cfg.RuntimeConfig.load("auto")
+
+                    # then
+                    assert config.name == existing_config
+                    assert config.token == "this_token_best_token"
+                    assert config.uri == "http://actual_name.domain"
+
+                def test_on_local_env_default_config_set_to_local(self, monkeypatch):
+                    # given
+                    existing_config = "local"
+                    monkeypatch.setenv("ORQ_CURRENT_CONFIG", existing_config)
+
+                    # when
+                    config = api_cfg.RuntimeConfig.load("auto")
+
+                    # then
+                    assert config == api_cfg.RuntimeConfig.load("local")
+
+                def test_on_local_env_non_existing_default_config(
+                    self, monkeypatch, tmp_default_config_json
+                ):
+                    # given
+                    existing_config = "non_existing"
+                    monkeypatch.setenv("ORQ_CURRENT_CONFIG", existing_config)
+
+                    # then
+                    with pytest.raises(exceptions.RuntimeConfigError):
+                        api_cfg.RuntimeConfig.load("auto")
+
+                def test_on_local_env_auto_default_config(self, monkeypatch):
+                    # given
+                    existing_config = "auto"
+                    monkeypatch.setenv("ORQ_CURRENT_CONFIG", existing_config)
+
+                    # then
+                    with pytest.raises(exceptions.RuntimeConfigError):
+                        api_cfg.RuntimeConfig.load("auto")
+
+                def test_on_local_env_no_default_config(self):
+                    with pytest.raises(exceptions.RuntimeConfigError):
+                        api_cfg.RuntimeConfig.load("auto")
 
 
 @pytest.mark.parametrize(

@@ -9,7 +9,7 @@ import pytest
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _dates
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs
+from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk._base._spaces._structs import Project, Workspace
 from orquestra.sdk._base.cli import _arg_resolvers, _repos
 from orquestra.sdk._base.cli._ui import _presenters, _prompts
@@ -565,6 +565,16 @@ class TestWFRunResolver:
 
     class TestResolveLogSwitches:
         @staticmethod
+        @pytest.fixture
+        def mocked_logs():
+            return WorkflowLogs(
+                per_task={"foo": LogOutput(out=["fop"], err=[])},
+                system=LogOutput(out=["bar"], err=[]),
+                env_setup=LogOutput(out=["baz"], err=[]),
+                other=LogOutput(out=["fip"], err=[]),
+            )
+
+        @staticmethod
         @pytest.mark.parametrize(
             "switches",
             [
@@ -577,7 +587,7 @@ class TestWFRunResolver:
             ],
         )
         def test_returns_unchanged_if_all_switches_are_set_and_all_logs_available(
-            switches,
+            switches, mocked_logs
         ):
             """
             The most trivial case - all of the log types are available, and the user
@@ -585,12 +595,6 @@ class TestWFRunResolver:
             nothing.
             """
             # Given
-            logs = WorkflowLogs(
-                per_task={"foo": ["fop"]},
-                system=["bar"],
-                env_setup=["baz"],
-                other=["fip"],
-            )
             prompter = create_autospec(_prompts.Prompter)
             resolver = _arg_resolvers.WFRunResolver(
                 wf_run_repo=create_autospec(_repos.WorkflowRunRepo), prompter=prompter
@@ -598,7 +602,7 @@ class TestWFRunResolver:
 
             # When
             resolved_switches = resolver.resolve_log_switches(
-                *switches, logs
+                *switches, mocked_logs
             )  # type: ignore
 
             # Then
@@ -635,6 +639,7 @@ class TestWFRunResolver:
                 t.Optional[bool], t.Optional[bool], t.Optional[bool], t.Optional[bool]
             ],
             expected_switches: t.Tuple[bool, bool, bool, bool],
+            mocked_logs,
         ):
             """
             The user has set some, but not all, switches to True, and the log types
@@ -642,19 +647,13 @@ class TestWFRunResolver:
             unchanged and set the remaining switches to False.
             """
             # Given
-            logs = WorkflowLogs(
-                per_task={"foo": ["fop"]},
-                system=["bar"],
-                env_setup=["baz"],
-                other=["fip"],
-            )
             prompter = create_autospec(_prompts.Prompter)
             resolver = _arg_resolvers.WFRunResolver(
                 wf_run_repo=create_autospec(_repos.WorkflowRunRepo), prompter=prompter
             )
 
             # When
-            resolved_switches = resolver.resolve_log_switches(*switches, logs)
+            resolved_switches = resolver.resolve_log_switches(*switches, mocked_logs)
 
             # Then
             assert resolved_switches == {
@@ -685,6 +684,7 @@ class TestWFRunResolver:
             switches: t.Tuple[
                 t.Optional[bool], t.Optional[bool], t.Optional[bool], t.Optional[bool]
             ],
+            mocked_logs,
         ):
             """
             The user has set some, but not all, switches to False, and all the log
@@ -692,12 +692,6 @@ class TestWFRunResolver:
             the remaining log types they haven't ruled out.
             """
             # Given
-            logs = WorkflowLogs(
-                per_task={"foo": ["fop"]},
-                system=["bar"],
-                env_setup=["baz"],
-                other=["fip"],
-            )
             prompter = create_autospec(_prompts.Prompter)
             prompter.choice.return_value = WorkflowLogs.WorkflowLogTypeName.PER_TASK
             resolver = _arg_resolvers.WFRunResolver(
@@ -717,7 +711,7 @@ class TestWFRunResolver:
             ]
 
             # When
-            _ = resolver.resolve_log_switches(*switches, logs)
+            _ = resolver.resolve_log_switches(*switches, mocked_logs)
 
             # Then
             prompter.choice.assert_called_once_with(
@@ -740,25 +734,20 @@ class TestWFRunResolver:
             switches: t.Tuple[
                 t.Optional[bool], t.Optional[bool], t.Optional[bool], t.Optional[bool]
             ],
+            mocked_logs,
         ):
             """
             The user has set some, but not all, switches, and all the log types are
             available. The resolved should set any unchanged switches to false
             """
             # Given
-            logs = WorkflowLogs(
-                per_task={"foo": ["fop"]},
-                system=["bar"],
-                env_setup=["baz"],
-                other=["bic"],
-            )
             prompter = create_autospec(_prompts.Prompter)
             resolver = _arg_resolvers.WFRunResolver(
                 wf_run_repo=create_autospec(_repos.WorkflowRunRepo), prompter=prompter
             )
 
             # When
-            resolved_switches = resolver.resolve_log_switches(*switches, logs)
+            resolved_switches = resolver.resolve_log_switches(*switches, mocked_logs)
 
             # Then
             assert resolved_switches == {
@@ -791,6 +780,7 @@ class TestWFRunResolver:
             expected_switches: t.Tuple[
                 t.Optional[bool], t.Optional[bool], t.Optional[bool], t.Optional[bool]
             ],
+            mocked_logs,
         ):
             """
             The user chooses the logs type when prompted. The resolver should set the
@@ -798,12 +788,6 @@ class TestWFRunResolver:
             """
             # Given
             prompter = create_autospec(_prompts.Prompter)
-            logs = WorkflowLogs(
-                per_task={"foo": ["fop"]},
-                system=["bar"],
-                env_setup=["baz"],
-                other=["bic"],
-            )
             prompter.choice.return_value = user_choice
             resolver = _arg_resolvers.WFRunResolver(
                 wf_run_repo=create_autospec(_repos.WorkflowRunRepo), prompter=prompter
@@ -811,7 +795,7 @@ class TestWFRunResolver:
 
             # When
             resolved_switches = resolver.resolve_log_switches(
-                None, None, None, None, logs
+                None, None, None, None, mocked_logs
             )
 
             # Then
@@ -911,20 +895,20 @@ class TestWFRunResolver:
             [
                 (
                     WorkflowLogs(
-                        per_task={"foo": ["fop"]},
-                        system=["bar"],
-                        env_setup=[],
-                        other=[],
+                        per_task={"foo": LogOutput(out=["fop"], err=[])},
+                        system=LogOutput(out=["bar"], err=[]),
+                        env_setup=LogOutput(out=[], err=[]),
+                        other=LogOutput(out=[], err=[]),
                     ),
                     (False, None, None, None),
                     [WorkflowLogs.WorkflowLogTypeName.SYSTEM],
                 ),
                 (
                     WorkflowLogs(
-                        per_task={"foo": ["fop"]},
-                        system=[],
-                        env_setup=["baz"],
-                        other=[],
+                        per_task={"foo": LogOutput(out=["fop"], err=[])},
+                        system=LogOutput(out=[], err=[]),
+                        env_setup=LogOutput(out=["baz"], err=[]),
+                        other=LogOutput(out=[], err=[]),
                     ),
                     (None, None, False, None),
                     [WorkflowLogs.WorkflowLogTypeName.PER_TASK],
@@ -963,9 +947,9 @@ class TestWFRunResolver:
         def test_warns_if_requested_logs_unavailable():
             logs = WorkflowLogs(
                 per_task={},
-                system=[],
-                env_setup=[],
-                other=[],
+                system=LogOutput(out=[], err=[]),
+                env_setup=LogOutput(out=[], err=[]),
+                other=LogOutput(out=[], err=[]),
             )
             prompter = create_autospec(_prompts.Prompter)
             resolver = _arg_resolvers.WFRunResolver(

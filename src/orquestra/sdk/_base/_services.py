@@ -11,7 +11,12 @@ import subprocess
 from pathlib import Path
 from typing import Protocol
 
-from ._env import RAY_PLASMA_PATH_ENV, RAY_STORAGE_PATH_ENV, RAY_TEMP_PATH_ENV
+from ._env import (
+    ORQ_TASK_RUN_LOGS_DIR,
+    RAY_PLASMA_PATH_ENV,
+    RAY_STORAGE_PATH_ENV,
+    RAY_TEMP_PATH_ENV,
+)
 
 ORQUESTRA_BASE_PATH = Path.home() / ".orquestra"
 
@@ -63,6 +68,20 @@ def ray_plasma_path():
         return Path(os.environ[RAY_PLASMA_PATH_ENV])
     except KeyError:
         return ORQUESTRA_BASE_PATH / "ray_plasma"
+
+
+def redirected_logs_dir():
+    """
+    Used by log redirection to store workflow logs
+
+    By default, this is `~/.orquestra/logs` and each workflow will have log files like:
+     * `~/.orquestra/logs/wf/<wf run ID>/task/<task invocation ID>.err`
+     * `~/.orquestra/logs/wf/<wf run ID>/task/<task invocation ID>.out`
+    """
+    try:
+        return Path(os.environ[ORQ_TASK_RUN_LOGS_DIR])
+    except KeyError:
+        return ORQUESTRA_BASE_PATH / "logs"
 
 
 # Timeout for inter-process commands (seconds).

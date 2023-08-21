@@ -25,7 +25,7 @@ from ..schema.workflow_run import (
     WorkflowRunMinimal,
     WorkspaceId,
 )
-from ._logs._interfaces import LogReader, WorkflowLogs
+from ._logs._interfaces import LogOutput, LogReader, WorkflowLogs
 from ._spaces._structs import Project, ProjectRef, Workspace
 
 # A typealias that hints where we expect raw artifact values.
@@ -159,7 +159,7 @@ class RuntimeInterface(ABC, LogReader):
     @abstractmethod
     def get_task_logs(
         self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
-    ) -> t.List[str]:
+    ) -> LogOutput:
         raise NotImplementedError()
 
     @abstractmethod

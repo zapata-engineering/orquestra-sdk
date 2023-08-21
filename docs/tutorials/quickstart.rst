@@ -3,7 +3,12 @@ Quickstart
 ==========
 
 This example presents the shortest possible path to running a workflow with Orquestra from a Python script.
-It assumes you've :doc:`installed Orquestra Workflow SDK <installing-macos-linux>`.
+
+Prerequisites
+=============
+
+#. You've installed Orquestra Workflow SDK (:doc:`macOS, Linux<installing-macos-linux>`, :doc:`Windows<installing-windows>`).
+
 
 Define a task and a workflow
 ============================

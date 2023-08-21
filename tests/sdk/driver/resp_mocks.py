@@ -296,7 +296,7 @@ def make_get_task_run_logs_response():
         https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/task-run-logs.yaml#L13
     """
 
-    return "bytes"
+    return (DATA_DIR / "get_task_logs_response" / "logs.tar.gz").read_bytes()
 
 
 def _make_fake_workspace_data():

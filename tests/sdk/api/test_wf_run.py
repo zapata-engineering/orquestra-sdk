@@ -20,7 +20,7 @@ from orquestra.sdk._base import _api, _dsl, _traversal, _workflow, serde
 from orquestra.sdk._base._api._task_run import TaskRun
 from orquestra.sdk._base._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
-from orquestra.sdk._base._logs._interfaces import LogReader, WorkflowLogs
+from orquestra.sdk._base._logs._interfaces import LogOutput, LogReader, WorkflowLogs
 from orquestra.sdk._base._spaces._api import list_projects, list_workspaces
 from orquestra.sdk._base._spaces._structs import ProjectRef, Workspace
 from orquestra.sdk._base.abc import RuntimeInterface
@@ -1003,20 +1003,23 @@ class TestWorkflowRun:
             log_reader = create_autospec(LogReader)
             log_reader.get_workflow_logs.return_value = WorkflowLogs(
                 per_task={
-                    invs[0]: ["woohoo!\n"],
-                    invs[1]: ["another\n", "line\n"],
+                    invs[0]: LogOutput(out=["woohoo!\n"], err=[]),
+                    invs[1]: LogOutput(out=["another\n", "line\n"], err=[]),
                     # This task invocation was executed, but it produced no logs.
-                    invs[2]: [],
+                    invs[2]: LogOutput(out=[], err=[]),
                     # There's also 4th task invocation in the workflow def, it wasn't
                     # executed yet, so we don't return it.
                 },
-                env_setup=[],
-                system=[
-                    "<sys log sentinel 1>",
-                    "<sys log sentinel 2>",
-                    "<sys log sentinel 3>",
-                ],
-                other=[],
+                env_setup=LogOutput(out=[], err=[]),
+                system=LogOutput(
+                    out=[
+                        "<sys log sentinel 1>",
+                        "<sys log sentinel 2>",
+                        "<sys log sentinel 3>",
+                    ],
+                    err=[],
+                ),
+                other=LogOutput(out=[], err=[]),
             )
 
             run._runtime = log_reader
@@ -1030,11 +1033,11 @@ class TestWorkflowRun:
             expected_inv = "invocation-0-task-capitalize"
             assert expected_inv in logs.per_task
             assert len(logs.per_task[expected_inv]) == 1
-            assert logs.per_task[expected_inv][0] == "woohoo!\n"
+            assert logs.per_task[expected_inv].out[0] == "woohoo!\n"
 
-            assert len(logs.system) == 3
+            assert len(logs.system.out) == 3
 
-            assert logs.system == [
+            assert logs.system.out == [
                 "<sys log sentinel 1>",
                 "<sys log sentinel 2>",
                 "<sys log sentinel 3>",

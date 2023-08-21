@@ -28,7 +28,9 @@ Required hardware resources are configured on a per-task basis by setting the ``
 * ``disk``: disk space (bytes).
 * ``gpu``: whether access to a gpu unit is required (``1`` if a GPU is required, ``0`` otherwise).
 
-Amounts of CPU and memory resources are specified by a string comprising a floating point value, and, optionally, a modifier to the base unit ('byte' in the case of ``memory`` and ``disk`` requests, 'cores' in the case of ``cpu`` requests). The modifier can be a SI (metric), or IEC (binary) multiplier as detailed in the table below. So ``disk="10k"`` will be interpreted as '10 kilobytes', while ``cpu="10k"`` would request 10^7 cores.
+Amounts of CPU and memory resources are specified by a string comprising a floating point value, and, optionally, a modifier to the base unit ('byte' in the case of ``memory`` and ``disk`` requests, 'cores' in the case of ``cpu`` requests).
+The modifier can be an SI (metric), or IEC (binary) multiplier as detailed in the table below.
+So ``disk="10k"`` will be interpreted as '10 kilobytes', while ``cpu="10k"`` would request 10^4 cores.
 
 .. table:: Unit multipliers
     :widths: auto

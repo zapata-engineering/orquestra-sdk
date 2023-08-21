@@ -43,10 +43,6 @@ from ._dsl import (
     get_fn_ref,
     parse_custom_name,
 )
-from ._in_process_runtime import InProcessRuntime
-from ._spaces._resolver import resolve_studio_ref
-from ._spaces._structs import ProjectRef
-from .abc import RuntimeInterface
 
 
 # ----- Workflow exceptions  -----
@@ -181,39 +177,17 @@ class WorkflowDef(Generic[_R]):
             ProjectInvalidError: when only 1 out of project and workspace is passed
 
         """
-        _config: _api.RuntimeConfig
-        if isinstance(config, _api.RuntimeConfig):
-            _config = config
-        elif isinstance(config, str):
-            _config = _api.RuntimeConfig.load(config)
-        else:
-            raise TypeError(
-                f"'config' argument to `run()` has unsupported type {type(config)}."
-            )
-        runtime: RuntimeInterface
-        if _config._runtime_name == "IN_PROCESS":
-            runtime = InProcessRuntime()
-        else:
-            runtime = _config._get_runtime(project_dir=project_dir)
-
-        # In close future there will be multiple ways of figuring out the
-        # appropriate runtime to use, based on `config`. Regardless of this
-        # logic, the runtime should always be resolved.
-        assert runtime is not None
-
-        _project: Optional[ProjectRef] = resolve_studio_ref(workspace_id, project_id)
-
         # The DirtyGitRepo warning can be raised here.
         wf_def_model = self.model
 
-        wf_run = _api.WorkflowRun._start(
-            wf_def=wf_def_model,
-            runtime=runtime,
-            config=_config,
-            project=_project,
-            dry_run=dry_run,
+        return _api.WorkflowRun.start_from_ir(
+            wf_def = wf_def_model,
+            config=config,
+            workspace_id=workspace_id,
+            project_id=project_id,
+            project_dir=project_dir,
+            dry_run = dry_run,
         )
-        return wf_run
 
     def with_resources(
         self,

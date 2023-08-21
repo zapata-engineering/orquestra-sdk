@@ -201,7 +201,7 @@ class RayRuntime(RuntimeInterface):
         self._config = config
         self._project_dir = project_dir
 
-        self._log_reader: LogReader = _ray_logs.DirectRayReader(
+        self._log_reader: LogReader = _ray_logs.DirectLogReader(
             _services.ray_temp_path()
         )
 

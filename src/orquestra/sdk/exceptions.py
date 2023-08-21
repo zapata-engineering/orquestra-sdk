@@ -9,7 +9,7 @@ Custom exceptions for the SDK.
 import typing as t
 
 from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.workflow_run import State
+from orquestra.sdk.schema.workflow_run import State, TaskInvocationId, WorkflowRunId
 
 
 class WorkflowSyntaxError(Exception):
@@ -154,6 +154,15 @@ class InvalidWorkflowRunLogsError(BaseRuntimeError):
     """Raised when workflow logs cannot be decoded."""
 
     pass
+
+
+class TaskRunLogsNotFound(NotFoundError):
+    """Raised when a task run logs cannot be found, or the ID is invalid"""
+
+    def __init__(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
+        self.wf_run_id = wf_run_id
+        self.task_inv_id = task_inv_id
+        super().__init__()
 
 
 class WorkflowRunNotSucceeded(BaseRuntimeError):

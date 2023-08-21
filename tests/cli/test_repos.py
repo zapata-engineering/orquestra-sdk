@@ -21,8 +21,8 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base import _dates, _db
 from orquestra.sdk._base._config import SPECIAL_CONFIG_NAME_DICT
 from orquestra.sdk._base._driver._client import DriverClient
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs
-from orquestra.sdk._base._testing import _example_wfs
+from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
+from orquestra.sdk._base._testing import _example_wfs, _reloaders
 from orquestra.sdk._base.cli import _repos
 from orquestra.sdk._base.cli._ui import _models as ui_models
 from orquestra.sdk._ray import _dag
@@ -32,7 +32,6 @@ from orquestra.sdk.schema.workflow_run import RunStatus, State
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
 from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
 
-from .. import reloaders
 from ..sdk.data.configs import TEST_CONFIG_JSON
 
 INSTANT_1 = _dates.from_comps(2023, 2, 24, 7, 26, 7, 704015, utc_hour_offset=1)
@@ -676,23 +675,29 @@ class TestWorkflowRunRepo:
                 config = "<config sentinel>"
                 wf_run_id = "<id sentinel>"
                 per_task_logs_dict = {
-                    "inv1": ["my_log", "my_another_log"],
-                    "inv2": ["and another one"],
+                    "inv1": LogOutput(out=["my_log", "my_another_log"], err=[]),
+                    "inv2": LogOutput(out=["and another one"], err=[]),
                 }
-                env_setup_logs_list = [
-                    "<env setup log sentinel 1>",
-                    "<env setup log sentinel 2>",
-                ]
-                sys_logs_list = [
-                    "<sys log sentinel 1>",
-                    "<sys log sentinel 2>",
-                ]
+                env_setup_logs_list = LogOutput(
+                    out=[
+                        "<env setup log sentinel 1>",
+                        "<env setup log sentinel 2>",
+                    ],
+                    err=[],
+                )
+                sys_logs_list = LogOutput(
+                    out=[
+                        "<sys log sentinel 1>",
+                        "<sys log sentinel 2>",
+                    ],
+                    err=[],
+                )
 
                 mock_wf_run.get_logs.return_value = WorkflowLogs(
                     per_task=per_task_logs_dict,
                     env_setup=env_setup_logs_list,
                     system=sys_logs_list,
-                    other=[],
+                    other=LogOutput(out=[], err=[]),
                 )
 
                 repo = _repos.WorkflowRunRepo()
@@ -1356,7 +1361,7 @@ class TestWorkflowDefRepoIntegration:
         Prepares a directory for importing Python modules and cleans up the
         module cache afterwards.
         """
-        with reloaders.restore_loaded_modules():
+        with _reloaders.restore_loaded_modules():
             sys.path.insert(0, str(tmp_path))
 
             yield tmp_path
@@ -1417,7 +1422,7 @@ class TestWorkflowDefRepoIntegration:
 
                 repo = _repos.WorkflowDefRepo()
 
-                with reloaders.restore_loaded_modules():
+                with _reloaders.restore_loaded_modules():
                     # When
                     mod = repo.get_module_from_spec("my_pkg.my_module")
 

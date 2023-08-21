@@ -361,10 +361,11 @@ class GetWorkflowRunLogsRequest(pydantic.BaseModel):
 class GetTaskRunLogsRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/task-run-logs.yaml#L8
+        https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml
     """
 
-    taskRunId: TaskRunID
+    workflowRunId: WorkflowRunID
+    taskInvocationId: TaskInvocationID
 
 
 class CommonResourceMeta(pydantic.BaseModel):
@@ -420,10 +421,11 @@ ListProjectResponse = List[ProjectDetail]
 # file contains newline-separated chunks. Each chunk is a JSON-encoded list of events.
 
 
+LogFilename = NewType("LogFilename", str)
 RayFilename = NewType("RayFilename", str)
 
 
-class Message(pydantic.BaseModel):
+class WorkflowLogMessage(pydantic.BaseModel):
     """
     Represents a single line indexed by the server side log service.
 
@@ -450,7 +452,7 @@ class Message(pydantic.BaseModel):
     """
 
 
-class Event(NamedTuple):
+class WorkflowLogEvent(NamedTuple):
     """
     A pair of ``[timestamp, message]``.
 
@@ -465,13 +467,66 @@ class Event(NamedTuple):
     time that the message is logged by Ray runtime.
     """
 
-    message: Message
+    message: WorkflowLogMessage
     """
     A single indexed log line.
     """
 
 
-Section = List[Event]
+WorkflowLogSection = List[WorkflowLogEvent]
+
+
+class TaskLogMessage(pydantic.BaseModel):
+    """
+    Represents a single line indexed by the server side log service.
+
+    Based on:
+    https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml#L16
+
+    The name is borrowed from Fluent Bit nomenclature:
+    https://docs.fluentbit.io/manual/concepts/key-concepts#event-format.
+    """
+
+    log: str
+    """
+    Single line content.
+    """
+
+    log_filename: LogFilename
+    """
+    Server-side file path of the indexed file.
+    """
+
+    tag: str
+    """
+    An identifier in the form of:
+        "workflow.logs.ray.<workflow run ID>.<task invocation ID>"
+    """
+
+
+class TaskLogEvent(NamedTuple):
+    """
+    A pair of ``[timestamp, task log message]``.
+
+    Based on:
+    https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml#L16
+    """
+
+    timestamp: float
+    """
+    Unix timestamp in seconds with fraction for the moment when a log line is exported
+    from Ray system to Orquestra. It does not necessarily correspond to the particular
+    time that the message is logged by Ray runtime.
+    """
+
+    message: TaskLogMessage
+    """
+    A single indexed log line.
+    """
+
+
+TaskLogSection = List[TaskLogEvent]
+
 
 # --- System Logs ---
 

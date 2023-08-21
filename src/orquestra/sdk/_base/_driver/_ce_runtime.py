@@ -13,7 +13,8 @@ from orquestra.sdk import Project, ProjectRef, Workspace, exceptions
 from orquestra.sdk._base import _retry, serde
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base._logs import _regrouping
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs
+from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
+from orquestra.sdk._base._logs._models import LogAccumulator, LogStreamType
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.kubernetes.quantity import parse_quantity
 from orquestra.sdk.schema.configs import RuntimeConfiguration
@@ -482,6 +483,7 @@ class CERuntime(RuntimeInterface):
         try:
             messages = self._client.get_workflow_run_logs(wf_run_id)
             sys_messages = self._client.get_system_logs(wf_run_id)
+            wf_def = self._client.get_workflow_run(wf_run_id).workflow_def
         except (_exceptions.InvalidWorkflowRunID, _exceptions.WorkflowRunNotFound) as e:
             raise exceptions.WorkflowRunNotFoundError(
                 f"Workflow run with id `{wf_run_id}` not found"
@@ -497,16 +499,30 @@ class CERuntime(RuntimeInterface):
                 "Please report this as a bug."
             ) from e
 
-        task_logs = []
-        env_logs = []
-        other_logs = []
+        task_logs = {}
+        env_logs = LogAccumulator()
+        other_logs = LogAccumulator()
+        system_logs = LogAccumulator()
+
+        for task_inv_id in wf_def.task_invocations.keys():
+            try:
+                task_logs[task_inv_id] = self.get_task_logs(wf_run_id, task_inv_id)
+            except exceptions.TaskRunLogsNotFound:
+                # If a task's logs aren't available, keep going
+                pass
 
         for m in messages:
+            # Default to "log.out" if no log filenames
             path = Path(m.ray_filename)
+            stream = LogStreamType.by_file(path)
             if _regrouping.is_worker(path=path):
-                task_logs.append(m.log)
+                # We previously added Ray worker logs under task logs with
+                # "UNKNOWN TASK INV".
+                # Now, we get task logs from the CE API directly and add the
+                # worker logs to "other".
+                other_logs.add_line_by_stream(stream, m.log)
             elif _regrouping.is_env_setup(path=path):
-                env_logs.append(m.log)
+                env_logs.add_line_by_stream(stream, m.log)
             else:
                 # Reasons for the "other" logs: future proofness and empathy. The server
                 # might return events from more files in the future. We want to let the
@@ -518,17 +534,54 @@ class CERuntime(RuntimeInterface):
                 # interleaved lines from multiple files. This is gonna be much easier
                 # to implement after we do
                 # https://zapatacomputing.atlassian.net/browse/ORQSDK-840.
-                other_logs.append(m.log)
+                other_logs.add_line_by_stream(stream, m.log)
+
+        for sys_m in sys_messages:
+            system_logs.add_line_by_stream(LogStreamType.STDOUT, str(sys_m.log))
 
         return WorkflowLogs(
-            per_task={"UNKNOWN TASK INV ID": task_logs},
-            system=[str(m.log) for m in sys_messages],
-            env_setup=env_logs,
-            other=other_logs,
+            per_task=task_logs,
+            system=LogOutput(out=system_logs.out, err=system_logs.err),
+            env_setup=LogOutput(out=env_logs.out, err=env_logs.err),
+            other=LogOutput(out=other_logs.out, err=other_logs.err),
         )
 
     def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
-        raise NotImplementedError()
+        """
+        Get the logs produced by a task invocation during the execution of a workflow
+        run.
+
+        Args:
+            wf_run_id: the ID of a workflow run
+            task_inv_id: the ID of a specific task invocation in the workflow
+
+        Raises:
+            WorkflowRunNotFound: if the workflow run cannot be found
+            InvalidWorkflowRunLogsError: if the logs could not be decoded
+            UnauthorizedError: if the remote cluster rejects the token
+        """
+        try:
+            messages = self._client.get_task_run_logs(wf_run_id, task_inv_id)
+        except (_exceptions.InvalidWorkflowRunID, _exceptions.TaskRunLogsNotFound) as e:
+            raise exceptions.TaskRunLogsNotFound(wf_run_id, task_inv_id) from e
+        except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
+            raise exceptions.UnauthorizedError(
+                f"Could not access logs for workflow run with id `{wf_run_id}`. "
+                "- the authorization token was rejected by the remote cluster."
+            ) from e
+        except _exceptions.WorkflowRunLogsNotReadable as e:
+            raise exceptions.InvalidWorkflowRunLogsError(
+                f"Failed to decode logs for workflow run with id `{wf_run_id}` "
+                f"and task invocation ID `{task_inv_id}`. "
+                "Please report this as a bug."
+            ) from e
+
+        task_logs = LogAccumulator()
+        for m in messages:
+            path = Path(m.log_filename)
+            stream = LogStreamType.by_file(path)
+            task_logs.add_line_by_stream(stream, m.log)
+        return LogOutput(out=task_logs.out, err=task_logs.err)
 
     def list_workspaces(self):
         try:
