@@ -67,12 +67,6 @@ class RuntimeConfigError(BaseRuntimeError):
     pass
 
 
-class UnsavedConfigChangesError(BaseRuntimeError):
-    """Raised when there are unsaved clashing changes to the token."""
-
-    pass
-
-
 class LocalConfigLoginError(BaseRuntimeError):
     """Raised when trying to log in using a config that relates to local execution."""
 
