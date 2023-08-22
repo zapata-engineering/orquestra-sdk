@@ -213,6 +213,30 @@ class TestRayRuntimeMethods:
                 # during start and finish of a task. Thus it is >=, not >
                 assert (status.end_time - status.start_time).total_seconds() >= 0
 
+        @pytest.mark.parametrize("trial", range(1))
+        def test_handles_ray_environment_setup_error(
+            self, runtime: _dag.RayRuntime, trial
+        ):
+            # Given
+            wf_def = _example_wfs.cause_env_setup_error.model
+            run_id = runtime.create_workflow_run(wf_def, None)
+
+            # Block until wf completes
+            _wait_to_finish_wf(run_id, runtime, timeout=100)
+
+            # When
+
+            run = runtime.get_workflow_run_status(run_id)
+
+            # Then
+            assert (
+                run.status.state == State.FAILED
+            ), f"Invalid state. Full status: {run.status}. Task runs: {run.task_runs}"
+            assert (
+                run.message
+                == f"Could not set up runtime environment. See environment setup logs for details. `orq wf logs {run_id} --env-setup`"
+            )
+
         def test_exception_in_task_stops_execution(self, runtime: _dag.RayRuntime):
             """
             The workflow graph:

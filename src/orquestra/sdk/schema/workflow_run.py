@@ -72,3 +72,4 @@ class WorkflowRun(WorkflowRunMinimal):
 
     task_runs: t.List[TaskRun]
     status: RunStatus
+    message: t.Optional[str] = None

@@ -349,3 +349,16 @@ def task_with_single_output_explicit():
 @sdk.workflow
 def wf_with_explicit_n_outputs():
     return task_with_single_output_explicit()
+
+
+@sdk.task(
+    source_import=sdk.InlineImport(),
+    dependency_imports=sdk.PythonImports("MarkupSafe==1.0.0", "Jinja2==2.7.2"),
+)
+def cause_env_setup_error_task() -> str:
+    pass
+
+
+@sdk.workflow
+def cause_env_setup_error():
+    return [cause_env_setup_error_task()]

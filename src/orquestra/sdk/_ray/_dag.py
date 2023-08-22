@@ -330,6 +330,18 @@ class RayRuntime(RuntimeInterface):
             self._client.get_task_metadata(workflow_id=workflow_run_id, name=inv_id)
             for inv_id in inv_ids
         ]
+        message: t.Optional[str] = None
+
+        breakpoint()
+        if wf_status == _client.WorkflowStatus.FAILED:
+            logs = self.get_workflow_logs(workflow_run_id)
+            env_logs = logs.env_setup
+            breakpoint()
+            if (
+                "ray.exceptions.RuntimeEnvSetupError: Failed to set up runtime environment."
+                in env_logs.out
+            ):
+                message = f"Could not set up runtime environment. See environment setup logs for details. `orq wf logs {workflow_run_id} --env-setup`"
 
         return WorkflowRun(
             id=workflow_run_id,
@@ -352,6 +364,7 @@ class RayRuntime(RuntimeInterface):
                 start_time=wf_meta["stats"].get("start_time"),
                 end_time=wf_meta["stats"].get("end_time"),
             ),
+            message=message,
         )
 
     def get_workflow_run_outputs_non_blocking(
