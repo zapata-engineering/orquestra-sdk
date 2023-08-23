@@ -56,6 +56,7 @@ def _fake_completed_workflow(end_state: State = State.SUCCEEDED):
     # return values are unpacked.
     run_model.workflow_def.output_ids.__len__ = Mock(return_value=2)
 
+    run_model.message = None
     run_model.status.state = end_state
     return run_model
 
@@ -479,6 +480,26 @@ class TestWorkflowRun:
                     "wf_pass_tuple-1 is RUNNING. Sleeping for 4.0s...\n"
                     "wf_pass_tuple-1 is RUNNING. Sleeping for 4.0s...\n"
                     "wf_pass_tuple-1 is SUCCEEDED\n"
+                )
+
+            @staticmethod
+            def test_verbose_with_message(monkeypatch, run, mock_runtime, capsys):
+                # Given
+                monkeypatch.setattr(time, "sleep", MagicMock())
+                mock_runtime.get_workflow_run_status.return_value.message = (
+                    "<message sentinel>"
+                )
+
+                # When
+                run.wait_until_finished()
+
+                # Then
+                captured = capsys.readouterr()
+                assert captured.out == ""
+                assert captured.err == (
+                    "wf_pass_tuple-1 is RUNNING. Sleeping for 4.0s...\n"
+                    "wf_pass_tuple-1 is RUNNING. Sleeping for 4.0s...\n"
+                    "wf_pass_tuple-1 is SUCCEEDED - <message sentinel>\n"
                 )
 
             @staticmethod

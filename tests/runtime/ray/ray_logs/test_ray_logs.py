@@ -66,9 +66,12 @@ class TestIterEnvLogPaths:
 
         # Then
         paths = list(paths_iter)
-        # There's only one file for the env setup because we've run only one Ray job.
-        assert len(paths) == 1
-        assert len([p for p in paths if "runtime_env_setup" in p.stem]) == 1
+        # There are two files for the env setup - the log from the env setup agent, and
+        # the env setup log from the one Ray job we've run.
+        files = [p.stem for p in paths if "runtime_env" in p.stem]
+        assert len(paths) == 2
+        assert len(files) == 2
+        assert "runtime_env_agent" in files
 
 
 def _existing_wf_run_id():
