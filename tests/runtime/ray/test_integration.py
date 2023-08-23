@@ -213,7 +213,7 @@ class TestRayRuntimeMethods:
                 # during start and finish of a task. Thus it is >=, not >
                 assert (status.end_time - status.start_time).total_seconds() >= 0
 
-        @pytest.mark.parametrize("trial", range(1))
+        @pytest.mark.parametrize("trial", range(5))
         def test_handles_ray_environment_setup_error(
             self, runtime: _dag.RayRuntime, trial
         ):
