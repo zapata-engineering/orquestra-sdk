@@ -170,6 +170,26 @@ class ArgumentUnwrapper:
             return self._user_fn(*args, **kwargs)
 
 
+def _generate_nop_function(output_metadata: ir.TaskOutputMetadata):
+    def _nop_function_factory(self):
+        def nop():
+            return (None,) * self._n_outputs
+
+        return nop
+
+
+def _get_user_function(
+    user_fn_ref, dry_run, output_metadata: t.Optional[ir.TaskOutputMetadata]
+):
+    # Ref is None only in case of the data aggregation step
+    if user_fn_ref is None:
+        return _aggregate_outputs
+    elif not dry_run:
+        return _locate_user_fn(user_fn_ref)
+    else:
+        return _generate_nop_function(output_metadata)
+
+
 def _make_ray_dag_node(
     client: RayClient,
     ray_options: t.Mapping,
@@ -180,6 +200,7 @@ def _make_ray_dag_node(
     n_outputs: t.Optional[int],
     project_dir: t.Optional[Path],
     user_fn_ref: t.Optional[ir.FunctionRef],
+    output_metadata: t.Optional[ir.TaskOutputMetadata],
     dry_run: bool,
 ) -> _client.FunctionNode:
     """
@@ -218,12 +239,10 @@ def _make_ray_dag_node(
                 if project_dir is not None:
                     dispatch.ensure_sys_paths([str(project_dir)])
 
-                if user_fn_ref is None:
-                    serialization = False
-                    user_fn = _aggregate_outputs
-                else:
-                    serialization = True
-                    user_fn = _locate_user_fn(user_fn_ref)
+                # True for all the steps except data aggregation
+                serialization = user_fn_ref is None
+
+                user_fn = _get_user_function(user_fn_ref, dry_run, output_metadata)
 
                 wrapped = ArgumentUnwrapper(
                     user_fn=user_fn,
@@ -442,9 +461,10 @@ def make_ray_dag(
             ray_kwargs=kwargs,
             args_artifact_nodes=pos_args_artifact_nodes,
             kwargs_artifact_nodes=kwargs_artifact_nodes,
-            n_outputs=_compat.n_outputs(task_def=user_task, task_inv=invocation),
+            n_outputs=user_task.output_metadata.n_outputs,
             project_dir=project_dir,
             user_fn_ref=user_task.fn_ref,
+            output_metadata=user_task.output_metadata,
             dry_run=dry_run,
         )
 
@@ -478,7 +498,8 @@ def make_ray_dag(
         n_outputs=len(pos_args),
         project_dir=None,
         user_fn_ref=None,
-        dry_run=dry_run,
+        output_metadata=None,
+        dry_run=False,
     )
 
     # Data aggregation step is run with catch_exceptions=True - so it returns tuple of
