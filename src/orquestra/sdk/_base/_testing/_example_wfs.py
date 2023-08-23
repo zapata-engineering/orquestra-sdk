@@ -355,8 +355,8 @@ def wf_with_explicit_n_outputs():
     source_import=sdk.InlineImport(),
     dependency_imports=sdk.PythonImports("MarkupSafe==1.0.0", "Jinja2==2.7.2"),
 )
-def cause_env_setup_error_task() -> str:
-    pass
+def cause_env_setup_error_task() -> bool:
+    return True
 
 
 @sdk.workflow

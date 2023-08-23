@@ -232,9 +232,9 @@ class TestRayRuntimeMethods:
             assert (
                 run.status.state == State.FAILED
             ), f"Invalid state. Full status: {run.status}. Task runs: {run.task_runs}"
-            assert (
-                run.message
-                == f"Could not set up runtime environment. See environment setup logs for details. `orq wf logs {run_id} --env-setup`"
+            assert run.message == (
+                "Could not set up runtime environment. See environment setup logs "
+                f"for details. `orq wf logs {run_id} --env-setup`"
             )
 
         def test_exception_in_task_stops_execution(self, runtime: _dag.RayRuntime):
