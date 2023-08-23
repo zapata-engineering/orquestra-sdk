@@ -188,7 +188,6 @@ def _make_ray_dag_node(
     ray_kwargs: t.Mapping[str, t.Any],
     args_artifact_nodes: t.Mapping,
     kwargs_artifact_nodes: t.Mapping,
-    n_outputs: t.Optional[int],
     project_dir: t.Optional[Path],
     user_fn_ref: t.Optional[ir.FunctionRef],
     output_metadata: t.Optional[ir.TaskOutputMetadata],
@@ -207,7 +206,6 @@ def _make_ray_dag_node(
             see ArgumentUnwrapper
         kwargs_artifact_nodes: a map of keyword arg name to artifact node
             see ArgumentUnwrapper
-        n_outputs: the number of outputs for this task function (if known)
         project_dir: the working directory the workflow was submitted from
         user_fn_ref: function reference for a function to be executed by Ray.
             if None - executes data aggregation step
@@ -251,14 +249,14 @@ def _make_ray_dag_node(
                 )
                 unpacked: t.Tuple[responses.WorkflowResult, ...]
 
-                if n_outputs is not None and n_outputs > 1:
+                if output_metadata is not None and output_metadata.n_outputs > 1:
                     unpacked = tuple(
                         serde.result_from_artifact(
                             wrapped_return[i], ir.ArtifactFormat.AUTO
                         )
                         if serialization
                         else wrapped_return[i]
-                        for i in range(n_outputs)
+                        for i in range(output_metadata.n_outputs)
                     )
                 else:
                     unpacked = (packed,)
@@ -450,7 +448,6 @@ def make_ray_dag(
             ray_kwargs=kwargs,
             args_artifact_nodes=pos_args_artifact_nodes,
             kwargs_artifact_nodes=kwargs_artifact_nodes,
-            n_outputs=_compat.n_outputs(task_def=user_task, task_inv=invocation),
             project_dir=project_dir,
             user_fn_ref=user_task.fn_ref,
             output_metadata=user_task.output_metadata,
@@ -484,10 +481,11 @@ def make_ray_dag(
         ray_kwargs={},
         args_artifact_nodes=pos_args_artifact_nodes,
         kwargs_artifact_nodes={},
-        n_outputs=len(pos_args),
         project_dir=None,
         user_fn_ref=None,
-        output_metadata=None,
+        output_metadata=ir.TaskOutputMetadata(
+            n_outputs=len(pos_args), is_subscriptable=False
+        ),
         dry_run=False,
     )
 
