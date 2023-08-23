@@ -215,7 +215,7 @@ class TestRayRuntimeMethods:
 
         @pytest.mark.parametrize("trial", range(5))
         def test_handles_ray_environment_setup_error(
-            self, runtime: _dag.RayRuntime, trial
+            self, runtime: _dag.RayRuntime, trial, shared_ray_conn
         ):
             # Given
             wf_def = _example_wfs.cause_env_setup_error.model
@@ -225,17 +225,22 @@ class TestRayRuntimeMethods:
             _wait_to_finish_wf(run_id, runtime, timeout=100)
 
             # When
-
             run = runtime.get_workflow_run_status(run_id)
 
             # Then
             assert (
                 run.status.state == State.FAILED
             ), f"Invalid state. Full status: {run.status}. Task runs: {run.task_runs}"
+            # Grab the logs so we can debug when the test fails
+            logs = (
+                _ray_logs.DirectLogReader(Path(shared_ray_conn._temp_dir))
+                .get_workflow_logs(wf_run_id=run_id)
+                .env_setup
+            )
             assert run.message == (
                 "Could not set up runtime environment. See environment setup logs "
                 f"for details. `orq wf logs {run_id} --env-setup`"
-            )
+            ), ("OUT\n" + "\n".join(logs.out) + "ERR\n" + "\n".join(logs.err))
 
         def test_exception_in_task_stops_execution(self, runtime: _dag.RayRuntime):
             """
