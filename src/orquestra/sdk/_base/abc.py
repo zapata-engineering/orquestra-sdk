@@ -50,7 +50,7 @@ class RuntimeInterface(ABC, LogReader):
                 used currently only on CE runtime.
                 When omitted, WF will be scheduled at default project
             dry_run: Run the workflow without actually executing any task code.
-                used to test infrastructure, imports dependencies etc.
+                Useful for testing infrastructure, dependency imports, etc.
         """
         raise NotImplementedError()
 

@@ -169,7 +169,7 @@ class WorkflowDef(Generic[_R]):
             workspace_id: ID of the workspace for workflow - supported only on CE
             project_id: ID of the project for workflow - supported only on CE
             dry_run: Run the workflow without actually executing any task code.
-                used to test infrastructure, imports dependencies etc.
+                Useful for testing infrastructure, dependency imports, etc.
         Raises:
             orquestra.sdk.exceptions.DirtyGitRepo: (warning) when a task def used by
                 this workflow def has a "GitImport" and the git repo that contains it

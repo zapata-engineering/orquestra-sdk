@@ -150,7 +150,7 @@ class WorkflowRun:
             workspace_id: ID of the workspace for workflow - supported only on CE
             project_id: ID of the project for workflow - supported only on CE
             dry_run: Run the workflow without actually executing any task code.
-                used to test infrastructure, imports dependencies etc.
+                Useful for testing infrastructure, dependency imports, etc.
             project_dir: the path to the project directory. If omitted, the current
                 working directory is used.
         """
