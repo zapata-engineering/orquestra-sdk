@@ -332,16 +332,30 @@ class RayRuntime(RuntimeInterface):
         ]
         message: t.Optional[str] = None
 
-        breakpoint()
         if wf_status == _client.WorkflowStatus.FAILED:
+            # Set the default message. This is the fallback in case we can't determine
+            # any more precide information.
+            message = (
+                "The workflow encountered an issue. "
+                "Please consult the logs for more information "
+                "or re-run the workflow with RAY_IGNORE_UNHANDLED_ERRORS=0"
+            )
+
+            # Scan the logs for telltales of known failure modes.
+            # Currently this only covers failure to set up the environment.
             logs = self.get_workflow_logs(workflow_run_id)
             env_logs = logs.env_setup
-            breakpoint()
-            if (
-                "ray.exceptions.RuntimeEnvSetupError: Failed to set up runtime environment."
-                in env_logs.out
-            ):
-                message = f"Could not set up runtime environment. See environment setup logs for details. `orq wf logs {workflow_run_id} --env-setup`"
+            for line in env_logs.err + env_logs.out:
+                if re.search(
+                    r"Runtime env creation failed for \d* times, don't retry any more.",
+                    line,
+                ):
+                    message = (
+                        "Could not set up runtime environment. "
+                        "See environment setup logs for details. "
+                        f"`orq wf logs {workflow_run_id} --env-setup`"
+                    )
+                    break
 
         return WorkflowRun(
             id=workflow_run_id,
