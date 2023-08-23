@@ -241,7 +241,7 @@ def _make_ray_dag_node(
                 )
 
                 wrapped_return = wrapped(*inner_args, **inner_kwargs)
-                # assert wrapped_return != SENTINEL
+
                 packed: responses.WorkflowResult = (
                     serde.result_from_artifact(wrapped_return, ir.ArtifactFormat.AUTO)
                     if serialization
