@@ -360,7 +360,11 @@ class RayRuntime(RuntimeInterface):
             env_logs = logs.env_setup
             for line in env_logs.err + env_logs.out:
                 if re.search(
-                    r"Runtime env creation failed for \d* times, don't retry any more.",
+                    r"("
+                    r"Runtime env creation failed for \d* times, don't retry any more"
+                    r"|"
+                    r"Failed to create runtime env"
+                    r")",
                     line,
                 ):
                     message = (
