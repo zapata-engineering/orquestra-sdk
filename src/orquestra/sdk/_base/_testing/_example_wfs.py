@@ -361,4 +361,8 @@ def cause_env_setup_error_task() -> str:
 
 @sdk.workflow
 def cause_env_setup_error():
+    """
+    Jinja2 relies on a higher version of MarkupSafe, so the dependency imports for the
+    cause_env_setup_error_task task will cause pip to throw an error.
+    """
     return [cause_env_setup_error_task()]
