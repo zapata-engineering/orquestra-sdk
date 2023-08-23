@@ -20,7 +20,7 @@ from .._base._env import (
 )
 from .._base._logs import _markers
 from ..kubernetes.quantity import parse_quantity
-from ..schema import _compat, ir, responses, workflow_run
+from ..schema import ir, responses, workflow_run
 from . import _client, _id_gen
 from ._client import RayClient
 from ._wf_metadata import InvUserMetadata, pydatic_to_json_dict
