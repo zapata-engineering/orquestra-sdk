@@ -127,7 +127,7 @@ class TestRayRuntimeMethods:
             # normally this WF would fail, but as a dry-run, no task code is executed
             outputs = runtime.get_workflow_run_outputs_non_blocking(run_id)
 
-            assert outputs == ((None,),)
+            assert outputs == (JSONResult(value='"dry_run task output"'),)
 
         def test_unpacking_workflow_dry_run(
             self, monkeypatch: pytest.MonkeyPatch, runtime: _dag.RayRuntime
@@ -138,7 +138,19 @@ class TestRayRuntimeMethods:
 
             outputs = runtime.get_workflow_run_outputs_non_blocking(run_id)
 
-            assert outputs == (None, None, None, None, None, None, None)
+            res = JSONResult(value='"dry_run task output"')
+            assert outputs == (
+                res,
+                res,
+                res,
+                res,
+                JSONResult(
+                    value='{"__tuple__": true, "__values__": ["dry_run task output"'
+                    ', "dry_run task output"]}'
+                ),
+                res,
+                res,
+            )
 
     class TestGetWorkflowRunStatus:
         """

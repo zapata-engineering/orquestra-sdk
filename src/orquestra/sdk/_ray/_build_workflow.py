@@ -81,8 +81,6 @@ class ArgumentUnwrapper:
         args_artifact_nodes: t.Mapping[int, ir.ArtifactNode],
         kwargs_artifact_nodes: t.Mapping[str, ir.ArtifactNode],
         deserialize: bool,
-        n_outputs: int,
-        dry_run: bool,
     ):
         """
         Args:
@@ -103,8 +101,6 @@ class ArgumentUnwrapper:
         self._args_artifact_nodes = args_artifact_nodes
         self._kwargs_artifact_nodes = kwargs_artifact_nodes
         self._deserialize = deserialize
-        self._n_outputs = n_outputs
-        self._dry_run = dry_run
 
     def _get_metadata(self, key: t.Union[int, str]) -> t.Optional[ir.ArtifactNode]:
         if isinstance(key, int):
@@ -146,12 +142,6 @@ class ArgumentUnwrapper:
         else:
             assert_never(arg)
 
-    def _nop_function_factory(self):
-        def nop():
-            return (None,) * self._n_outputs
-
-        return nop
-
     def __call__(self, *wrapped_args, **wrapped_kwargs):
         args = []
         kwargs = {}
@@ -162,20 +152,20 @@ class ArgumentUnwrapper:
         for name, kwarg in wrapped_kwargs.items():
             kwargs[name] = self._unpack_argument(kwarg, name)
 
-        # if the dry_run mode is enabled, we don't execute user function, but just
-        # empty nop function returning Nones
-        if self._dry_run and self._deserialize:
-            return self._nop_function_factory()()
-        else:
-            return self._user_fn(*args, **kwargs)
+        return self._user_fn(*args, **kwargs)
+
+
+SENTINEL = "dry_run task output"
 
 
 def _generate_nop_function(output_metadata: ir.TaskOutputMetadata):
-    def _nop_function_factory(self):
-        def nop():
-            return (None,) * self._n_outputs
+    def nop(*_, **__):
+        if not output_metadata.is_subscriptable:
+            return SENTINEL
+        else:
+            return (SENTINEL,) * output_metadata.n_outputs
 
-        return nop
+    return nop
 
 
 def _get_user_function(
@@ -187,6 +177,7 @@ def _get_user_function(
     elif not dry_run:
         return _locate_user_fn(user_fn_ref)
     else:
+        assert output_metadata is not None
         return _generate_nop_function(output_metadata)
 
 
@@ -240,7 +231,7 @@ def _make_ray_dag_node(
                     dispatch.ensure_sys_paths([str(project_dir)])
 
                 # True for all the steps except data aggregation
-                serialization = user_fn_ref is None
+                serialization = user_fn_ref is not None
 
                 user_fn = _get_user_function(user_fn_ref, dry_run, output_metadata)
 
@@ -249,12 +240,10 @@ def _make_ray_dag_node(
                     args_artifact_nodes=args_artifact_nodes,
                     kwargs_artifact_nodes=kwargs_artifact_nodes,
                     deserialize=serialization,
-                    dry_run=dry_run,
-                    n_outputs=n_outputs if n_outputs else 1,
                 )
 
                 wrapped_return = wrapped(*inner_args, **inner_kwargs)
-
+                # assert wrapped_return != SENTINEL
                 packed: responses.WorkflowResult = (
                     serde.result_from_artifact(wrapped_return, ir.ArtifactFormat.AUTO)
                     if serialization
@@ -461,7 +450,7 @@ def make_ray_dag(
             ray_kwargs=kwargs,
             args_artifact_nodes=pos_args_artifact_nodes,
             kwargs_artifact_nodes=kwargs_artifact_nodes,
-            n_outputs=user_task.output_metadata.n_outputs,
+            n_outputs=_compat.n_outputs(task_def=user_task, task_inv=invocation),
             project_dir=project_dir,
             user_fn_ref=user_task.fn_ref,
             output_metadata=user_task.output_metadata,
