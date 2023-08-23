@@ -364,8 +364,6 @@ def make_ray_dag(
             task_invocation_id=invocation.id,
         )
 
-        # TODO: !
-
         pip = _import_pip_env(invocation, workflow_def)
 
         ray_options = {
