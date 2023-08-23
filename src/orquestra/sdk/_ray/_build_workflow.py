@@ -209,6 +209,10 @@ def _make_ray_dag_node(
         project_dir: the working directory the workflow was submitted from
         user_fn_ref: function reference for a function to be executed by Ray.
             if None - executes data aggregation step
+        output_metadata: output metadata for the user task function. Keeps number
+            of outputs and if the output is subscriptable
+        dry_run: Run the task without actually executing any user code.
+            Useful for testing infrastructure, dependency imports, etc.
     """
 
     @client.remote
