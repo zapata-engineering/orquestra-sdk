@@ -277,7 +277,8 @@ class WorkflowRun:
 
         assert frequency > 0.0, "Frequency must be a positive non-zero value"
 
-        status = self.get_status()
+        status_model = self.get_status_model()
+        status = status_model.status.state
 
         while status == State.RUNNING or status == State.WAITING:
             sleep_time = 1.0 / frequency
@@ -289,7 +290,8 @@ class WorkflowRun:
                 )
 
             time.sleep(sleep_time)
-            status = self.get_status()
+            status_model = self.get_status_model()
+            status = status_model.status.state
 
         if status not in COMPLETED_STATES:
             raise NotImplementedError(
@@ -299,7 +301,9 @@ class WorkflowRun:
 
         if verbose:
             print(
-                f"{self.run_id} is {status.name}",
+                f"{self.run_id} is {status.name}"
+                if status_model.message is None
+                else f"{self.run_id} is {status.name} - {status_model.message}",
                 file=sys.stderr,
             )
 
