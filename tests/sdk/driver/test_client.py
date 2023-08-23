@@ -1040,7 +1040,9 @@ class TestClient:
                 )
 
                 with pytest.raises(_exceptions.InvalidWorkflowRunRequest):
-                    _ = client.create_workflow_run(workflow_def_id, resources, False)
+                    _ = client.create_workflow_run(
+                        workflow_def_id, resources, dry_run=False
+                    )
 
             @staticmethod
             def test_invalid_sdk_version(

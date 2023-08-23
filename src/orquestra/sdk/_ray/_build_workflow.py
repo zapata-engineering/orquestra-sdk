@@ -164,7 +164,7 @@ class ArgumentUnwrapper:
 
         # if the dry_run mode is enabled, we don't execute user function, but just
         # empty nop function returning Nones
-        if self._dry_run:
+        if self._dry_run and self._deserialize:
             return self._nop_function_factory()()
         else:
             return self._user_fn(*args, **kwargs)

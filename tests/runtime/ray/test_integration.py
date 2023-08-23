@@ -121,7 +121,7 @@ class TestRayRuntimeMethods:
             self, monkeypatch: pytest.MonkeyPatch, runtime: _dag.RayRuntime
         ):
             wf_def = _example_wfs.exception_wf_with_multiple_values.model
-            run_id = runtime.create_workflow_run(wf_def, None, True)
+            run_id = runtime.create_workflow_run(wf_def, project=None, dry_run=True)
             _wait_to_finish_wf(run_id, runtime)
 
             # normally this WF would fail, but as a dry-run, no task code is executed
@@ -133,7 +133,7 @@ class TestRayRuntimeMethods:
             self, monkeypatch: pytest.MonkeyPatch, runtime: _dag.RayRuntime
         ):
             wf_def = _example_wfs.multioutput_task_failed_wf.model
-            run_id = runtime.create_workflow_run(wf_def, None, True)
+            run_id = runtime.create_workflow_run(wf_def, project=None, dry_run=True)
             _wait_to_finish_wf(run_id, runtime)
 
             outputs = runtime.get_workflow_run_outputs_non_blocking(run_id)

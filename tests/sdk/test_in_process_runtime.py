@@ -77,7 +77,7 @@ def test_secret_inside_ir(
     get_secret.return_value = mocked_secret
     monkeypatch.setattr(_client.SecretsClient, "get_secret", get_secret)
 
-    run_id = runtime.create_workflow_run(wf_with_secrets().model, None, False)
+    run_id = runtime.create_workflow_run(wf_with_secrets().model, None, dry_run=False)
     result = runtime.get_workflow_run_outputs_non_blocking(run_id)
 
     assert result == (serde.result_from_artifact("Mocked", ir.ArtifactFormat.AUTO),)
@@ -85,7 +85,7 @@ def test_secret_inside_ir(
 
 def test_explicit_n_outputs_single(runtime: InProcessRuntime):
     run_id = runtime.create_workflow_run(
-        wf_with_explicit_n_outputs().model, None, False
+        wf_with_explicit_n_outputs().model, None, dry_run=False
     )
     result = runtime.get_workflow_run_outputs_non_blocking(run_id)
 
@@ -100,7 +100,7 @@ class TestQueriesAfterRunning:
     @staticmethod
     @pytest.fixture
     def run_id(runtime: InProcessRuntime, wf_def) -> WorkflowRunId:
-        run_id = runtime.create_workflow_run(wf_def, None, False)
+        run_id = runtime.create_workflow_run(wf_def, None, dry_run=False)
         return run_id
 
     class TestGetWorkflowRunOutputs:
@@ -115,8 +115,8 @@ class TestQueriesAfterRunning:
             wf_def1 = wf_pass_tuple().model
             wf_def2 = wf_pass_callables_from_task().model
 
-            run_id1 = runtime.create_workflow_run(wf_def1, None, False)
-            run_id2 = runtime.create_workflow_run(wf_def2, None, False)
+            run_id1 = runtime.create_workflow_run(wf_def1, None, dry_run=False)
+            run_id2 = runtime.create_workflow_run(wf_def2, None, dry_run=False)
 
             outputs1 = runtime.get_workflow_run_outputs_non_blocking(run_id1)
             outputs2 = runtime.get_workflow_run_outputs_non_blocking(run_id2)
@@ -140,7 +140,9 @@ class TestQueriesAfterRunning:
         class TestMultipleTaskOutputs:
             @staticmethod
             def test_some_unused(runtime, wf_def_unused_outputs):
-                run_id = runtime.create_workflow_run(wf_def_unused_outputs, None, False)
+                run_id = runtime.create_workflow_run(
+                    wf_def_unused_outputs, None, dry_run=False
+                )
 
                 assert runtime.get_available_outputs(run_id) == {
                     "invocation-0-task-two-outputs": serde.result_from_artifact(
@@ -150,7 +152,9 @@ class TestQueriesAfterRunning:
 
             @staticmethod
             def test_all_used(runtime, wf_def_all_used):
-                run_id = runtime.create_workflow_run(wf_def_all_used, None, False)
+                run_id = runtime.create_workflow_run(
+                    wf_def_all_used, None, dry_run=False
+                )
 
                 assert runtime.get_available_outputs(run_id) == {
                     "invocation-0-task-two-outputs": serde.result_from_artifact(
@@ -163,7 +167,7 @@ class TestStop:
     @staticmethod
     def test_existing_run(runtime, wf_def):
         # Given
-        run_id = runtime.create_workflow_run(wf_def, None, False)
+        run_id = runtime.create_workflow_run(wf_def, None, dry_run=False)
 
         # When
         runtime.stop_workflow_run(run_id)
@@ -186,8 +190,8 @@ class TestListWorkflowRuns:
     @staticmethod
     def test_happy_path(runtime, wf_def):
         # Given
-        _ = runtime.create_workflow_run(wf_def, None, False)
-        _ = runtime.create_workflow_run(wf_def, None, False)
+        _ = runtime.create_workflow_run(wf_def, None, dry_run=False)
+        _ = runtime.create_workflow_run(wf_def, None, dry_run=False)
 
         # When
         wf_runs = runtime.list_workflow_runs()
@@ -198,8 +202,8 @@ class TestListWorkflowRuns:
     @staticmethod
     def test_limit(runtime, wf_def):
         # Given
-        _ = runtime.create_workflow_run(wf_def, None, False)
-        _ = runtime.create_workflow_run(wf_def, None, False)
+        _ = runtime.create_workflow_run(wf_def, None, dry_run=False)
+        _ = runtime.create_workflow_run(wf_def, None, dry_run=False)
 
         # When
         wf_runs = runtime.list_workflow_runs(limit=1)
@@ -210,7 +214,7 @@ class TestListWorkflowRuns:
     @staticmethod
     def test_state_running(runtime, wf_def):
         # Given
-        _ = runtime.create_workflow_run(wf_def, None, False)
+        _ = runtime.create_workflow_run(wf_def, None, dry_run=False)
 
         # When
         wf_runs = runtime.list_workflow_runs(state=State.RUNNING)
@@ -222,7 +226,7 @@ class TestListWorkflowRuns:
     @staticmethod
     def test_state_succeeded(runtime, wf_def):
         # Given
-        _ = runtime.create_workflow_run(wf_def, None, False)
+        _ = runtime.create_workflow_run(wf_def, None, dry_run=False)
 
         # When
         wf_runs = runtime.list_workflow_runs(state=State.SUCCEEDED)
@@ -234,8 +238,8 @@ class TestListWorkflowRuns:
     @staticmethod
     def test_max_age(runtime, wf_def):
         # Given
-        run_id = runtime.create_workflow_run(wf_def, None, False)
-        _ = runtime.create_workflow_run(wf_def, None, False)
+        run_id = runtime.create_workflow_run(wf_def, None, dry_run=False)
+        _ = runtime.create_workflow_run(wf_def, None, dry_run=False)
         runtime._start_time_store[run_id] = _dates.now() - timedelta(days=1)
 
         # When

@@ -376,7 +376,7 @@ class RayRuntime(RuntimeInterface):
         # By this line we're assuming the workflow run exists, otherwise we wouldn't get
         # its status. If the following line raises errors we treat them as unexpected.
         ray_result = self._client.get_workflow_output(workflow_run_id)
-
+        breakpoint()
         if isinstance(ray_result, TaskResult):
             # If we have a TaskResult, we're a >=0.47.0 result
             # We can assume this is pre-seralised in the form:

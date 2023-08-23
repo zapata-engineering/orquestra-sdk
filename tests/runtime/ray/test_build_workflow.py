@@ -399,7 +399,12 @@ class TestArgumentUnwrapper:
         ):
             fn = Mock()
             arg_unwrapper = _build_workflow.ArgumentUnwrapper(
-                fn, args_artifact_nodes, {}, True, 1, False
+                fn,
+                args_artifact_nodes,
+                {},
+                deserialize=True,
+                n_outputs=1,
+                dry_run=False,
             )
             _ = arg_unwrapper(task_result, task_result, task_result)
 

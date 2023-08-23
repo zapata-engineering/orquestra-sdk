@@ -82,7 +82,9 @@ class TestCreateWorkflowRun:
         mocked_client.create_workflow_run.return_value = workflow_run_id
 
         # When
-        wf_run_id = runtime.create_workflow_run(my_workflow.model, None, False)
+        wf_run_id = runtime.create_workflow_run(
+            my_workflow.model, project=None, dry_run=False
+        )
 
         # Then
         mocked_client.create_workflow_def.assert_called_once_with(
