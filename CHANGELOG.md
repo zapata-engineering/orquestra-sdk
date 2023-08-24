@@ -8,6 +8,8 @@
 
 🔥 *Features*
 
+* Adding `dry_run` parameter to `Workflow.run()`. It allows to test resources, dependencies and infrastructure while ignoring user task code.
+
 🧟 *Deprecations*
 
 👩‍🔬 *Experimental*
