@@ -358,9 +358,8 @@ class RayRuntime(RuntimeInterface):
             # Currently this only covers failure to set up the environment.
             logs = self.get_workflow_logs(workflow_run_id)
             env_logs = logs.env_setup
+            assert len(env_logs.err + env_logs.out) > 0
             for line in env_logs.err + env_logs.out:
-                if "env" in line:
-                    print("LINE:", line)
                 if re.search(
                     r"Runtime env creation failed for \d* times, don't retry any more",
                     line,
