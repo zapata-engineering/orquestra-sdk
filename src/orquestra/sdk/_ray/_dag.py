@@ -11,7 +11,6 @@ import dataclasses
 import logging
 import os
 import re
-import time
 import typing as t
 import warnings
 from datetime import timedelta
@@ -357,14 +356,8 @@ class RayRuntime(RuntimeInterface):
 
             # Scan the logs for telltales of known failure modes.
             # Currently this only covers failure to set up the environment.
-            count: int = 0
             env_logs = self.get_workflow_logs(workflow_run_id).env_setup
-            while len(env_logs.err + env_logs.out) < 1:
-                count += 1
-                time.sleep(5)
-                env_logs = self.get_workflow_logs(workflow_run_id).env_setup
-
-            for line in env_logs.err + env_logs.out:
+            for line in reversed(env_logs.err + env_logs.out):
                 if re.search(
                     r"Runtime env creation failed for \d* times, don't retry any more",
                     line,
