@@ -20,6 +20,7 @@
 
 🥷 *Internal*
 * Reformatted docs source files to put each sentence on its own line.
+* Removed `UnsavedConfigChangesError`
 
 📃 *Docs*
 
