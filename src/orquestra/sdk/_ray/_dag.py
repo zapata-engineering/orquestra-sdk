@@ -266,7 +266,10 @@ class RayRuntime(RuntimeInterface):
         client.shutdown()
 
     def create_workflow_run(
-        self, workflow_def: ir.WorkflowDef, project: t.Optional[ProjectRef]
+        self,
+        workflow_def: ir.WorkflowDef,
+        project: t.Optional[ProjectRef],
+        dry_run: bool,
     ) -> WorkflowRunId:
         if project:
             warnings.warn(
@@ -283,6 +286,7 @@ class RayRuntime(RuntimeInterface):
             workflow_def=workflow_def,
             workflow_run_id=wf_run_id,
             project_dir=self._project_dir,
+            dry_run=dry_run,
         )
         wf_user_metadata = WfUserMetadata(workflow_def=workflow_def)
 
@@ -372,7 +376,6 @@ class RayRuntime(RuntimeInterface):
         # By this line we're assuming the workflow run exists, otherwise we wouldn't get
         # its status. If the following line raises errors we treat them as unexpected.
         ray_result = self._client.get_workflow_output(workflow_run_id)
-
         if isinstance(ray_result, TaskResult):
             # If we have a TaskResult, we're a >=0.47.0 result
             # We can assume this is pre-seralised in the form:

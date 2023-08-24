@@ -82,7 +82,9 @@ class TestCreateWorkflowRun:
         mocked_client.create_workflow_run.return_value = workflow_run_id
 
         # When
-        wf_run_id = runtime.create_workflow_run(my_workflow.model, None)
+        wf_run_id = runtime.create_workflow_run(
+            my_workflow.model, project=None, dry_run=False
+        )
 
         # Then
         mocked_client.create_workflow_def.assert_called_once_with(
@@ -91,6 +93,7 @@ class TestCreateWorkflowRun:
         mocked_client.create_workflow_run.assert_called_once_with(
             workflow_def_id,
             _models.Resources(cpu=None, memory=None, gpu=None, nodes=None),
+            False,
         )
         assert isinstance(wf_run_id, WorkflowRunId)
         assert (
@@ -111,13 +114,16 @@ class TestCreateWorkflowRun:
 
             # When
             _ = runtime.create_workflow_run(
-                workflow_parametrised_with_resources(memory="10Gi").model, None
+                workflow_parametrised_with_resources(memory="10Gi").model,
+                None,
+                dry_run=False,
             )
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
                 workflow_def_id,
                 _models.Resources(cpu=None, memory="10Gi", gpu=None, nodes=None),
+                False,
             )
 
         def test_with_cpu(
@@ -133,13 +139,16 @@ class TestCreateWorkflowRun:
 
             # When
             _ = runtime.create_workflow_run(
-                workflow_parametrised_with_resources(cpu="1000m").model, None
+                workflow_parametrised_with_resources(cpu="1000m").model,
+                None,
+                dry_run=False,
             )
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
                 workflow_def_id,
                 _models.Resources(cpu="1000m", memory=None, gpu=None, nodes=None),
+                False,
             )
 
         def test_with_gpu(
@@ -155,13 +164,14 @@ class TestCreateWorkflowRun:
 
             # When
             _ = runtime.create_workflow_run(
-                workflow_parametrised_with_resources(gpu="1").model, None
+                workflow_parametrised_with_resources(gpu="1").model, None, dry_run=False
             )
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
                 workflow_def_id,
                 _models.Resources(cpu=None, memory=None, gpu="1", nodes=None),
+                False,
             )
 
         def test_maximum_resource(
@@ -177,13 +187,14 @@ class TestCreateWorkflowRun:
 
             # When
             _ = runtime.create_workflow_run(
-                workflow_with_different_resources().model, None
+                workflow_with_different_resources().model, None, dry_run=False
             )
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
                 workflow_def_id,
                 _models.Resources(cpu="5000m", memory="3G", gpu="1", nodes=None),
+                False,
             )
 
         def test_resources_from_workflow(
@@ -203,12 +214,14 @@ class TestCreateWorkflowRun:
                 .with_resources(cpu="1", memory="1.5G", gpu="1", nodes=20)
                 .model,
                 None,
+                dry_run=False,
             )
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
                 workflow_def_id,
                 _models.Resources(cpu="1", memory="1.5G", gpu="1", nodes=20),
+                False,
             )
 
     class TestWorkflowDefFailure:
@@ -222,7 +235,7 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(exceptions.WorkflowSyntaxError):
-                _ = runtime.create_workflow_run(my_workflow.model, None)
+                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
 
         def test_unknown_http(
             self, mocked_client: MagicMock, runtime: _ce_runtime.CERuntime
@@ -234,7 +247,7 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(_exceptions.UnknownHTTPError):
-                _ = runtime.create_workflow_run(my_workflow.model, None)
+                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
 
         @pytest.mark.parametrize(
             "failure_exc", [_exceptions.InvalidTokenError, _exceptions.ForbiddenError]
@@ -250,7 +263,7 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(exceptions.UnauthorizedError):
-                _ = runtime.create_workflow_run(my_workflow.model, None)
+                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
 
         def test_invalid_project(
             self,
@@ -263,7 +276,9 @@ class TestCreateWorkflowRun:
             # When
             with pytest.raises(exceptions.ProjectInvalidError):
                 _ = runtime.create_workflow_run(
-                    my_workflow.model, ProjectRef(workspace_id="a", project_id="b")
+                    my_workflow.model,
+                    ProjectRef(workspace_id="a", project_id="b"),
+                    False,
                 )
 
     class TestWorkflowRunFailure:
@@ -284,7 +299,7 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(exceptions.WorkflowRunNotStarted):
-                _ = runtime.create_workflow_run(my_workflow.model, None)
+                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
 
         @pytest.mark.parametrize("submitted_version", (None, "0.1.0"))
         @pytest.mark.parametrize(
@@ -304,7 +319,7 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(exceptions.WorkflowRunNotStarted) as exc_info:
-                _ = runtime.create_workflow_run(my_workflow.model, None)
+                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
 
             error_message = str(exc_info.value)
             assert "This is an unsupported version of orquestra-sdk.\n" in error_message
@@ -333,7 +348,7 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(_exceptions.UnknownHTTPError):
-                _ = runtime.create_workflow_run(my_workflow.model, None)
+                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
 
         @pytest.mark.parametrize(
             "failure_exc", [_exceptions.InvalidTokenError, _exceptions.ForbiddenError]
@@ -349,7 +364,7 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(exceptions.UnauthorizedError):
-                _ = runtime.create_workflow_run(my_workflow.model, None)
+                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
 
 
 class TestGetWorkflowRunStatus:
@@ -1610,13 +1625,12 @@ def test_ce_resources(
 
     # When
     with context as exec_info:
-        runtime.create_workflow_run(wf().model, None)
+        runtime.create_workflow_run(wf().model, None, dry_run=False)
 
     # Then
     if raises:
         assert all([telltale in str(exec_info) for telltale in telltales])
     else:
         mocked_client.create_workflow_run.assert_called_once_with(
-            workflow_def_id,
-            expected_resources,
+            workflow_def_id, expected_resources, False
         )

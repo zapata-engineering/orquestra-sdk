@@ -368,7 +368,10 @@ class DriverClient:
     # ---- Workflow Runs ----
 
     def create_workflow_run(
-        self, workflow_def_id: _models.WorkflowDefID, resources: _models.Resources
+        self,
+        workflow_def_id: _models.WorkflowDefID,
+        resources: _models.Resources,
+        dry_run: bool,
     ) -> _models.WorkflowRunID:
         """
         Submit a workflow def to run in the workflow driver
@@ -383,7 +386,9 @@ class DriverClient:
         resp = self._post(
             self._uri_provider.uri_for("create_workflow_run"),
             body_params=_models.CreateWorkflowRunRequest(
-                workflowDefinitionID=workflow_def_id, resources=resources
+                workflowDefinitionID=workflow_def_id,
+                resources=resources,
+                dryRun=dry_run,
             ).dict(),
         )
 

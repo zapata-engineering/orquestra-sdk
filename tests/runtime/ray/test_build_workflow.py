@@ -152,7 +152,7 @@ class TestResourcesInMakeDag:
         workflow = workflow_parametrised_with_resources(**resources).model
 
         # When
-        _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, None)
+        _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, False)
 
         # Then
         calls = client.add_options.call_args_list
@@ -207,7 +207,7 @@ class TestResourcesInMakeDag:
             workflow.metadata.sdk_version.original = "mocked"
 
             # When
-            _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, None)
+            _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, False)
 
             # Then
             calls = client.add_options.call_args_list
@@ -239,7 +239,7 @@ class TestResourcesInMakeDag:
             ).model
 
             # When
-            _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, None)
+            _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, False)
 
             # Then
             calls = client.add_options.call_args_list
@@ -391,7 +391,10 @@ class TestArgumentUnwrapper:
         ):
             fn = Mock()
             arg_unwrapper = _build_workflow.ArgumentUnwrapper(
-                fn, args_artifact_nodes, {}, True
+                fn,
+                args_artifact_nodes,
+                {},
+                deserialize=True,
             )
             _ = arg_unwrapper(task_result, task_result, task_result)
 
