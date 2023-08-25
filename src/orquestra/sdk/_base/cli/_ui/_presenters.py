@@ -346,26 +346,10 @@ def _format_tasks_succeeded(summary: ui_models.WFRunSummary) -> str:
     return f"{summary.n_tasks_succeeded} / {summary.n_task_invocations_total}"
 
 
-class WFRunPresenter:
-    def show_wf_run(self, summary: ui_models.WFRunSummary):
-        click.echo("Workflow overview")
-        click.echo(
-            tabulate(
-                [
-                    ["workflow def name", summary.wf_def_name],
-                    ["run ID", summary.wf_run_id],
-                    ["status", summary.wf_run_status.state.name],
-                    [
-                        "start time",
-                        _format_datetime(summary.wf_run_status.start_time),
-                    ],
-                    [
-                        "end time",
-                        _format_datetime(summary.wf_run_status.end_time),
-                    ],
-                    ["tasks succeeded", _format_tasks_succeeded(summary)],
-                ]
-            )
+class WFRunPresenter(RichPresenter):
+    def show_submitted_wf_run(self, wf_run_id: WorkflowRunId):
+        self._console.print(
+            f"[green]Workflow Submitted![/green] Run ID: [bold]{wf_run_id}[/bold]"
         )
         click.echo()
 
