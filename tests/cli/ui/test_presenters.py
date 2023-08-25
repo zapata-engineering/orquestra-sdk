@@ -42,20 +42,19 @@ def sys_exit_mock(monkeypatch):
     monkeypatch.setattr(sys, "exit", exit_mock)
     return exit_mock
 
+CONSOLE_WIDTH = 120
+
+@pytest.fixture
+def test_console():
+    return Console(file=StringIO(), width=CONSOLE_WIDTH)
+
 
 class TestLogsPresenter:
-    CONSOLE_WIDTH = 120
-
-    @staticmethod
-    @pytest.fixture
-    def test_console():
-        return Console(file=StringIO(), width=TestLogsPresenter.CONSOLE_WIDTH)
-
     @staticmethod
     @pytest.fixture
     def rule():
         def _inner(prefix: t.Optional[str] = None):
-            line = "─" * TestLogsPresenter.CONSOLE_WIDTH
+            line = "─" * CONSOLE_WIDTH
             if prefix is None:
                 return line
             return f"{prefix} {line[len(prefix)+1:]}"
@@ -606,6 +605,22 @@ ET_INSTANT_2 = Instant(
 
 class TestWorkflowRunPresenter:
     @staticmethod
+    def test_show_submitted_wf_run(test_console):
+        # Given
+        wf_run_id = "wf.1"
+
+        presenter = _presenters.WFRunPresenter(console=test_console)
+
+        # When
+        presenter.show_submitted_wf_run(wf_run_id)
+
+        # Then
+        expected = "Workflow Submitted! Run ID: wf.1\n"
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        assert output == expected
+
+    @staticmethod
     @pytest.mark.parametrize(
         "summary,expected_path",
         [
@@ -662,10 +677,10 @@ class TestWorkflowRunPresenter:
         ],
     )
     def test_show_wf_run(
-        monkeypatch, capsys, summary: ui_models.WFRunSummary, expected_path: Path
+        monkeypatch, test_console, summary: ui_models.WFRunSummary, expected_path: Path
     ):
         # Given
-        presenter = _presenters.WFRunPresenter()
+        presenter = _presenters.WFRunPresenter(console=test_console)
         monkeypatch.setattr(
             _presenters,
             "_format_datetime",
@@ -675,10 +690,11 @@ class TestWorkflowRunPresenter:
         presenter.show_wf_run(summary)
 
         # Then
-        captured = capsys.readouterr()
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
 
         expected = expected_path.read_text()
-        assert captured.out == expected
+        assert output == expected
 
 
 class TestPromptPresenter:

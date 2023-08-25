@@ -351,37 +351,69 @@ class WFRunPresenter(RichPresenter):
         self._console.print(
             f"[green]Workflow Submitted![/green] Run ID: [bold]{wf_run_id}[/bold]"
         )
-        click.echo()
 
-        task_rows = [
-            ["function", "invocation ID", "status", "start_time", "end_time", "message"]
-        ]
+    def get_wf_run(self, summary: ui_models.WFRunSummary, live: bool = False):
+        summary_table = Table(
+            Column(style="bold", justify="right"),
+            Column(),
+            show_header=False,
+            box=SIMPLE_HEAVY,
+        )
+        summary_table.add_row("Workflow Def Name", summary.wf_def_name)
+        summary_table.add_row("Run ID", summary.wf_run_id)
+        summary_table.add_row("Status", summary.wf_run_status.state.name)
+        summary_table.add_row(
+            "Start Time", _format_datetime(summary.wf_run_status.start_time)
+        )
+        summary_table.add_row(
+            "End Time", _format_datetime(summary.wf_run_status.end_time)
+        )
+        summary_table.add_row("Succeeded Tasks", _format_tasks_succeeded(summary))
+        task_details = Table(
+            "Function",
+            "Invocation ID",
+            "Status",
+            "Start Time",
+            "End Time",
+            "Message",
+            box=SIMPLE_HEAVY,
+        )
         for task_row in summary.task_rows:
-            task_rows.append(
-                [
-                    task_row.task_fn_name,
-                    task_row.inv_id,
-                    task_row.status.state.value,
-                    _format_datetime(task_row.status.start_time),
-                    _format_datetime(task_row.status.end_time),
-                    task_row.message or "",
-                ]
+            task_details.add_row(
+                task_row.task_fn_name,
+                task_row.inv_id,
+                task_row.status.state.name,
+                _format_datetime(task_row.status.start_time),
+                _format_datetime(task_row.status.end_time),
+                task_row.message,
             )
-        click.echo("Task details")
-        click.echo(tabulate(task_rows, headers="firstrow"))
+        title = Rule("Workflow Overview", align="left")
+        task_title = Rule("Task Details", align="left")
+        renderables = [title, summary_table, task_title, task_details]
+        if live:
+            l = f"Last updated: {_dates.local_isoformat(_dates.now())}\nPress ctrl+c to exit."
+            renderables.append(l)
+        return Group(*renderables)
+
+    def show_wf_run(self, summary: ui_models.WFRunSummary):
+        self._console.print(self.get_wf_run(summary))
 
     def show_wf_list(self, summary: ui_models.WFList):
-        rows = [["Workflow Run ID", "Status", "Tasks Succeeded", "Start Time"]]
-        for model_row in summary.wf_rows:
-            rows.append(
-                [
-                    model_row.workflow_run_id,
-                    model_row.status,
-                    model_row.tasks_succeeded,
-                    _format_datetime(model_row.start_time),
-                ]
+        table = Table(
+            "Workflow Run ID",
+            "Status",
+            "Succeeded Tasks",
+            "Start Time",
+            box=SIMPLE_HEAVY,
+        )
+        for run in summary.wf_rows:
+            table.add_row(
+                run.workflow_run_id,
+                run.status,
+                run.tasks_succeeded,
+                _format_datetime(run.start_time),
             )
-        click.echo(tabulate(rows, headers="firstrow"))
+        self._console.print(table)
 
 
 class PromptPresenter:
