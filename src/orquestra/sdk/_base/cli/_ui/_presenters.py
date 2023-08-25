@@ -99,7 +99,8 @@ class LogsPresenter(RichPresenter):
         Present logs to the user.
 
         Args:
-            logs: The logs to display, this may be in a dictionary or as a plain LogOutput object
+            logs: The logs to display, this may be in a dictionary or as a plain
+                LogOutput object
             log_type: An optional name used to split multiple log types
         """
         _logs = self._rich_logs(logs)
@@ -122,7 +123,8 @@ class LogsPresenter(RichPresenter):
             log_type: additional information identify the type of logs saved.
         """
         self._console.print(
-            f"Workflow {log_type.value + ' ' if log_type else ''}logs saved at [bold]{path}[/bold]"
+            f"Workflow {log_type.value + ' ' if log_type else ''}"
+            f"logs saved at [bold]{path}[/bold]"
         )
 
 
@@ -161,7 +163,10 @@ class ArtifactPresenter(RichPresenter):
         Args:
             values: plain, deserialized artifact values.
         """
-        header = f"In workflow {wf_run_id}, task invocation {task_inv_id} produced {len(values)} outputs."
+        header = (
+            f"In workflow {wf_run_id}, task invocation {task_inv_id} "
+            f"produced {len(values)} outputs."
+        )
         self._console.print(Group(header, self._values_table(values)))
 
     def show_workflow_outputs(
@@ -334,7 +339,7 @@ class WFRunPresenter(RichPresenter):
             f"[green]Workflow Submitted![/green] Run ID: [bold]{wf_run_id}[/bold]"
         )
 
-    def get_wf_run(self, summary: ui_models.WFRunSummary, live: bool = False):
+    def get_wf_run(self, summary: ui_models.WFRunSummary):
         summary_table = Table(
             Column(style="bold", justify="right"),
             Column(),
@@ -371,11 +376,7 @@ class WFRunPresenter(RichPresenter):
             )
         title = Rule("Workflow Overview", align="left")
         task_title = Rule("Task Details", align="left")
-        renderables = [title, summary_table, task_title, task_details]
-        if live:
-            l = f"Last updated: {_dates.local_isoformat(_dates.now())}\nPress ctrl+c to exit."
-            renderables.append(l)
-        return Group(*renderables)
+        return Group(title, summary_table, task_title, task_details)
 
     def show_wf_run(self, summary: ui_models.WFRunSummary):
         self._console.print(self.get_wf_run(summary))

@@ -19,7 +19,6 @@ from orquestra.sdk._base._spaces._structs import Project, Workspace
 from orquestra.sdk._base.cli._ui import _errors
 from orquestra.sdk._base.cli._ui import _models as ui_models
 from orquestra.sdk._base.cli._ui import _presenters
-from orquestra.sdk._base.cli._ui._corq_format import per_command
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.responses import ResponseStatusCode, ServiceResponse
@@ -64,7 +63,7 @@ class TestLogsPresenter:
         return _inner
 
     @staticmethod
-    def test_show_logs_with_dict(test_console):
+    def test_show_logs_with_dict(test_console: Console):
         # Given
         task_invocation = "my_task_invocation"
         task_logs = LogOutput(out=["my_log"], err=[])
@@ -83,10 +82,10 @@ class TestLogsPresenter:
         assert "my_log" in output
 
     @staticmethod
-    def test_show_logs_with_logoutput(test_console):
+    def test_show_logs_with_logoutput(test_console: Console):
         # Given
         logs = LogOutput(out=["my_log"], err=[])
-        presenter = _presenters.LogsPresenter(test_console)
+        presenter = _presenters.LogsPresenter(console=test_console)
 
         # When
         presenter.show_logs(logs)
@@ -98,7 +97,7 @@ class TestLogsPresenter:
         assert "my_log" in output
 
     @staticmethod
-    def test_print_stdout_when_available(test_console):
+    def test_print_stdout_when_available(test_console: Console):
         # Given
         logs = LogOutput(out=["my_log"], err=[])
         presenter = _presenters.LogsPresenter(console=test_console)
@@ -113,7 +112,7 @@ class TestLogsPresenter:
         assert "stderr" not in output
 
     @staticmethod
-    def test_print_stderr_when_available(test_console):
+    def test_print_stderr_when_available(test_console: Console):
         # Given
         logs = LogOutput(out=[], err=["my_log"])
         presenter = _presenters.LogsPresenter(console=test_console)
@@ -128,7 +127,7 @@ class TestLogsPresenter:
         assert "stderr" in output
 
     @staticmethod
-    def test_print_both_when_available(test_console):
+    def test_print_both_when_available(test_console: Console):
         # Given
         logs = LogOutput(out=["my_log"], err=["my_log"])
         presenter = _presenters.LogsPresenter(console=test_console)
@@ -143,7 +142,7 @@ class TestLogsPresenter:
         assert "stderr" in output
 
     @staticmethod
-    def test_show_dumped_wf_logs(test_console):
+    def test_show_dumped_wf_logs(test_console: Console):
         # Given
         dummy_path: Path = Path("/my/cool/path")
         presenter = _presenters.LogsPresenter(console=test_console)
@@ -186,7 +185,7 @@ class TestLogsPresenter:
         assert rule() not in output
 
     @staticmethod
-    def test_with_logoutput_logs(test_console):
+    def test_with_logoutput_logs(test_console: Console):
         # Given
         logs = LogOutput(out=["<log line 1 sentinel>", "<log line 2 sentinel>"], err=[])
         presenter = _presenters.LogsPresenter(console=test_console)
@@ -235,7 +234,7 @@ class TestLogsPresenter:
         assert expected == output
 
     @staticmethod
-    def test_stderr_output(test_console):
+    def test_stderr_output(test_console: Console):
         # Given
         logs = LogOutput(out=[], err=["<log line 1 sentinel>", "<log line 2 sentinel>"])
         presenter = _presenters.LogsPresenter(console=test_console)
@@ -258,7 +257,7 @@ class TestLogsPresenter:
         assert output == expected
 
     @staticmethod
-    def test_both_output(test_console):
+    def test_both_output(test_console: Console):
         # Given
         logs = LogOutput(out=["<log line 1 sentinel>"], err=["<log line 2 sentinel>"])
         presenter = _presenters.LogsPresenter(console=test_console)
@@ -327,7 +326,7 @@ class TestWrappedCorqOutputPresenter:
 class TestArtifactPresenter:
     class TestDumpedWFResult:
         @staticmethod
-        def test_json(test_console):
+        def test_json(test_console: Console):
             # Given
             details = serde.DumpDetails(
                 file_path=Path("tests/some-path/wf.1234_1.json"),
@@ -347,7 +346,7 @@ class TestArtifactPresenter:
             assert "wf.1234_1.json as a text json file." in output
 
         @staticmethod
-        def test_pickle(test_console):
+        def test_pickle(test_console: Console):
             # Given
             details = serde.DumpDetails(
                 file_path=Path("tests/some-path/wf.1234_1.pickle"),
@@ -367,7 +366,7 @@ class TestArtifactPresenter:
             assert "wf.1234_1.pickle as a binary pickle file." in output
 
         @staticmethod
-        def test_other_format(test_console):
+        def test_other_format(test_console: Console):
             # Given
             details = serde.DumpDetails(
                 file_path=Path("tests/some-path/wf.1234_1.npz"),
@@ -387,7 +386,7 @@ class TestArtifactPresenter:
             assert "wf.1234_1.npz as NUMPY_ARRAY." in output
 
     @staticmethod
-    def test_show_workflow_outputs(test_console):
+    def test_show_workflow_outputs(test_console: Console):
         # Given
         values = [set([21, 38]), {"hello": "there"}]
         wf_run_id = "wf.1234"
@@ -414,7 +413,7 @@ class TestArtifactPresenter:
         assert output == expected
 
     @staticmethod
-    def test_show_task_outputs(test_console):
+    def test_show_task_outputs(test_console: Console):
         # Given
         values = [set([21, 38]), {"hello": "there"}]
         wf_run_id = "wf.1234"
@@ -444,7 +443,7 @@ class TestArtifactPresenter:
 
 class TestServicesPresenter:
     class TestShowServices:
-        def test_running(self, test_console):
+        def test_running(self, test_console: Console):
             # Given
             services = [ServiceResponse(name="mocked", is_running=True, info=None)]
             presenter = _presenters.ServicePresenter(console=test_console)
@@ -463,7 +462,7 @@ class TestServicesPresenter:
             )
             assert output == expected
 
-        def test_not_running(self, test_console):
+        def test_not_running(self, test_console: Console):
             # Given
             services = [ServiceResponse(name="mocked", is_running=False, info=None)]
             presenter = _presenters.ServicePresenter(console=test_console)
@@ -482,7 +481,7 @@ class TestServicesPresenter:
             )
             assert output == expected
 
-        def test_with_info(self, test_console):
+        def test_with_info(self, test_console: Console):
             # Given
             services = [
                 ServiceResponse(name="mocked", is_running=False, info="something")
@@ -643,7 +642,7 @@ ET_INSTANT_2 = Instant(
 
 class TestWorkflowRunPresenter:
     @staticmethod
-    def test_show_submitted_wf_run(test_console):
+    def test_show_submitted_wf_run(test_console: Console):
         # Given
         wf_run_id = "wf.1"
 
