@@ -481,8 +481,8 @@ class TestCLI:
         assert [line.strip() for line in results_ce] == [
             f"Workflow run {mock_ce_run_single} has 1 outputs.",
             "",
-            'Index   Type             Pretty Printed',
-            '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+            "Index   Type             Pretty Printed",
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
             "0       <class 'list'>   [1, 2, 3]",
             "",
             "",
@@ -540,8 +540,8 @@ class TestCLI:
         assert [line.strip() for line in results_ce] == [
             f"Workflow run {mock_ce_run_multiple} has 2 outputs.",
             "",
-            'Index   Type             Pretty Printed',
-            '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+            "Index   Type             Pretty Printed",
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
             "0       <class 'list'>   [1, 2, 3]",
             "1       <class 'list'>   [1, 2, 3]",
             "",
