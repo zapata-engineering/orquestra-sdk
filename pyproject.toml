@@ -65,10 +65,13 @@ select = [
   "E",   # pycodestyle
   "W",   # pycodestyle
   "F",   # pyflakes
+  "D",   # pydocstyle
 ]
 ignore = ["E203","E266"]
 target-version = "py38"
 
+[tool.ruff.pydocstyle]
+convention="google"
 
 [tool.pymarkdown]
 # Our CHANGELOG.md violates all these rules. We can remove them one-by-one when

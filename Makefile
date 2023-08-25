@@ -84,7 +84,12 @@ build-system-deps:
 
 .PHONY: flake8
 flake8:
-	$(PYTHON) -m flake8 --ignore=E203,E266,W503 --max-line-length=88 src tests docs/examples
+	$(PYTHON) -m flake8 \
+	--style=google \
+	--arg-type-hints-in-docstring=False \
+	--ignore=E203,E266,DOC301,W503 \
+	--max-line-length=88 \
+	src tests docs/examples
 
 .PHONY: black
 black:
