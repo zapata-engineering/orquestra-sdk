@@ -117,10 +117,11 @@ class RuntimeConfig:
     @classmethod
     def in_process(
         cls,
-    ):
+    ) -> "RuntimeConfig":
         """Factory method to generate RuntimeConfig objects for in-process runtimes.
+
         Returns:
-            RuntimeConfig
+            RuntimeConfig: the in-process runtime configuration.
         """
         return RuntimeConfig("IN_PROCESS", "in_process", True)
 
@@ -128,11 +129,14 @@ class RuntimeConfig:
     def ray(
         cls,
     ) -> "RuntimeConfig":
-        """
-        Config for running workflows on Ray. Makes the SDK connect to a Ray
-        cluster when you .run() the workflow. Requires starting the Ray
-        cluster separately in the background via 'ray start --head
+        """Config for running workflows on Ray.
+
+        Makes the SDK connect to a Ray cluster when you .run() the workflow. Requires
+        starting the Ray cluster separately in the background via 'ray start --head
         --storage=...'.
+
+        Returns:
+            RuntimeConfig:the Ray runtime configuration.
         """
         config = RuntimeConfig("RAY_LOCAL", "local", True)
         setattr(config, "log_to_driver", False)
@@ -158,6 +162,9 @@ class RuntimeConfig:
         Args:
             uri: Address of the CE cluster on which to run the workflow.
             token: Authorisation token for access to the cluster.
+
+        Returns:
+            RuntimeConfig
         """
         runtime_name = RuntimeName.CE_REMOTE
         config_name = _config.generate_config_name(runtime_name, uri)
@@ -182,11 +189,9 @@ class RuntimeConfig:
         Args:
             project_dir: the path to the project directory. If omitted, the current
                 working directory is used.
-        Raises:
-            ModuleNotFoundError: when orquestra.sdk._base is not installed.
 
         Returns:
-            Runtime: The runtime specified by the configuration.
+            RuntimeInterface: The runtime specified by the configuration.
         """
         _project_dir: Path = Path(project_dir or Path.cwd())
 
@@ -226,15 +231,17 @@ class RuntimeConfig:
     def load(
         cls,
         config_name: str,
-    ):
+    ) -> "RuntimeConfig":
         """Load an existing configuration from a file.
 
         Args:
             config_name: The name of the configuration to be loaded.
 
         Raises:
-            orquestra.sdk.exceptions.ConfigFileNotFoundError
-            orquestra.sdk.exceptions.ConfigNameNotFoundError
+            orquestra.sdk.exceptions.ConfigFileNotFoundError: when the configuration
+                file is a higher version than this version of the SDK supports.
+            orquestra.sdk.exceptions.ConfigNameNotFoundError: when no config with the
+                specified name exists in the config file.
 
         Returns:
             RuntimeConfig: The configuration as loaded from the file.
@@ -300,7 +307,11 @@ class RuntimeConfig:
 
         Args:
             config: the RuntimeConfigration object to be converted (e.g. the return from
-            _config.load()).
+                _config.load()).
+
+        Returns:
+            RuntimeConfig: The configuration as converted from the RuntimeConfiguration
+                object.
         """
         if config.runtime_name == RuntimeName.IN_PROCESS:
             return RuntimeConfig.in_process()
