@@ -42,7 +42,9 @@ def sys_exit_mock(monkeypatch):
     monkeypatch.setattr(sys, "exit", exit_mock)
     return exit_mock
 
+
 CONSOLE_WIDTH = 120
+
 
 @pytest.fixture
 def test_console():
@@ -397,15 +399,18 @@ class TestArtifactPresenter:
         # Then
         assert isinstance(test_console.file, StringIO)
         output = test_console.file.getvalue()
-        expected = "\n".join([
-            'Workflow run wf.1234 has 2 outputs.',
-            '                                               ',
-            '  Index   Type             Pretty Printed      ',
-            ' ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ',
-            "  0       <class 'set'>    {21, 38}            ",
-            "  1       <class 'dict'>   {'hello': 'there'}  ",
-            '                                               ',
-            "",])
+        expected = "\n".join(
+            [
+                "Workflow run wf.1234 has 2 outputs.",
+                "                                               ",
+                "  Index   Type             Pretty Printed      ",
+                " ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ",
+                "  0       <class 'set'>    {21, 38}            ",
+                "  1       <class 'dict'>   {'hello': 'there'}  ",
+                "                                               ",
+                "",
+            ]
+        )
         assert output == expected
 
     @staticmethod
@@ -422,14 +427,18 @@ class TestArtifactPresenter:
         # Then
         assert isinstance(test_console.file, StringIO)
         output = test_console.file.getvalue()
-        expected = "\n".join(['In workflow wf.1234, task invocation inv6 produced 2 outputs.',
-            '                                               ',
-            '  Index   Type             Pretty Printed      ',
-            ' ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ',
-            "  0       <class 'set'>    {21, 38}            ",
-            "  1       <class 'dict'>   {'hello': 'there'}  ",
-            '                                               ',
-            "",])
+        expected = "\n".join(
+            [
+                "In workflow wf.1234, task invocation inv6 produced 2 outputs.",
+                "                                               ",
+                "  Index   Type             Pretty Printed      ",
+                " ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ",
+                "  0       <class 'set'>    {21, 38}            ",
+                "  1       <class 'dict'>   {'hello': 'there'}  ",
+                "                                               ",
+                "",
+            ]
+        )
         assert output == expected
 
 
@@ -444,12 +453,14 @@ class TestServicesPresenter:
             # Then
             assert isinstance(test_console.file, StringIO)
             output = test_console.file.getvalue()
-            expected = "\n".join([
-                '                       ',
-                '  mocked   Running     ',
-                '                       ',
-                "",
-            ])
+            expected = "\n".join(
+                [
+                    "                       ",
+                    "  mocked   Running     ",
+                    "                       ",
+                    "",
+                ]
+            )
             assert output == expected
 
         def test_not_running(self, test_console):
@@ -461,12 +472,14 @@ class TestServicesPresenter:
             # Then
             assert isinstance(test_console.file, StringIO)
             output = test_console.file.getvalue()
-            expected = "\n".join([
-                '                           ',
-                '  mocked   Not Running     ',
-                '                           ',
-                "",
-            ])
+            expected = "\n".join(
+                [
+                    "                           ",
+                    "  mocked   Not Running     ",
+                    "                           ",
+                    "",
+                ]
+            )
             assert output == expected
 
         def test_with_info(self, test_console):
@@ -480,12 +493,14 @@ class TestServicesPresenter:
             # Then
             assert isinstance(test_console.file, StringIO)
             output = test_console.file.getvalue()
-            expected = "\n".join([
-                '                                    ',
-                '  mocked   Not Running   something  ',
-                '                                    ',
-                "",
-            ])
+            expected = "\n".join(
+                [
+                    "                                    ",
+                    "  mocked   Not Running   something  ",
+                    "                                    ",
+                    "",
+                ]
+            )
             assert output == expected
 
     @staticmethod

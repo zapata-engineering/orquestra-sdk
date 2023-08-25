@@ -6,14 +6,13 @@ Utilities for presenting human-readable text output from dorq commands. These ar
 mostly adapters over the corq's formatters.
 """
 import os
-import pprint
 import sys
 import typing as t
 import webbrowser
 from contextlib import contextmanager
 from functools import singledispatchmethod
 from pathlib import Path
-from typing import Iterable, Iterator, List, Sequence
+from typing import Iterable, Iterator, Optional, Sequence
 
 import click
 from rich.box import SIMPLE_HEAVY
@@ -31,16 +30,10 @@ from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk.schema import responses
 from orquestra.sdk.schema.configs import ConfigName, RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.ir import ArtifactFormat
-from orquestra.sdk.schema.workflow_run import (
-    TaskInvocationId,
-    WorkflowRun,
-    WorkflowRunId,
-    WorkflowRunOnlyID,
-)
+from orquestra.sdk.schema.workflow_run import TaskInvocationId, WorkflowRunId
 
 from . import _errors
 from . import _models as ui_models
-from ._corq_format import per_command
 
 
 class RichPresenter:
