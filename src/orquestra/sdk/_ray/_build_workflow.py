@@ -235,16 +235,19 @@ def _make_ray_dag_node(
                 # True for all the steps except data aggregation
                 serialization = user_fn_ref is not None
 
-                user_fn = _get_user_function(user_fn_ref, dry_run, output_metadata)
+                try:
+                    user_fn = _get_user_function(user_fn_ref, dry_run, output_metadata)
 
-                wrapped = ArgumentUnwrapper(
-                    user_fn=user_fn,
-                    args_artifact_nodes=args_artifact_nodes,
-                    kwargs_artifact_nodes=kwargs_artifact_nodes,
-                    deserialize=serialization,
-                )
+                    wrapped = ArgumentUnwrapper(
+                        user_fn=user_fn,
+                        args_artifact_nodes=args_artifact_nodes,
+                        kwargs_artifact_nodes=kwargs_artifact_nodes,
+                        deserialize=serialization,
+                    )
 
-                wrapped_return = wrapped(*inner_args, **inner_kwargs)
+                    wrapped_return = wrapped(*inner_args, **inner_kwargs)
+                except Exception as e:
+                    raise Exception from e
 
                 packed: responses.WorkflowResult = (
                     serde.result_from_artifact(wrapped_return, ir.ArtifactFormat.AUTO)
