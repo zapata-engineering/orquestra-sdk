@@ -733,6 +733,41 @@ class TestWorkflowRunPresenter:
         expected = expected_path.read_text()
         assert output == expected
 
+    @staticmethod
+    def test_show_wf_list(monkeypatch: pytest.MonkeyPatch, test_console: Console):
+        # Given
+        expected_path = DATA_DIR / "list_wf_runs.txt"
+        summary = ui_models.WFList(
+            wf_rows=[
+                ui_models.WFList.WFRow(
+                    workflow_run_id="wf1",
+                    status="mocked status",
+                    tasks_succeeded="x/y",
+                    start_time=UTC_INSTANT,
+                ),
+                ui_models.WFList.WFRow(
+                    workflow_run_id="wf2",
+                    status="mocked status",
+                    tasks_succeeded="x/y",
+                    start_time=None,
+                ),
+            ]
+        )
+        presenter = _presenters.WFRunPresenter(console=test_console)
+        monkeypatch.setattr(
+            _presenters,
+            "_format_datetime",
+            lambda x: "Fri Feb 24 08:26:07 2023" if x else "",
+        )
+        # When
+        presenter.show_wf_list(summary)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        expected = expected_path.read_text()
+        assert output == expected
+
 
 class TestPromptPresenter:
     class TestWorkspacesList:
