@@ -42,7 +42,9 @@ class RichPresenter:
 
     @contextmanager
     def progress_spinner(self, spinner_label: str = "Loading"):
-        with Live(Spinner("dots", spinner_label), transient=True) as live:
+        with Live(
+            Spinner("dots", spinner_label), console=self._console, transient=True
+        ) as live:
             yield live
 
 
