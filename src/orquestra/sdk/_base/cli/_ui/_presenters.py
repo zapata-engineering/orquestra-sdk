@@ -210,7 +210,7 @@ class ArtifactPresenter:
         click.echo(f"Artifact saved at {dump_details.file_path} " f"as {format_name}.")
 
 
-class ServicePresenter:
+class ServicePresenter(RichPresenter):
     @contextmanager
     def show_progress(
         self, services: Sequence[_services.Service], *, label: str
@@ -221,32 +221,26 @@ class ServicePresenter:
         Yields an iterable of services; when you iterate over it, the progress bar is
         advanced.
         """
-        with click.progressbar(
-            services,
-            show_eta=False,
-            item_show_func=lambda svc: f"{label} {svc.name}"
-            if svc is not None
-            else None,
-        ) as bar:
-            yield bar
+        with Live(Spinner("dots", label), transient=True):
+            yield services
 
     def show_services(self, services: Sequence[responses.ServiceResponse]):
-        click.echo(
-            tabulate(
-                [
-                    [
-                        click.style(svc.name, bold=True),
-                        click.style("Running", fg="green")
-                        if svc.is_running
-                        else click.style("Not Running", fg="red"),
-                        svc.info,
-                    ]
-                    for svc in services
-                ],
-                colalign=("right",),
-                tablefmt="plain",
-            ),
+        status_table = Table(
+            Column("Service", style="bold"),
+            Column("Status"),
+            Column("Info", style="blue"),
+            box=SIMPLE_HEAVY,
+            show_header=False,
         )
+        for svc in services:
+            status_table.add_row(
+                svc.name,
+                "[green]Running[/green]"
+                if svc.is_running
+                else "[red]Not Running[/red]",
+                svc.info or "",
+            )
+        self._console.print(status_table)
 
     def show_failure(self, service_responses: Sequence[responses.ServiceResponse]):
         self.show_services(service_responses)

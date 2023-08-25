@@ -433,37 +433,58 @@ class TestArtifactPresenter:
 
 class TestServicesPresenter:
     class TestShowServices:
-        def test_running(self, capsys):
+        def test_running(self, test_console):
             # Given
             services = [ServiceResponse(name="mocked", is_running=True, info=None)]
-            presenter = _presenters.ServicePresenter()
+            presenter = _presenters.ServicePresenter(console=test_console)
             # When
             presenter.show_services(services)
             # Then
-            captured = capsys.readouterr()
-            assert "mocked  Running" in captured.out
+            assert isinstance(test_console.file, StringIO)
+            output = test_console.file.getvalue()
+            expected = "\n".join([
+                '                       ',
+                '  mocked   Running     ',
+                '                       ',
+                "",
+            ])
+            assert output == expected
 
-        def test_not_running(self, capsys):
+        def test_not_running(self, test_console):
             # Given
             services = [ServiceResponse(name="mocked", is_running=False, info=None)]
-            presenter = _presenters.ServicePresenter()
+            presenter = _presenters.ServicePresenter(console=test_console)
             # When
             presenter.show_services(services)
             # Then
-            captured = capsys.readouterr()
-            assert "mocked  Not Running" in captured.out
+            assert isinstance(test_console.file, StringIO)
+            output = test_console.file.getvalue()
+            expected = "\n".join([
+                '                           ',
+                '  mocked   Not Running     ',
+                '                           ',
+                "",
+            ])
+            assert output == expected
 
-        def test_with_info(self, capsys):
+        def test_with_info(self, test_console):
             # Given
             services = [
                 ServiceResponse(name="mocked", is_running=False, info="something")
             ]
-            presenter = _presenters.ServicePresenter()
+            presenter = _presenters.ServicePresenter(console=test_console)
             # When
             presenter.show_services(services)
             # Then
-            captured = capsys.readouterr()
-            assert "mocked  Not Running  something" in captured.out
+            assert isinstance(test_console.file, StringIO)
+            output = test_console.file.getvalue()
+            expected = "\n".join([
+                '                                    ',
+                '  mocked   Not Running   something  ',
+                '                                    ',
+                "",
+            ])
+            assert output == expected
 
     @staticmethod
     def test_show_failure(capsys, sys_exit_mock):
