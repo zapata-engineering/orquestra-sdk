@@ -6,7 +6,7 @@ Unit tests for 'orq task logs' glue code.
 """
 
 from pathlib import Path
-from unittest.mock import create_autospec
+from unittest.mock import Mock, create_autospec
 
 import pytest
 
@@ -183,3 +183,30 @@ class TestAction:
 
             dumped_path = action._dumper.dump.return_value
             action._logs_presenter.show_dumped_wf_logs.assert_called_with(dumped_path)
+
+        @staticmethod
+        def test_failure(action, monkeypatch):
+            # Given
+            # CLI inputs
+            wf_run_id = "<wf run ID sentinel>"
+            config = "<config sentinel>"
+            download_dir = Path("/tmp/my/awesome/dir")
+            task_inv_id = "<my inv ID>"
+            fn_name = "<my task fn name>"
+            exception = Exception("<exception sentinel>")
+            monkeypatch.setattr(
+                action, "_on_cmd_call_with_exceptions", Mock(side_effect=exception)
+            )
+
+            # When
+            action.on_cmd_call(
+                wf_run_id=wf_run_id,
+                config=config,
+                download_dir=download_dir,
+                fn_name=fn_name,
+                task_inv_id=task_inv_id,
+            )
+
+            # Then
+            # We should pass input CLI args to config resolver.
+            action._error_presenter.show_error.assert_called_with(exception)

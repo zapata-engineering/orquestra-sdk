@@ -260,3 +260,30 @@ class TestAction:
 
             # Do not print logs to stdout
             action._logs_presenter.show_logs.assert_not_called()
+
+        @staticmethod
+        def test_failure(action, monkeypatch):
+            # Given
+            # CLI inputs
+            wf_run_id = "<wf run ID sentinel>"
+            config = "<config sentinel>"
+            download_dir = Path("/tmp/my/awesome/dir")
+            exception = Exception("<exception sentinel>")
+            monkeypatch.setattr(
+                action, "_on_cmd_call_with_exceptions", Mock(side_effect=exception)
+            )
+
+            # When
+            action.on_cmd_call(
+                wf_run_id=wf_run_id,
+                config=config,
+                download_dir=download_dir,
+                task="<task sentinel>",
+                system="<system sentinel>",
+                env_setup="<env sentinel>",
+                other="<other sentinel>",
+            )
+
+            # Then
+            # We should pass input CLI args to config resolver.
+            action._error_presenter.show_error.assert_called_with(exception)
