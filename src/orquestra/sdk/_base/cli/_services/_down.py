@@ -39,10 +39,8 @@ class Action:
             manage_ray=manage_ray, manage_all=manage_all
         )
 
-        with self._presenter.show_progress(
-            resolved_services, label="Stopping"
-        ) as progress:
-            for service in progress:
+        with self._presenter.progress_spinner("Stopping"):
+            for service in resolved_services:
                 service.down()
 
         services = [

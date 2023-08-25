@@ -204,19 +204,6 @@ class ArtifactPresenter(RichPresenter):
 
 
 class ServicePresenter(RichPresenter):
-    @contextmanager
-    def show_progress(
-        self, services: Sequence[_services.Service], *, label: str
-    ) -> Iterator[Iterable[_services.Service]]:
-        """
-        Starts a progress bar on the context enter.
-
-        Yields an iterable of services; when you iterate over it, the progress bar is
-        advanced.
-        """
-        with Live(Spinner("dots", label), transient=True):
-            yield services
-
     def show_services(self, services: Sequence[responses.ServiceResponse]):
         status_table = Table(
             Column("Service", style="bold"),
