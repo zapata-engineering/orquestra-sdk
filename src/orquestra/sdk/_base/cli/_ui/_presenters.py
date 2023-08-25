@@ -149,7 +149,13 @@ class WrappedCorqOutputPresenter:
         click.echo(message=message)
 
 
-class ArtifactPresenter:
+class ArtifactPresenter(RichPresenter):
+    def _values_table(self, values: t.Sequence[t.Any]) -> Table:
+        table = Table("Index", "Type", "Pretty Printed", box=SIMPLE_HEAVY)
+        for i, value in enumerate(values):
+            table.add_row(str(i), f"{type(value)}", Pretty(value))
+        return table
+
     def show_task_outputs(
         self,
         values: t.Sequence[t.Any],
@@ -162,16 +168,8 @@ class ArtifactPresenter:
         Args:
             values: plain, deserialized artifact values.
         """
-        click.echo(
-            f"In workflow {wf_run_id}, task invocation {task_inv_id} produced "
-            f"{len(values)} outputs."
-        )
-
-        for value_i, value in enumerate(values):
-            click.echo()
-            click.echo(f"Output {value_i}. Object type: {type(value)}")
-            click.echo("Pretty printed value:")
-            click.echo(pprint.pformat(value))
+        header = f"In workflow {wf_run_id}, task invocation {task_inv_id} produced {len(values)} outputs."
+        self._console.print(Group(header, self._values_table(values)))
 
     def show_workflow_outputs(
         self, values: t.Sequence[t.Any], wf_run_id: WorkflowRunId
@@ -182,13 +180,8 @@ class ArtifactPresenter:
         Args:
             values: plain, deserialized artifact values.
         """
-        click.echo(f"Workflow run {wf_run_id} has {len(values)} outputs.")
-
-        for value_i, value in enumerate(values):
-            click.echo()
-            click.echo(f"Output {value_i}. Object type: {type(value)}")
-            click.echo("Pretty printed value:")
-            click.echo(pprint.pformat(value))
+        header = f"Workflow run {wf_run_id} has {len(values)} outputs."
+        self._console.print(Group(header, self._values_table(values)))
 
     def show_dumped_artifact(self, dump_details: serde.DumpDetails):
         """
@@ -207,7 +200,9 @@ class ArtifactPresenter:
         else:
             format_name = dump_details.format.name
 
-        click.echo(f"Artifact saved at {dump_details.file_path} " f"as {format_name}.")
+        self._console.print(
+            f"Artifact saved at {dump_details.file_path} " f"as {format_name}."
+        )
 
 
 class ServicePresenter(RichPresenter):
