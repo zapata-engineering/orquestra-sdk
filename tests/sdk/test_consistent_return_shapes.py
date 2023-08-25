@@ -25,6 +25,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import typing as t
 from pathlib import Path
@@ -427,6 +428,10 @@ class TestAPI:
     "ray",
     "mock_config_env_var",
     "mock_db_env_var",
+)
+@pytest.mark.skipif(
+    sys.platform.startswith("win32"),
+    reason="Windows uses different symbols than macOS and Linux",
 )
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.slow

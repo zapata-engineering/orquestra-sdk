@@ -386,6 +386,10 @@ class TestArtifactPresenter:
             assert "wf.1234_1.npz as NUMPY_ARRAY." in output
 
     @staticmethod
+    @pytest.mark.skipif(
+        sys.platform.startswith("win32"),
+        reason="Windows uses different symbols than macOS and Linux",
+    )
     def test_show_workflow_outputs(test_console: Console):
         # Given
         values = [set([21, 38]), {"hello": "there"}]
@@ -413,6 +417,10 @@ class TestArtifactPresenter:
         assert output == expected
 
     @staticmethod
+    @pytest.mark.skipif(
+        sys.platform.startswith("win32"),
+        reason="Windows uses different symbols than macOS and Linux",
+    )
     def test_show_task_outputs(test_console: Console):
         # Given
         values = [set([21, 38]), {"hello": "there"}]
@@ -658,6 +666,10 @@ class TestWorkflowRunPresenter:
         assert output == expected
 
     @staticmethod
+    @pytest.mark.skipif(
+        sys.platform.startswith("win32"),
+        reason="Windows uses different symbols than macOS and Linux",
+    )
     @pytest.mark.parametrize(
         "summary,expected_path",
         [
@@ -734,6 +746,10 @@ class TestWorkflowRunPresenter:
         assert output == expected
 
     @staticmethod
+    @pytest.mark.skipif(
+        sys.platform.startswith("win32"),
+        reason="Windows uses different symbols than macOS and Linux",
+    )
     def test_show_wf_list(monkeypatch: pytest.MonkeyPatch, test_console: Console):
         # Given
         expected_path = DATA_DIR / "list_wf_runs.txt"
