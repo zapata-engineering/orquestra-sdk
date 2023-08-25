@@ -75,11 +75,6 @@ class LogsPresenter(RichPresenter):
             )
         return Group(*renderables)
 
-    @_rich_logs.register(list)
-    @staticmethod
-    def _(logs: list) -> RenderableType:
-        return "\n".join(logs)
-
     @_rich_logs.register(LogOutput)
     @staticmethod
     def _(logs: LogOutput) -> RenderableType:
