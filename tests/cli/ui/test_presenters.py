@@ -4,10 +4,12 @@
 import sys
 import typing as t
 from datetime import datetime, timezone
+from io import StringIO
 from pathlib import Path
 from unittest.mock import Mock, create_autospec
 
 import pytest
+from rich.console import Console
 
 from orquestra import sdk
 from orquestra.sdk._base import serde
@@ -41,124 +43,244 @@ def sys_exit_mock(monkeypatch):
     return exit_mock
 
 
+class TestLogsPresenter:
+    CONSOLE_WIDTH = 120
+
+    @staticmethod
+    @pytest.fixture
+    def test_console():
+        return Console(file=StringIO(), width=TestLogsPresenter.CONSOLE_WIDTH)
+
+    @staticmethod
+    @pytest.fixture
+    def rule():
+        def _inner(prefix: t.Optional[str] = None):
+            line = "─" * TestLogsPresenter.CONSOLE_WIDTH
+            if prefix is None:
+                return line
+            return f"{prefix} {line[len(prefix)+1:]}"
+
+        return _inner
+
+    @staticmethod
+    def test_show_logs_with_dict(test_console):
+        # Given
+        task_invocation = "my_task_invocation"
+        task_logs = LogOutput(out=["my_log"], err=[])
+        logs = {task_invocation: task_logs}
+
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        assert "my_task_invocation" in output
+        assert "stdout" in output
+        assert "my_log" in output
+
+    @staticmethod
+    def test_show_logs_with_logoutput(test_console):
+        # Given
+        logs = LogOutput(out=["my_log"], err=[])
+        presenter = _presenters.LogsPresenter(test_console)
+
+        # When
+        presenter.show_logs(logs)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        assert "stdout" in output
+        assert "my_log" in output
+
+    @staticmethod
+    def test_print_stdout_when_available(test_console):
+        # Given
+        logs = LogOutput(out=["my_log"], err=[])
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        assert "stdout" in output
+        assert "stderr" not in output
+
+    @staticmethod
+    def test_print_stderr_when_available(test_console):
+        # Given
+        logs = LogOutput(out=[], err=["my_log"])
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        assert "stdout" not in output
+        assert "stderr" in output
+
+    @staticmethod
+    def test_print_both_when_available(test_console):
+        # Given
+        logs = LogOutput(out=["my_log"], err=["my_log"])
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        assert "stdout" in output
+        assert "stderr" in output
+
+    @staticmethod
+    def test_show_dumped_wf_logs(test_console):
+        # Given
+        dummy_path: Path = Path("/my/cool/path")
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_dumped_wf_logs(dummy_path)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        assert f"Workflow logs saved at {dummy_path}" in output
+
+    @staticmethod
+    def test_with_mapped_logs(test_console, rule: t.Callable[..., str]):
+        # Given
+        logs = {
+            "<task invocation id sentinel>": LogOutput(
+                out=[
+                    "<log line 1 sentinel>",
+                    "<log line 2 sentinel>",
+                ],
+                err=[],
+            )
+        }
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        for line in [
+            "<task invocation id sentinel>",
+            "stdout",
+            "<log line 1 sentinel>",
+            "<log line 2 sentinel>",
+        ]:
+            assert line in output
+        assert rule() not in output
+
+    @staticmethod
+    def test_with_logoutput_logs(test_console):
+        # Given
+        logs = LogOutput(out=["<log line 1 sentinel>", "<log line 2 sentinel>"], err=[])
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        expected = "\n".join(
+            [
+                "                                  ",
+                "  stdout   <log line 1 sentinel>  ",
+                "           <log line 2 sentinel>  ",
+                "                                  ",
+                "",
+            ]
+        )
+        assert output == expected
+
+    @staticmethod
+    def test_with_log_type(test_console, rule: t.Callable[..., str]):
+        # Given
+        logs = LogOutput(out=["<log line 1 sentinel>", "<log line 2 sentinel>"], err=[])
+        log_type = Mock(value="<log type sentinel>")
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs, log_type=log_type)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        expected = "\n".join(
+            [
+                rule("<log type sentinel> logs"),
+                "                                  ",
+                "  stdout   <log line 1 sentinel>  ",
+                "           <log line 2 sentinel>  ",
+                "                                  ",
+                rule(),
+                "",
+            ]
+        )
+        assert expected == output
+
+    @staticmethod
+    def test_stderr_output(test_console):
+        # Given
+        logs = LogOutput(out=[], err=["<log line 1 sentinel>", "<log line 2 sentinel>"])
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        expected = "\n".join(
+            [
+                "                                  ",
+                "  stderr   <log line 1 sentinel>  ",
+                "           <log line 2 sentinel>  ",
+                "                                  ",
+                "",
+            ]
+        )
+        assert output == expected
+
+    @staticmethod
+    def test_both_output(test_console):
+        # Given
+        logs = LogOutput(out=["<log line 1 sentinel>"], err=["<log line 2 sentinel>"])
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        expected = "\n".join(
+            [
+                "                                  ",
+                "  stdout   <log line 1 sentinel>  ",
+                "  stderr   <log line 2 sentinel>  ",
+                "                                  ",
+                "",
+            ]
+        )
+        assert output == expected
+
+
 class TestWrappedCorqOutputPresenter:
-    class TestPassingDataToCorq:
-        """
-        Tests WrappedCorqOutputPresenter's methods that delegate formatting outputs to
-        the older, corq formatters.
-        """
-
-        @staticmethod
-        def test_show_submitted_wf_run(monkeypatch):
-            # Given
-            pretty_print_mock = Mock()
-            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
-
-            wf_run_id = "wf.1"
-
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_submitted_wf_run(wf_run_id)
-
-            # Then
-            called_args = pretty_print_mock.call_args.args
-            response_model = called_args[0]
-            assert response_model.workflow_runs[0].id == wf_run_id
-
-        @staticmethod
-        def test_show_logs_with_dict(monkeypatch):
-            # Given
-            pretty_print_mock = Mock()
-            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
-            task_invocation = "my_task_invocation"
-            task_logs = LogOutput(out=["my_log"], err=[])
-            logs = {task_invocation: task_logs}
-
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs)
-
-            # Then
-            called_args = pretty_print_mock.call_args.args
-            response_model = called_args[0]
-            assert "stdout:" in response_model.logs
-            assert task_logs.out[0] in response_model.logs
-            assert task_invocation in response_model.logs[0]
-
-        @staticmethod
-        def test_show_logs_with_logoutput(monkeypatch):
-            # Given
-            pretty_print_mock = Mock()
-            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
-            logs = LogOutput(out=["my_log"], err=[])
-
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs)
-
-            # Then
-            called_args = pretty_print_mock.call_args.args
-            response_model = called_args[0]
-            assert "stdout:" in response_model.logs
-            assert logs.out[0] in response_model.logs
-
-        @staticmethod
-        def test_print_stdout_when_available(monkeypatch):
-            # Given
-            pretty_print_mock = Mock()
-            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
-            logs = LogOutput(out=["my_log"], err=[])
-
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs)
-
-            # Then
-            called_args = pretty_print_mock.call_args.args
-            response_model = called_args[0]
-            assert "stdout:" in response_model.logs
-            assert "stderr:" not in response_model.logs
-
-        @staticmethod
-        def test_print_stderr_when_available(monkeypatch):
-            # Given
-            pretty_print_mock = Mock()
-            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
-            logs = LogOutput(out=[], err=["my_log"])
-
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs)
-
-            # Then
-            called_args = pretty_print_mock.call_args.args
-            response_model = called_args[0]
-            assert "stdout:" not in response_model.logs
-            assert "stderr:" in response_model.logs
-
-        @staticmethod
-        def test_print_both_when_available(monkeypatch):
-            # Given
-            pretty_print_mock = Mock()
-            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
-            logs = LogOutput(out=["my_log"], err=["my_log"])
-
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs)
-
-            # Then
-            called_args = pretty_print_mock.call_args.args
-            response_model = called_args[0]
-            assert "stdout:" in response_model.logs
-            assert "stderr:" in response_model.logs
-
     class TestPrinting:
         """
         Tests WrappedCorqOutputPresenter's methods that print outputs directly.
@@ -176,126 +298,6 @@ class TestWrappedCorqOutputPresenter:
             # Then
             captured = capsys.readouterr()
             assert f"Workflow run {wf_run_id} stopped" in captured.out
-
-        @staticmethod
-        def test_show_dumped_wf_logs(capsys):
-            # Given
-            dummy_path: Path = Path("/my/cool/path")
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_dumped_wf_logs(dummy_path)
-
-            # Then
-            captured = capsys.readouterr()
-            assert f"Workflow logs saved at {dummy_path}" in captured.out
-
-    class TestShowLogs:
-        @staticmethod
-        def test_with_mapped_logs(capsys):
-            # Given
-            logs = {
-                "<task invocation id sentinel>": LogOutput(
-                    out=[
-                        "<log line 1 sentinel>",
-                        "<log line 2 sentinel>",
-                    ],
-                    err=[],
-                )
-            }
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs)
-
-            # Then
-            captured = capsys.readouterr()
-            for line in [
-                "task-invocation-id: <task invocation id sentinel>",
-                "stdout:",
-                "<log line 1 sentinel>",
-                "<log line 2 sentinel>",
-            ]:
-                assert line in captured.out
-            assert "=" * 80 not in captured.out
-
-        @staticmethod
-        def test_with_logoutput_logs(capsys):
-            # Given
-            logs = LogOutput(
-                out=["<log line 1 sentinel>", "<log line 2 sentinel>"], err=[]
-            )
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs)
-
-            # Then
-            captured = capsys.readouterr()
-            assert (
-                "stdout:\n<log line 1 sentinel>\n<log line 2 sentinel>\n"
-                in captured.out
-            )
-            assert "=" * 80 not in captured.out
-
-        @staticmethod
-        def test_with_log_type(capsys):
-            # Given
-            logs = LogOutput(
-                out=["<log line 1 sentinel>", "<log line 2 sentinel>"], err=[]
-            )
-            log_type = Mock(value="<log type sentinel>")
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs, log_type=log_type)
-
-            # Then
-            captured = capsys.readouterr()
-            for line in [
-                "=== <LOG TYPE SENTINEL> LOGS ===================================================",  # noqa: E501
-                "stdout:",
-                "<log line 1 sentinel>",
-                "<log line 2 sentinel>",
-                "================================================================================",  # noqa: E501
-            ]:
-                assert line in captured.out
-
-        @staticmethod
-        def test_stderr_output(capsys):
-            # Given
-            logs = LogOutput(
-                out=[], err=["<log line 1 sentinel>", "<log line 2 sentinel>"]
-            )
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs)
-
-            # Then
-            captured = capsys.readouterr()
-            assert (
-                "stderr:\n<log line 1 sentinel>\n<log line 2 sentinel>\n"
-                in captured.out
-            )
-
-        @staticmethod
-        def test_both_output(capsys):
-            # Given
-            logs = LogOutput(
-                out=["<log line 1 sentinel>"], err=["<log line 2 sentinel>"]
-            )
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs)
-
-            # Then
-            captured = capsys.readouterr()
-            assert (
-                "stdout:\n<log line 1 sentinel>\nstderr:\n<log line 2 sentinel>\n"
-                in captured.out
-            )
 
     @staticmethod
     def test_handling_error(monkeypatch, sys_exit_mock):

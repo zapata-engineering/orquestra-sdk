@@ -16,6 +16,13 @@ from pathlib import Path
 from typing import Iterable, Iterator, List, Sequence
 
 import click
+from rich.box import SIMPLE_HEAVY
+from rich.console import Console, Group, RenderableType
+from rich.live import Live
+from rich.pretty import Pretty
+from rich.rule import Rule
+from rich.spinner import Spinner
+from rich.table import Column, Table
 from tabulate import tabulate
 
 from orquestra.sdk._base import _dates, _env, _services, serde
@@ -36,35 +43,80 @@ from . import _models as ui_models
 from ._corq_format import per_command
 
 
-class WrappedCorqOutputPresenter:
+class RichPresenter:
+    def __init__(self, console: Optional[Console] = None):
+        self._console = console or Console()
+
+    @contextmanager
+    def progress_spinner(self, spinner_label: str = "Loading"):
+        with Live(Spinner("dots", spinner_label), transient=True) as live:
+            yield live
+
+
+class LogsPresenter(RichPresenter):
     """
-    Uses corq's responses and formatters for pretty-printing dorq data.
+    Present workflow and task logs
     """
 
-    def show_wf_runs_list(self, wf_runs: List[WorkflowRun]):
-        resp = responses.GetWorkflowRunResponse(
-            meta=responses.ResponseMetadata(
-                success=True,
-                code=responses.ResponseStatusCode.OK,
-                message="Success",
-            ),
-            workflow_runs=wf_runs,
-        )
-        per_command.pretty_print_response(resp, project_dir=None)
+    @singledispatchmethod
+    def _rich_logs(*args) -> RenderableType:
+        """
+        Format the logs into a list of strings to be printed.
+        """
+        raise NotImplementedError(
+            f"No log lines constructor for args {args}"
+        )  # pragma: no cover
 
-    def show_submitted_wf_run(self, wf_run_id: WorkflowRunId):
-        resp = responses.SubmitWorkflowDefResponse(
-            meta=responses.ResponseMetadata(
-                success=True,
-                code=responses.ResponseStatusCode.OK,
-                message="Success",
-            ),
-            workflow_runs=[WorkflowRunOnlyID(id=wf_run_id)],
-        )
-        per_command.pretty_print_response(resp, project_dir=None)
+    @_rich_logs.register(dict)
+    @staticmethod
+    def _(logs: dict) -> RenderableType:
+        from rich.console import Group
 
-    def show_stopped_wf_run(self, wf_run_id: WorkflowRunId):
-        click.echo(f"Workflow run {wf_run_id} stopped.")
+        renderables = []
+        for invocation_id, invocation_logs in logs.items():
+            renderables.append(
+                Group(
+                    f"[bold]{invocation_id}[/bold]",
+                    LogsPresenter._rich_logs(invocation_logs),
+                )
+            )
+        return Group(*renderables)
+
+    @_rich_logs.register(list)
+    @staticmethod
+    def _(logs: list) -> RenderableType:
+        return "\n".join(logs)
+
+    @_rich_logs.register(LogOutput)
+    @staticmethod
+    def _(logs: LogOutput) -> RenderableType:
+        table = Table("Stream", "Content", show_header=False, box=SIMPLE_HEAVY)
+        if len(logs.out) > 0:
+            table.add_row("[bold blue]stdout[/bold blue]", "\n".join(logs.out))
+        if len(logs.err) > 0:
+            table.add_row("[bold red]stderr[/bold red]", "\n".join(logs.err))
+        return table
+
+    def show_logs(
+        self,
+        logs: t.Union[t.Mapping[TaskInvocationId, LogOutput], LogOutput],
+        log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None,
+    ):
+        """
+        Present logs to the user.
+
+        Args:
+            logs: The logs to display, this may be in a dictionary or as a plain LogOutput object
+            log_type: An optional name used to split multiple log types
+        """
+        _logs = self._rich_logs(logs)
+        renderables = [_logs]
+
+        if log_type:
+            _log_type = f"{log_type.value} logs".replace("_", " ")
+            renderables.insert(0, Rule(_log_type, align="left"))
+            renderables.append(Rule())
+        self._console.print(Group(*renderables))
 
     def show_dumped_wf_logs(
         self, path: Path, log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None
@@ -76,73 +128,21 @@ class WrappedCorqOutputPresenter:
             path: The path to the dump file.
             log_type: additional information identify the type of logs saved.
         """
-        click.echo(
-            f"Workflow {log_type.value + ' ' if log_type else ''}logs saved at {path}"
+        self._console.print(
+            f"Workflow {log_type.value + ' ' if log_type else ''}logs saved at [bold]{path}[/bold]"
         )
 
-    @singledispatchmethod
-    @staticmethod
-    def _format_logs(*args) -> t.List[str]:
-        """
-        Format the logs into a list of strings to be printed.
-        """
-        raise NotImplementedError(
-            f"No log lines constructor for args {args}"
-        )  # pragma: no cover
 
-    @_format_logs.register(dict)
-    @staticmethod
-    def _(logs: dict) -> t.List[str]:
-        log_lines = []
-        for invocation_id, invocation_logs in logs.items():
-            log_lines.append(f"task-invocation-id: {invocation_id}")
-            log_lines.extend(WrappedCorqOutputPresenter._format_logs(invocation_logs))
-        return log_lines
+class WrappedCorqOutputPresenter:
+    """
+    Uses corq's responses and formatters for pretty-printing dorq data.
+    """
 
-    @_format_logs.register(list)
-    @staticmethod
-    def _(logs: list) -> t.List[str]:
-        return logs
-
-    @_format_logs.register(LogOutput)
-    @staticmethod
-    def _(logs: LogOutput) -> t.List[str]:
-        output = []
-        if len(logs.out) > 0:
-            output.extend(["stdout:", *logs.out])
-        if len(logs.err) > 0:
-            output.extend(["stderr:", *logs.err])
-        return output
-
-    def show_logs(
-        self,
-        logs: t.Union[t.Mapping[TaskInvocationId, LogOutput], LogOutput],
-        log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None,
-    ):
-        """
-        Present logs to the user.
-        """
-        _logs = self._format_logs(logs)
-
-        resp = responses.GetLogsResponse(
-            meta=responses.ResponseMetadata(
-                success=True,
-                code=responses.ResponseStatusCode.OK,
-                message="Successfully got workflow run logs.",
-            ),
-            logs=_logs,
-        )
-
-        if log_type:
-            _log_type = f"{log_type.value} logs".replace("_", " ")
-            click.echo(f"=== {_log_type.upper()} " + "=" * (75 - len(_log_type)))
-        per_command.pretty_print_response(resp, project_dir=None)
-        if log_type:
-            click.echo("=" * 80 + "\n\n")
+    def show_stopped_wf_run(self, wf_run_id: WorkflowRunId):
+        click.echo(f"Workflow run {wf_run_id} stopped.")
 
     def show_error(self, exception: Exception):
         status_code = _errors.pretty_print_exception(exception)
-
         sys.exit(status_code.value)
 
     def show_message(self, message: str):

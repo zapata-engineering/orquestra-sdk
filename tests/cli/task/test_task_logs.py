@@ -18,7 +18,10 @@ from orquestra.sdk._base.cli._arg_resolvers import (
 from orquestra.sdk._base.cli._dumpers import LogsDumper
 from orquestra.sdk._base.cli._repos import WorkflowRunRepo
 from orquestra.sdk._base.cli._task import _logs
-from orquestra.sdk._base.cli._ui._presenters import WrappedCorqOutputPresenter
+from orquestra.sdk._base.cli._ui._presenters import (
+    LogsPresenter,
+    WrappedCorqOutputPresenter,
+)
 
 
 class TestAction:
@@ -44,7 +47,8 @@ class TestAction:
             resolved_invocation_id = "<resolved invocation id>"
 
             # Mocks
-            presenter = create_autospec(WrappedCorqOutputPresenter)
+            logs_presenter = create_autospec(LogsPresenter)
+            error_presenter = create_autospec(WrappedCorqOutputPresenter)
 
             dumper = create_autospec(LogsDumper)
             dumped_path = "<dumped path sentinel>"
@@ -65,7 +69,8 @@ class TestAction:
             task_inv_id_resolver.resolve.return_value = resolved_invocation_id
 
             return _logs.Action(
-                presenter=presenter,
+                logs_presenter=logs_presenter,
+                error_presenter=error_presenter,
                 dumper=dumper,
                 wf_run_repo=wf_run_repo,
                 config_resolver=config_resolver,
@@ -94,7 +99,7 @@ class TestAction:
 
             # Then
             # We should pass input CLI args to config resolver.
-            action._presenter.show_error.assert_not_called()
+            action._error_presenter.show_error.assert_not_called()
 
             action._config_resolver.resolve.assert_called_with(wf_run_id, config)
 
@@ -119,7 +124,7 @@ class TestAction:
 
             # We expect printing the workflow run returned from the repo.
             logs = action._wf_run_repo.get_task_logs.return_value
-            action._presenter.show_logs.assert_called_with(logs)
+            action._logs_presenter.show_logs.assert_called_with(logs)
 
             # We don't expect any dumps.
             assert action._dumper.dump.mock_calls == []
@@ -145,7 +150,7 @@ class TestAction:
 
             # Then
             # We should pass input CLI args to config resolver.
-            action._presenter.show_error.assert_not_called()
+            action._error_presenter.show_error.assert_not_called()
             action._config_resolver.resolve.assert_called_with(wf_run_id, config)
 
             # We should pass resolved_config to run ID resolver.
@@ -168,7 +173,7 @@ class TestAction:
             )
 
             # Do not print logs to stdout
-            action._presenter.show_logs.assert_not_called()
+            action._logs_presenter.show_logs.assert_not_called()
 
             # Expect dumping logs to the FS.
             logs = action._wf_run_repo.get_task_logs.return_value
@@ -177,4 +182,4 @@ class TestAction:
             )
 
             dumped_path = action._dumper.dump.return_value
-            action._presenter.show_dumped_wf_logs.assert_called_with(dumped_path)
+            action._logs_presenter.show_dumped_wf_logs.assert_called_with(dumped_path)

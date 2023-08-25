@@ -14,7 +14,10 @@ from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk._base.cli._arg_resolvers import WFConfigResolver, WFRunResolver
 from orquestra.sdk._base.cli._dumpers import LogsDumper
 from orquestra.sdk._base.cli._repos import WorkflowRunRepo
-from orquestra.sdk._base.cli._ui._presenters import WrappedCorqOutputPresenter
+from orquestra.sdk._base.cli._ui._presenters import (
+    LogsPresenter,
+    WrappedCorqOutputPresenter,
+)
 from orquestra.sdk._base.cli._workflow import _logs
 
 
@@ -40,7 +43,8 @@ class TestAction:
             resolved_config = "<resolved config>"
 
             # Mocks
-            presenter = create_autospec(WrappedCorqOutputPresenter)
+            logs_presenter = create_autospec(LogsPresenter)
+            error_presenter = create_autospec(WrappedCorqOutputPresenter)
             dumper = create_autospec(LogsDumper)
             wf_run_repo = create_autospec(WorkflowRunRepo)
 
@@ -62,7 +66,8 @@ class TestAction:
             wf_run_resolver.resolve_id.return_value = resolved_id
 
             action = _logs.Action(
-                presenter=presenter,
+                logs_presenter=logs_presenter,
+                error_presenter=error_presenter,
                 dumper=dumper,
                 wf_run_repo=wf_run_repo,
                 config_resolver=config_resolver,
@@ -100,7 +105,7 @@ class TestAction:
 
             # Then
             # We should pass input CLI args to config resolver.
-            action._presenter.show_error.assert_not_called()
+            action._error_presenter.show_error.assert_not_called()
             action._config_resolver.resolve.assert_called_with(wf_run_id, config)
 
             # We should pass resolved_config to run ID resolver.
@@ -127,23 +132,23 @@ class TestAction:
 
             # We expect printing the workflow run returned from the repo.
             if task_switch:
-                print(action._presenter.show_logs.call_args_list)
+                print(action._logs_presenter.show_logs.call_args_list)
                 task_logs = action._wf_run_repo.get_wf_logs.return_value.per_task
-                action._presenter.show_logs.assert_any_call(
+                action._logs_presenter.show_logs.assert_any_call(
                     task_logs, log_type=_logs.WorkflowLogs.WorkflowLogTypeName.PER_TASK
                 ),
             if system_switch:
                 sys_logs = action._wf_run_repo.get_wf_logs.return_value.system
-                action._presenter.show_logs.assert_any_call(
+                action._logs_presenter.show_logs.assert_any_call(
                     sys_logs, log_type=_logs.WorkflowLogs.WorkflowLogTypeName.SYSTEM
                 )
             if env_setup_switch:
                 env_setup_logs = action._wf_run_repo.get_wf_logs.return_value.env_setup
-                action._presenter.show_logs.assert_any_call(
+                action._logs_presenter.show_logs.assert_any_call(
                     env_setup_logs,
                     log_type=_logs.WorkflowLogs.WorkflowLogTypeName.ENV_SETUP,
                 )
-            assert action._presenter.show_logs.call_count == sum(
+            assert action._logs_presenter.show_logs.call_count == sum(
                 [task_switch, system_switch, env_setup_switch]
             )
 
@@ -185,7 +190,7 @@ class TestAction:
 
             # Then
             # We should pass input CLI args to config resolver.
-            action._presenter.show_error.assert_not_called()
+            action._error_presenter.show_error.assert_not_called()
             action._config_resolver.resolve.assert_called_with(wf_run_id, config)
 
             # We should pass resolved_config to run ID resolver.
@@ -219,7 +224,7 @@ class TestAction:
                     download_dir,
                     log_type=_logs.WorkflowLogs.WorkflowLogTypeName.PER_TASK,
                 )
-                action._presenter.show_dumped_wf_logs.assert_any_call(
+                action._logs_presenter.show_dumped_wf_logs.assert_any_call(
                     dumped_path,
                     log_type=_logs.WorkflowLogs.WorkflowLogTypeName.PER_TASK,
                 )
@@ -231,7 +236,7 @@ class TestAction:
                     download_dir,
                     log_type=_logs.WorkflowLogs.WorkflowLogTypeName.SYSTEM,
                 )
-                action._presenter.show_dumped_wf_logs.assert_any_call(
+                action._logs_presenter.show_dumped_wf_logs.assert_any_call(
                     dumped_path, log_type=_logs.WorkflowLogs.WorkflowLogTypeName.SYSTEM
                 )
             if env_setup_switch:
@@ -242,16 +247,16 @@ class TestAction:
                     download_dir,
                     log_type=_logs.WorkflowLogs.WorkflowLogTypeName.ENV_SETUP,
                 )
-                action._presenter.show_dumped_wf_logs.assert_any_call(
+                action._logs_presenter.show_dumped_wf_logs.assert_any_call(
                     dumped_path,
                     log_type=_logs.WorkflowLogs.WorkflowLogTypeName.ENV_SETUP,
                 )
             assert action._dumper.dump.call_count == sum(
                 [task_switch, system_switch, env_setup_switch]
             )
-            assert action._presenter.show_dumped_wf_logs.call_count == sum(
+            assert action._logs_presenter.show_dumped_wf_logs.call_count == sum(
                 [task_switch, system_switch, env_setup_switch]
             )
 
             # Do not print logs to stdout
-            action._presenter.show_logs.assert_not_called()
+            action._logs_presenter.show_logs.assert_not_called()
