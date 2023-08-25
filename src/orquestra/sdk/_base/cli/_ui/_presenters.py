@@ -12,7 +12,7 @@ import webbrowser
 from contextlib import contextmanager
 from functools import singledispatchmethod
 from pathlib import Path
-from typing import Iterable, Iterator, Optional, Sequence
+from typing import Optional, Sequence
 
 import click
 from rich.box import SIMPLE_HEAVY
@@ -24,7 +24,7 @@ from rich.spinner import Spinner
 from rich.table import Column, Table
 from tabulate import tabulate
 
-from orquestra.sdk._base import _dates, _env, _services, serde
+from orquestra.sdk._base import _dates, _env, serde
 from orquestra.sdk._base._dates import Instant
 from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk.schema import responses
