@@ -514,8 +514,9 @@ class ConfigRepo:
         Saves the token in the config file
 
         Raises:
-            ExpiredTokenError: if the token is expired
-            InvalidTokenError: if the token is not a valid format
+            orquestra.sdk.exceptions.ExpiredTokenError: if the current date is after the
+                token's expiry
+            orquestra.sdk.exceptions.InvalidTokenError: if the token is not a JWT
         """
         check_jwt_without_signature_verification(token)
 

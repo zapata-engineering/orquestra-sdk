@@ -94,9 +94,9 @@ class SecretsClient:
     def get_secret(self, name: SecretName) -> SecretDefinition:
         """
         Raises:
-            SecretNotFoundError: see the exception's docstring
-            InvalidTokenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk.secrets._exceptions.SecretNotFoundError:
+            orquestra.sdk.secrets._exceptions.InvalidTokenError:
+            orquestra.sdk.secrets._exceptions.UnknownHTTPError:
         """
         resp = self._get(API_ACTIONS["get_secret"].format(name))
 
@@ -112,8 +112,8 @@ class SecretsClient:
     ) -> t.Sequence[SecretNameObj]:
         """
         Raises:
-            InvalidTokenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk.secrets._exceptions.InvalidTokenError:
+            orquestra.sdk.secrets._exceptions.UnknownHTTPError:
         """
         resp = self._get(
             API_ACTIONS["list_secrets"],
@@ -130,9 +130,9 @@ class SecretsClient:
     def create_secret(self, new_secret: SecretDefinition):
         """
         Raises:
-            SecretAlreadyExistsError: see the exception's docstring
-            InvalidTokenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk.secrets._exceptions.SecretAlreadyExistsError:
+            orquestra.sdk.secrets._exceptions.InvalidTokenError:
+            orquestra.sdk.secrets._exceptions.UnknownHTTPError:
         """
         resp = self._post(
             API_ACTIONS["create_secret"],
@@ -147,9 +147,9 @@ class SecretsClient:
     def update_secret(self, name: SecretName, value: SecretValue):
         """
         Raises:
-            SecretNotFoundError: see the exception's docstring
-            InvalidTokenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk.secrets._exceptions.SecretNotFoundError:
+            orquestra.sdk.secrets._exceptions.InvalidTokenError:
+            orquestra.sdk.secrets._exceptions.UnknownHTTPError:
         """
         obj = SecretValueObj(value=value)
         resp = self._post(
@@ -165,9 +165,9 @@ class SecretsClient:
     def delete_secret(self, name: SecretName):
         """
         Raises:
-            SecretNotFoundError: see the exception's docstring
-            InvalidTokenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk.secrets._exceptions.SecretNotFoundError:
+            orquestra.sdk.secrets._exceptions.InvalidTokenError:
+            orquestra.sdk.secrets._exceptions.UnknownHTTPError:
         """
         resp = self._delete(API_ACTIONS["delete_secret"].format(name))
 

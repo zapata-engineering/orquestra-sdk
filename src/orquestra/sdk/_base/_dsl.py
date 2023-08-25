@@ -38,6 +38,7 @@ from typing_extensions import ParamSpec
 
 if TYPE_CHECKING:
     import pip_api
+    import orquestra.sdk
 
 import wrapt  # type: ignore
 
@@ -468,7 +469,7 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
     def __init__(
         self,
         fn: Callable[_P, _R],
-        output_metadata: TaskOutputMetadata,
+        output_metadata: "orquestra.sdk._base._dsl.TaskOutputMetadata",
         source_import: Optional[Import] = None,
         parameters: Optional[OrderedDict] = None,
         dependency_imports: Optional[Tuple[Import, ...]] = None,
@@ -704,10 +705,10 @@ class ArtifactFuture:
 
     def __init__(
         self,
-        invocation: TaskInvocation,
+        invocation: orquestra.sdk._base._dsl.TaskInvocation,
         output_index: Optional[int] = None,
         custom_name: Optional[str] = DEFAULT_CUSTOM_NAME,
-        serialization_format: ArtifactFormat = DEFAULT_SERIALIZATION_FORMAT,
+        serialization_format: orquestra.sdk._base._dsl.ArtifactFormat = DEFAULT_SERIALIZATION_FORMAT,  # noqa: E501
     ):
         self.invocation = invocation
         # if the invocation returns multiple values, this the index in the output
@@ -774,21 +775,32 @@ class ArtifactFuture:
     def with_invocation_meta(
         self,
         *,
-        cpu: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
-        memory: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
-        disk: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
-        gpu: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
-        custom_image: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
+        cpu: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
+        memory: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
+        disk: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
+        gpu: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
+        custom_image: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
         """Assigns optional metadata related to task invocation used to generate this
         artifact.
 
         Doesn't modify existing invocations, returns a new one.
 
-        Example usage:
+        Example usage::
+
             text = capitalize("hello").with_invocation_meta(
-                cpu="1000m",custom_image="zapatacomputing/orquestra-qml:v0.1.0-cuda"
-                )
+                cpu="1000m", custom_image="zapatacomputing/orquestra-qml:v0.1.0-cuda"
+            )
 
         Args:
             cpu: amount of cpu assigned to the task invocation
@@ -842,17 +854,26 @@ class ArtifactFuture:
     def with_resources(
         self,
         *,
-        cpu: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
-        memory: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
-        disk: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
-        gpu: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
+        cpu: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
+        memory: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
+        disk: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
+        gpu: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
         """Assigns optional metadata related to task invocation used to generate this
         artifact.
 
         Doesn't modify existing invocations, returns a new one.
 
-        Example usage:
+        Example usage::
+
             text = capitalize("hello").with_resources(cpu="1000m")
 
         Args:
@@ -870,17 +891,20 @@ class ArtifactFuture:
 
     def with_custom_image(
         self,
-        custom_image: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
+        custom_image: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
         """Assigns optional metadata related to task invocation used to generate this
         artifact.
 
         Doesn't modify existing invocations, returns a new one.
 
-        Example usage:
+        Example usage::
+
             text = capitalize("hello").with_custom_image(
                 "zapatacomputing/orquestra-qml:v0.1.0-cuda"
-                )
+            )
 
         Args:
             custom_image: docker image used to run the task invocation
