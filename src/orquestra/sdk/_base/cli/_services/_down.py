@@ -1,6 +1,7 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
+import subprocess
 from typing import Optional
 
 from orquestra.sdk.schema.responses import ServiceResponse
@@ -39,13 +40,40 @@ class Action:
             manage_ray=manage_ray, manage_all=manage_all
         )
 
+        success = True
+        responses = []
+
         with self._presenter.progress_spinner("Stopping"):
             for service in resolved_services:
-                service.down()
+                try:
+                    service.down()
+                    responses.append(
+                        ServiceResponse(
+                            name=service.name,
+                            is_running=service.is_running(),
+                            info=None,
+                        )
+                    )
+                except subprocess.CalledProcessError as e:
+                    success = False
+                    responses.append(
+                        ServiceResponse(
+                            name=service.name,
+                            is_running=True,
+                            info="\n".join(
+                                [
+                                    "command:",
+                                    str(e.cmd),
+                                    "stdout:",
+                                    *e.stdout.decode().splitlines(),
+                                    "stderr:",
+                                    *e.stderr.decode().splitlines(),
+                                ]
+                            ),
+                        )
+                    )
 
-        services = [
-            ServiceResponse(name=svc.name, is_running=svc.is_running(), info=None)
-            for svc in resolved_services
-        ]
-
-        self._presenter.show_services(services=services)
+        if success:
+            self._presenter.show_services(responses)
+        else:
+            self._presenter.show_failure(responses)
