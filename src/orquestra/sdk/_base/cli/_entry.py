@@ -407,6 +407,28 @@ def down(ray: t.Optional[bool], all: t.Optional[bool]):
 
 
 @cloup.command()
+@cloup.option_group(
+    "Services",
+    cloup.option("--ray", is_flag=True, default=None, help="Stop a Ray cluster"),
+    cloup.option("--all", is_flag=True, default=None, help="Stop all known services"),
+)
+def restart(ray: t.Optional[bool], all: t.Optional[bool]):
+    """
+    Stops and then restarts managed services required to execute workflows locally.
+
+    By default, this command only restarts the ray cluster.
+    """
+    from ._services._down import Action as DownAction
+    from ._services._up import Action as UpAction
+
+    down_action = DownAction()
+    up_action = UpAction()
+
+    down_action.on_cmd_call(manage_ray=ray, manage_all=all)
+    up_action.on_cmd_call(manage_ray=ray, manage_all=all)
+
+
+@cloup.command()
 def status():
     """
     Prints the status of known services.
@@ -424,6 +446,7 @@ dorq.section(
     up,
     down,
     status,
+    restart,
 )
 
 
