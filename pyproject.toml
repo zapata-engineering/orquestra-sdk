@@ -65,7 +65,7 @@ select = [
   "E",   # pycodestyle
   "W",   # pycodestyle
   "F",   # pyflakes
-  "D",   # pydocstyle
+  # "D",   # pydocstyle. TODO: ORQSDK-965
 ]
 ignore = ["E203","E266"]
 target-version = "py38"
