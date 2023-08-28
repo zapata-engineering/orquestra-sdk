@@ -48,6 +48,10 @@ class NotFoundError(BaseRuntimeError):
     pass
 
 
+class UserTaskFailedError(BaseRuntimeError):
+    pass
+
+
 # Config Errors
 class ConfigFileNotFoundError(BaseRuntimeError):
     """Raised when the configuration file cannot be identified."""
@@ -109,19 +113,6 @@ class InvalidWorkflowDefinitionError(BaseRuntimeError):
     pass
 
 
-class WorkflowDefinitionSyntaxError(BaseRuntimeError):
-    """Raised when there is a syntax error in the workflow definition."""
-
-    # TODO: This is not actually raised anywhere in our code. Do we still need it?
-    pass
-
-
-class WorkflowTooLargeError(BaseRuntimeError):
-    """Raised when a workflow is too large to run on the available resources."""
-
-    pass
-
-
 # Task Definition Errors
 class InvalidTaskDefinitionError(BaseRuntimeError):
     """Raised when a task definition is invalid."""
@@ -138,12 +129,6 @@ class NodesInTaskResourcesWarning(Warning):
 
 
 # Workflow Errors
-class WorkflowNotFoundError(BaseRuntimeError):
-    """Raised when the specified workflow cannot be found."""
-
-    pass
-
-
 class InvalidWorkflowRunLogsError(BaseRuntimeError):
     """Raised when workflow logs cannot be decoded."""
 
