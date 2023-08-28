@@ -82,9 +82,20 @@ github_actions:
 build-system-deps:
 	$(PYTHON) -m pip install wheel
 
+# TODO: change DOC to DOC301 after TODO
 .PHONY: flake8
 flake8:
 	$(PYTHON) -m flake8 \
+	--style=google \
+	--arg-type-hints-in-docstring=False \
+	--ignore=E203,E266,DOC,W503 \
+	--max-line-length=88 \
+	src tests docs/examples
+
+.PHONY: docstring_check
+docstring_check:
+	$(PYTHON) -m flake8 \
+	--select=DOC \
 	--style=google \
 	--arg-type-hints-in-docstring=False \
 	--ignore=E203,E266,DOC301,W503 \
