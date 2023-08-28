@@ -183,6 +183,19 @@ def wf_using_git_imports():
     return [task_with_git_import()]
 
 
+@sdk.task(dependency_imports=[sdk.PythonImports("inflect==7.0.0")])
+def task_throwing_library_exception():
+    import inflect  # type: ignore # noqa
+
+    p = inflect.engine()
+    p.number_to_words(1234, group=-1)
+
+
+@sdk.workflow
+def workflow_throwing_3rd_party_exception():
+    return task_throwing_library_exception()
+
+
 @sdk.task(dependency_imports=[sdk.PythonImports("polars")])
 def task_with_python_imports() -> int:
     import polars  # type: ignore # noqa
