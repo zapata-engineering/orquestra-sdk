@@ -577,6 +577,12 @@ def list_workflow_runs(
     """
     List the workflow runs, with some filters.
 
+    Note: this method returns a list of full ``WorkflowRun`` objects.
+    This will allow you to iterate through workflowruns performing actions on them,
+    e.g. stopping all workflows older than a month.
+    If you want an overview of workflows without necessarily needing to interact with
+    them, ``sdk.list_workflow_runs_summary()`` is a more efficient alternative.
+
     Args:
         config: The name of the configuration to use.
         limit: Restrict the number of runs to return, prioritising the most recent.
@@ -650,6 +656,53 @@ def list_workflow_runs(
         )
         runs.append(workflow_run)
     return runs
+
+
+def list_workflow_runs_summary(
+    config: t.Union[ConfigName, "RuntimeConfig"],
+    *,
+    limit: t.Optional[int] = None,
+    max_age: t.Optional[str] = None,
+    state: t.Optional[t.Union[State, t.List[State]]] = None,
+    project_dir: t.Optional[t.Union[Path, str]] = None,
+    workspace: t.Optional[WorkspaceId] = None,
+    project: t.Optional[ProjectId] = None,
+):  # TODO: return type - might make sense to be a dict?
+    """
+    List a summery of workflow runs, with some filters.
+
+    Note: this method returns a list of workflow run ids.  # TODO: keep up to date.
+    This will allow you to see a summary of workflow runs matching your filters.
+    Interacting with any individual workflow will require calling the
+    ``WorkflowRun.by_id()``
+    factory method.
+    If you want to act on each matching workflow run,
+    ``sdk.list_workflow_runs_summary()``
+    is a more efficient alternative.
+
+    Args:
+        config: The name of the configuration to use.
+        limit: Restrict the number of runs to return, prioritising the most recent.
+        max_age: Only return runs younger than the specified maximum age.
+        state: Only return runs of runs with the specified status.
+        project_dir: The location of the project directory.
+            This directory must contain the workflows database to which this run was
+            saved.
+            If omitted, the current working directory is assumed to be the project
+            directory.
+        workspace: Only return runs from the specified workspace when using CE.
+        project: will be used to list workflows from specific workspace and project
+            when using CE.
+
+    Raises:
+        ConfigNameNotFoundError: when the named config is not found in the file.
+        NotImplementedError: when a filter is specified for a runtime that does not
+            support it.
+
+    Returns:
+        ?  # TODO: update.
+    """
+    pass
 
 
 def _parse_max_age(age: t.Optional[str]) -> t.Optional[timedelta]:
