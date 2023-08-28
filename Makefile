@@ -8,6 +8,7 @@
 # make test PYTHON=/tmp/other/python/version
 PYTHON="python"
 
+DOCS_BUILD_DIR = docs/_build
 
 clean:
 	find . -regex '^.*\(__pycache__\|\.py[co]\)$$' -delete;
@@ -18,6 +19,7 @@ clean:
 	rm -rf tests/.pytest_cache;
 	rm -rf dist build
 	rm -f .coverage*
+	rm -rf "$(DOCS_BUILD_DIR)"
 
 
 test:
@@ -133,3 +135,11 @@ test-fast:
 		--durations=10 \
 		docs/examples/tests \
 		tests
+
+
+SPHINX_OPTS = "-W"
+
+
+.PHONY: docs
+docs:
+	sphinx-build ./docs "$(DOCS_BUILD_DIR)" $(SPHINX_OPTS)
