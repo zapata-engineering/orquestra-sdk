@@ -5,10 +5,12 @@
 🚨 *Breaking Changes*
 
 * When `auto` config is passed from local machine, config set in `ORQ_CURRENT_CONFIG` env variable will be used. Using `auto` locally without that env variable set, will result in an error.
+* Removed `orquestra.sdk.v2` module. Please use `orquestra.sdk` instead.
 
 🔥 *Features*
 
 * Adding `dry_run` parameter to `Workflow.run()`. It allows to test resources, dependencies and infrastructure while ignoring user task code.
+* Added `orq reset` as a shortcut for `orq down`, `orq up`
 
 🧟 *Deprecations*
 
