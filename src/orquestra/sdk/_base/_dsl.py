@@ -38,9 +38,11 @@ from typing_extensions import ParamSpec
 
 if TYPE_CHECKING:
     import pip_api
-    import orquestra.sdk
 
 import wrapt  # type: ignore
+
+# Needed for fully-qualified type annotations.
+import orquestra.sdk
 
 from ..exceptions import DirtyGitRepo, InvalidTaskDefinitionError, WorkflowSyntaxError
 from ..kubernetes.quantity import parse_quantity
@@ -466,6 +468,9 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
     get the serializable form.
     """
 
+    # The fully-qualified type hint is a workaround for docs' autoapi not being able to
+    # resolve symbols.
+
     def __init__(
         self,
         fn: Callable[_P, _R],
@@ -772,6 +777,9 @@ class ArtifactFuture:
         """
         raise NotImplementedError("ArtifactFuture cannot be pickled")
 
+    # The fully-qualified type hint is a workaround for docs' autoapi not being able to
+    # resolve symbols.
+
     def with_invocation_meta(
         self,
         *,
@@ -851,6 +859,9 @@ class ArtifactFuture:
             serialization_format=self.serialization_format,
         )
 
+    # The fully-qualified type hint is a workaround for docs' autoapi not being able to
+    # resolve symbols.
+
     def with_resources(
         self,
         *,
@@ -888,6 +899,9 @@ class ArtifactFuture:
         )
 
         return self.with_invocation_meta(cpu=cpu, memory=memory, disk=disk, gpu=gpu)
+
+    # The fully-qualified type hint is a workaround for docs' autoapi not being able to
+    # resolve symbols.
 
     def with_custom_image(
         self,
