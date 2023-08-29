@@ -733,6 +733,7 @@ class Test3rdPartyLibraries:
             runtime.get_workflow_run_outputs_non_blocking(run_id)
 
         captured_stderr = capsys.readouterr().err
+
         # this package should be only used inside ray env
         assert "Failed to unpickle serialized exception" not in captured_stderr
         assert "No module named" not in captured_stderr

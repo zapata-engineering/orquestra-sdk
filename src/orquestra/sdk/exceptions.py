@@ -49,7 +49,18 @@ class NotFoundError(BaseRuntimeError):
 
 
 class UserTaskFailedError(BaseRuntimeError):
-    pass
+    """
+    Raised when a task run fails during execution.
+
+    The actual exception that stopped the task from execution is chained as
+    ``raise TaskRunFailedError(...) from e``. This is a workaround for
+    de/serialization of exceptions defined in 3rd-party libraries.
+    """
+
+    def __init__(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
+        super().__init__()
+        self.wf_run_id = wf_run_id
+        self.task_inv_id = task_inv_id
 
 
 # Config Errors
