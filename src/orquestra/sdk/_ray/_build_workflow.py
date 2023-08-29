@@ -234,16 +234,28 @@ def _make_ray_dag_node(
                 # True for all the steps except data aggregation
                 serialization = user_fn_ref is not None
 
-                user_fn = _get_user_function(user_fn_ref, dry_run, output_metadata)
+                # Try-except block covers _get_user_function and wrapped() because:
+                # _get_user_function un-pickles the inlineImported functions - and this
+                # operation can already cause exceptions
+                # wrapped() calls user function, which catches all the exceptions
+                # that happens within user code
+                try:
+                    user_fn = _get_user_function(user_fn_ref, dry_run, output_metadata)
 
-                wrapped = ArgumentUnwrapper(
-                    user_fn=user_fn,
-                    args_artifact_nodes=args_artifact_nodes,
-                    kwargs_artifact_nodes=kwargs_artifact_nodes,
-                    deserialize=serialization,
-                )
+                    wrapped = ArgumentUnwrapper(
+                        user_fn=user_fn,
+                        args_artifact_nodes=args_artifact_nodes,
+                        kwargs_artifact_nodes=kwargs_artifact_nodes,
+                        deserialize=serialization,
+                    )
 
-                wrapped_return = wrapped(*inner_args, **inner_kwargs)
+                    wrapped_return = wrapped(*inner_args, **inner_kwargs)
+                except Exception as e:
+                    raise exceptions.UserTaskFailedError(
+                        f"User task with task invocation id:{task_inv_id} failed.",
+                        wf_run_id if wf_run_id else "",
+                        task_inv_id if task_inv_id else "",
+                    ) from e
 
                 packed: responses.WorkflowResult = (
                     serde.result_from_artifact(wrapped_return, ir.ArtifactFormat.AUTO)

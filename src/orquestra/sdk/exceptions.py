@@ -48,6 +48,26 @@ class NotFoundError(BaseRuntimeError):
     pass
 
 
+class UserTaskFailedError(BaseRuntimeError):
+    """
+    Raised when a task run fails during execution.
+
+    The actual exception that stopped the task from execution is chained as
+    ``raise TaskRunFailedError(...) from e``. This is a workaround for
+    de/serialization of exceptions defined in 3rd-party libraries.
+    """
+
+    def __init__(
+        self,
+        msg: str,
+        wf_run_id: WorkflowRunId = "",
+        task_inv_id: TaskInvocationId = "",
+    ):
+        super().__init__(msg)
+        self.wf_run_id = wf_run_id
+        self.task_inv_id = task_inv_id
+
+
 # Config Errors
 class ConfigFileNotFoundError(BaseRuntimeError):
     """Raised when the configuration file cannot be identified."""
@@ -109,19 +129,6 @@ class InvalidWorkflowDefinitionError(BaseRuntimeError):
     pass
 
 
-class WorkflowDefinitionSyntaxError(BaseRuntimeError):
-    """Raised when there is a syntax error in the workflow definition."""
-
-    # TODO: This is not actually raised anywhere in our code. Do we still need it?
-    pass
-
-
-class WorkflowTooLargeError(BaseRuntimeError):
-    """Raised when a workflow is too large to run on the available resources."""
-
-    pass
-
-
 # Task Definition Errors
 class InvalidTaskDefinitionError(BaseRuntimeError):
     """Raised when a task definition is invalid."""
@@ -138,12 +145,6 @@ class NodesInTaskResourcesWarning(Warning):
 
 
 # Workflow Errors
-class WorkflowNotFoundError(BaseRuntimeError):
-    """Raised when the specified workflow cannot be found."""
-
-    pass
-
-
 class InvalidWorkflowRunLogsError(BaseRuntimeError):
     """Raised when workflow logs cannot be decoded."""
 

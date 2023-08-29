@@ -710,6 +710,39 @@ class Test3rdPartyLibraries:
         with pytest.raises(ModuleNotFoundError):
             import piccup  # type: ignore # noqa
 
+    @staticmethod
+    def test_3rd_party_library_exception(monkeypatch, runtime: _dag.RayRuntime, capsys):
+        """
+        Verifies we can run tasks with GitImport dependencies not available at the time
+        of workflow submit time.
+        """
+        # Given
+        # This package should not be installed before running test
+        with pytest.raises(ModuleNotFoundError):
+            import inflect  # type: ignore # noqa
+
+        # When
+        run_id = runtime.create_workflow_run(
+            _example_wfs.workflow_throwing_3rd_party_exception.model, None, False
+        )
+        # This test is notoriously slow to run, especially on local machines.
+        _wait_to_finish_wf(run_id, runtime, timeout=10 * 60.0)
+
+        # Then
+        with pytest.raises(exceptions.WorkflowRunNotSucceeded):
+            runtime.get_workflow_run_outputs_non_blocking(run_id)
+
+        captured_stderr = capsys.readouterr().err
+
+        # this package should be only used inside ray env
+        assert "Failed to unpickle serialized exception" not in captured_stderr
+        assert "No module named" not in captured_stderr
+        # we should be able to see the original exception in the logs.
+        assert "inflect.BadChunkingOptionError" in captured_stderr
+
+        with pytest.raises(ModuleNotFoundError):
+            import inflect  # type: ignore # noqa
+
 
 @pytest.mark.slow
 class TestRayRuntimeErrors:

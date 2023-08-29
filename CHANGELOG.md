@@ -18,6 +18,8 @@
 
 🐛 *Bug Fixes*
 
+* Package-dependent exception thrown from the task no-longer causes the red-herring error of `no module named <xxx>` in the logs. It prints proper exception
+
 💅 *Improvements*
 
 🥷 *Internal*
