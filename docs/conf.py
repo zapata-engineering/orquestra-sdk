@@ -40,8 +40,6 @@ extensions = [
 ]
 source_suffix = {
     ".rst": "restructuredtext",
-    # '.txt': 'restructuredtext',
-    # '.md': 'markdown',
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -79,8 +77,4 @@ html_logo = "_static/orquestra.png"
 html_title = "Orquestra Documentation"
 html_favicon = "_static/favicon.ico"
 
-# Intersphinx is a tool for creating links to multiple repos.  This should help us!
 intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
-
-# This is so that the args to __init__ methods are appended to the class docs
-autoclass_content = "both"
