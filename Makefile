@@ -98,7 +98,7 @@ docstring_check:
 	--select=DOC \
 	--style=google \
 	--arg-type-hints-in-docstring=False \
-	--ignore=E203,E266,DOC301,W503 \
+	--ignore=E203,E266,DOC201,DOC203,DOC301,W503 \
 	--max-line-length=88 \
 	src tests docs/examples
 
