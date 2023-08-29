@@ -279,16 +279,19 @@ def add_with_error(a, b):
 @sdk.workflow
 def exception_wf_with_multiple_values():
     """
-       [1]
-        │
-        ▼
-       [2] => exception
-        │
-        ▼
-       [3] => won't run
-        │
-        ▼
-    [return]
+    ::
+
+           [1]
+            │
+            ▼
+           [2] => exception
+            │
+            ▼
+           [3] => won't run
+            │
+            ▼
+        [return]
+
     """
     future1 = add(37, 21)
     future2 = add_with_error(future1, future1)

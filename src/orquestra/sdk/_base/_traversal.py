@@ -764,14 +764,14 @@ def flatten_graph(
 ) -> ir.WorkflowDef:
     """Traverse the nested linked list of futures and produce a flat graph.
 
-    Each `dsl.ArtifactFuture` is mapped to a single `model.ArtifactNode`.
-    Each `dsl.Constant` is mapped to a single `model.ConstantNode`.
-    Each `dsl.TaskInvocation` is mapped to a single `model.TaskInvocation`.
+    Each ``dsl.ArtifactFuture`` is mapped to a single ``model.ArtifactNode``.
+    Each ``dsl.Constant`` is mapped to a single ``model.ConstantNode``.
+    Each ``dsl.TaskInvocation`` is mapped to a single ``model.TaskInvocation``.
 
-    Unique task references from `dsl.TaskInvocation`s are mapped to `model.Task`s.
+    Unique task references from ``dsl.TaskInvocation`` s are mapped to ``model.Task`` s.
 
-    Each `model.TaskInvocation` refers to nodes from `tasks`, `artifact_nodes` &
-    `constant_nodes` by their ids. This allows deduplication of metadata if a single
+    Each ``model.TaskInvocation`` refers to nodes from ``tasks``, ``artifact_nodes`` &
+    ``constant_nodes`` by their ids. This allows deduplication of metadata if a single
     node is referenced by multiple invocations.
     """
     root_futures = futures
