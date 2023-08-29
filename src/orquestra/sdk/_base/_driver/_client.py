@@ -219,10 +219,10 @@ class DriverClient:
         Stores a workflow definition for future submission
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowDef:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError:
-            orquestra.sdk._base._driver._exceptions.ForbiddenError:
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError:
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowDef
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
 
         Returns:
             the WorkflowDefID associated with the stored definition
@@ -262,9 +262,9 @@ class DriverClient:
         Lists all known workflow definitions
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError:
-            orquestra.sdk._base._driver._exceptions.ForbiddenError:
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError:
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
         resp = self._get(
             self._uri_provider.uri_for("list_workflow_defs"),
@@ -312,11 +312,11 @@ class DriverClient:
         Gets a stored workflow definition
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowDefID:
-            orquestra.sdk._base._driver._exceptions.WorkflowDefNotFound:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError:
-            orquestra.sdk._base._driver._exceptions.ForbiddenError:
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError:
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowDefID
+            orquestra.sdk._base._driver._exceptions.WorkflowDefNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
 
         Returns:
             a parsed WorkflowDef
@@ -346,11 +346,11 @@ class DriverClient:
         Gets a stored workflow definition
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowDefID:
-            orquestra.sdk._base._driver._exceptions.WorkflowDefNotFound:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError:
-            orquestra.sdk._base._driver._exceptions.ForbiddenError:
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError:
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowDefID
+            orquestra.sdk._base._driver._exceptions.WorkflowDefNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
         resp = self._delete(
             self._uri_provider.uri_for(
@@ -377,11 +377,11 @@ class DriverClient:
         Submit a workflow def to run in the workflow driver
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunRequest:
-            orquestra.sdk._base._driver._exceptions.UnsupportedSDKVersion:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError:
-            orquestra.sdk._base._driver._exceptions.ForbiddenError:
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError:
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunRequest
+            orquestra.sdk._base._driver._exceptions.UnsupportedSDKVersion
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
         resp = self._post(
             self._uri_provider.uri_for("create_workflow_run"),
@@ -420,9 +420,9 @@ class DriverClient:
         List workflow runs with a specified workflow def ID from the workflow driver
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError:
-            orquestra.sdk._base._driver._exceptions.ForbiddenError:
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError:
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
         # Schema: https://github.com/zapatacomputing/workflow-driver/blob/fa3eb17f1132d9c7f4960331ffe7ddbd31e02f8c/openapi/src/resources/workflow-runs.yaml#L10 # noqa: E501
         resp = self._get(
@@ -461,11 +461,11 @@ class DriverClient:
         Gets the status of a workflow run from the workflow driver
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID:
-            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError:
-            orquestra.sdk._base._driver._exceptions.ForbiddenError:
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError:
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
+            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
 
         resp = self._get(
@@ -499,10 +499,10 @@ class DriverClient:
             force: if the workflow should be forcefully terminated
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError:
-            orquestra.sdk._base._driver._exceptions.ForbiddenError:
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError:
+            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
 
         resp = self._post(
@@ -527,11 +527,11 @@ class DriverClient:
         Gets the workflow run artifact IDs of a workflow run from the workflow driver
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID:
-            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError:
-            orquestra.sdk._base._driver._exceptions.ForbiddenError:
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError:
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
+            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
 
         resp = self._get(
@@ -563,11 +563,11 @@ class DriverClient:
         Gets workflow run artifacts from the workflow driver
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunArtifactID:
-            orquestra.sdk._base._driver._exceptions.WorkflowRunArtifactNotFound:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError:
-            orquestra.sdk._base._driver._exceptions.ForbiddenError:
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError:
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunArtifactID
+            orquestra.sdk._base._driver._exceptions.WorkflowRunArtifactNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
 
         resp = self._get(
@@ -597,11 +597,11 @@ class DriverClient:
         Gets the workflow run result IDs of a workflow run from the workflow driver
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID:
-            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError:
-            orquestra.sdk._base._driver._exceptions.ForbiddenError:
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError:
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
+            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
 
         resp = self._get(
@@ -631,11 +631,11 @@ class DriverClient:
         Gets workflow run results from the workflow driver
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunResultID:
-            orquestra.sdk._base._driver._exceptions.WorkflowRunResultNotFound:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError:
-            orquestra.sdk._base._driver._exceptions.ForbiddenError:
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError:
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunResultID
+            orquestra.sdk._base._driver._exceptions.WorkflowRunResultNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
 
         resp = self._get(
@@ -683,12 +683,12 @@ class DriverClient:
         Gets the logs of a workflow run from the workflow driver
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID:
-            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError:
-            orquestra.sdk._base._driver._exceptions.ForbiddenError:
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError:
-            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotReadable:
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
+            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotReadable
         """
 
         resp = self._get(
@@ -738,12 +738,12 @@ class DriverClient:
         Gets the logs of a task run from the workflow driver
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID:
-            orquestra.sdk._base._driver._exceptions.TaskRunLogsNotFound:
-            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotReadable:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError:
-            orquestra.sdk._base._driver._exceptions.ForbiddenError:
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError:
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
+            orquestra.sdk._base._driver._exceptions.TaskRunLogsNotFound
+            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotReadable
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
 
         resp = self._get(
@@ -789,12 +789,12 @@ class DriverClient:
         Get the logs of a workflow run from the workflow driver.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.ForbiddenError:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID:
-            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotFound:
-            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotReadable:
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError:
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
+            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotFound
+            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotReadable
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
             NotImplementedError: when a log object's source_type is not a recognised
                 value, or is a value for a schema has not been defined.
         """
@@ -882,11 +882,11 @@ class DriverClient:
         Gets the status of a workflow run from the workflow driver
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID:
-            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError:
-            orquestra.sdk._base._driver._exceptions.ForbiddenError:
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError:
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
+            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
 
         resp = self._get(
