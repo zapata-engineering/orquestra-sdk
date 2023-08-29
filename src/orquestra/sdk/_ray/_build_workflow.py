@@ -252,7 +252,9 @@ def _make_ray_dag_node(
                     wrapped_return = wrapped(*inner_args, **inner_kwargs)
                 except Exception as e:
                     raise exceptions.UserTaskFailedError(
-                        wf_run_id=wf_run_id, task_inv_id=task_inv_id
+                        f"User task with task invocation id:{task_inv_id} failed.",
+                        wf_run_id if wf_run_id else "",
+                        task_inv_id if task_inv_id else "",
                     ) from e
 
                 packed: responses.WorkflowResult = (
