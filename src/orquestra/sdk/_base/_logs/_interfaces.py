@@ -27,9 +27,11 @@ class WorkflowLogs:
     """
     A mapping with task logs. Each key-value pair corresponds to one task
     invocation.
-    - key: task invocation ID (see
-        orquestra.sdk._base.ir.WorkflowDef.task_invocations)
-    - value: log lines from running this task invocation
+
+    * key: task invocation ID (see
+      ``orquestra.sdk.schema.ir.WorkflowDef.task_invocations``)
+
+    * value: log lines from running this task invocation
     """
 
     env_setup: LogOutput

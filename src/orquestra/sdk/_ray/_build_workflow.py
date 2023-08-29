@@ -22,7 +22,6 @@ from .._base._logs import _markers
 from ..kubernetes.quantity import parse_quantity
 from ..schema import ir, responses, workflow_run
 from . import _client, _id_gen
-from ._client import RayClient
 from ._wf_metadata import InvUserMetadata, pydatic_to_json_dict
 
 DEFAULT_IMAGE_TEMPLATE = "hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:{}"
@@ -182,7 +181,7 @@ def _get_user_function(
 
 
 def _make_ray_dag_node(
-    client: RayClient,
+    client: _client.RayClient,
     ray_options: t.Mapping,
     ray_args: t.Iterable[t.Any],
     ray_kwargs: t.Mapping[str, t.Any],
@@ -199,7 +198,7 @@ def _make_ray_dag_node(
 
     Args:
         client: Ray API facade
-        ray_options: dict passed to RayClient.add_options()
+        ray_options: dict passed to _client.RayClient.add_options()
         ray_args: constants or futures required to build the DAG
         ray_kwargs: constants or futures required to build the DAG
         args_artifact_nodes: a map of positional arg index to artifact node
@@ -369,7 +368,7 @@ def _ray_resources_for_custom_image(image_name: str) -> t.Mapping[str, float]:
 
 
 def make_ray_dag(
-    client: RayClient,
+    client: _client.RayClient,
     workflow_def: ir.WorkflowDef,
     workflow_run_id: workflow_run.WorkflowRunId,
     dry_run: bool,

@@ -87,9 +87,10 @@ class RuntimeInterface(ABC, LogReader):
 
         This method should return all output values for a task even if some of them
         aren't used in the workflow function. Reasons:
-        - Users might be interested in the computed value after running, even though
+
+        * Users might be interested in the computed value after running, even though
           the workflow didn't make an explicit use of it.
-        - Position in the task output tuple is significant. We can't just drop some of
+        * Position in the task output tuple is significant. We can't just drop some of
           the elements because this would shift indices.
 
         Careful: This method does NOT return status of a workflow. Verify it beforehand
@@ -213,9 +214,9 @@ class WorkflowRepo(ABC):
 
         Arguments:
             prefix (Optional): Only return workflow runs whose IDs start with the
-            prefix.
+                prefix.
             config_name (Optional): Only return workflow runs that use the
-            specified configuration name.
+                specified configuration name.
 
         Returns:
             A list of workflow runs for a given config. Includes: run ID, stored

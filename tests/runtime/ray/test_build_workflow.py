@@ -10,7 +10,7 @@ import pytest
 from orquestra.sdk._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
 )
-from orquestra.sdk._ray import _build_workflow
+from orquestra.sdk._ray import _build_workflow, _client
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.responses import WorkflowResult
 
@@ -124,7 +124,7 @@ class TestResourcesInMakeDag:
 
     @pytest.fixture
     def client(self):
-        return create_autospec(_build_workflow.RayClient)
+        return create_autospec(_client.RayClient)
 
     @pytest.mark.parametrize(
         "resources, expected, types",

@@ -39,7 +39,6 @@ from ..schema.workflow_run import (
 )
 from . import _client, _id_gen, _ray_logs
 from ._build_workflow import TaskResult, make_ray_dag
-from ._client import RayClient
 from ._wf_metadata import WfUserMetadata, pydatic_to_json_dict
 
 
@@ -185,9 +184,9 @@ class RayRuntime(RuntimeInterface):
         self,
         config: RuntimeConfiguration,
         project_dir: Path,
-        client: t.Optional[RayClient] = None,
+        client: t.Optional[_client.RayClient] = None,
     ):
-        self._client = client or RayClient()
+        self._client = client or _client.RayClient()
 
         ray_params = RayParams(
             address=config.runtime_options["address"],
@@ -230,7 +229,7 @@ class RayRuntime(RuntimeInterface):
         logger = logging.getLogger("ray")
         logger.setLevel(logging.ERROR)
 
-        client = RayClient()
+        client = _client.RayClient()
         try:
             client.init(**dataclasses.asdict(ray_params))
         except ConnectionError as e:
@@ -262,7 +261,7 @@ class RayRuntime(RuntimeInterface):
 
         Safe to call multiple times in a row.
         """
-        client = RayClient()
+        client = _client.RayClient()
         client.shutdown()
 
     def create_workflow_run(

@@ -33,7 +33,7 @@ def wf_run_id():
 
 @pytest.fixture
 def client():
-    return create_autospec(_dag.RayClient)
+    return create_autospec(_client.RayClient)
 
 
 @pytest.mark.parametrize(
