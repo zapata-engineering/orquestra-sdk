@@ -16,7 +16,6 @@ WORKER_GLOB = "session_*/logs/worker*.???"
 
 # Examples:
 # "/tmp/ray/session_latest/logs/runtime_env_setup-01000000.log"
-# "/tmp/ray/session_latest/logs/runtime_env_actor.log"
 ENV_SETUP_GLOB = "session_*/logs/runtime_env_setup-*.log"
 
 

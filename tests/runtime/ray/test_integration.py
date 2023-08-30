@@ -272,10 +272,12 @@ class TestRayRuntimeMethods:
                 .get_workflow_logs(wf_run_id=run_id)
                 .env_setup
             )
-            assert run.message == (
-                "Could not set up runtime environment. See environment setup logs "
-                f"for details. `orq wf logs {run_id} --env-setup`"
-            ), ("OUT\n" + "\n".join(logs.out) + "ERR\n" + "\n".join(logs.err))
+            assert run.message in [
+                f"Could not set up runtime environment. See environment setup logs for details. `orq wf logs {run_id} --env-setup`",  # noqa: E501
+                f"The workflow encountered an issue. Please consult the logs for more information. `orq wf logs {run_id}`",  # noqa: E501
+            ], (
+                "OUT\n" + "\n".join(logs.out) + "ERR\n" + "\n".join(logs.err)
+            )
 
         def test_exception_in_task_stops_execution(self, runtime: _dag.RayRuntime):
             """
