@@ -79,8 +79,6 @@ class WorkflowRun:
             project_dir: The location of the project directory. This directory must
                 contain the workflows database to which this run was saved. If omitted,
                 the current working directory is assumed to be the project directory.
-            config_save_file: The location to which the associated configuration was
-                saved. If omitted, the default config file path is used.
 
         Raises:
             orquestra.sdk.exceptions.WorkflowRunNotFoundError: when the run_id doesn't
@@ -138,6 +136,7 @@ class WorkflowRun:
         config: t.Union[RuntimeConfig, str],
         workspace_id: t.Optional[WorkspaceId] = None,
         project_id: t.Optional[ProjectId] = None,
+        dry_run: bool = False,
         project_dir: t.Optional[t.Union[str, Path]] = None,
     ):
         """
@@ -150,6 +149,8 @@ class WorkflowRun:
                 the name of a saved configuration.
             workspace_id: ID of the workspace for workflow - supported only on CE
             project_id: ID of the project for workflow - supported only on CE
+            dry_run: Run the workflow without actually executing any task code.
+                Useful for testing infrastructure, dependency imports, etc.
             project_dir: the path to the project directory. If omitted, the current
                 working directory is used.
         """
@@ -165,7 +166,11 @@ class WorkflowRun:
         )
 
         wf_run = cls._start(
-            wf_def=wf_def, runtime=runtime, config=_config, project=_project
+            wf_def=wf_def,
+            runtime=runtime,
+            config=_config,
+            project=_project,
+            dry_run=dry_run,
         )
 
         return wf_run
@@ -176,12 +181,13 @@ class WorkflowRun:
         wf_def: ir.WorkflowDef,
         runtime: RuntimeInterface,
         config: t.Optional[RuntimeConfig],
+        dry_run: bool,
         project: t.Optional[ProjectRef] = None,
     ):
         """
         Schedule workflow for execution and return WorkflowRun.
         """
-        run_id = runtime.create_workflow_run(wf_def, project)
+        run_id = runtime.create_workflow_run(wf_def, project, dry_run)
 
         workflow_run = WorkflowRun(
             run_id=run_id,
@@ -272,7 +278,7 @@ class WorkflowRun:
                 stderr.
 
         Returns:
-            State: The state of the finished workflow.
+            orquestra.sdk.schema.workflow_run.State: The state of the finished workflow.
         """
 
         assert frequency > 0.0, "Frequency must be a positive non-zero value"

@@ -5,7 +5,6 @@ import ast
 import functools
 import inspect
 import warnings
-from enum import Enum
 from pathlib import Path
 from types import FunctionType
 from typing import (
@@ -155,6 +154,7 @@ class WorkflowDef(Generic[_R]):
         project_dir: Optional[Union[str, Path]] = None,
         workspace_id: Optional[WorkspaceId] = None,
         project_id: Optional[ProjectId] = None,
+        dry_run: bool = False,
     ) -> _api.WorkflowRun:
         """
         Schedules workflow for execution.
@@ -167,12 +167,14 @@ class WorkflowDef(Generic[_R]):
                 working directory is used.
             workspace_id: ID of the workspace for workflow - supported only on CE
             project_id: ID of the project for workflow - supported only on CE
-
+            dry_run: Run the workflow without actually executing any task code.
+                Useful for testing infrastructure, dependency imports, etc.
         Raises:
             orquestra.sdk.exceptions.DirtyGitRepo: (warning) when a task def used by
                 this workflow def has a "GitImport" and the git repo that contains it
                 has uncommitted changes.
-            ProjectInvalidError: when only 1 out of project and workspace is passed
+            orquestra.sdk.exceptions.ProjectInvalidError: when only 1 out of project and
+                workspace is passed.
 
         """
         # The DirtyGitRepo warning can be raised here.
@@ -184,6 +186,7 @@ class WorkflowDef(Generic[_R]):
             workspace_id=workspace_id,
             project_id=project_id,
             project_dir=project_dir,
+            dry_run=dry_run,
         )
 
     def with_resources(
@@ -200,7 +203,8 @@ class WorkflowDef(Generic[_R]):
 
         Doesn't modify the existing workflow definition, returns a new one.
 
-        Example usage:
+        Example usage::
+
             wf_run = my_workflow().with_resources(
                 cpu="10", memory="10Gi"
             ).run("my_cluster")
@@ -391,8 +395,7 @@ class _CalledFunction(NamedTuple):
     line_no: Optional[int] = None
 
 
-class Sentinel(Enum):
-    NO_MODULE = object()
+NO_MODULE_SENTINEL = object()
 
 
 def _get_callable(
@@ -408,13 +411,13 @@ def _get_callable(
         _fn : Callable corresponding to the call_statement
         module_name : Name of the callable's module
     """
-    found_module = Sentinel.NO_MODULE
+    found_module: Any = NO_MODULE_SENTINEL
     _fn = None
     module_name = None
     for node in call_statement:
         if node.node_type is NodeReferenceType.CALL:
             # For CALL nodes we try to retrieve the callable object
-            if found_module is not Sentinel.NO_MODULE:
+            if found_module is not NO_MODULE_SENTINEL:
                 # This raises:
                 #    AttributeError if the function isn't found
                 try:
@@ -441,7 +444,7 @@ def _get_callable(
         else:
             # try to retrieve the module from where the callable is imported
             try:
-                if found_module is not Sentinel.NO_MODULE:
+                if found_module is not NO_MODULE_SENTINEL:
                     found_module = getattr(found_module, node.name)
                 else:
                     found_module = fn.__globals__[node.name]

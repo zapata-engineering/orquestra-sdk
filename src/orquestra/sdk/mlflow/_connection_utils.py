@@ -43,11 +43,9 @@ def _get_mlflow_cr_name_and_port() -> Tuple[str, str]:
     - ORQ_MLFLOW_CR_NAME
     - ORQ_MLFLOW_PORT
 
-    Example usage:
+    Example usage::
 
-    ```python
-    mlflow_cr_name, mlflow_port = _get_mlflow_cr_name_and_port()
-    ```
+        mlflow_cr_name, mlflow_port = _get_mlflow_cr_name_and_port()
 
     Raises:
         EnvironmentError: when either of the environment variables are not set.

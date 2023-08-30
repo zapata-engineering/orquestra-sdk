@@ -41,9 +41,11 @@ class RuntimeConfigurationFile(BaseModel):
     """
     This schema is for the storage of "Runtime configurations".
     The major version number should be bumped when:
-        - The values inside the configuration file are modified, for example if the
-            `configs` option is renamed or the type is changed.
-        - The shape of `RuntimeConfiguration` changes
+
+    * The values inside the configuration file are modified, for example if
+      the ``configs`` option is renamed or the type is changed.
+
+    * The shape of ``RuntimeConfiguration`` changes.
     """
 
     version: str

@@ -13,6 +13,7 @@ import pytest
 
 from orquestra.sdk._base.cli import _entry
 from orquestra.sdk._base.cli._login import _login
+from orquestra.sdk._base.cli._services import _down, _up
 from orquestra.sdk._base.cli._workflow import _list
 from orquestra.sdk.schema.configs import RuntimeName
 
@@ -59,6 +60,7 @@ class TestCommandTreeAssembly:
             ["up"],
             ["down"],
             ["status"],
+            ["restart"],
             ["login"],
         ],
     )
@@ -296,3 +298,46 @@ class TestVersion:
 
         captured = capsys.readouterr()
         assert captured.out.startswith("Orquestra Workflow SDK, version ")
+
+
+class TestRestart:
+    @pytest.fixture
+    def mock_up_action(self, monkeypatch: pytest.MonkeyPatch):
+        action_mock = Mock()
+        monkeypatch.setattr(_up.Action, "on_cmd_call", action_mock)
+        return action_mock
+
+    @pytest.fixture
+    def mock_down_action(self, monkeypatch: pytest.MonkeyPatch):
+        action_mock = Mock()
+        monkeypatch.setattr(_down.Action, "on_cmd_call", action_mock)
+        return action_mock
+
+    @staticmethod
+    @pytest.mark.parametrize("ray_arg, ray_value", [([], None), (["--ray"], True)])
+    @pytest.mark.parametrize("all_arg, all_value", [([], None), (["--all"], True)])
+    def test_calls_down_up(
+        entrypoint,
+        mock_up_action,
+        mock_down_action,
+        monkeypatch,
+        ray_arg,
+        ray_value,
+        all_arg,
+        all_value,
+    ):
+        # Given
+        mock_exit = Mock()
+        monkeypatch.setattr(sys, "exit", mock_exit)
+        entrypoint(["restart"] + ray_arg + all_arg)
+
+        # When
+        _entry.main()
+
+        # Then
+        mock_down_action.assert_called_once_with(
+            manage_ray=ray_value, manage_all=all_value
+        )
+        mock_up_action.assert_called_once_with(
+            manage_ray=ray_value, manage_all=all_value
+        )

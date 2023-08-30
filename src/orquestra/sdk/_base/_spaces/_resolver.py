@@ -19,9 +19,9 @@ def resolve_studio_ref(
     Resolve the workspace and project IDs from the passed args or environment vars.
 
     Raises:
-    ProjectInvalidError: when one but not both of the workspace and project id
-        arguments are specified - this is insufficient information to uniquely
-        identify a project.
+        orquestra.sdk.exceptions.ProjectInvalidError: when one but not both of the
+            workspace and project id arguments are specified - this is insufficient
+            information to uniquely identify a project.
     """
     current_workspace = resolve_studio_workspace_ref(workspace_id)
 

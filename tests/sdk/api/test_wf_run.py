@@ -209,7 +209,11 @@ class TestWorkflowRun:
     @pytest.fixture
     def run(sample_wf_def, mock_runtime) -> _api.WorkflowRun:
         return _api.WorkflowRun._start(
-            wf_def=sample_wf_def.model, runtime=mock_runtime, config=None, project=None
+            wf_def=sample_wf_def.model,
+            runtime=mock_runtime,
+            config=None,
+            project=None,
+            dry_run=False,
         )
 
     class TestByID:
@@ -1387,7 +1391,7 @@ class TestProjectId:
         monkeypatch.setattr(_api._config.RuntimeConfig, "name", "auto")
         with raises:
             wf_def.run("in_process", workspace_id=workspace_id, project_id=project_id)
-            workflow_create_mock.assert_called_once_with(wf_def.model, expected)
+            workflow_create_mock.assert_called_once_with(wf_def.model, expected, False)
 
 
 class TestListWorkspaces:
