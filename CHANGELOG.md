@@ -6,6 +6,7 @@
 
 * When `auto` config is passed from local machine, config set in `ORQ_CURRENT_CONFIG` env variable will be used. Using `auto` locally without that env variable set, will result in an error.
 * Removed `orquestra.sdk.v2` module. Please use `orquestra.sdk` instead.
+* Bump Ray version to 2.6.3
 
 🔥 *Features*
 
