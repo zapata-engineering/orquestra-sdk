@@ -254,7 +254,7 @@ class TestRayRuntimeMethods:
         ):
             # Given
             wf_def = _example_wfs.cause_env_setup_error.model
-            run_id = runtime.create_workflow_run(wf_def, None)
+            run_id = runtime.create_workflow_run(wf_def, None, False)
 
             # Block until wf completes
             _wait_to_finish_wf(run_id, runtime, timeout=100)
