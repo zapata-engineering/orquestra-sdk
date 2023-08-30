@@ -14,8 +14,7 @@ from pathlib import Path
 # 903b5bfa866935b17bbd3d3a64d22c7c6b746c2d522ad5fca9cf1f6a-01000000-249.err"
 WORKER_GLOB = "session_*/logs/worker*.???"
 
-# Examples:
-# "/tmp/ray/session_latest/logs/runtime_env_setup-01000000.log"
+# Example: "/tmp/ray/session_latest/logs/runtime_env_setup-01000000.log"
 ENV_SETUP_GLOB = "session_*/logs/runtime_env_setup-*.log"
 
 
