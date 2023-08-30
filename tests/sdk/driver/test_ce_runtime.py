@@ -8,7 +8,7 @@ from unittest.mock import DEFAULT, MagicMock, Mock, call, create_autospec
 import pytest
 
 import orquestra.sdk as sdk
-from orquestra.sdk import Project, Workspace, exceptions
+from orquestra.sdk import LogOutput, Project, Workspace, exceptions
 from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _models
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing._example_wfs import (
@@ -47,6 +47,11 @@ def workflow_run_id():
 
 
 @pytest.fixture
+def task_inv_id():
+    return "00000000-0000-0000-0000-000000000000"
+
+
+@pytest.fixture
 def workflow_run_status(workflow_run_id: WorkflowRunId):
     def _workflow_run(state: State):
         workflow_def_mock = create_autospec(WorkflowDef)
@@ -77,7 +82,9 @@ class TestCreateWorkflowRun:
         mocked_client.create_workflow_run.return_value = workflow_run_id
 
         # When
-        wf_run_id = runtime.create_workflow_run(my_workflow.model, None)
+        wf_run_id = runtime.create_workflow_run(
+            my_workflow.model, project=None, dry_run=False
+        )
 
         # Then
         mocked_client.create_workflow_def.assert_called_once_with(
@@ -86,6 +93,7 @@ class TestCreateWorkflowRun:
         mocked_client.create_workflow_run.assert_called_once_with(
             workflow_def_id,
             _models.Resources(cpu=None, memory=None, gpu=None, nodes=None),
+            False,
         )
         assert isinstance(wf_run_id, WorkflowRunId)
         assert (
@@ -106,13 +114,16 @@ class TestCreateWorkflowRun:
 
             # When
             _ = runtime.create_workflow_run(
-                workflow_parametrised_with_resources(memory="10Gi").model, None
+                workflow_parametrised_with_resources(memory="10Gi").model,
+                None,
+                dry_run=False,
             )
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
                 workflow_def_id,
                 _models.Resources(cpu=None, memory="10Gi", gpu=None, nodes=None),
+                False,
             )
 
         def test_with_cpu(
@@ -128,13 +139,16 @@ class TestCreateWorkflowRun:
 
             # When
             _ = runtime.create_workflow_run(
-                workflow_parametrised_with_resources(cpu="1000m").model, None
+                workflow_parametrised_with_resources(cpu="1000m").model,
+                None,
+                dry_run=False,
             )
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
                 workflow_def_id,
                 _models.Resources(cpu="1000m", memory=None, gpu=None, nodes=None),
+                False,
             )
 
         def test_with_gpu(
@@ -150,13 +164,14 @@ class TestCreateWorkflowRun:
 
             # When
             _ = runtime.create_workflow_run(
-                workflow_parametrised_with_resources(gpu="1").model, None
+                workflow_parametrised_with_resources(gpu="1").model, None, dry_run=False
             )
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
                 workflow_def_id,
                 _models.Resources(cpu=None, memory=None, gpu="1", nodes=None),
+                False,
             )
 
         def test_maximum_resource(
@@ -172,13 +187,14 @@ class TestCreateWorkflowRun:
 
             # When
             _ = runtime.create_workflow_run(
-                workflow_with_different_resources().model, None
+                workflow_with_different_resources().model, None, dry_run=False
             )
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
                 workflow_def_id,
                 _models.Resources(cpu="5000m", memory="3G", gpu="1", nodes=None),
+                False,
             )
 
         def test_resources_from_workflow(
@@ -198,12 +214,14 @@ class TestCreateWorkflowRun:
                 .with_resources(cpu="1", memory="1.5G", gpu="1", nodes=20)
                 .model,
                 None,
+                dry_run=False,
             )
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
                 workflow_def_id,
                 _models.Resources(cpu="1", memory="1.5G", gpu="1", nodes=20),
+                False,
             )
 
     class TestWorkflowDefFailure:
@@ -217,7 +235,7 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(exceptions.WorkflowSyntaxError):
-                _ = runtime.create_workflow_run(my_workflow.model, None)
+                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
 
         def test_unknown_http(
             self, mocked_client: MagicMock, runtime: _ce_runtime.CERuntime
@@ -229,7 +247,7 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(_exceptions.UnknownHTTPError):
-                _ = runtime.create_workflow_run(my_workflow.model, None)
+                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
 
         @pytest.mark.parametrize(
             "failure_exc", [_exceptions.InvalidTokenError, _exceptions.ForbiddenError]
@@ -245,7 +263,7 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(exceptions.UnauthorizedError):
-                _ = runtime.create_workflow_run(my_workflow.model, None)
+                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
 
         def test_invalid_project(
             self,
@@ -258,7 +276,9 @@ class TestCreateWorkflowRun:
             # When
             with pytest.raises(exceptions.ProjectInvalidError):
                 _ = runtime.create_workflow_run(
-                    my_workflow.model, ProjectRef(workspace_id="a", project_id="b")
+                    my_workflow.model,
+                    ProjectRef(workspace_id="a", project_id="b"),
+                    False,
                 )
 
     class TestWorkflowRunFailure:
@@ -279,7 +299,7 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(exceptions.WorkflowRunNotStarted):
-                _ = runtime.create_workflow_run(my_workflow.model, None)
+                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
 
         @pytest.mark.parametrize("submitted_version", (None, "0.1.0"))
         @pytest.mark.parametrize(
@@ -299,7 +319,7 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(exceptions.WorkflowRunNotStarted) as exc_info:
-                _ = runtime.create_workflow_run(my_workflow.model, None)
+                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
 
             error_message = str(exc_info.value)
             assert "This is an unsupported version of orquestra-sdk.\n" in error_message
@@ -328,7 +348,7 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(_exceptions.UnknownHTTPError):
-                _ = runtime.create_workflow_run(my_workflow.model, None)
+                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
 
         @pytest.mark.parametrize(
             "failure_exc", [_exceptions.InvalidTokenError, _exceptions.ForbiddenError]
@@ -344,7 +364,7 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(exceptions.UnauthorizedError):
-                _ = runtime.create_workflow_run(my_workflow.model, None)
+                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
 
 
 class TestGetWorkflowRunStatus:
@@ -1129,16 +1149,14 @@ class TestListWorkflowRuns:
 
 
 class TestGetWorkflowLogs:
-    def test_happy_path(
-        self,
-        mocked_client: MagicMock,
-        runtime: _ce_runtime.CERuntime,
-        workflow_run_id: str,
-    ):
-        # Given
-        tag = "shouldnt-matter"
-        wf_logs = [
-            _models.Message(
+    @pytest.fixture
+    def tag(self):
+        return "shouldnt-matter"
+
+    @pytest.fixture
+    def ray_logs(self, tag: str):
+        return [
+            _models.WorkflowLogMessage(
                 log="line 1",
                 ray_filename=_models.RayFilename(
                     "/tmp/ray/session_latest/logs/worker-b4584f711ed56477c7e7c0ea4b16"
@@ -1146,7 +1164,7 @@ class TestGetWorkflowLogs:
                 ),
                 tag=tag,
             ),
-            _models.Message(
+            _models.WorkflowLogMessage(
                 log="line 2",
                 ray_filename=_models.RayFilename(
                     "/tmp/ray/session_latest/logs/worker-b4584f711ed56477c7e7c0ea4b16"
@@ -1154,14 +1172,14 @@ class TestGetWorkflowLogs:
                 ),
                 tag=tag,
             ),
-            _models.Message(
+            _models.WorkflowLogMessage(
                 log="line 3",
                 ray_filename=_models.RayFilename(
                     "/tmp/ray/session_latest/logs/something_else.log"
                 ),
                 tag=tag,
             ),
-            _models.Message(
+            _models.WorkflowLogMessage(
                 log="line 4",
                 ray_filename=_models.RayFilename(
                     "/tmp/ray/session_latest/logs/runtime_env_setup-01000000.log"
@@ -1169,34 +1187,131 @@ class TestGetWorkflowLogs:
                 tag=tag,
             ),
         ]
-        mocked_client.get_workflow_run_logs.return_value = wf_logs
+
+    def test_happy_path(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        tag: str,
+        ray_logs: List[_models.WorkflowLogMessage],
+        workflow_run_id: str,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        # Given
+        sys_logs = [
+            _models.K8sEventLog(tag=tag, log={"some": "values", "another": "thing"}),
+            _models.RayHeadNodeEventLog(tag=tag, log="Ray head log line"),
+            _models.RayWorkerNodeEventLog(tag=tag, log="Ray worker log line"),
+            _models.UnknownEventLog(tag=tag, log="Unknown log line"),
+        ]
+        wf_run = Mock()
+        wf_run.workflow_def.task_invocations.keys.return_value = ["inv1", "inv2"]
+        mocked_client.get_workflow_run.return_value = wf_run
+        mocked_client.get_workflow_run_logs.return_value = ray_logs
+        mocked_client.get_system_logs.return_value = sys_logs
+
+        get_task_logs = Mock(return_value=LogOutput(out=["mocked"], err=["mocked err"]))
+        monkeypatch.setattr(runtime, "get_task_logs", get_task_logs)
 
         # When
         logs = runtime.get_workflow_logs(workflow_run_id)
 
         # Then
+        mocked_client.get_system_logs.assert_called_once_with(workflow_run_id)
         mocked_client.get_workflow_run_logs.assert_called_once_with(workflow_run_id)
-        # TODO: update the expected task inv IDs when working on
-        # https://zapatacomputing.atlassian.net/browse/ORQSDK-840.
+        get_task_logs.assert_has_calls(
+            [call(workflow_run_id, "inv1"), call(workflow_run_id, "inv2")]
+        )
         assert logs.per_task == {
-            "UNKNOWN TASK INV ID": ["line 1", "line 2"],
+            "inv1": LogOutput(out=["mocked"], err=["mocked err"]),
+            "inv2": LogOutput(out=["mocked"], err=["mocked err"]),
         }
 
-        assert logs.env_setup == ["line 4"]
+        assert logs.env_setup == LogOutput(out=["line 4"], err=[])
 
-        assert logs.other == ["line 3"]
+        assert logs.system == LogOutput(
+            out=[
+                "{'some': 'values', 'another': 'thing'}",
+                "Ray head log line",
+                "Ray worker log line",
+                "Unknown log line",
+            ],
+            err=[],
+        )
+
+        assert logs.other == LogOutput(out=["line 2", "line 3"], err=["line 1"])
+
+    def test_no_task_logs(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        tag: str,
+        ray_logs: List[_models.WorkflowLogMessage],
+        workflow_run_id: str,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        # Given
+        sys_logs = [
+            _models.K8sEventLog(tag=tag, log={"some": "values", "another": "thing"}),
+            _models.RayHeadNodeEventLog(tag=tag, log="Ray head log line"),
+            _models.RayWorkerNodeEventLog(tag=tag, log="Ray worker log line"),
+            _models.UnknownEventLog(tag=tag, log="Unknown log line"),
+        ]
+        wf_run = Mock()
+        wf_run.workflow_def.task_invocations.keys.return_value = ["inv1", "inv2"]
+        mocked_client.get_workflow_run.return_value = wf_run
+        mocked_client.get_workflow_run_logs.return_value = ray_logs
+        mocked_client.get_system_logs.return_value = sys_logs
+
+        # Mocking not finding any task logs at all
+        get_task_logs = Mock(
+            side_effect=exceptions.TaskRunLogsNotFound(workflow_run_id, Mock())
+        )
+        monkeypatch.setattr(runtime, "get_task_logs", get_task_logs)
+
+        # When
+        logs = runtime.get_workflow_logs(workflow_run_id)
+
+        # Then
+        mocked_client.get_system_logs.assert_called_once_with(workflow_run_id)
+        mocked_client.get_workflow_run_logs.assert_called_once_with(workflow_run_id)
+
+        assert logs.per_task == {}
+
+        assert logs.env_setup == LogOutput(out=["line 4"], err=[])
+
+        assert logs.system == LogOutput(
+            out=[
+                "{'some': 'values', 'another': 'thing'}",
+                "Ray head log line",
+                "Ray worker log line",
+                "Unknown log line",
+            ],
+            err=[],
+        )
+
+        assert logs.other == LogOutput(out=["line 2", "line 3"], err=["line 1"])
 
     @pytest.mark.parametrize(
-        "exception, expected_exception",
+        "exception, expected_exception, exception_args",
         [
-            (_exceptions.InvalidWorkflowRunID, exceptions.WorkflowRunNotFoundError),
-            (_exceptions.WorkflowRunNotFound, exceptions.WorkflowRunNotFoundError),
-            (_exceptions.InvalidTokenError, exceptions.UnauthorizedError),
-            (_exceptions.ForbiddenError, exceptions.UnauthorizedError),
-            (_exceptions.UnknownHTTPError, _exceptions.UnknownHTTPError),
+            (
+                _exceptions.InvalidWorkflowRunID,
+                exceptions.WorkflowRunNotFoundError,
+                (Mock(),),
+            ),
+            (
+                _exceptions.WorkflowRunNotFound,
+                exceptions.WorkflowRunNotFoundError,
+                (Mock(),),
+            ),
+            (_exceptions.InvalidTokenError, exceptions.UnauthorizedError, tuple()),
+            (_exceptions.ForbiddenError, exceptions.UnauthorizedError, tuple()),
+            (_exceptions.UnknownHTTPError, _exceptions.UnknownHTTPError, (Mock(),)),
             (
                 _exceptions.WorkflowRunLogsNotReadable,
                 exceptions.InvalidWorkflowRunLogsError,
+                (Mock(), Mock()),
             ),
         ],
     )
@@ -1207,13 +1322,95 @@ class TestGetWorkflowLogs:
         workflow_run_id: str,
         exception,
         expected_exception,
+        exception_args,
     ):
         # Given
-        mocked_client.get_workflow_run_logs.side_effect = exception(MagicMock())
+        mocked_client.get_workflow_run_logs.side_effect = exception(*exception_args)
 
         # When
         with pytest.raises(expected_exception):
             runtime.get_workflow_logs(workflow_run_id)
+
+
+class TestGetTaskLogs:
+    @pytest.fixture
+    def tag(self):
+        return "shouldnt-matter"
+
+    @pytest.fixture
+    def logs(self, tag: str):
+        return [
+            _models.TaskLogMessage(
+                log="line 1",
+                log_filename=_models.LogFilename(
+                    "/var/task_run_logs/wf/wf-run-id/task/task-inv-id.out"
+                ),
+                tag=tag,
+            ),
+            _models.TaskLogMessage(
+                log="line 2",
+                log_filename=_models.LogFilename(
+                    "/var/task_run_logs/wf/wf-run-id/task/task-inv-id.err"
+                ),
+                tag=tag,
+            ),
+        ]
+
+    def test_happy_path(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        logs: List[_models.TaskLogMessage],
+        workflow_run_id: str,
+        task_inv_id: str,
+    ):
+        # Given
+        mocked_client.get_task_run_logs.return_value = logs
+        # When
+        task_logs = runtime.get_task_logs(workflow_run_id, task_inv_id)
+
+        # Then
+        assert task_logs == LogOutput(out=["line 1"], err=["line 2"])
+
+    @pytest.mark.parametrize(
+        "exception, expected_exception, exception_args",
+        [
+            (
+                _exceptions.InvalidWorkflowRunID,
+                exceptions.TaskRunLogsNotFound,
+                (Mock(),),
+            ),
+            (
+                _exceptions.TaskRunLogsNotFound,
+                exceptions.TaskRunLogsNotFound,
+                (Mock(), Mock()),
+            ),
+            (_exceptions.InvalidTokenError, exceptions.UnauthorizedError, tuple()),
+            (_exceptions.ForbiddenError, exceptions.UnauthorizedError, tuple()),
+            (_exceptions.UnknownHTTPError, _exceptions.UnknownHTTPError, (Mock(),)),
+            (
+                _exceptions.WorkflowRunLogsNotReadable,
+                exceptions.InvalidWorkflowRunLogsError,
+                (Mock(), Mock()),
+            ),
+        ],
+    )
+    def test_exception_handling(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        workflow_run_id: str,
+        task_inv_id: str,
+        exception,
+        expected_exception,
+        exception_args,
+    ):
+        # Given
+        mocked_client.get_task_run_logs.side_effect = exception(*exception_args)
+
+        # When
+        with pytest.raises(expected_exception):
+            runtime.get_task_logs(workflow_run_id, task_inv_id)
 
 
 class TestListWorkspaces:
@@ -1428,13 +1625,12 @@ def test_ce_resources(
 
     # When
     with context as exec_info:
-        runtime.create_workflow_run(wf().model, None)
+        runtime.create_workflow_run(wf().model, None, dry_run=False)
 
     # Then
     if raises:
         assert all([telltale in str(exec_info) for telltale in telltales])
     else:
         mocked_client.create_workflow_run.assert_called_once_with(
-            workflow_def_id,
-            expected_resources,
+            workflow_def_id, expected_resources, False
         )

@@ -28,7 +28,7 @@ from ._base._dsl import (
     TaskDef,
     task,
 )
-from ._base._logs._interfaces import WorkflowLogs
+from ._base._logs._interfaces import LogOutput, WorkflowLogs
 from ._base._spaces._api import list_projects, list_workspaces
 from ._base._spaces._structs import Project, ProjectRef, Workspace
 from ._base._workflow import NotATaskWarning, WorkflowDef, WorkflowTemplate, workflow
@@ -71,4 +71,5 @@ __all__ = [
     "State",
     "Workspace",
     "CurrentRunIDs",
+    "LogOutput",
 ]

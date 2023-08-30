@@ -13,37 +13,48 @@ from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
 
 @dataclass(frozen=True)
+class LogOutput:
+    out: t.Sequence[str]
+    err: t.Sequence[str]
+
+    def __len__(self):
+        return len(self.out) + len(self.err)
+
+
+@dataclass(frozen=True)
 class WorkflowLogs:
-    per_task: t.Mapping[TaskInvocationId, t.Sequence[str]]
+    per_task: t.Mapping[TaskInvocationId, LogOutput]
     """
     A mapping with task logs. Each key-value pair corresponds to one task
     invocation.
-    - key: task invocation ID (see
-        orquestra.sdk._base.ir.WorkflowDef.task_invocations)
-    - value: log lines from running this task invocation
+
+    * key: task invocation ID (see
+      ``orquestra.sdk.schema.ir.WorkflowDef.task_invocations``)
+
+    * value: log lines from running this task invocation
     """
 
-    env_setup: t.Sequence[str]
+    env_setup: LogOutput
     """
     Logs related to setting up execution environment.
     """
 
-    system: t.Sequence[str]
+    system: LogOutput
     """
     Logs relating to the execution environment.
     """
 
-    other: t.Sequence[str]
+    other: LogOutput
     """
     Log lines that don't match any other category we support at the moment. If this
     contains useful information, please consider upgrading with
-    ``pip install --uprade orquestra-sdk`` or report your use case to the SDK Team at
+    ``pip install --upgrade orquestra-sdk`` or report your use case to the SDK Team at
     Zapata Computing.
     """
 
     def get_log_type(
         self, log_type
-    ) -> t.Union[t.Mapping[TaskInvocationId, t.Sequence[str]], t.Sequence[str]]:
+    ) -> t.Union[t.Mapping[TaskInvocationId, LogOutput], LogOutput]:
         """
         Return the specified log type.
 
@@ -78,7 +89,7 @@ class LogReader(t.Protocol):
 
     def get_task_logs(
         self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
-    ) -> t.List[str]:  # pragma: no cover
+    ) -> LogOutput:  # pragma: no cover
         """
         Reads all available logs, specific to a single task invocation/run.
 

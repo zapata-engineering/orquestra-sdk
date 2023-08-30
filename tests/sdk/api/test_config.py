@@ -13,6 +13,7 @@ from unittest.mock import mock_open, patch
 
 import pytest
 
+from orquestra.sdk import exceptions
 from orquestra.sdk._base import _config
 from orquestra.sdk._base._api import _config as api_cfg
 from orquestra.sdk.exceptions import ConfigNameNotFoundError
@@ -20,7 +21,7 @@ from orquestra.sdk.schema.configs import CONFIG_FILE_CURRENT_VERSION, RuntimeNam
 
 from ..data.configs import TEST_CONFIG_JSON, TEST_CONFIGS_DICT
 
-VALID_RUNTIME_NAMES: list = ["RAY_LOCAL", "QE_REMOTE", "IN_PROCESS", "CE_REMOTE"]
+VALID_RUNTIME_NAMES: list = ["RAY_LOCAL", "IN_PROCESS", "CE_REMOTE"]
 VALID_CONFIG_NAMES: list = ["name_with_underscores", "name with spaces"]
 
 
@@ -55,7 +56,6 @@ class TestRuntimeConfiguration:
                 in str(exc_info.value)
             )
             assert "`RuntimeConfig.in_process()`" in str(exc_info.value)
-            assert "`RuntimeConfig.qe()`" in str(exc_info.value)
             assert "`RuntimeConfig.ray()`" in str(exc_info.value)
             assert "`RuntimeConfig.ce()`" in str(exc_info.value)
 
@@ -81,7 +81,7 @@ class TestRuntimeConfiguration:
         @pytest.fixture
         def config(self):
             config = api_cfg.RuntimeConfig(
-                "QE_REMOTE", name="test_config", bypass_factory_methods=True
+                "CE_REMOTE", name="test_config", bypass_factory_methods=True
             )
             setattr(config, "uri", "test_uri")
             setattr(config, "token", "test_token")
@@ -102,7 +102,7 @@ class TestRuntimeConfiguration:
             "runtime_name, config_name, runtime_options",
             [
                 (
-                    "QE_REMOTE",
+                    "CE_REMOTE",
                     "name_mismatch",
                     {"uri": "test_uri", "token": "test_token"},
                 ),
@@ -112,7 +112,7 @@ class TestRuntimeConfiguration:
                     {"uri": "test_uri", "token": "test_token"},
                 ),
                 (
-                    "QE_REMOTE",
+                    "CE_REMOTE",
                     "test_config",
                     {
                         "uri": "test_uri",
@@ -141,7 +141,7 @@ class TestRuntimeConfiguration:
         @staticmethod
         def test_happy_path():
             config = api_cfg.RuntimeConfig(
-                "QE_REMOTE", name="test_config", bypass_factory_methods=True
+                "CE_REMOTE", name="test_config", bypass_factory_methods=True
             )
             config.uri = "test_uri"  # type: ignore
             config.token = "test_token"
@@ -166,20 +166,6 @@ class TestRuntimeConfiguration:
 
                 assert config.name == "local"
                 assert config._runtime_name == "RAY_LOCAL"
-
-        class TestQeFactory:
-            @staticmethod
-            def test_with_minimal_args():
-                config = api_cfg.RuntimeConfig.qe(
-                    uri="https://prod-d.orquestra.io/",
-                    token="test token",
-                )
-
-                name = config.name
-                assert name == "prod-d"
-                assert config._runtime_name == "QE_REMOTE"
-                assert config.uri == "https://prod-d.orquestra.io/"  # type: ignore
-                assert config.token == "test token"
 
         class TestRemoteRayFactory:
             @staticmethod
@@ -313,41 +299,104 @@ class TestRuntimeConfiguration:
                 )
 
         class TestAutoConfig:
-            def test_on_cluster(self, monkeypatch, tmp_path):
-                token = "the best token you have ever seen"
-                pass_file = tmp_path / "pass.port"
-                pass_file.write_text(token)
-                monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", str(pass_file))
-                monkeypatch.setenv("ORQ_CURRENT_CLUSTER", "cluster.io")
+            class TestRemoteAuto:
+                def test_on_cluster(self, monkeypatch, tmp_path):
+                    token = "the best token you have ever seen"
+                    pass_file = tmp_path / "pass.port"
+                    pass_file.write_text(token)
+                    monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", str(pass_file))
+                    monkeypatch.setenv("ORQ_CURRENT_CLUSTER", "cluster.io")
 
-                cfg = api_cfg.RuntimeConfig.load(
-                    "auto",
-                )
-
-                assert cfg.token == token
-                assert cfg.uri == "https://cluster.io"
-
-            def test_no_cluster_uri(self, tmp_path, monkeypatch):
-                token = "the best token you have ever seen"
-                pass_file = tmp_path / "pass.port"
-                pass_file.write_text(token)
-                monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", str(pass_file))
-                with pytest.raises(EnvironmentError):
-                    api_cfg.RuntimeConfig.load(
+                    cfg = api_cfg.RuntimeConfig.load(
                         "auto",
                     )
 
-            def test_on_local_env(self):
-                assert api_cfg.RuntimeConfig.load("auto") == api_cfg.RuntimeConfig.load(
-                    "local"
-                )
+                    assert cfg.token == token
+                    assert cfg.uri == "https://cluster.io"
 
-            def test_no_file(self, monkeypatch):
-                monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", "non-existing-path")
-                with pytest.raises(FileNotFoundError):
-                    api_cfg.RuntimeConfig.load(
+                def test_on_cluster_with_default_config(self, monkeypatch, tmp_path):
+                    # default config does not change behaviour on cluster
+                    token = "the best token you have ever seen"
+                    pass_file = tmp_path / "pass.port"
+                    pass_file.write_text(token)
+                    monkeypatch.setenv("ORQ_CURRENT_CONFIG", "actual_name")
+                    monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", str(pass_file))
+                    monkeypatch.setenv("ORQ_CURRENT_CLUSTER", "cluster.io")
+
+                    cfg = api_cfg.RuntimeConfig.load(
                         "auto",
                     )
+
+                    assert cfg.token == token
+                    assert cfg.uri == "https://cluster.io"
+
+                def test_no_cluster_uri(self, tmp_path, monkeypatch):
+                    token = "the best token you have ever seen"
+                    pass_file = tmp_path / "pass.port"
+                    pass_file.write_text(token)
+                    monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", str(pass_file))
+                    with pytest.raises(EnvironmentError):
+                        api_cfg.RuntimeConfig.load(
+                            "auto",
+                        )
+
+                def test_no_file(self, monkeypatch):
+                    monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", "non-existing-path")
+                    with pytest.raises(FileNotFoundError):
+                        api_cfg.RuntimeConfig.load(
+                            "auto",
+                        )
+
+            class TestLocalAuto:
+                def test_on_local_env_default_config(
+                    self, monkeypatch, tmp_default_config_json
+                ):
+                    # given
+                    existing_config = "actual_name"
+                    monkeypatch.setenv("ORQ_CURRENT_CONFIG", existing_config)
+
+                    # when
+                    config = api_cfg.RuntimeConfig.load("auto")
+
+                    # then
+                    assert config.name == existing_config
+                    assert config.token == "this_token_best_token"
+                    assert config.uri == "http://actual_name.domain"
+
+                def test_on_local_env_default_config_set_to_local(self, monkeypatch):
+                    # given
+                    existing_config = "local"
+                    monkeypatch.setenv("ORQ_CURRENT_CONFIG", existing_config)
+
+                    # when
+                    config = api_cfg.RuntimeConfig.load("auto")
+
+                    # then
+                    assert config == api_cfg.RuntimeConfig.load("local")
+
+                def test_on_local_env_non_existing_default_config(
+                    self, monkeypatch, tmp_default_config_json
+                ):
+                    # given
+                    existing_config = "non_existing"
+                    monkeypatch.setenv("ORQ_CURRENT_CONFIG", existing_config)
+
+                    # then
+                    with pytest.raises(exceptions.RuntimeConfigError):
+                        api_cfg.RuntimeConfig.load("auto")
+
+                def test_on_local_env_auto_default_config(self, monkeypatch):
+                    # given
+                    existing_config = "auto"
+                    monkeypatch.setenv("ORQ_CURRENT_CONFIG", existing_config)
+
+                    # then
+                    with pytest.raises(exceptions.RuntimeConfigError):
+                        api_cfg.RuntimeConfig.load("auto")
+
+                def test_on_local_env_no_default_config(self):
+                    with pytest.raises(exceptions.RuntimeConfigError):
+                        api_cfg.RuntimeConfig.load("auto")
 
 
 @pytest.mark.parametrize(
@@ -472,21 +521,21 @@ class TestRuntimeConfiguration:
                 f" to version {CONFIG_FILE_CURRENT_VERSION}. Updated 2 entries:\n - multiple_configs_need_updating\n - this_one_too",  # NOQA E501
             ],
         ),
-        (  # Mix of QE and Ray configs - only ray should be updated.
+        (  # Mix of CE and Ray configs - only ray should be updated.
             {
                 "configs": {
-                    "mix_of_QE_and_RAY": {
+                    "mix_of_CE_and_RAY": {
                         "runtime_name": "RAY_LOCAL",
                         "runtime_options": {},
                     },
                     "update_me": {"runtime_name": "RAY_LOCAL", "runtime_options": {}},
-                    "but_not_me": {"runtime_name": "QE_REMOTE", "runtime_options": {}},
+                    "but_not_me": {"runtime_name": "CE_REMOTE", "runtime_options": {}},
                 },
                 "version": CONFIG_FILE_CURRENT_VERSION,
             },
             {
                 "configs": {
-                    "mix_of_QE_and_RAY": {
+                    "mix_of_CE_and_RAY": {
                         "runtime_name": "RAY_LOCAL",
                         "runtime_options": {
                             "temp_dir": None,
@@ -498,13 +547,13 @@ class TestRuntimeConfiguration:
                             "temp_dir": None,
                         },
                     },
-                    "but_not_me": {"runtime_name": "QE_REMOTE", "runtime_options": {}},
+                    "but_not_me": {"runtime_name": "CE_REMOTE", "runtime_options": {}},
                 },
                 "version": CONFIG_FILE_CURRENT_VERSION,
             },
             [
                 "Successfully migrated file ",
-                f" to version {CONFIG_FILE_CURRENT_VERSION}. Updated 2 entries:\n - mix_of_QE_and_RAY\n - update_me",  # NOQA E501
+                f" to version {CONFIG_FILE_CURRENT_VERSION}. Updated 2 entries:\n - mix_of_CE_and_RAY\n - update_me",  # NOQA E501
             ],
         ),
         (  # version alone needs updating
@@ -612,9 +661,7 @@ class TestUpdateSavedToken:
             cfg = runtime_factory()
             cfg.update_saved_token("new token")
 
-    @pytest.mark.parametrize(
-        "runtime_factory", [api_cfg.RuntimeConfig.ce, api_cfg.RuntimeConfig.qe]
-    )
+    @pytest.mark.parametrize("runtime_factory", [api_cfg.RuntimeConfig.ce])
     def test_happy_path(self, runtime_factory):
         new_token = "Hi, hello"
         cfg = runtime_factory(uri="https://prod-d.orquestra.io/", token="test token")
@@ -626,9 +673,7 @@ class TestUpdateSavedToken:
         assert cfg.token == new_token
         assert api_cfg.RuntimeConfig.load(cfg.name).token == new_token
 
-    @pytest.mark.parametrize(
-        "runtime_factory", [api_cfg.RuntimeConfig.ce, api_cfg.RuntimeConfig.qe]
-    )
+    @pytest.mark.parametrize("runtime_factory", [api_cfg.RuntimeConfig.ce])
     def test_same_token(self, runtime_factory):
         token = "Hi, hello"
         cfg = runtime_factory(uri="https://prod-d.orquestra.io/", token=token)

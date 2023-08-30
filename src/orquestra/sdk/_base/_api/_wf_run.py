@@ -33,12 +33,11 @@ from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
 from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
 from .. import serde
 from .._graphs import iter_invocations_topologically
-from .._in_process_runtime import InProcessRuntime
 from .._logs._interfaces import WorkflowLogs
 from .._spaces._resolver import resolve_studio_ref, resolve_studio_workspace_ref
 from .._spaces._structs import ProjectRef
 from ..abc import RuntimeInterface
-from ._config import RuntimeConfig, _resolve_config
+from ._config import RuntimeConfig, resolve_config
 from ._task_run import TaskRun
 
 COMPLETED_STATES = [State.FAILED, State.TERMINATED, State.SUCCEEDED, State.KILLED]
@@ -80,8 +79,6 @@ class WorkflowRun:
             project_dir: The location of the project directory. This directory must
                 contain the workflows database to which this run was saved. If omitted,
                 the current working directory is assumed to be the project directory.
-            config_save_file: The location to which the associated configuration was
-                saved. If omitted, the default config file path is used.
 
         Raises:
             orquestra.sdk.exceptions.WorkflowRunNotFoundError: when the run_id doesn't
@@ -111,14 +108,12 @@ class WorkflowRun:
             except (ConfigFileNotFoundError, ConfigNameNotFoundError):
                 raise
         else:
-            resolved_config = _resolve_config(config)
+            resolved_config = resolve_config(config)
 
         # Retrieve workflow def from the runtime:
         # - Ray stores wf def for us under a metadata entry.
         # - CE will have endpoints for getting [wf def] by [wf run ID]. See:
         #   https://zapatacomputing.atlassian.net/browse/ORQP-1317
-        # - QE probably won't have endpoints for this, but the single-user limitation
-        #   will be an implementation detail of `QERuntime`.
         runtime = resolved_config._get_runtime(_project_dir)
         try:
             wf_run_model = runtime.get_workflow_run_status(run_id)
@@ -141,6 +136,8 @@ class WorkflowRun:
         config: t.Union[RuntimeConfig, str],
         workspace_id: t.Optional[WorkspaceId] = None,
         project_id: t.Optional[ProjectId] = None,
+        dry_run: bool = False,
+        project_dir: t.Optional[t.Union[str, Path]] = None,
     ):
         """
         Start workflow run from its IR representation
@@ -152,23 +149,14 @@ class WorkflowRun:
                 the name of a saved configuration.
             workspace_id: ID of the workspace for workflow - supported only on CE
             project_id: ID of the project for workflow - supported only on CE
-
+            dry_run: Run the workflow without actually executing any task code.
+                Useful for testing infrastructure, dependency imports, etc.
+            project_dir: the path to the project directory. If omitted, the current
+                working directory is used.
         """
-        _config: RuntimeConfig
-        if isinstance(config, RuntimeConfig):
-            _config = config
-        elif isinstance(config, str):
-            _config = RuntimeConfig.load(config)
-        else:
-            raise TypeError(
-                f"'config' argument to `start_from_ir()` has unsupported "
-                f"type {type(config)}."
-            )
-        runtime: RuntimeInterface
-        if _config._runtime_name == "IN_PROCESS":
-            runtime = InProcessRuntime()
-        else:
-            runtime = _config._get_runtime()
+        _config = resolve_config(config)
+
+        runtime = _config._get_runtime(project_dir)
 
         assert runtime is not None
 
@@ -178,7 +166,11 @@ class WorkflowRun:
         )
 
         wf_run = cls._start(
-            wf_def=wf_def, runtime=runtime, config=_config, project=_project
+            wf_def=wf_def,
+            runtime=runtime,
+            config=_config,
+            project=_project,
+            dry_run=dry_run,
         )
 
         return wf_run
@@ -189,12 +181,13 @@ class WorkflowRun:
         wf_def: ir.WorkflowDef,
         runtime: RuntimeInterface,
         config: t.Optional[RuntimeConfig],
+        dry_run: bool,
         project: t.Optional[ProjectRef] = None,
     ):
         """
         Schedule workflow for execution and return WorkflowRun.
         """
-        run_id = runtime.create_workflow_run(wf_def, project)
+        run_id = runtime.create_workflow_run(wf_def, project, dry_run)
 
         workflow_run = WorkflowRun(
             run_id=run_id,
@@ -221,7 +214,7 @@ class WorkflowRun:
                 (serializable) form.
             runtime: the adapter object used to interact with the runtime to
                 submit workflow, get results, etc. Different "runtimes" like
-                Ray or Quantum Engine have corresponding classes.
+                Ray or Compute Engine have corresponding classes.
         """
 
         self._run_id = run_id
@@ -285,7 +278,7 @@ class WorkflowRun:
                 stderr.
 
         Returns:
-            State: The state of the finished workflow.
+            orquestra.sdk.schema.workflow_run.State: The state of the finished workflow.
         """
 
         assert frequency > 0.0, "Frequency must be a positive non-zero value"
@@ -633,7 +626,7 @@ def list_workflow_runs(
     _project_dir = Path(project_dir or Path.cwd())
 
     # Resolve config
-    resolved_config: RuntimeConfig = _resolve_config(config)
+    resolved_config: RuntimeConfig = resolve_config(config)
     # If user wasn't specific with workspace and project, we might want to resolve it
 
     # resolve runtime

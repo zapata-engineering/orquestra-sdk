@@ -39,7 +39,7 @@ else:
     class RayClient:
         """
         Layer of abstraction between our Orquestra-specific RayRuntime code and
-        Ray's API. Analogue to orquestra.sdk._base._qe._qe_client.
+        Ray's API.
 
         We should never use Ray's API directly; rather access it via this object's
         methods.

@@ -13,22 +13,19 @@ This module shouldn't contain any implementation, only interface definitions.
 import typing as t
 from abc import ABC, abstractmethod
 from datetime import timedelta
-from pathlib import Path
 
 from ..exceptions import WorkspacesNotSupportedError
-from ..schema.configs import RuntimeConfiguration
 from ..schema.ir import TaskInvocationId, WorkflowDef
 from ..schema.local_database import StoredWorkflowRun
 from ..schema.responses import WorkflowResult
 from ..schema.workflow_run import (
-    ProjectId,
     State,
     WorkflowRun,
     WorkflowRunId,
     WorkflowRunMinimal,
     WorkspaceId,
 )
-from ._logs._interfaces import LogReader, WorkflowLogs
+from ._logs._interfaces import LogOutput, LogReader, WorkflowLogs
 from ._spaces._structs import Project, ProjectRef, Workspace
 
 # A typealias that hints where we expect raw artifact values.
@@ -43,7 +40,7 @@ class RuntimeInterface(ABC, LogReader):
 
     @abstractmethod
     def create_workflow_run(
-        self, workflow_def: WorkflowDef, project: t.Optional[ProjectRef]
+        self, workflow_def: WorkflowDef, project: t.Optional[ProjectRef], dry_run: bool
     ) -> WorkflowRunId:
         """Schedules a workflow definition for execution
 
@@ -52,6 +49,8 @@ class RuntimeInterface(ABC, LogReader):
             project: project in which workflow is going to be executed
                 used currently only on CE runtime.
                 When omitted, WF will be scheduled at default project
+            dry_run: Run the workflow without actually executing any task code.
+                Useful for testing infrastructure, dependency imports, etc.
         """
         raise NotImplementedError()
 
@@ -88,9 +87,10 @@ class RuntimeInterface(ABC, LogReader):
 
         This method should return all output values for a task even if some of them
         aren't used in the workflow function. Reasons:
-        - Users might be interested in the computed value after running, even though
+
+        * Users might be interested in the computed value after running, even though
           the workflow didn't make an explicit use of it.
-        - Position in the task output tuple is significant. We can't just drop some of
+        * Position in the task output tuple is significant. We can't just drop some of
           the elements because this would shift indices.
 
         Careful: This method does NOT return status of a workflow. Verify it beforehand
@@ -160,7 +160,7 @@ class RuntimeInterface(ABC, LogReader):
     @abstractmethod
     def get_task_logs(
         self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
-    ) -> t.List[str]:
+    ) -> LogOutput:
         raise NotImplementedError()
 
     @abstractmethod
@@ -214,9 +214,9 @@ class WorkflowRepo(ABC):
 
         Arguments:
             prefix (Optional): Only return workflow runs whose IDs start with the
-            prefix.
+                prefix.
             config_name (Optional): Only return workflow runs that use the
-            specified configuration name.
+                specified configuration name.
 
         Returns:
             A list of workflow runs for a given config. Includes: run ID, stored

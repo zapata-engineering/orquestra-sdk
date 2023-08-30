@@ -12,6 +12,7 @@ import pytest
 from orquestra import sdk
 from orquestra.sdk._base import serde
 from orquestra.sdk._base._dates import Instant
+from orquestra.sdk._base._logs._interfaces import LogOutput
 from orquestra.sdk._base._spaces._structs import Project, Workspace
 from orquestra.sdk._base.cli._ui import _errors
 from orquestra.sdk._base.cli._ui import _models as ui_models
@@ -71,7 +72,7 @@ class TestWrappedCorqOutputPresenter:
             pretty_print_mock = Mock()
             monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
             task_invocation = "my_task_invocation"
-            task_logs = ["my_log"]
+            task_logs = LogOutput(out=["my_log"], err=[])
             logs = {task_invocation: task_logs}
 
             presenter = _presenters.WrappedCorqOutputPresenter()
@@ -82,15 +83,16 @@ class TestWrappedCorqOutputPresenter:
             # Then
             called_args = pretty_print_mock.call_args.args
             response_model = called_args[0]
-            assert task_logs[0] in response_model.logs
+            assert "stdout:" in response_model.logs
+            assert task_logs.out[0] in response_model.logs
             assert task_invocation in response_model.logs[0]
 
         @staticmethod
-        def test_show_logs_with_sequence(monkeypatch):
+        def test_show_logs_with_logoutput(monkeypatch):
             # Given
             pretty_print_mock = Mock()
             monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
-            logs = ["my_log"]
+            logs = LogOutput(out=["my_log"], err=[])
 
             presenter = _presenters.WrappedCorqOutputPresenter()
 
@@ -100,7 +102,62 @@ class TestWrappedCorqOutputPresenter:
             # Then
             called_args = pretty_print_mock.call_args.args
             response_model = called_args[0]
-            assert logs[0] in response_model.logs
+            assert "stdout:" in response_model.logs
+            assert logs.out[0] in response_model.logs
+
+        @staticmethod
+        def test_print_stdout_when_available(monkeypatch):
+            # Given
+            pretty_print_mock = Mock()
+            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
+            logs = LogOutput(out=["my_log"], err=[])
+
+            presenter = _presenters.WrappedCorqOutputPresenter()
+
+            # When
+            presenter.show_logs(logs)
+
+            # Then
+            called_args = pretty_print_mock.call_args.args
+            response_model = called_args[0]
+            assert "stdout:" in response_model.logs
+            assert "stderr:" not in response_model.logs
+
+        @staticmethod
+        def test_print_stderr_when_available(monkeypatch):
+            # Given
+            pretty_print_mock = Mock()
+            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
+            logs = LogOutput(out=[], err=["my_log"])
+
+            presenter = _presenters.WrappedCorqOutputPresenter()
+
+            # When
+            presenter.show_logs(logs)
+
+            # Then
+            called_args = pretty_print_mock.call_args.args
+            response_model = called_args[0]
+            assert "stdout:" not in response_model.logs
+            assert "stderr:" in response_model.logs
+
+        @staticmethod
+        def test_print_both_when_available(monkeypatch):
+            # Given
+            pretty_print_mock = Mock()
+            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
+            logs = LogOutput(out=["my_log"], err=["my_log"])
+
+            presenter = _presenters.WrappedCorqOutputPresenter()
+
+            # When
+            presenter.show_logs(logs)
+
+            # Then
+            called_args = pretty_print_mock.call_args.args
+            response_model = called_args[0]
+            assert "stdout:" in response_model.logs
+            assert "stderr:" in response_model.logs
 
     class TestPrinting:
         """
@@ -138,10 +195,13 @@ class TestWrappedCorqOutputPresenter:
         def test_with_mapped_logs(capsys):
             # Given
             logs = {
-                "<task invocation id sentinel>": [
-                    "<log line 1 sentinel>",
-                    "<log line 2 sentinel>",
-                ]
+                "<task invocation id sentinel>": LogOutput(
+                    out=[
+                        "<log line 1 sentinel>",
+                        "<log line 2 sentinel>",
+                    ],
+                    err=[],
+                )
             }
             presenter = _presenters.WrappedCorqOutputPresenter()
 
@@ -152,6 +212,7 @@ class TestWrappedCorqOutputPresenter:
             captured = capsys.readouterr()
             for line in [
                 "task-invocation-id: <task invocation id sentinel>",
+                "stdout:",
                 "<log line 1 sentinel>",
                 "<log line 2 sentinel>",
             ]:
@@ -159,9 +220,11 @@ class TestWrappedCorqOutputPresenter:
             assert "=" * 80 not in captured.out
 
         @staticmethod
-        def test_with_sequence_logs(capsys):
+        def test_with_logoutput_logs(capsys):
             # Given
-            logs = ["<log line 1 sentinel>", "<log line 2 sentinel>"]
+            logs = LogOutput(
+                out=["<log line 1 sentinel>", "<log line 2 sentinel>"], err=[]
+            )
             presenter = _presenters.WrappedCorqOutputPresenter()
 
             # When
@@ -169,13 +232,18 @@ class TestWrappedCorqOutputPresenter:
 
             # Then
             captured = capsys.readouterr()
-            assert "<log line 1 sentinel>\n<log line 2 sentinel>\n" in captured.out
+            assert (
+                "stdout:\n<log line 1 sentinel>\n<log line 2 sentinel>\n"
+                in captured.out
+            )
             assert "=" * 80 not in captured.out
 
         @staticmethod
         def test_with_log_type(capsys):
             # Given
-            logs = ["<log line 1 sentinel>", "<log line 2 sentinel>"]
+            logs = LogOutput(
+                out=["<log line 1 sentinel>", "<log line 2 sentinel>"], err=[]
+            )
             log_type = Mock(value="<log type sentinel>")
             presenter = _presenters.WrappedCorqOutputPresenter()
 
@@ -186,11 +254,48 @@ class TestWrappedCorqOutputPresenter:
             captured = capsys.readouterr()
             for line in [
                 "=== <LOG TYPE SENTINEL> LOGS ===================================================",  # noqa: E501
+                "stdout:",
                 "<log line 1 sentinel>",
                 "<log line 2 sentinel>",
                 "================================================================================",  # noqa: E501
             ]:
                 assert line in captured.out
+
+        @staticmethod
+        def test_stderr_output(capsys):
+            # Given
+            logs = LogOutput(
+                out=[], err=["<log line 1 sentinel>", "<log line 2 sentinel>"]
+            )
+            presenter = _presenters.WrappedCorqOutputPresenter()
+
+            # When
+            presenter.show_logs(logs)
+
+            # Then
+            captured = capsys.readouterr()
+            assert (
+                "stderr:\n<log line 1 sentinel>\n<log line 2 sentinel>\n"
+                in captured.out
+            )
+
+        @staticmethod
+        def test_both_output(capsys):
+            # Given
+            logs = LogOutput(
+                out=["<log line 1 sentinel>"], err=["<log line 2 sentinel>"]
+            )
+            presenter = _presenters.WrappedCorqOutputPresenter()
+
+            # When
+            presenter.show_logs(logs)
+
+            # Then
+            captured = capsys.readouterr()
+            assert (
+                "stdout:\n<log line 1 sentinel>\nstderr:\n<log line 2 sentinel>\n"
+                in captured.out
+            )
 
     @staticmethod
     def test_handling_error(monkeypatch, sys_exit_mock):
@@ -382,15 +487,14 @@ class TestServicesPresenter:
 
 
 class TestLoginPresenter:
-    @pytest.mark.parametrize("ce", [True, False])
-    def test_prompt_for_login(self, capsys, ce):
+    def test_prompt_for_login(self, capsys):
         # Given
         url = "cool_url"
         login_url = "cool_login_url"
         presenter = _presenters.LoginPresenter()
 
         # When
-        presenter.prompt_for_login(login_url, url, ce)
+        presenter.prompt_for_login(login_url, url)
 
         # Then
         captured = capsys.readouterr()
@@ -401,10 +505,7 @@ class TestLoginPresenter:
         )
         assert login_url in captured.out
         assert "Then save the token using command:" in captured.out
-        assert (
-            f"orq login -s {url} -t <paste your token here>" + (" --ce" if ce else "")
-            in captured.out
-        )
+        assert f"orq login -s {url} -t <paste your token here>" in captured.out
 
     def test_prompt_config_saved(self, capsys):
         # Given

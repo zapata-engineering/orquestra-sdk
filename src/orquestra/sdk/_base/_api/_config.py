@@ -38,13 +38,8 @@ class RuntimeConfig:
         config_in_process = RuntimeConfig.in_process()
         config_ray = RuntimeConfig.ray()
         config_ce = RuntimeConfig.ce()
-        config_qe = RuntimeConfig.qe()
 
         # Create the workflow run and begin its execution
-        run = wf.prepare(config_in_process)
-        run.start()
-
-        # Alternatively, to create and start in one step:
         run = wf.run(config_in_process)
     """
 
@@ -59,7 +54,6 @@ class RuntimeConfig:
                 "Please use the appropriate factory method for your desired runtime. "
                 "Supported runtimes are:\n"
                 "`RuntimeConfig.in_process()` for in-process execution,\n"
-                "`RuntimeConfig.qe()` for Quantum Engine,\n"
                 "`RuntimeConfig.ray()` for local Ray.\n"
                 "`RuntimeConfig.ce()` for Compute Engine. \n"
             )
@@ -136,7 +130,7 @@ class RuntimeConfig:
     ) -> "RuntimeConfig":
         """
         Config for running workflows on Ray. Makes the SDK connect to a Ray
-        cluster when you .prepare() the workflow. Requires starting the Ray
+        cluster when you .run() the workflow. Requires starting the Ray
         cluster separately in the background via 'ray start --head
         --storage=...'.
         """
@@ -150,33 +144,6 @@ class RuntimeConfig:
         setattr(config, "storage", None)
         setattr(config, "temp_dir", None)
         setattr(config, "address", "auto")
-        return config
-
-    @classmethod
-    def qe(
-        cls,
-        uri: str,
-        token: str,
-    ) -> "RuntimeConfig":
-        """
-        Config for running workflows on Quantum Engine/Orquestra Platform.
-
-        Args:
-            uri: Address of the QE cluster on which to run the workflow.
-            token: Authorisation token for access to the cluster.
-        """
-        runtime_name = RuntimeName.QE_REMOTE
-        config_name = _config.generate_config_name(runtime_name, uri)
-
-        config = RuntimeConfig(
-            runtime_name,
-            name=config_name,
-            bypass_factory_methods=True,
-        )
-        setattr(config, "uri", uri)
-        setattr(config, "token", token)
-        _config.save_or_update(config_name, runtime_name, config._get_runtime_options())
-
         return config
 
     @classmethod
@@ -363,13 +330,11 @@ class RuntimeConfig:
             SyntaxError: When this method is called for a runtime configuration that
                 does not use an authorisation token.
             ConfigNameNotFoundError: When there is no stored token to update.
-            UnsavedConfigChangesError: When there are unsaved changes to the token that
-                clash with the provided token
         """
 
-        if self._runtime_name not in [RuntimeName.QE_REMOTE, RuntimeName.CE_REMOTE]:
+        if self._runtime_name != RuntimeName.CE_REMOTE:
             raise SyntaxError(
-                "This runtime configuration does not require an authorisation token. "
+                "This runtime configuration does not require an authorization token. "
                 "Nothing has been saved."
             )
 
@@ -380,36 +345,21 @@ class RuntimeConfig:
         old_config = self._config_from_runtimeconfiguration(
             _config.read_config(self._name)
         )
-        if self._runtime_name != old_config._runtime_name:
-            raise ConfigNameNotFoundError(
-                f"A runtime configuration with name {self._name} exists, but relates to"
-                " a different runtime ("
-                f"this config: {self._runtime_name}, "
-                f"saved config: {old_config._runtime_name}"
-                "). Nothing has been saved. Please check the config name and try again."
-            )
 
         new_runtime_options: dict = old_config._get_runtime_options()
         new_runtime_options["token"] = token
 
-        if token != getattr(self, "token"):
-            # This is the most expected scenario - the RuntimeConfig matches the
-            # file, and the user has provided a new token.
-            self.token = token
-            _config.update_config(
-                config_name=self._name, new_runtime_options=new_runtime_options
-            )
-            logging.info(
-                f"Updated authorisation token written to '{self._name}' "
-                f"in file '{self._config_save_file}'. "
-                "The new token is ready to be used in this runtime configuration."
-            )
-        else:  # token == self.token
-            # The new token, and stored token are all the same, nothing to do.
-            logging.info(
-                f"The specified token is already stored in '{self._name}' "
-                f"in file '{self._config_save_file}'."
-            )
+        self.token = token
+        _config.update_config(
+            config_name=self._name,
+            runtime_name=self._runtime_name,
+            new_runtime_options=new_runtime_options,
+        )
+        logging.info(
+            f"Updated authorisation token written to '{self._name}' "
+            f"in file '{self._config_save_file}'. "
+            "The new token is ready to be used in this runtime configuration."
+        )
 
 
 def migrate_config_file():
@@ -465,7 +415,7 @@ def migrate_config_file():
         print(f" - {config_name}")
 
 
-def _resolve_config(
+def resolve_config(
     config: t.Union[ConfigName, "RuntimeConfig"],
 ) -> "RuntimeConfig":
     if isinstance(config, RuntimeConfig):

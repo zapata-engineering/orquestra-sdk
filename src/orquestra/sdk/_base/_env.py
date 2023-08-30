@@ -50,10 +50,20 @@ CURRENT_USER_ENV = "ORQ_CURRENT_USER"
 Set by Studio and CE to share current user
 """
 
+CURRENT_CONFIG_ENV = "ORQ_CURRENT_CONFIG"
+"""
+Can be set by the user to set default config when using "auto"
+"""
+
 ORQ_VERBOSE = "ORQ_VERBOSE"
 """
 If set to a truthy value, enables printing debug information when running the ``orq``
 CLI commands.
+"""
+
+ORQ_TASK_RUN_LOGS_DIR = "ORQ_TASK_RUN_LOGS_DIR"
+"""
+Used to set the storage location for task logs
 """
 
 # --------------------------------- Ray --------------------------------------

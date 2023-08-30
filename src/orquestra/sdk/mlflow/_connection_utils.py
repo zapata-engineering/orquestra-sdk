@@ -20,7 +20,6 @@ from orquestra.sdk._base._jwt import get_email_from_jwt_token
 from orquestra.sdk._base._services import ORQUESTRA_BASE_PATH
 from orquestra.sdk._base._spaces._api import make_workspace_url, make_workspace_zri
 from orquestra.sdk.exceptions import ConfigNameNotFoundError, RuntimeConfigError
-from orquestra.sdk.schema.configs import ConfigName
 
 DEFAULT_TEMP_ARTIFACTS_DIR: Path = ORQUESTRA_BASE_PATH / "mlflow" / "artifacts"
 RESOURCE_CATALOG_URI: str = "http://orquestra-resource-catalog.resource-catalog"
@@ -33,18 +32,6 @@ def _is_executing_remoteley() -> bool:
     """
     if os.getenv(_env.CURRENT_CLUSTER_ENV):
         return True
-    else:
-        # TODO: https://zapatacomputing.atlassian.net/browse/ORQSDK-914 - this
-        # workaround exists to maintian compatibility with previous WDR versions.
-        # Future releases should remove this else block.
-        envvars = [
-            _env.PASSPORT_FILE_ENV,
-            _env.MLFLOW_CR_NAME,
-            _env.MLFLOW_PORT,
-            _env.MLFLOW_ARTIFACTS_DIR,
-        ]
-        if all(os.getenv(envvar) for envvar in envvars):
-            return True
     return False
 
 
@@ -56,11 +43,9 @@ def _get_mlflow_cr_name_and_port() -> Tuple[str, str]:
     - ORQ_MLFLOW_CR_NAME
     - ORQ_MLFLOW_PORT
 
-    Example usage:
+    Example usage::
 
-    ```python
-    mlflow_cr_name, mlflow_port = _get_mlflow_cr_name_and_port()
-    ```
+        mlflow_cr_name, mlflow_port = _get_mlflow_cr_name_and_port()
 
     Raises:
         EnvironmentError: when either of the environment variables are not set.

@@ -6,15 +6,18 @@ Unit tests for RayLogs.
 """
 import typing as t
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
+from orquestra.sdk import LogOutput
 from orquestra.sdk._base import _dates
 from orquestra.sdk._base._logs import _markers
 from orquestra.sdk._ray import _ray_logs
 
 DATA_DIR = Path(__file__).parent / "data"
-TEST_RAY_TEMP = DATA_DIR / "ray_temp"
+TEST_RAY_TEMP = DATA_DIR / "legacy_logs" / "ray_temp"
+TEST_REDIRECTED_LOG_DIR = DATA_DIR / "redirected_logs" / "logs"
 
 
 SAMPLE_TIMESTAMP = _dates.utc_from_comps(2023, 2, 9, 11, 26, 7, 99382)
@@ -374,33 +377,37 @@ class TestIterTaskLogs:
             ]
 
 
-class TestDirectRayReader:
+class TestDirectLogReader:
     """
-    Unit tests for ``DirectRayReader``.
+    Unit tests for ``DirectLogReader``.
     Test boundary::
-        [recorded ray log files]->[DirectRayReader methods]
+        [recorded ray log files]->[DirectLogReader methods]
     """
+
+    @staticmethod
+    @pytest.fixture
+    def reader():
+        return _ray_logs.DirectLogReader(ray_temp=TEST_RAY_TEMP)
 
     class TestGetWorkflowLogs:
-        class TestPerTask:
+        class TestLegacyPerTask:
             @staticmethod
-            def test_happy_path():
-                # Given
-                reader = _ray_logs.DirectRayReader(ray_temp=TEST_RAY_TEMP)
-
+            def test_happy_path(reader: _ray_logs.DirectLogReader):
                 # When
                 logs = reader.get_workflow_logs(_existing_wf_run_id())
 
                 # Then
                 assert logs.per_task == {
-                    "invocation-0-task-task-with-python-imports": [],
-                    "invocation-1-task-add-with-log": ["hello, there!"],
+                    "invocation-0-task-task-with-python-imports": LogOutput(
+                        out=[], err=[]
+                    ),
+                    "invocation-1-task-add-with-log": LogOutput(
+                        out=["hello, there!"], err=[]
+                    ),
                 }
 
             @staticmethod
-            def test_invalid_id():
-                # Given
-                reader = _ray_logs.DirectRayReader(ray_temp=TEST_RAY_TEMP)
+            def test_invalid_id(reader: _ray_logs.DirectLogReader):
                 wf_run_id = "doesn't-exist"
 
                 # When
@@ -418,10 +425,7 @@ class TestDirectRayReader:
         )
         class TestNonTaskLogTypes:
             @staticmethod
-            def test_env_setup(wf_run_id: str):
-                # Given
-                reader = _ray_logs.DirectRayReader(ray_temp=TEST_RAY_TEMP)
-
+            def test_env_setup(wf_run_id: str, reader: _ray_logs.DirectLogReader):
                 # When
                 logs = reader.get_workflow_logs(wf_run_id)
 
@@ -432,40 +436,40 @@ class TestDirectRayReader:
                     "Installing python requirements",
                 ]:
                     assert (
-                        len([line for line in logs.env_setup if tell_tale in line]) > 0
+                        len([line for line in logs.env_setup.out if tell_tale in line])
+                        > 0
                     )
 
             @staticmethod
-            def test_system(wf_run_id: str):
-                # Given
-                reader = _ray_logs.DirectRayReader(ray_temp=TEST_RAY_TEMP)
-
+            def test_system(wf_run_id: str, reader: _ray_logs.DirectLogReader):
                 # When
                 logs = reader.get_workflow_logs(wf_run_id)
 
                 # Then
-                assert logs.system == [
-                    f"WARNING: we don't parse system logs for the local runtime. The log files can be found in the directory '{TEST_RAY_TEMP}'"  # noqa: E501
-                ]
+                assert logs.system == LogOutput(
+                    out=[],
+                    err=[
+                        f"WARNING: we don't parse system logs for the local runtime. The log files can be found in the directory '{TEST_RAY_TEMP}'"  # noqa: E501
+                    ],
+                )
 
             @staticmethod
-            def test_other(wf_run_id: str):
-                # Given
-                reader = _ray_logs.DirectRayReader(ray_temp=TEST_RAY_TEMP)
-
+            def test_other(wf_run_id: str, reader: _ray_logs.DirectLogReader):
                 # When
                 logs = reader.get_workflow_logs(wf_run_id)
 
                 # Then
-                assert logs.other == [
-                    f"WARNING: we don't parse uncategorized logs for the local runtime. The log files can be found in the directory '{TEST_RAY_TEMP}'"  # noqa: E501
-                ]
+                assert logs.other == LogOutput(
+                    out=[],
+                    err=[
+                        f"WARNING: we don't parse uncategorized logs for the local runtime. The log files can be found in the directory '{TEST_RAY_TEMP}'"  # noqa: E501
+                    ],
+                )
 
-    class TestGetTaskLogs:
+    class TestGetLegacyTaskLogs:
         @staticmethod
-        def test_happy_path():
+        def test_happy_path(reader: _ray_logs.DirectLogReader):
             # Given
-            reader = _ray_logs.DirectRayReader(ray_temp=TEST_RAY_TEMP)
             task_inv_id = "invocation-1-task-add-with-log"
 
             # When
@@ -474,34 +478,124 @@ class TestDirectRayReader:
             )
 
             # Then
-            assert logs == ["hello, there!"]
+            assert logs == LogOutput(out=["hello, there!"], err=[])
 
         @staticmethod
         @pytest.mark.parametrize(
             "wf_run_id,task_inv_id",
             [
-                (
-                    pytest.param("nope", id="invalid_id"),
-                    pytest.param("invocation-1-task-add-with-log", id="valid_id"),
+                pytest.param(
+                    "nope",
+                    "invocation-1-task-add-with-log",
+                    id="invalid_wf_id_valid_task_id",
                 ),
-                (
-                    pytest.param(_existing_wf_run_id(), id="valid_id"),
-                    pytest.param("nope", id="invalid_id"),
+                pytest.param(
+                    _existing_wf_run_id(), "nope", id="valid_wf_id_invalid_task_id"
                 ),
-                (
-                    pytest.param("nope", id="invalid_id"),
-                    pytest.param("nope", id="invalid_id"),
-                ),
+                pytest.param("nope", "nope", id="both_invalid_id"),
             ],
         )
-        def test_invalid_ids(wf_run_id, task_inv_id):
-            # Given
-            reader = _ray_logs.DirectRayReader(ray_temp=TEST_RAY_TEMP)
-            wf_run_id = "doesnt-exist"
-            task_inv_id = "invocation-1-task-add-with-log"
-
+        def test_invalid_ids(
+            wf_run_id: str, task_inv_id: str, reader: _ray_logs.DirectLogReader
+        ):
             # When
             logs = reader.get_task_logs(wf_run_id, task_inv_id)
 
             # Then
-            assert logs == []
+            assert logs == LogOutput(out=[], err=[])
+
+    class TestRedirectedLogs:
+        @staticmethod
+        @pytest.fixture(autouse=True)
+        def patch_log_location(monkeypatch: pytest.MonkeyPatch):
+            monkeypatch.setattr(
+                _ray_logs,
+                "redirected_logs_dir",
+                Mock(return_value=TEST_REDIRECTED_LOG_DIR),
+            )
+
+        @staticmethod
+        @pytest.fixture
+        def valid_wf_run_id():
+            return "wf-abcde-r000"
+
+        @staticmethod
+        @pytest.fixture
+        def valid_task_inv_id():
+            return "invocation-1-task-add-with-log"
+
+        class TestTaskLogs:
+            @staticmethod
+            def test_happy_path(
+                reader: _ray_logs.DirectLogReader,
+                valid_wf_run_id: str,
+                valid_task_inv_id: str,
+            ):
+                # When
+                logs = reader.get_task_logs(valid_wf_run_id, valid_task_inv_id)
+
+                # Then
+                assert logs == LogOutput(out=["hello, there!"], err=[])
+
+            @staticmethod
+            def test_invalid_task_id_is_empty(
+                reader: _ray_logs.DirectLogReader, valid_wf_run_id: str
+            ):
+                # Given
+                task_inv_id = "<task inv sentinel>"
+
+                # When
+                logs = reader.get_task_logs(valid_wf_run_id, task_inv_id)
+
+                # Then
+                assert logs == LogOutput(out=[], err=[])
+
+            @staticmethod
+            def test_invalid_wf_id_calls_legacy(
+                monkeypatch: pytest.MonkeyPatch,
+                reader: _ray_logs.DirectLogReader,
+                valid_task_inv_id: str,
+            ):
+                # Given
+                wf_run_id = "<wf run sentinel>"
+                legacy_logs = Mock()
+                monkeypatch.setattr(reader, "_get_legacy_task_logs", legacy_logs)
+
+                # When
+                _ = reader.get_task_logs(wf_run_id, valid_task_inv_id)
+
+                # Then
+                legacy_logs.assert_called_with(wf_run_id, [valid_task_inv_id])
+
+        class TestWorkflowLogs:
+            @staticmethod
+            def test_happy_path(
+                reader: _ray_logs.DirectLogReader, valid_wf_run_id: str
+            ):
+                # When
+                logs = reader.get_workflow_logs(valid_wf_run_id)
+
+                # Then
+                assert logs.per_task == {
+                    "invocation-0-task-task-with-python-imports": LogOutput(
+                        out=[], err=[]
+                    ),
+                    "invocation-1-task-add-with-log": LogOutput(
+                        out=["hello, there!"], err=[]
+                    ),
+                }
+
+            @staticmethod
+            def test_invalid_wf_id_calls_legacy(
+                monkeypatch: pytest.MonkeyPatch, reader: _ray_logs.DirectLogReader
+            ):
+                # Given
+                wf_run_id = "<wf run sentinel>"
+                legacy_logs = Mock()
+                monkeypatch.setattr(reader, "_get_legacy_task_logs", legacy_logs)
+
+                # When
+                _ = reader.get_workflow_logs(wf_run_id)
+
+                # Then
+                legacy_logs.assert_called_with(wf_run_id)

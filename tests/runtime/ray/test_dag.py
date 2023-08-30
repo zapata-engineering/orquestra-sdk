@@ -16,7 +16,6 @@ from orquestra.sdk._base import _dates
 from orquestra.sdk._base._config import (
     LOCAL_RUNTIME_CONFIGURATION,
     RuntimeConfiguration,
-    RuntimeName,
 )
 from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base._spaces._structs import ProjectRef
@@ -34,7 +33,7 @@ def wf_run_id():
 
 @pytest.fixture
 def client():
-    return create_autospec(_dag.RayClient)
+    return create_autospec(_client.RayClient)
 
 
 @pytest.mark.parametrize(
@@ -135,10 +134,10 @@ class TestRayRuntime:
 
     class TestReadingLogs:
         """
-        Verifies that RayRuntime gets whatever DirectRayReader produced.
+        Verifies that RayRuntime gets whatever DirectLogReader produced.
 
         Test boundary: [RayRuntime]─┬[ServiceManager]
-                                    └[DirectRayReader]
+                                    └[DirectLogReader]
         """
 
         class TestGetWorkflowLogs:
@@ -163,7 +162,7 @@ class TestRayRuntime:
                 logs_dict = {"inv_id1": ["Hello, there!", "General Kenobi!"]}
                 get_workflow_logs = Mock(return_value=logs_dict)
                 monkeypatch.setattr(
-                    _ray_logs.DirectRayReader, "get_workflow_logs", get_workflow_logs
+                    _ray_logs.DirectLogReader, "get_workflow_logs", get_workflow_logs
                 )
 
                 wf_run_id = "wf.1"
@@ -197,7 +196,7 @@ class TestRayRuntime:
                 logs_list = ["hello", "there!"]
                 get_task_logs = Mock(return_value=logs_list)
                 monkeypatch.setattr(
-                    _ray_logs.DirectRayReader, "get_task_logs", get_task_logs
+                    _ray_logs.DirectLogReader, "get_task_logs", get_task_logs
                 )
 
                 wf_run_id = "wf.1"
@@ -229,7 +228,9 @@ class TestRayRuntime:
             )
             with pytest.warns(expected_warning=exceptions.UnsupportedRuntimeFeature):
                 runtime.create_workflow_run(
-                    Mock(), project=ProjectRef(workspace_id="", project_id="")
+                    Mock(),
+                    dry_run=False,
+                    project=ProjectRef(workspace_id="", project_id=""),
                 )
 
     class TestListWorkflowRuns:

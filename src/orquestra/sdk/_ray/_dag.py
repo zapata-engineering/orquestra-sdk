@@ -16,8 +16,6 @@ import warnings
 from datetime import timedelta
 from pathlib import Path
 
-import pydantic
-
 from orquestra.sdk.schema.responses import WorkflowResult
 
 from .. import exceptions
@@ -31,20 +29,17 @@ from ..schema import ir
 from ..schema.configs import RuntimeConfiguration
 from ..schema.local_database import StoredWorkflowRun
 from ..schema.workflow_run import (
-    ProjectId,
     RunStatus,
     State,
     TaskInvocationId,
     TaskRun,
-    TaskRunId,
     WorkflowRun,
     WorkflowRunId,
     WorkspaceId,
 )
 from . import _client, _id_gen, _ray_logs
 from ._build_workflow import TaskResult, make_ray_dag
-from ._client import RayClient
-from ._wf_metadata import InvUserMetadata, WfUserMetadata, pydatic_to_json_dict
+from ._wf_metadata import WfUserMetadata, pydatic_to_json_dict
 
 
 def _instant_from_timestamp(
@@ -189,9 +184,9 @@ class RayRuntime(RuntimeInterface):
         self,
         config: RuntimeConfiguration,
         project_dir: Path,
-        client: t.Optional[RayClient] = None,
+        client: t.Optional[_client.RayClient] = None,
     ):
-        self._client = client or RayClient()
+        self._client = client or _client.RayClient()
 
         ray_params = RayParams(
             address=config.runtime_options["address"],
@@ -205,7 +200,7 @@ class RayRuntime(RuntimeInterface):
         self._config = config
         self._project_dir = project_dir
 
-        self._log_reader: LogReader = _ray_logs.DirectRayReader(
+        self._log_reader: LogReader = _ray_logs.DirectLogReader(
             _services.ray_temp_path()
         )
 
@@ -234,7 +229,7 @@ class RayRuntime(RuntimeInterface):
         logger = logging.getLogger("ray")
         logger.setLevel(logging.ERROR)
 
-        client = RayClient()
+        client = _client.RayClient()
         try:
             client.init(**dataclasses.asdict(ray_params))
         except ConnectionError as e:
@@ -266,11 +261,14 @@ class RayRuntime(RuntimeInterface):
 
         Safe to call multiple times in a row.
         """
-        client = RayClient()
+        client = _client.RayClient()
         client.shutdown()
 
     def create_workflow_run(
-        self, workflow_def: ir.WorkflowDef, project: t.Optional[ProjectRef]
+        self,
+        workflow_def: ir.WorkflowDef,
+        project: t.Optional[ProjectRef],
+        dry_run: bool,
     ) -> WorkflowRunId:
         if project:
             warnings.warn(
@@ -287,6 +285,7 @@ class RayRuntime(RuntimeInterface):
             workflow_def=workflow_def,
             workflow_run_id=wf_run_id,
             project_dir=self._project_dir,
+            dry_run=dry_run,
         )
         wf_user_metadata = WfUserMetadata(workflow_def=workflow_def)
 
@@ -376,7 +375,6 @@ class RayRuntime(RuntimeInterface):
         # By this line we're assuming the workflow run exists, otherwise we wouldn't get
         # its status. If the following line raises errors we treat them as unexpected.
         ray_result = self._client.get_workflow_output(workflow_run_id)
-
         if isinstance(ray_result, TaskResult):
             # If we have a TaskResult, we're a >=0.47.0 result
             # We can assume this is pre-seralised in the form:

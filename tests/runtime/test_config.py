@@ -16,7 +16,6 @@ where:
 The current solution for this is to focus on testing the layer that's close to
 the user. It's a lot easier to figure out appropriate behavior this way.
 """
-from unittest.mock import Mock
 
 import pytest
 
@@ -37,7 +36,7 @@ class TestProperties:
 
         @pytest.mark.parametrize("config_name", ["custom_cfg"])
         @pytest.mark.parametrize(
-            "runtime_name", [RuntimeName.QE_REMOTE, RuntimeName.RAY_LOCAL]
+            "runtime_name", [RuntimeName.CE_REMOTE, RuntimeName.RAY_LOCAL]
         )
         @pytest.mark.parametrize("new_runtime_options", [None, {}, {"foo": "bar"}])
         def test_no_file(

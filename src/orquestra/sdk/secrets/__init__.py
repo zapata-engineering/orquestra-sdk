@@ -13,7 +13,7 @@ This module's behavior depends on the execution context (in a standalone REPL/sc
 in a workflow on the Local Runtime, in a workflow on Orquestra Platform).
 
 When you're using ``orquestra.sdk.secrets`` on your machine (inside a standalone script
- or with the Local Ray Runtime), this class uses cluster credentials read from your
+or with the Local Ray Runtime), this class uses cluster credentials read from your
 config file (set by ``orq login``).
 
 When ``orquestra.sdk.secrets`` is used inside a task running remotely on the Orquestra

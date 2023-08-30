@@ -1,7 +1,6 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-import typing as t
 from pathlib import Path
 
 from orquestra.sdk import exceptions
@@ -15,12 +14,12 @@ def build_runtime_from_config(
     """
     Centralized place to get runtime object based on config.
 
-    There are a couple of runtime runtime integrations implemented as separate
+    There are a couple of runtime integrations implemented as separate
     classes. This factory function solves the problem of figuring out which
     class to use.
     """
     # Imports are deferred to cut down on the import graph for CLI latency. The
-    # subgraphs for Ray and for QE are distinct, and both take a lot of time to
+    # subgraphs for Ray and for CE are distinct, and both take a lot of time to
     # import.
     if config.runtime_name == RuntimeName.RAY_LOCAL:
         import orquestra.sdk._ray._dag
@@ -29,15 +28,17 @@ def build_runtime_from_config(
             project_dir=project_dir,
             config=config,
         )
-    elif config.runtime_name == RuntimeName.QE_REMOTE:
-        import orquestra.sdk._base._qe._qe_runtime
+    elif config.runtime_name == RuntimeName.IN_PROCESS:
+        import orquestra.sdk._base._in_process_runtime
 
-        return orquestra.sdk._base._qe._qe_runtime.QERuntime(
-            project_dir=project_dir, config=config, verbose=verbose
-        )
-
+        return orquestra.sdk._base._in_process_runtime.InProcessRuntime()
     elif config.runtime_name == RuntimeName.CE_REMOTE:
         return _build_ce_runtime(config, verbose)
+    elif config.runtime_name == RuntimeName.QE_REMOTE:
+        raise exceptions.QERemoved(
+            "QE support has been removed. "
+            f"Use CE by logging in again with `orq login -c {config.config_name}`"
+        )
     else:
         raise exceptions.NotFoundError(f"Unknown runtime: {config.runtime_name}")
 

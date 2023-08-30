@@ -1,8 +1,8 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 from enum import Enum
-from typing import Any, Dict, Literal, Union
+from typing import Any, Dict, Literal
 
 from pydantic.main import BaseModel
 
@@ -18,7 +18,7 @@ class RuntimeName(str, Enum):
     IN_PROCESS = "IN_PROCESS"
 
 
-RemoteRuntime = Union[Literal[RuntimeName.CE_REMOTE], Literal[RuntimeName.QE_REMOTE]]
+RemoteRuntime = Literal[RuntimeName.CE_REMOTE]
 
 
 class RuntimeConfiguration(BaseModel):
@@ -41,9 +41,11 @@ class RuntimeConfigurationFile(BaseModel):
     """
     This schema is for the storage of "Runtime configurations".
     The major version number should be bumped when:
-        - The values inside the configuration file are modified, for example if the
-            `configs` option is renamed or the type is changed.
-        - The shape of `RuntimeConfiguration` changes
+
+    * The values inside the configuration file are modified, for example if
+      the ``configs`` option is renamed or the type is changed.
+
+    * The shape of ``RuntimeConfiguration`` changes.
     """
 
     version: str

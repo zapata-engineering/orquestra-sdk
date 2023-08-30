@@ -2,7 +2,7 @@
 Migrating From Quantum Engine
 =============================
 
-By August 2023, Quantum Engine (QE) is being sun set.
+Quantum Engine (QE) had been sunset, as of August 2023.
 Running workflows remotely will only work with Compute Engine (CE).
 This document covers the differences between QE and CE, and how to move to CE.
 
@@ -10,7 +10,7 @@ This document covers the differences between QE and CE, and how to move to CE.
 Am I Affected?
 ==============
 
-If you're using ``orq login --qe``, you're on QE.
+If you've previously been using ``orq login --qe``, you have been using QE.
 Read this guide.
 
 If you're using ``orq login`` or ``orq login --ce``, you're already on CE.
@@ -27,10 +27,13 @@ Checklist
 
 Short list:
 
-#. Use Python 3.9. You can check it with ``python -V``.
+#. Use Python 3.9.
+   You can check it with ``python -V``.
 #. Run ``pip install -U "orquestra-sdk[all]"`` frequently.
-#. Update your task and workflow "imports". More info below.
-#. Update your task and workflow "resources". More info below.
+#. Update your task and workflow "imports".
+   More info below.
+#. Update your task and workflow "resources".
+   More info below.
 #. When logging in, use ``orq login``.
 
 
@@ -47,14 +50,22 @@ What's The Difference?
      - `Argo <https://github.com/argoproj/argo-workflows>`_
      - `Ray <https://www.ray.io>`_
    * - Tasks are executed in...
-     - Containers. Each task run results in spawning a separate container. This wastes your time and Platform's CPU cycles.
-     - Ray workers. If possible, Ray automatically reuses matching Python environments across task runs.
+     - Containers.
+       Each task run results in spawning a separate container.
+       This wastes your time and Platform's CPU cycles.
+     - Ray workers.
+       If possible, Ray automatically reuses matching Python environments across task runs.
    * - Maximum workflow size
-     - Typically, hundreds of task invocations. Hard limit on length of the internal workflow representation. It gets worse if the workflow contains embedded input data.
-     - Probably tens of thousands of task invocations in a single workflow. The limit haven't been hit yet.
+     - Typically, hundreds of task invocations.
+       Hard limit on length of the internal workflow representation.
+       It gets worse if the workflow contains embedded input data.
+     - Probably tens of thousands of task invocations in a single workflow.
+       The limit haven't been hit yet.
    * - Authorization with private git repos
-     - A special Orquestra service account has to be added to your repo with a read access. Requires coordination between you and an Orquestra administrator.
-     - Relies on Personal Access Tokens. Self-service.
+     - A special Orquestra service account has to be added to your repo with a read access.
+       Requires coordination between you and an Orquestra administrator.
+     - Relies on Personal Access Tokens.
+       Self-service.
    * - Loading tasks from a git repo
      - Works with bare scripts and setuptools-like packages.
      - Requires a setuptools-like package manifest (``pyproject.toml``/``setup.cfg``/``setup.py``, etc).
@@ -121,7 +132,8 @@ In QE, git imports were powered by running scripts to clone repos and install re
 In CE, we rely on `Ray's Runtime Environments <https://docs.ray.io/en/latest/ray-core/handling-dependencies.html#runtime-environments>`_ to do the heavy lifting for us.
 
 
-.. Note:: The ``@sdk.task()`` examples in this section show migrating ``source_import=``, but the same rules apply to ``dependency_imports=``.
+.. Note::
+    The ``@sdk.task()`` examples in this section show migrating ``source_import=``, but the same rules apply to ``dependency_imports=``.
 
 
 Project Structure
@@ -253,7 +265,8 @@ Orquestra users often use multiple levels of nested git repos, and the result of
 When referring to a public repo, ``GitImport.infer()`` will continue to work with CE.
 However, please consider switching to an explicit :ref:`GithubImport<github-import-public>`.
 
-``GitImport.infer()`` won't be extended to support referring to private repos. Please use a :ref:`GithubImport<github-import-private>` instead.
+``GitImport.infer()`` won't be extended to support referring to private repos.
+Please use a :ref:`GithubImport<github-import-private>` instead.
 
 .. note::
    Orquestra Workflow SDK is just a Python library.

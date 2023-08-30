@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 - 2023 Zapata Computing Inc.
+# © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 from __future__ import annotations
 
@@ -40,6 +40,9 @@ if TYPE_CHECKING:
     import pip_api
 
 import wrapt  # type: ignore
+
+# Needed for fully-qualified type annotations.
+import orquestra.sdk
 
 from ..exceptions import DirtyGitRepo, InvalidTaskDefinitionError, WorkflowSyntaxError
 from ..kubernetes.quantity import parse_quantity
@@ -465,10 +468,13 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
     get the serializable form.
     """
 
+    # The fully-qualified type hint is a workaround for docs' autoapi not being able to
+    # resolve symbols.
+
     def __init__(
         self,
         fn: Callable[_P, _R],
-        output_metadata: TaskOutputMetadata,
+        output_metadata: "orquestra.sdk._base._dsl.TaskOutputMetadata",
         source_import: Optional[Import] = None,
         parameters: Optional[OrderedDict] = None,
         dependency_imports: Optional[Tuple[Import, ...]] = None,
@@ -704,10 +710,10 @@ class ArtifactFuture:
 
     def __init__(
         self,
-        invocation: TaskInvocation,
+        invocation: orquestra.sdk._base._dsl.TaskInvocation,
         output_index: Optional[int] = None,
         custom_name: Optional[str] = DEFAULT_CUSTOM_NAME,
-        serialization_format: ArtifactFormat = DEFAULT_SERIALIZATION_FORMAT,
+        serialization_format: orquestra.sdk._base._dsl.ArtifactFormat = DEFAULT_SERIALIZATION_FORMAT,  # noqa: E501
     ):
         self.invocation = invocation
         # if the invocation returns multiple values, this the index in the output
@@ -771,24 +777,38 @@ class ArtifactFuture:
         """
         raise NotImplementedError("ArtifactFuture cannot be pickled")
 
+    # The fully-qualified type hint is a workaround for docs' autoapi not being able to
+    # resolve symbols.
+
     def with_invocation_meta(
         self,
         *,
-        cpu: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
-        memory: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
-        disk: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
-        gpu: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
-        custom_image: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
+        cpu: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
+        memory: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
+        disk: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
+        gpu: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
+        custom_image: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
         """Assigns optional metadata related to task invocation used to generate this
         artifact.
 
         Doesn't modify existing invocations, returns a new one.
 
-        Example usage:
+        Example usage::
+
             text = capitalize("hello").with_invocation_meta(
-                cpu="1000m",custom_image="zapatacomputing/orquestra-qml:v0.1.0-cuda"
-                )
+                cpu="1000m", custom_image="zapatacomputing/orquestra-qml:v0.1.0-cuda"
+            )
 
         Args:
             cpu: amount of cpu assigned to the task invocation
@@ -839,20 +859,32 @@ class ArtifactFuture:
             serialization_format=self.serialization_format,
         )
 
+    # The fully-qualified type hint is a workaround for docs' autoapi not being able to
+    # resolve symbols.
+
     def with_resources(
         self,
         *,
-        cpu: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
-        memory: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
-        disk: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
-        gpu: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
+        cpu: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
+        memory: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
+        disk: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
+        gpu: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
         """Assigns optional metadata related to task invocation used to generate this
         artifact.
 
         Doesn't modify existing invocations, returns a new one.
 
-        Example usage:
+        Example usage::
+
             text = capitalize("hello").with_resources(cpu="1000m")
 
         Args:
@@ -868,19 +900,25 @@ class ArtifactFuture:
 
         return self.with_invocation_meta(cpu=cpu, memory=memory, disk=disk, gpu=gpu)
 
+    # The fully-qualified type hint is a workaround for docs' autoapi not being able to
+    # resolve symbols.
+
     def with_custom_image(
         self,
-        custom_image: Optional[Union[str, Sentinel]] = Sentinel.NO_UPDATE,
+        custom_image: Optional[
+            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+        ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
         """Assigns optional metadata related to task invocation used to generate this
         artifact.
 
         Doesn't modify existing invocations, returns a new one.
 
-        Example usage:
+        Example usage::
+
             text = capitalize("hello").with_custom_image(
                 "zapatacomputing/orquestra-qml:v0.1.0-cuda"
-                )
+            )
 
         Args:
             custom_image: docker image used to run the task invocation
@@ -1062,12 +1100,12 @@ def task(
             code by analyzing the Abstract Syntax Tree (AST).
         custom_image: tell the runtime to run this task in a docker container
             preloaded with a custom docker image. Only supported with remote workflows
-            sent to Quantum Engine and Compute Engine.
+            sent to Compute Engine.
         custom_name: changes name for invocation of this task. Supports python
             formatting in brackets {} using task parameters. Currently, supports only
             values known at submit time. If parameter is unknown at submit time (e.g.
-            result of other task) - it will be placeholded. Due to the QE limitations
-            every char that is non-alphanumeric will be changed to dash ("-").
+            result of other task) - it will be placeholded. Every character that is
+            non-alphanumeric will be changed to dash ("-").
             Also only first 128 characters of the name will be used
     """
     task_dependency_imports: Optional[Tuple[Import, ...]]

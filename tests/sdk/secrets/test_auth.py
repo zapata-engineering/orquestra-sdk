@@ -89,7 +89,7 @@ class TestAuthorizedClient:
                         "configs": {
                             config_name: {
                                 "config_name": config_name,
-                                "runtime_name": "QE_REMOTE",
+                                "runtime_name": "CE_REMOTE",
                                 "runtime_options": {
                                     "uri": uri,
                                     "token": token,

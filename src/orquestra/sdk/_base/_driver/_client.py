@@ -24,7 +24,6 @@ from orquestra.sdk._base._spaces._api import make_workspace_zri
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
-    ProjectId,
     WorkflowRun,
     WorkflowRunMinimal,
     WorkspaceId,
@@ -220,10 +219,10 @@ class DriverClient:
         Stores a workflow definition for future submission
 
         Raises:
-            InvalidWorkflowDef: see the exception's docstring
-            InvalidTokenError: see the exception's docstring
-            ForbiddenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowDef
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
 
         Returns:
             the WorkflowDefID associated with the stored definition
@@ -263,9 +262,9 @@ class DriverClient:
         Lists all known workflow definitions
 
         Raises:
-            InvalidTokenError: see the exception's docstring
-            ForbiddenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
         resp = self._get(
             self._uri_provider.uri_for("list_workflow_defs"),
@@ -313,11 +312,11 @@ class DriverClient:
         Gets a stored workflow definition
 
         Raises:
-            InvalidWorkflowDefID: see the exception's docstring
-            WorkflowDefNotFound: see the exception's docstring
-            InvalidTokenError: see the exception's docstring
-            ForbiddenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowDefID
+            orquestra.sdk._base._driver._exceptions.WorkflowDefNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
 
         Returns:
             a parsed WorkflowDef
@@ -347,11 +346,11 @@ class DriverClient:
         Gets a stored workflow definition
 
         Raises:
-            InvalidWorkflowDefID: see the exception's docstring
-            WorkflowDefNotFound: see the exception's docstring
-            InvalidTokenError: see the exception's docstring
-            ForbiddenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowDefID
+            orquestra.sdk._base._driver._exceptions.WorkflowDefNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
         resp = self._delete(
             self._uri_provider.uri_for(
@@ -369,22 +368,27 @@ class DriverClient:
     # ---- Workflow Runs ----
 
     def create_workflow_run(
-        self, workflow_def_id: _models.WorkflowDefID, resources: _models.Resources
+        self,
+        workflow_def_id: _models.WorkflowDefID,
+        resources: _models.Resources,
+        dry_run: bool,
     ) -> _models.WorkflowRunID:
         """
         Submit a workflow def to run in the workflow driver
 
         Raises:
-            InvalidWorkflowRunRequest: see the exception's docstring
-            UnsupportedSDKVersion: see the exception's docstring
-            InvalidTokenError: see the exception's docstring
-            ForbiddenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunRequest
+            orquestra.sdk._base._driver._exceptions.UnsupportedSDKVersion
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
         resp = self._post(
             self._uri_provider.uri_for("create_workflow_run"),
             body_params=_models.CreateWorkflowRunRequest(
-                workflowDefinitionID=workflow_def_id, resources=resources
+                workflowDefinitionID=workflow_def_id,
+                resources=resources,
+                dryRun=dry_run,
             ).dict(),
         )
 
@@ -416,9 +420,9 @@ class DriverClient:
         List workflow runs with a specified workflow def ID from the workflow driver
 
         Raises:
-            InvalidTokenError: see the exception's docstring
-            ForbiddenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
         # Schema: https://github.com/zapatacomputing/workflow-driver/blob/fa3eb17f1132d9c7f4960331ffe7ddbd31e02f8c/openapi/src/resources/workflow-runs.yaml#L10 # noqa: E501
         resp = self._get(
@@ -457,11 +461,11 @@ class DriverClient:
         Gets the status of a workflow run from the workflow driver
 
         Raises:
-            InvalidWorkflowRunID: see the exception's docstring
-            WorkflowRunNotFound: see the exception's docstring
-            InvalidTokenError: see the exception's docstring
-            ForbiddenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
+            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
 
         resp = self._get(
@@ -495,10 +499,10 @@ class DriverClient:
             force: if the workflow should be forcefully terminated
 
         Raises:
-            WorkflowRunNotFound: see the exception's docstring
-            InvalidTokenError: see the exception's docstring
-            ForbiddenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
 
         resp = self._post(
@@ -523,11 +527,11 @@ class DriverClient:
         Gets the workflow run artifact IDs of a workflow run from the workflow driver
 
         Raises:
-            InvalidWorkflowRunID: see the exception's docstring
-            WorkflowRunNotFound: see the exception's docstring
-            InvalidTokenError: see the exception's docstring
-            ForbiddenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
+            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
 
         resp = self._get(
@@ -559,11 +563,11 @@ class DriverClient:
         Gets workflow run artifacts from the workflow driver
 
         Raises:
-            InvalidWorkflowRunArtifactID: see the exception's docstring
-            WorkflowRunArtifactNotFound: see the exception's docstring
-            InvalidTokenError: see the exception's docstring
-            ForbiddenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunArtifactID
+            orquestra.sdk._base._driver._exceptions.WorkflowRunArtifactNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
 
         resp = self._get(
@@ -593,11 +597,11 @@ class DriverClient:
         Gets the workflow run result IDs of a workflow run from the workflow driver
 
         Raises:
-            InvalidWorkflowRunID: see the exception's docstring
-            WorkflowRunNotFound: see the exception's docstring
-            InvalidTokenError: see the exception's docstring
-            ForbiddenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
+            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
 
         resp = self._get(
@@ -627,11 +631,11 @@ class DriverClient:
         Gets workflow run results from the workflow driver
 
         Raises:
-            InvalidWorkflowRunResultID: see the exception's docstring
-            WorkflowRunResultNotFound: see the exception's docstring
-            InvalidTokenError: see the exception's docstring
-            ForbiddenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunResultID
+            orquestra.sdk._base._driver._exceptions.WorkflowRunResultNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
 
         resp = self._get(
@@ -672,20 +676,19 @@ class DriverClient:
             return ComputeEngineWorkflowResult.parse_obj(json_response)
 
     # --- Workflow Logs ---
-
     def get_workflow_run_logs(
         self, wf_run_id: _models.WorkflowRunID
-    ) -> List[_models.Message]:
+    ) -> List[_models.WorkflowLogMessage]:
         """
         Gets the logs of a workflow run from the workflow driver
 
         Raises:
-            InvalidWorkflowRunID: see the exception's docstring
-            WorkflowRunNotFound: see the exception's docstring
-            InvalidTokenError: see the exception's docstring
-            ForbiddenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
-            WorkflowRunLogsNotReadable: see the exception's docstring
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
+            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotReadable
         """
 
         resp = self._get(
@@ -707,7 +710,7 @@ class DriverClient:
         try:
             unzipped: bytes = zlib.decompress(resp.content, 16)
         except zlib.error as e:
-            raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id) from e
+            raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id, None) from e
 
         untarred = TarFile(fileobj=io.BytesIO(unzipped)).extractfile("step-logs")
         assert untarred is not None
@@ -719,45 +722,79 @@ class DriverClient:
             if len(section_str) < 1:
                 continue
 
-            events = pydantic.parse_raw_as(_models.Section, section_str)
+            events = pydantic.parse_raw_as(_models.WorkflowLogSection, section_str)
 
             for event in events:
                 messages.append(event.message)
 
         return messages
 
-    def get_task_run_logs(self, task_run_id: _models.TaskRunID) -> bytes:
+    def get_task_run_logs(
+        self,
+        wf_run_id: _models.WorkflowRunID,
+        task_inv_id: _models.TaskInvocationID,
+    ) -> List[_models.TaskLogMessage]:
         """
         Gets the logs of a task run from the workflow driver
 
         Raises:
-            InvalidTokenError: see the exception's docstring
-            ForbiddenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
+            orquestra.sdk._base._driver._exceptions.TaskRunLogsNotFound
+            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotReadable
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
 
         resp = self._get(
             self._uri_provider.uri_for("get_task_run_logs"),
-            query_params=_models.GetTaskRunLogsRequest(taskRunId=task_run_id).dict(),
+            query_params=_models.GetTaskRunLogsRequest(
+                workflowRunId=wf_run_id, taskInvocationId=task_inv_id
+            ).dict(),
         )
 
-        # TODO: Handle other errors, not specified in spec yet (ORQSDK-655)
+        # Handle errors
+        if resp.status_code == codes.NOT_FOUND:
+            raise _exceptions.TaskRunLogsNotFound(wf_run_id, task_inv_id)
+        elif resp.status_code == codes.BAD_REQUEST:
+            raise _exceptions.InvalidWorkflowRunID(wf_run_id)
+
         _handle_common_errors(resp)
 
-        # TODO: unzip, get logs (ORQSDK-654)
-        return resp.content
+        # Decompress data
+        try:
+            unzipped: bytes = zlib.decompress(resp.content, 16)
+        except zlib.error as e:
+            raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id, task_inv_id) from e
+
+        untarred = TarFile(fileobj=io.BytesIO(unzipped)).extractfile("step-logs")
+        assert untarred is not None
+        decoded = untarred.read().decode()
+
+        # Parse the decoded data as logs
+        messages = []
+        for section_str in decoded.split("\n"):
+            if len(section_str) < 1:
+                continue
+
+            events = pydantic.parse_raw_as(_models.TaskLogSection, section_str)
+
+            for event in events:
+                messages.append(event.message)
+
+        return messages
 
     def get_system_logs(self, wf_run_id: _models.WorkflowRunID) -> List[_models.SysLog]:
         """
         Get the logs of a workflow run from the workflow driver.
 
         Raises:
-            ForbiddenError: see the exception's docstring
-            InvalidTokenError: see the exception's docstring
-            InvalidWorkflowRunID: see the exception's docstring
-            WorkflowRunLogsNotFound: see the exception's docstring
-            WorkflowRunLogsNotReadable: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
+            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotFound
+            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotReadable
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
             NotImplementedError: when a log object's source_type is not a recognised
                 value, or is a value for a schema has not been defined.
         """
@@ -780,7 +817,9 @@ class DriverClient:
         try:
             unzipped: bytes = zlib.decompress(resp.content, 16)
         except zlib.error as e:
-            raise _exceptions.WorkflowRunLogsNotReadable(wf_run_id) from e
+            raise _exceptions.WorkflowRunLogsNotReadable(
+                wf_run_id, task_invocation_id=None
+            ) from e
 
         untarred = TarFile(fileobj=io.BytesIO(unzipped)).extractfile("step-logs")
         assert untarred is not None
@@ -843,11 +882,11 @@ class DriverClient:
         Gets the status of a workflow run from the workflow driver
 
         Raises:
-            InvalidWorkflowRunID: see the exception's docstring
-            WorkflowRunNotFound: see the exception's docstring
-            InvalidTokenError: see the exception's docstring
-            ForbiddenError: see the exception's docstring
-            UnknownHTTPError: see the exception's docstring
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
+            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
 
         resp = self._get(

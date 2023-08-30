@@ -18,9 +18,9 @@ from typing import Iterable, Iterator, List, Sequence
 import click
 from tabulate import tabulate
 
-from orquestra.sdk._base import _config, _dates, _env, _services, serde
+from orquestra.sdk._base import _dates, _env, _services, serde
 from orquestra.sdk._base._dates import Instant
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs
+from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk.schema import responses
 from orquestra.sdk.schema.configs import ConfigName, RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.ir import ArtifactFormat
@@ -92,21 +92,31 @@ class WrappedCorqOutputPresenter:
 
     @_format_logs.register(dict)
     @staticmethod
-    def _(logs: dict):
-        return [
-            line
-            for invocation_id, invocation_lines in logs.items()
-            for line in (f"task-invocation-id: {invocation_id}", *invocation_lines)
-        ]
+    def _(logs: dict) -> t.List[str]:
+        log_lines = []
+        for invocation_id, invocation_logs in logs.items():
+            log_lines.append(f"task-invocation-id: {invocation_id}")
+            log_lines.extend(WrappedCorqOutputPresenter._format_logs(invocation_logs))
+        return log_lines
 
     @_format_logs.register(list)
     @staticmethod
-    def _(logs: list):
+    def _(logs: list) -> t.List[str]:
         return logs
+
+    @_format_logs.register(LogOutput)
+    @staticmethod
+    def _(logs: LogOutput) -> t.List[str]:
+        output = []
+        if len(logs.out) > 0:
+            output.extend(["stdout:", *logs.out])
+        if len(logs.err) > 0:
+            output.extend(["stderr:", *logs.err])
+        return output
 
     def show_logs(
         self,
-        logs: t.Union[t.Mapping[TaskInvocationId, t.Sequence[str]], t.Sequence[str]],
+        logs: t.Union[t.Mapping[TaskInvocationId, LogOutput], LogOutput],
         log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None,
     ):
         """
@@ -247,7 +257,7 @@ class ServicePresenter:
 class LoginPresenter:
     """User-facing presentation for the steps of the login process."""
 
-    def prompt_for_login(self, login_url, url, ce):
+    def prompt_for_login(self, login_url, url):
         """Instruct the user how to log in manually."""
         click.echo("We were unable to automatically log you in.")
         click.echo("Please login to your Orquestra account using the following URL.")
@@ -257,7 +267,6 @@ class LoginPresenter:
                 "Then save the token using command: \n"
                 f"orq login -s {url} -t <paste your token here>"
             )
-            + (" --ce" if ce else " --qe")
         )
 
     def prompt_config_saved(self, url, config_name, runtime_name):
@@ -301,10 +310,10 @@ class ConfigPresenter:
                         # show config name
                         click.style(config.config_name, bold=True),
                         #
-                        # show runtime name, colour coded blue for CE and green for QE
+                        # show runtime name, colour coded blue for CE and red for QE
                         click.style(config.runtime_name, fg="blue")
                         if config.runtime_name == RuntimeName.CE_REMOTE
-                        else click.style(config.runtime_name, fg="green"),
+                        else click.style(config.runtime_name, fg="red"),
                         #
                         # show cluster URI
                         config.runtime_options["uri"],

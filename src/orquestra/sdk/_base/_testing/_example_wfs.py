@@ -49,6 +49,18 @@ def multioutput_task():
     return "Zapata", "Computing"
 
 
+@sdk.task
+def multioutput_task_failing():
+    assert False
+    return "Zapata", "Computing"
+
+
+@sdk.task(n_outputs=2)
+def multioutput_task_failing_n_outpus():
+    assert False
+    return "Zapata", "Computing"
+
+
 @sdk.workflow
 def complicated_wf():
     first_name = "emiliano"
@@ -121,6 +133,16 @@ def multioutput_task_wf():
 
 
 @sdk.workflow
+def multioutput_task_failed_wf():
+    a, b = multioutput_task_failing_n_outpus()
+    _, c = multioutput_task_failing_n_outpus()
+    d, _ = multioutput_task_failing()
+    packed = multioutput_task_failing()
+    f, g = packed
+    return a, b, c, d, packed, f, g
+
+
+@sdk.workflow
 def my_workflow():
     first_name = "alex"
     last_name = "zapata"
@@ -159,6 +181,19 @@ def task_with_git_import():  # pragma: no cover
 @sdk.workflow
 def wf_using_git_imports():
     return [task_with_git_import()]
+
+
+@sdk.task(dependency_imports=[sdk.PythonImports("inflect==7.0.0")])
+def task_throwing_library_exception():
+    import inflect  # type: ignore # noqa
+
+    p = inflect.engine()
+    p.number_to_words(1234, group=-1)
+
+
+@sdk.workflow
+def workflow_throwing_3rd_party_exception():
+    return task_throwing_library_exception()
 
 
 @sdk.task(dependency_imports=[sdk.PythonImports("polars")])
@@ -257,16 +292,19 @@ def add_with_error(a, b):
 @sdk.workflow
 def exception_wf_with_multiple_values():
     """
-       [1]
-        │
-        ▼
-       [2] => exception
-        │
-        ▼
-       [3] => won't run
-        │
-        ▼
-    [return]
+    ::
+
+           [1]
+            │
+            ▼
+           [2] => exception
+            │
+            ▼
+           [3] => won't run
+            │
+            ▼
+        [return]
+
     """
     future1 = add(37, 21)
     future2 = add_with_error(future1, future1)

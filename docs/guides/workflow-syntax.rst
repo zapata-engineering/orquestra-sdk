@@ -100,9 +100,8 @@ This scenario works, but it's not recommended, so the SDK will print a "not a @t
 What doesn't work
 =================
 
-This is a list of the gotchas we've seen our users falling for.
-Some of these would be very difficult to enable given the underlying system constraints.
-Others might be solvable, but might have had low priority.
+The following are examples of common gotchas that our users have run into, and the workarounds and/or prescribed methods of achieving the desired behaviour.
+Note that many of these cases will be the subject of future work, so the behaviour documented here is liable to change.
 
 .. only:: internal
 
@@ -120,7 +119,8 @@ This is closely related to "dynamic graphs" concept that Orquestra currently doe
     :language: python
     :dedent: 8
 
-- Workaround: extract common code to plain Python functions and use them from within tasks. Tasks should be only invoked from a workflow function.
+- Workaround: extract common code to plain Python functions and use them from within tasks.
+  Tasks should be only invoked from a workflow function.
 
 .. literalinclude:: ../examples/tests/test_workflow_syntax.py
     :start-after: def task_in_task_workaround():
@@ -154,7 +154,7 @@ During workflow definition time, tasks return proxy objects called ``ArtifactFut
 
     .. warning::
         Adopting this workaround creates separate nodes in the computational graph only to reshape your data structures.
-        Each task invocation has an overhead, and this might waste time, especially when running workflows on Quantum Engine.
+        Each task invocation has an overhead, and this might waste time.
         Please try workaround 1 first.
 
     .. literalinclude:: ../examples/tests/test_workflow_syntax.py

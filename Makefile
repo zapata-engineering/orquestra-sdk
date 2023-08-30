@@ -1,20 +1,38 @@
 ################################################################################
-# © Copyright 2021-2022 Zapata Computing Inc.
+# © Copyright 2021-2023 Zapata Computing Inc.
 ################################################################################
-include subtrees/z_quantum_actions/Makefile
 
-# We need to override test commands in 'make test' and 'make coverage' to
-# specify PYTHONPATH & install required deps. This is needed to test scripts in
-# "./bin".
+# Use just "python" as the interpreter for all make tasks. It will use your
+# virtual environment if you activate it before running make. You can override
+# the interpreter path like:
+# make test PYTHON=/tmp/other/python/version
+PYTHON="python"
 
-# (override)
+DOCS_BUILD_DIR = docs/_build
+
+clean:
+	find . -regex '^.*\(__pycache__\|\.py[co]\)$$' -delete;
+	find . -type d -name __pycache__ -exec rm -r {} \+
+	find . -type d -name '*.egg-info' -exec rm -rf {} +
+	find . -type d -name .mypy_cache -exec rm -r {} \+
+	rm -rf .pytest_cache;
+	rm -rf tests/.pytest_cache;
+	rm -rf dist build
+	rm -f .coverage*
+	rm -rf "$(DOCS_BUILD_DIR)"
+
+
 test:
-	PYTHONPATH="." $(PYTHON) -m pytest \
+	$(PYTHON) -m pytest \
 		--ignore=tests/runtime/performance \
 		--ignore=tests/sdk/typing \
 		--durations=10 \
 		docs/examples/tests \
 		tests
+
+
+# Min code-test coverage measured for the whole project required for CI checks to pass.
+MIN_COVERAGE=75
 
 
 # Option explanation:
@@ -23,10 +41,8 @@ test:
 #    tools like 'python -m coverage report'
 # - '--cov-report xml' - in addition, generate an XML report and store it in
 #    coverage.xml file. It's required to upload stats to codecov.io.
-#
-# (override)
 coverage:
-	PYTHONPATH="." $(PYTHON) -m pytest \
+	$(PYTHON) -m pytest \
 		--cov=src \
 		--cov-fail-under=$(MIN_COVERAGE) \
 		--cov-report xml \
@@ -40,8 +56,6 @@ coverage:
 
 # Reads the code coverage stats from '.coverage' file and prints a textual,
 # human-readable report to stdout.
-#
-# (no override)
 show-coverage-text-report:
 	$(PYTHON) -m coverage report --show-missing
 
@@ -60,67 +74,88 @@ user-typing:
 	$(PYTHON) -m pytest tests/sdk/typing
 
 
-# (override)
 github_actions:
 	$(PYTHON) -m pip install --upgrade pip
 	$(PYTHON) -m pip install -e '.[dev]'
 
 # Install deps required to build wheel. Used for release automation. See also:
 # https://github.com/zapatacomputing/cicd-actions/blob/67dd6765157e0baefee0dc874e0f46ccd2075657/.github/workflows/py-wheel-build-and-push.yml#L26
-#
-# (override)
+.PHONY: build-system-deps
 build-system-deps:
 	$(PYTHON) -m pip install wheel
 
-
-# The maketargets for codestyle we inherit from the subtree run "clean" each
-# time. This is bad for local development, because it breaks the editable
-# installations, and invalidates cache, so mypy takes a very long time to run.
-# The temporary fix is to override these targets here, and eventually propagate
-# it to the subtree repo.
-
-# (override)
+# TODO: change DOC to DOC201,DOC203,DOC301 - ORQSDK-965
+.PHONY: flake8
 flake8:
-	$(PYTHON) -m flake8 --ignore=E203,E266,F401,W503 --max-line-length=88 src tests docs/examples
+	$(PYTHON) -m flake8 \
+	--style=google \
+	--arg-type-hints-in-docstring=False \
+	--ignore=E203,E266,DOC,W503 \
+	--max-line-length=88 \
+	src tests docs/examples
 
-# (override)
+.PHONY: docstring-check
+docstring-check:
+	$(PYTHON) -m flake8 \
+	--select=DOC \
+	--style=google \
+	--arg-type-hints-in-docstring=False \
+	--ignore=E203,E266,DOC201,DOC203,DOC301,W503 \
+	--max-line-length=88 \
+	src tests docs/examples
+
+.PHONY: black
 black:
 	$(PYTHON) -m black --check src tests docs/examples
 
-# (override)
+.PHONY: isort
 isort:
 	$(PYTHON) -m isort --check src tests docs/examples
 
-# For mypy we additionally need to exclude one of the testing directories.
-# (override)
+.PHONY: pymarkdown
+pymarkdown:
+	$(PYTHON) -m pymarkdown scan CHANGELOG.md
+
+.PHONY: mypy
 mypy:
 	$(PYTHON) -m mypy src tests
 
 
 # Type check the project. Alternative to mypy. We'll eventually make it
 # required but we need to gradually improve ourcodebase.
-# (no override)
 .PHONY:
 pyright:
 	$(PYTHON) -m pyright src tests
 
-# (override)
-style: flake8 black isort mypy
+.PHONY:
+style:
+	@$(MAKE) pymarkdown
+	@$(MAKE) flake8
+	@$(MAKE) black
+	@$(MAKE) isort
+	@$(MAKE) mypy
 	@echo This project passes style!
 
 
-# (no override)
+.PHONY:
 style-fix:
 	black src tests docs/examples
 	isort --profile=black src tests docs/examples
 
-# (no override)
 # Run tests, but discard the ones that exceptionally slow to run locally.
 test-fast:
-	PYTHONPATH="." $(PYTHON) -m pytest \
+	$(PYTHON) -m pytest \
 		-m "not slow" \
 		--ignore=tests/runtime/performance \
 		--ignore=tests/sdk/typing \
 		--durations=10 \
 		docs/examples/tests \
 		tests
+
+
+SPHINX_OPTS = "-W"
+
+
+.PHONY: docs
+docs:
+	sphinx-build ./docs "$(DOCS_BUILD_DIR)" $(SPHINX_OPTS)

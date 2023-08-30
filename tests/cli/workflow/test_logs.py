@@ -10,7 +10,7 @@ from unittest.mock import Mock, create_autospec
 
 import pytest
 
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs
+from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk._base.cli._arg_resolvers import WFConfigResolver, WFRunResolver
 from orquestra.sdk._base.cli._dumpers import LogsDumper
 from orquestra.sdk._base.cli._repos import WorkflowRunRepo
@@ -46,12 +46,12 @@ class TestAction:
 
             logs = WorkflowLogs(
                 per_task={
-                    "task_inv1": ["my_log_1", "my_log_2"],
-                    "task_inv2": ["log3"],
+                    "task_inv1": LogOutput(out=["my_log_1", "my_log_2"], err=[]),
+                    "task_inv2": LogOutput(out=["log3"], err=[]),
                 },
-                system=["sys_log_1", "sys_log_2"],
-                env_setup=["env_log_1", "env_log_2"],
-                other=[],
+                system=LogOutput(out=["sys_log_1", "sys_log_2"], err=[]),
+                env_setup=LogOutput(["env_log_1", "env_log_2"], err=[]),
+                other=LogOutput(out=[], err=[]),
             )
             wf_run_repo.get_wf_logs = Mock(return_value=logs)
 

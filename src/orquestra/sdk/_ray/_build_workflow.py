@@ -13,16 +13,15 @@ import pydantic
 from typing_extensions import assert_never
 
 from .. import exceptions, secrets
-from .._base import _exec_ctx, _git_url_utils, _graphs, dispatch, serde
+from .._base import _exec_ctx, _git_url_utils, _graphs, _services, dispatch, serde
 from .._base._env import (
     RAY_DOWNLOAD_GIT_IMPORTS_ENV,
     RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV,
 )
 from .._base._logs import _markers
 from ..kubernetes.quantity import parse_quantity
-from ..schema import _compat, ir, responses, workflow_run
+from ..schema import ir, responses, workflow_run
 from . import _client, _id_gen
-from ._client import RayClient
 from ._wf_metadata import InvUserMetadata, pydatic_to_json_dict
 
 DEFAULT_IMAGE_TEMPLATE = "hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:{}"
@@ -155,16 +154,43 @@ class ArgumentUnwrapper:
         return self._user_fn(*args, **kwargs)
 
 
+SENTINEL = "dry_run task output"
+
+
+def _generate_nop_function(output_metadata: ir.TaskOutputMetadata):
+    def nop(*_, **__):
+        if not output_metadata.is_subscriptable:
+            return SENTINEL
+        else:
+            return (SENTINEL,) * output_metadata.n_outputs
+
+    return nop
+
+
+def _get_user_function(
+    user_fn_ref, dry_run, output_metadata: t.Optional[ir.TaskOutputMetadata]
+):
+    # Ref is None only in case of the data aggregation step
+    if user_fn_ref is None:
+        return _aggregate_outputs
+    elif not dry_run:
+        return _locate_user_fn(user_fn_ref)
+    else:
+        assert output_metadata is not None
+        return _generate_nop_function(output_metadata)
+
+
 def _make_ray_dag_node(
-    client: RayClient,
+    client: _client.RayClient,
     ray_options: t.Mapping,
     ray_args: t.Iterable[t.Any],
     ray_kwargs: t.Mapping[str, t.Any],
     args_artifact_nodes: t.Mapping,
     kwargs_artifact_nodes: t.Mapping,
-    n_outputs: t.Optional[int],
     project_dir: t.Optional[Path],
     user_fn_ref: t.Optional[ir.FunctionRef],
+    output_metadata: t.Optional[ir.TaskOutputMetadata],
+    dry_run: bool,
 ) -> _client.FunctionNode:
     """
     Prepares a Ray task that fits a single ir.TaskInvocation. The result is a
@@ -172,17 +198,20 @@ def _make_ray_dag_node(
 
     Args:
         client: Ray API facade
-        ray_options: dict passed to RayClient.add_options()
+        ray_options: dict passed to _client.RayClient.add_options()
         ray_args: constants or futures required to build the DAG
         ray_kwargs: constants or futures required to build the DAG
         args_artifact_nodes: a map of positional arg index to artifact node
             see ArgumentUnwrapper
         kwargs_artifact_nodes: a map of keyword arg name to artifact node
             see ArgumentUnwrapper
-        n_outputs: the number of outputs for this task function (if known)
         project_dir: the working directory the workflow was submitted from
         user_fn_ref: function reference for a function to be executed by Ray.
             if None - executes data aggregation step
+        output_metadata: output metadata for the user task function. Keeps number
+            of outputs and if the output is subscriptable
+        dry_run: Run the task without actually executing any user code.
+            Useful for testing infrastructure, dependency imports, etc.
     """
 
     @client.remote
@@ -194,27 +223,39 @@ def _make_ray_dag_node(
             # TODO: make the IDs required and raise an error if they're not present.
             # https://zapatacomputing.atlassian.net/browse/ORQSDK-530
             wf_run_id, task_inv_id, _ = get_current_ids()
-            with _markers.printed_task_markers(
-                wf_run_id=wf_run_id, task_inv_id=task_inv_id
+            with _markers.capture_logs(
+                logs_dir=_services.redirected_logs_dir(),
+                wf_run_id=wf_run_id,
+                task_inv_id=task_inv_id,
             ):
                 if project_dir is not None:
                     dispatch.ensure_sys_paths([str(project_dir)])
 
-                if user_fn_ref is None:
-                    serialization = False
-                    user_fn = _aggregate_outputs
-                else:
-                    serialization = True
-                    user_fn = _locate_user_fn(user_fn_ref)
+                # True for all the steps except data aggregation
+                serialization = user_fn_ref is not None
 
-                wrapped = ArgumentUnwrapper(
-                    user_fn=user_fn,
-                    args_artifact_nodes=args_artifact_nodes,
-                    kwargs_artifact_nodes=kwargs_artifact_nodes,
-                    deserialize=serialization,
-                )
+                # Try-except block covers _get_user_function and wrapped() because:
+                # _get_user_function un-pickles the inlineImported functions - and this
+                # operation can already cause exceptions
+                # wrapped() calls user function, which catches all the exceptions
+                # that happens within user code
+                try:
+                    user_fn = _get_user_function(user_fn_ref, dry_run, output_metadata)
 
-                wrapped_return = wrapped(*inner_args, **inner_kwargs)
+                    wrapped = ArgumentUnwrapper(
+                        user_fn=user_fn,
+                        args_artifact_nodes=args_artifact_nodes,
+                        kwargs_artifact_nodes=kwargs_artifact_nodes,
+                        deserialize=serialization,
+                    )
+
+                    wrapped_return = wrapped(*inner_args, **inner_kwargs)
+                except Exception as e:
+                    raise exceptions.UserTaskFailedError(
+                        f"User task with task invocation id:{task_inv_id} failed.",
+                        wf_run_id if wf_run_id else "",
+                        task_inv_id if task_inv_id else "",
+                    ) from e
 
                 packed: responses.WorkflowResult = (
                     serde.result_from_artifact(wrapped_return, ir.ArtifactFormat.AUTO)
@@ -223,14 +264,14 @@ def _make_ray_dag_node(
                 )
                 unpacked: t.Tuple[responses.WorkflowResult, ...]
 
-                if n_outputs is not None and n_outputs > 1:
+                if output_metadata is not None and output_metadata.n_outputs > 1:
                     unpacked = tuple(
                         serde.result_from_artifact(
                             wrapped_return[i], ir.ArtifactFormat.AUTO
                         )
                         if serialization
                         else wrapped_return[i]
-                        for i in range(n_outputs)
+                        for i in range(output_metadata.n_outputs)
                     )
                 else:
                     unpacked = (packed,)
@@ -336,9 +377,10 @@ def _ray_resources_for_custom_image(image_name: str) -> t.Mapping[str, float]:
 
 
 def make_ray_dag(
-    client: RayClient,
+    client: _client.RayClient,
     workflow_def: ir.WorkflowDef,
     workflow_run_id: workflow_run.WorkflowRunId,
+    dry_run: bool,
     project_dir: t.Optional[Path] = None,
 ):
     # a mapping of "artifact ID" <-> "the ray Future needed to get the value"
@@ -421,9 +463,10 @@ def make_ray_dag(
             ray_kwargs=kwargs,
             args_artifact_nodes=pos_args_artifact_nodes,
             kwargs_artifact_nodes=kwargs_artifact_nodes,
-            n_outputs=_compat.n_outputs(task_def=user_task, task_inv=invocation),
             project_dir=project_dir,
             user_fn_ref=user_task.fn_ref,
+            output_metadata=user_task.output_metadata,
+            dry_run=dry_run,
         )
 
         for output_id in invocation.output_ids:
@@ -453,9 +496,12 @@ def make_ray_dag(
         ray_kwargs={},
         args_artifact_nodes=pos_args_artifact_nodes,
         kwargs_artifact_nodes={},
-        n_outputs=len(pos_args),
         project_dir=None,
         user_fn_ref=None,
+        output_metadata=ir.TaskOutputMetadata(
+            n_outputs=len(pos_args), is_subscriptable=False
+        ),
+        dry_run=False,
     )
 
     # Data aggregation step is run with catch_exceptions=True - so it returns tuple of

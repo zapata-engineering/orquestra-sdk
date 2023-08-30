@@ -8,7 +8,7 @@ In-process implementation of the runtime interface.
 import typing as t
 import warnings
 from contextlib import contextmanager
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _dates, abc
@@ -16,7 +16,6 @@ from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.responses import WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
-    ProjectId,
     RunStatus,
     State,
     TaskRun,
@@ -132,7 +131,10 @@ class InProcessRuntime(abc.RuntimeInterface):
         return f"{wf_def.name}-{len(self._output_store) + 1}"
 
     def create_workflow_run(
-        self, workflow_def: ir.WorkflowDef, project: t.Optional[ProjectRef]
+        self,
+        workflow_def: ir.WorkflowDef,
+        project: t.Optional[ProjectRef],
+        dry_run: bool,
     ) -> WfRunId:
         if project:
             warnings.warn(
@@ -141,6 +143,12 @@ class InProcessRuntime(abc.RuntimeInterface):
                 category=exceptions.UnsupportedRuntimeFeature,
             )
 
+        if dry_run:
+            warnings.warn(
+                "InProcessRuntime doesn't support `dry_run`."
+                " A Regular task code will be executed.",
+                category=exceptions.UnsupportedRuntimeFeature,
+            )
         run_id = self._gen_next_run_id(workflow_def)
 
         self._start_time_store[run_id] = _dates.now()

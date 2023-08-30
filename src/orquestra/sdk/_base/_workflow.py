@@ -5,7 +5,6 @@ import ast
 import functools
 import inspect
 import warnings
-from enum import Enum
 from pathlib import Path
 from types import FunctionType
 from typing import (
@@ -26,7 +25,7 @@ from typing import (
 from typing_extensions import ParamSpec
 
 import orquestra.sdk.schema.ir as ir
-from orquestra.sdk.exceptions import ConfigNameNotFoundError, WorkflowSyntaxError
+from orquestra.sdk.exceptions import WorkflowSyntaxError
 from orquestra.sdk.schema.workflow_run import ProjectId, WorkspaceId
 
 from .. import secrets
@@ -43,10 +42,6 @@ from ._dsl import (
     get_fn_ref,
     parse_custom_name,
 )
-from ._in_process_runtime import InProcessRuntime
-from ._spaces._resolver import resolve_studio_ref
-from ._spaces._structs import ProjectRef
-from .abc import RuntimeInterface
 
 
 # ----- Workflow exceptions  -----
@@ -159,6 +154,7 @@ class WorkflowDef(Generic[_R]):
         project_dir: Optional[Union[str, Path]] = None,
         workspace_id: Optional[WorkspaceId] = None,
         project_id: Optional[ProjectId] = None,
+        dry_run: bool = False,
     ) -> _api.WorkflowRun:
         """
         Schedules workflow for execution.
@@ -171,46 +167,27 @@ class WorkflowDef(Generic[_R]):
                 working directory is used.
             workspace_id: ID of the workspace for workflow - supported only on CE
             project_id: ID of the project for workflow - supported only on CE
-
+            dry_run: Run the workflow without actually executing any task code.
+                Useful for testing infrastructure, dependency imports, etc.
         Raises:
             orquestra.sdk.exceptions.DirtyGitRepo: (warning) when a task def used by
                 this workflow def has a "GitImport" and the git repo that contains it
                 has uncommitted changes.
-            ProjectInvalidError: when only 1 out of project and workspace is passed
+            orquestra.sdk.exceptions.ProjectInvalidError: when only 1 out of project and
+                workspace is passed.
 
         """
-        _config: _api.RuntimeConfig
-        if isinstance(config, _api.RuntimeConfig):
-            _config = config
-        elif isinstance(config, str):
-            _config = _api.RuntimeConfig.load(config)
-        else:
-            raise TypeError(
-                f"'config' argument to `run()` has unsupported type {type(config)}."
-            )
-        runtime: RuntimeInterface
-        if _config._runtime_name == "IN_PROCESS":
-            runtime = InProcessRuntime()
-        else:
-            runtime = _config._get_runtime(project_dir=project_dir)
-
-        # In close future there will be multiple ways of figuring out the
-        # appropriate runtime to use, based on `config`. Regardless of this
-        # logic, the runtime should always be resolved.
-        assert runtime is not None
-
-        _project: Optional[ProjectRef] = resolve_studio_ref(workspace_id, project_id)
-
         # The DirtyGitRepo warning can be raised here.
         wf_def_model = self.model
 
-        wf_run = _api.WorkflowRun._start(
+        return _api.WorkflowRun.start_from_ir(
             wf_def=wf_def_model,
-            runtime=runtime,
-            config=_config,
-            project=_project,
+            config=config,
+            workspace_id=workspace_id,
+            project_id=project_id,
+            project_dir=project_dir,
+            dry_run=dry_run,
         )
-        return wf_run
 
     def with_resources(
         self,
@@ -226,7 +203,8 @@ class WorkflowDef(Generic[_R]):
 
         Doesn't modify the existing workflow definition, returns a new one.
 
-        Example usage:
+        Example usage::
+
             wf_run = my_workflow().with_resources(
                 cpu="10", memory="10Gi"
             ).run("my_cluster")
@@ -417,8 +395,7 @@ class _CalledFunction(NamedTuple):
     line_no: Optional[int] = None
 
 
-class Sentinel(Enum):
-    NO_MODULE = object()
+NO_MODULE_SENTINEL = object()
 
 
 def _get_callable(
@@ -434,13 +411,13 @@ def _get_callable(
         _fn : Callable corresponding to the call_statement
         module_name : Name of the callable's module
     """
-    found_module = Sentinel.NO_MODULE
+    found_module: Any = NO_MODULE_SENTINEL
     _fn = None
     module_name = None
     for node in call_statement:
         if node.node_type is NodeReferenceType.CALL:
             # For CALL nodes we try to retrieve the callable object
-            if found_module is not Sentinel.NO_MODULE:
+            if found_module is not NO_MODULE_SENTINEL:
                 # This raises:
                 #    AttributeError if the function isn't found
                 try:
@@ -467,7 +444,7 @@ def _get_callable(
         else:
             # try to retrieve the module from where the callable is imported
             try:
-                if found_module is not Sentinel.NO_MODULE:
+                if found_module is not NO_MODULE_SENTINEL:
                     found_module = getattr(found_module, node.name)
                 else:
                     found_module = fn.__globals__[node.name]
