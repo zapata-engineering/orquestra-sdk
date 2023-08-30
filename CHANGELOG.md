@@ -3,6 +3,60 @@
 ## Unreleased
 
 🚨 *Breaking Changes*
+* When `auto` config is passed from local machine, config set in `ORQ_CURRENT_CONFIG` env variable will be used. Using `auto` locally without that env variable set, will result in an error.
+* Removed `orquestra.sdk.v2` module. Please use `orquestra.sdk` instead.
+* Bump Ray version to 2.6.3
+
+🔥 *Features*
+
+* Adding `dry_run` parameter to `Workflow.run()`. It allows to test resources, dependencies and infrastructure while ignoring user task code.
+* Added `orq reset` as a shortcut for `orq down`, `orq up`
+
+🧟 *Deprecations*
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+* Package-dependent exception thrown from the task no-longer causes the red-herring error of `no module named <xxx>` in the logs. It prints proper exception
+
+💅 *Improvements*
+
+🥷 *Internal*
+* Reformatted docs source files to put each sentence on its own line.
+* Removed `UnsavedConfigChangesError`
+
+📃 *Docs*
+
+## v0.55.0
+
+🚨 *Breaking Changes*
+
+* Quantum Engine support has been removed.
+* All log return types have been changes from `Sequence[str]` to `LogOutput` which contains an `out` and an `err` property for the standard out and standard error, respectively.
+* Task logs on Compute Engine will now be available under the dictionary `task_logs` with the task invocation ID as the key. Task logs from workflows submitted with v0.54.0 and earlier that ran on Compute Engine will be available under "other" logs.
+
+🔥 *Features*
+* Task logs are now available from Compute Engine.
+
+🧟 *Deprecations*
+* `list_workflow_runs`' project parameter emits a warning and will be removed in the next release. This change doesn't affect the system's behavior, the parameter was ignored anyway.
+
+💅 *Improvements*
+* `orq wf *` and `orq task *` commands (other than `orq wf submit`) won't prompt for project parameter anymore, as it was ignored anyway
+* On macOS and Linux, task logs are stored in individual files instead being correlated with markers from Ray logs.
+
+📃 *Docs*
+* Corrected unclear language in `Secrets` docs.
+* Corrected unclear language in the quickstart guide.
+* Fixed resource management doc incorrectly stating that 10k == 10^7.
+* Removed outdated references to the `wf.prepare()` method.
+* Fixed wording and formatting issues in Resource Management, Workflow Syntax, Runtime Configuration, and Workflow Runs, and Parametrized Workflows.
+* Updated Jupyter tutorial's content.
+
+## v0.54.0
+
+🚨 *Breaking Changes*
 * `orq wf list` command does not accept `-p, --project-id` parameter anymore
 * `orq wf list` only prompts for a single config now
 * Deprecated functions `sdk.wfprint()` and `sdk.workflow_logger()` have been removed.
