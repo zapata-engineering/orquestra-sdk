@@ -340,8 +340,8 @@ class RayRuntime(RuntimeInterface):
             # any more precide information.
             message = (
                 "The workflow encountered an issue. "
-                "Please consult the logs for more information "
-                "or re-run the workflow with RAY_IGNORE_UNHANDLED_ERRORS=0"
+                "Please consult the logs for more information. "
+                f"`orq wf logs {workflow_run_id}`"
             )
 
             # Scan the logs for telltales of known failure modes.
