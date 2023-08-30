@@ -46,7 +46,7 @@ class TaskRun:
     ):
         """
         This object isn't intended to be directly initialized. Instead, please use
-        `WorkflowRun.get_tasks()`.
+        ``WorkflowRun.get_tasks()``.
         """
         self._task_run_id = task_run_id
         self._task_invocation_id = task_invocation_id
@@ -333,13 +333,12 @@ def current_run_ids() -> CurrentRunIDs:
 
     Task run ID is a globally unique identifier of executing an invocation exactly once.
 
-    This function is intended to be used within the task code in the following way:
-    ```
-    @sdk.task
-    def t():
-        wf_run_id, task_inv_id, task_run_id =  sdk.current_run_ids()
-        ...
-    ```
+    This function is intended to be used within the task code in the following way::
+
+        @sdk.task
+        def t():
+            wf_run_id, task_inv_id, task_run_id =  sdk.current_run_ids()
+            ...
 
     Returns:
         The IDs associated with the current run, in a named tuple. See: CurrentRunIDs

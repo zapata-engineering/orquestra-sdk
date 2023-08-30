@@ -13,7 +13,7 @@ from orquestra.sdk._base._db._migration import (
 )
 from orquestra.sdk._base._env import DB_PATH_ENV
 from orquestra.sdk._base.abc import WorkflowRepo
-from orquestra.sdk.exceptions import WorkflowNotFoundError
+from orquestra.sdk.exceptions import WorkflowRunNotFoundError
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import WorkflowRunId
@@ -89,7 +89,7 @@ class WorkflowDB(WorkflowRepo, AbstractContextManager):
             workflow_run_id: the ID of the workflow to be returned.
 
         Raises:
-            WorkflowNotFoundError: raised when no matching workflow exists in the
+            WorkflowRunNotFoundError: raised when no matching workflow exists in the
             database.
 
         Returns:
@@ -103,7 +103,7 @@ class WorkflowDB(WorkflowRepo, AbstractContextManager):
             )
             result = cur.fetchone()
             if result is None or len(result) == 0:
-                raise WorkflowNotFoundError(
+                raise WorkflowRunNotFoundError(
                     f"Workflow run with ID {workflow_run_id} not found"
                 )
             return StoredWorkflowRun(

@@ -183,6 +183,19 @@ def wf_using_git_imports():
     return [task_with_git_import()]
 
 
+@sdk.task(dependency_imports=[sdk.PythonImports("inflect==7.0.0")])
+def task_throwing_library_exception():
+    import inflect  # type: ignore # noqa
+
+    p = inflect.engine()
+    p.number_to_words(1234, group=-1)
+
+
+@sdk.workflow
+def workflow_throwing_3rd_party_exception():
+    return task_throwing_library_exception()
+
+
 @sdk.task(dependency_imports=[sdk.PythonImports("polars")])
 def task_with_python_imports() -> int:
     import polars  # type: ignore # noqa
@@ -279,16 +292,19 @@ def add_with_error(a, b):
 @sdk.workflow
 def exception_wf_with_multiple_values():
     """
-       [1]
-        │
-        ▼
-       [2] => exception
-        │
-        ▼
-       [3] => won't run
-        │
-        ▼
-    [return]
+    ::
+
+           [1]
+            │
+            ▼
+           [2] => exception
+            │
+            ▼
+           [3] => won't run
+            │
+            ▼
+        [return]
+
     """
     future1 = add(37, 21)
     future2 = add_with_error(future1, future1)

@@ -22,7 +22,6 @@ from .._base._logs import _markers
 from ..kubernetes.quantity import parse_quantity
 from ..schema import ir, responses, workflow_run
 from . import _client, _id_gen
-from ._client import RayClient
 from ._wf_metadata import InvUserMetadata, pydatic_to_json_dict
 
 DEFAULT_IMAGE_TEMPLATE = "hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:{}"
@@ -182,7 +181,7 @@ def _get_user_function(
 
 
 def _make_ray_dag_node(
-    client: RayClient,
+    client: _client.RayClient,
     ray_options: t.Mapping,
     ray_args: t.Iterable[t.Any],
     ray_kwargs: t.Mapping[str, t.Any],
@@ -199,7 +198,7 @@ def _make_ray_dag_node(
 
     Args:
         client: Ray API facade
-        ray_options: dict passed to RayClient.add_options()
+        ray_options: dict passed to _client.RayClient.add_options()
         ray_args: constants or futures required to build the DAG
         ray_kwargs: constants or futures required to build the DAG
         args_artifact_nodes: a map of positional arg index to artifact node
@@ -235,16 +234,28 @@ def _make_ray_dag_node(
                 # True for all the steps except data aggregation
                 serialization = user_fn_ref is not None
 
-                user_fn = _get_user_function(user_fn_ref, dry_run, output_metadata)
+                # Try-except block covers _get_user_function and wrapped() because:
+                # _get_user_function un-pickles the inlineImported functions - and this
+                # operation can already cause exceptions
+                # wrapped() calls user function, which catches all the exceptions
+                # that happens within user code
+                try:
+                    user_fn = _get_user_function(user_fn_ref, dry_run, output_metadata)
 
-                wrapped = ArgumentUnwrapper(
-                    user_fn=user_fn,
-                    args_artifact_nodes=args_artifact_nodes,
-                    kwargs_artifact_nodes=kwargs_artifact_nodes,
-                    deserialize=serialization,
-                )
+                    wrapped = ArgumentUnwrapper(
+                        user_fn=user_fn,
+                        args_artifact_nodes=args_artifact_nodes,
+                        kwargs_artifact_nodes=kwargs_artifact_nodes,
+                        deserialize=serialization,
+                    )
 
-                wrapped_return = wrapped(*inner_args, **inner_kwargs)
+                    wrapped_return = wrapped(*inner_args, **inner_kwargs)
+                except Exception as e:
+                    raise exceptions.UserTaskFailedError(
+                        f"User task with task invocation id:{task_inv_id} failed.",
+                        wf_run_id if wf_run_id else "",
+                        task_inv_id if task_inv_id else "",
+                    ) from e
 
                 packed: responses.WorkflowResult = (
                     serde.result_from_artifact(wrapped_return, ir.ArtifactFormat.AUTO)
@@ -366,7 +377,7 @@ def _ray_resources_for_custom_image(image_name: str) -> t.Mapping[str, float]:
 
 
 def make_ray_dag(
-    client: RayClient,
+    client: _client.RayClient,
     workflow_def: ir.WorkflowDef,
     workflow_run_id: workflow_run.WorkflowRunId,
     dry_run: bool,

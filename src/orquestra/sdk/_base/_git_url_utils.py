@@ -72,9 +72,10 @@ def parse_git_url(url: str) -> GitURL:
     """
     Parse a git URL from a string
     Accepted formats:
-        <protocol>://[<user>@]<host>[:<port>]/<path>[?<query>]
-        <user>@<host>:<path>
-        ssh://<user>@<host>:<repo>
+
+    * ``<protocol>://[<user>@]<host>[:<port>]/<path>[?<query>]``
+    * ``<user>@<host>:<path>``
+    * ``ssh://<user>@<host>:<repo>``
     """
     try:
         parsed = parse_url(url)

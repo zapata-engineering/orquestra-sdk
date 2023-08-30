@@ -278,7 +278,7 @@ class WorkflowRun:
                 stderr.
 
         Returns:
-            State: The state of the finished workflow.
+            orquestra.sdk.schema.workflow_run.State: The state of the finished workflow.
         """
 
         assert frequency > 0.0, "Frequency must be a positive non-zero value"
