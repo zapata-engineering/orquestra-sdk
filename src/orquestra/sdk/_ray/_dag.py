@@ -21,11 +21,7 @@ from orquestra.sdk.schema.responses import WorkflowResult
 from .. import exceptions
 from .._base import _dates, _services, serde
 from .._base._db import WorkflowDB
-from .._base._env import (
-    _RAY_IGNORE_UNHANDLED_ERRORS,
-    RAY_GLOBAL_WF_RUN_ID_ENV,
-    RAY_SHOW_UNHANDLED_ERRORS,
-)
+from .._base._env import RAY_GLOBAL_WF_RUN_ID_ENV
 from .._base._logs._interfaces import LogReader
 from .._base._spaces._structs import ProjectRef
 from .._base.abc import RuntimeInterface
@@ -292,15 +288,6 @@ class RayRuntime(RuntimeInterface):
             dry_run=dry_run,
         )
         wf_user_metadata = WfUserMetadata(workflow_def=workflow_def)
-
-        # Our default behaviour w.r.t. showing unhandled errors is the opposite of
-        # Ray's. This maps between the user-facing "RAY_SHOW_UNHANDLED_ERRORS" and the
-        # ray-facing "RAY_IGNORE_UNHANDLED_ERRORS".
-        show_unhandled_ray_errors = os.environ.get(RAY_SHOW_UNHANDLED_ERRORS)
-        if show_unhandled_ray_errors == "1":
-            os.environ.pop(_RAY_IGNORE_UNHANDLED_ERRORS, None)
-        else:
-            os.environ[_RAY_IGNORE_UNHANDLED_ERRORS] = "1"
 
         # Unfortunately, Ray doesn't validate uniqueness of workflow IDs. Let's
         # hope we won't get a collision.

@@ -108,26 +108,6 @@ Example:
     ORQ_RAY_SET_CUSTOM_IMAGE_RESOURCES=1
 """
 
-RAY_SHOW_UNHANDLED_ERRORS = "RAY_SHOW_UNHANDLED_ERRORS"
-"""
-Used to show unhandled errors raised in Ray.
-
-This is the user-facing partner to _RAY_IGNORE_UNHANDLED_ERRORS.
-
-Example:
-    RAY_SHOW_UNHANDLED_ERRORS=1
-"""
-
-
-_RAY_IGNORE_UNHANDLED_ERRORS = "RAY_IGNORE_UNHANDLED_ERRORS"
-"""
-Used to suppress unhandled errors raised in Ray.
-
-This is the ray-side partner to RAY_SHOW_UNHANDLED_ERRORS, and should not be set
-directly by the user.
-"""
-
-
 # --------------------------------- MLFlow -----------------------------------
 
 MLFLOW_CR_NAME = "ORQ_MLFLOW_CR_NAME"
