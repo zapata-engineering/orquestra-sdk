@@ -82,7 +82,7 @@ github_actions:
 build-system-deps:
 	$(PYTHON) -m pip install wheel
 
-# TODO: change DOC to DOC301 - ORQSDK-965
+# TODO: change DOC to DOC201,DOC203,DOC301 - ORQSDK-965
 .PHONY: flake8
 flake8:
 	$(PYTHON) -m flake8 \
