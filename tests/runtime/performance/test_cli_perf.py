@@ -85,7 +85,7 @@ def orq_workflow_run(ray_cluster, orq_project_dir):
     output = _run_orq_command(["wf", "submit", "-c", "local", "workflow_defs"])
     # Parse the stdout to get the workflow ID
     stdout = output.stdout.decode()
-    match = re.match("Workflow submitted! Run ID: (?P<wf_run_id>.*)", stdout)
+    match = re.match("Workflow Submitted! Run ID: (?P<wf_run_id>.*)", stdout)
     assert match is not None
     workflow_id = match.groupdict().get("wf_run_id")
     assert workflow_id is not None

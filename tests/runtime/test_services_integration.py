@@ -34,7 +34,8 @@ class TestRayCLI:
             monkeypatch.chdir(tmp_path)
             # As of Ray 2.3.1 setting paths to "." is a reliable way to make 'ray start'
             # fail.
-            monkeypatch.setenv("ORQ_RAY_TEMP_PATH", ".")
+            # Since Ray 2.6 temp path has to be absolute path, not relative
+            monkeypatch.setenv("ORQ_RAY_TEMP_PATH", str(tmp_path))
             monkeypatch.setenv("ORQ_RAY_STORAGE_PATH", ".")
             monkeypatch.setenv("ORQ_RAY_PLASMA_PATH", ".")
 

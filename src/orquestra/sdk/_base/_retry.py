@@ -14,7 +14,8 @@ def retry(
     """
     A decorator useful for when a function should be retried.
 
-    Usage:
+    Usage::
+
         @retry(attempts=2, allowed_exceptions=(RuntimeError, ConnectionError))
         def my_function_that_can_fail():
             ...

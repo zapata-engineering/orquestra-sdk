@@ -14,8 +14,9 @@ def check_jwt_without_signature_verification(token: str):
     Only used as a sanity check when reading a token from the CLI.
 
     Raises:
-        ExpiredTokenError: if the current date is after the token's expiry
-        InvalidTokenError: if the token is not a JWT
+        orquestra.sdk.exceptions.ExpiredTokenError: if the current date is after the
+            token's expiry
+        orquestra.sdk.exceptions.InvalidTokenError: if the token is not a JWT
     """
     try:
         _ = jwt.decode(token, options={"verify_signature": False, "verify_exp": True})

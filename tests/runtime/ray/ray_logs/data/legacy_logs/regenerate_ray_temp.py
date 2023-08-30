@@ -77,7 +77,6 @@ def main():
         *test_logs_dir.glob("raylet.???"),
         *test_logs_dir.glob("ray_client_server.???"),
     ]:
-
         print(f"- {delete_path}")
         try:
             # 1. Assume the path is a directory.

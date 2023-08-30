@@ -45,66 +45,6 @@ SNAPSHOT_VERSIONS = [
 ]
 
 
-class TestNOutputs:
-    class TestCurrentIR:
-        @staticmethod
-        @pytest.fixture
-        def wf_def():
-            return unpacking.unpacking_wf().model
-
-        @staticmethod
-        def test_single_output_task(wf_def: ir.WorkflowDef):
-            # Given
-            pairs = _get_task_by_name(wf_def=wf_def, task_name="single_output")
-            assert len(pairs) == 1
-            task_def, task_inv = pairs[0]
-
-            # When
-            n_outputs = _compat.n_outputs(task_def, task_inv)
-
-            # Then
-            assert n_outputs == 1
-
-        @staticmethod
-        def test_multi_output(wf_def: ir.WorkflowDef):
-            # Given
-            pairs = _get_task_by_name(wf_def=wf_def, task_name="two_outputs")
-            assert (
-                len(pairs) == 2
-            ), "There should be two invocations in the test workflow"
-
-            for task_def, task_inv in pairs:
-                # When
-                n_outputs = _compat.n_outputs(task_def, task_inv)
-
-                # Then
-                assert n_outputs == 2
-
-    @pytest.mark.parametrize("snapshot_version", SNAPSHOT_VERSIONS)
-    class TestOldIR:
-        @staticmethod
-        @pytest.fixture
-        def wf_def(snapshot_version: str):
-            path = DATA_PATH / f"unpacking_wf_{snapshot_version}.json"
-            return ir.WorkflowDef.parse_file(path)
-
-        @staticmethod
-        @pytest.mark.filterwarnings("ignore::orquestra.sdk.exceptions.VersionMismatch")
-        def test_single_output_task(wf_def: ir.WorkflowDef):
-            # Given
-            pairs = _get_task_by_name(wf_def=wf_def, task_name="single_output")
-            assert len(pairs) == 1
-            task_def, task_inv = pairs[0]
-
-            # When
-            n_outputs = _compat.n_outputs(task_def, task_inv)
-
-            # Then
-            assert n_outputs == 1
-
-        # No test for "multi_output" because "n_outputs" isn't reliable with old IRs.
-
-
 class TestResultIsPacked:
     class TestCurrentIR:
         @staticmethod

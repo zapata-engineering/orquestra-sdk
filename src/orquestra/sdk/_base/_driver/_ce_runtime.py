@@ -111,7 +111,7 @@ class CERuntime(RuntimeInterface):
         self._client = client
 
     def create_workflow_run(
-        self, workflow_def: WorkflowDef, project: Optional[ProjectRef]
+        self, workflow_def: WorkflowDef, project: Optional[ProjectRef], dry_run: bool
     ) -> WorkflowRunId:
         """
         Schedules a workflow definition for execution
@@ -120,6 +120,7 @@ class CERuntime(RuntimeInterface):
             workflow_def: the IR of the workflow to run
             project: Project dir (workspace and project ID) on which the workflow
             will be run
+            dry_run: If True, code of the tasks will not be executed
         Raises:
             WorkflowSyntaxError: when the workflow definition was rejected by the remote
                 cluster
@@ -149,7 +150,7 @@ class CERuntime(RuntimeInterface):
             workflow_def_id = self._client.create_workflow_def(workflow_def, project)
 
             workflow_run_id = self._client.create_workflow_run(
-                workflow_def_id, resources
+                workflow_def_id, resources, dry_run
             )
         except _exceptions.InvalidWorkflowDef as e:
             raise exceptions.WorkflowSyntaxError(

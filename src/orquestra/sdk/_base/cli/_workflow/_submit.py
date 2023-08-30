@@ -23,7 +23,8 @@ class Action:
     def __init__(
         self,
         prompter=_prompts.Prompter(),
-        presenter=_presenters.WrappedCorqOutputPresenter(),
+        submit_presenter=_presenters.WFRunPresenter(),
+        error_presenter=_presenters.WrappedCorqOutputPresenter(),
         wf_def_repo=_repos.WorkflowDefRepo(),
         wf_run_repo=_repos.WorkflowRunRepo(),
         config_resolver: t.Optional[_arg_resolvers.ConfigResolver] = None,
@@ -31,7 +32,8 @@ class Action:
     ):
         # text IO
         self._prompter = prompter
-        self._presenter = presenter
+        self._submit_presenter = submit_presenter
+        self._error_presenter = error_presenter
 
         # data sources
         self._wf_run_repo = wf_run_repo
@@ -57,7 +59,7 @@ class Action:
                 module, name, config, workspace_id, project_id, force
             )
         except Exception as e:
-            self._presenter.show_error(e)
+            self._error_presenter.show_error(e)
 
     def _on_cmd_call_with_exceptions(
         self,
@@ -145,4 +147,4 @@ class Action:
                 # abort
                 return
 
-        self._presenter.show_submitted_wf_run(wf_run_id)
+        self._submit_presenter.show_submitted_wf_run(wf_run_id)
