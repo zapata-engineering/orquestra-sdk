@@ -92,8 +92,8 @@ flake8:
 	--max-line-length=88 \
 	src tests docs/examples
 
-.PHONY: docstring_check
-docstring_check:
+.PHONY: docstring-check
+docstring-check:
 	$(PYTHON) -m flake8 \
 	--select=DOC \
 	--style=google \
