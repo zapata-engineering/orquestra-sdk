@@ -84,9 +84,25 @@ github_actions:
 build-system-deps:
 	$(PYTHON) -m pip install wheel
 
+# TODO: change DOC to DOC201,DOC203,DOC301 - ORQSDK-965
 .PHONY: flake8
 flake8:
-	$(PYTHON) -m flake8 --ignore=E203,E266,W503 --max-line-length=88 src tests docs/examples
+	$(PYTHON) -m flake8 \
+	--style=google \
+	--arg-type-hints-in-docstring=False \
+	--ignore=E203,E266,DOC,W503 \
+	--max-line-length=88 \
+	src tests docs/examples
+
+.PHONY: docstring-check
+docstring-check:
+	$(PYTHON) -m flake8 \
+	--select=DOC \
+	--style=google \
+	--arg-type-hints-in-docstring=False \
+	--ignore=E203,E266,DOC201,DOC203,DOC301,W503 \
+	--max-line-length=88 \
+	src tests docs/examples
 
 .PHONY: black
 black:
