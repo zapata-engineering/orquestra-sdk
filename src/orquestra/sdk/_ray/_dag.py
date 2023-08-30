@@ -359,7 +359,10 @@ class RayRuntime(RuntimeInterface):
             env_logs = self.get_workflow_logs(workflow_run_id).env_setup
             for line in reversed(env_logs.err + env_logs.out):
                 if re.search(
-                    r"Runtime env creation failed for \d* times, don't retry any more",
+                    r"Runtime env creation failed for \d* times, don't retry any more"
+                    "|"
+                    r"ray.exceptions.RuntimeEnvSetupError: "
+                    r"Failed to set up runtime environment.",
                     line,
                 ):
                     message = (
