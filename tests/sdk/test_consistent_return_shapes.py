@@ -25,6 +25,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import typing as t
 from pathlib import Path
@@ -428,6 +429,10 @@ class TestAPI:
     "mock_config_env_var",
     "mock_db_env_var",
 )
+@pytest.mark.skipif(
+    sys.platform.startswith("win32"),
+    reason="Windows uses different symbols than macOS and Linux",
+)
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.slow
 class TestCLI:
@@ -450,11 +455,11 @@ class TestCLI:
         )
 
         m = re.match(
-            r"Workflow submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
+            r"Workflow Submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
         )
         assert m is not None
         run_id_ray = m.group("run_id").strip()
-        assert "Workflow submitted!" in run_ce.stdout.decode()
+        assert "Workflow Submitted!" in run_ce.stdout.decode()
 
         # WHEN
         results_ray = (
@@ -481,9 +486,10 @@ class TestCLI:
         assert [line.strip() for line in results_ce] == [
             f"Workflow run {mock_ce_run_single} has 1 outputs.",
             "",
-            "Output 0. Object type: <class 'list'>",
-            "Pretty printed value:",
-            f"{single_result_vanilla}",
+            "Index   Type             Pretty Printed",
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            "0       <class 'list'>   [1, 2, 3]",
+            "",
             "",
         ]
 
@@ -508,11 +514,11 @@ class TestCLI:
         )
 
         m = re.match(
-            r"Workflow submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
+            r"Workflow Submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
         )
         assert m is not None
         run_id_ray = m.group("run_id").strip()
-        assert "Workflow submitted!" in run_ce.stdout.decode()
+        assert "Workflow Submitted!" in run_ce.stdout.decode()
 
         # WHEN
         results_ray = (
@@ -539,13 +545,11 @@ class TestCLI:
         assert [line.strip() for line in results_ce] == [
             f"Workflow run {mock_ce_run_multiple} has 2 outputs.",
             "",
-            "Output 0. Object type: <class 'list'>",
-            "Pretty printed value:",
-            f"{multiple_result_vanilla[0]}",
+            "Index   Type             Pretty Printed",
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            "0       <class 'list'>   [1, 2, 3]",
+            "1       <class 'list'>   [1, 2, 3]",
             "",
-            "Output 1. Object type: <class 'list'>",
-            "Pretty printed value:",
-            f"{multiple_result_vanilla[1]}",
             "",
         ]
 
@@ -582,7 +586,7 @@ class TestCLIDownloadDir:
         ), f"STDOUT: {run_ce.stdout.decode()},\n\nSTDERR: {run_ce.stderr.decode()}"
 
         m = re.match(
-            r"Workflow submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
+            r"Workflow Submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
         )
         assert m is not None
         run_id_ray = m.group("run_id").strip()
@@ -654,7 +658,7 @@ class TestCLIDownloadDir:
         )
 
         m = re.match(
-            r"Workflow submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
+            r"Workflow Submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
         )
         assert m is not None
         run_id_ray = m.group("run_id").strip()

@@ -21,7 +21,8 @@ class Action:
 
     def __init__(
         self,
-        presenter=_presenters.WrappedCorqOutputPresenter(),
+        logs_presenter=_presenters.LogsPresenter(),
+        error_presenter=_presenters.WrappedCorqOutputPresenter(),
         dumper=_dumpers.LogsDumper(),
         wf_run_repo=_repos.WorkflowRunRepo(),
         config_resolver: t.Optional[_arg_resolvers.WFConfigResolver] = None,
@@ -43,14 +44,15 @@ class Action:
         )
 
         # output
-        self._presenter = presenter
+        self._logs_presenter = logs_presenter
+        self._error_presenter = error_presenter
         self._dumper = dumper
 
     def on_cmd_call(self, *args, **kwargs):
         try:
             self._on_cmd_call_with_exceptions(*args, **kwargs)
         except Exception as e:
-            self._presenter.show_error(e)
+            self._error_presenter.show_error(e)
 
     def _on_cmd_call_with_exceptions(
         self,
@@ -85,6 +87,6 @@ class Action:
                 wf_run_id=resolved_wf_run_id,
                 dir_path=download_dir,
             )
-            self._presenter.show_dumped_wf_logs(dump_path)
+            self._logs_presenter.show_dumped_wf_logs(dump_path)
         else:
-            self._presenter.show_logs(logs)
+            self._logs_presenter.show_logs(logs)

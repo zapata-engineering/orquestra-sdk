@@ -12,7 +12,7 @@ import pytest
 
 from orquestra.sdk._base import _services
 from orquestra.sdk._base.cli import _arg_resolvers
-from orquestra.sdk._base.cli._services import _up
+from orquestra.sdk._base.cli._services import _down
 from orquestra.sdk._base.cli._ui import _presenters
 from orquestra.sdk.schema.responses import ServiceResponse
 
@@ -21,7 +21,7 @@ class TestAction:
     """
     Test boundary::
 
-        [_up.Action]->[Prompter]
+        [_down.Action]->[Prompter]
     """
 
     class TestPassingAllValues:
@@ -30,6 +30,7 @@ class TestAction:
         def service():
             service = create_autospec(_services.Service)
             service.name = "testing"
+            service.is_running.return_value = False
 
             return service
 
@@ -40,7 +41,7 @@ class TestAction:
             service_resolver.resolve.return_value = [service]
             presenter = create_autospec(_presenters.ServicePresenter)
 
-            action = _up.Action(
+            action = _down.Action(
                 presenter=presenter,
                 service_resolver=service_resolver,
             )
@@ -53,33 +54,26 @@ class TestAction:
             action.on_cmd_call(manage_ray=None, manage_all=None)
 
             # Then
-            action._presenter.progress_spinner.assert_called_with("Starting")
+            action._presenter.progress_spinner.assert_called_with("Stopping")
             action._presenter.show_services.assert_called_with(
                 services=[
-                    ServiceResponse(name=service.name, is_running=True, info="Started!")
+                    ServiceResponse(name=service.name, is_running=False, info=None)
                 ]
             )
 
         @staticmethod
-        def test_failure(service, action: _up.Action):
+        def test_failure(service, action: _down.Action):
             # Given
-            service.up.side_effect = subprocess.CalledProcessError(
+            service.down.side_effect = subprocess.CalledProcessError(
                 returncode=1,
                 cmd=[
                     "ray",
-                    "start",
-                    "--head",
-                    "--temp-dir=.",
-                    "--storage=.",
-                    "--plasma-directory=.",
+                    "stop",
                 ],
-                output=(
-                    "Usage stats collection is disabled.\nLocal node IP: 127.0.0.1"
-                ).encode(),
+                output=b"",
                 stderr=inspect.cleandoc(
                     """
-                        File "pyarrow/error.pxi", line 100, in pyarrow.lib.check_status
-                        pyarrow.lib.ArrowInvalid: URI has empty scheme: '.'
+                        Could not terminate `...` due to ...
                     """
                 ).encode(),
             )
@@ -92,17 +86,14 @@ class TestAction:
                 [
                     ServiceResponse(
                         name=service.name,
-                        is_running=False,
+                        is_running=True,
                         info=inspect.cleandoc(
                             """
                                command:
-                               ['ray', 'start', '--head', '--temp-dir=.', '--storage=.', '--plasma-directory=.']
+                               ['ray', 'stop']
                                stdout:
-                               Usage stats collection is disabled.
-                               Local node IP: 127.0.0.1
                                stderr:
-                               File "pyarrow/error.pxi", line 100, in pyarrow.lib.check_status
-                               pyarrow.lib.ArrowInvalid: URI has empty scheme: '.'
+                               Could not terminate `...` due to ...
                            """  # noqa: E501
                         ),
                     )

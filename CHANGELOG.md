@@ -12,6 +12,7 @@
 
 * Adding `dry_run` parameter to `Workflow.run()`. It allows to test resources, dependencies and infrastructure while ignoring user task code.
 * Added `orq reset` as a shortcut for `orq down`, `orq up`
+* New CLI output formatting for a subset of commands.
 
 🧟 *Deprecations*
 

@@ -4,10 +4,12 @@
 import sys
 import typing as t
 from datetime import datetime, timezone
+from io import StringIO
 from pathlib import Path
 from unittest.mock import Mock, create_autospec
 
 import pytest
+from rich.console import Console
 
 from orquestra import sdk
 from orquestra.sdk._base import serde
@@ -17,7 +19,6 @@ from orquestra.sdk._base._spaces._structs import Project, Workspace
 from orquestra.sdk._base.cli._ui import _errors
 from orquestra.sdk._base.cli._ui import _models as ui_models
 from orquestra.sdk._base.cli._ui import _presenters
-from orquestra.sdk._base.cli._ui._corq_format import per_command
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import ArtifactFormat
 from orquestra.sdk.schema.responses import ResponseStatusCode, ServiceResponse
@@ -41,124 +42,245 @@ def sys_exit_mock(monkeypatch):
     return exit_mock
 
 
+CONSOLE_WIDTH = 120
+
+
+@pytest.fixture
+def test_console():
+    return Console(file=StringIO(), width=CONSOLE_WIDTH)
+
+
+class TestLogsPresenter:
+    @staticmethod
+    @pytest.fixture
+    def rule():
+        def _inner(prefix: t.Optional[str] = None):
+            line = "─" * CONSOLE_WIDTH
+            if prefix is None:
+                return line
+            return f"{prefix} {line[len(prefix)+1:]}"
+
+        return _inner
+
+    @staticmethod
+    def test_show_logs_with_dict(test_console: Console):
+        # Given
+        task_invocation = "my_task_invocation"
+        task_logs = LogOutput(out=["my_log"], err=[])
+        logs = {task_invocation: task_logs}
+
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        assert "my_task_invocation" in output
+        assert "stdout" in output
+        assert "my_log" in output
+
+    @staticmethod
+    def test_show_logs_with_logoutput(test_console: Console):
+        # Given
+        logs = LogOutput(out=["my_log"], err=[])
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        assert "stdout" in output
+        assert "my_log" in output
+
+    @staticmethod
+    def test_print_stdout_when_available(test_console: Console):
+        # Given
+        logs = LogOutput(out=["my_log"], err=[])
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        assert "stdout" in output
+        assert "stderr" not in output
+
+    @staticmethod
+    def test_print_stderr_when_available(test_console: Console):
+        # Given
+        logs = LogOutput(out=[], err=["my_log"])
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        assert "stdout" not in output
+        assert "stderr" in output
+
+    @staticmethod
+    def test_print_both_when_available(test_console: Console):
+        # Given
+        logs = LogOutput(out=["my_log"], err=["my_log"])
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        assert "stdout" in output
+        assert "stderr" in output
+
+    @staticmethod
+    def test_show_dumped_wf_logs(test_console: Console):
+        # Given
+        dummy_path: Path = Path("/my/cool/path")
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_dumped_wf_logs(dummy_path)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        assert f"Workflow logs saved at {dummy_path}" in output
+
+    @staticmethod
+    def test_with_mapped_logs(test_console, rule: t.Callable[..., str]):
+        # Given
+        logs = {
+            "<task invocation id sentinel>": LogOutput(
+                out=[
+                    "<log line 1 sentinel>",
+                    "<log line 2 sentinel>",
+                ],
+                err=[],
+            )
+        }
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        for line in [
+            "<task invocation id sentinel>",
+            "stdout",
+            "<log line 1 sentinel>",
+            "<log line 2 sentinel>",
+        ]:
+            assert line in output
+        assert rule() not in output
+
+    @staticmethod
+    def test_with_logoutput_logs(test_console: Console):
+        # Given
+        logs = LogOutput(out=["<log line 1 sentinel>", "<log line 2 sentinel>"], err=[])
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        expected = "\n".join(
+            [
+                "                                  ",
+                "  stdout   <log line 1 sentinel>  ",
+                "           <log line 2 sentinel>  ",
+                "                                  ",
+                "",
+            ]
+        )
+        assert output == expected
+
+    @staticmethod
+    def test_with_log_type(test_console, rule: t.Callable[..., str]):
+        # Given
+        logs = LogOutput(out=["<log line 1 sentinel>", "<log line 2 sentinel>"], err=[])
+        log_type = Mock(value="<log type sentinel>")
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs, log_type=log_type)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        expected = "\n".join(
+            [
+                rule("<log type sentinel> logs"),
+                "                                  ",
+                "  stdout   <log line 1 sentinel>  ",
+                "           <log line 2 sentinel>  ",
+                "                                  ",
+                rule(),
+                "",
+            ]
+        )
+        assert expected == output
+
+    @staticmethod
+    def test_stderr_output(test_console: Console):
+        # Given
+        logs = LogOutput(out=[], err=["<log line 1 sentinel>", "<log line 2 sentinel>"])
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        expected = "\n".join(
+            [
+                "                                  ",
+                "  stderr   <log line 1 sentinel>  ",
+                "           <log line 2 sentinel>  ",
+                "                                  ",
+                "",
+            ]
+        )
+        assert output == expected
+
+    @staticmethod
+    def test_both_output(test_console: Console):
+        # Given
+        logs = LogOutput(out=["<log line 1 sentinel>"], err=["<log line 2 sentinel>"])
+        presenter = _presenters.LogsPresenter(console=test_console)
+
+        # When
+        presenter.show_logs(logs)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        expected = "\n".join(
+            [
+                "                                  ",
+                "  stdout   <log line 1 sentinel>  ",
+                "  stderr   <log line 2 sentinel>  ",
+                "                                  ",
+                "",
+            ]
+        )
+        assert output == expected
+
+
 class TestWrappedCorqOutputPresenter:
-    class TestPassingDataToCorq:
-        """
-        Tests WrappedCorqOutputPresenter's methods that delegate formatting outputs to
-        the older, corq formatters.
-        """
-
-        @staticmethod
-        def test_show_submitted_wf_run(monkeypatch):
-            # Given
-            pretty_print_mock = Mock()
-            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
-
-            wf_run_id = "wf.1"
-
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_submitted_wf_run(wf_run_id)
-
-            # Then
-            called_args = pretty_print_mock.call_args.args
-            response_model = called_args[0]
-            assert response_model.workflow_runs[0].id == wf_run_id
-
-        @staticmethod
-        def test_show_logs_with_dict(monkeypatch):
-            # Given
-            pretty_print_mock = Mock()
-            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
-            task_invocation = "my_task_invocation"
-            task_logs = LogOutput(out=["my_log"], err=[])
-            logs = {task_invocation: task_logs}
-
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs)
-
-            # Then
-            called_args = pretty_print_mock.call_args.args
-            response_model = called_args[0]
-            assert "stdout:" in response_model.logs
-            assert task_logs.out[0] in response_model.logs
-            assert task_invocation in response_model.logs[0]
-
-        @staticmethod
-        def test_show_logs_with_logoutput(monkeypatch):
-            # Given
-            pretty_print_mock = Mock()
-            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
-            logs = LogOutput(out=["my_log"], err=[])
-
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs)
-
-            # Then
-            called_args = pretty_print_mock.call_args.args
-            response_model = called_args[0]
-            assert "stdout:" in response_model.logs
-            assert logs.out[0] in response_model.logs
-
-        @staticmethod
-        def test_print_stdout_when_available(monkeypatch):
-            # Given
-            pretty_print_mock = Mock()
-            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
-            logs = LogOutput(out=["my_log"], err=[])
-
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs)
-
-            # Then
-            called_args = pretty_print_mock.call_args.args
-            response_model = called_args[0]
-            assert "stdout:" in response_model.logs
-            assert "stderr:" not in response_model.logs
-
-        @staticmethod
-        def test_print_stderr_when_available(monkeypatch):
-            # Given
-            pretty_print_mock = Mock()
-            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
-            logs = LogOutput(out=[], err=["my_log"])
-
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs)
-
-            # Then
-            called_args = pretty_print_mock.call_args.args
-            response_model = called_args[0]
-            assert "stdout:" not in response_model.logs
-            assert "stderr:" in response_model.logs
-
-        @staticmethod
-        def test_print_both_when_available(monkeypatch):
-            # Given
-            pretty_print_mock = Mock()
-            monkeypatch.setattr(per_command, "pretty_print_response", pretty_print_mock)
-            logs = LogOutput(out=["my_log"], err=["my_log"])
-
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs)
-
-            # Then
-            called_args = pretty_print_mock.call_args.args
-            response_model = called_args[0]
-            assert "stdout:" in response_model.logs
-            assert "stderr:" in response_model.logs
-
     class TestPrinting:
         """
         Tests WrappedCorqOutputPresenter's methods that print outputs directly.
@@ -176,126 +298,6 @@ class TestWrappedCorqOutputPresenter:
             # Then
             captured = capsys.readouterr()
             assert f"Workflow run {wf_run_id} stopped" in captured.out
-
-        @staticmethod
-        def test_show_dumped_wf_logs(capsys):
-            # Given
-            dummy_path: Path = Path("/my/cool/path")
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_dumped_wf_logs(dummy_path)
-
-            # Then
-            captured = capsys.readouterr()
-            assert f"Workflow logs saved at {dummy_path}" in captured.out
-
-    class TestShowLogs:
-        @staticmethod
-        def test_with_mapped_logs(capsys):
-            # Given
-            logs = {
-                "<task invocation id sentinel>": LogOutput(
-                    out=[
-                        "<log line 1 sentinel>",
-                        "<log line 2 sentinel>",
-                    ],
-                    err=[],
-                )
-            }
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs)
-
-            # Then
-            captured = capsys.readouterr()
-            for line in [
-                "task-invocation-id: <task invocation id sentinel>",
-                "stdout:",
-                "<log line 1 sentinel>",
-                "<log line 2 sentinel>",
-            ]:
-                assert line in captured.out
-            assert "=" * 80 not in captured.out
-
-        @staticmethod
-        def test_with_logoutput_logs(capsys):
-            # Given
-            logs = LogOutput(
-                out=["<log line 1 sentinel>", "<log line 2 sentinel>"], err=[]
-            )
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs)
-
-            # Then
-            captured = capsys.readouterr()
-            assert (
-                "stdout:\n<log line 1 sentinel>\n<log line 2 sentinel>\n"
-                in captured.out
-            )
-            assert "=" * 80 not in captured.out
-
-        @staticmethod
-        def test_with_log_type(capsys):
-            # Given
-            logs = LogOutput(
-                out=["<log line 1 sentinel>", "<log line 2 sentinel>"], err=[]
-            )
-            log_type = Mock(value="<log type sentinel>")
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs, log_type=log_type)
-
-            # Then
-            captured = capsys.readouterr()
-            for line in [
-                "=== <LOG TYPE SENTINEL> LOGS ===================================================",  # noqa: E501
-                "stdout:",
-                "<log line 1 sentinel>",
-                "<log line 2 sentinel>",
-                "================================================================================",  # noqa: E501
-            ]:
-                assert line in captured.out
-
-        @staticmethod
-        def test_stderr_output(capsys):
-            # Given
-            logs = LogOutput(
-                out=[], err=["<log line 1 sentinel>", "<log line 2 sentinel>"]
-            )
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs)
-
-            # Then
-            captured = capsys.readouterr()
-            assert (
-                "stderr:\n<log line 1 sentinel>\n<log line 2 sentinel>\n"
-                in captured.out
-            )
-
-        @staticmethod
-        def test_both_output(capsys):
-            # Given
-            logs = LogOutput(
-                out=["<log line 1 sentinel>"], err=["<log line 2 sentinel>"]
-            )
-            presenter = _presenters.WrappedCorqOutputPresenter()
-
-            # When
-            presenter.show_logs(logs)
-
-            # Then
-            captured = capsys.readouterr()
-            assert (
-                "stdout:\n<log line 1 sentinel>\nstderr:\n<log line 2 sentinel>\n"
-                in captured.out
-            )
 
     @staticmethod
     def test_handling_error(monkeypatch, sys_exit_mock):
@@ -324,145 +326,189 @@ class TestWrappedCorqOutputPresenter:
 class TestArtifactPresenter:
     class TestDumpedWFResult:
         @staticmethod
-        def test_json(capsys):
+        def test_json(test_console: Console):
             # Given
             details = serde.DumpDetails(
                 file_path=Path("tests/some-path/wf.1234_1.json"),
                 format=ArtifactFormat.JSON,
             )
-            presenter = _presenters.ArtifactPresenter()
+            presenter = _presenters.ArtifactPresenter(console=test_console)
 
             # When
             presenter.show_dumped_artifact(details)
 
             # Then
-            captured = capsys.readouterr()
+            assert isinstance(test_console.file, StringIO)
+            output = test_console.file.getvalue()
             # We can't assert on the full path because separators are
             # platform-dependent.
-            assert "Artifact saved at tests" in captured.out
-            assert "wf.1234_1.json as a text json file." in captured.out
+            assert "Artifact saved at tests" in output
+            assert "wf.1234_1.json as a text json file." in output
 
         @staticmethod
-        def test_pickle(capsys):
+        def test_pickle(test_console: Console):
             # Given
             details = serde.DumpDetails(
                 file_path=Path("tests/some-path/wf.1234_1.pickle"),
                 format=ArtifactFormat.ENCODED_PICKLE,
             )
-            presenter = _presenters.ArtifactPresenter()
+            presenter = _presenters.ArtifactPresenter(console=test_console)
 
             # When
             presenter.show_dumped_artifact(details)
 
             # Then
-            captured = capsys.readouterr()
+            assert isinstance(test_console.file, StringIO)
+            output = test_console.file.getvalue()
             # We can't assert on the full path because separators are
             # platform-dependent.
-            assert "Artifact saved at tests" in captured.out
-            assert "wf.1234_1.pickle as a binary pickle file." in captured.out
+            assert "Artifact saved at tests" in output
+            assert "wf.1234_1.pickle as a binary pickle file." in output
 
         @staticmethod
-        def test_other_format(capsys):
+        def test_other_format(test_console: Console):
             # Given
             details = serde.DumpDetails(
                 file_path=Path("tests/some-path/wf.1234_1.npz"),
                 format=ArtifactFormat.NUMPY_ARRAY,
             )
-            presenter = _presenters.ArtifactPresenter()
+            presenter = _presenters.ArtifactPresenter(console=test_console)
 
             # When
             presenter.show_dumped_artifact(details)
 
             # Then
-            captured = capsys.readouterr()
+            assert isinstance(test_console.file, StringIO)
+            output = test_console.file.getvalue()
             # We can't assert on the full path because separators are
             # platform-dependent.
-            assert "Artifact saved at tests" in captured.out
-            assert "wf.1234_1.npz as NUMPY_ARRAY." in captured.out
+            assert "Artifact saved at tests" in output
+            assert "wf.1234_1.npz as NUMPY_ARRAY." in output
 
     @staticmethod
-    def test_show_workflow_outputs(capsys):
+    @pytest.mark.skipif(
+        sys.platform.startswith("win32"),
+        reason="Windows uses different symbols than macOS and Linux",
+    )
+    def test_show_workflow_outputs(test_console: Console):
         # Given
         values = [set([21, 38]), {"hello": "there"}]
         wf_run_id = "wf.1234"
-        presenter = _presenters.ArtifactPresenter()
+        presenter = _presenters.ArtifactPresenter(console=test_console)
 
         # When
         presenter.show_workflow_outputs(values, wf_run_id)
 
         # Then
-        captured = capsys.readouterr()
-        assert (
-            "Workflow run wf.1234 has 2 outputs.\n"
-            "\n"
-            "Output 0. Object type: <class 'set'>\n"
-            "Pretty printed value:\n"
-            "{21, 38}\n"
-            "\n"
-            "Output 1. Object type: <class 'dict'>\n"
-            "Pretty printed value:\n"
-            "{'hello': 'there'}\n"
-        ) == captured.out
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        expected = "\n".join(
+            [
+                "Workflow run wf.1234 has 2 outputs.",
+                "                                               ",
+                "  Index   Type             Pretty Printed      ",
+                " ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ",
+                "  0       <class 'set'>    {21, 38}            ",
+                "  1       <class 'dict'>   {'hello': 'there'}  ",
+                "                                               ",
+                "",
+            ]
+        )
+        assert output == expected
 
     @staticmethod
-    def test_show_task_outputs(capsys):
+    @pytest.mark.skipif(
+        sys.platform.startswith("win32"),
+        reason="Windows uses different symbols than macOS and Linux",
+    )
+    def test_show_task_outputs(test_console: Console):
         # Given
         values = [set([21, 38]), {"hello": "there"}]
         wf_run_id = "wf.1234"
         task_inv_id = "inv6"
-        presenter = _presenters.ArtifactPresenter()
+        presenter = _presenters.ArtifactPresenter(console=test_console)
 
         # When
         presenter.show_task_outputs(values, wf_run_id, task_inv_id)
 
         # Then
-        captured = capsys.readouterr()
-        assert (
-            "In workflow wf.1234, task invocation inv6 produced 2 outputs.\n"
-            "\n"
-            "Output 0. Object type: <class 'set'>\n"
-            "Pretty printed value:\n"
-            "{21, 38}\n"
-            "\n"
-            "Output 1. Object type: <class 'dict'>\n"
-            "Pretty printed value:\n"
-            "{'hello': 'there'}\n"
-        ) == captured.out
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        expected = "\n".join(
+            [
+                "In workflow wf.1234, task invocation inv6 produced 2 outputs.",
+                "                                               ",
+                "  Index   Type             Pretty Printed      ",
+                " ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ",
+                "  0       <class 'set'>    {21, 38}            ",
+                "  1       <class 'dict'>   {'hello': 'there'}  ",
+                "                                               ",
+                "",
+            ]
+        )
+        assert output == expected
 
 
 class TestServicesPresenter:
     class TestShowServices:
-        def test_running(self, capsys):
+        def test_running(self, test_console: Console):
             # Given
             services = [ServiceResponse(name="mocked", is_running=True, info=None)]
-            presenter = _presenters.ServicePresenter()
+            presenter = _presenters.ServicePresenter(console=test_console)
             # When
             presenter.show_services(services)
             # Then
-            captured = capsys.readouterr()
-            assert "mocked  Running" in captured.out
+            assert isinstance(test_console.file, StringIO)
+            output = test_console.file.getvalue()
+            expected = "\n".join(
+                [
+                    "                       ",
+                    "  mocked   Running     ",
+                    "                       ",
+                    "",
+                ]
+            )
+            assert output == expected
 
-        def test_not_running(self, capsys):
+        def test_not_running(self, test_console: Console):
             # Given
             services = [ServiceResponse(name="mocked", is_running=False, info=None)]
-            presenter = _presenters.ServicePresenter()
+            presenter = _presenters.ServicePresenter(console=test_console)
             # When
             presenter.show_services(services)
             # Then
-            captured = capsys.readouterr()
-            assert "mocked  Not Running" in captured.out
+            assert isinstance(test_console.file, StringIO)
+            output = test_console.file.getvalue()
+            expected = "\n".join(
+                [
+                    "                           ",
+                    "  mocked   Not Running     ",
+                    "                           ",
+                    "",
+                ]
+            )
+            assert output == expected
 
-        def test_with_info(self, capsys):
+        def test_with_info(self, test_console: Console):
             # Given
             services = [
                 ServiceResponse(name="mocked", is_running=False, info="something")
             ]
-            presenter = _presenters.ServicePresenter()
+            presenter = _presenters.ServicePresenter(console=test_console)
             # When
             presenter.show_services(services)
             # Then
-            captured = capsys.readouterr()
-            assert "mocked  Not Running  something" in captured.out
+            assert isinstance(test_console.file, StringIO)
+            output = test_console.file.getvalue()
+            expected = "\n".join(
+                [
+                    "                                    ",
+                    "  mocked   Not Running   something  ",
+                    "                                    ",
+                    "",
+                ]
+            )
+            assert output == expected
 
     @staticmethod
     def test_show_failure(capsys, sys_exit_mock):
@@ -604,6 +650,26 @@ ET_INSTANT_2 = Instant(
 
 class TestWorkflowRunPresenter:
     @staticmethod
+    def test_show_submitted_wf_run(test_console: Console):
+        # Given
+        wf_run_id = "wf.1"
+
+        presenter = _presenters.WFRunPresenter(console=test_console)
+
+        # When
+        presenter.show_submitted_wf_run(wf_run_id)
+
+        # Then
+        expected = "Workflow Submitted! Run ID: wf.1\n"
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        assert output == expected
+
+    @staticmethod
+    @pytest.mark.skipif(
+        sys.platform.startswith("win32"),
+        reason="Windows uses different symbols than macOS and Linux",
+    )
     @pytest.mark.parametrize(
         "summary,expected_path",
         [
@@ -660,10 +726,10 @@ class TestWorkflowRunPresenter:
         ],
     )
     def test_show_wf_run(
-        monkeypatch, capsys, summary: ui_models.WFRunSummary, expected_path: Path
+        monkeypatch, test_console, summary: ui_models.WFRunSummary, expected_path: Path
     ):
         # Given
-        presenter = _presenters.WFRunPresenter()
+        presenter = _presenters.WFRunPresenter(console=test_console)
         monkeypatch.setattr(
             _presenters,
             "_format_datetime",
@@ -673,10 +739,50 @@ class TestWorkflowRunPresenter:
         presenter.show_wf_run(summary)
 
         # Then
-        captured = capsys.readouterr()
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
 
         expected = expected_path.read_text()
-        assert captured.out == expected
+        assert output == expected
+
+    @staticmethod
+    @pytest.mark.skipif(
+        sys.platform.startswith("win32"),
+        reason="Windows uses different symbols than macOS and Linux",
+    )
+    def test_show_wf_list(monkeypatch: pytest.MonkeyPatch, test_console: Console):
+        # Given
+        expected_path = DATA_DIR / "list_wf_runs.txt"
+        summary = ui_models.WFList(
+            wf_rows=[
+                ui_models.WFList.WFRow(
+                    workflow_run_id="wf1",
+                    status="mocked status",
+                    tasks_succeeded="x/y",
+                    start_time=UTC_INSTANT,
+                ),
+                ui_models.WFList.WFRow(
+                    workflow_run_id="wf2",
+                    status="mocked status",
+                    tasks_succeeded="x/y",
+                    start_time=None,
+                ),
+            ]
+        )
+        presenter = _presenters.WFRunPresenter(console=test_console)
+        monkeypatch.setattr(
+            _presenters,
+            "_format_datetime",
+            lambda x: "Fri Feb 24 08:26:07 2023" if x else "",
+        )
+        # When
+        presenter.show_wf_list(summary)
+
+        # Then
+        assert isinstance(test_console.file, StringIO)
+        output = test_console.file.getvalue()
+        expected = expected_path.read_text()
+        assert output == expected
 
 
 class TestPromptPresenter:
