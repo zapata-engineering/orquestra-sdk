@@ -43,10 +43,8 @@ class Action:
         responses = []
         success = True
 
-        with self._presenter.show_progress(
-            resolved_services, label="Starting"
-        ) as progress:
-            for service in progress:
+        with self._presenter.progress_spinner("Starting"):
+            for service in resolved_services:
                 try:
                     service.up()
 

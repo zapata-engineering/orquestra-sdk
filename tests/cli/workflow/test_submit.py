@@ -51,7 +51,8 @@ class TestAction:
             project = "project'"
 
             prompter = create_autospec(_prompts.Prompter)
-            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
+            submit_presenter = create_autospec(_presenters.WFRunPresenter)
+            error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
 
             wf_run_id = "wf.test"
             wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
@@ -65,7 +66,8 @@ class TestAction:
 
             action = _submit.Action(
                 prompter=prompter,
-                presenter=presenter,
+                submit_presenter=submit_presenter,
+                error_presenter=error_presenter,
                 wf_run_repo=wf_run_repo,
                 wf_def_repo=wf_def_repo,
             )
@@ -90,7 +92,7 @@ class TestAction:
             )
 
             # We expect telling the user the wf run ID.
-            presenter.show_submitted_wf_run.assert_called_with(wf_run_id)
+            submit_presenter.show_submitted_wf_run.assert_called_with(wf_run_id)
 
     class TestOmittingName:
         @staticmethod
@@ -109,7 +111,8 @@ class TestAction:
             prompter = create_autospec(_prompts.Prompter)
             prompter.choice.return_value = selected_name
 
-            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
+            submit_presenter = create_autospec(_presenters.WFRunPresenter)
+            error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
 
             wf_run_id = "wf.test"
             wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
@@ -125,7 +128,8 @@ class TestAction:
 
             action = _submit.Action(
                 prompter=prompter,
-                presenter=presenter,
+                submit_presenter=submit_presenter,
+                error_presenter=error_presenter,
                 wf_run_repo=wf_run_repo,
                 wf_def_repo=wf_def_repo,
             )
@@ -151,7 +155,7 @@ class TestAction:
             )
 
             # We expect telling the user the wf run ID.
-            presenter.show_submitted_wf_run.assert_called_with(wf_run_id)
+            submit_presenter.show_submitted_wf_run.assert_called_with(wf_run_id)
 
         @staticmethod
         @pytest.mark.parametrize("force", [False, True])
@@ -167,8 +171,8 @@ class TestAction:
 
             prompter = create_autospec(_prompts.Prompter)
 
-            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
-            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
+            submit_presenter = create_autospec(_presenters.WFRunPresenter)
+            error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
 
             wf_run_id = "wf.test"
             wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
@@ -184,7 +188,8 @@ class TestAction:
 
             action = _submit.Action(
                 prompter=prompter,
-                presenter=presenter,
+                submit_presenter=submit_presenter,
+                error_presenter=error_presenter,
                 wf_run_repo=wf_run_repo,
                 wf_def_repo=wf_def_repo,
             )
@@ -210,7 +215,7 @@ class TestAction:
             )
 
             # We expect telling the user the wf run ID.
-            presenter.show_submitted_wf_run.assert_called_with(wf_run_id)
+            submit_presenter.show_submitted_wf_run.assert_called_with(wf_run_id)
 
         @staticmethod
         @pytest.mark.parametrize("force", [False, True])
@@ -223,7 +228,8 @@ class TestAction:
             project = "project"
 
             prompter = create_autospec(_prompts.Prompter)
-            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
+            submit_presenter = create_autospec(_presenters.WFRunPresenter)
+            error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
             wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
             wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
             wf_def_repo.get_worklow_names.side_effect = (
@@ -232,7 +238,8 @@ class TestAction:
 
             action = _submit.Action(
                 prompter=prompter,
-                presenter=presenter,
+                submit_presenter=submit_presenter,
+                error_presenter=error_presenter,
                 wf_run_repo=wf_run_repo,
                 wf_def_repo=wf_def_repo,
             )
@@ -252,7 +259,7 @@ class TestAction:
 
             # We expect presenting the error.
             _assert_called_with_type(
-                presenter.show_error, exceptions.NoWorkflowDefinitionsFound
+                error_presenter.show_error, exceptions.NoWorkflowDefinitionsFound
             )
 
         @staticmethod
@@ -265,7 +272,8 @@ class TestAction:
             project = "project"
 
             prompter = create_autospec(_prompts.Prompter)
-            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
+            submit_presenter = create_autospec(_presenters.WFRunPresenter)
+            error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
             wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
 
             sys_path = [module, "foo", "bar"]
@@ -278,7 +286,8 @@ class TestAction:
 
             action = _submit.Action(
                 prompter=prompter,
-                presenter=presenter,
+                submit_presenter=submit_presenter,
+                error_presenter=error_presenter,
                 wf_run_repo=wf_run_repo,
                 wf_def_repo=wf_def_repo,
             )
@@ -298,7 +307,7 @@ class TestAction:
 
             # We expect telling the user about the error.
             _assert_called_with_type(
-                presenter.show_error, exceptions.WorkflowDefinitionModuleNotFound
+                error_presenter.show_error, exceptions.WorkflowDefinitionModuleNotFound
             )
 
     class TestDirtyRepo:
@@ -322,7 +331,8 @@ class TestAction:
             # Simulate a user saying "yes"
             prompter.confirm.return_value = True
 
-            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
+            submit_presenter = create_autospec(_presenters.WFRunPresenter)
+            error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
 
             wf_run_id = "wf.test"
             wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
@@ -345,7 +355,8 @@ class TestAction:
 
             action = _submit.Action(
                 prompter=prompter,
-                presenter=presenter,
+                submit_presenter=submit_presenter,
+                error_presenter=error_presenter,
                 wf_run_repo=wf_run_repo,
                 wf_def_repo=wf_def_repo,
             )
@@ -363,7 +374,7 @@ class TestAction:
             prompter.confirm.assert_called()
 
             # We expect telling the user the wf run ID.
-            presenter.show_submitted_wf_run.assert_called_with(wf_run_id)
+            submit_presenter.show_submitted_wf_run.assert_called_with(wf_run_id)
 
         @staticmethod
         def test_force():
@@ -376,7 +387,8 @@ class TestAction:
             force = True
 
             prompter = create_autospec(_prompts.Prompter)
-            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
+            submit_presenter = create_autospec(_presenters.WFRunPresenter)
+            error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
 
             wf_run_id = "wf.test"
             wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
@@ -399,7 +411,8 @@ class TestAction:
 
             action = _submit.Action(
                 prompter=prompter,
-                presenter=presenter,
+                submit_presenter=submit_presenter,
+                error_presenter=error_presenter,
                 wf_run_repo=wf_run_repo,
                 wf_def_repo=wf_def_repo,
             )
@@ -417,7 +430,7 @@ class TestAction:
             prompter.confirm.assert_not_called()
 
             # We expect telling the user the wf run ID.
-            presenter.show_submitted_wf_run.assert_called_with(wf_run_id)
+            submit_presenter.show_submitted_wf_run.assert_called_with(wf_run_id)
 
     class TestProjectResolve:
         @pytest.mark.parametrize("workspace_support", [True, False])
@@ -428,7 +441,8 @@ class TestAction:
             config = "cluster_z"
 
             prompter = create_autospec(_prompts.Prompter)
-            presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
+            submit_presenter = create_autospec(_presenters.WFRunPresenter)
+            error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
 
             wf_run_id = "wf.test"
             wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
@@ -454,7 +468,8 @@ class TestAction:
 
             action = _submit.Action(
                 prompter=prompter,
-                presenter=presenter,
+                submit_presenter=submit_presenter,
+                error_presenter=error_presenter,
                 wf_run_repo=wf_run_repo,
                 wf_def_repo=wf_def_repo,
                 spaces_resolver=spaces_resolver,
@@ -491,4 +506,4 @@ class TestAction:
                 )
 
             # We expect telling the user the wf run ID.
-            presenter.show_submitted_wf_run.assert_called_with(wf_run_id)
+            submit_presenter.show_submitted_wf_run.assert_called_with(wf_run_id)

@@ -6,65 +6,108 @@ Utilities for presenting human-readable text output from dorq commands. These ar
 mostly adapters over the corq's formatters.
 """
 import os
-import pprint
 import sys
 import typing as t
 import webbrowser
 from contextlib import contextmanager
 from functools import singledispatchmethod
 from pathlib import Path
-from typing import Iterable, Iterator, List, Sequence
+from typing import Optional, Sequence
 
 import click
+from rich.box import SIMPLE_HEAVY
+from rich.console import Console, Group, RenderableType
+from rich.live import Live
+from rich.pretty import Pretty
+from rich.rule import Rule
+from rich.spinner import Spinner
+from rich.table import Column, Table
 from tabulate import tabulate
 
-from orquestra.sdk._base import _dates, _env, _services, serde
+from orquestra.sdk._base import _dates, _env, serde
 from orquestra.sdk._base._dates import Instant
 from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk.schema import responses
 from orquestra.sdk.schema.configs import ConfigName, RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.ir import ArtifactFormat
-from orquestra.sdk.schema.workflow_run import (
-    TaskInvocationId,
-    WorkflowRun,
-    WorkflowRunId,
-    WorkflowRunOnlyID,
-)
+from orquestra.sdk.schema.workflow_run import TaskInvocationId, WorkflowRunId
 
 from . import _errors
 from . import _models as ui_models
-from ._corq_format import per_command
 
 
-class WrappedCorqOutputPresenter:
+class RichPresenter:
+    def __init__(self, console: Optional[Console] = None):
+        self._console = console or Console()
+
+    @contextmanager
+    def progress_spinner(self, spinner_label: str = "Loading"):
+        with Live(
+            Spinner("dots", spinner_label), console=self._console, transient=True
+        ) as live:
+            yield live
+
+
+class LogsPresenter(RichPresenter):
     """
-    Uses corq's responses and formatters for pretty-printing dorq data.
+    Present workflow and task logs
     """
 
-    def show_wf_runs_list(self, wf_runs: List[WorkflowRun]):
-        resp = responses.GetWorkflowRunResponse(
-            meta=responses.ResponseMetadata(
-                success=True,
-                code=responses.ResponseStatusCode.OK,
-                message="Success",
-            ),
-            workflow_runs=wf_runs,
-        )
-        per_command.pretty_print_response(resp, project_dir=None)
+    @singledispatchmethod
+    def _rich_logs(*args) -> RenderableType:
+        """
+        Format the logs into a list of strings to be printed.
+        """
+        raise NotImplementedError(
+            f"No log lines constructor for args {args}"
+        )  # pragma: no cover
 
-    def show_submitted_wf_run(self, wf_run_id: WorkflowRunId):
-        resp = responses.SubmitWorkflowDefResponse(
-            meta=responses.ResponseMetadata(
-                success=True,
-                code=responses.ResponseStatusCode.OK,
-                message="Success",
-            ),
-            workflow_runs=[WorkflowRunOnlyID(id=wf_run_id)],
-        )
-        per_command.pretty_print_response(resp, project_dir=None)
+    @_rich_logs.register(dict)
+    @staticmethod
+    def _(logs: dict) -> RenderableType:
+        from rich.console import Group
 
-    def show_stopped_wf_run(self, wf_run_id: WorkflowRunId):
-        click.echo(f"Workflow run {wf_run_id} stopped.")
+        renderables = []
+        for invocation_id, invocation_logs in logs.items():
+            renderables.append(
+                Group(
+                    f"[bold]{invocation_id}[/bold]",
+                    LogsPresenter._rich_logs(invocation_logs),
+                )
+            )
+        return Group(*renderables)
+
+    @_rich_logs.register(LogOutput)
+    @staticmethod
+    def _(logs: LogOutput) -> RenderableType:
+        table = Table("Stream", "Content", show_header=False, box=SIMPLE_HEAVY)
+        if len(logs.out) > 0:
+            table.add_row("[bold blue]stdout[/bold blue]", "\n".join(logs.out))
+        if len(logs.err) > 0:
+            table.add_row("[bold red]stderr[/bold red]", "\n".join(logs.err))
+        return table
+
+    def show_logs(
+        self,
+        logs: t.Union[t.Mapping[TaskInvocationId, LogOutput], LogOutput],
+        log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None,
+    ):
+        """
+        Present logs to the user.
+
+        Args:
+            logs: The logs to display, this may be in a dictionary or as a plain
+                LogOutput object
+            log_type: An optional name used to split multiple log types
+        """
+        _logs = self._rich_logs(logs)
+        renderables = [_logs]
+
+        if log_type:
+            _log_type = f"{log_type.value} logs".replace("_", " ")
+            renderables.insert(0, Rule(_log_type, align="left"))
+            renderables.append(Rule())
+        self._console.print(Group(*renderables))
 
     def show_dumped_wf_logs(
         self, path: Path, log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None
@@ -76,80 +119,35 @@ class WrappedCorqOutputPresenter:
             path: The path to the dump file.
             log_type: additional information identify the type of logs saved.
         """
-        click.echo(
-            f"Workflow {log_type.value + ' ' if log_type else ''}logs saved at {path}"
+        self._console.print(
+            f"Workflow {log_type.value + ' ' if log_type else ''}"
+            f"logs saved at [bold]{path}[/bold]"
         )
 
-    @singledispatchmethod
-    @staticmethod
-    def _format_logs(*args) -> t.List[str]:
-        """
-        Format the logs into a list of strings to be printed.
-        """
-        raise NotImplementedError(
-            f"No log lines constructor for args {args}"
-        )  # pragma: no cover
 
-    @_format_logs.register(dict)
-    @staticmethod
-    def _(logs: dict) -> t.List[str]:
-        log_lines = []
-        for invocation_id, invocation_logs in logs.items():
-            log_lines.append(f"task-invocation-id: {invocation_id}")
-            log_lines.extend(WrappedCorqOutputPresenter._format_logs(invocation_logs))
-        return log_lines
+class WrappedCorqOutputPresenter:
+    """
+    Uses corq's responses and formatters for pretty-printing dorq data.
+    """
 
-    @_format_logs.register(list)
-    @staticmethod
-    def _(logs: list) -> t.List[str]:
-        return logs
-
-    @_format_logs.register(LogOutput)
-    @staticmethod
-    def _(logs: LogOutput) -> t.List[str]:
-        output = []
-        if len(logs.out) > 0:
-            output.extend(["stdout:", *logs.out])
-        if len(logs.err) > 0:
-            output.extend(["stderr:", *logs.err])
-        return output
-
-    def show_logs(
-        self,
-        logs: t.Union[t.Mapping[TaskInvocationId, LogOutput], LogOutput],
-        log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None,
-    ):
-        """
-        Present logs to the user.
-        """
-        _logs = self._format_logs(logs)
-
-        resp = responses.GetLogsResponse(
-            meta=responses.ResponseMetadata(
-                success=True,
-                code=responses.ResponseStatusCode.OK,
-                message="Successfully got workflow run logs.",
-            ),
-            logs=_logs,
-        )
-
-        if log_type:
-            _log_type = f"{log_type.value} logs".replace("_", " ")
-            click.echo(f"=== {_log_type.upper()} " + "=" * (75 - len(_log_type)))
-        per_command.pretty_print_response(resp, project_dir=None)
-        if log_type:
-            click.echo("=" * 80 + "\n\n")
+    def show_stopped_wf_run(self, wf_run_id: WorkflowRunId):
+        click.echo(f"Workflow run {wf_run_id} stopped.")
 
     def show_error(self, exception: Exception):
         status_code = _errors.pretty_print_exception(exception)
-
         sys.exit(status_code.value)
 
     def show_message(self, message: str):
         click.echo(message=message)
 
 
-class ArtifactPresenter:
+class ArtifactPresenter(RichPresenter):
+    def _values_table(self, values: t.Sequence[t.Any]) -> Table:
+        table = Table("Index", "Type", "Pretty Printed", box=SIMPLE_HEAVY)
+        for i, value in enumerate(values):
+            table.add_row(str(i), f"{type(value)}", Pretty(value))
+        return table
+
     def show_task_outputs(
         self,
         values: t.Sequence[t.Any],
@@ -162,16 +160,11 @@ class ArtifactPresenter:
         Args:
             values: plain, deserialized artifact values.
         """
-        click.echo(
-            f"In workflow {wf_run_id}, task invocation {task_inv_id} produced "
-            f"{len(values)} outputs."
+        header = (
+            f"In workflow {wf_run_id}, task invocation {task_inv_id} "
+            f"produced {len(values)} outputs."
         )
-
-        for value_i, value in enumerate(values):
-            click.echo()
-            click.echo(f"Output {value_i}. Object type: {type(value)}")
-            click.echo("Pretty printed value:")
-            click.echo(pprint.pformat(value))
+        self._console.print(Group(header, self._values_table(values)))
 
     def show_workflow_outputs(
         self, values: t.Sequence[t.Any], wf_run_id: WorkflowRunId
@@ -182,13 +175,8 @@ class ArtifactPresenter:
         Args:
             values: plain, deserialized artifact values.
         """
-        click.echo(f"Workflow run {wf_run_id} has {len(values)} outputs.")
-
-        for value_i, value in enumerate(values):
-            click.echo()
-            click.echo(f"Output {value_i}. Object type: {type(value)}")
-            click.echo("Pretty printed value:")
-            click.echo(pprint.pformat(value))
+        header = f"Workflow run {wf_run_id} has {len(values)} outputs."
+        self._console.print(Group(header, self._values_table(values)))
 
     def show_dumped_artifact(self, dump_details: serde.DumpDetails):
         """
@@ -207,46 +195,29 @@ class ArtifactPresenter:
         else:
             format_name = dump_details.format.name
 
-        click.echo(f"Artifact saved at {dump_details.file_path} " f"as {format_name}.")
-
-
-class ServicePresenter:
-    @contextmanager
-    def show_progress(
-        self, services: Sequence[_services.Service], *, label: str
-    ) -> Iterator[Iterable[_services.Service]]:
-        """
-        Starts a progress bar on the context enter.
-
-        Yields an iterable of services; when you iterate over it, the progress bar is
-        advanced.
-        """
-        with click.progressbar(
-            services,
-            show_eta=False,
-            item_show_func=lambda svc: f"{label} {svc.name}"
-            if svc is not None
-            else None,
-        ) as bar:
-            yield bar
-
-    def show_services(self, services: Sequence[responses.ServiceResponse]):
-        click.echo(
-            tabulate(
-                [
-                    [
-                        click.style(svc.name, bold=True),
-                        click.style("Running", fg="green")
-                        if svc.is_running
-                        else click.style("Not Running", fg="red"),
-                        svc.info,
-                    ]
-                    for svc in services
-                ],
-                colalign=("right",),
-                tablefmt="plain",
-            ),
+        self._console.print(
+            f"Artifact saved at {dump_details.file_path} " f"as {format_name}."
         )
+
+
+class ServicePresenter(RichPresenter):
+    def show_services(self, services: Sequence[responses.ServiceResponse]):
+        status_table = Table(
+            Column("Service", style="bold"),
+            Column("Status"),
+            Column("Info", style="blue"),
+            box=SIMPLE_HEAVY,
+            show_header=False,
+        )
+        for svc in services:
+            status_table.add_row(
+                svc.name,
+                "[green]Running[/green]"
+                if svc.is_running
+                else "[red]Not Running[/red]",
+                svc.info or "",
+            )
+        self._console.print(status_table)
 
     def show_failure(self, service_responses: Sequence[responses.ServiceResponse]):
         self.show_services(service_responses)
@@ -346,58 +317,70 @@ def _format_tasks_succeeded(summary: ui_models.WFRunSummary) -> str:
     return f"{summary.n_tasks_succeeded} / {summary.n_task_invocations_total}"
 
 
-class WFRunPresenter:
-    def show_wf_run(self, summary: ui_models.WFRunSummary):
-        click.echo("Workflow overview")
-        click.echo(
-            tabulate(
-                [
-                    ["workflow def name", summary.wf_def_name],
-                    ["run ID", summary.wf_run_id],
-                    ["status", summary.wf_run_status.state.name],
-                    [
-                        "start time",
-                        _format_datetime(summary.wf_run_status.start_time),
-                    ],
-                    [
-                        "end time",
-                        _format_datetime(summary.wf_run_status.end_time),
-                    ],
-                    ["tasks succeeded", _format_tasks_succeeded(summary)],
-                ]
-            )
+class WFRunPresenter(RichPresenter):
+    def show_submitted_wf_run(self, wf_run_id: WorkflowRunId):
+        self._console.print(
+            f"[green]Workflow Submitted![/green] Run ID: [bold]{wf_run_id}[/bold]"
         )
-        click.echo()
 
-        task_rows = [
-            ["function", "invocation ID", "status", "start_time", "end_time", "message"]
-        ]
+    def get_wf_run(self, summary: ui_models.WFRunSummary):
+        summary_table = Table(
+            Column(style="bold", justify="right"),
+            Column(),
+            show_header=False,
+            box=SIMPLE_HEAVY,
+        )
+        summary_table.add_row("Workflow Def Name", summary.wf_def_name)
+        summary_table.add_row("Run ID", summary.wf_run_id)
+        summary_table.add_row("Status", summary.wf_run_status.state.name)
+        summary_table.add_row(
+            "Start Time", _format_datetime(summary.wf_run_status.start_time)
+        )
+        summary_table.add_row(
+            "End Time", _format_datetime(summary.wf_run_status.end_time)
+        )
+        summary_table.add_row("Succeeded Tasks", _format_tasks_succeeded(summary))
+        task_details = Table(
+            "Function",
+            "Invocation ID",
+            "Status",
+            "Start Time",
+            "End Time",
+            "Message",
+            box=SIMPLE_HEAVY,
+        )
         for task_row in summary.task_rows:
-            task_rows.append(
-                [
-                    task_row.task_fn_name,
-                    task_row.inv_id,
-                    task_row.status.state.value,
-                    _format_datetime(task_row.status.start_time),
-                    _format_datetime(task_row.status.end_time),
-                    task_row.message or "",
-                ]
+            task_details.add_row(
+                task_row.task_fn_name,
+                task_row.inv_id,
+                task_row.status.state.name,
+                _format_datetime(task_row.status.start_time),
+                _format_datetime(task_row.status.end_time),
+                task_row.message,
             )
-        click.echo("Task details")
-        click.echo(tabulate(task_rows, headers="firstrow"))
+        title = Rule("Workflow Overview", align="left")
+        task_title = Rule("Task Details", align="left")
+        return Group(title, summary_table, task_title, task_details)
+
+    def show_wf_run(self, summary: ui_models.WFRunSummary):
+        self._console.print(self.get_wf_run(summary))
 
     def show_wf_list(self, summary: ui_models.WFList):
-        rows = [["Workflow Run ID", "Status", "Tasks Succeeded", "Start Time"]]
-        for model_row in summary.wf_rows:
-            rows.append(
-                [
-                    model_row.workflow_run_id,
-                    model_row.status,
-                    model_row.tasks_succeeded,
-                    _format_datetime(model_row.start_time),
-                ]
+        table = Table(
+            "Workflow Run ID",
+            "Status",
+            "Succeeded Tasks",
+            "Start Time",
+            box=SIMPLE_HEAVY,
+        )
+        for run in summary.wf_rows:
+            table.add_row(
+                run.workflow_run_id,
+                run.status,
+                run.tasks_succeeded,
+                _format_datetime(run.start_time),
             )
-        click.echo(tabulate(rows, headers="firstrow"))
+        self._console.print(table)
 
 
 class PromptPresenter:

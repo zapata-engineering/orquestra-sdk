@@ -1,13 +1,14 @@
-Workflow overview
------------------  ------------------------
-workflow def name  hello_orq
-run ID             wf.1
-status             WAITING
-start time         Fri Feb 24 08:26:07 2023
-end time
-tasks succeeded    0 / 21
------------------  ------------------------
-
-Task details
-function    invocation ID    status    start_time    end_time    message
-----------  ---------------  --------  ------------  ----------  ---------
+Workflow Overview ──────────────────────────────────────────────────────────────────────────────────────────────────────
+                                                
+  Workflow Def Name   hello_orq                 
+             Run ID   wf.1                      
+             Status   WAITING                   
+         Start Time   Fri Feb 24 08:26:07 2023  
+           End Time                             
+    Succeeded Tasks   0 / 21                    
+                                                
+Task Details ───────────────────────────────────────────────────────────────────────────────────────────────────────────
+                                                                       
+  Function   Invocation ID   Status   Start Time   End Time   Message  
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 
+                                                                       
