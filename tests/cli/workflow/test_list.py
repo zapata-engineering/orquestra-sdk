@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
 Unit tests for 'orq wf list' glue code.
@@ -63,7 +63,7 @@ class TestAction:
         wf_run_repo = Mock()
 
         wf_runs = [return_wf(), return_wf()]
-        wf_run_repo.list_wf_runs.return_value = wf_runs
+        wf_run_repo.list_wf_run_summaries.return_value = wf_runs
 
         config_resolver = Mock()
         config_resolver.resolve.return_value = resolved_config
@@ -119,7 +119,7 @@ class TestAction:
             state, interactive=interactive
         )
 
-        wf_run_repo.list_wf_runs.assert_called_with(
+        wf_run_repo.list_wf_run_summaries.assert_called_with(
             resolved_config,
             limit=resolved_limit,
             max_age=resolved_max_age,
