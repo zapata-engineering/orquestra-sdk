@@ -88,6 +88,28 @@ class Secret(NamedTuple):
     # specific workspace.
     workspace_id: Optional[str] = None
 
+    _secret_as_string_error = (
+        "Invalid usage of a Secret object. Secrets are not "
+        "available when building the workflow graph and cannot"
+        " be used as strings. If you need to use a Secret's"
+        " value, this must be done inside of a task."
+    )
+
+    def __getattr__(self, item):
+        try:
+            return self.__getattribute__(item)
+        except AttributeError as e:
+            raise AttributeError(self._secret_as_string_error) from e
+
+    def __getitem__(self, item):
+        raise AttributeError(self._secret_as_string_error)
+
+    def __str__(self):
+        raise AttributeError(self._secret_as_string_error)
+
+    def __iter__(self):
+        raise AttributeError(self._secret_as_string_error)
+
 
 @dataclass(frozen=True, eq=True)
 class GitImportWithAuth:

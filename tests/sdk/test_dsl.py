@@ -761,3 +761,49 @@ class TestResources:
 
         # should not raise
         wf().model
+
+
+class TestSecretAsString:
+    def test_basic_secret_as_string_usage(self):
+        @sdk.workflow()
+        def wf():
+            my_secret = sdk.secrets.get("w/e", workspace_id="w/e")
+            my_secret.split()
+
+        with pytest.raises(AttributeError) as e:
+            wf().model
+
+        assert "Invalid usage of a Secret object" in str(e)
+
+    def test_secret_subscribe_as_string(self):
+        @sdk.workflow()
+        def wf():
+            my_secret = sdk.secrets.get("w/e", workspace_id="w/e")[0]
+
+        with pytest.raises(AttributeError) as e:
+            wf().model
+
+        assert "Invalid usage of a Secret object" in str(e)
+
+    def test_secret_translated_to_string(self):
+        @sdk.workflow()
+        def wf():
+            my_secrets = sdk.secrets.get("w/e", workspace_id="w/e")
+            print(my_secrets)
+
+        with pytest.raises(AttributeError) as e:
+            wf().model
+
+        assert "Invalid usage of a Secret object" in str(e)
+
+    def test_secret_as_iterable(self):
+        @sdk.workflow()
+        def wf():
+            my_secrets = sdk.secrets.get("w/e", workspace_id="w/e")
+            for letter in my_secrets:
+                print(letter)
+
+        with pytest.raises(AttributeError) as e:
+            wf().model
+
+        assert "Invalid usage of a Secret object" in str(e)
