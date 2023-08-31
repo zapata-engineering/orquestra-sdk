@@ -30,7 +30,12 @@ from ...schema.workflow_run import ProjectId, State
 from ...schema.workflow_run import TaskRun as TaskRunModel
 from ...schema.workflow_run import TaskRunId
 from ...schema.workflow_run import WorkflowRun as WorkflowRunModel
-from ...schema.workflow_run import WorkflowRunId, WorkflowRunMinimal, WorkspaceId
+from ...schema.workflow_run import (
+    WorkflowRunId,
+    WorkflowRunMinimal,
+    WorkflowRunSummary,
+    WorkspaceId,
+)
 from .. import serde
 from .._graphs import iter_invocations_topologically
 from .._logs._interfaces import WorkflowLogs
@@ -570,6 +575,91 @@ class WorkflowRun:
         return tasks
 
 
+def _handle_common_project_errors(project, workspace):
+    if project and not workspace:
+        raise ProjectInvalidError(
+            f"The project `{project}` cannot be uniquely identified "
+            "without a workspace parameter."
+        )
+
+    if project:
+        warnings.warn(
+            "`project` parameter in `list_workflow_runs` is deprecated and will be "
+            "removed in the next release.",
+            FutureWarning,
+        )
+        # Null project - it is ignored by platform anyway - left as parameter for
+        # backward compatibility only
+        project = None
+
+    return project
+
+
+def list_workflow_run_summaries(
+    config: t.Union[ConfigName, "RuntimeConfig"],
+    *,
+    limit: t.Optional[int] = None,
+    max_age: t.Optional[str] = None,
+    state: t.Optional[t.Union[State, t.List[State]]] = None,
+    project_dir: t.Optional[t.Union[Path, str]] = None,
+    workspace: t.Optional[WorkspaceId] = None,
+    project: t.Optional[ProjectId] = None,
+) -> t.List[WorkflowRunSummary]:
+    """
+    List summaries of the workflow runs, with some filters.
+
+    Note: this method returns ``WorkflowRunSummary`` objects that are static overviews
+    of the workflow runs. If you need to perform operatios on the workflows, you
+    probably want ``sdk.list_workflow_runs()``.
+
+    Args:
+        config: The name of the configuration to use.
+        limit: Restrict the number of runs to return, prioritising the most recent.
+        max_age: Only return runs younger than the specified maximum age.
+        state: Only return runs of runs with the specified status.
+        project_dir: The location of the project directory. This directory must
+            contain the workflows database to which this run was saved. If omitted,
+            the current working directory is assumed to be the project directory.
+        workspace: Only return runs from the specified workspace when using CE.
+        project: will be used to list workflows from specific workspace and project
+            when using CE.
+
+    Raises:
+        ConfigNameNotFoundError: when the named config is not found in the file.
+        NotImplementedError: when a filter is specified for a runtime that does not
+            support it.
+
+    Returns:
+        a list of WorkflowRunSummary objects.
+    """
+    project = _handle_common_project_errors(project, workspace)
+    workspace = resolve_studio_workspace_ref(workspace_id=workspace)
+
+    # Resolve config
+    resolved_config: RuntimeConfig = resolve_config(config)
+
+    # resolve runtime
+    runtime = resolved_config._get_runtime(Path(project_dir or Path.cwd()))
+
+    # Grab the workflow summaries from the runtime.
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=VersionMismatch)
+        run_statuses: t.Sequence[
+            WorkflowRunSummary
+        ] = runtime.list_workflow_run_summaries(
+            limit=limit,
+            max_age=_parse_max_age(max_age),
+            state=state,
+            workspace=workspace,
+        )
+
+    # We need to convert to the public API notion of a WorkflowRun
+    runs = []
+    for run_status in run_statuses:
+        runs.append(run_status)
+    return runs
+
+
 def list_workflow_runs(
     config: t.Union[ConfigName, "RuntimeConfig"],
     *,
@@ -584,10 +674,10 @@ def list_workflow_runs(
     List the workflow runs, with some filters.
 
     Note: this method returns a list of full ``WorkflowRun`` objects.
-    This will allow you to iterate through workflowruns performing actions on them,
+    This will allow you to iterate through workflow runs performing actions on them,
     e.g. stopping all workflows older than a month.
     If you want an overview of workflows without necessarily needing to interact with
-    them, ``sdk.list_workflow_runs_summary()`` is a more efficient alternative.
+    them, ``sdk.list_workflow_run_summaries()`` is a more efficient alternative.
 
     Args:
         config: The name of the configuration to use.
@@ -611,22 +701,7 @@ def list_workflow_runs(
     """
     # TODO: update docstring when platform workspace/project filtering is merged [ORQP-1479](https://zapatacomputing.atlassian.net/browse/ORQP-1479?atlOrigin=eyJpIjoiZWExMWI4MDUzYTI0NDQ0ZDg2ZTBlNzgyNjE3Njc4MDgiLCJwIjoiaiJ9) # noqa: E501
 
-    if project and not workspace:
-        raise ProjectInvalidError(
-            f"The project `{project}` cannot be uniquely identified "
-            "without a workspace parameter."
-        )
-
-    if project:
-        warnings.warn(
-            "`project` parameter in `list_workflow_runs` is deprecated and will be "
-            "removed in the next release.",
-            FutureWarning,
-        )
-        # Null project - it is ignored by platform anyway - left as parameter for
-        # backward compatibility only
-        project = None
-
+    project = _handle_common_project_errors(project, workspace)
     workspace = resolve_studio_workspace_ref(workspace_id=workspace)
 
     _project_dir = Path(project_dir or Path.cwd())
@@ -662,53 +737,6 @@ def list_workflow_runs(
         )
         runs.append(workflow_run)
     return runs
-
-
-def list_workflow_runs_summary(
-    config: t.Union[ConfigName, "RuntimeConfig"],
-    *,
-    limit: t.Optional[int] = None,
-    max_age: t.Optional[str] = None,
-    state: t.Optional[t.Union[State, t.List[State]]] = None,
-    project_dir: t.Optional[t.Union[Path, str]] = None,
-    workspace: t.Optional[WorkspaceId] = None,
-    project: t.Optional[ProjectId] = None,
-):  # TODO: return type - might make sense to be a dict?
-    """
-    List a summery of workflow runs, with some filters.
-
-    Note: this method returns a list of workflow run ids.  # TODO: keep up to date.
-    This will allow you to see a summary of workflow runs matching your filters.
-    Interacting with any individual workflow will require calling the
-    ``WorkflowRun.by_id()``
-    factory method.
-    If you want to act on each matching workflow run,
-    ``sdk.list_workflow_runs_summary()``
-    is a more efficient alternative.
-
-    Args:
-        config: The name of the configuration to use.
-        limit: Restrict the number of runs to return, prioritising the most recent.
-        max_age: Only return runs younger than the specified maximum age.
-        state: Only return runs of runs with the specified status.
-        project_dir: The location of the project directory.
-            This directory must contain the workflows database to which this run was
-            saved.
-            If omitted, the current working directory is assumed to be the project
-            directory.
-        workspace: Only return runs from the specified workspace when using CE.
-        project: will be used to list workflows from specific workspace and project
-            when using CE.
-
-    Raises:
-        ConfigNameNotFoundError: when the named config is not found in the file.
-        NotImplementedError: when a filter is specified for a runtime that does not
-            support it.
-
-    Returns:
-        ?  # TODO: update.
-    """
-    pass
 
 
 def _parse_max_age(age: t.Optional[str]) -> t.Optional[timedelta]:

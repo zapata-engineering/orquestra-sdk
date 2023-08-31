@@ -226,7 +226,7 @@ class MinimalWorkflowRunResponse(pydantic.BaseModel):
         )
 
 
-class SummaryWorkflowRunResponse(MinimalWorkflowRunResponse):
+class WorkflowRunSummaryResponse(MinimalWorkflowRunResponse):
     """
     Contains all of the information needed to give a basic overview of the workflow.
 
@@ -325,7 +325,7 @@ class ListWorkflowRunsRequest(pydantic.BaseModel):
 
 ListWorkflowRunsResponse = List[MinimalWorkflowRunResponse]
 
-ListWorkflowRunSummariesResponse = List[WorkflowRunSummary]
+ListWorkflowRunSummariesResponse = List[WorkflowRunSummaryResponse]
 
 
 class GetWorkflowRunResponse(pydantic.BaseModel):

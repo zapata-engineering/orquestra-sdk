@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
 Code for 'orq workflow list'.
@@ -102,7 +102,7 @@ class Action:
         except exceptions.WorkspacesNotSupportedError:
             pass
 
-        wf_runs = self._wf_run_repo.list_wf_runs(
+        wf_runs = self._wf_run_repo.list_wf_run_summaries(
             resolved_config,
             workspace=workspace,
             limit=resolved_limit,
