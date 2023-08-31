@@ -14,6 +14,8 @@
 
 💅 *Improvements*
 
+* Throw more informative exceptions if secret is used in any unintended way inside workflow function
+
 🥷 *Internal*
 
 📃 *Docs*
