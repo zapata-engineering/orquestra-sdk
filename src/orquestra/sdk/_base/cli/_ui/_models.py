@@ -39,6 +39,7 @@ class WFRunSummary:
     task_rows: t.Sequence[TaskRow]
     n_tasks_succeeded: int
     n_task_invocations_total: int
+    owner: t.Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -53,5 +54,6 @@ class WFList:
         status: str
         tasks_succeeded: str
         start_time: t.Optional[Instant]
+        owner: t.Optional[str] = None
 
     wf_rows: t.Sequence[WFRow]

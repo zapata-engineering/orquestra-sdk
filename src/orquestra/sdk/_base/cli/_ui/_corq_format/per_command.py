@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 import json
 import pathlib
@@ -197,6 +197,8 @@ def _format_datetime(dt: t.Optional[_dates.Instant]) -> str:
 def _print_single_run(run: responses.WorkflowRun, project_dir: t.Optional[str]):
     analyzer = _WorkflowDefAnalyzer(run.workflow_def)
 
+    # TODO: show owner if there is one. -  ORQSDK-924
+
     print("Workflow overview")
     print(
         tabulate.tabulate(
@@ -231,6 +233,7 @@ def _print_single_run(run: responses.WorkflowRun, project_dir: t.Optional[str]):
 
 
 def _format_multiple_runs(runs: t.Sequence[responses.WorkflowRun]):
+    # TODO: show owner if there is one - ORQSDK-924
     headers = ["workflow run ID", "status", "tasks succeeded"]
     rows = [
         [run.id, run.status.state.value, _tasks_number_summary(run)] for run in runs

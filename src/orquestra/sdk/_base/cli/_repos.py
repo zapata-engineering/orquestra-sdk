@@ -449,6 +449,7 @@ def _ui_model_from_wf(wf_run: WorkflowRun):
         status=wf_run.status.state.value,
         tasks_succeeded=_tasks_number_summary(wf_run),
         start_time=wf_run.status.start_time,
+        owner=wf_run.owner,
     )
 
 
@@ -469,6 +470,7 @@ class SummaryRepo:
             wf_def_name=wf_run.workflow_def.name,
             wf_run_id=wf_run.id,
             wf_run_status=wf_run.status,
+            owner=wf_run.owner,
             task_rows=[
                 _ui_model_from_task_run(task_run, wf_def=wf_run.workflow_def)
                 for task_run in wf_run.task_runs
