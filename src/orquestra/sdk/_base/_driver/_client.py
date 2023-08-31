@@ -17,6 +17,7 @@ from urllib.parse import urljoin
 
 import pydantic
 import requests
+from pydantic.generics import GenericModel
 from requests import codes
 
 from orquestra.sdk import ProjectRef
@@ -26,6 +27,7 @@ from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, Workflow
 from orquestra.sdk.schema.workflow_run import (
     WorkflowRun,
     WorkflowRunMinimal,
+    WorkflowRunSummary,
     WorkspaceId,
 )
 
@@ -417,14 +419,83 @@ class DriverClient:
         workspace: Optional[WorkspaceId] = None,
     ) -> Paginated[WorkflowRunMinimal]:
         """
-        List workflow runs with a specified workflow def ID from the workflow driver
+        List workflow runs with a specified workflow def ID from the workflow driver.
 
         Raises:
             orquestra.sdk._base._driver._exceptions.InvalidTokenError
             orquestra.sdk._base._driver._exceptions.ForbiddenError
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
+
+        parsed_response, next_token = self._list_workflow_runs(
+            _models.ListWorkflowRunsResponse,
+            workflow_def_id,
+            page_size,
+            page_token,
+            workspace,
+        )
+
+        workflow_runs = []
+        for r in parsed_response.data:
+            workflow_def = self.get_workflow_def(r.definitionId)
+            workflow_runs.append(r.to_ir(workflow_def.workflow))
+
+        return Paginated(
+            contents=workflow_runs,
+            next_page_token=next_token,
+        )
+
+    def list_workflow_run_summaries(
+        self,
+        workflow_def_id: Optional[_models.WorkflowDefID] = None,
+        page_size: Optional[int] = None,
+        page_token: Optional[str] = None,
+        workspace: Optional[WorkspaceId] = None,
+    ) -> Paginated[WorkflowRunSummary]:
+        """
+        List workflow runs summaries with a specified workflow def ID.
+
+        Raises:
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError
+            orquestra.sdk._base._driver._exceptions.ForbiddenError
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+        """
+
+        parsed_response, next_token = self._list_workflow_runs(
+            _models.ListWorkflowRunSummariesResponse,
+            workflow_def_id,
+            page_size,
+            page_token,
+            workspace,
+        )
+
+        workflow_runs = []
+        for r in parsed_response.data:
+            workflow_runs.append(r.to_ir())
+
+        return Paginated(
+            contents=workflow_runs,
+            next_page_token=next_token,
+        )
+
+    def _list_workflow_runs(
+        self,
+        response_model: GenericModel,
+        workflow_def_id: Optional[_models.WorkflowDefID] = None,
+        page_size: Optional[int] = None,
+        page_token: Optional[str] = None,
+        workspace: Optional[WorkspaceId] = None,
+    ):
+        """
+        Get a list of wf runs from the workflow driver.
+
+        The responses will be parsed using the specified response model.
+
+        This method consolidates the logic used by both list_workflow_runs and
+        list_workflow_run_summaries.
+        """
         # Schema: https://github.com/zapatacomputing/workflow-driver/blob/fa3eb17f1132d9c7f4960331ffe7ddbd31e02f8c/openapi/src/resources/workflow-runs.yaml#L10 # noqa: E501
+
         resp = self._get(
             self._uri_provider.uri_for("list_workflow_runs"),
             query_params=_models.ListWorkflowRunsRequest(
@@ -438,7 +509,7 @@ class DriverClient:
         _handle_common_errors(resp)
 
         parsed_response = _models.Response[
-            _models.ListWorkflowRunsResponse, _models.Pagination
+            response_model, _models.Pagination
         ].parse_obj(resp.json())
 
         if parsed_response.meta is not None:
@@ -446,15 +517,7 @@ class DriverClient:
         else:
             next_token = None
 
-        workflow_runs = []
-        for r in parsed_response.data:
-            workflow_def = self.get_workflow_def(r.definitionId)
-            workflow_runs.append(r.to_ir(workflow_def.workflow))
-
-        return Paginated(
-            contents=workflow_runs,
-            next_page_token=next_token,
-        )
+        return parsed_response, next_token
 
     def get_workflow_run(self, wf_run_id: _models.WorkflowRunID) -> WorkflowRun:
         """

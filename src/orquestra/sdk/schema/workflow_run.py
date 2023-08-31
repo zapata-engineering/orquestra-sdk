@@ -65,6 +65,18 @@ class WorkflowRunMinimal(WorkflowRunOnlyID):
     workflow_def: WorkflowDef
 
 
+class WorkflowRunSummary(WorkflowRunOnlyID):
+    """
+    A summary overview of a workflow run
+    """
+
+    status: RunStatus
+    owner: str
+    total_tasks: int
+    completed_tasks: int
+    dry_run: bool
+
+
 class WorkflowRun(WorkflowRunMinimal):
     """
     A full workflow run with TaskRuns and WorkflowRun status
