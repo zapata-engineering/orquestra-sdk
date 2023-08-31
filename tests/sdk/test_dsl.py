@@ -778,7 +778,7 @@ class TestSecretAsString:
     def test_secret_subscribe_as_string(self):
         @sdk.workflow()
         def wf():
-            my_secret = sdk.secrets.get("w/e", workspace_id="w/e")[0]
+            sdk.secrets.get("w/e", workspace_id="w/e")[0]
 
         with pytest.raises(AttributeError) as e:
             wf().model
@@ -788,8 +788,8 @@ class TestSecretAsString:
     def test_secret_translated_to_string(self):
         @sdk.workflow()
         def wf():
-            my_secrets = sdk.secrets.get("w/e", workspace_id="w/e")
-            print(my_secrets)
+            my_secret = sdk.secrets.get("w/e", workspace_id="w/e")
+            print(my_secret)
 
         with pytest.raises(AttributeError) as e:
             wf().model
