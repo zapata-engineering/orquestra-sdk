@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 - 2023 Zapata Computing Inc.
+# © Copyright 2022 Zapata Computing Inc.
 ################################################################################
 """Workflow Run model.
 
@@ -84,4 +84,3 @@ class WorkflowRun(WorkflowRunMinimal):
 
     task_runs: t.List[TaskRun]
     status: RunStatus
-    owner: t.Optional[str] = None
