@@ -20,6 +20,8 @@
 
 🥷 *Internal*
 
+* Removed unused local cache code.
+
 📃 *Docs*
 
 ## v0.56.0
