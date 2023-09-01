@@ -13,10 +13,7 @@ import typing as t
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated
 
-from .ir import (
-    ArtifactFormat,
-    TaskInvocationId,
-)
+from .ir import ArtifactFormat, TaskInvocationId
 
 
 class ResponseFormat(enum.Enum):
