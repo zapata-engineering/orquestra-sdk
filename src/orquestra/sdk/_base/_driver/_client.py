@@ -17,7 +17,6 @@ from urllib.parse import urljoin
 
 import pydantic
 import requests
-from pydantic.generics import GenericModel
 from requests import codes
 
 from orquestra.sdk import ProjectRef
@@ -427,13 +426,21 @@ class DriverClient:
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
 
-        parsed_response, next_token = self._list_workflow_runs(
-            _models.ListWorkflowRunsResponse,
+        resp = self._list_workflow_runs(
             workflow_def_id,
             page_size,
             page_token,
             workspace,
         )
+
+        parsed_response = _models.Response[
+            _models.ListWorkflowRunsResponse, _models.Pagination
+        ].parse_obj(resp.json())
+
+        if parsed_response.meta is not None:
+            next_token = parsed_response.meta.nextPageToken
+        else:
+            next_token = None
 
         workflow_runs = []
         for r in parsed_response.data:
@@ -461,13 +468,21 @@ class DriverClient:
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError
         """
 
-        parsed_response, next_token = self._list_workflow_runs(
-            _models.ListWorkflowRunSummariesResponse,
+        resp = self._list_workflow_runs(
             workflow_def_id,
             page_size,
             page_token,
             workspace,
         )
+
+        parsed_response = _models.Response[
+            _models.ListWorkflowRunSummariesResponse, _models.Pagination
+        ].parse_obj(resp.json())
+
+        if parsed_response.meta is not None:
+            next_token = parsed_response.meta.nextPageToken
+        else:
+            next_token = None
 
         workflow_runs = []
         for r in parsed_response.data:
@@ -480,7 +495,6 @@ class DriverClient:
 
     def _list_workflow_runs(
         self,
-        response_model: GenericModel,
         workflow_def_id: Optional[_models.WorkflowDefID] = None,
         page_size: Optional[int] = None,
         page_token: Optional[str] = None,
@@ -508,16 +522,7 @@ class DriverClient:
 
         _handle_common_errors(resp)
 
-        parsed_response = _models.Response[
-            response_model, _models.Pagination
-        ].parse_obj(resp.json())
-
-        if parsed_response.meta is not None:
-            next_token = parsed_response.meta.nextPageToken
-        else:
-            next_token = None
-
-        return parsed_response, next_token
+        return resp
 
     def get_workflow_run(self, wf_run_id: _models.WorkflowRunID) -> WorkflowRun:
         """

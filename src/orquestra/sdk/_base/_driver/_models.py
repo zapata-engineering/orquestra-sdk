@@ -241,7 +241,7 @@ class WorkflowRunSummaryResponse(MinimalWorkflowRunResponse):
     completedTasks: int
     dryRun: bool
 
-    def to_ir(self) -> WorkflowRunSummary:
+    def to_ir(self, *args) -> WorkflowRunSummary:
         return WorkflowRunSummary(
             id=self.id,
             status=self.status.to_ir(),

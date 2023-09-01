@@ -644,20 +644,14 @@ def list_workflow_run_summaries(
     # Grab the workflow summaries from the runtime.
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=VersionMismatch)
-        run_statuses: t.Sequence[
-            WorkflowRunSummary
-        ] = runtime.list_workflow_run_summaries(
+        run_summaries: t.List[WorkflowRunSummary] = runtime.list_workflow_run_summaries(
             limit=limit,
             max_age=_parse_max_age(max_age),
             state=state,
             workspace=workspace,
         )
 
-    # We need to convert to the public API notion of a WorkflowRun
-    runs = []
-    for run_status in run_statuses:
-        runs.append(run_status)
-    return runs
+    return run_summaries
 
 
 def list_workflow_runs(

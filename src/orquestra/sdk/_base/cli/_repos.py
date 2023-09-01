@@ -473,7 +473,7 @@ def _tasks_number_summary(wf_run: WorkflowRun) -> str:
 
 
 @singledispatch
-def _ui_model_from_wf(wf_run: WorkflowRun):
+def _ui_model_from_wf(wf_run) -> ui_models.WFList.WFRow:
     """
     Convert a workflow run object into a consistent form to be displayed by the UI.
 
@@ -486,6 +486,11 @@ def _ui_model_from_wf(wf_run: WorkflowRun):
             have succeeded) and start time of the workflow in string forms for ease of
             display.
     """
+    raise NotImplementedError(f"No ui model defined for type {type(wf_run)}")
+
+
+@_ui_model_from_wf.register
+def _(wf_run: WorkflowRun) -> ui_models.WFList.WFRow:
     return ui_models.WFList.WFRow(
         workflow_run_id=wf_run.id,
         status=wf_run.status.state.value,
@@ -495,7 +500,7 @@ def _ui_model_from_wf(wf_run: WorkflowRun):
 
 
 @_ui_model_from_wf.register
-def _(wf_run: WorkflowRunSummary):
+def _(wf_run: WorkflowRunSummary) -> ui_models.WFList.WFRow:
     return ui_models.WFList.WFRow(
         workflow_run_id=wf_run.id,
         status=wf_run.status.state.value,
