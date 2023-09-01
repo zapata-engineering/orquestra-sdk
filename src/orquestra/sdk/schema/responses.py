@@ -13,17 +13,10 @@ import typing as t
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated
 
-from .configs import RuntimeConfiguration
 from .ir import (
     ArtifactFormat,
-    Import,
-    ImportId,
-    TaskDef,
-    TaskDefId,
     TaskInvocationId,
-    WorkflowDef,
 )
-from .workflow_run import WorkflowRun, WorkflowRunOnlyID
 
 
 class ResponseFormat(enum.Enum):
@@ -58,93 +51,6 @@ class ResponseMetadata(BaseModel):
     message: str
 
 
-class ErrorResponse(BaseModel):
-    meta: ResponseMetadata
-
-
-class GetWorkflowDefResponse(BaseModel):
-    meta: ResponseMetadata
-    workflow_defs: t.List[WorkflowDef]
-
-
-class GetTaskDefResponse(BaseModel):
-    meta: ResponseMetadata
-    task_defs: t.Dict[TaskDefId, TaskDef]
-    imports: t.Dict[ImportId, Import]
-
-
-class SubmitWorkflowDefResponse(BaseModel):
-    meta: ResponseMetadata
-    workflow_runs: t.List[WorkflowRunOnlyID]
-
-
-class GetWorkflowRunResponse(BaseModel):
-    meta: ResponseMetadata
-    workflow_runs: t.List[WorkflowRun]
-
-
-class ListWorkflowRunsResponse(BaseModel):
-    meta: ResponseMetadata
-    workflow_runs: t.List[WorkflowRun]
-    filters: dict
-
-
-class StopWorkflowRunResponse(BaseModel):
-    meta: ResponseMetadata
-
-
-class SetDefaultConfig(BaseModel):
-    meta: ResponseMetadata
-    default_config_name: str
-
-
-class GetDefaultConfig(BaseModel):
-    meta: ResponseMetadata
-    default_config_name: str
-
-
-class SetTokenResponse(BaseModel):
-    """
-    Used by 'orq set token'.
-    """
-
-    meta: ResponseMetadata
-    # Config content after the action.
-    result_config: RuntimeConfiguration
-
-
-class CreateConfigResponse(BaseModel):
-    """
-    Used by `orq create-config`
-    """
-
-    meta: ResponseMetadata
-    written_config: RuntimeConfiguration
-
-
-class ServicesNotRunningResponse(BaseModel):
-    meta: ResponseMetadata
-
-
-class ServicesStartedResponse(BaseModel):
-    meta: ResponseMetadata
-
-
-class ServicesStoppedResponse(BaseModel):
-    meta: ResponseMetadata
-
-
-class ServicesStatusResponse(BaseModel):
-    meta: ResponseMetadata
-
-    # True if a local Ray cluster is running in the background.
-    ray_running: bool
-
-    # True if a fluentbit service is running in the background.
-    # Deprecated, always set to ``False``.
-    fluentbit_running: bool
-
-
 class JSONResult(BaseModel):
     # Output value dumped to a flat JSON string.
     value: str
@@ -169,35 +75,6 @@ WorkflowResult = Annotated[
 class ComputeEngineWorkflowResult(BaseModel):
     results: t.Tuple[WorkflowResult, ...]
     type: t.Literal["ComputeEngineWorkflowResult"] = "ComputeEngineWorkflowResult"
-
-
-# TODO: should we keep this as deprecated, or remove it?
-class GetWorkflowRunResultsResponse(BaseModel):
-    """
-    Deprecated.
-
-    In the past, this was used as an output of CLI commands for returning workflow
-    artifact values.
-    """
-
-    meta: ResponseMetadata
-    workflow_run_id: str
-    workflow_results: t.List[WorkflowResult]
-
-
-class GetArtifactsResponse(BaseModel):
-    meta: ResponseMetadata
-
-    artifacts: t.Dict[TaskInvocationId, t.Any]
-    """Artifact values returned from tasks. Each key-value pair in this dict
-    corresponds to a single task invocation inside a workflow. The dicts value
-    is a plain artifact value, as returned from the task. If a task returns
-    multiple values, the dicts value is a tuple."""
-
-
-class GetLogsResponse(BaseModel):
-    meta: ResponseMetadata
-    logs: t.List[str]
 
 
 class ServiceResponse(BaseModel):
