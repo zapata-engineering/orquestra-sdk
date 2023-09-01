@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """Workflow Run model.
 
@@ -65,18 +65,6 @@ class WorkflowRunMinimal(WorkflowRunOnlyID):
     workflow_def: WorkflowDef
 
 
-class WorkflowRunSummary(WorkflowRunOnlyID):
-    """
-    A summary overview of a workflow run
-    """
-
-    status: RunStatus
-    owner: str
-    total_tasks: int
-    completed_tasks: int
-    dry_run: bool
-
-
 class WorkflowRun(WorkflowRunMinimal):
     """
     A full workflow run with TaskRuns and WorkflowRun status
@@ -84,3 +72,28 @@ class WorkflowRun(WorkflowRunMinimal):
 
     task_runs: t.List[TaskRun]
     status: RunStatus
+
+
+class WorkflowRunSummary(WorkflowRunOnlyID):
+    """
+    A summary overview of a workflow run
+    """
+
+    status: RunStatus
+    owner: t.Optional[str]
+    total_tasks: int
+    completed_tasks: int
+    dry_run: t.Optional[bool]
+
+    @staticmethod
+    def from_workflowrun(wf: WorkflowRun) -> "WorkflowRunSummary":
+        return WorkflowRunSummary(
+            id=wf.id,
+            status=wf.status,
+            owner=None,
+            total_tasks=len(wf.workflow_def.task_invocations),
+            completed_tasks=sum(
+                1 for tr in wf.task_runs if tr.status.state == State.SUCCEEDED
+            ),
+            dry_run=None,
+        )
