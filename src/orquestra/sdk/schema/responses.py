@@ -171,7 +171,14 @@ class ComputeEngineWorkflowResult(BaseModel):
     type: t.Literal["ComputeEngineWorkflowResult"] = "ComputeEngineWorkflowResult"
 
 
+# TODO: should we keep this as deprecated, or remove it?
 class GetWorkflowRunResultsResponse(BaseModel):
+    """
+    Deprecated.
+
+    In the past, this was used as an output of CLI commands for returning workflow
+    artifact values.
+    """
     meta: ResponseMetadata
     workflow_run_id: str
     workflow_results: t.List[WorkflowResult]
