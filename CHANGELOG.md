@@ -12,6 +12,8 @@
 
 🐛 *Bug Fixes*
 
+* `orq login --list` properly handles missing or empty config file
+
 💅 *Improvements*
 
 * Throw more informative exceptions if secret is used in any unintended way inside workflow function
