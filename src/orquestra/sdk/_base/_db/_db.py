@@ -5,7 +5,7 @@ import os
 import sqlite3
 from contextlib import AbstractContextManager
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Union
 
 from orquestra.sdk._base._db._migration import (
     migrate_project_db_to_shared_db,
