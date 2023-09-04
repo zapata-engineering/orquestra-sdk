@@ -95,18 +95,28 @@ class WorkflowRun:
         # Resolve config
         resolved_config: RuntimeConfig
         if config is None:
-            # Shorthand: use the cached value.
-            # We need to read the config name from the local DB and load the config
-            # entry.
-            try:
-                stored_run = cls._get_stored_run(_project_dir, run_id)
-            except WorkflowRunNotFoundError:
-                raise
+            # Shorthand: query runtimes from the config until we find the run.
+            cfgs = RuntimeConfig.list_configs()
 
-            try:
-                resolved_config = RuntimeConfig.load(stored_run.config_name)
-            except (ConfigFileNotFoundError, ConfigNameNotFoundError):
-                raise
+            cfgs_unauthorized = []
+            cfgs_not_found = []
+            for cfg_name in cfgs:
+                try:
+                    wf_run = WorkflowRun.by_id(run_id=run_id, config=cfg_name)
+                except UnauthorizedError:
+                    cfgs_unauthorized.append(cfg_name)
+                    continue
+                except WorkflowRunNotFoundError:
+                    cfgs_not_found.append(cfg_name)
+                    continue
+
+                return wf_run
+
+            assert False, (
+                f"Couldn't find {run_id}. "
+                f"Unauthorized runtimes: {cfgs_unauthorized}, "
+                f"not found runtimes: {cfgs_not_found}"
+            )
         else:
             resolved_config = resolve_config(config)
 
