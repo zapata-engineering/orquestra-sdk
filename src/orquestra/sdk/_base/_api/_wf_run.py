@@ -15,6 +15,7 @@ from ...exceptions import (
     ConfigFileNotFoundError,
     ConfigNameNotFoundError,
     ProjectInvalidError,
+    RayNotRunningError,
     UnauthorizedError,
     VersionMismatch,
     WorkflowRunCanNotBeTerminated,
@@ -98,24 +99,25 @@ class WorkflowRun:
             # Shorthand: query runtimes from the config until we find the run.
             cfgs = RuntimeConfig.list_configs()
 
-            cfgs_unauthorized = []
-            cfgs_not_found = []
+            cfgs_by_exception = {}
+
             for cfg_name in cfgs:
                 try:
                     wf_run = WorkflowRun.by_id(run_id=run_id, config=cfg_name)
-                except UnauthorizedError:
-                    cfgs_unauthorized.append(cfg_name)
+                except (
+                    UnauthorizedError,
+                    RayNotRunningError,
+                    WorkflowRunNotFoundError,
+                ) as e:
+                    # Known issue: we'll get `AttributeError` if `ray` isn't installed.
+                    # We don't capture it here.
+                    error_name = type(e).__name__
+                    cfgs_by_exception.setdefault(error_name, []).append(cfg_name)
                     continue
-                except WorkflowRunNotFoundError:
-                    cfgs_not_found.append(cfg_name)
-                    continue
-
                 return wf_run
 
             assert False, (
-                f"Couldn't find {run_id}. "
-                f"Unauthorized runtimes: {cfgs_unauthorized}, "
-                f"not found runtimes: {cfgs_not_found}"
+                f"Couldn't find {run_id}. Gathered errors: {cfgs_by_exception}"
             )
         else:
             resolved_config = resolve_config(config)
