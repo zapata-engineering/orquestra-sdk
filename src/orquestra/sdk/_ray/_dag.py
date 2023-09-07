@@ -541,7 +541,7 @@ class RayRuntime(RuntimeInterface):
         max_age: t.Optional[timedelta] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
         workspace: t.Optional[WorkspaceId] = None,
-    ):
+    ) -> t.List[WorkflowRunSummary]:
         """
         List summaries of the workflow runs, with some filters
 
@@ -550,9 +550,6 @@ class RayRuntime(RuntimeInterface):
             max_age: Only return runs younger than the specified maximum age.
             status: Only return runs of runs with the specified status.
             workspace: Only return runs from the specified workspace.
-
-        Returns:
-            A list of the workflow runs' summaries.
         """
         return [
             WorkflowRunSummary.from_workflow_run(wf)
