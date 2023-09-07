@@ -97,17 +97,3 @@ class WorkflowRunSummary(WorkflowRunOnlyID):
             ),
             dry_run=None,
         )
-
-    def __str__(self):
-        outstr = f"Summery for workflow run '{self.id}'"
-        if self.dry_run:
-            outstr += " (dry run):"
-        else:
-            outstr += ":"
-        outstr += (
-            f"\n- status: {self.status.state}"
-            f"\n- completed tasks: {self.completed_tasks}/{self.total_tasks}"
-        )
-        if self.owner:
-            outstr += f"\n- owner: {self.owner}"
-        return outstr
