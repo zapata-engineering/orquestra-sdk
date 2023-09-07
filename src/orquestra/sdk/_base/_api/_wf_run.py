@@ -609,7 +609,7 @@ def list_workflow_run_summaries(
     List summaries of the workflow runs, with some filters.
 
     Note: this method returns ``WorkflowRunSummary`` objects that are static overviews
-    of the workflow runs. If you need to perform operatios on the workflows, you
+    of the workflow runs. If you need to perform operations on the workflows, you
     probably want ``sdk.list_workflow_runs()``.
 
     Args:
