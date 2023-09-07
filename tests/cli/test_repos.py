@@ -31,6 +31,7 @@ from orquestra.sdk.schema.configs import RuntimeName
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
 from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
+from src.orquestra.sdk.schema.workflow_run import WorkflowRunSummary
 
 from ..sdk.data.configs import TEST_CONFIG_JSON
 
@@ -833,6 +834,44 @@ class TestWorkflowRunRepo:
 
             # Then
             assert [run.id for run in runs] == stub_run_ids
+
+        @staticmethod
+        def test_list_wf_run_summaries(monkeypatch):
+            # Given
+            config = "ray"
+            stub_run_ids = ["wf.1", "wf.2"]
+            state = State("RUNNING")
+            mock_wf_run_summaries = []
+            owner = "owner"
+            total_tasks = 99
+            completed_tasks = 1
+
+            for stub_id in stub_run_ids:
+                wf_run = WorkflowRunSummary(
+                    id=stub_id,
+                    status=RunStatus(state=state, start_time=None, end_time=None),
+                    owner=owner,
+                    total_tasks=total_tasks,
+                    completed_tasks=completed_tasks,
+                )
+                mock_wf_run_summaries.append(wf_run)
+
+            monkeypatch.setattr(
+                sdk,
+                "list_workflow_run_summaries",
+                Mock(return_value=mock_wf_run_summaries),
+            )
+
+            # Prevent RayRuntime from connecting to a real cluster.
+            monkeypatch.setattr(_dag.RayRuntime, "startup", Mock())
+
+            repo = _repos.WorkflowRunRepo()
+
+            # When
+            runs = repo.list_wf_run_summaries(config)
+
+            # Then
+            assert [run.id for run in runs] == stub_run_ids, runs[0]
 
         class TestWithInProcess:
             """
