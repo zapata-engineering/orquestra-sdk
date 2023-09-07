@@ -575,7 +575,9 @@ class WorkflowRun:
         return tasks
 
 
-def _handle_common_project_errors(project, workspace):
+def _handle_common_project_errors(
+    project: t.Optional[ProjectId], workspace: t.Optional[WorkspaceId]
+):
     if project and not workspace:
         raise ProjectInvalidError(
             f"The project `{project}` cannot be uniquely identified "
