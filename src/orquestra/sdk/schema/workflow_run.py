@@ -81,8 +81,8 @@ class WorkflowRunSummary(WorkflowRunOnlyID):
 
     status: RunStatus
     owner: t.Optional[str]
-    total_tasks: int
-    completed_tasks: int
+    total_task_runs: int
+    completed_task_runs: int
     dry_run: t.Optional[bool]
 
     @staticmethod
@@ -91,8 +91,8 @@ class WorkflowRunSummary(WorkflowRunOnlyID):
             id=wf.id,
             status=wf.status,
             owner=None,
-            total_tasks=len(wf.workflow_def.task_invocations),
-            completed_tasks=sum(
+            total_task_runs=len(wf.workflow_def.task_invocations),
+            completed_task_runs=sum(
                 1 for tr in wf.task_runs if tr.status.state == State.SUCCEEDED
             ),
             dry_run=None,

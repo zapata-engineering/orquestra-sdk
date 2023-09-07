@@ -246,8 +246,8 @@ class WorkflowRunSummaryResponse(MinimalWorkflowRunResponse):
             id=self.id,
             status=self.status.to_ir(),
             owner=self.owner,
-            total_tasks=self.totalTasks,
-            completed_tasks=self.completedTasks,
+            total_task_runs=self.totalTasks,
+            completed_task_runs=self.completedTasks,
             dry_run=self.dryRun,
         )
 

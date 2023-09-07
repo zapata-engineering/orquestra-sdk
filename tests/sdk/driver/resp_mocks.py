@@ -82,8 +82,8 @@ def _list_wf_run_resp(
     workflow_def_id: WorkflowDefID,
     status: RunStatus,
     create_time: str = "<create time>",
-    total_tasks: int = -1,
-    completed_tasks: int = -1,
+    total_task_runs: int = -1,
+    completed_task_runs: int = -1,
     dryrun: bool = False,
 ):
     return {
@@ -92,8 +92,8 @@ def _list_wf_run_resp(
         "status": _status_resp(status),
         "createTime": create_time,
         "owner": "evil/emiliano.zapata@zapatacomputing.com",
-        "totalTasks": total_tasks,
-        "completedTasks": completed_tasks,
+        "totalTasks": total_task_runs,
+        "completedTasks": completed_task_runs,
         "dryRun": dryrun,
     }
 

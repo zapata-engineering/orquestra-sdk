@@ -843,16 +843,16 @@ class TestWorkflowRunRepo:
             state = State("RUNNING")
             mock_wf_run_summaries = []
             owner = "owner"
-            total_tasks = 99
-            completed_tasks = 1
+            total_task_runs = 99
+            completed_task_runs = 1
 
             for stub_id in stub_run_ids:
                 wf_run = WorkflowRunSummary(
                     id=stub_id,
                     status=RunStatus(state=state, start_time=None, end_time=None),
                     owner=owner,
-                    total_tasks=total_tasks,
-                    completed_tasks=completed_tasks,
+                    total_task_runs=total_task_runs,
+                    completed_task_runs=completed_task_runs,
                 )
                 mock_wf_run_summaries.append(wf_run)
 

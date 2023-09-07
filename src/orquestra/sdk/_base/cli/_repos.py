@@ -504,7 +504,7 @@ def _(wf_run: WorkflowRunSummary) -> ui_models.WFList.WFRow:
     return ui_models.WFList.WFRow(
         workflow_run_id=wf_run.id,
         status=wf_run.status.state.value,
-        tasks_succeeded=f"{wf_run.completed_tasks}/{wf_run.total_tasks}",
+        tasks_succeeded=f"{wf_run.completed_task_runs}/{wf_run.total_task_runs}",
         start_time=wf_run.status.start_time,
     )
 
