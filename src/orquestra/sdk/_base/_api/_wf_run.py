@@ -603,7 +603,6 @@ def list_workflow_run_summaries(
     limit: t.Optional[int] = None,
     max_age: t.Optional[str] = None,
     state: t.Optional[t.Union[State, t.List[State]]] = None,
-    project_dir: t.Optional[t.Union[Path, str]] = None,
     workspace: t.Optional[WorkspaceId] = None,
     project: t.Optional[ProjectId] = None,
 ) -> t.List[WorkflowRunSummary]:
@@ -641,7 +640,7 @@ def list_workflow_run_summaries(
     resolved_config: RuntimeConfig = resolve_config(config)
 
     # resolve runtime
-    runtime = resolved_config._get_runtime(Path(project_dir or Path.cwd()))
+    runtime = resolved_config._get_runtime(Path.cwd())
 
     # Grab the workflow summaries from the runtime.
     with warnings.catch_warnings():
