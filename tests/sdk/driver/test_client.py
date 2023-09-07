@@ -133,6 +133,10 @@ class TestClient:
         return "00000000-0000-0000-0000-000000000000"
 
     @pytest.fixture
+    def status(self):
+        return RunStatus(state=State.SUCCEEDED)
+
+    @pytest.fixture
     def workflow_def(self):
         @sdk.task
         def task():
@@ -835,7 +839,7 @@ class TestClient:
                 with pytest.raises(_exceptions.UnknownHTTPError):
                     _ = client.get_workflow_run(workflow_run_id)
 
-        class TestList:
+        class TestListWorkflowRuns:
             @staticmethod
             @pytest.fixture
             def endpoint_mocker(endpoint_mocker_base, base_uri: str):
@@ -869,6 +873,7 @@ class TestClient:
                 client: DriverClient,
                 workflow_run_id: str,
                 workflow_def_id: str,
+                status: RunStatus,
             ):
                 endpoint_mocker(
                     # Specified in:
@@ -876,6 +881,7 @@ class TestClient:
                     json=resp_mocks.make_list_wf_run_response(
                         ids=[workflow_run_id] * 10,
                         workflow_def_ids=[workflow_def_id] * 10,
+                        statuses=[status] * 10,
                     )
                 )
 
@@ -894,6 +900,7 @@ class TestClient:
                 client: DriverClient,
                 workflow_run_id: str,
                 workflow_def_id: str,
+                status: RunStatus,
             ):
                 endpoint_mocker(
                     # Specified in:
@@ -901,6 +908,7 @@ class TestClient:
                     json=resp_mocks.make_list_wf_run_paginated_response(
                         ids=[workflow_run_id] * 10,
                         workflow_def_ids=[workflow_def_id] * 10,
+                        statuses=[status] * 10,
                     )
                 )
 
@@ -958,11 +966,13 @@ class TestClient:
                 token,
                 workflow_run_id,
                 workflow_def_id,
+                status: RunStatus,
             ):
                 endpoint_mocker(
                     json=resp_mocks.make_list_wf_run_response(
                         ids=[workflow_run_id] * 10,
                         workflow_def_ids=[workflow_def_id] * 10,
+                        statuses=[status] * 10,
                     ),
                     match=[
                         responses.matchers.header_matcher(
@@ -1007,6 +1017,185 @@ class TestClient:
 
                 with pytest.raises(_exceptions.UnknownHTTPError):
                     _ = client.list_workflow_runs()
+
+        class TestListWorkflowRunSummaries:
+            @staticmethod
+            @pytest.fixture
+            def endpoint_mocker(endpoint_mocker_base, base_uri: str):
+                """
+                Returns a helper for mocking requests. Assumes that most of the tests
+                inside this class contain a very similar set up.
+                """
+
+                return endpoint_mocker_base(
+                    responses.GET,
+                    f"{base_uri}/api/workflow-runs",
+                )
+
+            # @staticmethod
+            # @pytest.fixture
+            # def mock_get_workflow_def(
+            #     client: DriverClient,
+            #     workflow_def: WorkflowDef,
+            #     monkeypatch: pytest.MonkeyPatch,
+            # ):
+            #     mock = create_autospec(GetWorkflowDefResponse)
+            #     mock.workflow = workflow_def
+            #     function_mock = create_autospec(client.get_workflow_def)
+            #     function_mock.return_value = mock
+            #     monkeypatch.setattr(client, "get_workflow_def", function_mock)
+
+            @staticmethod
+            def test_list_workflow_run_summaries(
+                endpoint_mocker,
+                # mock_get_workflow_def,
+                client: DriverClient,
+                workflow_run_id: str,
+                workflow_def_id: str,
+                status: RunStatus,
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/workflow-runs.yaml#L14
+                    json=resp_mocks.make_list_wf_run_response(
+                        ids=[workflow_run_id] * 10,
+                        workflow_def_ids=[workflow_def_id] * 10,
+                        statuses=[status] * 10,
+                    )
+                )
+
+                defs = client.list_workflow_run_summaries()
+
+                assert isinstance(defs, Paginated)
+                assert len(defs.contents) == 10
+                assert defs.contents[0].id == workflow_run_id
+                assert defs.next_page_token is None
+                assert defs.prev_page_token is None
+
+            @staticmethod
+            def test_list_workflow_runs_with_pagination(
+                endpoint_mocker,
+                # mock_get_workflow_def,
+                client: DriverClient,
+                workflow_run_id: str,
+                workflow_def_id: str,
+                status: RunStatus,
+            ):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/workflow-runs.yaml#L14
+                    json=resp_mocks.make_list_wf_run_paginated_response(
+                        ids=[workflow_run_id] * 10,
+                        workflow_def_ids=[workflow_def_id] * 10,
+                        statuses=[status] * 10,
+                    )
+                )
+
+                defs = client.list_workflow_run_summaries()
+
+                assert isinstance(defs, Paginated)
+                assert len(defs.contents) == 10
+                assert defs.contents[0].id == workflow_run_id
+                assert (
+                    defs.next_page_token == "1989-12-13T00:00:00.000000Z,"
+                    "00000000-0000-0000-0000-0000000000000"
+                )
+
+            @staticmethod
+            @pytest.mark.parametrize(
+                "kwargs,params",
+                [
+                    ({}, {}),
+                    ({"workflow_def_id": "0"}, {"workflowDefinitionID": "0"}),
+                    ({"page_size": 100}, {"pageSize": 100}),
+                    ({"page_token": "abc"}, {"pageToken": "abc"}),
+                    (
+                        {"page_size": 100, "page_token": "abc"},
+                        {"pageSize": 100, "pageToken": "abc"},
+                    ),
+                ],
+            )
+            def test_params_encoding(
+                endpoint_mocker,
+                # mock_get_workflow_def,
+                client: DriverClient,
+                kwargs: Dict,
+                params: Dict,
+            ):
+                """
+                Verifies that params are correctly sent to the server.
+                """
+                endpoint_mocker(
+                    json=resp_mocks.make_list_wf_def_response(ids=[], wf_defs=[]),
+                    match=[responses.matchers.query_param_matcher(params)],
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/workflow-runs.yaml#L14
+                    status=200,
+                )
+
+                client.list_workflow_run_summaries(**kwargs)
+
+                # The assertion is done by mocked_responses
+
+            @staticmethod
+            def test_sets_auth(
+                endpoint_mocker,
+                # mock_get_workflow_def,
+                client: DriverClient,
+                token,
+                workflow_run_id,
+                workflow_def_id,
+                status: RunStatus,
+            ):
+                endpoint_mocker(
+                    json=resp_mocks.make_list_wf_run_response(
+                        ids=[workflow_run_id] * 10,
+                        workflow_def_ids=[workflow_def_id] * 10,
+                        statuses=[status] * 10,
+                    ),
+                    match=[
+                        responses.matchers.header_matcher(
+                            {"Authorization": f"Bearer {token}"}
+                        )
+                    ],
+                )
+
+                client.list_workflow_run_summaries()
+
+                # The assertion is done by mocked_responses
+
+            @staticmethod
+            def test_unauthorized(endpoint_mocker, client: DriverClient):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/workflow-runs.yaml#L33
+                    status=401,
+                )
+
+                with pytest.raises(_exceptions.InvalidTokenError):
+                    _ = client.list_workflow_run_summaries()
+
+            @staticmethod
+            def test_forbidden(endpoint_mocker, client: DriverClient):
+                endpoint_mocker(
+                    # Specified in:
+                    # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/workflow-runs.yaml#L35
+                    status=403,
+                )
+
+                with pytest.raises(_exceptions.ForbiddenError):
+                    _ = client.list_workflow_run_summaries()
+
+            @staticmethod
+            def test_unknown_error(endpoint_mocker, client: DriverClient):
+                endpoint_mocker(
+                    # Specified in
+                    # https://github.com/zapatacomputing/workflow-driver/blob/6270a214fff40f53d7b25ec967f2e7875eb296e3/openapi/src/resources/workflow-runs.yaml#L37
+                    status=500,
+                )
+
+                with pytest.raises(_exceptions.UnknownHTTPError):
+                    _ = client.list_workflow_run_summaries()
 
         class TestCreate:
             @staticmethod
