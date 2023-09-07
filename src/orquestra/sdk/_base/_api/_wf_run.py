@@ -629,9 +629,6 @@ def list_workflow_run_summaries(
         ConfigNameNotFoundError: when the named config is not found in the file.
         NotImplementedError: when a filter is specified for a runtime that does not
             support it.
-
-    Returns:
-        a list of WorkflowRunSummary objects.
     """
     project = _handle_common_project_errors(project, workspace)
     workspace = resolve_studio_workspace_ref(workspace_id=workspace)
