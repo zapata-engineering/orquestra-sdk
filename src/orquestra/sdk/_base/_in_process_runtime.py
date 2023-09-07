@@ -363,7 +363,7 @@ class InProcessRuntime(abc.RuntimeInterface):
             A list of the workflow runs' summaries.
         """
         return [
-            WorkflowRunSummary.from_workflowrun(wf)
+            WorkflowRunSummary.from_workflow_run(wf)
             for wf in self.list_workflow_runs(
                 limit=limit,
                 max_age=max_age,

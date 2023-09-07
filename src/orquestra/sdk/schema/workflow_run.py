@@ -86,7 +86,7 @@ class WorkflowRunSummary(WorkflowRunOnlyID):
     dry_run: t.Optional[bool]
 
     @staticmethod
-    def from_workflowrun(wf: WorkflowRun) -> "WorkflowRunSummary":
+    def from_workflow_run(wf: WorkflowRun) -> "WorkflowRunSummary":
         return WorkflowRunSummary(
             id=wf.id,
             status=wf.status,
