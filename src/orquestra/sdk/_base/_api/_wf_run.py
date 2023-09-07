@@ -610,7 +610,7 @@ def list_workflow_run_summaries(
     """
     List summaries of the workflow runs, with some filters.
 
-    Note: this method returns ``WorkflowRunSummary`` objects that are static overviews
+    Note: this function returns ``WorkflowRunSummary`` objects that are static overviews
     of the workflow runs. If you need to perform operations on the workflows, you
     probably want ``sdk.list_workflow_runs()``.
 
@@ -669,7 +669,7 @@ def list_workflow_runs(
     """
     List the workflow runs, with some filters.
 
-    Note: this method returns a list of full ``WorkflowRun`` objects.
+    Note: this function returns a list of full ``WorkflowRun`` objects.
     This will allow you to iterate through workflow runs performing actions on them,
     e.g. stopping all workflows older than a month.
     If you want an overview of workflows without necessarily needing to interact with
