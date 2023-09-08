@@ -2,6 +2,11 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 
+"""
+User-facing `WorkflowRun` object for representing and allowing interaction with an
+individual workflow.
+"""
+
 import re
 import sys
 import time
@@ -21,6 +26,7 @@ from ...exceptions import (
     WorkflowRunNotFinished,
     WorkflowRunNotFoundError,
     WorkflowRunNotSucceeded,
+    WorkspacesNotSupportedError,
 )
 from ...schema import ir
 from ...schema.configs import ConfigName
@@ -51,16 +57,25 @@ class WorkflowRun:
     @staticmethod
     def _get_stored_run(_project_dir: Path, run_id: WorkflowRunId) -> StoredWorkflowRun:
         """
+        Get the run details from the database.
+
+        Extracted from by_id method to mock it in unit tests.
+
+        Args:
+            _project_dir: The location of the project directory.
+            run_id: The id of the workflow run to be loaded.
+
         Raises:
             orquestra.sdk.exceptions.WorkflowNotFoundError: raised when no matching
-            workflow exists in the database.
+                workflow exists in the database.
         """
         from orquestra.sdk._base._db import WorkflowDB
 
-        # Get the run details from the database. Extracted from by_id method
-        # to mock it in unit tests.
-        with WorkflowDB.open_project_db(_project_dir) as db:
-            return db.get_workflow_run(run_id)
+        try:
+            with WorkflowDB.open_project_db(_project_dir) as db:
+                return db.get_workflow_run(run_id)
+        except WorkflowRunNotFoundError:
+            raise
 
     @classmethod
     def by_id(
@@ -69,7 +84,8 @@ class WorkflowRun:
         config: t.Optional[t.Union["RuntimeConfig", str]] = None,
         project_dir: t.Optional[t.Union[Path, str]] = None,
     ) -> "WorkflowRun":
-        """Get the WorkflowRun corresponding to a previous workflow run.
+        """
+        Get the WorkflowRun corresponding to a previous workflow run.
 
         Args:
             run_id: The id of the workflow run to be loaded.
@@ -184,9 +200,7 @@ class WorkflowRun:
         dry_run: bool,
         project: t.Optional[ProjectRef] = None,
     ):
-        """
-        Schedule workflow for execution and return WorkflowRun.
-        """
+        """Schedule workflow for execution and return WorkflowRun."""
         run_id = runtime.create_workflow_run(wf_def, project, dry_run)
 
         workflow_run = WorkflowRun(
@@ -206,8 +220,9 @@ class WorkflowRun:
         config: t.Optional["RuntimeConfig"] = None,
     ):
         """
-        Users aren't expected to use __init__() directly. Please use
-        `WorkflowRun.by_id` or `WorkflowDef.run()`.
+        Users aren't expected to use __init__() directly.
+
+        Please use `WorkflowRun.by_id` or `WorkflowDef.run()`.
 
         Args:
             wf_def: the workflow being run. Workflow definition in the model
@@ -235,9 +250,7 @@ class WorkflowRun:
 
     @property
     def config(self):
-        """
-        The configuration for this workflow run.
-        """
+        """The configuration for this workflow run."""
         if self._config is None:
             no_config_message = (
                 "This workflow run was created without a runtime configuration. "
@@ -249,25 +262,31 @@ class WorkflowRun:
 
     @property
     def run_id(self):
-        """
-        The run_id for this workflow run.
-        """
+        """The run_id for this workflow run."""
         return self._run_id
 
     @cached_property
     def project(self):
-        """Get the project and workspace id of a workflowrun,
-        Currently supported only on CE
+        """
+        Get the project and workspace id of a workflowrun.
+
+        Currently supported only on CE.
 
         Raises:
             orquestra.sdk.exceptions.WorkspacesNotSupportedError: when runtime
-            does not support workspaces and projects
+                does not support workspaces and projects
         """
 
-        return self._runtime.get_workflow_project(self.run_id)
+        try:
+            return self._runtime.get_workflow_project(self.run_id)
+        except WorkspacesNotSupportedError:
+            raise
 
-    def wait_until_finished(self, frequency: float = 0.25, verbose=True) -> State:
-        """Block until the workflow run finishes.
+    def wait_until_finished(
+        self, frequency: float = 0.25, verbose: bool = True
+    ) -> State:
+        """
+        Block until the workflow run finishes.
 
         This method draws no distinctions between whether the workflow run completes
         successfully, fails, or is terminated for any other reason.
@@ -276,6 +295,10 @@ class WorkflowRun:
             frequency: The frequency in Hz at which the status should be checked.
             verbose: If ``True``, each iteration of the polling loop will print to
                 stderr.
+
+        Raises:
+            NotImplementedError: When the workflow finishes with a state that is not
+                explicitly handled by this method.
 
         Returns:
             orquestra.sdk.schema.workflow_run.State: The state of the finished workflow.
@@ -324,7 +347,7 @@ class WorkflowRun:
         Raises:
             orquestra.sdk.exceptions.UnauthorizedError: when communication with runtime
                 failed because of an auth error
-            orquestra.sdk.exceptions.WorkflowRunCanNotBeTerminated if the termination
+            orquestra.sdk.exceptions.WorkflowRunCanNotBeTerminated: if the termination
                 attempt failed
         """
         try:
@@ -659,14 +682,16 @@ def list_workflow_runs(
 
 
 def _parse_max_age(age: t.Optional[str]) -> t.Optional[timedelta]:
-    """Parse a string specifying an age into a timedelta object.
+    """
+    Parse a string specifying an age into a timedelta object.
+
     If the string cannot be parsed, an exception is raises.
 
     Args:
         age: the string to be parsed.
 
     Raises:
-        ValueError if the age string cannot be parsed
+        ValueError: if the age string cannot be parsed
 
     Returns:
         datetime.timedelta: the age specified by the 'age' string, as a timedelta.
