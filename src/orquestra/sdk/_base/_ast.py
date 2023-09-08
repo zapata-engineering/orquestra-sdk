@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 import ast
 import logging
@@ -228,11 +228,12 @@ class CallVisitor(ast.NodeVisitor):
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         """Visits a function definition by only iterating over its statements.
+
         Other information about the Function definition is not analyzed e.g.
         decorators.
 
         Args:
-            node : ast node of type FunctionDef
+            node: ast node of type FunctionDef
         """
         for statement in node.body:
             self.generic_visit(statement)
@@ -241,7 +242,7 @@ class CallVisitor(ast.NodeVisitor):
         """Extract information of a Call
 
         Args:
-            node : node for a Call in a AST
+            node: node for a Call in a AST
         Returns:
             _Call object with information about the Call statement
         """
