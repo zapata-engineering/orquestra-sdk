@@ -272,6 +272,9 @@ class TestRayRuntimeMethods:
                 .get_workflow_logs(wf_run_id=run_id)
                 .env_setup
             )
+
+            # TODO: this is a stopgap due to differences between behaviour on CI and
+            # local. See ORQSDK-978 for details.
             assert run.message in [
                 f"Could not set up runtime environment. See environment setup logs for details. `orq wf logs {run_id} --env-setup`",  # noqa: E501
                 f"The workflow encountered an issue. Please consult the logs for more information. `orq wf logs {run_id}`",  # noqa: E501
