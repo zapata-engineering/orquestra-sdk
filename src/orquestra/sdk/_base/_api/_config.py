@@ -177,13 +177,12 @@ class RuntimeConfig:
     def _get_runtime(
         self, project_dir: t.Optional[t.Union[str, Path]] = None
     ) -> RuntimeInterface:
-        """Build the run
+        """
+        Build the run.
 
         Args:
             project_dir: the path to the project directory. If omitted, the current
                 working directory is used.
-        Raises:
-            ModuleNotFoundError: when orquestra.sdk._base is not installed.
 
         Returns:
             Runtime: The runtime specified by the configuration.
@@ -233,8 +232,10 @@ class RuntimeConfig:
             config_name: The name of the configuration to be loaded.
 
         Raises:
-            orquestra.sdk.exceptions.ConfigFileNotFoundError
-            orquestra.sdk.exceptions.ConfigNameNotFoundError
+            orquestra.sdk.exceptions.ConfigFileNotFoundError: When the config file is
+                of a higher version than this version of the SDK supports.
+            orquestra.sdk.exceptions.ConfigNameNotFoundError: When the specified config
+                name is not present in the config file.
 
         Returns:
             RuntimeConfig: The configuration as loaded from the file.
@@ -300,7 +301,7 @@ class RuntimeConfig:
 
         Args:
             config: the RuntimeConfigration object to be converted (e.g. the return from
-            _config.load()).
+                _config.load()).
         """
         if config.runtime_name == RuntimeName.IN_PROCESS:
             return RuntimeConfig.in_process()
