@@ -90,7 +90,7 @@ class WorkflowDB(WorkflowRepo, AbstractContextManager):
 
         Raises:
             WorkflowRunNotFoundError: raised when no matching workflow exists in the
-            database.
+                database.
 
         Returns:
             StoredWorkflowRun: the details of the stored workflow.
