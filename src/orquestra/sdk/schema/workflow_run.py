@@ -76,11 +76,16 @@ class WorkflowRun(WorkflowRunMinimal):
 
 class WorkflowRunSummary(WorkflowRunOnlyID):
     """
-    A summary overview of a workflow run
+    A summary overview of a workflow run.
     """
 
     status: RunStatus
     owner: t.Optional[str]
+    """
+    The email address of the account that submitted this workflow run.
+
+    For local runs, this field is not populated.
+    """
     total_task_runs: int
     completed_task_runs: int
     dry_run: t.Optional[bool]
