@@ -31,7 +31,7 @@ from orquestra.sdk.schema.configs import RuntimeName
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
 from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
-from src.orquestra.sdk.schema.workflow_run import WorkflowRunSummary
+from orquestra.sdk.schema.workflow_run import WorkflowRunSummary
 
 from ..sdk.data.configs import TEST_CONFIG_JSON
 
@@ -1038,38 +1038,24 @@ class TestSummaryRepo:
         [
             pytest.param(
                 [
-                    WorkflowRunModel(
+                    WorkflowRunSummary(
                         id="wf.2",
-                        workflow_def=_example_wfs.complicated_wf().model,
-                        task_runs=[
-                            TaskRunModel(
-                                id="task_run_1",
-                                invocation_id="invocation-1-task-capitalize",
-                                status=RunStatus(
-                                    state=State.SUCCEEDED,
-                                    start_time=INSTANT_1,
-                                    end_time=INSTANT_2,
-                                ),
-                            ),
-                            TaskRunModel(
-                                id="task_run_2",
-                                invocation_id="invocation-2-task-concat",
-                                status=RunStatus(
-                                    state=State.RUNNING,
-                                    start_time=INSTANT_2,
-                                ),
-                            ),
-                        ],
                         status=RunStatus(
                             state=State.RUNNING,
                             start_time=INSTANT_1 + datetime.timedelta(seconds=30),
                         ),
+                        owner="evil/emiliano.zapata@zapatacomputing.com",
+                        total_task_runs=2,
+                        completed_task_runs=1,
+                        dry_run=False,
                     ),
-                    WorkflowRunModel(
+                    WorkflowRunSummary(
                         id="wf.1",
-                        workflow_def=_example_wfs.complicated_wf().model,
-                        task_runs=[],
                         status=RunStatus(state=State.WAITING, start_time=INSTANT_1),
+                        owner="evil/emiliano.zapata@zapatacomputing.com",
+                        total_task_runs=0,
+                        completed_task_runs=0,
+                        dry_run=False,
                     ),
                 ],
                 ui_models.WFList(
@@ -1127,7 +1113,7 @@ class TestSummaryRepo:
         ],
     )
     def test_wf_list_summary(
-        wf_run: t.List[WorkflowRunModel], expected_summary: ui_models.WFList
+        wf_run: t.List[WorkflowRunSummary], expected_summary: ui_models.WFList
     ):
         # Given
         repo = _repos.SummaryRepo()
