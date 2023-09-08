@@ -4,7 +4,6 @@
 """
 RuntimeInterface implementation that uses Compute Engine.
 """
-import contextlib
 import warnings
 from datetime import timedelta
 from pathlib import Path
@@ -33,26 +32,6 @@ from orquestra.sdk.schema.workflow_run import (
 )
 
 from . import _client, _exceptions, _models
-
-
-class HandleAuthErrors(contextlib.AbstractContextManager):
-    def __init__(self, message: str, project: Optional[ProjectRef] = None):
-        self.message = message
-        self.project = project
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        if exc_type in [_exceptions.InvalidTokenError, _exceptions.ForbiddenError]:
-            raise exceptions.UnauthorizedError(
-                f"{self.message} "
-                "- the authorization token was rejected by the remote cluster."
-            )
-        elif exc_type is _exceptions.ForbiddenError:
-            if self.project:
-                raise exceptions.ProjectInvalidError(
-                    f"{self.message} " f"invalid workspace: {self.project.workspace_id}"
-                )
-            else:
-                raise exceptions.UnauthorizedError(self.message)
 
 
 def _get_max_resources(workflow_def: WorkflowDef) -> _models.Resources:
