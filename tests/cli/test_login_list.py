@@ -57,3 +57,26 @@ class TestAction:
             ("<config name sentinel 2>",),
         ]
         prompter.assert_not_called()
+
+    def test_no_remote_configs(monkeypatch, capsys):
+        # Given
+        exception_presenter = Mock()
+        config_repo = Mock()
+        prompter = Mock()
+
+        config_repo.list_remote_config_names = Mock(return_value=[])
+
+        action = Action(
+            exception_presenter=exception_presenter,
+            config_repo=config_repo,
+            prompter=prompter,
+        )
+
+        # When
+        action._on_cmd_call_with_exceptions()
+
+        # Then
+        assert "No remote configs available" in capsys.readouterr().out
+        exception_presenter.assert_not_called()
+        config_repo.list_remote_config_names.assert_called_once_with()
+        prompter.assert_not_called()

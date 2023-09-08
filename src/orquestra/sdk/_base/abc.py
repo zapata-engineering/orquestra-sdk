@@ -230,23 +230,3 @@ class WorkflowRepo(ABC):
             the workflow run with run ID, stored config, and WorkflowDef
         """
         raise NotImplementedError()
-
-    @abstractmethod
-    def get_workflow_runs_list(
-        self, prefix: t.Optional[str], config_name: t.Optional[str]
-    ) -> t.List[StoredWorkflowRun]:
-        """
-        Retrieve all workflow runs matching one or more conditions. If no conditions
-        are set, returns all workflow runs.
-
-        Arguments:
-            prefix (Optional): Only return workflow runs whose IDs start with the
-                prefix.
-            config_name (Optional): Only return workflow runs that use the
-                specified configuration name.
-
-        Returns:
-            A list of workflow runs for a given config. Includes: run ID, stored
-            config, and WorkflowDef
-        """
-        raise NotImplementedError()
