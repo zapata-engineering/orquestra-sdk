@@ -393,10 +393,7 @@ def update_config(
             left intact.
 
     Raises:
-        ValueError:
-            - if `config_name` was resolved to "local".
-            - if `config_name` couldn't be resolved automatically.
-        KeyError:
+        RuntimeConfigError:
             - if one or more runtime options are not valid for this runtime.
     """
     with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME):
@@ -413,9 +410,12 @@ def update_config(
             resolved_prev_config_entry,
         )
 
-        resolved_runtime_options = _validate_runtime_options(
-            runtime_name, resolved_options
-        )
+        try:
+            resolved_runtime_options = _validate_runtime_options(
+                runtime_name, resolved_options
+            )
+        except exceptions.RuntimeConfigError:
+            raise
 
         _save_new_config_file(
             config_name,
