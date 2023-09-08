@@ -4,7 +4,7 @@
 
 🚨 *Breaking Changes*
 
-* Removed model classes that used to define the shape of old `orq` CLI command outputs.
+* Removed model classes that used to define the shape of defunct `orq` CLI command outputs.
 
 🔥 *Features*
 
