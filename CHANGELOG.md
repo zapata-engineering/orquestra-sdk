@@ -5,6 +5,8 @@
 🚨 *Breaking Changes*
 
 🔥 *Features*
+* Added `sdk.list_workflow_run_summeries()` as a partner to `sdk.list_workflow_runs()` - the new function provides a static overview of workflow runs as a way to quickly check on their statuses.
+
 
 🧟 *Deprecations*
 
@@ -17,6 +19,7 @@
 💅 *Improvements*
 
 * Throw more informative exceptions if secret is used in any unintended way inside workflow function
+* `orq wf list` now uses `sdk.list_workflow_run_summeries()` under the hood. On CE, this reduces the required API calls from 3N+1 to 1.
 
 🥷 *Internal*
 
@@ -37,6 +40,7 @@
 * Adding `dry_run` parameter to `Workflow.run()`. It allows to test resources, dependencies and infrastructure while ignoring user task code.
 * Added `orq reset` as a shortcut for `orq down`, `orq up`
 * New CLI output formatting for a subset of commands.
+
 
 🐛 *Bug Fixes*
 
