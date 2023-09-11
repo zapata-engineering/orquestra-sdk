@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """Workflow Run model.
 
@@ -9,6 +9,7 @@ structure here is JSON-serializable.
 
 import enum
 import typing as t
+import warnings
 
 from pydantic import BaseModel
 
@@ -34,6 +35,25 @@ class State(enum.Enum):
     @classmethod
     def _missing_(cls, _):
         return cls.UNKNOWN
+
+    def is_completed(self) -> bool:
+        """
+        Check whether the state indicates that execution of the workflow run has ended.
+
+        Returns:
+            True if the execution has ended for any reason, False if the workflow run
+                is waiting or running.
+        """
+        if self == self.UNKNOWN:
+            warnings.warn("Cannot determine the workflow run state.")
+
+        return self in (
+            self.SUCCEEDED,
+            self.TERMINATED,
+            self.FAILED,
+            self.ERROR,
+            self.KILLED,
+        )
 
 
 class RunStatus(BaseModel):
