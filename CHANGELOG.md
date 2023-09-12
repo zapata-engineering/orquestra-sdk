@@ -4,6 +4,8 @@
 
 🚨 *Breaking Changes*
 
+* Removed model classes that used to define the shape of defunct `orq` CLI command outputs.
+
 🔥 *Features*
 * Added `sdk.list_workflow_run_summeries()` as a partner to `sdk.list_workflow_runs()` - the new function provides a static overview of workflow runs as a way to quickly check on their statuses.
 
