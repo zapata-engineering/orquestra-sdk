@@ -72,13 +72,14 @@ class Prompter:
             message: The message to prompt the user.
             default: The value to return as the default, if the user doesn't choose
                 anything.
+            allow_all: if True, add an 'all' option to the bottom of the list.
 
         Returns:
             The item the user chose, either a ChoiceID or an object if ``choices`` was
-            a tuple.
+                a tuple.
 
         Raises:
-            UserCancelledPrompt if the user cancels the prompt
+            UserCancelledPrompt: if the user cancels the prompt
         """
         # If there are no choices, report it to the user and exit.
         if len(choices) == 0:
@@ -112,7 +113,7 @@ class Prompter:
 
     def confirm(self, message: str, default: bool) -> bool:
         """
-        Ask the user for confirmation
+        Ask the user for confirmation.
 
         Args:
             message: The message to prompt the user.
@@ -122,7 +123,7 @@ class Prompter:
             The result from the prompt
 
         Raises:
-            UserCancelledPrompt if the user cancels the prompt
+            UserCancelledPrompt: if the user cancels the prompt
         """
         answer = inquirer.confirm(message, default=default)
 
@@ -160,7 +161,7 @@ class Prompter:
         default: t.Optional[t.Union[str, t.List[str]]] = None,
     ) -> t.Union[t.List[ChoiceID], t.List[T]]:
         """
-        Presents the user a multiple choice and returns what they selected
+        Presents the user a multiple choice and returns what they selected.
 
         Args:
             choices: The list of choices to present to the user. If this is of the shape
@@ -175,7 +176,7 @@ class Prompter:
             ``choices`` was a tuple.
 
         Raises:
-            UserCancelledPrompt if the user cancels the prompt
+            UserCancelledPrompt: if the user cancels the prompt
         """
         # If there are no choices, report it to the user and exit.
         if len(choices) == 0:
@@ -212,9 +213,9 @@ class Prompter:
         allow_none: t.Optional[bool] = False,
     ) -> t.Union[int, None]:
         """
-        Asks the user to enter an integer
+        Asks the user to enter an integer.
 
-        If the user's input is not an integer, the prompt will ask again
+        If the user's input is not an integer, the prompt will ask again.
 
         Args:
             message: The message to prompt the user.
@@ -223,10 +224,10 @@ class Prompter:
             allow_none: allow 'None' as a valid response.
 
         Returns:
-            an integer parsed from the user's input
+            an integer parsed from the user's input.
 
         Raises:
-            UserCancelledPrompt if the user cancels the prompt
+            UserCancelledPrompt: if the user cancels the prompt
         """
 
         nonestrings: t.List[str] = []
@@ -275,12 +276,14 @@ class Prompter:
             message: The message to prompt the user.
             default: The value to return as the default, if the user doesn't choose
                 anything.
+            allow_none: If True, the prompter will accept 'None' or an empty string as
+                a response, and return None if one of these is given.
 
         Returns:
-            an integer parsed from the user's input
+            an integer parsed from the user's input.
 
         Raises:
-            UserCancelledPrompt if the user cancels the prompt
+            UserCancelledPrompt: if the user cancels the prompt
         """
 
         nonestrings: t.List[str] = []
