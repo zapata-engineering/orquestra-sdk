@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
 Tools for generating IDs for use inside Runtimes.
@@ -25,6 +25,9 @@ def gen_short_uid(char_length: int) -> str:
 
         >>> gen_short_uid(5)
         'd2f26'
+
+    Args:
+        char_length: the required number of characters for the UID.
     """
     a_uuid = uuid.uuid4()
     n_bytes = math.ceil(char_length / 2)
