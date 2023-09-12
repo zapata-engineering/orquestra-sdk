@@ -113,24 +113,25 @@ def _workflow_state_from_ray_meta(
     end_time: t.Optional[float],
     ray_task_metas: t.List[t.Dict[str, t.Any]],
 ) -> State:
-    # We look at the tasks and check that all of them are in a completed
-    # state.
-    tasks_completed = (
-        (
-            state := _task_state_from_ray_meta(
-                wf_status,
-                task_meta["stats"].get("start_time"),
-                task_meta["stats"].get("end_time"),
-                task_meta["stats"].get("failed"),
-            )
-        ).is_completed()
-        or state == State.WAITING
-        for task_meta in ray_task_metas
-    )
-
     if wf_status == _client.WorkflowStatus.FAILED:
         # If Ray said the workflow has failed, we'll check to see if all the tasks are
         # in a completed state.
+        # Note that unlike when reporting states for individual tasks, we regard
+        # 'WAITING' as completed as we only want tasks that have actually started to
+        # prevent the workflow from being reported as FAILED.
+        tasks_completed = (
+            (
+                state := _task_state_from_ray_meta(
+                    wf_status,
+                    task_meta["stats"].get("start_time"),
+                    task_meta["stats"].get("end_time"),
+                    task_meta["stats"].get("failed"),
+                )
+            ).is_completed()
+            or state == State.WAITING
+            for task_meta in ray_task_metas
+        )
+
         if all(tasks_completed):
             # If all the tasks are completed, we will say the workflow failed.
             return State.FAILED
