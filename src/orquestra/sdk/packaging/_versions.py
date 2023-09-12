@@ -122,7 +122,7 @@ def InstalledImport(
     return PythonImports(f"{package_name}=={version}")
 
 
-def execute_task(task: TaskDef, args, kwargs) -> Any:
+def execute_task(task: TaskDef, args: tuple, kwargs: dict) -> Any:
     """
     A helper method for testing tasks by executing them outside of the workflow graph.
 
