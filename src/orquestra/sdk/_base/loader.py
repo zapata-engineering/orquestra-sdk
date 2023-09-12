@@ -119,7 +119,7 @@ DEFAULT_IMPORT_BLOCK_LIST: t.List[str] = []
 
 def get_workflow_defs_module(
     directory: str, import_block_list: t.Optional[t.List[str]] = None
-):
+) -> types.ModuleType:
     """
     Return the module containing the current project's workflow definitions.
 
@@ -165,7 +165,7 @@ def get_workflow_defs_module(
     return module
 
 
-def get_attributes_of_type(target_object, target_type: type) -> t.List:
+def get_attributes_of_type(target_object: object, target_type: type) -> t.List:
     """Get all attributes of an object that are instances of a given type.
 
     Args:
