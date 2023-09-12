@@ -199,11 +199,15 @@ def _workflow_status_from_ray_meta(
         # there are tasks still running.
         _end_time = None
     elif state == State.FAILED:
-        # If the workflow failed, we'll pick the latest end_time from the tasks
-        # This is because the end_time stored with the workflow is
-        # when the workflow was marked as failed, not when the last task ended.
+        # If the workflow failed, we'll pick the latest end_time from the tasks.
+        # This is because the end_time stored with the workflow is when the workflow
+        # was marked as failed, not when the last task ended. Note that workflows can
+        # fail with waiting tasks, so we filter out any tasks that don't have a start
+        # time.
         _end_time = max(
-            task_meta["stats"].get("end_time") for task_meta in ray_task_metas
+            task_meta["stats"].get("end_time")
+            for task_meta in ray_task_metas
+            if task_meta["stats"].get("start_time")
         )
     else:
         # In all other scenarios, we can just use the end_time the workflow
