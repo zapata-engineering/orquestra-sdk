@@ -159,6 +159,8 @@ class ArtifactPresenter(RichPresenter):
 
         Args:
             values: plain, deserialized artifact values.
+            wf_run_id: ID of the workflow run, displayed as part of the summary.
+            task_inv_id: ID of the task invocation, displayed as part of the summary.
         """
         header = (
             f"In workflow {wf_run_id}, task invocation {task_inv_id} "
@@ -174,6 +176,7 @@ class ArtifactPresenter(RichPresenter):
 
         Args:
             values: plain, deserialized artifact values.
+            wf_run_id: ID of the workflow run, displayed as part of the summary.
         """
         header = f"Workflow run {wf_run_id} has {len(values)} outputs."
         self._console.print(Group(header, self._values_table(values)))
