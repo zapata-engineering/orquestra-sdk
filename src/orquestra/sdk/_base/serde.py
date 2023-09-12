@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2021-2022 Zapata Computing Inc.
+# © Copyright 2021-2023 Zapata Computing Inc.
 ################################################################################
 import codecs
 import json
@@ -199,9 +199,16 @@ class DumpDetails:
 
 def dump_to_file(value: t.Any, dir_path: Path, file_name_prefix: str) -> DumpDetails:
     """
-    Writes ``value`` to a file. Serialization format is picked depending on the value.
+    Writes ``value`` to a file.
+
+    The serialization format is picked depending on the value.
     The result file is created under ``<dir_path>/<file_name_prefix><extension>``,
     where ``extension`` matches the inferred format.
+
+    Args:
+        value: the value to be written.
+        dir_path: path to the directory in which the output file should be created.
+        file_name_prefix: an identifying prefix to be added to the file name.
 
     Returns:
         Metadata about the created file.
