@@ -6,6 +6,8 @@ Facade module for Ray API.
 """
 import typing as t
 
+from src.orquestra.sdk.exceptions import WorkflowRunNotFoundError
+
 try:
     import ray
     import ray._private.ray_constants
@@ -129,18 +131,36 @@ else:
 
         def get_workflow_metadata(self, workflow_id: str) -> t.Dict[str, t.Any]:
             """
+            Get the metadata for the workflow run, using Ray Workflow API
+
+            Args:
+                workflow_id: ID of the workflow run, used to identify the correct run
+                    in Ray.
+
             Raises:
                 ValueError: if there's no workflow with this ID.
             """
-            return ray.workflow.get_metadata(workflow_id)
+            try:
+                return ray.workflow.get_metadata(workflow_id)
+            except ValueError:
+                raise
 
         def get_workflow_status(self, workflow_id: str):
             """
+            Get the current status of the workflow run, using Ray Workflow API.
+
+            Args:
+                workflow_id: ID of the workflow run, used to identify the correct run
+                    in Ray.
+
             Raises:
                 ray.workflow.exceptions.WorkflowNotFoundError: if there's no
                     workflow with this ID.
             """
-            return ray.workflow.get_status(workflow_id)
+            try:
+                return ray.workflow.get_status(workflow_id)
+            except WorkflowRunNotFoundError:
+                raise
 
         def get_task_metadata(self, workflow_id: str, name: str):
             return ray.workflow.get_metadata(workflow_id, name)
@@ -148,7 +168,12 @@ else:
         def get_workflow_output(self, workflow_id: str) -> t.Any:
             """
             Get values computed by the the whole workflow, using Ray Workflow API.
+
             Blocks until the workflow is completed.
+
+            Args:
+                workflow_id: ID of the workflow run, used to identify the correct run
+                    in Ray.
 
             Returns:
                 Deserialized values produced by the workflow's last node.
@@ -156,7 +181,10 @@ else:
             Raises:
                 ValueError: if there's no workflow with this ID.
             """
-            return ray.workflow.get_output(workflow_id)
+            try:
+                return ray.workflow.get_output(workflow_id)
+            except ValueError:
+                raise
 
         def get_task_output_async(self, workflow_id: str, task_id: str) -> ObjectRef:
             """
