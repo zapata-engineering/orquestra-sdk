@@ -310,8 +310,14 @@ class RayRuntime(RuntimeInterface):
 
     def get_workflow_run_status(self, workflow_run_id: WorkflowRunId) -> WorkflowRun:
         """
+        Get the current status of a workflow run.
+
+        Args:
+            workflow_run_id: ID of the workflow run.
+
         Raises:
-            orquestra.sdk.exceptions.WorkflowRunNotFoundError
+            orquestra.sdk.exceptions.WorkflowRunNotFoundError: if no run with
+                `workflow_run_id` was found.
         """
         try:
             wf_status = self._client.get_workflow_status(workflow_id=workflow_run_id)
@@ -395,9 +401,14 @@ class RayRuntime(RuntimeInterface):
         self, workflow_run_id: WorkflowRunId
     ) -> t.Dict[ir.TaskInvocationId, WorkflowResult]:
         """
+        Get the outputs from all completed tasks in the workflow run.
+
+        Args:
+            workflow_run_id: ID of the workflow run.
+
         Raises:
-            orquestra.sdk.exceptions.WorkflowRunNotFoundError: if no run
-                with `workflow_run_id` was found.
+            orquestra.sdk.exceptions.WorkflowRunNotFoundError: if no run with
+                `workflow_run_id` was found.
         """
         # The approach is based on two steps:
         # 1. Get task run status.
