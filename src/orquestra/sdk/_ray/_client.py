@@ -6,7 +6,7 @@ Facade module for Ray API.
 """
 import typing as t
 
-from src.orquestra.sdk.exceptions import WorkflowRunNotFoundError
+from orquestra.sdk.exceptions import WorkflowRunNotFoundError
 
 try:
     import ray
