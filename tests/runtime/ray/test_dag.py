@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
 Unit tests for orquestra.sdk._ray._dag. If you need a test against a live
@@ -36,74 +36,172 @@ def client():
     return create_autospec(_client.RayClient)
 
 
+task_state_cases = [
+    [State.SUCCEEDED, State.SUCCEEDED],
+    [State.SUCCEEDED, State.RUNNING],
+]
+
+
 @pytest.mark.parametrize(
-    "ray_wf_status, start_time, end_time, expected_orq_status",
+    "ray_wf_status, start_time, end_time, task_states, expected_orq_status",
+    # Successful: report as SUCCEEDED
     [
-        (_client.WorkflowStatus.SUCCESSFUL, None, None, State.SUCCEEDED),
-        (_client.WorkflowStatus.SUCCESSFUL, TEST_TIME, None, State.SUCCEEDED),
-        (_client.WorkflowStatus.SUCCESSFUL, TEST_TIME, TEST_TIME, State.SUCCEEDED),
-        (_client.WorkflowStatus.RUNNING, None, None, State.WAITING),
-        (_client.WorkflowStatus.RUNNING, TEST_TIME, None, State.RUNNING),
-        (_client.WorkflowStatus.RUNNING, TEST_TIME, TEST_TIME, State.SUCCEEDED),
-        (_client.WorkflowStatus.FAILED, None, None, State.FAILED),
-        (_client.WorkflowStatus.FAILED, TEST_TIME, None, State.FAILED),
-        (_client.WorkflowStatus.FAILED, TEST_TIME, TEST_TIME, State.FAILED),
-        (_client.WorkflowStatus.RESUMABLE, None, None, State.FAILED),
-        (_client.WorkflowStatus.RESUMABLE, TEST_TIME, None, State.FAILED),
-        (_client.WorkflowStatus.RESUMABLE, TEST_TIME, TEST_TIME, State.FAILED),
-        (_client.WorkflowStatus.CANCELED, None, None, State.TERMINATED),
-        (_client.WorkflowStatus.CANCELED, TEST_TIME, None, State.TERMINATED),
-        (_client.WorkflowStatus.CANCELED, TEST_TIME, TEST_TIME, State.TERMINATED),
+        (_client.WorkflowStatus.SUCCESSFUL, start, end, task_states, State.SUCCEEDED)
+        for start in [None, TEST_TIME]
+        for end in [None, TEST_TIME]
+        for task_states in task_state_cases
+    ]
+    # Resumable: report as FAILED
+    + [
+        (_client.WorkflowStatus.RESUMABLE, start, end, task_states, State.FAILED)
+        for start in [None, TEST_TIME]
+        for end in [None, TEST_TIME]
+        for task_states in task_state_cases
+    ]
+    # Canceled: report as TERMINATED
+    + [
+        (_client.WorkflowStatus.CANCELED, start, end, task_states, State.TERMINATED)
+        for start in [None, TEST_TIME]
+        for end in [None, TEST_TIME]
+        for task_states in task_state_cases
+    ]
+    # Running:
+    # (defensive case for race conditions in Ray) status is running but no start time
+    # reported. Report as WAITING
+    + [
+        (_client.WorkflowStatus.RUNNING, None, None, task_states, State.WAITING)
+        for task_states in task_state_cases
+    ]
+    # the wf has a start time and no end time - it's definitely running.
+    + [
+        (_client.WorkflowStatus.RUNNING, TEST_TIME, None, task_states, State.RUNNING)
+        for task_states in task_state_cases
+    ]
+    # the wf has a start and end time, but the status is still being reported as
+    # 'running' - Ray hasn't updated the status yet. Report as SUCCEEDED.
+    + [
+        (
+            _client.WorkflowStatus.RUNNING,
+            TEST_TIME,
+            TEST_TIME,
+            task_states,
+            State.SUCCEEDED,
+        )
+        for task_states in task_state_cases
+    ]
+    # Failed:
+    # Tasks are still running, report as RUNNING
+    + [
+        (_client.WorkflowStatus.FAILED, start, end, task_states, State.RUNNING)
+        for start in [None, TEST_TIME]
+        for end in [None, TEST_TIME]
+        for task_states in [
+            [State.SUCCEEDED, State.RUNNING],
+            [State.TERMINATED, State.RUNNING],
+        ]
+    ]
+    # Tasks have all completed, report as FAILED
+    + [
+        (
+            _client.WorkflowStatus.FAILED,
+            start,
+            end,
+            [State.SUCCEEDED, State.FAILED],
+            State.FAILED,
+        )
+        for start in [None, TEST_TIME]
+        for end in [None, TEST_TIME]
     ],
 )
 def test_workflow_state_from_ray_meta(
     ray_wf_status,
     start_time,
     end_time,
+    task_states,
     expected_orq_status,
+    monkeypatch: pytest.MonkeyPatch,
 ):
+    mock_task_state: Mock = create_autospec(_dag._task_state_from_ray_meta)
+    mock_task_state.side_effect = task_states
+    mock_ray_meta = create_autospec(dict)
+    monkeypatch.setattr(_dag.__name__ + "._task_state_from_ray_meta", mock_task_state)
     assert (
         _dag._workflow_state_from_ray_meta(
             ray_wf_status,
             start_time,
             end_time,
+            ray_task_metas=[mock_ray_meta, mock_ray_meta],
         )
         == expected_orq_status
     )
 
 
 @pytest.mark.parametrize(
-    "ray_wf_status, start_time, end_time, expected_orq_status",
+    "ray_wf_status, start_time, end_time, failed_flag, expected_orq_status",
+    # Cancelled: a user stopped the workflow permanently.
     [
-        (_client.WorkflowStatus.SUCCESSFUL, None, None, State.WAITING),
-        (_client.WorkflowStatus.SUCCESSFUL, TEST_TIME, None, State.SUCCEEDED),
-        (_client.WorkflowStatus.SUCCESSFUL, TEST_TIME, TEST_TIME, State.SUCCEEDED),
-        (_client.WorkflowStatus.RUNNING, None, None, State.WAITING),
-        (_client.WorkflowStatus.RUNNING, TEST_TIME, None, State.RUNNING),
-        (_client.WorkflowStatus.RUNNING, TEST_TIME, TEST_TIME, State.SUCCEEDED),
-        # A task that didn't have a chance to run yet, because other tasks failed.
-        (_client.WorkflowStatus.FAILED, None, None, State.WAITING),
-        # The task that failed the workflow.
-        (_client.WorkflowStatus.FAILED, TEST_TIME, None, State.FAILED),
-        # A task that finished before other tasks failed.
-        (_client.WorkflowStatus.FAILED, TEST_TIME, TEST_TIME, State.SUCCEEDED),
-        # Resumable: something's happened to the workflow. Ray allows to
-        # restart it. We don't support that yet -> we say it's failed.
-        # We don't have API for cancelling a wf, either. If a wf is in this
-        # state, something bad happened.
-        (_client.WorkflowStatus.RESUMABLE, None, None, State.FAILED),
-        (_client.WorkflowStatus.RESUMABLE, TEST_TIME, None, State.FAILED),
-        (_client.WorkflowStatus.RESUMABLE, TEST_TIME, TEST_TIME, State.FAILED),
-        # Cancelled: a user stopped the workflow permanently.
-        (_client.WorkflowStatus.CANCELED, None, None, State.TERMINATED),
-        (_client.WorkflowStatus.CANCELED, TEST_TIME, None, State.TERMINATED),
-        (_client.WorkflowStatus.CANCELED, TEST_TIME, TEST_TIME, State.TERMINATED),
+        (_client.WorkflowStatus.CANCELED, start, end, failed, State.TERMINATED)
+        for start in [None, TEST_TIME]
+        for end in [None, TEST_TIME]
+        for failed in [None, False, True]
+    ]
+    # Resumable: something's happened to the workflow. Ray allows the user to restart
+    # it. We don't support that yet -> we say it's failed. We don't have API for
+    # cancelling a wf, either. If a wf is in this state, something bad happened.
+    + [
+        (_client.WorkflowStatus.RESUMABLE, start, end, failed, State.FAILED)
+        for start in [None, TEST_TIME]
+        for end in [None, TEST_TIME]
+        for failed in [None, False, True]
+    ]
+    # Any other workflow status, plus a failed flag: the task has failed, regardless of
+    # the overall workflow status, and should be reported as such.
+    + [
+        (status, start, end, True, State.FAILED)
+        for status in [
+            _client.WorkflowStatus.SUCCESSFUL,
+            _client.WorkflowStatus.RUNNING,
+            _client.WorkflowStatus.FAILED,
+        ]
+        for start in [None, TEST_TIME]
+        for end in [None, TEST_TIME]
+    ]
+    # Any other workflow status, no failed flag, no start time: The task is waiting to
+    # run.
+    + [
+        (status, None, None, False, State.WAITING)
+        for status in [
+            _client.WorkflowStatus.SUCCESSFUL,
+            _client.WorkflowStatus.RUNNING,
+            _client.WorkflowStatus.FAILED,
+        ]
+    ]
+    # Any other workflow status, no failed flag, a start time but no end time: The task
+    # is in progress
+    + [
+        (status, TEST_TIME, None, False, State.RUNNING)
+        for status in [
+            _client.WorkflowStatus.SUCCESSFUL,
+            _client.WorkflowStatus.RUNNING,
+            _client.WorkflowStatus.FAILED,
+        ]
+    ]
+    # Any other workflow status, no failed flag, start time and end time: The task
+    # finished and didn't fail.
+    + [
+        (status, TEST_TIME, TEST_TIME, False, State.SUCCEEDED)
+        for status in [
+            _client.WorkflowStatus.SUCCESSFUL,
+            _client.WorkflowStatus.RUNNING,
+            _client.WorkflowStatus.FAILED,
+        ]
     ],
 )
 def test_task_state_from_ray_meta(
-    ray_wf_status,
+    ray_wf_status: _client.WorkflowStatus,
     start_time,
     end_time,
+    failed_flag,
     expected_orq_status,
 ):
     assert (
@@ -111,6 +209,7 @@ def test_task_state_from_ray_meta(
             ray_wf_status,
             start_time,
             end_time,
+            failed_flag,
         )
         == expected_orq_status
     )
