@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
 This module exposes some machinery for loading workflow_defs.
@@ -54,13 +54,14 @@ class ImportFaker(abc.MetaPathFinder):
         self._loader = FakeLoader()
         self.block_list = block_list
 
-    def find_spec(self, fullname, path, target=None):
+    def find_spec(self, fullname: str, path: t.Any, target: t.Any = None):
         """
-        Implements the interface for a meta path finder
+        Implements the interface for a meta path finder.
+
         Args:
-            fullname: the 'dotted' syntax of the module, for example 'orquestra.sdk'
-            path: not used - the __path__ from a subpackage or module's parent
-            target: not used - meta path finders can use a module object as a hint
+            fullname: the 'dotted' syntax of the module, for example 'orquestra.sdk'.
+            path: not used - the __path__ from a subpackage or module's parent.
+            target: not used - meta path finders can use a module object as a hint.
         """
         if any(fullname.startswith(blocked) for blocked in self.block_list):
             return self._gen_spec(fullname)
@@ -119,14 +120,16 @@ DEFAULT_IMPORT_BLOCK_LIST: t.List[str] = []
 def get_workflow_defs_module(
     directory: str, import_block_list: t.Optional[t.List[str]] = None
 ):
-    """Return the module containing the current project's workflow definitions.
+    """
+    Return the module containing the current project's workflow definitions.
 
     Args:
         directory: path to a directory with a workflow_defs.py file. The directory is
             added to the interpreter's `sys.path`.
+        import_block_list: a list of module names to block.
 
     Raises:
-        FileNotFoundError if the workflow defs module weren't found.
+        FileNotFoundError: if the workflow defs module wasn't found.
 
     Returns:
         The loaded workflow_defs module.
@@ -143,6 +146,8 @@ def get_workflow_defs_module(
 
     try:
         module = dispatch.load_module_or_help_debugging(WORKFLOW_DEFS_MODULE)
+    except FileNotFoundError:
+        raise
     finally:
         # Unload all fake libraries and remove the fake importer, even if an
         # exception happened.
