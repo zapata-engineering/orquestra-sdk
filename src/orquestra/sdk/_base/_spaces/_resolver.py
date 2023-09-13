@@ -18,6 +18,10 @@ def resolve_studio_ref(
     """
     Resolve the workspace and project IDs from the passed args or environment vars.
 
+    Args:
+        workspace_id: ID of the workspace for workflow - supported only on CE.
+        project_id: ID of the project for workflow - supported only on CE.
+
     Raises:
         orquestra.sdk.exceptions.ProjectInvalidError: when one but not both of the
             workspace and project id arguments are specified - this is insufficient
