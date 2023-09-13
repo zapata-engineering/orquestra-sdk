@@ -67,8 +67,11 @@ class RuntimeInterface(ABC, LogReader):
 
         This method raises exceptions if the workflow output artifacts are not available
 
+        Args:
+            workflow_run_id: ID identifying the workflow run.
+
         Raises:
-            WorkflowRunNotSucceeded if the workflow has not yet finished
+            WorkflowRunNotSucceeded: if the workflow has not yet finished
         """
         raise NotImplementedError()
 
@@ -76,7 +79,7 @@ class RuntimeInterface(ABC, LogReader):
     def get_available_outputs(
         self, workflow_run_id: WorkflowRunId
     ) -> t.Dict[TaskInvocationId, WorkflowResult]:
-        """Returns all available outputs for a workflow
+        """Returns all available outputs for a workflow run.
 
         This method returns all available artifacts. When the workflow fails it returns
         artifacts only for the steps that did success. Might raise an exception if
@@ -97,6 +100,10 @@ class RuntimeInterface(ABC, LogReader):
         to make sure if workflow failed/succeeded/is running. You might get incomplete
         results
 
+        Args:
+            workflow_run_id: ID identifying the workflow run.
+
+
         Returns:
             A mapping with an entry for each task run in the workflow. The key is the
                 task's invocation ID. The value is whatever the task function returned,
@@ -110,8 +117,15 @@ class RuntimeInterface(ABC, LogReader):
     ) -> None:
         """Stops a workflow run.
 
+        Args:
+            workflow_run_id: ID identifying the workflow run.
+            force: Asks the runtime to terminate the workflow without waiting for the
+                workflow to gracefully exit.
+                By default, this behavior is up to the runtime, but can be overridden
+                with True/False.
+
         Raises:
-        WorkflowRunCanNotBeTerminated if workflow run is cannot be terminated.
+            WorkflowRunCanNotBeTerminated: if workflow run is cannot be terminated.
         """
         raise NotImplementedError()
 
@@ -184,7 +198,7 @@ class WorkflowRepo(ABC):
             workflow_run: the workflow run with run ID, stored config, and WorkflowDef
 
         Raises:
-            RuntimeError if the workflow ID has already been used
+            RuntimeError: if the workflow ID has already been used
         """
         raise NotImplementedError()
 
@@ -197,7 +211,7 @@ class WorkflowRepo(ABC):
             workflow_run_id: the run ID to load
 
         Raises:
-            NotFoundError if the workflow run is not found
+            NotFoundError: if the workflow run is not found
 
         Returns:
             the workflow run with run ID, stored config, and WorkflowDef
