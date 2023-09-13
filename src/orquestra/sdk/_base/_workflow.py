@@ -25,6 +25,7 @@ from typing import (
 from typing_extensions import ParamSpec
 
 import orquestra.sdk.schema.ir as ir
+from orquestra.sdk import exceptions
 from orquestra.sdk.exceptions import WorkflowSyntaxError
 from orquestra.sdk.schema.workflow_run import ProjectId, WorkspaceId
 
@@ -175,19 +176,23 @@ class WorkflowDef(Generic[_R]):
                 has uncommitted changes.
             orquestra.sdk.exceptions.ProjectInvalidError: when only 1 out of project and
                 workspace is passed.
-
         """
-        # The DirtyGitRepo warning can be raised here.
-        wf_def_model = self.model
+        try:
+            wf_def_model = self.model
+        except exceptions.DirtyGitRepo:
+            raise
 
-        return _api.WorkflowRun.start_from_ir(
-            wf_def=wf_def_model,
-            config=config,
-            workspace_id=workspace_id,
-            project_id=project_id,
-            project_dir=project_dir,
-            dry_run=dry_run,
-        )
+        try:
+            return _api.WorkflowRun.start_from_ir(
+                wf_def=wf_def_model,
+                config=config,
+                workspace_id=workspace_id,
+                project_id=project_id,
+                project_dir=project_dir,
+                dry_run=dry_run,
+            )
+        except exceptions.ProjectInvalidError:
+            raise
 
     def with_resources(
         self,
@@ -264,9 +269,17 @@ class WorkflowTemplate(Generic[_P, _R]):
         self._default_source_import = default_source_import
         self._default_dependency_imports = default_dependency_imports
 
+    # flake8: ignore=DOC101
     def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> WorkflowDef[_R]:
         """
+        When called like a function, construct and return the WorkflowDef.
+
+        Args:
+            *args: Variable length argument list to be passed to the workflow.
+            **kwargs: Arbitrary keyword arguments to be passed to the workflow.
+
         Raises:
+            RuntimeError: if the workflow calls a non-task function.
             orquestra.sdk.exceptions.WorkflowSyntaxError: if the arguments don't match
                 the workflow def's parameters.
         """
@@ -398,15 +411,18 @@ class _CalledFunction(NamedTuple):
 NO_MODULE_SENTINEL = object()
 
 
-def _get_callable(
+def _get_callable(  # noqa: DOC103 - pydoclint doesn't like fn: Callable for some reason
     fn: Callable, call_statement: List[NodeReference]
 ) -> Tuple[Union[Callable, None], Union[str, None]]:
     """Find the callable and the callable's module name.
-    If the callable cannot be find then return None
+
+    If the callable cannot be find then return None.
+
     Args:
         fn : workflow function
         call_statement : List of NodeReferences with information
             about the call history
+
     Returns:
         _fn : Callable corresponding to the call_statement
         module_name : Name of the callable's module
@@ -458,7 +474,7 @@ def _get_callable(
     return _fn, module_name
 
 
-def _get_function_calls(fn: Callable) -> List[_CalledFunction]:
+def _get_function_calls(fn: Callable) -> List[_CalledFunction]:  # noqa: DOC103
     """Get the functions that are called inside the workflow definition.
     This function uses some heuristics to find function calls using the
     workflow function's AST.
@@ -542,6 +558,7 @@ def workflow(
     """Decorator that produces a workflow definition.
 
     Args:
+        fn: the function to be wrapped.
         resources: !Unstable API! The resources that this workflow requires.
             The exact behaviour depends on the runtime, based on a Compute Engine
             workflow, you can set the cluster your workflow will use:
