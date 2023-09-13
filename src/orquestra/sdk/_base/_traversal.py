@@ -249,7 +249,7 @@ class GraphTraversal:
 
                     self._point_future_to_artifact(n)
 
-                # due dilligence
+                # due diligence
                 seen_futures.add(n)
                 seen_invocations.add(n.invocation)
 
@@ -435,11 +435,19 @@ def _make_import_model(imp: _dsl.Import):
         raise ValueError(f"Invalid DSL import type: {type(imp)}")
 
 
-def _make_resources_model(resources: _dsl.Resources, is_task=True):
-    """Create a resources object of the IR based on a resources
-    of the DSL. If no resources are allocated then returns None.
+def _make_resources_model(
+    resources: _dsl.Resources, is_task: bool = True
+) -> ir.Resources:
+    """
+    Create a resources object of the IR based on a resources of the DSL.
+
+    If no resources are allocated then returns None.
+
     Args:
         resources: resources object from the DSL
+        is_task: toggle indicating whether the resources are for the workflow, or an
+            individual task.
+
     Returns:
         resources object from the IR
     """
