@@ -13,6 +13,9 @@ def check_jwt_without_signature_verification(token: str):
     Note: This DOES NOT CRYPTOGRAPHICALY VERIFY THE TOKEN.
     Only used as a sanity check when reading a token from the CLI.
 
+    Args:
+        token: the token to be checked.
+
     Raises:
         orquestra.sdk.exceptions.ExpiredTokenError: if the current date is after the
             token's expiry
