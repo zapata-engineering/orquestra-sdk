@@ -1036,7 +1036,6 @@ class TestClient:
             @staticmethod
             def test_list_workflow_run_summaries(
                 endpoint_mocker,
-                # mock_get_workflow_def,
                 client: DriverClient,
                 workflow_run_id: str,
                 workflow_def_id: str,
