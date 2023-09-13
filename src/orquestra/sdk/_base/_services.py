@@ -129,7 +129,10 @@ class RayManager:
             stderr=subprocess.PIPE,
         )
         if not self.is_running():
-            proc.check_returncode()
+            try:
+                proc.check_returncode()
+            except subprocess.CalledProcessError:
+                raise
 
     def down(self):
         """
@@ -141,13 +144,16 @@ class RayManager:
         """
         # 'ray stop' can be ran multiple times. It doesn't fail if no cluster is
         # running.
-        _ = subprocess.run(
-            ["ray", "stop"],
-            check=True,
-            timeout=IPC_TIMEOUT,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+        try:
+            _ = subprocess.run(
+                ["ray", "stop"],
+                check=True,
+                timeout=IPC_TIMEOUT,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except subprocess.CalledProcessError:
+            raise
 
     def is_running(self):
         """
@@ -160,11 +166,14 @@ class RayManager:
             subprocess.CalledProcessError: if calling the `ray` CLI failed. This
                 shouldn't happen in regular conditions.
         """
-        proc = subprocess.run(
-            ["ray", "status"],
-            check=False,
-            timeout=IPC_TIMEOUT,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+        try:
+            proc = subprocess.run(
+                ["ray", "status"],
+                check=False,
+                timeout=IPC_TIMEOUT,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except subprocess.CalledProcessError:
+            raise
         return proc.returncode == 0
