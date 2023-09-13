@@ -93,9 +93,13 @@ class LogReader(t.Protocol):
         """
         Reads all available logs, specific to a single task invocation/run.
 
+        Args:
+            wf_run_id: ID of the workflow run containing the task.
+            task_inv_id: ID of the task invocation for which we want the logs.
+
         Returns:
             Log lines printed when running this task invocation. If the task didn't
-            produce any logs this should be an empty list.
+                produce any logs this should be an empty list.
         """
         # pragma: no cover
         ...
