@@ -429,7 +429,7 @@ def generate_config_name(
     runtime_name: Union[RuntimeName, str], uri: Optional[str]
 ) -> ConfigName:
     """
-    Generate a for the specified runtime configuration options.
+    Generate a name for the specified runtime configuration options.
 
     CE_REMOTE configurations are named based on their cluster uri. All other
     configurations have static names assigned.
