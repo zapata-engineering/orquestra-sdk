@@ -3,6 +3,8 @@
 ################################################################################
 import typing as t
 
+from orquestra.sdk.exceptions import ConfigNameNotFoundError
+
 from ...schema.configs import ConfigName
 from ...schema.workflow_run import WorkspaceId
 from .._api._config import RuntimeConfig, resolve_config
@@ -12,17 +14,23 @@ from ._structs import Project, Workspace
 def list_workspaces(
     config: t.Union[ConfigName, "RuntimeConfig"],
 ) -> t.Sequence[Workspace]:
-    """Get the list of all workspaces available to a user.
+    """
+    Get the list of all workspaces available to a user.
+
     Warning: works only on CE runtimes
 
     Args:
         config: The name of the configuration to use.
 
     Raises:
-        ConfigNameNotFoundError: when the named config is not found in the file.
+        orquestra.sdk.exceptions.ConfigNameNotFoundError: When the specified config
+            name is not present in the config file.
     """
     # Resolve config
-    resolved_config = resolve_config(config)
+    try:
+        resolved_config = resolve_config(config)
+    except ConfigNameNotFoundError:
+        raise
 
     runtime = resolved_config._get_runtime()
 
@@ -38,12 +46,16 @@ def list_projects(
 
     Args:
         config: The name of the configuration to use.
-        workspace_id: ID of the workspace to use
+        workspace_id: ID of the workspace to use.
+
     Raises:
         ConfigNameNotFoundError: when the named config is not found in the file.
     """
     # Resolve config
-    resolved_config = resolve_config(config)
+    try:
+        resolved_config = resolve_config(config)
+    except ConfigNameNotFoundError:
+        raise
     resolved_workspace_id: str
 
     resolved_workspace_id = (
