@@ -1032,18 +1032,6 @@ class TestClient:
                     f"{base_uri}/api/workflow-runs",
                 )
 
-            # @staticmethod
-            # @pytest.fixture
-            # def mock_get_workflow_def(
-            #     client: DriverClient,
-            #     workflow_def: WorkflowDef,
-            #     monkeypatch: pytest.MonkeyPatch,
-            # ):
-            #     mock = create_autospec(GetWorkflowDefResponse)
-            #     mock.workflow = workflow_def
-            #     function_mock = create_autospec(client.get_workflow_def)
-            #     function_mock.return_value = mock
-            #     monkeypatch.setattr(client, "get_workflow_def", function_mock)
 
             @staticmethod
             def test_list_workflow_run_summaries(
