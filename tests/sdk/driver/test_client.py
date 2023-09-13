@@ -1105,7 +1105,6 @@ class TestClient:
             )
             def test_params_encoding(
                 endpoint_mocker,
-                # mock_get_workflow_def,
                 client: DriverClient,
                 kwargs: Dict,
                 params: Dict,
