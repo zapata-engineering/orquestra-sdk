@@ -197,6 +197,9 @@ def parse_line(line: str) -> t.Optional[Marker]:
 
     Attempts to interpret a single log line as a marker.
 
+    Args:
+        line: the line to be parsed.
+
     Returns:
         - Deserialized marker object with the marker event's content.
         - None if the line doesn't match the marker format.
