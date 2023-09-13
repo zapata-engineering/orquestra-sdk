@@ -12,6 +12,7 @@ import sys
 import typing as t
 import warnings
 from contextlib import contextmanager
+from types import ModuleType
 
 import requests
 from typing_extensions import assert_never
@@ -23,6 +24,7 @@ from orquestra.sdk._base._driver._client import DriverClient, ExternalUriProvide
 from orquestra.sdk._base._jwt import check_jwt_without_signature_verification
 from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk._base.abc import ArtifactValue
+from orquestra.sdk.exceptions import WorkflowRunNotFoundError
 from orquestra.sdk.schema import _compat
 from orquestra.sdk.schema.configs import (
     ConfigName,
@@ -51,12 +53,20 @@ def _find_first(f: t.Callable[[t.Any], bool], it: t.Iterable):
 class WorkflowRunRepo:
     def get_config_name_by_run_id(self, wf_run_id: WorkflowRunId) -> ConfigName:
         """
+        Get the name of the config with which the workflow run was submitted.
+
+        Args:
+            wf_run_id: ID of the workflow run.
+
         Raises:
-            orquestra.sdk.exceptions.WorkflowRunNotFoundError: when couldn't find
-                a matching record.
+            orquestra.sdk.exceptions.WorkflowRunNotFoundError: when a matching record
+                couldn't be found.
         """
         with _db.WorkflowDB.open_db() as db:
-            stored_run = db.get_workflow_run(workflow_run_id=wf_run_id)
+            try:
+                stored_run = db.get_workflow_run(workflow_run_id=wf_run_id)
+            except WorkflowRunNotFoundError:
+                raise
             return stored_run.config_name
 
     def list_wf_runs(
@@ -69,6 +79,13 @@ class WorkflowRunRepo:
     ) -> t.List[WorkflowRun]:
         """
         Asks the runtime for all workflow runs that match the filters.
+
+        Args:
+            config: the configuration specifying the runtime to be interrogated.
+            workspace: only list runs in the specified workspace.
+            limit: the maximum number of runs to list.
+            max_age: only list runs younger than the specified age.
+            state: only list runs in the specified state(s).
 
         Raises:
             ConnectionError: when connection with Ray failed.
@@ -93,6 +110,14 @@ class WorkflowRunRepo:
         self, wf_run_id: WorkflowRunId, config_name: t.Optional[ConfigName]
     ) -> WorkflowRun:
         """
+        Load the full details of the specified run from the runtime and database.
+
+        Args:
+            wf_run_id: The ID of the workflow run to be loaded.
+            config_name: Determines where to look for the workflow run record.
+                If omitted, we will retrieve the config name from a local cache of
+                workflow runs submitted from this machine.
+
         Raises:
             orquestra.sdk.exceptions.WorkflowRunNotFoundError: when the wf_run_id
                 doesn't match any available run ID.
@@ -116,6 +141,15 @@ class WorkflowRunRepo:
         config_name: ConfigName,
     ) -> TaskRunId:
         """
+        Determine task run ID of an individual task invocation.
+
+        Args:
+            wf_run_id: The ID of the workflow run containing the task invocation.
+            task_inv_id: The ID of the task invocation to be examined.
+            config_name: Determines where to look for the workflow run record.
+                If omitted, we will retrieve the config name from a local cache of
+                workflow runs submitted from this machine.
+
         Raises:
             orquestra.sdk.exceptions.WorkflowRunNotFoundError: when the wf_run_id
                 doesn't match any available run ID.
@@ -156,8 +190,14 @@ class WorkflowRunRepo:
     ) -> WorkflowRunId:
         """
         Args:
+            wf_def: definition of the workflow to be submitted.
+            config: the configuration specifying the runtime to which to submit.
             ignore_dirty_repo: if False, turns the DirtyGitRepo warning into a raised
                 exception.
+            workspace_id: the ID of the workspace in which the workflow run should
+                reside (if supported).
+            project_id: the ID of the project in which the workflow run should
+                reside (if supported).
 
         Raises:
             orquestra.sdk.exceptions.DirtyGitRepo: if ``ignore_dirty_repo`` is False and
@@ -165,13 +205,16 @@ class WorkflowRunRepo:
                 that contains it has uncommitted changes.
         """
 
-        with warnings.catch_warnings():
-            if not ignore_dirty_repo:
-                warnings.filterwarnings("error", category=exceptions.DirtyGitRepo)
+        try:
+            with warnings.catch_warnings():
+                if not ignore_dirty_repo:
+                    warnings.filterwarnings("error", category=exceptions.DirtyGitRepo)
 
-            wf_run = wf_def.run(
-                config, workspace_id=workspace_id, project_id=project_id
-            )
+                wf_run = wf_def.run(
+                    config, workspace_id=workspace_id, project_id=project_id
+                )
+        except exceptions.DirtyGitRepo:
+            raise
 
         return wf_run.run_id
 
@@ -179,10 +222,20 @@ class WorkflowRunRepo:
         self, wf_run_id: WorkflowRunId, config_name: ConfigName, force: t.Optional[bool]
     ):
         """
+        Terminate a running workflow.
+
+        Args:
+            wf_run_id: ID of the workflow run to be terminated.
+            config_name: configuration specifying the runtime with which the workflow
+                is running.
+            force: ask the runtime to terminate the workflow without waiting for it to
+                gracefully exit. By default, this behavior is up to the runtime, but
+                can be overridden with True/False.
+
         Raises:
             orquestra.sdk.exceptions.UnauthorizedError: when communication with runtime
                 failed because of an auth error
-            orquestra.sdk.exceptions.WorkflowRunCanNotBeTerminated if the termination
+            orquestra.sdk.exceptions.WorkflowRunCanNotBeTerminated: if the termination
                 attempt failed
         """
         wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
@@ -199,6 +252,10 @@ class WorkflowRunRepo:
 
         If the workflow is still executing this will block until the workflow
         completion.
+
+        Args:
+            wf_run_id: ID of the workflow run.
+            config_name: config specifying the runtime.
 
         Raises:
             orquestra.sdk.exceptions.NotFoundError: when the run_id doesn't match a
@@ -233,8 +290,12 @@ class WorkflowRunRepo:
         config_name: ConfigName,
     ) -> t.Tuple[ArtifactValue, ...]:
         """
-        Asks the runtime for task output values. The output is always a n-tuple where n
-        is the number of outputs in the task def metadata.
+        Asks the runtime for task output values.
+
+        Args:
+            wf_run_id: ID of the workflow run containing the task.
+            task_inv_id: ID of the task invocation.
+            config_name: config specifying the runtime.
 
         Raises:
             orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match a
@@ -243,6 +304,9 @@ class WorkflowRunRepo:
                 doesn't match the workflow definition.
             orquestra.sdk.exceptions.ConfigNameNotFoundError: when the named config is
                 not found in the file.
+
+        Returns:
+            A n-tuple where n is the number of outputs in the task def metadata.
         """
         try:
             wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
@@ -281,6 +345,12 @@ class WorkflowRunRepo:
         self, wf_run_id: WorkflowRunId, config_name: ConfigName
     ) -> WorkflowDef:
         """
+        Get the WorkflowDef for a submitted workflow run based on its run ID.
+
+        Args:
+            wf_run_id: ID of the workflow run.
+            config_name: config specifying the runtime.
+
         Raises:
             orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match a
                 stored run ID.
@@ -305,11 +375,16 @@ class WorkflowRunRepo:
         self, wf_run_id: WorkflowRunId, config_name: ConfigName
     ) -> t.Sequence[str]:
         """
-        Extracts task function names used in this workflow run.
+        Extract task function names used in this workflow run.
 
-        If two different task defs have the same function name this returns a single
+        If two different task defs have the same function name, this returns a single
         name entry. This can happen when similar tasks are defined in two different
         modules.
+
+        Args:
+            wf_run_id: ID of the workflow run.
+            config_name: config specifying the runtime.
+
 
         Raises:
             orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match a
@@ -341,6 +416,11 @@ class WorkflowRunRepo:
         """
         Selects task invocation IDs that refer to functions named ``task_fn_name``.
 
+        Args:
+            wf_run_id: ID of the workflow run.
+            config_name: config specifying the runtime.
+            task_fn_name: the name of the function against which to match inv IDs.
+
         Raises:
             orquestra.sdk.exceptions.NotFoundError: when the wf_run_id doesn't match a
                 stored run ID.
@@ -364,6 +444,12 @@ class WorkflowRunRepo:
         self, wf_run_id: WorkflowRunId, config_name: ConfigName
     ) -> WorkflowLogs:
         """
+        Get the logs created by a workflow run from the runtime.
+
+        Args:
+            wf_run_id: ID of the workflow run.
+            config_name: config specifying the runtime.
+
         Raises:
             ConnectionError: when connection with Ray failed.
             orquestra.sdk.exceptions.UnauthorizedError: when connection with runtime
@@ -391,15 +477,30 @@ class WorkflowRunRepo:
         config_name: ConfigName,
     ) -> t.Mapping[TaskInvocationId, LogOutput]:
         """
+        Get the logs generated by one task from the runtime.
+
+        Args:
+            wf_run_id: ID of the workflow run containing the task.
+            task_inv_id: Invocation ID of the individual task whose logs we want to get.
+            config_name: config specifying the runtime.
+
         Raises:
-            orquestra.sdk.exceptions.WorkflowRunNotFoundError
-            orquestra.sdk.exceptions.ConfigmeNotFoundError
-            orquestra.sdk.exceptions.ConfigNameNotFoundError
+            orquestra.sdk.exceptions.WorkflowRunNotFoundError: when the wf_run_id
+                doesn't match a stored run ID.
+            orquestra.sdk.exceptions.UnauthorizedError: when authorization with the
+                remote runtime failed.
+            orquestra.sdk.exceptions.ConfigFileNotFoundError: when the config file
+                couldn't be read
+            orquestra.sdk.exceptions.ConfigNameNotFoundError: when there's no
+                corresponding config entry in the config file.
+            orquestra.sdk.exceptions.TaskInvocationNotFoundError: when the task_inv_id
+                doesn't match a stored task invocation ID for this workflow run.
         """
         try:
             wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
         except (
-            exceptions.NotFoundError,
+            exceptions.WorkflowRunNotFoundError,
+            exceptions.UnauthorizedError,
             exceptions.ConfigFileNotFoundError,
             exceptions.ConfigNameNotFoundError,
         ):
@@ -513,12 +614,21 @@ class ConfigRepo:
         """
         Saves the token in the config file
 
+        Args:
+            uri: the URI of the remote cluster to which the token grants access.
+            token: the token string to be stored.
+            runtime_name: the runtime with which workflows submitted with this token
+                should be run.
+
         Raises:
             orquestra.sdk.exceptions.ExpiredTokenError: if the current date is after the
                 token's expiry
             orquestra.sdk.exceptions.InvalidTokenError: if the token is not a JWT
         """
-        check_jwt_without_signature_verification(token)
+        try:
+            check_jwt_without_signature_verification(token)
+        except (exceptions.ExpiredTokenError, exceptions.InvalidTokenError):
+            raise
 
         config_name = _config.generate_config_name(runtime_name, uri)
 
@@ -622,6 +732,9 @@ class WorkflowDefRepo:
         """
         Tries to figure out dotted module name, imports the module, and returns it.
 
+        Args:
+            module_spec: either a path to a source file, or a dotted import name.
+
         Raises:
             sdk.exceptions.WorkflowDefinitionModuleNotFound: if there's no module
                 matching the resolved name
@@ -640,10 +753,15 @@ class WorkflowDefRepo:
                     module_name=dotted_name, sys_path=sys.path
                 )
 
-    def get_worklow_names(self, module) -> t.Sequence[str]:
+    def get_worklow_names(self, module: ModuleType) -> t.Sequence[str]:
         """
+        Get the names of all workflows defined in a module.
+
+        Args:
+            module: the module to be examinied.
+
         Raises:
-            orquestra.sdk.exceptions.NoWorkflowDefinitionsFound when there was no
+            orquestra.sdk.exceptions.NoWorkflowDefinitionsFound: when there were no
                 matching wf defs found in the module.
         """
         workflows: t.Sequence[sdk.WorkflowTemplate] = loader.get_attributes_of_type(
@@ -659,10 +777,16 @@ class WorkflowDefRepo:
 
         return [wf._fn.__name__ for wf in workflows]
 
-    def get_workflow_def(self, module, name: str) -> sdk.WorkflowDef:
+    def get_workflow_def(self, module: ModuleType, name: str) -> sdk.WorkflowDef:
         """
+        Get the definition of a single workflow from a module.
+
+        Args:
+            module: the module containing the workflow definition.
+            name: the name of the workflow.
+
         Raises:
-            orquestra.sdk.exceptions.WorkflowSyntaxError when the workflow of choice is
+            orquestra.sdk.exceptions.WorkflowSyntaxError: when the workflow of choice is
                 parametrized.
         """
         wf_template = getattr(module, name)
