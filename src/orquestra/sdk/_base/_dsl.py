@@ -138,11 +138,12 @@ class GitImport:
         git_ref: Optional[str] = None,
     ) -> "DeferredGitImport":
         """Get local Git info for a specific local repo.
-           The current git repo info is retrieved as default.
+
+        The current git repo info is retrieved as default.
 
         Args:
-            local_repo_path - path to the local repo
-            git_ref - branch/commit/tag
+            local_repo_path: path to the local repo
+            git_ref: branch/commit/tag
 
         Usage:
             GitImport.infer()
@@ -158,6 +159,14 @@ def GithubImport(
 ):
     """
     Helper to create GitImports from Github repos.
+
+    Args:
+        repo: The name of the repo from which to import.
+        git_ref: the reference to be imported
+            (see https://docs.github.com/en/rest/git/refs for details).
+        username: the username used to access GitHub
+        personal_access_token: must be configured in GitHub for access to the specified
+            repo.
 
     Raises:
         TypeError: when a value that is not a `sdk.Secret` is passed as
@@ -212,7 +221,7 @@ class DeferredGitImport:
                 NotAGitRepo: when the local directory is not a valid git repo
                 NoRemoteRepo: when the remote git repo doesn't exist
                 DirtyGitRep: when there is uncommitted change or unpushed commit
-                in a git repo
+                    in a git repo
         """
         import git
 
@@ -581,12 +590,14 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
 
         Raises:
             InvalidTaskDefinitionError: If task is defined in __main__module and is not
-            inlined using source_import==InlineImport()
-            or
-            When invalid number of resources was requested
+                inlined using ``source_import==InlineImport()`` or when an invalid
+                number of resources was requested
         """
-        self._validate_task_not_in_main()
-        self._validate_task_resources()
+        try:
+            self._validate_task_not_in_main()
+            self._validate_task_resources()
+        except InvalidTaskDefinitionError:
+            raise
 
     def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
@@ -1129,6 +1140,9 @@ def task(
             result of other task) - it will be placeholded. Every character that is
             non-alphanumeric will be changed to dash ("-").
             Also only first 128 characters of the name will be used
+
+    Raises:
+        ValueError: when a task has fewer than 1 outputs.
     """
     task_dependency_imports: Optional[Tuple[Import, ...]]
 
