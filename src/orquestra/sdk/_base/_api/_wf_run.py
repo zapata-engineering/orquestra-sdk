@@ -618,9 +618,6 @@ def list_workflow_run_summaries(
         limit: Restrict the number of runs to return, prioritising the most recent.
         max_age: Only return runs younger than the specified maximum age.
         state: Only return runs of runs with the specified status.
-        project_dir: The location of the project directory. This directory must
-            contain the workflows database to which this run was saved. If omitted,
-            the current working directory is assumed to be the project directory.
         workspace: Only return runs from the specified workspace when using CE.
         project: will be used to list workflows from specific workspace and project
             when using CE.
