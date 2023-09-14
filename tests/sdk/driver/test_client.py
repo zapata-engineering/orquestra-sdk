@@ -1032,7 +1032,6 @@ class TestClient:
                     f"{base_uri}/api/workflow-runs",
                 )
 
-
             @staticmethod
             def test_list_workflow_run_summaries(
                 endpoint_mocker,
