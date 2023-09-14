@@ -85,7 +85,7 @@ ignore = [
     'E203',     # whitespace before ':'
     'E266',     # Too many leading '#' for block comment
     'DOC201',   # Function/method does not have a return section in docstring
-    'DOC203',   # 
+    'DOC203',   # Return type(s) in docstring not consistent with the return annotation
     'DOC301',   # `__init__()` should not have a docstring
     'W503'      # Line break occurred before a binary operator
 ]
