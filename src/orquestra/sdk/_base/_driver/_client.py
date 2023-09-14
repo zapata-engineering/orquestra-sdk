@@ -26,6 +26,7 @@ from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, Workflow
 from orquestra.sdk.schema.workflow_run import (
     WorkflowRun,
     WorkflowRunMinimal,
+    WorkflowRunSummary,
     WorkspaceId,
 )
 
@@ -507,15 +508,16 @@ class DriverClient:
         workspace: Optional[WorkspaceId] = None,
     ) -> Paginated[WorkflowRunMinimal]:
         """
-        List workflow runs with a specified workflow def ID from the workflow driver
+        List workflow runs with a specified workflow def ID from the workflow driver.
 
         Args:
-            workflow_def_id:
+            workflow_def_id: Only list workflow runs matching this workflow def. If
+                omitted, workflow runs with any workflow definition will be returned.
             page_size: Maximum number of results returned in a single page.
             page_token: Token for the requested page of the list results.
                 If omitted the first page will be returned.
             workspace: Only list workflow runs in the specified workspace. If omitted,
-                all workflow runs will be returned.
+                workflow runs from all workspaces will be returned.
 
         Raises:
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
@@ -524,25 +526,21 @@ class DriverClient:
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
-        # Schema: https://github.com/zapatacomputing/workflow-driver/blob/fa3eb17f1132d9c7f4960331ffe7ddbd31e02f8c/openapi/src/resources/workflow-runs.yaml#L10 # noqa: E501
-        resp = self._get(
-            self._uri_provider.uri_for("list_workflow_runs"),
-            query_params=_models.ListWorkflowRunsRequest(
-                workflowDefinitionID=workflow_def_id,
-                pageSize=page_size,
-                pageToken=page_token,
-                workspaceId=workspace,
-            ).dict(),
-        )
-
+        
         try:
-            _handle_common_errors(resp)
+          resp = self._list_workflow_runs(
+              workflow_def_id,
+              page_size,
+              page_token,
+              workspace,
+          )
         except (
             _exceptions.InvalidTokenError,
             _exceptions.ForbiddenError,
             _exceptions.UnknownHTTPError,
         ):
             raise
+
 
         parsed_response = _models.Response[
             _models.ListWorkflowRunsResponse, _models.Pagination
@@ -562,6 +560,119 @@ class DriverClient:
             contents=workflow_runs,
             next_page_token=next_token,
         )
+
+    def list_workflow_run_summaries(
+        self,
+        workflow_def_id: Optional[_models.WorkflowDefID] = None,
+        page_size: Optional[int] = None,
+        page_token: Optional[str] = None,
+        workspace: Optional[WorkspaceId] = None,
+    ) -> Paginated[WorkflowRunSummary]:
+        """
+        List workflow runs summaries with a specified workflow def ID.
+
+        Args:
+            workflow_def_id: Only list workflow runs matching this workflow def. If
+                omitted, workflow runs with any workflow definition will be returned.
+            page_size: Maximum number of results returned in a single page.
+            page_token: Token for the requested page of the list results.
+                If omitted the first page will be returned.
+            workspace: Only list workflow runs in the specified workspace. If omitted,
+                workflow runs from all workspaces will be returned.
+
+        Raises:
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
+        """
+
+        try:
+            resp = self._list_workflow_runs(
+                workflow_def_id,
+                page_size,
+                page_token,
+                workspace,
+            )
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
+
+        parsed_response = _models.Response[
+            _models.ListWorkflowRunSummariesResponse, _models.Pagination
+        ].parse_obj(resp.json())
+
+        if parsed_response.meta is not None:
+            next_token = parsed_response.meta.nextPageToken
+        else:
+            next_token = None
+
+        workflow_runs = []
+        for r in parsed_response.data:
+            workflow_runs.append(r.to_ir())
+
+        return Paginated(
+            contents=workflow_runs,
+            next_page_token=next_token,
+        )
+
+    def _list_workflow_runs(
+        self,
+        workflow_def_id: Optional[_models.WorkflowDefID] = None,
+        page_size: Optional[int] = None,
+        page_token: Optional[str] = None,
+        workspace: Optional[WorkspaceId] = None,
+    ):
+        """Get a list of wf runs from the workflow driver.
+
+        The responses will be parsed using the specified response model.
+
+        This method consolidates the logic used by both list_workflow_runs and
+        list_workflow_run_summaries.
+        
+        Args:
+            workflow_def_id: Only list workflow runs matching this workflow def. If
+                omitted, workflow runs with any workflow definition will be returned.
+            page_size: Maximum number of results returned in a single page.
+            page_token: Token for the requested page of the list results.
+                If omitted the first page will be returned.
+            workspace: Only list workflow runs in the specified workspace. If omitted,
+                workflow runs from all workspaces will be returned.
+          
+        
+        Raises:
+          orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
+        """
+        # Schema: https://github.com/zapatacomputing/workflow-driver/blob/fa3eb17f1132d9c7f4960331ffe7ddbd31e02f8c/openapi/src/resources/workflow-runs.yaml#L10 # noqa: E501
+
+        resp = self._get(
+            self._uri_provider.uri_for("list_workflow_runs"),
+            query_params=_models.ListWorkflowRunsRequest(
+                workflowDefinitionID=workflow_def_id,
+                pageSize=page_size,
+                pageToken=page_token,
+                workspaceId=workspace,
+            ).dict(),
+        )
+
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise  
+
+        return resp
 
     def get_workflow_run(self, wf_run_id: _models.WorkflowRunID) -> WorkflowRun:
         """

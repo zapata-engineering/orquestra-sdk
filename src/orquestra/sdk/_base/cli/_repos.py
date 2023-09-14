@@ -13,6 +13,7 @@ import typing as t
 import warnings
 from contextlib import contextmanager
 from types import ModuleType
+from functools import singledispatch
 
 import requests
 from typing_extensions import assert_never
@@ -40,6 +41,7 @@ from orquestra.sdk.schema.workflow_run import (
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
+    WorkflowRunSummary,
     WorkspaceId,
 )
 
@@ -68,6 +70,33 @@ class WorkflowRunRepo:
             except WorkflowRunNotFoundError:
                 raise
             return stored_run.config_name
+
+    def list_wf_run_summaries(
+        self,
+        config: ConfigName,
+        workspace: t.Optional[WorkspaceId] = None,
+        limit: t.Optional[int] = None,
+        max_age: t.Optional[str] = None,
+        state: t.Optional[t.Union[State, t.List[State]]] = None,
+    ) -> t.List[WorkflowRunSummary]:
+        """
+        Asks the runtime for sumaries of all workflow runs that match the filters.
+
+        Raises:
+            ConnectionError: when connection with Ray failed.
+            orquestra.sdk.exceptions.UnauthorizedError: when connection with runtime
+                failed because of an auth error.
+        """
+        try:
+            return sdk.list_workflow_run_summaries(
+                config,
+                limit=limit,
+                max_age=max_age,
+                state=state,
+                workspace=workspace,
+            )
+        except (ConnectionError, exceptions.UnauthorizedError):
+            raise
 
     def list_wf_runs(
         self,
@@ -544,11 +573,39 @@ def _tasks_number_summary(wf_run: WorkflowRun) -> str:
     return f"{finished}/{total}"
 
 
-def _ui_model_from_wf(wf_run: WorkflowRun):
+@singledispatch
+def _ui_model_from_wf(wf_run) -> ui_models.WFList.WFRow:
+    """
+    Convert a workflow run object into a consistent form to be displayed by the UI.
+
+    Args:
+        wf_run: The workflow run to be displayed. May be a WorkflowRun or
+            WorkflowRunSummary.
+
+    Returns:
+        A WFRow object containing the id, status, number of task (including how many
+            have succeeded) and start time of the workflow in string forms for ease of
+            display.
+    """
+    raise NotImplementedError(f"No ui model defined for type {type(wf_run)}")
+
+
+@_ui_model_from_wf.register
+def _(wf_run: WorkflowRun) -> ui_models.WFList.WFRow:
     return ui_models.WFList.WFRow(
         workflow_run_id=wf_run.id,
         status=wf_run.status.state.value,
         tasks_succeeded=_tasks_number_summary(wf_run),
+        start_time=wf_run.status.start_time,
+    )
+
+
+@_ui_model_from_wf.register
+def _(wf_run: WorkflowRunSummary) -> ui_models.WFList.WFRow:
+    return ui_models.WFList.WFRow(
+        workflow_run_id=wf_run.id,
+        status=wf_run.status.state.value,
+        tasks_succeeded=f"{wf_run.completed_task_runs}/{wf_run.total_task_runs}",
         start_time=wf_run.status.start_time,
     )
 
@@ -578,7 +635,17 @@ class SummaryRepo:
             n_task_invocations_total=n_total,
         )
 
-    def wf_list_summary(self, wf_runs: t.List[WorkflowRun]) -> ui_models.WFList:
+    def wf_list_summary(self, wf_runs: t.List[WorkflowRunSummary]) -> ui_models.WFList:
+        """
+        Construct a list of summaries of workflow runs.
+
+        Args:
+            wf_runs: a list of WorkflowRunSummary object coressponding to the workflows
+                to be displayed.
+
+        Returns:
+            A WFList containing summary lines for the specified workflows.
+        """
         wf_runs.sort(
             key=lambda wf_run: wf_run.status.start_time
             if wf_run.status.start_time

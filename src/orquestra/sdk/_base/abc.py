@@ -23,6 +23,7 @@ from ..schema.workflow_run import (
     WorkflowRun,
     WorkflowRunId,
     WorkflowRunMinimal,
+    WorkflowRunSummary,
     WorkspaceId,
 )
 from ._logs._interfaces import LogOutput, LogReader, WorkflowLogs
@@ -149,6 +150,32 @@ class RuntimeInterface(ABC, LogReader):
                 on CE.
         Returns:
                 A list of the workflow runs
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def list_workflow_run_summaries(
+        self,
+        *,
+        limit: t.Optional[int] = None,
+        max_age: t.Optional[timedelta] = None,
+        state: t.Optional[t.Union[State, t.List[State]]] = None,
+        workspace: t.Optional[WorkspaceId] = None,
+    ) -> t.List[WorkflowRunSummary]:
+        """
+        List summaries of the workflow runs, with some filters
+
+        Args:
+            limit: Restrict the number of runs to return, prioritising the most recent.
+            max_age: Only return runs younger than the specified maximum age.
+            status: Only return runs of runs with the specified status.
+            workspace: Only return runs from the specified workspace.
+
+        Raises:
+            UnauthorizedError: if the remote cluster rejects the token
+
+        Returns:
+            A list of the workflow run summaries.
         """
         raise NotImplementedError()
 

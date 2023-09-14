@@ -1307,6 +1307,183 @@ class TestListWorkflows:
         )
 
 
+class TestListWorkflowSummaries:
+    @staticmethod
+    @pytest.fixture
+    def mock_config_runtime(monkeypatch):
+        run = MagicMock()
+        type(run).id = PropertyMock(side_effect=["wf0", "wf1", "wf2"])
+        runtime = Mock(RuntimeInterface)
+        # For getting workflow ID
+        runtime.list_workflow_run_summaries.return_value = [run, run, run]
+        mock_config = MagicMock(_api.RuntimeConfig)
+        mock_config._get_runtime.return_value = runtime
+        monkeypatch.setattr(
+            _api.RuntimeConfig, "load", MagicMock(return_value=mock_config)
+        )
+
+        return runtime
+
+    def test_get_all_wfs(self, mock_config_runtime):
+        # Given
+        # When
+        runs = _api.list_workflow_run_summaries("mocked_config")
+        # Then
+        assert len(runs) == 3
+        assert runs[0].id == "wf0"
+        assert runs[1].id == "wf1"
+        assert runs[2].id == "wf2"
+
+    def test_invalid_max_age(self, mock_config_runtime):
+        # Given
+        # When
+        with pytest.raises(ValueError) as exc_info:
+            _ = _api.list_workflow_run_summaries("mocked_config", max_age="hello")
+        assert exc_info.match("Time strings must")
+
+    @pytest.mark.parametrize(
+        "max_age, delta",
+        [
+            ("1d", timedelta(days=1)),
+            ("2h", timedelta(hours=2)),
+            ("3m", timedelta(minutes=3)),
+            ("4s", timedelta(seconds=4)),
+            ("1d2h3m4s", timedelta(days=1, seconds=7384)),
+        ],
+    )
+    def test_with_max_age(self, mock_config_runtime, max_age, delta):
+        # Given
+        # When
+        _ = _api.list_workflow_run_summaries("mocked_config", max_age=max_age)
+        # Then
+        mock_config_runtime.list_workflow_run_summaries.assert_called_once_with(
+            limit=None,
+            max_age=delta,
+            state=None,
+            workspace=None,
+        )
+
+    def test_with_limit(self, mock_config_runtime):
+        # Given
+        # When
+        _ = _api.list_workflow_run_summaries("mocked_config", limit=10)
+        # Then
+        mock_config_runtime.list_workflow_run_summaries.assert_called_once_with(
+            limit=10,
+            max_age=None,
+            state=None,
+            workspace=None,
+        )
+
+    def test_with_state(self, mock_config_runtime):
+        # Given
+        # When
+        _ = _api.list_workflow_run_summaries("mocked_config", state=State.SUCCEEDED)
+        # Then
+        mock_config_runtime.list_workflow_run_summaries.assert_called_once_with(
+            limit=None,
+            max_age=None,
+            state=State.SUCCEEDED,
+            workspace=None,
+        )
+
+    def test_with_workspace(self, mock_config_runtime):
+        # GIVEN
+        # WHEN
+        _ = _api.list_workflow_run_summaries(
+            "mocked_config", workspace="<workspace ID sentinel>"
+        )
+
+        # THEN
+        mock_config_runtime.list_workflow_run_summaries.assert_called_once_with(
+            limit=None,
+            max_age=None,
+            state=None,
+            workspace="<workspace ID sentinel>",
+        )
+
+    def test_raises_exception_with_project_and_no_workspace(self, mock_config_runtime):
+        # GIVEN
+        # WHEN
+        with pytest.raises(ProjectInvalidError) as e:
+            _ = _api.list_workflow_run_summaries(
+                "mocked_config", project="<project ID sentinel>"
+            )
+
+        # THEN
+        assert e.exconly() == (
+            "orquestra.sdk.exceptions.ProjectInvalidError: The project "
+            "`<project ID sentinel>` cannot be uniquely identified without a workspace "
+            "parameter."
+        )
+
+    def test_in_studio_passed_arguments(self, monkeypatch, mock_config_runtime):
+        # GIVEN
+        monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", "env_workspace")
+        monkeypatch.setenv("ORQ_CURRENT_PROJECT", "env_project")
+
+        # WHEN
+        _ = _api.list_workflow_run_summaries(
+            "mocked_config",
+            workspace="<workspace ID sentinel>",
+        )
+
+        # THEN
+        mock_config_runtime.list_workflow_run_summaries.assert_called_once_with(
+            limit=None,
+            max_age=None,
+            state=None,
+            workspace="<workspace ID sentinel>",
+        )
+
+    def test_in_studio_no_arguments(self, monkeypatch, mock_config_runtime):
+        # GIVEN
+        monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", "env_workspace")
+        monkeypatch.setenv("ORQ_CURRENT_PROJECT", "env_project")
+
+        # overwrite config name
+        mock_config = MagicMock(_api.RuntimeConfig)
+        mock_config._get_runtime.return_value = mock_config_runtime
+        mock_config.name = "auto"
+        monkeypatch.setattr(
+            _api.RuntimeConfig, "load", MagicMock(return_value=mock_config)
+        )
+
+        # WHEN
+        _ = _api.list_workflow_run_summaries(
+            "mock_config",
+        )
+
+        # THEN
+        mock_config_runtime.list_workflow_run_summaries.assert_called_once_with(
+            limit=None,
+            max_age=None,
+            state=None,
+            workspace="env_workspace",
+        )
+
+    @staticmethod
+    def test_suppresses_versionmismatch_warnings(mock_config_runtime):
+        # Given
+        def raise_warnings(*args, **kwargs):
+            warnings.warn("a warning that should not be suppressed")
+            warnings.warn(VersionMismatch("foo", Mock(), None))
+            warnings.warn(VersionMismatch("foo", Mock(), None))
+            return [Mock(), Mock(), Mock()]
+
+        mock_config_runtime.list_workflow_run_summaries.side_effect = raise_warnings
+
+        # When
+        with pytest.warns(Warning) as record:
+            _ = _api.list_workflow_run_summaries("mocked_config")
+
+        # Then
+        assert len(record) == 1
+        assert str(record[0].message) == str(
+            UserWarning("a warning that should not be suppressed")
+        )
+
+
 @pytest.mark.parametrize(
     "workspace_id, project_id, workspace_env, project_env, raises, expected",
     [

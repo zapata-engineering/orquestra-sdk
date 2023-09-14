@@ -250,6 +250,70 @@ class TestListWorkflowRuns:
         assert len(wf_runs) == 1
 
 
+class TestListWorkflowRunSummaries:
+    @staticmethod
+    def test_happy_path(runtime, wf_def):
+        # Given
+        _ = runtime.create_workflow_run(wf_def, None, dry_run=False)
+        _ = runtime.create_workflow_run(wf_def, None, dry_run=False)
+
+        # When
+        wf_runs = runtime.list_workflow_run_summaries()
+
+        # Then
+        assert len(wf_runs) == 2
+
+    @staticmethod
+    def test_limit(runtime, wf_def):
+        # Given
+        _ = runtime.create_workflow_run(wf_def, None, dry_run=False)
+        _ = runtime.create_workflow_run(wf_def, None, dry_run=False)
+
+        # When
+        wf_runs = runtime.list_workflow_run_summaries(limit=1)
+
+        # Then
+        assert len(wf_runs) == 1
+
+    @staticmethod
+    def test_state_running(runtime, wf_def):
+        # Given
+        _ = runtime.create_workflow_run(wf_def, None, dry_run=False)
+
+        # When
+        wf_runs = runtime.list_workflow_run_summaries(state=State.RUNNING)
+
+        # Then
+        # It doesn't make sense to get a running workflow from this runtime
+        assert len(wf_runs) == 0
+
+    @staticmethod
+    def test_state_succeeded(runtime, wf_def):
+        # Given
+        _ = runtime.create_workflow_run(wf_def, None, dry_run=False)
+
+        # When
+        wf_runs = runtime.list_workflow_run_summaries(state=State.SUCCEEDED)
+
+        # Then
+        # It doesn't make sense to get a running workflow from this runtime
+        assert len(wf_runs) == 1
+
+    @staticmethod
+    def test_max_age(runtime, wf_def):
+        # Given
+        run_id = runtime.create_workflow_run(wf_def, None, dry_run=False)
+        _ = runtime.create_workflow_run(wf_def, None, dry_run=False)
+        runtime._start_time_store[run_id] = _dates.now() - timedelta(days=1)
+
+        # When
+        wf_runs = runtime.list_workflow_run_summaries(max_age=timedelta(minutes=1))
+
+        # Then
+        # It doesn't make sense to get a running workflow from this runtime
+        assert len(wf_runs) == 1
+
+
 class TestUnsupportedMethods:
     @staticmethod
     @pytest.mark.parametrize(
