@@ -6,6 +6,7 @@ Class to get logs from Ray for particular Workflow, both historical and live.
 """
 import typing as t
 from pathlib import Path
+from typing import Iterator
 
 from orquestra.sdk._base._logs import _markers, _regrouping
 from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
@@ -49,7 +50,7 @@ def _iter_log_lines(paths: t.Iterable[Path]) -> t.Iterator[bytes]:
 
 def iter_task_logs(
     worker_file_path: Path,
-) -> t.Iterator[CapturedLogLines]:
+) -> Iterator[CapturedLogLines]:
     """
     A generator over logs contained in a Ray worker's output file
 
@@ -66,9 +67,9 @@ def iter_task_logs(
     Args:
         worker_file_path: The path to the output of a Ray worker.
 
-    Returns:
-        A generator that yields batches of logs relating to specific workflow runs and
-        task invocations.
+    Yields:
+        CapturedLogLines: A generator that yields batches of logs relating to specific
+            workflow runs and task invocations.
     """
 
     with worker_file_path.open() as f:
