@@ -226,7 +226,7 @@ class MinimalWorkflowRunResponse(pydantic.BaseModel):
         )
 
 
-class WorkflowRunSummaryResponse(MinimalWorkflowRunResponse):
+class WorkflowRunSummaryResponse(pydantic.BaseModel):
     """
     Contains all of the information needed to give a basic overview of the workflow.
 
@@ -234,6 +234,8 @@ class WorkflowRunSummaryResponse(MinimalWorkflowRunResponse):
         https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml#L1
     """
 
+    id: WorkflowRunID
+    definitionId: WorkflowDefID
     status: RunStatusResponse
     createTime: str
     owner: str
@@ -241,7 +243,7 @@ class WorkflowRunSummaryResponse(MinimalWorkflowRunResponse):
     completedTasks: int
     dryRun: bool
 
-    def to_ir(self, *args) -> WorkflowRunSummary:
+    def to_ir(self) -> WorkflowRunSummary:
         return WorkflowRunSummary(
             id=self.id,
             status=self.status.to_ir(),
