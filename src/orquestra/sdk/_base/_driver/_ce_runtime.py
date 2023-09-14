@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-"""
-RuntimeInterface implementation that uses Compute Engine.
-"""
+"""RuntimeInterface implementation that uses Compute Engine."""
 import warnings
 from datetime import timedelta
 from pathlib import Path
@@ -98,9 +96,7 @@ def _verify_workflow_resources(
 
 
 class CERuntime(RuntimeInterface):
-    """
-    A runtime for communicating with the Compute Engine API endpoints
-    """
+    """A runtime for communicating with the Compute Engine API endpoints."""
 
     def __init__(
         self,
@@ -108,16 +104,18 @@ class CERuntime(RuntimeInterface):
         client: _client.DriverClient,
         verbose: bool = False,
     ):
-        """
+        """Initialiser for the CERuntime interface.
+
         Args:
             config: contains the runtime configuration, including the name of the
-                config being used and the associated runtime options. These options
-                control how to connect to a CE cluster.
+                config being used and the associated runtime options.
+                These options control how to connect to a CE cluster.
+            client: The DriverClient through which the runtime should communicate.
             verbose: if `True`, CERuntime may print debug information about
                 its inner working to stderr.
 
         Raises:
-            RuntimeConfigError: when the config is invalid
+            RuntimeConfigError: when the config is invalid.
         """
         self._config = config
         self._verbose = verbose
@@ -127,26 +125,24 @@ class CERuntime(RuntimeInterface):
     def create_workflow_run(
         self, workflow_def: WorkflowDef, project: Optional[ProjectRef], dry_run: bool
     ) -> WorkflowRunId:
-        """
-        Schedules a workflow definition for execution
+        """Schedules a workflow definition for execution.
 
         Args:
-            workflow_def: the IR of the workflow to run
+            workflow_def: the IR of the workflow to run.
             project: Project dir (workspace and project ID) on which the workflow
-                will be run
-            dry_run: If True, code of the tasks will not be executed
+                will be run.
+            dry_run: If True, code of the tasks will not be executed.
 
         Raises:
             WorkflowSyntaxError: when the workflow definition was rejected by the remote
-                cluster
+                cluster.
             WorkflowRunNotStarted: for all other errors that prevented the workflow run
-                from being scheduled
+                from being scheduled.
             UnauthorizedError: if the current token was rejected by the remote cluster
 
         Returns:
-            the workflow run ID
+            the workflow run ID.
         """
-
         max_invocation_resources = _get_max_resources(workflow_def)
 
         if workflow_def.resources is not None:
@@ -218,8 +214,7 @@ class CERuntime(RuntimeInterface):
         return workflow_run_id
 
     def get_workflow_run_status(self, workflow_run_id: WorkflowRunId) -> WorkflowRun:
-        """
-        Gets the status of a workflow run
+        """Gets the status of a workflow run.
 
         Args:
             workflow_run_id: the ID of a workflow run
@@ -267,7 +262,6 @@ class CERuntime(RuntimeInterface):
         Returns:
             the outputs associated with the workflow run
         """
-
         try:
             result_ids = self._client.get_workflow_run_results(workflow_run_id)
         except (
@@ -330,7 +324,7 @@ class CERuntime(RuntimeInterface):
     def get_available_outputs(
         self, workflow_run_id: WorkflowRunId
     ) -> Dict[TaskInvocationId, WorkflowResult]:
-        """Returns all available outputs for a workflow
+        """Returns all available outputs for a workflow.
 
         This method returns all available artifacts. When the workflow fails
         it returns artifacts only for the steps that did success.
@@ -428,14 +422,17 @@ class CERuntime(RuntimeInterface):
         state: Optional[Union[State, List[State]]],
         workspace: Optional[WorkspaceId],
     ) -> list:
-        """
-        Iterate through pages listing workflow runs.
+        """Iterate through pages listing workflow runs.
 
         This method encompasses the logic the drives `list_workflow_runs` and
         `list_workflow_run_summaries`.
 
         Args:
             func: the paginated listing function over which to iterate.
+            limit: Restrict the number of runs to return, prioritising the most recent.
+            max_age: Only return runs younger than the specified maximum age.
+            state: Only return runs of runs with the specified status.
+            workspace: Only return runs from the specified workspace.
 
         Raises:
             exceptions.UnauthorizedError: if the remote cluster rejects the token.
@@ -499,13 +496,12 @@ class CERuntime(RuntimeInterface):
         state: Optional[Union[State, List[State]]] = None,
         workspace: Optional[WorkspaceId] = None,
     ) -> List[WorkflowRunSummary]:
-        """
-        List summaries of the workflow runs, with some filters
+        """List summaries of the workflow runs, with some filters.
 
         Args:
             limit: Restrict the number of runs to return, prioritising the most recent.
             max_age: Only return runs younger than the specified maximum age.
-            status: Only return runs of runs with the specified status.
+            state: Only return runs of runs with the specified status.
             workspace: Only return runs from the specified workspace.
 
         Raises:
@@ -531,8 +527,7 @@ class CERuntime(RuntimeInterface):
         state: Optional[Union[State, List[State]]] = None,
         workspace: Optional[WorkspaceId] = None,
     ) -> List[WorkflowRunMinimal]:
-        """
-        List the workflow runs, with some filters
+        """List the workflow runs, with some filters.
 
         Args:
             limit: Restrict the number of runs to return, prioritising the most recent.
@@ -559,8 +554,7 @@ class CERuntime(RuntimeInterface):
             raise
 
     def get_workflow_logs(self, wf_run_id: WorkflowRunId) -> WorkflowLogs:
-        """
-        Get all logs produced during the execution of this workflow run.
+        """Get all logs produced during the execution of this workflow run.
 
         Args:
             wf_run_id: the ID of a workflow run
@@ -636,18 +630,16 @@ class CERuntime(RuntimeInterface):
         )
 
     def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
-        """
-        Get the logs produced by a task invocation during the execution of a workflow
-        run.
+        """Get the logs produced by a task invocation during a workflow run.
 
         Args:
-            wf_run_id: the ID of a workflow run
-            task_inv_id: the ID of a specific task invocation in the workflow
+            wf_run_id: the ID of a workflow run.
+            task_inv_id: the ID of a specific task invocation in the workflow.
 
         Raises:
-            WorkflowRunNotFound: if the workflow run cannot be found
-            InvalidWorkflowRunLogsError: if the logs could not be decoded
-            UnauthorizedError: if the remote cluster rejects the token
+            WorkflowRunNotFound: if the workflow run cannot be found.
+            InvalidWorkflowRunLogsError: if the logs could not be decoded.
+            UnauthorizedError: if the remote cluster rejects the token.
         """
         try:
             messages = self._client.get_task_run_logs(wf_run_id, task_inv_id)

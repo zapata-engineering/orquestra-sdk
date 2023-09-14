@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-"""
-In-process implementation of the runtime interface.
-"""
+"""In-process implementation of the runtime interface."""
 
 import typing as t
 import warnings
@@ -38,8 +36,7 @@ TaskOutputs = t.Tuple[ArtifactValue, ...]
 global_current_run_ids: t.Optional[
     t.Tuple[WorkflowRunId, ir.TaskInvocationId, TaskRunId]
 ] = None
-"""
-Global variable to store the current workflow, task inv, and task run IDs.
+"""Global variable to store the current workflow, task inv, and task run IDs.
 
 This should _only_ be used in the context of the set_ids context manager or the
 `get_current_in_process_ids` function, and should be None at all other times.
@@ -48,13 +45,11 @@ This should _only_ be used in the context of the set_ids context manager or the
 
 @contextmanager
 def set_ids(ids: t.Tuple[WorkflowRunId, ir.TaskInvocationId, TaskRunId]):
-    """
-    Temporarily set the global_current_run_ids global variable.
+    """Temporarily set the global_current_run_ids global variable.
 
     global_current_run_ids will be set to a tuple of the current WorkflowRunID,
     TaskInvocationID, and TaskRunID.
     """
-
     global global_current_run_ids
     old_ids = global_current_run_ids
     global_current_run_ids = ids
@@ -65,9 +60,7 @@ def set_ids(ids: t.Tuple[WorkflowRunId, ir.TaskInvocationId, TaskRunId]):
 def get_current_in_process_ids() -> (
     t.Optional[t.Tuple[WorkflowRunId, ir.TaskInvocationId, TaskRunId]]
 ):
-    """
-    Getter for the current In process run IDs.
-    """
+    """Getter for the current In process run IDs."""
     return global_current_run_ids
 
 
@@ -112,9 +105,9 @@ def _get_kwargs(
 
 
 class InProcessRuntime(abc.RuntimeInterface):
-    """
-    Result of calling workflow function directly. Empty at first. Filled each
-    time `create_workflow_run` is called.
+    """Result of calling workflow function directly.
+
+    Empty at first, filled each time `create_workflow_run` is called.
 
     Implements orquestra.sdk._base.abc.RuntimeInterface methods.
     """
@@ -293,8 +286,7 @@ class InProcessRuntime(abc.RuntimeInterface):
         state: t.Union[State, t.List[State], None] = None,
         workspace: t.Optional[WorkspaceId] = None,
     ) -> t.List[WorkflowRun]:
-        """
-        List the workflow runs, with some filters
+        """List the workflow runs, with some filters.
 
         Args:
             limit: Restrict the number of runs to return, prioritising the most recent.
@@ -302,10 +294,10 @@ class InProcessRuntime(abc.RuntimeInterface):
             state: Only return runs of runs with the specified status.
             workspace: Only return runs from the specified workspace. Not supported
                 on this runtime.
+
         Returns:
                 A list of the workflow runs
         """
-
         now = _dates.now()
 
         if state is not None:
@@ -350,13 +342,12 @@ class InProcessRuntime(abc.RuntimeInterface):
         state: t.Optional[t.Union[State, t.List[State]]] = None,
         workspace: t.Optional[WorkspaceId] = None,
     ):
-        """
-        List summaries of the workflow runs, with some filters
+        """List summaries of the workflow runs, with some filters.
 
         Args:
             limit: Restrict the number of runs to return, prioritising the most recent.
             max_age: Only return runs younger than the specified maximum age.
-            status: Only return runs of runs with the specified status.
+            state: Only return runs of runs with the specified status.
             workspace: Only return runs from the specified workspace.
 
         Returns:

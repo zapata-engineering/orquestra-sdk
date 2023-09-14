@@ -1,8 +1,7 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-"""
-Repositories that encapsulate data access used by dorq commands.
+"""Repositories that encapsulate data access used by dorq commands.
 
 The "data" layer. Shouldn't directly depend on the "view" layer.
 """
@@ -12,8 +11,8 @@ import sys
 import typing as t
 import warnings
 from contextlib import contextmanager
-from types import ModuleType
 from functools import singledispatch
+from types import ModuleType
 
 import requests
 from typing_extensions import assert_never
@@ -54,8 +53,7 @@ def _find_first(f: t.Callable[[t.Any], bool], it: t.Iterable):
 
 class WorkflowRunRepo:
     def get_config_name_by_run_id(self, wf_run_id: WorkflowRunId) -> ConfigName:
-        """
-        Get the name of the config with which the workflow run was submitted.
+        """Get the name of the config with which the workflow run was submitted.
 
         Args:
             wf_run_id: ID of the workflow run.
@@ -79,8 +77,14 @@ class WorkflowRunRepo:
         max_age: t.Optional[str] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
     ) -> t.List[WorkflowRunSummary]:
-        """
-        Asks the runtime for sumaries of all workflow runs that match the filters.
+        """Asks the runtime for sumaries of all workflow runs that match the filters.
+
+        Args:
+            config: the configuration specifying the runtime to be interrogated.
+            workspace: only list runs in the specified workspace.
+            limit: the maximum number of runs to list.
+            max_age: only list runs younger than the specified age.
+            state: only list runs in the specified state(s).
 
         Raises:
             ConnectionError: when connection with Ray failed.
@@ -106,8 +110,7 @@ class WorkflowRunRepo:
         max_age: t.Optional[str] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
     ) -> t.List[WorkflowRun]:
-        """
-        Asks the runtime for all workflow runs that match the filters.
+        """Asks the runtime for all workflow runs that match the filters.
 
         Args:
             config: the configuration specifying the runtime to be interrogated.
@@ -138,8 +141,7 @@ class WorkflowRunRepo:
     def get_wf_by_run_id(
         self, wf_run_id: WorkflowRunId, config_name: t.Optional[ConfigName]
     ) -> WorkflowRun:
-        """
-        Load the full details of the specified run from the runtime and database.
+        """Load the full details of the specified run from the runtime and database.
 
         Args:
             wf_run_id: The ID of the workflow run to be loaded.
@@ -169,8 +171,7 @@ class WorkflowRunRepo:
         task_inv_id: TaskInvocationId,
         config_name: ConfigName,
     ) -> TaskRunId:
-        """
-        Determine task run ID of an individual task invocation.
+        """Determine task run ID of an individual task invocation.
 
         Args:
             wf_run_id: The ID of the workflow run containing the task invocation.
@@ -217,7 +218,8 @@ class WorkflowRunRepo:
         workspace_id: t.Optional[WorkspaceId],
         project_id: t.Optional[ProjectId],
     ) -> WorkflowRunId:
-        """
+        """Submit the workflow to be run.
+
         Args:
             wf_def: definition of the workflow to be submitted.
             config: the configuration specifying the runtime to which to submit.
@@ -233,7 +235,6 @@ class WorkflowRunRepo:
                 a task def used by this workflow def has a "GitImport" and the git repo
                 that contains it has uncommitted changes.
         """
-
         try:
             with warnings.catch_warnings():
                 if not ignore_dirty_repo:
@@ -250,8 +251,7 @@ class WorkflowRunRepo:
     def stop(
         self, wf_run_id: WorkflowRunId, config_name: ConfigName, force: t.Optional[bool]
     ):
-        """
-        Terminate a running workflow.
+        """Terminate a running workflow.
 
         Args:
             wf_run_id: ID of the workflow run to be terminated.
@@ -276,8 +276,7 @@ class WorkflowRunRepo:
             raise
 
     def get_wf_outputs(self, wf_run_id: WorkflowRunId, config_name: ConfigName):
-        """
-        Asks the runtime for workflow output values.
+        """Asks the runtime for workflow output values.
 
         If the workflow is still executing this will block until the workflow
         completion.
@@ -318,8 +317,7 @@ class WorkflowRunRepo:
         task_inv_id: TaskInvocationId,
         config_name: ConfigName,
     ) -> t.Tuple[ArtifactValue, ...]:
-        """
-        Asks the runtime for task output values.
+        """Asks the runtime for task output values.
 
         Args:
             wf_run_id: ID of the workflow run containing the task.
@@ -373,8 +371,7 @@ class WorkflowRunRepo:
     def _get_wf_def_model(
         self, wf_run_id: WorkflowRunId, config_name: ConfigName
     ) -> WorkflowDef:
-        """
-        Get the WorkflowDef for a submitted workflow run based on its run ID.
+        """Get the WorkflowDef for a submitted workflow run based on its run ID.
 
         Args:
             wf_run_id: ID of the workflow run.
@@ -403,8 +400,7 @@ class WorkflowRunRepo:
     def get_task_fn_names(
         self, wf_run_id: WorkflowRunId, config_name: ConfigName
     ) -> t.Sequence[str]:
-        """
-        Extract task function names used in this workflow run.
+        """Extract task function names used in this workflow run.
 
         If two different task defs have the same function name, this returns a single
         name entry. This can happen when similar tasks are defined in two different
@@ -421,7 +417,6 @@ class WorkflowRunRepo:
             orquestra.sdk.exceptions.ConfigNameNotFoundError: when the named config is
                 not found in the file.
         """
-
         try:
             wf_def = self._get_wf_def_model(wf_run_id, config_name)
         except (exceptions.NotFoundError, exceptions.ConfigNameNotFoundError):
@@ -442,8 +437,7 @@ class WorkflowRunRepo:
         config_name: ConfigName,
         task_fn_name: str,
     ) -> t.Sequence[TaskInvocationId]:
-        """
-        Selects task invocation IDs that refer to functions named ``task_fn_name``.
+        """Selects task invocation IDs that refer to functions named ``task_fn_name``.
 
         Args:
             wf_run_id: ID of the workflow run.
@@ -472,8 +466,7 @@ class WorkflowRunRepo:
     def get_wf_logs(
         self, wf_run_id: WorkflowRunId, config_name: ConfigName
     ) -> WorkflowLogs:
-        """
-        Get the logs created by a workflow run from the runtime.
+        """Get the logs created by a workflow run from the runtime.
 
         Args:
             wf_run_id: ID of the workflow run.
@@ -505,8 +498,7 @@ class WorkflowRunRepo:
         task_inv_id: TaskInvocationId,
         config_name: ConfigName,
     ) -> t.Mapping[TaskInvocationId, LogOutput]:
-        """
-        Get the logs generated by one task from the runtime.
+        """Get the logs generated by one task from the runtime.
 
         Args:
             wf_run_id: ID of the workflow run containing the task.
@@ -574,9 +566,8 @@ def _tasks_number_summary(wf_run: WorkflowRun) -> str:
 
 
 @singledispatch
-def _ui_model_from_wf(wf_run) -> ui_models.WFList.WFRow:
-    """
-    Convert a workflow run object into a consistent form to be displayed by the UI.
+def _ui_model_from_wf(wf_run) -> ui_models.WFList.WFRow:  # noqa: DOC106, DOC107, DOC501
+    """Convert a workflow run object into a consistent form to be displayed by the UI.
 
     Args:
         wf_run: The workflow run to be displayed. May be a WorkflowRun or
@@ -611,9 +602,7 @@ def _(wf_run: WorkflowRunSummary) -> ui_models.WFList.WFRow:
 
 
 class SummaryRepo:
-    """
-    Performs data wrangling to derive UI models that we can show to the user.
-    """
+    """Performs data wrangling to derive UI models that we can show to the user."""
 
     def wf_run_summary(self, wf_run: WorkflowRun) -> ui_models.WFRunSummary:
         n_succeeded = sum(
@@ -636,8 +625,7 @@ class SummaryRepo:
         )
 
     def wf_list_summary(self, wf_runs: t.List[WorkflowRunSummary]) -> ui_models.WFList:
-        """
-        Construct a list of summaries of workflow runs.
+        """Construct a list of summaries of workflow runs.
 
         Args:
             wf_runs: a list of WorkflowRunSummary object coressponding to the workflows
@@ -656,9 +644,7 @@ class SummaryRepo:
 
 
 class ConfigRepo:
-    """
-    Wraps accessing ~/.orquestra/config.json
-    """
+    """Wraps accessing ~/.orquestra/config.json."""
 
     def list_config_names(self) -> t.Sequence[ConfigName]:
         return [
@@ -668,9 +654,7 @@ class ConfigRepo:
         ]
 
     def list_remote_config_names(self) -> t.Sequence[ConfigName]:
-        """
-        List config names that are not part of the local 'special cases'.
-        """
+        """List config names that are not part of the local 'special cases'."""
         return [
             config
             for config in sdk.RuntimeConfig.list_configs()
@@ -678,8 +662,7 @@ class ConfigRepo:
         ]
 
     def store_token_in_config(self, uri: str, token: str, runtime_name: RemoteRuntime):
-        """
-        Saves the token in the config file
+        """Saves the token in the config file.
 
         Args:
             uri: the URI of the remote cluster to which the token grants access.
@@ -711,16 +694,12 @@ class ConfigRepo:
         return config_name
 
     def read_config(self, config: ConfigName) -> RuntimeConfiguration:
-        """
-        Read a stored config.
-        """
+        """Read a stored config."""
         return _config.read_config(config)
 
 
 class SpacesRepo:
-    """
-    Wraps access to workspaces and projects
-    """
+    """Wraps access to workspaces and projects."""
 
     def list_workspaces(
         self,
@@ -733,9 +712,7 @@ class SpacesRepo:
 
 
 class RuntimeRepo:
-    """
-    Wraps access to CE clients
-    """
+    """Wraps access to CE clients."""
 
     def get_login_url(
         self,
@@ -757,9 +734,7 @@ class RuntimeRepo:
 
 
 def resolve_dotted_name(module_spec: str) -> str:
-    """
-    Heuristic for detecting various ways to specify project modules.
-    """
+    """Heuristic for detecting various ways to specify project modules."""
     if os.path.sep in module_spec or module_spec.endswith(".py"):
         # This looks like a file path!
 
@@ -796,8 +771,7 @@ def _extend_sys_path(sys_path_additions: t.Sequence[str]):
 
 class WorkflowDefRepo:
     def get_module_from_spec(self, module_spec: str):
-        """
-        Tries to figure out dotted module name, imports the module, and returns it.
+        """Tries to figure out dotted module name, imports the module, and returns it.
 
         Args:
             module_spec: either a path to a source file, or a dotted import name.
@@ -821,8 +795,7 @@ class WorkflowDefRepo:
                 )
 
     def get_worklow_names(self, module: ModuleType) -> t.Sequence[str]:
-        """
-        Get the names of all workflows defined in a module.
+        """Get the names of all workflows defined in a module.
 
         Args:
             module: the module to be examinied.
@@ -845,8 +818,7 @@ class WorkflowDefRepo:
         return [wf._fn.__name__ for wf in workflows]
 
     def get_workflow_def(self, module: ModuleType, name: str) -> sdk.WorkflowDef:
-        """
-        Get the definition of a single workflow from a module.
+        """Get the definition of a single workflow from a module.
 
         Args:
             module: the module containing the workflow definition.

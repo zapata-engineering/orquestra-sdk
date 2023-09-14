@@ -1,8 +1,7 @@
 ################################################################################
 # © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Code for accessing the Workflow Driver API.
+"""Code for accessing the Workflow Driver API.
 
 Implemented API spec:
     https://github.com/zapatacomputing/workflow-driver/tree/2b3534/openapi
@@ -108,8 +107,7 @@ T = TypeVar("T")
 
 
 class Paginated(Generic[T]):
-    """
-    Represents a paginated response.
+    """Represents a paginated response.
 
     The contents of the current page can be accessed via ``contents``.
 
@@ -150,9 +148,7 @@ class Paginated(Generic[T]):
 
 
 class DriverClient:
-    """
-    Client for interacting with the Workflow Driver API via HTTP.
-    """
+    """Client for interacting with the Workflow Driver API via HTTP."""
 
     def __init__(self, session: requests.Session, uri_provider: ExternalUriProvider):
         self._uri_provider = uri_provider
@@ -162,8 +158,7 @@ class DriverClient:
     def from_token(
         cls, token: str, uri_provider: ExternalUriProvider
     ) -> "DriverClient":
-        """
-        Create a driver client from a token and URI.
+        """Create a driver client from a token and URI.
 
         Args:
             token: Auth token taken from logging in.
@@ -182,7 +177,7 @@ class DriverClient:
         query_params: Optional[Mapping],
         allow_redirects: bool = True,
     ) -> requests.Response:
-        """Helper method for GET requests"""
+        """Helper method for GET requests."""
         response = self._session.get(
             uri,
             params=query_params,
@@ -197,7 +192,7 @@ class DriverClient:
         body_params: Optional[Mapping],
         query_params: Optional[Mapping] = None,
     ) -> requests.Response:
-        """Helper method for POST requests"""
+        """Helper method for POST requests."""
         response = self._session.post(
             uri,
             json=body_params,
@@ -206,7 +201,7 @@ class DriverClient:
         return response
 
     def _delete(self, uri: str) -> requests.Response:
-        """Helper method for DELETE requests"""
+        """Helper method for DELETE requests."""
         response = self._session.delete(uri)
 
         return response
@@ -220,8 +215,7 @@ class DriverClient:
         workflow_def: WorkflowDef,
         project: Optional[ProjectRef],
     ) -> _models.WorkflowDefID:
-        """
-        Stores a workflow definition for future submission.
+        """Stores a workflow definition for future submission.
 
         Args:
             workflow_def: The workflow definition to be stored.
@@ -276,8 +270,7 @@ class DriverClient:
     def list_workflow_defs(
         self, page_size: Optional[int] = None, page_token: Optional[str] = None
     ) -> Paginated[WorkflowDef]:
-        """
-        Lists all known workflow definitions
+        """Lists all known workflow definitions.
 
         Args:
             page_size: Maximum number of results returned in a single page.
@@ -357,8 +350,7 @@ class DriverClient:
     def get_workflow_def(
         self, workflow_def_id: _models.WorkflowDefID
     ) -> _models.GetWorkflowDefResponse:
-        """
-        Gets a stored workflow definition
+        """Gets a stored workflow definition.
 
         Args:
             workflow_def_id: Id of the stored workflow definition to be loaded.
@@ -405,8 +397,7 @@ class DriverClient:
         return parsed_resp.data
 
     def delete_workflow_def(self, workflow_def_id: _models.WorkflowDefID):
-        """
-        Gets a stored workflow definition.
+        """Gets a stored workflow definition.
 
         Args:
             workflow_def_id: the ID of the workflow definition to be loaded.
@@ -450,8 +441,7 @@ class DriverClient:
         resources: _models.Resources,
         dry_run: bool,
     ) -> _models.WorkflowRunID:
-        """
-        Submit a workflow def to run in the workflow driver.
+        """Submit a workflow def to run in the workflow driver.
 
         Args:
             workflow_def_id: TODO
@@ -507,8 +497,7 @@ class DriverClient:
         page_token: Optional[str] = None,
         workspace: Optional[WorkspaceId] = None,
     ) -> Paginated[WorkflowRunMinimal]:
-        """
-        List workflow runs with a specified workflow def ID from the workflow driver.
+        """List workflow runs with a specified workflow def ID from the workflow driver.
 
         Args:
             workflow_def_id: Only list workflow runs matching this workflow def. If
@@ -526,21 +515,19 @@ class DriverClient:
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
-        
         try:
-          resp = self._list_workflow_runs(
-              workflow_def_id,
-              page_size,
-              page_token,
-              workspace,
-          )
+            resp = self._list_workflow_runs(
+                workflow_def_id,
+                page_size,
+                page_token,
+                workspace,
+            )
         except (
             _exceptions.InvalidTokenError,
             _exceptions.ForbiddenError,
             _exceptions.UnknownHTTPError,
         ):
             raise
-
 
         parsed_response = _models.Response[
             _models.ListWorkflowRunsResponse, _models.Pagination
@@ -568,8 +555,7 @@ class DriverClient:
         page_token: Optional[str] = None,
         workspace: Optional[WorkspaceId] = None,
     ) -> Paginated[WorkflowRunSummary]:
-        """
-        List workflow runs summaries with a specified workflow def ID.
+        """List workflow runs summaries with a specified workflow def ID.
 
         Args:
             workflow_def_id: Only list workflow runs matching this workflow def. If
@@ -587,7 +573,6 @@ class DriverClient:
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
-
         try:
             resp = self._list_workflow_runs(
                 workflow_def_id,
@@ -633,7 +618,7 @@ class DriverClient:
 
         This method consolidates the logic used by both list_workflow_runs and
         list_workflow_run_summaries.
-        
+
         Args:
             workflow_def_id: Only list workflow runs matching this workflow def. If
                 omitted, workflow runs with any workflow definition will be returned.
@@ -642,8 +627,8 @@ class DriverClient:
                 If omitted the first page will be returned.
             workspace: Only list workflow runs in the specified workspace. If omitted,
                 workflow runs from all workspaces will be returned.
-          
-        
+
+
         Raises:
           orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
@@ -670,13 +655,12 @@ class DriverClient:
             _exceptions.ForbiddenError,
             _exceptions.UnknownHTTPError,
         ):
-            raise  
+            raise
 
         return resp
 
     def get_workflow_run(self, wf_run_id: _models.WorkflowRunID) -> WorkflowRun:
-        """
-        Gets the status of a workflow run from the workflow driver
+        """Gets the status of a workflow run from the workflow driver.
 
         Args:
             wf_run_id: ID of the workflow run to be loaded.
@@ -692,7 +676,6 @@ class DriverClient:
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
-
         resp = self._get(
             self._uri_provider.uri_for("get_workflow_run", parameters=(wf_run_id,)),
             query_params=None,
@@ -723,8 +706,7 @@ class DriverClient:
     def terminate_workflow_run(
         self, wf_run_id: _models.WorkflowRunID, force: Optional[bool] = None
     ):
-        """
-        Asks the workflow driver to terminate a workflow run
+        """Asks the workflow driver to terminate a workflow run.
 
         Args:
             wf_run_id: the workflow to terminate
@@ -739,7 +721,6 @@ class DriverClient:
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
-
         resp = self._post(
             self._uri_provider.uri_for(
                 "terminate_workflow_run", parameters=(wf_run_id,)
@@ -765,8 +746,7 @@ class DriverClient:
     def get_workflow_run_artifacts(
         self, wf_run_id: _models.WorkflowRunID
     ) -> Mapping[_models.TaskRunID, List[_models.WorkflowRunArtifactID]]:
-        """
-        Gets the workflow run artifact IDs of a workflow run from the workflow driver
+        """Gets the artifact IDs of a workflow run from the workflow driver.
 
         Args:
             wf_run_id: ID of the workflow run whose artifacts we want.
@@ -782,7 +762,6 @@ class DriverClient:
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
-
         resp = self._get(
             self._uri_provider.uri_for(
                 "get_workflow_run_artifacts",
@@ -815,8 +794,7 @@ class DriverClient:
     def get_workflow_run_artifact(
         self, artifact_id: _models.WorkflowRunArtifactID
     ) -> WorkflowResult:
-        """
-        Gets workflow run artifacts from the workflow driver
+        """Gets workflow run artifacts from the workflow driver.
 
         Args:
             artifact_id: ID of the artifact to be loaded.
@@ -832,7 +810,6 @@ class DriverClient:
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
-
         resp = self._get(
             self._uri_provider.uri_for("get_artifact", parameters=(artifact_id,)),
             query_params=None,
@@ -863,8 +840,7 @@ class DriverClient:
     def get_workflow_run_results(
         self, wf_run_id: _models.WorkflowRunID
     ) -> List[_models.WorkflowRunResultID]:
-        """
-        Gets the workflow run result IDs of a workflow run from the workflow driver
+        """Gets the workflow run result IDs of a workflow run from the workflow driver.
 
         Args:
             wf_run_id: ID of the workflow run whose results we want.
@@ -880,7 +856,6 @@ class DriverClient:
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
-
         resp = self._get(
             self._uri_provider.uri_for("get_workflow_run_results"),
             query_params=_models.GetWorkflowRunResultsRequest(
@@ -911,8 +886,7 @@ class DriverClient:
     def get_workflow_run_result(
         self, result_id: _models.WorkflowRunResultID
     ) -> Union[WorkflowResult, ComputeEngineWorkflowResult]:
-        """
-        Gets workflow run results from the workflow driver
+        """Gets workflow run results from the workflow driver.
 
         Args:
             result_id: ID of the result to be loaded.
@@ -928,7 +902,6 @@ class DriverClient:
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
-
         resp = self._get(
             self._uri_provider.uri_for(
                 "get_workflow_run_result", parameters=(result_id,)
@@ -977,8 +950,7 @@ class DriverClient:
     def get_workflow_run_logs(
         self, wf_run_id: _models.WorkflowRunID
     ) -> List[_models.WorkflowLogMessage]:
-        """
-        Gets the logs of a workflow run from the workflow driver
+        """Gets the logs of a workflow run from the workflow driver.
 
         Args:
             wf_run_id: ID of the workflow run whose logs we want.
@@ -996,7 +968,6 @@ class DriverClient:
             orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotReadable: when
                 the logs exist, but cannot be decoded.
         """
-
         resp = self._get(
             self._uri_provider.uri_for("get_workflow_run_logs"),
             query_params=_models.GetWorkflowRunLogsRequest(
@@ -1047,8 +1018,7 @@ class DriverClient:
         wf_run_id: _models.WorkflowRunID,
         task_inv_id: _models.TaskInvocationID,
     ) -> List[_models.TaskLogMessage]:
-        """
-        Gets the logs of a task run from the workflow driver
+        """Gets the logs of a task run from the workflow driver.
 
         Args:
             wf_run_id: ID of the workflow run containing the task.
@@ -1067,7 +1037,6 @@ class DriverClient:
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
-
         resp = self._get(
             self._uri_provider.uri_for("get_task_run_logs"),
             query_params=_models.GetTaskRunLogsRequest(
@@ -1114,8 +1083,7 @@ class DriverClient:
         return messages
 
     def get_system_logs(self, wf_run_id: _models.WorkflowRunID) -> List[_models.SysLog]:
-        """
-        Get the system-level logs of a workflow run from the workflow driver.
+        """Get the system-level logs of a workflow run from the workflow driver.
 
         Args:
             wf_run_id: ID of the workflow runs the logs of which should be loaded.
@@ -1181,8 +1149,7 @@ class DriverClient:
         return messages
 
     def list_workspaces(self):
-        """
-        Gets the list of all workspaces
+        """Gets the list of all workspaces.
 
         Raises:
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
@@ -1191,7 +1158,6 @@ class DriverClient:
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
-
         resp = self._get(
             self._uri_provider.uri_for("list_workspaces"),
             query_params=None,
@@ -1213,8 +1179,7 @@ class DriverClient:
         return parsed_response
 
     def list_projects(self, workspace_id: WorkspaceId):
-        """
-        Gets the list of all projects in given workspace.
+        """Gets the list of all projects in given workspace.
 
         Args:
             workspace_id: ID of the target workspace.
@@ -1226,7 +1191,6 @@ class DriverClient:
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
-
         workspace_zri = make_workspace_zri(workspace_id)
 
         resp = self._get(
@@ -1253,8 +1217,7 @@ class DriverClient:
         return parsed_response
 
     def get_workflow_project(self, wf_run_id: _models.WorkflowRunID) -> ProjectRef:
-        """
-        Gets the status of a workflow run from the workflow driver
+        """Gets the status of a workflow run from the workflow driver.
 
         Args:
             wf_run_id: ID of the workflow run.
@@ -1270,7 +1233,6 @@ class DriverClient:
             orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound: when the
                 workflow run cannot be found
         """
-
         resp = self._get(
             self._uri_provider.uri_for("get_workflow_run", parameters=(wf_run_id,)),
             query_params=None,

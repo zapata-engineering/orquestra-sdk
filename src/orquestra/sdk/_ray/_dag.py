@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-"""
-RuntimeInterface implementation that uses Ray DAG/Ray Core API.
-"""
+"""RuntimeInterface implementation that uses Ray DAG/Ray Core API."""
 
 from __future__ import annotations
 
@@ -52,9 +50,10 @@ def _instant_from_timestamp(
 
 
 def _generate_wf_run_id(wf_def: ir.WorkflowDef):
-    """
-    Implements the "tagging" design doc:
-    https://zapatacomputing.atlassian.net/wiki/spaces/ORQSRUN/pages/479920161/Logging+Tagging
+    """Implements the "tagging" design doc.
+
+    Doc:
+    https://zapatacomputing.atlassian.net/wiki/spaces/ORQSRUN/pages/479920161/Logging+Tagging.
 
     Assumed to be globally unique.
 
@@ -84,8 +83,7 @@ def _task_state_from_ray_meta(
     start_time: t.Optional[float],
     end_time: t.Optional[float],
 ) -> State:
-    """
-    Heuristic to figure out SDK task run state from Ray's workflow status and times.
+    """Heuristic to figure out SDK task run state from Ray's workflow status and times.
 
     Note that `wf_status` is status of the whole workflow, but this procedure
     is meant to be applied for tasks.
@@ -162,10 +160,11 @@ def _workflow_status_from_ray_meta(
 
 @dataclasses.dataclass(frozen=True)
 class RayParams:
-    """Parameters we pass to Ray. See Ray documentation for reference of what values are
-    possible and what they do:
+    """Parameters we pass to Ray.
+
+    See Ray documentation for reference of what values are possible and what they do:
     - https://docs.ray.io/en/latest/package-ref.html#ray-init
-    - https://docs.ray.io/en/latest/workflows/package-ref.html#ray.workflow.init
+    - https://docs.ray.io/en/latest/workflows/package-ref.html#ray.workflow.init.
     """
 
     address: t.Optional[str] = None
@@ -207,10 +206,11 @@ class RayRuntime(RuntimeInterface):
 
     @classmethod
     def startup(cls, ray_params: RayParams):
-        """
-        Initialize a global Ray connection. If you need a separate connection
-        with different params, you need to call .shutdown first(). Globals
-        suck.
+        """Initialize a global Ray connection.
+
+        If you need a separate connection with different params, you need to call
+        .shutdown first().
+        Globals suck.
 
         This operation is idempotent – calling it multiple times with the same
         arguments has the same effect as calling it once.
@@ -224,7 +224,6 @@ class RayRuntime(RuntimeInterface):
             exceptions.RayActorNameClashError: when multiple Ray actors exist with the
                 same name.
         """
-
         # Turn off internal Ray logs, unless there is an error
         # If Ray is set to configure logging, this will be overridden
         logger = logging.getLogger("ray")
@@ -257,8 +256,9 @@ class RayRuntime(RuntimeInterface):
 
     @classmethod
     def shutdown(cls):
-        """Clean up Ray connection. Call it if you want to connect to Ray with different
-        parameters.
+        """Clean up Ray connection.
+
+        Call it if you want to connect to Ray with different  parameters.
 
         Safe to call multiple times in a row.
         """
@@ -310,8 +310,7 @@ class RayRuntime(RuntimeInterface):
         return wf_run_id
 
     def get_workflow_run_status(self, workflow_run_id: WorkflowRunId) -> WorkflowRun:
-        """
-        Get the current status of a workflow run.
+        """Get the current status of a workflow run.
 
         Args:
             workflow_run_id: ID of the workflow run.
@@ -401,8 +400,7 @@ class RayRuntime(RuntimeInterface):
     def get_available_outputs(
         self, workflow_run_id: WorkflowRunId
     ) -> t.Dict[ir.TaskInvocationId, WorkflowResult]:
-        """
-        Get the outputs from all completed tasks in the workflow run.
+        """Get the outputs from all completed tasks in the workflow run.
 
         Args:
             workflow_run_id: ID of the workflow run.
@@ -495,8 +493,7 @@ class RayRuntime(RuntimeInterface):
         state: t.Optional[t.Union[State, t.List[State]]] = None,
         workspace: t.Optional[WorkspaceId] = None,
     ) -> t.List[WorkflowRun]:
-        """
-        List the workflow runs, with some filters
+        """List the workflow runs, with some filters.
 
         Args:
             limit: Restrict the number of runs to return, prioritising the most recent.
@@ -553,13 +550,12 @@ class RayRuntime(RuntimeInterface):
         state: t.Optional[t.Union[State, t.List[State]]] = None,
         workspace: t.Optional[WorkspaceId] = None,
     ) -> t.List[WorkflowRunSummary]:
-        """
-        List summaries of the workflow runs, with some filters
+        """List summaries of the workflow runs, with some filters.
 
         Args:
             limit: Restrict the number of runs to return, prioritising the most recent.
             max_age: Only return runs younger than the specified maximum age.
-            status: Only return runs of runs with the specified status.
+            state: Only return runs of runs with the specified status.
             workspace: Only return runs from the specified workspace.
         """
         return [
