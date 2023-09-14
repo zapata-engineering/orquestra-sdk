@@ -119,8 +119,9 @@ class CERuntime(RuntimeInterface):
         Args:
             workflow_def: the IR of the workflow to run
             project: Project dir (workspace and project ID) on which the workflow
-            will be run
+                will be run
             dry_run: If True, code of the tasks will not be executed
+
         Raises:
             WorkflowSyntaxError: when the workflow definition was rejected by the remote
                 cluster
@@ -383,8 +384,15 @@ class CERuntime(RuntimeInterface):
     ) -> None:
         """Stops a workflow run.
 
+        Args:
+            workflow_run_id: ID of the workflow run to be terminated.
+            force: Asks the runtime to terminate the workflow without waiting for the
+                workflow to gracefully exit.
+                By default, this behavior is up to the runtime, but can be overridden
+                with True/False.
+
         Raises:
-            WorkflowRunCanNotBeTerminated if workflow run is cannot be terminated.
+            WorkflowRunCanNotBeTerminated: if workflow run is cannot be terminated.
         """
         try:
             self._client.terminate_workflow_run(workflow_run_id, force)
@@ -412,7 +420,7 @@ class CERuntime(RuntimeInterface):
         Args:
             limit: Restrict the number of runs to return, prioritising the most recent.
             max_age: Only return runs younger than the specified maximum age.
-            status: Only return runs of runs with the specified status.
+            state: Only return runs of runs with the specified status.
             workspace: Only return runs from the specified workspace.
 
         Raises:
@@ -478,7 +486,6 @@ class CERuntime(RuntimeInterface):
         Raises:
             WorkflowRunNotFound: if the workflow run cannot be found
             UnauthorizedError: if the remote cluster rejects the token
-            ...
         """
         try:
             messages = self._client.get_workflow_run_logs(wf_run_id)
