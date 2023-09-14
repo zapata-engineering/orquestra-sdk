@@ -7,7 +7,7 @@ RuntimeInterface implementation that uses Compute Engine.
 import warnings
 from datetime import timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Union
+from typing import Dict, List, Optional, Protocol, Sequence, Union
 
 from orquestra.sdk import Project, ProjectRef, Workspace, exceptions
 from orquestra.sdk._base import _retry, serde
@@ -32,6 +32,19 @@ from orquestra.sdk.schema.workflow_run import (
 )
 
 from . import _client, _exceptions, _models
+
+
+class PaginatedListFunc(Protocol):
+    """Protocol for functions passed to CERuntime._list_wf_runs()."""
+
+    def __call__(
+        self,
+        workflow_def_id: Optional[_models.WorkflowDefID] = None,
+        page_size: Optional[int] = None,
+        page_token: Optional[str] = None,
+        workspace: Optional[WorkspaceId] = None,
+    ) -> _client.Paginated:
+        ...
 
 
 def _get_max_resources(workflow_def: WorkflowDef) -> _models.Resources:
@@ -401,7 +414,7 @@ class CERuntime(RuntimeInterface):
 
     @staticmethod
     def _list_wf_runs(
-        func,
+        func: PaginatedListFunc,
         limit: Optional[int],
         max_age: Optional[timedelta],
         state: Optional[Union[State, List[State]]],
@@ -414,18 +427,7 @@ class CERuntime(RuntimeInterface):
         `list_workflow_run_summaries`.
 
         Args:
-            func: the paginated listing function over which to iterate. Must have a
-                signiture matching:
-
-                .. code-block::
-                    func(
-                        workflow_def_id: Optional[WorkflowDefID],
-                        page_size: Optional[int],
-                        page_token: Optional[str],
-                        workspace: Optional[WorkspaceId],
-                    )
-
-                and return a list.
+            func: the paginated listing function over which to iterate.
 
         Raises:
             exceptions.UnauthorizedError: if the remote cluster rejects the token.
