@@ -437,7 +437,7 @@ def _make_import_model(imp: _dsl.Import):
 
 def _make_resources_model(
     resources: _dsl.Resources, is_task: bool = True
-) -> ir.Resources:
+) -> t.Optional[ir.Resources]:
     """
     Create a resources object of the IR based on a resources of the DSL.
 
