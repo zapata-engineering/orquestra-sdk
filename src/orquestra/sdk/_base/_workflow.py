@@ -136,9 +136,9 @@ class WorkflowDef(Generic[_R]):
 
     @property
     def graph(self):
-        """
-        Builds a graphviz visualization of the workflow graph. Jupyter renders it
-        natively.
+        """Builds a graphviz visualization of the workflow graph.
+
+        Jupyter renders it natively.
 
         Note: rendering an image of the result graph requires a system-wide installation
         of graphviz. For installation instructions see:
@@ -157,8 +157,7 @@ class WorkflowDef(Generic[_R]):
         project_id: Optional[ProjectId] = None,
         dry_run: bool = False,
     ) -> _api.WorkflowRun:
-        """
-        Schedules workflow for execution.
+        """Schedules workflow for execution.
 
         Args:
             config: SDK needs to know where to execute the workflow. The config
@@ -170,6 +169,7 @@ class WorkflowDef(Generic[_R]):
             project_id: ID of the project for workflow - supported only on CE
             dry_run: Run the workflow without actually executing any task code.
                 Useful for testing infrastructure, dependency imports, etc.
+
         Raises:
             orquestra.sdk.exceptions.DirtyGitRepo: (warning) when a task def used by
                 this workflow def has a "GitImport" and the git repo that contains it
@@ -203,8 +203,7 @@ class WorkflowDef(Generic[_R]):
         gpu: Optional[Union[str, _dsl.Sentinel]] = _dsl.Sentinel.NO_UPDATE,
         nodes: Optional[Union[int, _dsl.Sentinel]] = _dsl.Sentinel.NO_UPDATE,
     ) -> "WorkflowDef":
-        """
-        Assigns optional metadata related to this workflow definition object.
+        """Assigns optional metadata related to this workflow definition object.
 
         Doesn't modify the existing workflow definition, returns a new one.
 
@@ -245,9 +244,7 @@ class WorkflowDef(Generic[_R]):
 
 
 class WorkflowTemplate(Generic[_P, _R]):
-    """
-    Result of applying the `@workflow` decorator to a function.
-    """
+    """Result of applying the `@workflow` decorator to a function."""
 
     def __init__(
         self,
@@ -271,8 +268,7 @@ class WorkflowTemplate(Generic[_P, _R]):
 
     # flake8: ignore=DOC101
     def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> WorkflowDef[_R]:
-        """
-        When called like a function, construct and return the WorkflowDef.
+        """When called like a function, construct and return the WorkflowDef.
 
         Args:
             *args: Variable length argument list to be passed to the workflow.
@@ -364,8 +360,8 @@ class WorkflowTemplate(Generic[_P, _R]):
 
     @property
     def is_parametrized(self) -> bool:
-        """
-        A workflow is parametrized if the decorated function has parameters.
+        """A workflow is parametrized if the decorated function has parameters.
+
         If the function had no parameters, the workflow is not considered parametrized.
         """
         return self._is_parametrized
@@ -374,7 +370,7 @@ class WorkflowTemplate(Generic[_P, _R]):
     def model(self) -> ir.WorkflowDef:
         """Serializable form of a workflow template (intermediate representation).
 
-        returns:
+        Returns:
             Serializable Pydantic model.
         """
         # First we check if we're a parametrized workflow
@@ -391,14 +387,13 @@ class WorkflowTemplate(Generic[_P, _R]):
 # ----- decorator helpers -----
 class _CalledFunction(NamedTuple):
     """Call made inside the workflow definition.
+
     Attributes:
-        function : the function called inside the workflow
-        name : name of the function called
-        module_name : name of the module from where the function is
-            imported from
-        source_file : file where the function is defined
-        line_no : line of the workflow definition where the function
-            is called
+        function: the function called inside the workflow.
+        name: name of the function called.
+        module_name: name of the module from where the function is imported from.
+        source_file: file where the function is defined.
+        line_no: line of the workflow definition where the function is called.
     """
 
     function: Callable
@@ -419,13 +414,12 @@ def _get_callable(  # noqa: DOC103 - pydoclint doesn't like fn: Callable for som
     If the callable cannot be find then return None.
 
     Args:
-        fn : workflow function
-        call_statement : List of NodeReferences with information
-            about the call history
+        fn: workflow function
+        call_statement: List of NodeReferences with information about the call history.
 
     Returns:
-        _fn : Callable corresponding to the call_statement
-        module_name : Name of the callable's module
+        _fn: Callable corresponding to the call_statement
+        module_name: Name of the callable's module
     """
     found_module: Any = NO_MODULE_SENTINEL
     _fn = None
@@ -476,13 +470,15 @@ def _get_callable(  # noqa: DOC103 - pydoclint doesn't like fn: Callable for som
 
 def _get_function_calls(fn: Callable) -> List[_CalledFunction]:  # noqa: DOC103
     """Get the functions that are called inside the workflow definition.
-    This function uses some heuristics to find function calls using the
-    workflow function's AST.
-    If the function call cannot be identified, then is not returned in
-    list of called functions.
+
+    This function uses some heuristics to find function calls using the workflow
+    function's AST.
+    If the function call cannot be identified, then is not returned in list of called
+    functions.
 
     Arguments:
         fn : Workflow function
+
     Returns:
         List of functions that are called inside the
             workflow function

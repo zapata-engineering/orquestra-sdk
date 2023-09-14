@@ -1,8 +1,7 @@
 ################################################################################
 # © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Code for accessing the Config Service API.
+"""Code for accessing the Config Service API.
 
 API spec: https://github.com/zapatacomputing/config-service/tree/main/openapi/src
 """
@@ -33,8 +32,7 @@ API_ACTIONS = {
 
 
 def _handle_common_errors(response: requests.Response):
-    """
-    Handle common errors that can arise from API calls.
+    """Handle common errors that can arise from API calls.
 
     Args:
         response: the response from the API.
@@ -52,9 +50,7 @@ def _handle_common_errors(response: requests.Response):
 
 
 class SecretsClient:
-    """
-    Client for interacting with the Config Service API via HTTP.
-    """
+    """Client for interacting with the Config Service API via HTTP."""
 
     def __init__(self, base_uri: str, session: requests.Session):
         self._base_uri = base_uri
@@ -62,8 +58,7 @@ class SecretsClient:
 
     @classmethod
     def from_token(cls, base_uri: str, token: str) -> "SecretsClient":
-        """
-        Construct a secrets client from a token string.
+        """Construct a secrets client from a token string.
 
         Args:
             base_uri: Orquestra cluster URI, like 'https://foobar.orquestra.io'.
@@ -79,7 +74,7 @@ class SecretsClient:
     def _get(
         self, endpoint: str, query_params: t.Optional[t.Mapping] = None
     ) -> requests.Response:
-        """Helper method for GET requests"""
+        """Helper method for GET requests."""
         response = self._session.get(
             urljoin(self._base_uri, endpoint),
             params=query_params,
@@ -90,7 +85,7 @@ class SecretsClient:
     def _post(
         self, endpoint: str, body_params: t.Optional[t.Mapping]
     ) -> requests.Response:
-        """Helper method for POST requests"""
+        """Helper method for POST requests."""
         response = self._session.post(
             urljoin(self._base_uri, endpoint),
             json=body_params,
@@ -98,7 +93,7 @@ class SecretsClient:
         return response
 
     def _delete(self, endpoint: str) -> requests.Response:
-        """Helper method for DELETE requests"""
+        """Helper method for DELETE requests."""
         response = self._session.delete(urljoin(self._base_uri, endpoint))
 
         return response
@@ -106,8 +101,7 @@ class SecretsClient:
     # --- queries ---
 
     def get_secret(self, name: SecretName) -> SecretDefinition:
-        """
-        Get a secret from the API.
+        """Get a secret from the API.
 
         Args:
             name: the name of the secret to be fetched.
@@ -135,11 +129,10 @@ class SecretsClient:
     def list_secrets(
         self, workspace_id: t.Optional[WorkspaceId]
     ) -> t.Sequence[SecretNameObj]:
-        """
-        List the available secrets.
+        """List the available secrets.
 
         Args:
-            workspace_id: the ID of the workspace in which
+            workspace_id: the ID of the workspace to which the secrets belong.
 
         Raises:
             orquestra.sdk.secrets._exceptions.InvalidTokenError: when the authorization
@@ -163,8 +156,7 @@ class SecretsClient:
     # --- mutations ---
 
     def create_secret(self, new_secret: SecretDefinition):
-        """
-        Post a new secret.
+        """Post a new secret.
 
         Args:
             new_secret: the definition of the secret to be created.
@@ -191,8 +183,7 @@ class SecretsClient:
             raise
 
     def update_secret(self, name: SecretName, value: SecretValue):
-        """
-        Update the value of an existing secret.
+        """Update the value of an existing secret.
 
         Args:
             name: the name of the secret to be updated.
@@ -221,8 +212,7 @@ class SecretsClient:
             raise
 
     def delete_secret(self, name: SecretName):
-        """
-        Remove a secret.
+        """Remove a secret.
 
         Args:
             name: the name of the secret to be deleted.

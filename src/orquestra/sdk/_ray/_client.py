@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-"""
-Facade module for Ray API.
-"""
+"""Facade module for Ray API."""
 import typing as t
 
 from orquestra.sdk.exceptions import WorkflowRunNotFoundError
@@ -39,9 +37,7 @@ else:
     LogPrefixTaskName = ray._private.ray_constants.LOG_PREFIX_TASK_NAME
 
     class RayClient:
-        """
-        Layer of abstraction between our Orquestra-specific RayRuntime code and
-        Ray's API.
+        """Abstraction layer between our Orquestra-specific RayRuntime and Ray's API.
 
         We should never use Ray's API directly; rather access it via this object's
         methods.
@@ -130,8 +126,7 @@ else:
             ray.workflow.run_async(dag_node, workflow_id=workflow_id, metadata=metadata)
 
         def get_workflow_metadata(self, workflow_id: str) -> t.Dict[str, t.Any]:
-            """
-            Get the metadata for the workflow run, using Ray Workflow API
+            """Get the metadata for the workflow run, using Ray Workflow API.
 
             Args:
                 workflow_id: ID of the workflow run, used to identify the correct run
@@ -146,8 +141,7 @@ else:
                 raise
 
         def get_workflow_status(self, workflow_id: str):
-            """
-            Get the current status of the workflow run, using Ray Workflow API.
+            """Get the current status of the workflow run, using Ray Workflow API.
 
             Args:
                 workflow_id: ID of the workflow run, used to identify the correct run
@@ -166,8 +160,7 @@ else:
             return ray.workflow.get_metadata(workflow_id, name)
 
         def get_workflow_output(self, workflow_id: str) -> t.Any:
-            """
-            Get values computed by the the whole workflow, using Ray Workflow API.
+            """Get values computed by the the whole workflow, using Ray Workflow API.
 
             Blocks until the workflow is completed.
 
@@ -187,15 +180,17 @@ else:
                 raise
 
         def get_task_output_async(self, workflow_id: str, task_id: str) -> ObjectRef:
-            """
-            Get values computed by a single task node in a workflow, using Ray
-            Workflow API. Blocks until the workflow is completed.
+            """Get values computed by a single task node in a workflow.
+
+            Uses the Ray Workflow API.
+            Blocks until the workflow is completed.
 
             The "async" in the name refers to the returned type – an ObjectRef
             instead of a deserialized value.
 
             It won't raise errors if the 'workflow_id'-'task_id' combination wasn't
-            found. A ValueError will be raised at ray.get() time.
+            found.
+            A ValueError will be raised at ray.get() time.
             """
             return ray.workflow.get_output_async(workflow_id, task_id=task_id)
 

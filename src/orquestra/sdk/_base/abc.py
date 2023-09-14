@@ -103,7 +103,7 @@ class RuntimeInterface(ABC, LogReader):
 
         Careful: This method does NOT return status of a workflow.
         Verify it beforehand to make sure if workflow failed/succeeded/is running.
-        You might get incomplete results
+        You might get incomplete results.
 
         Args:
             workflow_run_id: ID identifying the workflow run.

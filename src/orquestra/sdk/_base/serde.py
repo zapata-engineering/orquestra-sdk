@@ -50,10 +50,10 @@ def _serialize_json(value: t.Any):
 
 
 def _chunkify(s: str) -> t.List[str]:
-    """
-    Yaml/JSON parsers will fail if string is too large,
-    so break it down into a list of strings where each chunk
-    is no larger than CHUNK_SIZE
+    """Break a string fown into chunks.
+
+    Yaml/JSON parsers will fail if string is too large, so break it down into a list of
+    strings where each chunk is no larger than CHUNK_SIZE.
     """
     return [s[i : i + CHUNK_SIZE] for i in range(0, len(s), CHUNK_SIZE)]
 
@@ -68,8 +68,7 @@ def _encoded_pickle_chunks(object: t.Any) -> t.List[str]:
 
 @contextmanager
 def registered_module(module):
-    """
-    Used to temporarily register a module to be pickled by value
+    """Used to temporarily register a module to be pickled by value.
 
     If a module (or its members) are not registered, they will be pickled by reference
     which will require the modules to be installed when unpickling.
@@ -198,8 +197,7 @@ class DumpDetails:
 
 
 def dump_to_file(value: t.Any, dir_path: Path, file_name_prefix: str) -> DumpDetails:
-    """
-    Writes ``value`` to a file.
+    """Writes ``value`` to a file.
 
     The serialization format is picked depending on the value.
     The result file is created under ``<dir_path>/<file_name_prefix><extension>``,

@@ -2,9 +2,7 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 
-"""
-Utilities for handling pip packages.
-"""
+"""Utilities for handling pip packages."""
 
 import re
 import sys
@@ -26,8 +24,7 @@ class PackagingError(exceptions.BaseRuntimeError):
 
 
 def get_installed_version(package_name: str) -> str:
-    """
-    Gets the installed version of a specific package.
+    """Gets the installed version of a specific package.
 
     A package is what you use when you `pip install` something, not the module:
 
@@ -86,8 +83,7 @@ def InstalledImport(
     version_match: Optional[str] = None,
     fallback: Optional[Import] = None,
 ) -> Import:
-    """
-    Returns PythonImports for a task for the installed version of a package.
+    """Returns PythonImports for a task for the installed version of a package.
 
     On an error, if a fallback is provided, the fallback is returned instead.
 
@@ -123,8 +119,7 @@ def InstalledImport(
 
 
 def execute_task(task: TaskDef, args: tuple, kwargs: dict) -> Any:
-    """
-    A helper method for testing tasks by executing them outside of the workflow graph.
+    """A helper method to testing tasks by executing them outside of the workflow graph.
 
     Use only for unittesting code.
 

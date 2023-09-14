@@ -67,7 +67,7 @@ select = [
   "F",   # pyflakes
   "D",   # pydocstyle
 ]
-ignore = ["E203","E266"]
+ignore = ["E203","E266","D100"]
 target-version = "py38"
 
 [tool.ruff.pydocstyle]
