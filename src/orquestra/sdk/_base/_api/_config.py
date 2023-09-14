@@ -177,8 +177,7 @@ class RuntimeConfig:
     def _get_runtime(
         self, project_dir: t.Optional[t.Union[str, Path]] = None
     ) -> RuntimeInterface:
-        """
-        Build the run.
+        """Build the run.
 
         Args:
             project_dir: the path to the project directory. If omitted, the current

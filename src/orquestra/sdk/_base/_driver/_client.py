@@ -367,7 +367,7 @@ class DriverClient:
                 error is raised by the remote cluster.
 
         Returns:
-            The parsed WorkflowDef
+            The parsed WorkflowDef.
         """
         resp = self._get(
             self._uri_provider.uri_for(
@@ -444,8 +444,8 @@ class DriverClient:
         """Submit a workflow def to run in the workflow driver.
 
         Args:
-            workflow_def_id: TODO
-            resources: TODO
+            workflow_def_id: ID of the workflow definition to be submitted.
+            resources: The resources required to execute the workflow.
             dry_run: TODO
 
         Raises:

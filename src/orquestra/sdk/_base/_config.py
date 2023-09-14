@@ -100,8 +100,7 @@ BOOLEAN_RUNTIME_OPTIONS: List[str] = ["log_to_driver", "configure_logging"]
 
 
 def get_config_file_path() -> Path:
-    """
-    Get the absolute path to the config file.
+    """Get the absolute path to the config file.
 
     Returns:
         Path: Path to the configuration file. The default is `~/.orquestra/config.json`
