@@ -65,7 +65,7 @@ select = [
   "E",   # pycodestyle
   "W",   # pycodestyle
   "F",   # pyflakes
-  # "D",   # pydocstyle. TODO: ORQSDK-965
+  "D",   # pydocstyle
 ]
 ignore = ["E203","E266"]
 target-version = "py38"
@@ -78,3 +78,20 @@ convention="google"
 # we fix the formatting. Rules reference:
 # https://github.com/jackdewinter/pymarkdown/blob/main/docs/rules.md
 plugins.md013.enabled = false
+
+[tool.flake8]
+style = 'google'
+ignore = [
+    'E203',     # whitespace before ':'
+    'E266',     # Too many leading '#' for block comment
+    'DOC201',   # Function/method does not have a return section in docstring
+    'DOC203',   # 
+    'DOC301',   # `__init__()` should not have a docstring
+    'W503'      # Line break occurred before a binary operator
+]
+per-file-ignores = [
+    'abc.py:DOC501', # ABC docstrings don't need "raises NotImplementedError"
+]
+max-line-length = 88
+count = true
+arg-type-hints-in-docstring = false
