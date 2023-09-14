@@ -30,6 +30,7 @@ from orquestra.sdk.schema.workflow_run import (
     TaskRun,
     WorkflowRun,
     WorkflowRunMinimal,
+    WorkflowRunSummary,
     WorkspaceId,
 )
 
@@ -225,6 +226,34 @@ class MinimalWorkflowRunResponse(pydantic.BaseModel):
         )
 
 
+class WorkflowRunSummaryResponse(pydantic.BaseModel):
+    """
+    Contains all of the information needed to give a basic overview of the workflow.
+
+    Implements:
+        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml#L1
+    """
+
+    id: WorkflowRunID
+    definitionId: WorkflowDefID
+    status: RunStatusResponse
+    createTime: str
+    owner: str
+    totalTasks: int
+    completedTasks: int
+    dryRun: bool
+
+    def to_ir(self) -> WorkflowRunSummary:
+        return WorkflowRunSummary(
+            id=self.id,
+            status=self.status.to_ir(),
+            owner=self.owner,
+            total_task_runs=self.totalTasks,
+            completed_task_runs=self.completedTasks,
+            dry_run=self.dryRun,
+        )
+
+
 class WorkflowRunResponse(MinimalWorkflowRunResponse):
     """
     Implements:
@@ -297,6 +326,8 @@ class ListWorkflowRunsRequest(pydantic.BaseModel):
 
 
 ListWorkflowRunsResponse = List[MinimalWorkflowRunResponse]
+
+ListWorkflowRunSummariesResponse = List[WorkflowRunSummaryResponse]
 
 
 class GetWorkflowRunResponse(pydantic.BaseModel):
