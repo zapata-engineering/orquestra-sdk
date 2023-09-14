@@ -1,11 +1,12 @@
 ################################################################################
 # © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
-"""
-This module exposes some machinery for loading workflow_defs.
+"""This module exposes some machinery for loading workflow_defs.
+
 It is not intended to be used as a Public API and is not exposed by the orquestra.sdk
-namespace. The only reason this is not a private module is that it is used by
-downstream projects, such as orquestra-lsp.
+namespace.
+The only reason this is not a private module is that it is used by downstream projects,
+such as orquestra-lsp.
 These internals are subject to change.
 """
 
@@ -33,30 +34,29 @@ class FakeImportedAttribute:
 
 
 class ImportFaker(abc.MetaPathFinder):
-    """
-    ImportFaker implements a 'meta path finder'.
+    """ImportFaker implements a 'meta path finder'.
+
     This is used by Python to find out where a module should be loaded from and, in
     this specific case, returns a 'module spec' for a faked module.
     """
 
     def __init__(self, block_list: t.List[str] = []):
-        """
-        Inits the ImportFaker with a block list
+        """Inits the ImportFaker with a block list.
 
         Args:
-            block_list: a list of module names to block. The format of the module names
-              should be the dotted module name, for example: 'orquestra.sdk'
-              The block list will be used to check that a requested module does not
-              start any of the entries in the list. For example, if 'orq' is in the
-              block list, 'orquestra.sdk', 'orquestra.quantum', etc. will be loaded as
-              fake modules.
+            block_list: a list of module names to block.
+                The format of the module names should be the dotted module name, for
+                example: 'orquestra.sdk'.
+                The block list will be used to check that a requested module does not
+                start any of the entries in the list.
+                For example, if 'orq' is in the block list, 'orquestra.sdk',
+                'orquestra.quantum', etc. will be loaded as fake modules.
         """
         self._loader = FakeLoader()
         self.block_list = block_list
 
     def find_spec(self, fullname: str, path: t.Any, target: t.Any = None):
-        """
-        Implements the interface for a meta path finder.
+        """Implements the interface for a meta path finder.
 
         Args:
             fullname: the 'dotted' syntax of the module, for example 'orquestra.sdk'.
@@ -68,19 +68,17 @@ class ImportFaker(abc.MetaPathFinder):
         return None
 
     def _gen_spec(self, fullname):
-        """Returns a spec for a faked module"""
+        """Returns a spec for a faked module."""
         spec = importlib.machinery.ModuleSpec(fullname, self._loader)
         return spec
 
     def unload_fakes(self):
-        """Unloads all fakes the ImportFaker has created"""
+        """Unloads all fakes the ImportFaker has created."""
         self._loader.unload_fakes()
 
 
 class DummyModule(types.ModuleType):
-    """
-    A module that always returns fake objects on attribute access.
-    """
+    """A module that always returns fake objects on attribute access."""
 
     __path__ = []
 
@@ -89,23 +87,23 @@ class DummyModule(types.ModuleType):
 
 
 class FakeLoader(abc.Loader):
-    """Implements a module loader for faked modules"""
+    """Implements a module loader for faked modules."""
 
     def __init__(self):
         self._fake_modules = {}
 
     def create_module(self, spec):
-        """Creates a fake module from a given module spec"""
+        """Creates a fake module from a given module spec."""
         dummy = DummyModule(spec.name)
         self._fake_modules[spec.name] = dummy
         return dummy
 
     def exec_module(self, module):
-        """Called when a module is imported or reloaded"""
+        """Called when a module is imported or reloaded."""
         pass
 
     def unload_fakes(self):
-        """Unloads all modules that this loader has loaded"""
+        """Unloads all modules that this loader has loaded."""
         for name in self._fake_modules.keys():
             del sys.modules[name]
         self._fake_modules = {}
@@ -120,8 +118,7 @@ DEFAULT_IMPORT_BLOCK_LIST: t.List[str] = []
 def get_workflow_defs_module(
     directory: str, import_block_list: t.Optional[t.List[str]] = None
 ) -> types.ModuleType:
-    """
-    Return the module containing the current project's workflow definitions.
+    """Return the module containing the current project's workflow definitions.
 
     Args:
         directory: path to a directory with a workflow_defs.py file. The directory is

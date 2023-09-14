@@ -370,6 +370,10 @@ class WorkflowTemplate(Generic[_P, _R]):
     def model(self) -> ir.WorkflowDef:
         """Serializable form of a workflow template (intermediate representation).
 
+        Raises:
+            NotImplementedError: when this method is called with a parametrized
+                workflow.
+
         Returns:
             Serializable Pydantic model.
         """

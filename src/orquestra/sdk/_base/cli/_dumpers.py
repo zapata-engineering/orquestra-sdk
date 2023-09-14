@@ -2,9 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 
-"""
-Code that stores values on disk as a result of a CLI command.
-"""
+"""Code that stores values on disk as a result of a CLI command."""
 import typing as t
 from functools import singledispatchmethod
 from pathlib import Path
@@ -15,9 +13,7 @@ from orquestra.sdk.schema.workflow_run import TaskInvocationId, WorkflowRunId
 
 
 class WFOutputDumper:
-    """
-    Writes a workflow run's output artifacts to a file.
-    """
+    """Writes a workflow run's output artifacts to a file."""
 
     def dump(
         self,
@@ -26,16 +22,14 @@ class WFOutputDumper:
         output_index: int,
         dir_path: Path,
     ) -> serde.DumpDetails:
-        """
-        Serialize a single artifact value and save it as a new file.
+        """Serialize a single artifact value and save it as a new file.
 
-        Missing directories will be created. Filenames will be generate based on
-        ``wf_run_id`` and ``output_index``. The serialization format and file
-        extensions are inferred based on the object.
+        Missing directories will be created.
+        Filenames will be generate based on ``wf_run_id`` and ``output_index``.
+        The serialization format and file extensions are inferred based on the object.
 
         No standard errors are expected to be raised.
         """
-
         dump_dir = dir_path / wf_run_id / "wf_results"
 
         dump_details = serde.dump_to_file(
@@ -46,9 +40,7 @@ class WFOutputDumper:
 
 
 class TaskOutputDumper:
-    """
-    Writes task run's output artifact to a file.
-    """
+    """Writes task run's output artifact to a file."""
 
     def dump(
         self,
@@ -58,16 +50,15 @@ class TaskOutputDumper:
         output_index: int,
         dir_path: Path,
     ) -> serde.DumpDetails:
-        """
-        Serialize artifact value and save it as a new file.
+        """Serialize artifact value and save it as a new file.
 
         Creates missing directories. Generates filenames based on ``wf_run_id`` and
-        ``output_index``. Figures out the serialization format based on the object. The
-        generated file extension matches the inferred format.
+        ``output_index``.
+        Figures out the serialization format based on the object.
+        The generated file extension matches the inferred format.
 
         No standard errors are expected to be raised.
         """
-
         dump_dir = dir_path / wf_run_id / "task_results" / task_inv_id
 
         dump_details = serde.dump_to_file(
@@ -80,9 +71,7 @@ class TaskOutputDumper:
 
 
 class LogsDumper:
-    """
-    Writes logs to files.
-    """
+    """Writes logs to files."""
 
     @staticmethod
     def _get_logs_file(
@@ -104,10 +93,10 @@ class LogsDumper:
         dir_path: Path,
         log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None,
     ):
-        """
-        Save logs from wf into a file.
+        """Save logs from wf into a file.
 
-        Creates missing directories. Generates filenames based on ``wf_run_id``
+        Creates missing directories.
+        Generates filenames based on ``wf_run_id``.
         No standard errors are expected to be raised.
         """
         logs_file = self._get_logs_file(dir_path, wf_run_id, log_type=log_type)
@@ -122,8 +111,7 @@ class LogsDumper:
     @singledispatchmethod
     @staticmethod
     def _construct_output_log_lines(self, *args) -> t.List[str]:
-        """
-        Construct a list of log lines to be printed.
+        """Construct a list of log lines to be printed.
 
         This method has overloads for dict and list arguments.
         """

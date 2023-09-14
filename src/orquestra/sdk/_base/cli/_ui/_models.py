@@ -1,8 +1,7 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-"""
-UI models. Common data structures between the "data" and "view" layers.
+"""UI models. Common data structures between the "data" and "view" layers.
 
 Classes here are containers for information we show to the users in the CLI UI.
 Ideally, most data transformations would be already done (like counting the number of
@@ -19,9 +18,7 @@ from orquestra.sdk.schema.workflow_run import RunStatus, WorkflowRunId
 
 @dataclass(frozen=True)
 class WFRunSummary:
-    """
-    UI model for ``orq wf view``.
-    """
+    """UI model for ``orq wf view``."""
 
     @dataclass(frozen=True)
     class TaskRow:
@@ -43,9 +40,7 @@ class WFRunSummary:
 
 @dataclass(frozen=True)
 class WFList:
-    """
-    UI model for ``orq wf list``
-    """
+    """UI model for ``orq wf list``."""
 
     @dataclass(frozen=True)
     class WFRow:

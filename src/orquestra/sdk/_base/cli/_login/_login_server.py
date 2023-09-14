@@ -30,7 +30,7 @@ class LoginServer:
         await self._runner.cleanup()
 
     async def _send_response(self, request: web.Request, status_code: int):
-        """Sends an empty response with a specified status code with CORS"""
+        """Sends an empty response with a specified status code with CORS."""
         res = web.StreamResponse(
             status=status_code,
             headers={

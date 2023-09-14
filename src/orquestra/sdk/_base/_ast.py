@@ -16,11 +16,13 @@ class _AstReturnMetadata(t.NamedTuple):
 
 
 class OutputCounterVisitor(ast.NodeVisitor):
-    """Counts how many "outputs" a task function has. Activates only on
-    "Return" and "Pass" statements.
+    """Counts how many "outputs" a task function has.
+
+    Activates only on "Return" and "Pass" statements.
 
     This is the "outer" visitor. Defers most of the analysis to the "inner"
-    visitor. The idea is to parse _any_ tree are nested _under_ a return clause.
+    visitor.
+    The idea is to parse _any_ tree are nested _under_ a return clause.
     """
 
     def __init__(self):
@@ -50,8 +52,10 @@ class OutputCounterVisitor(ast.NodeVisitor):
 
 
 class _ReturnExprVisitor(ast.NodeVisitor):
-    """The "inner" visitor. Handles any expression that's nested under the
-    return statement."""
+    """The "inner" visitor.
+
+    Handles any expression that's nested under the return statement.
+    """
 
     def __init__(self):
         self.outputs: t.Set[_AstReturnMetadata] = set()
@@ -127,7 +131,7 @@ def normalize_indents(source: str) -> str:
 
 
 class NodeReferenceType(Enum):
-    """Types of ast nodes that are relevant to analyze a Call"""
+    """Types of ast nodes that are relevant to analyze a Call."""
 
     ATTRIBUTE = "ATTRIBUTE"
     NAME = "NAME"
@@ -135,21 +139,21 @@ class NodeReferenceType(Enum):
 
 
 class NodeReference(t.NamedTuple):
-    """Reference to a Node in the workflow function's AST"""
+    """Reference to a Node in the workflow function's AST."""
 
     name: str
     node_type: NodeReferenceType
 
 
 class _Call(t.NamedTuple):
-    """Call identified by the CallVisitor
+    """Call identified by the CallVisitor.
 
     Args:
-        callable_name : Dummy object with the name of the callable
-        call_statement : list of modules or calls used to
-            perform the call
-        line_no : line where the callable is call inside the
-            workflow definition
+        callable_name: Dummy object with the name of the callable.
+        call_statement: list of modules or calls used to
+            perform the call.
+        line_no: line where the callable is call inside the
+            workflow definition.
     """
 
     callable_name: str
@@ -159,8 +163,7 @@ class _Call(t.NamedTuple):
 
 
 def get_call_statement(node: ast.Call) -> t.List[NodeReference]:
-    """
-    Get each part of a call
+    """Get each part of a call.
 
     Examples:
         "task()" → [task()]
@@ -168,11 +171,11 @@ def get_call_statement(node: ast.Call) -> t.List[NodeReference]:
         "task().with_resources()" → [task(),with_resources()]
 
     Args:
-        node: AST node to check the name
+        node: AST node to check the name.
+
     Returns:
         A list with each part of the name separated out.
     """
-
     current_node: ast.AST = node
     call_statement: t.List[NodeReference] = []
     while isinstance(current_node, ast.Attribute) or isinstance(current_node, ast.Call):
@@ -233,18 +236,19 @@ class CallVisitor(ast.NodeVisitor):
         decorators.
 
         Args:
-            node: ast node of type FunctionDef
+            node: ast node of type FunctionDef.
         """
         for statement in node.body:
             self.generic_visit(statement)
 
     def visit_Call(self, node: ast.Call) -> None:
-        """Extract information of a Call
+        """Extract information of a Call.
 
         Args:
-            node: node for a Call in a AST
+            node: node for a Call in a AST.
+
         Returns:
-            _Call object with information about the Call statement
+            _Call object with information about the Call statement.
         """
         call_statement = get_call_statement(node)
         self.calls.append(

@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Code for 'orq workflow results'.
-"""
+"""Code for 'orq workflow results'."""
 import typing as t
 from pathlib import Path
 
@@ -15,9 +13,7 @@ from .._ui import _presenters
 
 
 class Action:
-    """
-    Encapsulates app-related logic for handling ``orq workflow results``.
-    """
+    """Encapsulates app-related logic for handling ``orq workflow results``."""
 
     def __init__(
         self,

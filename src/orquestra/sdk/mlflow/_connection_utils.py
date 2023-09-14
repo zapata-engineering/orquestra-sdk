@@ -27,17 +27,14 @@ RESOURCE_CATALOG_URI: str = "http://orquestra-resource-catalog.resource-catalog"
 
 # region: private
 def _is_executing_remoteley() -> bool:
-    """
-    Determine whether the code is being executed locally, or on a cluster/studio.
-    """
+    """Determine whether the code is being executed locally, or on a cluster/studio."""
     if os.getenv(_env.CURRENT_CLUSTER_ENV):
         return True
     return False
 
 
 def _get_mlflow_cr_name_and_port() -> Tuple[str, str]:
-    """
-    Reads in the MLFlow custom resource name and port from environment variables.
+    """Reads in the MLFlow custom resource name and port from environment variables.
 
     The environment variables are:
     - ORQ_MLFLOW_CR_NAME
@@ -50,7 +47,6 @@ def _get_mlflow_cr_name_and_port() -> Tuple[str, str]:
     Raises:
         EnvironmentError: when either of the environment variables are not set.
     """
-
     assert (
         _is_executing_remoteley()
     ), "This function should not be called when running locally."
@@ -68,8 +64,7 @@ def _get_mlflow_cr_name_and_port() -> Tuple[str, str]:
 
 
 def _read_passport_token() -> str:
-    """
-    Reads in the token.
+    """Reads in the token.
 
     The file path is specified by the PASSPOT_FILE_ENV environment variable.
 
@@ -84,9 +79,7 @@ def _read_passport_token() -> str:
 
 
 def _make_session(token) -> Session:
-    """
-    Create a HTTP session with the specified token.
-    """
+    """Create a HTTP session with the specified token."""
     session = Session()
     session.headers["Content-Type"] = "application/json"
     session.headers["Authorization"] = f"Bearer {token}"
@@ -99,15 +92,14 @@ def _make_session(token) -> Session:
 
 
 def get_temp_artifacts_dir() -> Path:
-    """
-    Return a path to a temp directory that can be used to temporarily store artifacts.
+    """Return a path to a directory that can be used to temporarily store artifacts.
 
-    Uploading artifacts to MLflow requires them to be written locally first. Finding an
-    appropriate directory vary significantly between a workflow running locally and one
-    running on a remote cluster. This function handles that complexity so that workflows
-    do not need adjusting between runtimes.
+    Uploading artifacts to MLflow requires them to be written locally first.
+    Finding an appropriate directory vary significantly between a workflow running
+    locally and one running on a remote cluster.
+    This function handles that complexity so that workflows do not need adjusting
+    between runtimes.
     """
-
     temp_dir_path: Path = Path(
         os.getenv(_env.MLFLOW_ARTIFACTS_DIR) or DEFAULT_TEMP_ARTIFACTS_DIR
     )
@@ -121,8 +113,7 @@ def get_temp_artifacts_dir() -> Path:
 
 
 def get_tracking_uri(workspace_id: str, config_name: Optional[str] = None) -> str:
-    """
-    Infer a URI for accessing an MLflow tracking server deployed within this workspace.
+    """Infer a URI for accessing MLflow tracking server deployed within this workspace.
 
     When run within an Orquestra cluster, this function returns an "internal URI" that
     helps save cluster bandwidth. This works even without specifying ``config_name``.
@@ -142,7 +133,6 @@ def get_tracking_uri(workspace_id: str, config_name: Optional[str] = None) -> st
         ValueError: When this function is called in a local execution context without
             specifying a valid non-local config name.
     """
-
     if _is_executing_remoteley():
         if config_name is not None:
             warnings.warn(
@@ -194,7 +184,7 @@ def get_tracking_token(config_name: Optional[str] = None) -> str:
     Raises:
         ValueError: When this function is called without a config name in a local
             execution context.
-    """
+    """  # noqa: D205, D212
     if _is_executing_remoteley():
         # Assume we're on a cluster
         if config_name is not None:
@@ -213,8 +203,7 @@ def get_tracking_token(config_name: Optional[str] = None) -> str:
 
 
 def get_current_user(config_name: t.Optional[str]) -> str:
-    """
-    Return current user that can be used to power MLFlow UI label
+    """Return current user that can be used to power MLFlow UI label.
 
     When used inside a studio or CE task, returns actively logged-in user.
     When used locally, uses token stored inside config to figure out what username

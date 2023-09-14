@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Code for 'orq workflow submit'.
-"""
+"""Code for 'orq workflow submit'."""
 import typing as t
 
 from orquestra.sdk import exceptions
@@ -13,8 +11,7 @@ from .._ui import _presenters, _prompts
 
 
 class Action:
-    """
-    Encapsulates app-related logic for handling ``orq workflow submit``.
+    """Encapsulates app-related logic for handling ``orq workflow submit``.
 
     The module is considered part of the name, so this class should be read as
     ``_dorq._workflow._submit.Action``.
@@ -70,9 +67,7 @@ class Action:
         project_id: t.Optional[str],
         force: bool,
     ):
-        """
-        Implementation of the command action. Doesn't catch exceptions.
-        """
+        """Implementation of the command action. Doesn't catch exceptions."""
         # 1. Resolve config, workspace and project
         resolved_config = self._config_resolver.resolve(config)
 

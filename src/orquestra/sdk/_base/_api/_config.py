@@ -24,8 +24,8 @@ from ..abc import RuntimeInterface
 
 
 class RuntimeConfig:
-    """
-    Encompasses the configuration with which a workflow can be run.
+    """Encompasses the configuration with which a workflow can be run.
+
     Intended to be used with the WorkflowDef class to create a run with the desired
     configuration.
 
@@ -100,8 +100,7 @@ class RuntimeConfig:
         return self._name
 
     def _get_runtime_options(self) -> dict:
-        """
-        Construct a dictionary of the current runtime options.
+        """Construct a dictionary of the current runtime options.
 
         This is intended to translate between the user-facing API layer where runtime
         options are attributes, to the backend where we want them as a dict we can pass
@@ -119,8 +118,9 @@ class RuntimeConfig:
         cls,
     ):
         """Factory method to generate RuntimeConfig objects for in-process runtimes.
+
         Returns:
-            RuntimeConfig
+            RuntimeConfig.
         """
         return RuntimeConfig("IN_PROCESS", "in_process", True)
 
@@ -128,11 +128,11 @@ class RuntimeConfig:
     def ray(
         cls,
     ) -> "RuntimeConfig":
-        """
-        Config for running workflows on Ray. Makes the SDK connect to a Ray
-        cluster when you .run() the workflow. Requires starting the Ray
-        cluster separately in the background via 'ray start --head
-        --storage=...'.
+        """Config for running workflows on Ray.
+
+        Makes the SDK connect to a Ray cluster when you .run() the workflow.
+        Requires starting the Ray cluster separately in the background via
+        'ray start --head --storage=...'.
         """
         config = RuntimeConfig("RAY_LOCAL", "local", True)
         setattr(config, "log_to_driver", False)
@@ -152,8 +152,7 @@ class RuntimeConfig:
         uri: str,
         token: str,
     ) -> "RuntimeConfig":
-        """
-        Config for running workflows on Compute Engine.
+        """Config for running workflows on Compute Engine.
 
         Args:
             uri: Address of the CE cluster on which to run the workflow.
@@ -239,7 +238,6 @@ class RuntimeConfig:
         Returns:
             RuntimeConfig: The configuration as loaded from the file.
         """
-
         # Doing this check here covers us for cases where the config file doesn't
         # exist but the user is trying to load one of the built in configs. There's
         # not need to create the config file in this case.
@@ -294,9 +292,10 @@ class RuntimeConfig:
     def _config_from_runtimeconfiguration(
         cls, config: RuntimeConfiguration
     ) -> "RuntimeConfig":
-        """
-        Convert a RuntimeConfiguration object (as used by the under-the-hood
-        mechanisms) to a RuntimeConfig (python API) object.
+        """Convert a RuntimeConfiguration object to a RuntimeConfig object.
+
+        RuntimeConfiguration is used by the under-the-hood mechanisms;
+        RuntimeConfig is user-facing int he Python API.
 
         Args:
             config: the RuntimeConfigration object to be converted (e.g. the return from
@@ -319,9 +318,9 @@ class RuntimeConfig:
     # endregion LOADING FROM FILE
 
     def update_saved_token(self, token: str):
-        """
-        Update the stored auth token for this configuration. This also updates the token
-        in memory for this RuntimeConfig object.
+        """Update the stored auth token for this configuration.
+
+        This also updates the token in memory for this RuntimeConfig object.
 
         Args:
             token: the new token.
@@ -331,7 +330,6 @@ class RuntimeConfig:
                 does not use an authorisation token.
             ConfigNameNotFoundError: When there is no stored token to update.
         """
-
         if self._runtime_name != RuntimeName.CE_REMOTE:
             raise SyntaxError(
                 "This runtime configuration does not require an authorization token. "

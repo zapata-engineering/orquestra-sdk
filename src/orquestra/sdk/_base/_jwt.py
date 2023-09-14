@@ -7,8 +7,7 @@ from ..exceptions import ExpiredTokenError, InvalidTokenError
 
 
 def check_jwt_without_signature_verification(token: str):
-    """
-    Checks a token and ensures it is a JWT and it is not expired
+    """Checks a token and ensures it is a JWT and it is not expired.
 
     Note: This DOES NOT CRYPTOGRAPHICALY VERIFY THE TOKEN.
     Only used as a sanity check when reading a token from the CLI.

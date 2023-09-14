@@ -50,34 +50,26 @@ class TaskRun(BaseModel):
 
 
 class WorkflowRunOnlyID(BaseModel):
-    """
-    A WorkflowRun that only contains the ID
-    """
+    """A WorkflowRun that only contains the ID."""
 
     id: WorkflowRunId
 
 
 class WorkflowRunMinimal(WorkflowRunOnlyID):
-    """
-    The minimal amount of information to create a WorkflowRun in the public API
-    """
+    """The minimal amount of information to create a WorkflowRun in the public API."""
 
     workflow_def: WorkflowDef
 
 
 class WorkflowRun(WorkflowRunMinimal):
-    """
-    A full workflow run with TaskRuns and WorkflowRun status
-    """
+    """A full workflow run with TaskRuns and WorkflowRun status."""
 
     task_runs: t.List[TaskRun]
     status: RunStatus
 
 
 class WorkflowRunSummary(WorkflowRunOnlyID):
-    """
-    A summary overview of a workflow run.
-    """
+    """A summary overview of a workflow run."""
 
     status: RunStatus
     owner: t.Optional[str]

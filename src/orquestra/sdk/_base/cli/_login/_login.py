@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-"""
-Code for 'orq login'.
-"""
+"""Code for 'orq login'."""
 import asyncio
 import typing as t
 
@@ -18,9 +16,7 @@ from ._login_server import LoginServer
 
 
 class Action:
-    """
-    Encapsulates app-related logic for handling `orq login`.
-    """
+    """Encapsulates app-related logic for handling `orq login`."""
 
     def __init__(
         self,
@@ -52,9 +48,7 @@ class Action:
         token: t.Optional[str],
         runtime_name: RemoteRuntime,
     ):
-        """
-        Call the login command action, catching any exceptions that arise.
-        """
+        """Call the login command action, catching any exceptions that arise."""
         try:
             self._on_cmd_call_with_exceptions(config, url, token, runtime_name)
         except Exception as e:
@@ -67,9 +61,7 @@ class Action:
         token: t.Optional[str],
         runtime_name: RemoteRuntime,
     ):
-        """
-        Implementation of the command action. Doesn't catch exceptions.
-        """
+        """Implementation of the command action. Doesn't catch exceptions."""
         assert bool(config) ^ bool(url), (
             "orq login action was called with arguments "
             f"'config = {config}, url = {url}'. "

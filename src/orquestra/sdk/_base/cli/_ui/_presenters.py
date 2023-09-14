@@ -1,9 +1,9 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-"""
-Utilities for presenting human-readable text output from dorq commands. These are
-mostly adapters over the corq's formatters.
+"""Utilities for presenting human-readable text output from dorq commands.
+
+These are mostly adapters over the corq's formatters.
 """
 import os
 import sys
@@ -49,15 +49,11 @@ class RichPresenter:
 
 
 class LogsPresenter(RichPresenter):
-    """
-    Present workflow and task logs
-    """
+    """Present workflow and task logs."""
 
     @singledispatchmethod
     def _rich_logs(*args) -> RenderableType:
-        """
-        Format the logs into a list of strings to be printed.
-        """
+        """Format the logs into a list of strings to be printed."""
         raise NotImplementedError(
             f"No log lines constructor for args {args}"
         )  # pragma: no cover
@@ -92,13 +88,12 @@ class LogsPresenter(RichPresenter):
         logs: t.Union[t.Mapping[TaskInvocationId, LogOutput], LogOutput],
         log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None,
     ):
-        """
-        Present logs to the user.
+        """Present logs to the user.
 
         Args:
             logs: The logs to display, this may be in a dictionary or as a plain
-                LogOutput object
-            log_type: An optional name used to split multiple log types
+                LogOutput object.
+            log_type: An optional name used to split multiple log types.
         """
         _logs = self._rich_logs(logs)
         renderables = [_logs]
@@ -112,8 +107,7 @@ class LogsPresenter(RichPresenter):
     def show_dumped_wf_logs(
         self, path: Path, log_type: t.Optional[WorkflowLogs.WorkflowLogTypeName] = None
     ):
-        """
-        Tell the user where logs have been saved.
+        """Tell the user where logs have been saved.
 
         Args:
             path: The path to the dump file.
@@ -126,9 +120,7 @@ class LogsPresenter(RichPresenter):
 
 
 class WrappedCorqOutputPresenter:
-    """
-    Uses corq's responses and formatters for pretty-printing dorq data.
-    """
+    """Uses corq's responses and formatters for pretty-printing dorq data."""
 
     def show_stopped_wf_run(self, wf_run_id: WorkflowRunId):
         click.echo(f"Workflow run {wf_run_id} stopped.")
@@ -154,8 +146,7 @@ class ArtifactPresenter(RichPresenter):
         wf_run_id: WorkflowRunId,
         task_inv_id: TaskInvocationId,
     ):
-        """
-        Prints a preview of the values produced by a task run.
+        """Prints a preview of the values produced by a task run.
 
         Args:
             values: plain, deserialized artifact values.
@@ -171,8 +162,7 @@ class ArtifactPresenter(RichPresenter):
     def show_workflow_outputs(
         self, values: t.Sequence[t.Any], wf_run_id: WorkflowRunId
     ):
-        """
-        Prints a preview of the output values produced by a workflow.
+        """Prints a preview of the output values produced by a workflow.
 
         Args:
             values: plain, deserialized artifact values.
@@ -182,9 +172,9 @@ class ArtifactPresenter(RichPresenter):
         self._console.print(Group(header, self._values_table(values)))
 
     def show_dumped_artifact(self, dump_details: serde.DumpDetails):
-        """
-        Prints summary after an artifact was stored on disk. Suitable for both workflow
-        outputs and task outputs.
+        """Prints summary after an artifact was stored on disk.
+
+        Suitable for both workflow outputs and task outputs.
         """
         format_name: str
         if dump_details.format == ArtifactFormat.JSON:
@@ -263,9 +253,7 @@ class LoginPresenter:
 
 
 class ConfigPresenter:
-    """
-    Present config information to the user.
-    """
+    """Present config information to the user."""
 
     def print_configs_list(
         self,
@@ -273,9 +261,7 @@ class ConfigPresenter:
         status: t.Mapping[ConfigName, bool],
         message: t.Optional[str] = "Stored configs:",
     ):
-        """
-        Print a list of stored configs.
-        """
+        """Print a list of stored configs."""
         if not configs:
             click.echo(
                 "No remote configs available. Create new config using "

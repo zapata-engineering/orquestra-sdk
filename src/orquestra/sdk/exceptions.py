@@ -2,9 +2,7 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 
-"""
-Custom exceptions for the SDK.
-"""
+"""Custom exceptions for the SDK."""
 
 import typing as t
 
@@ -49,8 +47,7 @@ class NotFoundError(BaseRuntimeError):
 
 
 class UserTaskFailedError(BaseRuntimeError):
-    """
-    Raised when a task run fails during execution.
+    """Raised when a task run fails during execution.
 
     The actual exception that stopped the task from execution is chained as
     ``raise TaskRunFailedError(...) from e``. This is a workaround for
@@ -94,14 +91,12 @@ class LocalConfigLoginError(BaseRuntimeError):
 
 
 class QERemoved(BaseRuntimeError):
-    """Raised when attempting to use QE"""
+    """Raised when attempting to use QE."""
 
 
 # Workflow Definition Errors
 class WorkflowDefinitionModuleNotFound(NotFoundError):
-    """
-    Raised when loading workflow definitions module failed.
-    """
+    """Raised when loading workflow definitions module failed."""
 
     def __init__(self, module_name: str, sys_path: t.Sequence[str]):
         self.module_name = module_name
@@ -110,17 +105,14 @@ class WorkflowDefinitionModuleNotFound(NotFoundError):
 
 
 class NoWorkflowDefinitionsFound(NotFoundError):
-    """
-    Raised when there's no workflow definitions in the specified module.
-    """
+    """Raised when there's no workflow definitions in the specified module."""
 
     def __init__(self, module_name: str):
         self.module_name = module_name
 
 
 class InvalidWorkflowDefinitionError(BaseRuntimeError):
-    """
-    Raised when a workflow definition is invalid.
+    """Raised when a workflow definition is invalid.
 
     This may be due to errors in the definition, or failure to meet runtime
     requirements.
@@ -137,8 +129,7 @@ class InvalidTaskDefinitionError(BaseRuntimeError):
 
 
 class NodesInTaskResourcesWarning(Warning):
-    """
-    Raised when a "nodes" resource is passed to a Task.
+    """Raised when a "nodes" resource is passed to a Task.
 
     Nodes currently only apply to workflows and this option will be ignored.
     """
@@ -152,7 +143,7 @@ class InvalidWorkflowRunLogsError(BaseRuntimeError):
 
 
 class TaskRunLogsNotFound(NotFoundError):
-    """Raised when a task run logs cannot be found, or the ID is invalid"""
+    """Raised when a task run logs cannot be found, or the ID is invalid."""
 
     def __init__(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
         self.wf_run_id = wf_run_id
@@ -161,9 +152,7 @@ class TaskRunLogsNotFound(NotFoundError):
 
 
 class WorkflowRunNotSucceeded(BaseRuntimeError):
-    """
-    Raised when a succeeded workflow is required but a one in another state is found.
-    """
+    """Raised when a succeeded workflow is required but it is found in another state."""
 
     def __init__(self, message: str, state: State):
         super().__init__(message)
@@ -197,15 +186,13 @@ class WorkflowRunNotStarted(WorkflowRunNotFoundError):
 
 
 class TaskRunNotFound(NotFoundError):
-    """Raised when a task hasn't completed yet, or the ID is invalid"""
+    """Raised when a task hasn't completed yet, or the ID is invalid."""
 
     pass
 
 
 class TaskInvocationNotFoundError(NotFoundError):
-    """
-    Raised when we can't find a Task Invocation that matches the provided ID.
-    """
+    """Raised when we can't find a Task Invocation that matches the provided ID."""
 
     def __init__(self, invocation_id: ir.TaskInvocationId):
         super().__init__()
@@ -213,9 +200,7 @@ class TaskInvocationNotFoundError(NotFoundError):
 
 
 class WorkflowResultsNotReadyError(NotFoundError):
-    """
-    Raised when a workflow has succeeded, but the results are not ready yet
-    """
+    """Raised when a workflow has succeeded, but the results are not ready yet."""
 
 
 class WorkflowRunIDNotFoundError(NotFoundError):
@@ -234,13 +219,13 @@ class UnauthorizedError(BaseRuntimeError):
 
 
 class ExpiredTokenError(BaseRuntimeError):
-    """Raised when the auth token is expired"""
+    """Raised when the auth token is expired."""
 
     pass
 
 
 class InvalidTokenError(BaseRuntimeError):
-    """Raised when an auth token is not a JWT"""
+    """Raised when an auth token is not a JWT."""
 
     pass
 
@@ -273,13 +258,13 @@ class LoginURLUnavailableError(BaseRuntimeError):
 
 
 class NoOptionsAvailableError(NotFoundError):
-    """Raised when the user would choose options, but no options are available"""
+    """Raised when the user would choose options, but no options are available."""
 
     pass
 
 
 class InProcessFromCLIError(NotFoundError):
-    """Raised when the user requests the in-process runtime when using the CLI"""
+    """Raised when the user requests the in-process runtime when using the CLI."""
 
 
 # Unsupported features
@@ -296,5 +281,6 @@ class ProjectInvalidError(BaseRuntimeError):
 
 
 class WorkspacesNotSupportedError(BaseRuntimeError):
-    """When requested for a workspaces-related method in a runtime that doesn't
-    support workspaces"""
+    """When a non-workspaces supporting runtime gets a workspaces-related request."""
+
+    pass

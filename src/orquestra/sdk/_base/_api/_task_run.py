@@ -21,9 +21,7 @@ from ..serde import deserialize_constant
 
 
 class TaskRun:
-    """
-    Represents execution of a single task.
-    """
+    """Represents execution of a single task."""
 
     class _InputUnavailable:
         def __str__(self):
@@ -44,9 +42,9 @@ class TaskRun:
         runtime: RuntimeInterface,
         wf_def: ir.WorkflowDef,
     ):
-        """
-        This object isn't intended to be directly initialized. Instead, please use
-        ``WorkflowRun.get_tasks()``.
+        """This object isn't intended to be directly initialized.
+
+        Instead, please use ``WorkflowRun.get_tasks()``.
         """
         self._task_run_id = task_run_id
         self._task_invocation_id = task_invocation_id
@@ -94,9 +92,7 @@ class TaskRun:
         )
 
     def get_status(self) -> State:
-        """
-        Fetch current status from the runtime
-        """
+        """Fetch current status from the runtime."""
         wf_run_model = self._runtime.get_workflow_run_status(self.workflow_run_id)
         task_run_model = next(
             run
@@ -111,8 +107,7 @@ class TaskRun:
         )
 
     def get_outputs(self) -> t.Any:
-        """
-        Get values calculated by this task run.
+        """Get values calculated by this task run.
 
         Returns whatever the task function returned, regardless of
         ``@task(n_outputs=...)``.
@@ -136,12 +131,11 @@ class TaskRun:
         return serde.deserialize(task_outputs)
 
     def _find_invocation_by_output_id(self, output: ir.ArgumentId) -> ir.TaskInvocation:
-        """
-        Helper method that locates the invocation object responsible for returning
-        output with given ID
+        """Locates the invocation object responsible for returning output with given ID.
+
         It is based on the assumption that output IDs are unique, and one output
         is returned by a single task invocation (but one invocation can produce
-        multiple outputs)
+        multiple outputs).
         """
         return next(
             inv
@@ -154,10 +148,10 @@ class TaskRun:
         arg_id: ir.ArgumentId,
         available_outputs: t.Mapping[TaskInvocationId, WorkflowResult],
     ) -> ArtifactValue:
-        """
-        Helper method that finds and deserializes input artifact value based on the
-        artifact/argument ID. Uses values from available_outputs, or deserializes the
-        constant embedded in the workflow def.
+        """Find and deserialize input artifact value based on the artifact/argument ID.
+
+        Uses values from available_outputs, or deserializes the constant embedded in
+        the workflow def.
         """
         if arg_id in self._wf_def.constant_nodes:
             value = deserialize_constant(self._wf_def.constant_nodes[arg_id])
@@ -192,12 +186,11 @@ class TaskRun:
             return parent_output_vals[output_index]
 
     def get_inputs(self) -> Inputs:
-        """
-        Get values of inputs (parameters) of a task run
+        """Get values of inputs (parameters) of a task run.
 
-        Returns:  Input namedTuple with Input.args and .kwargs parameters.
+        Returns:
+            Input namedTuple with Input.args and .kwargs parameters.
         """
-
         all_inv_outputs = self._runtime.get_available_outputs(self.workflow_run_id)
 
         task_invocation = self._wf_def.task_invocations[self.task_invocation_id]
@@ -213,9 +206,7 @@ class TaskRun:
         return self.Inputs(args, kwargs)
 
     def get_parents(self) -> t.Set["TaskRun"]:
-        """
-        Get parent tasks - tasks whose return values are taken as input parameters
-        """
+        """Get 'parent' tasks whose return values are taken as input parameters."""
         # Note: theoretically there might be a mismatch between task invocations and
         # task runs. Task invocations come from the static workflow definition. Task
         # runs only exist if a given task invocation was scheduled for execution. If a
@@ -268,8 +259,7 @@ class CurrentRunIDs(t.NamedTuple):
 
 
 def _get_ray_backend_ids() -> CurrentRunIDs:
-    """
-    Get the workflow run, task invocation, and task run IDs from Ray.
+    """Get the workflow run, task invocation, and task run IDs from Ray.
 
     Raises:
         ModuleNotFoundError: when Ray isn't installed.
@@ -294,14 +284,14 @@ def _get_ray_backend_ids() -> CurrentRunIDs:
 
 
 def _get_in_process_backend_ids() -> CurrentRunIDs:
-    """
-    Get the workflow run, task invocation, and task run IDs from the In-process runtime.
+    """Get the backend IDs from the In-process runtime.
 
     Raises:
         WorkflowRunIDNotFoundError: When the workflow run ID can't be recovered.
 
     Returns:
-        The IDs associated with the current run, in a named tuple. See: CurrentRunIDs
+        The workflow run, task invocation, and task run IDs associated with the current
+            run, in a named tuple. See: CurrentRunIDs
     """
     from ..._base._in_process_runtime import get_current_in_process_ids
 
@@ -318,9 +308,7 @@ def _get_in_process_backend_ids() -> CurrentRunIDs:
 
 
 def current_run_ids() -> CurrentRunIDs:
-    """
-    Get the workflow run, task invocation, and task run IDs related to current
-    execution context.
+    """Get the backend IDs related to current execution context.
 
     Workflow run ID is a globally unique identifier generated whenever a workflow is
     submitted for running. Single workflow definition can be run multiple times
@@ -341,7 +329,8 @@ def current_run_ids() -> CurrentRunIDs:
             ...
 
     Returns:
-        The IDs associated with the current run, in a named tuple. See: CurrentRunIDs
+        The workflow run, task invocation, and task run IDs associated with the current
+            run, in a named tuple. See: CurrentRunIDs
 
     Raises:
         WorkflowRunIDNotFoundError: When the workflow run ID cannot be recovered.

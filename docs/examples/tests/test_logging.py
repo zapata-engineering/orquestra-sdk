@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Snippets and tests used in the "Logging Guide" tutorial.
-"""
+"""Snippets and tests used in the "Logging Guide" tutorial."""
 
 import subprocess
 import sys

@@ -1,8 +1,7 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Models for accessing the Config Service API.
+"""Models for accessing the Config Service API.
 
 API spec: https://github.com/zapatacomputing/config-service/tree/main/openapi/src
 """
@@ -18,33 +17,33 @@ WorkspaceId = str
 
 class SecretNameObj(pydantic.BaseModel):
     """
-    Model for
-    https://github.com/zapatacomputing/config-service/blob/3f275a52149fb2b74c6a8c01726cce4f390a1533/openapi/src/schemas/SecretName.yaml
+    Model for:
+    https://github.com/zapatacomputing/config-service/blob/3f275a52149fb2b74c6a8c01726cce4f390a1533/openapi/src/schemas/SecretName.yaml.
 
     Named 'SecretNameObj' instead of 'SecretName' to avoid clash with the field type.
     alias.
-    """
+    """  # noqa: D205, D212
 
     name: SecretName
 
 
 class SecretValueObj(pydantic.BaseModel):
     """
-    Model for
-    https://github.com/zapatacomputing/config-service/blob/3f275a52149fb2b74c6a8c01726cce4f390a1533/openapi/src/schemas/SecretValue.yaml
+    Model for:
+    https://github.com/zapatacomputing/config-service/blob/3f275a52149fb2b74c6a8c01726cce4f390a1533/openapi/src/schemas/SecretValue.yaml.
 
     Named 'SecretValueObj' instead of 'SecretValue' to avoid clash with the field type.
     alias.
-    """
+    """  # noqa: D205, D212
 
     value: SecretValue
 
 
 class SecretDefinition(pydantic.BaseModel):
     """
-    Model for
-    https://github.com/zapatacomputing/config-service/blob/3f275a52149fb2b74c6a8c01726cce4f390a1533/openapi/src/schemas/SecretDefinition.yaml
-    """
+    Model for:
+    https://github.com/zapatacomputing/config-service/blob/3f275a52149fb2b74c6a8c01726cce4f390a1533/openapi/src/schemas/SecretDefinition.yaml.
+    """  # noqa: D205, D212
 
     name: SecretName
     value: SecretValue
@@ -53,8 +52,8 @@ class SecretDefinition(pydantic.BaseModel):
 
 class ListSecretsRequest(pydantic.BaseModel):
     """
-    Model for
-    https://github.com/zapatacomputing/config-service/blob/fbfc4627450bc9a460278b242738e55210e7bf03/openapi/src/parameters/query/workspace.yaml
-    """
+    Model for:
+    https://github.com/zapatacomputing/config-service/blob/fbfc4627450bc9a460278b242738e55210e7bf03/openapi/src/parameters/query/workspace.yaml.
+    """  # noqa: D205, D212
 
     workspace: WorkspaceId

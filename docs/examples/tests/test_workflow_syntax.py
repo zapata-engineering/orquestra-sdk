@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Snippets and tests used in the "Workflow Syntax" guide.
-"""
+"""Snippets and tests used in the "Workflow Syntax" guide."""
 
 import subprocess
 import sys
@@ -144,9 +142,7 @@ class Snippets:
         import orquestra.sdk as sdk
 
         def plain_reverse(text: str) -> str:
-            """
-            Notice this is just a regular Python function, not decorated with `@task`.
-            """
+            # Notice this is just a regular Python function, not decorated with `@task`.
             return text[::-1]
 
         @sdk.task

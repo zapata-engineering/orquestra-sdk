@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-"""
-Snippets and tests used in the "Parametrized Workflows" tutorial.
-"""
+"""Snippets and tests used in the "Parametrized Workflows" tutorial."""
 
 import subprocess
 import sys

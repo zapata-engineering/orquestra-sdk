@@ -25,8 +25,7 @@ def _split_auth(auth_value: Optional[str]):
 
 
 def build_git_url(url: GitURL, protocol_override: Optional[str] = None) -> str:
-    """
-    Returns a usable string from a GitURL.
+    """Returns a usable string from a GitURL.
 
     This will get the password from the secrets API, if required.
 
@@ -73,8 +72,8 @@ def build_git_url(url: GitURL, protocol_override: Optional[str] = None) -> str:
 
 
 def parse_git_url(url: str) -> GitURL:
-    """
-    Parse a git URL from a string
+    """Parse a git URL from a string.
+
     Accepted formats:
 
     * ``<protocol>://[<user>@]<host>[:<port>]/<path>[?<query>]``

@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Logs-related interfaces.
-"""
+"""Logs-related interfaces."""
 import typing as t
 from dataclasses import dataclass
 from enum import Enum
@@ -25,8 +23,9 @@ class LogOutput:
 class WorkflowLogs:
     per_task: t.Mapping[TaskInvocationId, LogOutput]
     """
-    A mapping with task logs. Each key-value pair corresponds to one task
-    invocation.
+    A mapping with task logs.
+
+    Each key-value pair corresponds to one task invocation.
 
     * key: task invocation ID (see
       ``orquestra.sdk.schema.ir.WorkflowDef.task_invocations``)
@@ -35,19 +34,15 @@ class WorkflowLogs:
     """
 
     env_setup: LogOutput
-    """
-    Logs related to setting up execution environment.
-    """
+    """Logs related to setting up execution environment."""
 
     system: LogOutput
-    """
-    Logs relating to the execution environment.
-    """
+    """Logs relating to the execution environment."""
 
     other: LogOutput
-    """
-    Log lines that don't match any other category we support at the moment. If this
-    contains useful information, please consider upgrading with
+    """Log lines that don't match any other category we support at the moment.
+
+    If this contains useful information, please consider upgrading with
     ``pip install --upgrade orquestra-sdk`` or report your use case to the SDK Team at
     Zapata Computing.
     """
@@ -55,8 +50,7 @@ class WorkflowLogs:
     def get_log_type(
         self, log_type
     ) -> t.Union[t.Mapping[TaskInvocationId, LogOutput], LogOutput]:
-        """
-        Return the specified log type.
+        """Return the specified log type.
 
         This method wraps the regular attribute getters in order to allow parametrised
         access to individual log types.
@@ -72,9 +66,7 @@ class WorkflowLogs:
         raise ValueError(f"Unknown workflow log type '{log_type}'.")
 
     class WorkflowLogTypeName(Enum):
-        """
-        Enum for specifying the individual types of Workflow log.
-        """
+        """Enum for specifying the individual types of Workflow log."""
 
         PER_TASK = "per_task"
         SYSTEM = "system"
@@ -83,23 +75,20 @@ class WorkflowLogs:
 
 
 class LogReader(t.Protocol):
-    """
-    A component that reads logs produced by tasks and workflows.
-    """
+    """A component that reads logs produced by tasks and workflows."""
 
     def get_task_logs(
         self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId
     ) -> LogOutput:  # pragma: no cover
-        """
-        Reads all available logs, specific to a single task invocation/run.
+        """Reads all available logs, specific to a single task invocation/run.
 
         Args:
             wf_run_id: ID of the workflow run containing the task.
             task_inv_id: ID of the task invocation for which we want the logs.
 
         Returns:
-            Log lines printed when running this task invocation. If the task didn't
-                produce any logs this should be an empty list.
+            Log lines printed when running this task invocation.
+                If the task didn't produce any logs this should be an empty list.
         """
         # pragma: no cover
         ...
@@ -107,7 +96,5 @@ class LogReader(t.Protocol):
     def get_workflow_logs(
         self, wf_run_id: WorkflowRunId
     ) -> WorkflowLogs:  # pragma: no cover
-        """
-        Reads all available logs printed during execution of this workflow run.
-        """
+        """Reads all available logs printed during execution of this workflow run."""
         ...

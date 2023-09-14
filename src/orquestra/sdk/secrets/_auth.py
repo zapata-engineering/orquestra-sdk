@@ -46,11 +46,11 @@ def _authorize_with_config(
 
 
 def authorized_client(config_name: t.Optional[ConfigName]) -> SecretsClient:
-    """
-    Create an authorized secrets client.
+    """Create an authorized secrets client.
 
     If the passport file environment variable is set, this will be preferentially used
-    for authorisation. Otherwise, the named config will be used.
+    for authorisation.
+    Otherwise, the named config will be used.
 
     Args:
         config_name: the config to be used for authorisation.

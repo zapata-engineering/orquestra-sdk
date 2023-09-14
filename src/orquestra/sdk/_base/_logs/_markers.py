@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Specialized log lines we emit in Orquestra logs.
-
+"""Specialized log lines we emit in Orquestra logs.
 
 ``TaskStartMarker`` and ``TaskEndMarker`` are record types that were previously
 used to hold the information we emit in the log markers.
@@ -33,8 +31,8 @@ UNKNOWN_TASK_INV_ID = "unknown-task-inv-id"
 
 
 def print_start(wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
-    """
-    Emits "task start" marker to stdout and stderr.
+    """Emits "task start" marker to stdout and stderr.
+
     Required for task-log correlation.
 
     See: ORQSDK-951 and ORQSDK-952 for deprecation strategy
@@ -48,8 +46,8 @@ def print_start(wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
 
 
 def print_end(wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
-    """
-    Emits "task end" marker to stdout and stderr.
+    """Emits "task end" marker to stdout and stderr.
+
     Required for task-log correlation.
 
     See: ORQSDK-951 and ORQSDK-952 for deprecation strategy
@@ -66,8 +64,7 @@ def capture_logs(
     wf_run_id: t.Optional[WorkflowRunId],
     task_inv_id: t.Optional[TaskInvocationId],
 ):
-    """
-    This context manager wraps our other log management context managers.
+    """This context manager wraps our other log management context managers.
 
     On Windows, we use markers.
     On macOS and Linux, we use redirected IO.
@@ -91,8 +88,7 @@ def printed_task_markers(
     wf_run_id: WorkflowRunId,
     task_inv_id: TaskInvocationId,
 ):
-    """
-    Deprecated: Newer workflows on Linux/macOS do not use this feature
+    """Deprecated: Newer workflows on Linux/macOS do not use this feature.
 
     See: ORQSDK-951 and ORQSDK-952 for deprecation strategy
 
@@ -115,9 +111,7 @@ def redirected_io(
     wf_run_id: WorkflowRunId,
     task_inv_id: TaskInvocationId,
 ):
-    """
-    Captures stdout and stderr and writes them to their own log files.
-    """
+    """Captures stdout and stderr and writes them to their own log files."""
     # We need to defer this import until after we're sure Windows cannot
     # reach it.
     # wurlitzer does not have type annotations
@@ -140,8 +134,7 @@ def redirected_io(
 
 @dataclass(frozen=True)
 class TaskStartMarker:
-    """
-    Deprecated: Newer workflows on Linux/macOS do not use this feature
+    """Deprecated: Newer workflows on Linux/macOS do not use this feature.
 
     See: ORQSDK-951 and ORQSDK-952 for deprecation strategy
     """
@@ -164,8 +157,7 @@ class TaskStartMarker:
 
 @dataclass(frozen=True)
 class TaskEndMarker:
-    """
-    Deprecated: Newer workflows on Linux/macOS do not use this feature
+    """Deprecated: Newer workflows on Linux/macOS do not use this feature.
 
     See: ORQSDK-951 and ORQSDK-952 for deprecation strategy
     """
@@ -190,8 +182,7 @@ Marker = t.Union[TaskStartMarker, TaskEndMarker]
 
 
 def parse_line(line: str) -> t.Optional[Marker]:
-    """
-    Deprecated: Newer workflows on Linux/macOS do not use this feature
+    """Deprecated: Newer workflows on Linux/macOS do not use this feature.
 
     See: ORQSDK-951 and ORQSDK-952 for deprecation strategy
 

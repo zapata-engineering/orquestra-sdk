@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Utils for reloading modules in tests.
-"""
+"""Utils for reloading modules in tests."""
 import sys
 from contextlib import contextmanager
 

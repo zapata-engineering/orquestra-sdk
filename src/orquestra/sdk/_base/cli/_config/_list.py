@@ -2,9 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 
-"""
-Code for 'orq login --list'.
-"""
+"""Code for 'orq login --list'."""
 from orquestra.sdk._base._jwt import check_jwt_without_signature_verification
 from orquestra.sdk.exceptions import ExpiredTokenError, InvalidTokenError
 
@@ -13,9 +11,7 @@ from .._ui import _presenters, _prompts
 
 
 class Action:
-    """
-    Encapsulates app-related logic for handling `orq login --list`.
-    """
+    """Encapsulates app-related logic for handling `orq login --list`."""
 
     def __init__(
         self,
@@ -35,18 +31,14 @@ class Action:
         self._config_repo: _repos.ConfigRepo = config_repo
 
     def on_cmd_call(self):
-        """
-        Call the config list command action, catching any exceptions that arise.
-        """
+        """Call the config list command action, catching any exceptions that arise."""
         try:
             self._on_cmd_call_with_exceptions()
         except Exception as e:
             self._exception_presenter.show_error(e)
 
     def _on_cmd_call_with_exceptions(self):
-        """
-        Implementation of the command action. Doesn't catch exceptions.
-        """
+        """Implementation of the command action. Doesn't catch exceptions."""
         configs = [
             self._config_repo.read_config(config_name)
             for config_name in self._config_repo.list_remote_config_names()

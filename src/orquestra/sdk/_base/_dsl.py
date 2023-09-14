@@ -258,7 +258,7 @@ class DeferredGitImport:
 
 
 class PythonImports:
-    """A task import that uses Python packages"""
+    """A task import that uses Python packages."""
 
     def __init__(
         self,
@@ -827,7 +827,8 @@ class ArtifactFuture:
             Union[str, "orquestra.sdk._base._dsl.Sentinel"]
         ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
-        """Assigns optional metadata related to task invocation used to generate this
+        """
+        Assigns optional metadata related to task invocation used to generate this
         artifact.
 
         Doesn't modify existing invocations, returns a new one.
@@ -844,7 +845,7 @@ class ArtifactFuture:
             disk: amount of disk assigned to the task invocation
             gpu: amount of gpu assigned to the task invocation
             custom_image: docker image used to run the task invocation
-        """
+        """  # noqa: D205, D212
         self._check_if_destructured(
             fn_name=self.invocation.task._fn_name,
             assign_type="invocation metadata",
@@ -906,7 +907,8 @@ class ArtifactFuture:
             Union[str, "orquestra.sdk._base._dsl.Sentinel"]
         ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
-        """Assigns optional metadata related to task invocation used to generate this
+        """
+        Assigns optional metadata related to task invocation used to generate this
         artifact.
 
         Doesn't modify existing invocations, returns a new one.
@@ -920,7 +922,7 @@ class ArtifactFuture:
             memory: amount of memory assigned to the task invocation
             disk: amount of disk assigned to the task invocation
             gpu: amount of gpu assigned to the task invocation
-        """
+        """  # noqa: D205, D212
         self._check_if_destructured(
             fn_name=self.invocation.task._fn_name,
             assign_type="resources",
@@ -937,7 +939,8 @@ class ArtifactFuture:
             Union[str, "orquestra.sdk._base._dsl.Sentinel"]
         ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
-        """Assigns optional metadata related to task invocation used to generate this
+        """
+        Assigns optional metadata related to task invocation used to generate this
         artifact.
 
         Doesn't modify existing invocations, returns a new one.
@@ -950,7 +953,7 @@ class ArtifactFuture:
 
         Args:
             custom_image: docker image used to run the task invocation
-        """
+        """  # noqa: D205, D212
         self._check_if_destructured(
             fn_name=self.invocation.task._fn_name,
             assign_type="custom image",
@@ -959,9 +962,14 @@ class ArtifactFuture:
         return self.with_invocation_meta(custom_image=custom_image)
 
     def _check_if_destructured(self, fn_name: str, assign_type: str):
-        """
-        Check if an ArtifactFuture has been destructured and raise a
-        WorkflowSyntaxError with the appropriate error message if so
+        """Check if an ArtifactFuture has been destructured.
+
+        Args:
+            fn_name: TODO
+            assign_type: TODO
+
+        Raises:
+            WorkflowSyntaxError: if the ArtifactFuture has been destructured
         """
         if self.output_index is not None:
             summary = traceback.StackSummary.extract(
