@@ -3,7 +3,7 @@
 ################################################################################
 import pytest
 
-from orquestra.sdk.schema import configs, ir, local_database, responses, workflow_run
+from orquestra.sdk.schema import configs, ir, local_database, workflow_run
 
 
 @pytest.mark.parametrize(
@@ -11,13 +11,6 @@ from orquestra.sdk.schema import configs, ir, local_database, responses, workflo
     [
         ir.WorkflowDef,
         workflow_run.WorkflowRun,
-        responses.GetWorkflowDefResponse,
-        responses.GetTaskDefResponse,
-        responses.ErrorResponse,
-        responses.SubmitWorkflowDefResponse,
-        responses.GetWorkflowRunResponse,
-        responses.GetWorkflowRunResultsResponse,
-        responses.GetLogsResponse,
         local_database.StoredWorkflowRun,
         configs.RuntimeConfigurationFile,
     ],
