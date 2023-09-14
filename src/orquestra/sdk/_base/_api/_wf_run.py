@@ -761,8 +761,6 @@ def list_workflow_runs(
 def _parse_max_age(age: t.Optional[str]) -> t.Optional[timedelta]:
     """Parse a string specifying an age into a timedelta object.
 
-    If the string cannot be parsed, an exception is raises.
-
     Args:
         age: the string to be parsed.
 

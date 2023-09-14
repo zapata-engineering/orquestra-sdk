@@ -446,7 +446,7 @@ class DriverClient:
         Args:
             workflow_def_id: ID of the workflow definition to be submitted.
             resources: The resources required to execute the workflow.
-            dry_run: TODO
+            dry_run: Run the workflow without actually executing any task code.
 
         Raises:
             orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunRequest: TODO

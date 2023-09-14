@@ -138,7 +138,7 @@ class CERuntime(RuntimeInterface):
                 cluster.
             WorkflowRunNotStarted: for all other errors that prevented the workflow run
                 from being scheduled.
-            UnauthorizedError: if the current token was rejected by the remote cluster
+            UnauthorizedError: if the current token was rejected by the remote cluster.
 
         Returns:
             the workflow run ID.
