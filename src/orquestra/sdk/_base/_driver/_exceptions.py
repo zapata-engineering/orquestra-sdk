@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Exception types related to the Workflow Driver API.
-"""
+"""Exception types related to the Workflow Driver API."""
 from typing import List, Optional
 
 import requests
@@ -18,6 +16,7 @@ from ._models import (
 
 
 class InvalidTokenError(Exception):
+    # noqa: D205, D212, D415
     """
     Raised when the communication with the external Config Service couldn't be made
     because of an invalid token.
@@ -25,9 +24,7 @@ class InvalidTokenError(Exception):
 
 
 class InvalidWorkflowDef(Exception):
-    """
-    Raised when an invalid Workflow Definition is sent to the Workflow Driver
-    """
+    """Raised when an invalid Workflow Definition is sent to the Workflow Driver."""
 
     def __init__(self, message: str, detail: str):
         self.message = message
@@ -36,9 +33,7 @@ class InvalidWorkflowDef(Exception):
 
 
 class InvalidWorkflowRunRequest(Exception):
-    """
-    Raised when an invalid Workflow Run request is sent to the Workflow Driver
-    """
+    """Raised when an invalid Workflow Run request is sent to the Workflow Driver."""
 
     def __init__(self, message: str, detail: str):
         self.message = message
@@ -47,8 +42,9 @@ class InvalidWorkflowRunRequest(Exception):
 
 
 class UnsupportedSDKVersion(InvalidWorkflowRunRequest):
+    # noqa: D200, D212
     """
-    Raised when an unsupported Workflow SDK version is used to submit a workflow run
+    Raised when an unsupported Workflow SDK version is used to submit a workflow run.
     """
 
     def __init__(
@@ -63,8 +59,7 @@ class UnsupportedSDKVersion(InvalidWorkflowRunRequest):
 
 
 class InvalidWorkflowDefID(Exception):
-    """
-    Raised when an invalid Workflow Definition ID is sent to the Workflow Driver
+    """Raised when an invalid Workflow Definition ID is sent to the Workflow Driver.
 
     Workflow Definition IDs are expected to be UUIDs, if an ID is sent that cannot be
     parsed as a UUID, this exception will be raised.
@@ -76,9 +71,7 @@ class InvalidWorkflowDefID(Exception):
 
 
 class InvalidWorkflowRunID(Exception):
-    """
-    Raised when an invalid Workflow Run ID is sent to the Workflow Driver
-    """
+    """Raised when an invalid Workflow Run ID is sent to the Workflow Driver."""
 
     def __init__(self, workflow_run_id: WorkflowRunID):
         self.workflow_run_id = workflow_run_id
@@ -86,8 +79,7 @@ class InvalidWorkflowRunID(Exception):
 
 
 class InvalidWorkflowRunArtifactID(Exception):
-    """
-    Raised when an invalid Workflow Run Artifact ID is sent to the Workflow Driver
+    """Raised when an invalid Workflow Run Artifact ID is sent to the Workflow Driver.
 
     Workflow Run Artifact IDs are expected to be UUIDs, if an ID is sent that cannot be
     parsed as a UUID, this exception will be raised.
@@ -99,8 +91,7 @@ class InvalidWorkflowRunArtifactID(Exception):
 
 
 class InvalidWorkflowRunResultID(Exception):
-    """
-    Raised when an invalid Workflow Run Result ID is sent to the Workflow Driver
+    """Raised when an invalid Workflow Run Result ID is sent to the Workflow Driver.
 
     Workflow Run Result IDs are expected to be UUIDs, if an ID is sent that cannot be
     parsed as a UUID, this exception will be raised.
@@ -112,15 +103,11 @@ class InvalidWorkflowRunResultID(Exception):
 
 
 class ForbiddenError(Exception):
-    """
-    Raised when the user did not have permission to access a specific resource
-    """
+    """Raised when the user did not have permission to access a specific resource."""
 
 
 class UnknownHTTPError(Exception):
-    """
-    Raised when there's an error we don't handle otherwise.
-    """
+    """Raised when there's an error we don't handle otherwise."""
 
     def __init__(self, response: requests.Response):
         self.response = response
@@ -128,9 +115,7 @@ class UnknownHTTPError(Exception):
 
 
 class WorkflowDefNotFound(Exception):
-    """
-    Raised when a Workflow Definition cannot be found
-    """
+    """Raised when a Workflow Definition cannot be found."""
 
     def __init__(self, workflow_def_id: WorkflowDefID):
         self.workflow_def_id = workflow_def_id
@@ -138,9 +123,7 @@ class WorkflowDefNotFound(Exception):
 
 
 class WorkflowRunNotFound(Exception):
-    """
-    Raised when a Workflow Run cannot be found
-    """
+    """Raised when a Workflow Run cannot be found."""
 
     def __init__(self, workflow_run_id: WorkflowRunID):
         self.workflow_run_id = workflow_run_id
@@ -148,9 +131,7 @@ class WorkflowRunNotFound(Exception):
 
 
 class WorkflowRunLogsNotFound(Exception):
-    """
-    Raised when a Workflow Run's Logs cannot be found
-    """
+    """Raised when a Workflow Run's Logs cannot be found."""
 
     def __init__(self, workflow_run_id: WorkflowRunID):
         self.workflow_run_id = workflow_run_id
@@ -158,9 +139,7 @@ class WorkflowRunLogsNotFound(Exception):
 
 
 class TaskRunLogsNotFound(Exception):
-    """
-    Raised when a Task Run's Logs cannot be found
-    """
+    """Raised when a Task Run's Logs cannot be found."""
 
     def __init__(
         self, workflow_run_id: WorkflowRunID, task_invocation_id: TaskInvocationID
@@ -171,9 +150,7 @@ class TaskRunLogsNotFound(Exception):
 
 
 class WorkflowRunLogsNotReadable(Exception):
-    """
-    Raised when a Workflow Run's Logs exist, but cannot be decoded.
-    """
+    """Raised when a Workflow Run's Logs exist, but cannot be decoded."""
 
     def __init__(
         self,
@@ -186,9 +163,7 @@ class WorkflowRunLogsNotReadable(Exception):
 
 
 class WorkflowRunArtifactNotFound(Exception):
-    """
-    Raised when a Workflow Run Artifact cannot be found
-    """
+    """Raised when a Workflow Run Artifact cannot be found."""
 
     def __init__(self, workflow_run_artifact_id: WorkflowRunArtifactID):
         self.workflow_run_artifact_id = workflow_run_artifact_id
@@ -196,9 +171,7 @@ class WorkflowRunArtifactNotFound(Exception):
 
 
 class WorkflowRunResultNotFound(Exception):
-    """
-    Raised when a Workflow Run Result cannot be found
-    """
+    """Raised when a Workflow Run Result cannot be found."""
 
     def __init__(self, workflow_run_result_id: WorkflowRunResultID):
         self.workflow_run_result_id = workflow_run_result_id
@@ -206,9 +179,7 @@ class WorkflowRunResultNotFound(Exception):
 
 
 class InvalidWorkspaceZRI(Exception):
-    """
-    Raised when workspace ZRI is invalid
-    """
+    """Raised when workspace ZRI is invalid."""
 
     def __init__(self, zri: str):
         self.zri = zri

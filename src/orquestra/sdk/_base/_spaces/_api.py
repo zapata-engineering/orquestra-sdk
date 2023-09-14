@@ -14,8 +14,7 @@ from ._structs import Project, Workspace
 def list_workspaces(
     config: t.Union[ConfigName, "RuntimeConfig"],
 ) -> t.Sequence[Workspace]:
-    """
-    Get the list of all workspaces available to a user.
+    """Get the list of all workspaces available to a user.
 
     Warning: works only on CE runtimes
 
@@ -42,6 +41,7 @@ def list_projects(
     workspace_id: t.Union[WorkspaceId, Workspace],
 ) -> t.Sequence[Project]:
     """Get the list of all workspaces available to a user.
+
     Warning: works only on CE runtimes
 
     Args:
@@ -70,8 +70,7 @@ def list_projects(
 
 
 def make_workspace_zri(workspace_id: str) -> str:
-    """
-    Make the workspace ZRI for the specified workspace ID.
+    """Make the workspace ZRI for the specified workspace ID.
 
     Builds project ZRI from some hardcoded values and the workspaceId based on
     https://zapatacomputing.atlassian.net/wiki/spaces/Platform/pages/512787664/2022-09-26+Zapata+Resource+Identifiers+ZRIs
@@ -84,7 +83,5 @@ def make_workspace_zri(workspace_id: str) -> str:
 
 
 def make_workspace_url(resource_catalog_url: str, workspace_zri: str) -> str:
-    """
-    Construct the URL for a workspace based on the resource catalog and workspace ZRI.
-    """
+    """Construct workspace URL based on the resource catalog and workspace ZRI."""
     return f"{resource_catalog_url}/api/workspaces/{workspace_zri}"

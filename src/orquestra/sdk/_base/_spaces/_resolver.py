@@ -15,8 +15,7 @@ def resolve_studio_ref(
     workspace_id: Optional[WorkspaceId],
     project_id: Optional[ProjectId],
 ) -> Optional[ProjectRef]:
-    """
-    Resolve the workspace and project IDs from the passed args or environment vars.
+    """Resolve the workspace and project IDs from the passed args or environment vars.
 
     Args:
         workspace_id: ID of the workspace for workflow - supported only on CE.
