@@ -65,6 +65,13 @@ task_state_cases = [
         for end in [None, TEST_TIME]
         for task_states in task_state_cases
     ]
+    # Resumable: report as FAILED
+    + [
+        (_client.WorkflowStatus.PENDING, start, end, task_states, State.WAITING)
+        for start in [None, TEST_TIME]
+        for end in [None, TEST_TIME]
+        for task_states in task_state_cases
+    ]
     # Running:
     # (defensive case for race conditions in Ray) status is running but no start time
     # reported. Report as WAITING
