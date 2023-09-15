@@ -123,7 +123,7 @@ def test_workflow_state_from_ray_meta(
 ):
     mock_task_state: Mock = create_autospec(_dag._task_state_from_ray_meta)
     mock_task_state.side_effect = task_states
-    mock_ray_meta = create_autospec(dict)
+    mock_ray_meta = {"stats": {}}
     monkeypatch.setattr(_dag, "_task_state_from_ray_meta", mock_task_state)
     assert (
         _dag._workflow_state_from_ray_meta(
