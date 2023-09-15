@@ -22,6 +22,7 @@ from orquestra.sdk.schema.workflow_run import (
     TaskRunId,
     WorkflowRun,
     WorkflowRunId,
+    WorkflowRunSummary,
     WorkspaceId,
 )
 
@@ -340,6 +341,36 @@ class InProcessRuntime(abc.RuntimeInterface):
                 -limit:
             ]
         return wf_runs
+
+    def list_workflow_run_summaries(
+        self,
+        *,
+        limit: t.Optional[int] = None,
+        max_age: t.Optional[timedelta] = None,
+        state: t.Optional[t.Union[State, t.List[State]]] = None,
+        workspace: t.Optional[WorkspaceId] = None,
+    ):
+        """
+        List summaries of the workflow runs, with some filters
+
+        Args:
+            limit: Restrict the number of runs to return, prioritising the most recent.
+            max_age: Only return runs younger than the specified maximum age.
+            status: Only return runs of runs with the specified status.
+            workspace: Only return runs from the specified workspace.
+
+        Returns:
+            A list of the workflow runs' summaries.
+        """
+        return [
+            WorkflowRunSummary.from_workflow_run(wf)
+            for wf in self.list_workflow_runs(
+                limit=limit,
+                max_age=max_age,
+                state=state,
+                workspace=workspace,
+            )
+        ]
 
     @classmethod
     def from_runtime_configuration(cls, *args, **kwargs):

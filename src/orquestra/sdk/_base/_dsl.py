@@ -76,6 +76,13 @@ Constant = Any
 # function calls).
 Argument = Union[Constant, "ArtifactFuture", "Secret"]
 
+_secret_as_string_error = (
+    "Invalid usage of a Secret object. Secrets are not "
+    "available when building the workflow graph and cannot"
+    " be used as strings. If you need to use a Secret's"
+    " value, this must be done inside of a task."
+)
+
 
 class Secret(NamedTuple):
     name: str
@@ -87,6 +94,21 @@ class Secret(NamedTuple):
     # Workspace ID is used by local and remote runtimes to fetch a secret from a
     # specific workspace.
     workspace_id: Optional[str] = None
+
+    def __getattr__(self, item):
+        try:
+            return self.__getattribute__(item)
+        except AttributeError as e:
+            raise AttributeError(_secret_as_string_error) from e
+
+    def __getitem__(self, item):
+        raise AttributeError(_secret_as_string_error)
+
+    def __str__(self):
+        raise AttributeError(_secret_as_string_error)
+
+    def __iter__(self):
+        raise AttributeError(_secret_as_string_error)
 
 
 @dataclass(frozen=True, eq=True)

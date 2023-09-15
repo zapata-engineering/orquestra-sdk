@@ -31,6 +31,7 @@ from orquestra.sdk.schema.configs import RuntimeName
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
 from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
+from orquestra.sdk.schema.workflow_run import WorkflowRunSummary
 
 from ..sdk.data.configs import TEST_CONFIG_JSON
 
@@ -834,6 +835,44 @@ class TestWorkflowRunRepo:
             # Then
             assert [run.id for run in runs] == stub_run_ids
 
+        @staticmethod
+        def test_list_wf_run_summaries(monkeypatch):
+            # Given
+            config = "ray"
+            stub_run_ids = ["wf.1", "wf.2"]
+            state = State("RUNNING")
+            mock_wf_run_summaries = []
+            owner = "owner"
+            total_task_runs = 99
+            completed_task_runs = 1
+
+            for stub_id in stub_run_ids:
+                wf_run = WorkflowRunSummary(
+                    id=stub_id,
+                    status=RunStatus(state=state, start_time=None, end_time=None),
+                    owner=owner,
+                    total_task_runs=total_task_runs,
+                    completed_task_runs=completed_task_runs,
+                )
+                mock_wf_run_summaries.append(wf_run)
+
+            monkeypatch.setattr(
+                sdk,
+                "list_workflow_run_summaries",
+                Mock(return_value=mock_wf_run_summaries),
+            )
+
+            # Prevent RayRuntime from connecting to a real cluster.
+            monkeypatch.setattr(_dag.RayRuntime, "startup", Mock())
+
+            repo = _repos.WorkflowRunRepo()
+
+            # When
+            runs = repo.list_wf_run_summaries(config)
+
+            # Then
+            assert [run.id for run in runs] == stub_run_ids, runs[0]
+
         class TestWithInProcess:
             """
             Uses sample workflow definition and in-process runtime to acquire a
@@ -999,38 +1038,24 @@ class TestSummaryRepo:
         [
             pytest.param(
                 [
-                    WorkflowRunModel(
+                    WorkflowRunSummary(
                         id="wf.2",
-                        workflow_def=_example_wfs.complicated_wf().model,
-                        task_runs=[
-                            TaskRunModel(
-                                id="task_run_1",
-                                invocation_id="invocation-1-task-capitalize",
-                                status=RunStatus(
-                                    state=State.SUCCEEDED,
-                                    start_time=INSTANT_1,
-                                    end_time=INSTANT_2,
-                                ),
-                            ),
-                            TaskRunModel(
-                                id="task_run_2",
-                                invocation_id="invocation-2-task-concat",
-                                status=RunStatus(
-                                    state=State.RUNNING,
-                                    start_time=INSTANT_2,
-                                ),
-                            ),
-                        ],
                         status=RunStatus(
                             state=State.RUNNING,
                             start_time=INSTANT_1 + datetime.timedelta(seconds=30),
                         ),
+                        owner="evil/emiliano.zapata@zapatacomputing.com",
+                        total_task_runs=2,
+                        completed_task_runs=1,
+                        dry_run=False,
                     ),
-                    WorkflowRunModel(
+                    WorkflowRunSummary(
                         id="wf.1",
-                        workflow_def=_example_wfs.complicated_wf().model,
-                        task_runs=[],
                         status=RunStatus(state=State.WAITING, start_time=INSTANT_1),
+                        owner="evil/emiliano.zapata@zapatacomputing.com",
+                        total_task_runs=0,
+                        completed_task_runs=0,
+                        dry_run=False,
                     ),
                 ],
                 ui_models.WFList(
@@ -1088,7 +1113,7 @@ class TestSummaryRepo:
         ],
     )
     def test_wf_list_summary(
-        wf_run: t.List[WorkflowRunModel], expected_summary: ui_models.WFList
+        wf_run: t.List[WorkflowRunSummary], expected_summary: ui_models.WFList
     ):
         # Given
         repo = _repos.SummaryRepo()

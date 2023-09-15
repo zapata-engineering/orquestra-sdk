@@ -4,6 +4,34 @@
 
 🚨 *Breaking Changes*
 
+* Removed model classes that used to define the shape of defunct `orq` CLI command outputs.
+
+🔥 *Features*
+* Added `sdk.list_workflow_run_summeries()` as a partner to `sdk.list_workflow_runs()` - the new function provides a static overview of workflow runs as a way to quickly check on their statuses.
+
+🧟 *Deprecations*
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+* `orq login --list` properly handles missing or empty config file
+
+💅 *Improvements*
+
+* Throw more informative exceptions if secret is used in any unintended way inside workflow function
+* `orq wf list` now uses `sdk.list_workflow_run_summeries()` under the hood. On CE, this reduces the required API calls from 3N+1 to 1.
+
+🥷 *Internal*
+
+* Removed unused local cache code.
+
+📃 *Docs*
+
+## v0.56.0
+
+🚨 *Breaking Changes*
+
 * When `auto` config is passed from local machine, config set in `ORQ_CURRENT_CONFIG` env variable will be used. Using `auto` locally without that env variable set, will result in an error.
 * Removed `orquestra.sdk.v2` module. Please use `orquestra.sdk` instead.
 * Bump Ray version to 2.6.3
@@ -14,21 +42,13 @@
 * Added `orq reset` as a shortcut for `orq down`, `orq up`
 * New CLI output formatting for a subset of commands.
 
-🧟 *Deprecations*
-
-👩‍🔬 *Experimental*
-
 🐛 *Bug Fixes*
 
 * Package-dependent exception thrown from the task no-longer causes the red-herring error of `no module named <xxx>` in the logs. It prints proper exception
 
-💅 *Improvements*
-
 🥷 *Internal*
 * Reformatted docs source files to put each sentence on its own line.
 * Removed `UnsavedConfigChangesError`
-
-📃 *Docs*
 
 ## v0.55.0
 

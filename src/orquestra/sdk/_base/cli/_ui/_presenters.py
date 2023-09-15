@@ -273,6 +273,13 @@ class ConfigPresenter:
         """
         Print a list of stored configs.
         """
+        if not configs:
+            click.echo(
+                "No remote configs available. Create new config using "
+                "`orq login -s <remote uri>` command"
+            )
+            return
+
         click.echo(message)
         click.echo(
             tabulate(
