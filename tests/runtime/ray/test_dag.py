@@ -84,6 +84,12 @@ task_state_cases = [
         (_client.WorkflowStatus.RUNNING, TEST_TIME, None, task_states, State.RUNNING)
         for task_states in task_state_cases
     ]
+    # the wf has an end time and no start time. Distrust the times and report as
+    # RUNNING.
+    + [
+        (_client.WorkflowStatus.RUNNING, None, TEST_TIME, task_states, State.RUNNING)
+        for task_states in task_state_cases
+    ]
     # the wf has a start and end time, but the status is still being reported as
     # 'running' - Ray hasn't updated the status yet. Report as SUCCEEDED.
     + [
