@@ -160,6 +160,35 @@ def _task_status_from_ray_meta(
     wf_status: _client.WorkflowStatus,
     task_meta: t.Dict[str, t.Any],
 ) -> RunStatus:
+    """Determine that status of a task from the task metadata and workflow status.
+
+    The mapping is::
+
+        +===========+=============+============+==========+=============+
+        | wf status | task failed | task start | task end | returned    |
+        |           | flag        | time       | time     | task status |
+        +===========+=============+============+==========+=============+
+        | RESUMABLE | any                                 | FAILED      |
+        +-----------+                                     +-------------+
+        | CANCELED  |                                     | TERMINATED  |
+        +-----------+-------------+------------+----------+-------------+
+        | any other | YES         | any                   | FAILED      |
+        + status    +-------------+------------+----------+-------------+
+        |           | NO          | NO         | NO       | WAITING     |
+        |           |             | YES        | NO       | RUNNING     |
+        |           |             | YES        | YES      | SUCCEEDED   |
+        |           |             | NO         | YES      | WAITING     |
+        +===========+=============+============+==========+=============+
+
+    Args:
+        wf_status: State of the workflow containing this task as reported by the
+            runtime.
+        task_meta: Metadata for this task.
+
+    Returns:
+        The inferred status of the task.
+    """
+
     start_time = task_meta["stats"].get("start_time")
     end_time = task_meta["stats"].get("end_time")
     # We've stored an extra item in the metadata of a failed task
@@ -185,6 +214,45 @@ def _workflow_status_from_ray_meta(
     end_time: t.Optional[float],
     ray_task_metas: t.List[t.Dict[str, t.Any]],
 ) -> RunStatus:
+    """Determine the status of a workflow from the reported status and the task states.
+
+    The mapping is::
+
+        +============+==========+==========+========+============+
+        | wf status  | tasks in | wf start | wf end | returned   |
+        |            | progress | time     | time   | wf status  |
+        +============+==========+==========+========+============+
+        | FAILED     | NO       | any               | FAILED     |
+        +            +----------+                   +------------+
+        |            | YES      |                   | RUNNING    |
+        +------------+----------+----------+--------+------------+
+        | RUNNING    | any      | YES      | YES    | SUCCEEDED  |
+        +            +          +----------+--------+------------+
+        |            |          | NO       | NO     | WAITING    |
+        +            +          +----------+--------+------------+
+        |            |          | YES      | NO     | RUNNING    |
+        +            +          +----------+--------+            +
+        |            |          | NO       | YES    |            |
+        +------------+----------+----------+--------+------------+
+        | CANCELLED  | any                          | TERMINATED |
+        +------------+                              +------------+
+        | SUCCESSFUL |                              | SUCCEEDED  |
+        +------------+                              +------------+
+        | RESUMABLE  |                              | FAILED     |
+        +------------+                              +------------+
+        | PENDING    |                              | WAITING    |
+        +------------+----------+----------+--------+------------+
+
+    Args:
+        wf_status: Status of the workflow as reported by the runtime.
+        start_time: Start time of the workflow as reported by the runtime.
+        end_time: End time of the workflow as reported by the runtime.
+        ray_task_metas: Metadata for the tasks in this workflow.
+            Used to determine the task statuses that inform the workflow status.
+
+    Returns:
+        The inferred status of the workflow run.
+    """
     # We'll use our workflow state heuristic to return a better
     # description of the workflow state.
     state = _workflow_state_from_ray_meta(
