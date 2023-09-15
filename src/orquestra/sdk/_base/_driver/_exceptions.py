@@ -16,11 +16,10 @@ from ._models import (
 
 
 class InvalidTokenError(Exception):
-    # noqa: D205, D212, D415
     """
     Raised when the communication with the external Config Service couldn't be made
     because of an invalid token.
-    """
+    """  # noqa: D205, D212, D415
 
 
 class InvalidWorkflowDef(Exception):
@@ -42,10 +41,9 @@ class InvalidWorkflowRunRequest(Exception):
 
 
 class UnsupportedSDKVersion(InvalidWorkflowRunRequest):
-    # noqa: D200, D212
     """
     Raised when an unsupported Workflow SDK version is used to submit a workflow run.
-    """
+    """  # noqa: D200, D212
 
     def __init__(
         self, submitted_version: Optional[str], supported_versions: Optional[List[str]]
