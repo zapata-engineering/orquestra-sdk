@@ -179,8 +179,8 @@ def test_workflow_state_from_ray_meta(
         for start in [None, TEST_TIME]
         for end in [None, TEST_TIME]
     ]
-    # Any other workflow status, no failed flag, no start time: The task is waiting to
-    # run.
+    # Any other workflow status, no failed flag, no start time, no end time: The task
+    # is waiting to run.
     + [
         (status, None, None, failed, State.WAITING)
         for status in [
