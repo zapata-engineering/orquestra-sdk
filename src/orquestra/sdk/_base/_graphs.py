@@ -45,7 +45,7 @@ def topological_sort(graph_to_sort: Graph) -> t.List[Node]:
 
     Raises:
         ValueError: TODO
-    """
+    """  # noqa: D205
     # We need a local copy because Kahn's algorithm mutates data.
     graph = {node: copy(successors) for node, successors in graph_to_sort.items()}
 

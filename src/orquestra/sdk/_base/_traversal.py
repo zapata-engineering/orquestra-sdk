@@ -622,7 +622,7 @@ def _find_nested_objs_in_fields(root_obj, predicate) -> t.Sequence:
 
     A "reference graph" means that each object holds references to its fields.
     Each field is another object with fields.
-    """
+    """  # noqa: D205
     stack = [root_obj]
     collected = []
     # Required for robustness against cycles.

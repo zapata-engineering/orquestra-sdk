@@ -1,9 +1,9 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """Example of a workflow file that can be exported to v1 (yaml) format and run on
 Orquestra cluster.
-"""
+"""  # noqa: D205
 import typing as t
 
 # public API
