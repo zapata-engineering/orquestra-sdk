@@ -5,6 +5,7 @@
 🚨 *Breaking Changes*
 
 * Removed model classes that used to define the shape of defunct `orq` CLI command outputs.
+* CE: When a task fails, the workflow will continue to be `RUNNING` while all other started tasks complete.
 
 🔥 *Features*
 * Added `sdk.list_workflow_run_summeries()` as a partner to `sdk.list_workflow_runs()` - the new function provides a static overview of workflow runs as a way to quickly check on their statuses.
@@ -25,6 +26,7 @@
 🥷 *Internal*
 
 * Removed unused local cache code.
+* The Ray metadata for failed tasks now includes a `failed` field in addition to the start and end times.
 
 📃 *Docs*
 
