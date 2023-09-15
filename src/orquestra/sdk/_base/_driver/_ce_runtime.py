@@ -7,7 +7,7 @@ RuntimeInterface implementation that uses Compute Engine.
 import warnings
 from datetime import timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Union
+from typing import Dict, List, Optional, Protocol, Sequence, Union
 
 from orquestra.sdk import Project, ProjectRef, Workspace, exceptions
 from orquestra.sdk._base import _retry, serde
@@ -27,10 +27,24 @@ from orquestra.sdk.schema.workflow_run import (
     WorkflowRun,
     WorkflowRunId,
     WorkflowRunMinimal,
+    WorkflowRunSummary,
     WorkspaceId,
 )
 
 from . import _client, _exceptions, _models
+
+
+class PaginatedListFunc(Protocol):
+    """Protocol for functions passed to CERuntime._list_wf_runs()."""
+
+    def __call__(
+        self,
+        workflow_def_id: Optional[_models.WorkflowDefID] = None,
+        page_size: Optional[int] = None,
+        page_token: Optional[str] = None,
+        workspace: Optional[WorkspaceId] = None,
+    ) -> _client.Paginated:
+        ...
 
 
 def _get_max_resources(workflow_def: WorkflowDef) -> _models.Resources:
@@ -398,6 +412,109 @@ class CERuntime(RuntimeInterface):
                 "- the authorization token was rejected by the remote cluster."
             ) from e
 
+    @staticmethod
+    def _list_wf_runs(
+        func: PaginatedListFunc,
+        limit: Optional[int],
+        max_age: Optional[timedelta],
+        state: Optional[Union[State, List[State]]],
+        workspace: Optional[WorkspaceId],
+    ) -> list:
+        """
+        Iterate through pages listing workflow runs.
+
+        This method encompasses the logic the drives `list_workflow_runs` and
+        `list_workflow_run_summaries`.
+
+        Args:
+            func: the paginated listing function over which to iterate.
+
+        Raises:
+            exceptions.UnauthorizedError: if the remote cluster rejects the token.
+
+        Returns:
+            A list of workflow runs, expressed either as WorkflowRun or
+                WorkflowRunSummary objects.
+        """
+        if max_age or state:
+            warnings.warn(
+                "Filtering CE workflow runs by max age and/or state is not currently "
+                "supported. These filters will not be applied."
+            )
+
+        # Calculate how many pages of what sizes we need.
+        # The max_page_size should be the same as the maximum defined in
+        # https://github.com/zapatacomputing/workflow-driver/blob/fc3964d37e05d9421029fe28fa844699e2f99a52/openapi/src/parameters/query/pageSize.yaml#L10 # noqa: E501
+        max_page_size: int = 100
+        page_sizes: Sequence[Optional[int]] = [None]
+        if limit is not None:
+            if limit < max_page_size:
+                page_sizes = [limit]
+            else:
+                page_sizes = [max_page_size for _ in range(limit // max_page_size)] + [
+                    limit % max_page_size
+                ]
+
+        page_token: Optional[str] = None
+        runs = []
+
+        for page_size in page_sizes:
+            try:
+                # TODO(ORQSDK-684): driver client cannot do filtering via API yet
+                # https://zapatacomputing.atlassian.net/browse/ORQSDK-684?atlOrigin=eyJpIjoiYmNiZjUyMjZiNzg5NDI2YWJmNGU5NzAxZDI1MmJlNzEiLCJwIjoiaiJ9 # noqa: E501
+                paginated_runs = func(
+                    page_size=page_size,
+                    page_token=page_token,
+                    workspace=workspace,
+                )
+            except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
+                raise exceptions.UnauthorizedError(
+                    "Could not get list of workflow runs "
+                    "- the authorization token was rejected by the remote cluster."
+                ) from e
+            page_token = paginated_runs.next_page_token
+            runs += paginated_runs.contents
+
+            if page_size is not None and len(paginated_runs.contents) < page_size:
+                # If we got back fewer results than we asked for, then we've exhausted
+                # the available runs given our filters and don't want to make any
+                # further requests.
+                break
+
+        return runs
+
+    def list_workflow_run_summaries(
+        self,
+        *,
+        limit: Optional[int] = None,
+        max_age: Optional[timedelta] = None,
+        state: Optional[Union[State, List[State]]] = None,
+        workspace: Optional[WorkspaceId] = None,
+    ) -> List[WorkflowRunSummary]:
+        """
+        List summaries of the workflow runs, with some filters
+
+        Args:
+            limit: Restrict the number of runs to return, prioritising the most recent.
+            max_age: Only return runs younger than the specified maximum age.
+            status: Only return runs of runs with the specified status.
+            workspace: Only return runs from the specified workspace.
+
+        Raises:
+            UnauthorizedError: if the remote cluster rejects the token
+        """
+        func = self._client.list_workflow_run_summaries
+        try:
+            return self._list_wf_runs(
+                func,
+                limit=limit,
+                max_age=max_age,
+                state=state,
+                workspace=workspace,
+            )
+        except exceptions.UnauthorizedError:
+            raise
+
     def list_workflow_runs(
         self,
         *,
@@ -421,52 +538,17 @@ class CERuntime(RuntimeInterface):
         Returns:
                 A list of the workflow runs
         """
-        if max_age or state:
-            warnings.warn(
-                "Filtering CE workflow runs by max age and/or state is not currently "
-                "supported. These filters will not be applied."
+        func = self._client.list_workflow_runs
+        try:
+            return self._list_wf_runs(
+                func,
+                limit=limit,
+                max_age=max_age,
+                state=state,
+                workspace=workspace,
             )
-
-        # Calculate how many pages of what sizes we need.
-        # The max_page_size should be the same as the maximum defined in
-        # https://github.com/zapatacomputing/workflow-driver/blob/fc3964d37e05d9421029fe28fa844699e2f99a52/openapi/src/parameters/query/pageSize.yaml#L10 # noqa: E501
-        max_page_size: int = 100
-        page_sizes: Sequence[Optional[int]] = [None]
-        if limit is not None:
-            if limit < max_page_size:
-                page_sizes = [limit]
-            else:
-                page_sizes = [max_page_size for _ in range(limit // max_page_size)] + [
-                    limit % max_page_size
-                ]
-
-        page_token: Optional[str] = None
-        runs: List[WorkflowRunMinimal] = []
-
-        for page_size in page_sizes:
-            try:
-                # TODO(ORQSDK-684): driver client cannot do filtering via API yet
-                # https://zapatacomputing.atlassian.net/browse/ORQSDK-684?atlOrigin=eyJpIjoiYmNiZjUyMjZiNzg5NDI2YWJmNGU5NzAxZDI1MmJlNzEiLCJwIjoiaiJ9 # noqa: E501
-                paginated_runs = self._client.list_workflow_runs(
-                    page_size=page_size,
-                    page_token=page_token,
-                    workspace=workspace,
-                )
-            except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
-                raise exceptions.UnauthorizedError(
-                    "Could not get list of workflow runs "
-                    "- the authorization token was rejected by the remote cluster."
-                ) from e
-            page_token = paginated_runs.next_page_token
-            runs += paginated_runs.contents
-
-            if page_size is not None and len(paginated_runs.contents) < page_size:
-                # If we got back fewer results than we asked for, then we've exhausted
-                # the available runs given our filters and don't want to make any
-                # further requests.
-                break
-
-        return runs
+        except exceptions.UnauthorizedError:
+            raise
 
     def get_workflow_logs(self, wf_run_id: WorkflowRunId) -> WorkflowLogs:
         """

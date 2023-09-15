@@ -92,3 +92,33 @@ class WorkflowRun(WorkflowRunMinimal):
 
     task_runs: t.List[TaskRun]
     status: RunStatus
+
+
+class WorkflowRunSummary(WorkflowRunOnlyID):
+    """
+    A summary overview of a workflow run.
+    """
+
+    status: RunStatus
+    owner: t.Optional[str]
+    """
+    The email address of the account that submitted this workflow run.
+
+    For local runs, this field is not populated.
+    """
+    total_task_runs: int
+    completed_task_runs: int
+    dry_run: t.Optional[bool]
+
+    @staticmethod
+    def from_workflow_run(wf: WorkflowRun) -> "WorkflowRunSummary":
+        return WorkflowRunSummary(
+            id=wf.id,
+            status=wf.status,
+            owner=None,
+            total_task_runs=len(wf.workflow_def.task_invocations),
+            completed_task_runs=sum(
+                1 for tr in wf.task_runs if tr.status.state == State.SUCCEEDED
+            ),
+            dry_run=None,
+        )

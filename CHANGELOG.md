@@ -8,6 +8,7 @@
 * CE: When a task fails, the workflow will continue to be `RUNNING` while all other started tasks complete.
 
 🔥 *Features*
+* Added `sdk.list_workflow_run_summeries()` as a partner to `sdk.list_workflow_runs()` - the new function provides a static overview of workflow runs as a way to quickly check on their statuses.
 
 🧟 *Deprecations*
 
@@ -20,6 +21,7 @@
 💅 *Improvements*
 
 * Throw more informative exceptions if secret is used in any unintended way inside workflow function
+* `orq wf list` now uses `sdk.list_workflow_run_summeries()` under the hood. On CE, this reduces the required API calls from 3N+1 to 1.
 
 🥷 *Internal*
 
