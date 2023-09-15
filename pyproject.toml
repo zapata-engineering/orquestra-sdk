@@ -67,12 +67,11 @@ select = [
   "F",   # pyflakes
   "D",   # pydocstyle
 ]
-ignore = ["E203","E266"]
+ignore = ["E203","E266","D100","D101","D102","D103","D105","D106","D107",]
 target-version = "py38"
 
 [tool.ruff.pydocstyle]
 convention="google"
-add-ignore=["D100","D101","D102","D103","D105","D106","D107",]
 
 [tool.pymarkdown]
 # Our CHANGELOG.md violates all these rules. We can remove them one-by-one when
