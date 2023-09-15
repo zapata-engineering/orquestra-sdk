@@ -95,6 +95,12 @@ class Secret(NamedTuple):
     # specific workspace.
     workspace_id: Optional[str] = None
 
+    def __reduce__(self) -> str | tuple[Any, ...]:
+        # We need to override the pickling behaviour for Secret
+        # This is because we override other dunder methods which cause the normal
+        # picling behaviour to fail.
+        return (self.__class__, (self.name, self.config_name, self.workspace_id))
+
     def __getattr__(self, item):
         try:
             return self.__getattribute__(item)
