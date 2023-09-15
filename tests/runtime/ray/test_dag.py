@@ -65,7 +65,7 @@ task_state_cases = [
         for end in [None, TEST_TIME]
         for task_states in task_state_cases
     ]
-    # Resumable: report as FAILED
+    # Pending: report as WAITING
     + [
         (_client.WorkflowStatus.PENDING, start, end, task_states, State.WAITING)
         for start in [None, TEST_TIME]
