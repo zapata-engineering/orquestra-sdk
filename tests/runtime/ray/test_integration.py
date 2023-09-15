@@ -7,6 +7,7 @@ as possible, because it's slow to run. Please consider using unit tests and
 RuntimeInterface mocks instead of extending this file.
 """
 import json
+import os
 import time
 import typing as t
 from pathlib import Path
@@ -16,6 +17,7 @@ import pytest
 from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base._config import LOCAL_RUNTIME_CONFIGURATION
+from orquestra.sdk._base._env import RAY_TEMP_PATH_ENV
 from orquestra.sdk._base._testing import _example_wfs, _ipc
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk._ray import _build_workflow, _client, _dag, _ray_logs
@@ -34,10 +36,15 @@ pytestmark = pytest.mark.filterwarnings(
 def runtime(
     shared_ray_conn, tmp_path_factory: pytest.TempPathFactory, change_db_location
 ):
+    # We need to set this env variable to let our logging code know the
+    # tmp location has changed.
+    os.environ[RAY_TEMP_PATH_ENV] = str(shared_ray_conn._temp_dir)
+
     project_dir = tmp_path_factory.mktemp("ray-integration")
     config = LOCAL_RUNTIME_CONFIGURATION
     client = _client.RayClient()
     rt = _dag.RayRuntime(config, project_dir, client)
+
     yield rt
 
 
