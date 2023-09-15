@@ -169,32 +169,35 @@ def test_workflow_state_from_ray_meta(
     # Any other workflow status, no failed flag, no start time: The task is waiting to
     # run.
     + [
-        (status, None, None, False, State.WAITING)
+        (status, None, None, failed, State.WAITING)
         for status in [
             _client.WorkflowStatus.SUCCESSFUL,
             _client.WorkflowStatus.RUNNING,
             _client.WorkflowStatus.FAILED,
         ]
+        for failed in [None, False]
     ]
     # Any other workflow status, no failed flag, a start time but no end time: The task
     # is in progress
     + [
-        (status, TEST_TIME, None, False, State.RUNNING)
+        (status, TEST_TIME, None, failed, State.RUNNING)
         for status in [
             _client.WorkflowStatus.SUCCESSFUL,
             _client.WorkflowStatus.RUNNING,
             _client.WorkflowStatus.FAILED,
         ]
+        for failed in [None, False]
     ]
     # Any other workflow status, no failed flag, start time and end time: The task
     # finished and didn't fail.
     + [
-        (status, TEST_TIME, TEST_TIME, False, State.SUCCEEDED)
+        (status, TEST_TIME, TEST_TIME, failed, State.SUCCEEDED)
         for status in [
             _client.WorkflowStatus.SUCCESSFUL,
             _client.WorkflowStatus.RUNNING,
             _client.WorkflowStatus.FAILED,
         ]
+        for failed in [None, False]
     ],
 )
 def test_task_state_from_ray_meta(
