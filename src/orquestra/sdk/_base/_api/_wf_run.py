@@ -226,7 +226,7 @@ class WorkflowRun:
 
         Note:
         Users aren't expected to use __init__() directly.
-        Please use `WorkflowRun.by_id` or `WorkflowDef.run()`.
+        Please use ``WorkflowRun.by_id`` or ``WorkflowDef.run()``.
 
         Args:
             run_id: The ID of this workflow run.
