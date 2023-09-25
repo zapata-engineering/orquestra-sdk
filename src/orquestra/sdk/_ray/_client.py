@@ -13,6 +13,7 @@ try:
     import ray.workflow
     from ray import exceptions  # noqa: F401
     from ray.workflow import exceptions as workflow_exceptions  # noqa: F401
+    from ray.workflow.workflow_storage import WorkflowStorage
 except ModuleNotFoundError:
     if not t.TYPE_CHECKING:
         WorkflowStatus = None
@@ -30,11 +31,19 @@ else:
     TaskError = ray.exceptions.RayTaskError
     ObjectRef = ray.ObjectRef
     WorkflowStatus = ray.workflow.WorkflowStatus
+    WorkflowStorage = WorkflowStorage
     Storage = ray.workflow.storage.Storage
     RuntimeEnv = ray.runtime_env.RuntimeEnv
     FunctionNode = ray.dag.FunctionNode
     LogPrefixActorName = ray._private.ray_constants.LOG_PREFIX_ACTOR_NAME
     LogPrefixTaskName = ray._private.ray_constants.LOG_PREFIX_TASK_NAME
+
+    def save_task_postrun_metadata(
+        wf_run_id: str,
+        task_inv_id: str,
+        metadata: t.Dict[str, t.Any],
+    ):
+        WorkflowStorage(wf_run_id).save_task_postrun_metadata(task_inv_id, metadata)
 
     class RayClient:
         """Abstraction layer between our Orquestra-specific RayRuntime and Ray's API.

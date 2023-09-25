@@ -3,6 +3,7 @@
 ################################################################################
 """Translates IR workflow def into a Ray workflow."""
 import os
+import time
 import typing as t
 from functools import singledispatch
 from pathlib import Path
@@ -252,6 +253,14 @@ def _make_ray_dag_node(
 
                     wrapped_return = wrapped(*inner_args, **inner_kwargs)
                 except Exception as e:
+                    assert wf_run_id is not None
+                    assert task_inv_id is not None
+                    _client.save_task_postrun_metadata(
+                        wf_run_id,
+                        task_inv_id,
+                        {"end_time": time.time(), "failed": True},
+                    )
+
                     raise exceptions.UserTaskFailedError(
                         f"User task with task invocation id:{task_inv_id} failed.",
                         wf_run_id if wf_run_id else "",
