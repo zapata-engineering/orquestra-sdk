@@ -297,10 +297,6 @@ class WorkflowRun:
             verbose: If ``True``, each iteration of the polling loop will print to
                 stderr.
 
-        Raises:
-            NotImplementedError: When the workflow finishes with a state that is not
-                explicitly handled by this method.
-
         Returns:
             orquestra.sdk.schema.workflow_run.State: The state of the finished workflow.
         """
