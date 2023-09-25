@@ -274,11 +274,17 @@ def _workflow_status_from_ray_meta(
         # was marked as failed, not when the last task ended. Note that workflows can
         # fail with waiting tasks, so we filter out any tasks that don't have a start
         # time.
-        _end_time = max(
+        task_end_times = [
             task_meta["stats"].get("end_time")
             for task_meta in ray_task_metas
             if task_meta["stats"].get("start_time")
-        )
+        ]
+        if len(task_end_times) == 0:
+            # If there are no usable task end times, use the workflow end time.
+            # This can occur if a workflow fails during environment setup.
+            _end_time = end_time
+        else:
+            _end_time = max(task_end_times)
     else:
         # In all other scenarios, we can just use the end_time the workflow
         # metadata provides.
