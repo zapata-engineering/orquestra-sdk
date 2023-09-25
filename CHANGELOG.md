@@ -9,6 +9,7 @@
 
 🔥 *Features*
 * Added `sdk.list_workflow_run_summeries()` as a partner to `sdk.list_workflow_runs()` - the new function provides a static overview of workflow runs as a way to quickly check on their statuses.
+* `WorkflowRun` objects in the API now have a "message" field, similar to that of `TaskRun`, to provide additional context to the status. If populated, this field is displayed alongside other workflow run info.
 
 🧟 *Deprecations*
 
@@ -17,11 +18,13 @@
 🐛 *Bug Fixes*
 
 * `orq login --list` properly handles missing or empty config file
+* Attempting to get the status of a workflow run that failed during environment setup will now report the workflow run as 'Failed' rather than raising a ValueError.
 
 💅 *Improvements*
 
 * Throw more informative exceptions if secret is used in any unintended way inside workflow function
 * `orq wf list` now uses `sdk.list_workflow_run_summeries()` under the hood. On CE, this reduces the required API calls from 3N+1 to 1.
+* Workflow runs failing due to errors during Ray environment setup will now display helpful error messages, including instructions on accessing the logs.
 
 🥷 *Internal*
 
