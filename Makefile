@@ -97,6 +97,10 @@ black:
 isort:
 	$(PYTHON) -m isort --check src tests docs/examples
 
+.PHONY: ruff
+ruff:
+	$(PYTHON) -m ruff --preview src tests docs/examples
+
 .PHONY: pymarkdown
 pymarkdown:
 	$(PYTHON) -m pymarkdown scan CHANGELOG.md
@@ -118,6 +122,7 @@ style:
 	@$(MAKE) flake8
 	@$(MAKE) black
 	@$(MAKE) isort
+	@$(MAKE) ruff
 	@$(MAKE) mypy
 	@echo This project passes style!
 
@@ -126,6 +131,7 @@ style:
 style-fix:
 	black src tests docs/examples
 	isort --profile=black src tests docs/examples
+	ruff --preview --fix src tests docs/examples
 
 # Run tests, but discard the ones that exceptionally slow to run locally.
 test-fast:
