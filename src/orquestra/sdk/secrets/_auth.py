@@ -56,7 +56,7 @@ def authorized_client(config_name: t.Optional[ConfigName]) -> SecretsClient:
         config_name: the config to be used for authorisation.
 
     Raises:
-        orquestra.ask. exceptions.ConfigNameNotFoundError: when no matching config was
+        orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was
             found.
 
     """
