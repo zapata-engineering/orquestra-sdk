@@ -2,7 +2,7 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 
-"""User-facing `WorkflowRun` object.
+"""User-facing ``WorkflowRun`` object.
 
 WorkflowRun represents, and allows interaction with, an individual workflow run.
 """
