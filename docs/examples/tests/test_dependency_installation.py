@@ -161,7 +161,7 @@ class Snippets:
 def _import_models(
     dsl_task,
 ) -> t.Tuple[ir.Import, t.Optional[t.Sequence[ir.Import]]]:
-    """Extract import models from the wqorkflow model.
+    """Extract import models from the workflow model.
 
     Uses the ``dsl_task`` exactly once in a workflow, builds the workflow model, and
     extracts imports used by the corresponding task def model.
