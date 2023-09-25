@@ -11,7 +11,7 @@ from .._ui import _presenters, _prompts
 
 
 class Action:
-    """Encapsulates app-related logic for handling `orq login --list`."""
+    """Encapsulates app-related logic for handling ``orq login --list``."""
 
     def __init__(
         self,
