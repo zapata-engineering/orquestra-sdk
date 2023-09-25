@@ -317,7 +317,7 @@ class RayRuntime(RuntimeInterface):
 
         Raises:
             orquestra.sdk.exceptions.WorkflowRunNotFoundError: if no run with
-                `workflow_run_id` was found.
+                ``workflow_run_id`` was found.
         """
         try:
             wf_status = self._client.get_workflow_status(workflow_id=workflow_run_id)
