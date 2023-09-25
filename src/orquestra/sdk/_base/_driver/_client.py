@@ -225,7 +225,8 @@ class DriverClient:
             orquestra.sdk._base._driver._exceptions.InvalidWorkflowDef: TODO
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
 
@@ -280,7 +281,8 @@ class DriverClient:
         Raises:
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                list workflow runs from a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
@@ -326,7 +328,8 @@ class DriverClient:
             KeyError: when the URL couldn't be found in the response.
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
@@ -362,7 +365,8 @@ class DriverClient:
                  workflow with the specified ID is found.
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
 
@@ -409,7 +413,8 @@ class DriverClient:
                  workflow with the specified ID is found.
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
@@ -453,7 +458,8 @@ class DriverClient:
             orquestra.sdk._base._driver._exceptions.UnsupportedSDKVersion: TODO
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
@@ -511,7 +517,8 @@ class DriverClient:
         Raises:
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                list workflow runs from a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
@@ -569,7 +576,8 @@ class DriverClient:
         Raises:
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                list workflow runs from a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
@@ -630,9 +638,10 @@ class DriverClient:
 
 
         Raises:
-          orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                list workflow runs from a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
@@ -672,7 +681,8 @@ class DriverClient:
                 workflow run cannot be found
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
@@ -717,7 +727,9 @@ class DriverClient:
                 workflow run cannot be found
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                terminate a workflow run from a workspace that does not belong to the
+                user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
@@ -758,7 +770,8 @@ class DriverClient:
                 workflow run cannot be found
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
@@ -806,7 +819,8 @@ class DriverClient:
                 the artifact cannot be found.
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
@@ -852,7 +866,8 @@ class DriverClient:
                 workflow run cannot be found
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
@@ -898,7 +913,8 @@ class DriverClient:
                 workflow run result cannot be found
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
@@ -962,7 +978,8 @@ class DriverClient:
                 workflow run cannot be found
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
             orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotReadable: when
@@ -1033,7 +1050,8 @@ class DriverClient:
                 the logs exist, but cannot be decoded.
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
@@ -1091,7 +1109,8 @@ class DriverClient:
         Raises:
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
             orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID: when the
@@ -1154,7 +1173,8 @@ class DriverClient:
         Raises:
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
@@ -1187,7 +1207,8 @@ class DriverClient:
         Raises:
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
         """
@@ -1225,7 +1246,8 @@ class DriverClient:
         Raises:
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
-            orquestra.sdk._base._driver._exceptions.ForbiddenError: TODO
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
             orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
                 error is raised by the remote cluster.
             orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID: when the
