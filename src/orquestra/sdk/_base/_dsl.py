@@ -115,7 +115,7 @@ class Secret(NamedTuple):
 class GitImportWithAuth:
     """A task import that uses a private Git repo.
 
-    Please use a helper method, such as GithubImport, instead of this class.
+    Please use a helper, such as GithubImport, instead of this class.
     """
 
     repo_url: str
