@@ -80,7 +80,7 @@ __version__ = "1.2.2"
 
 
 class DefaultGroup(click.Group):
-    """Invokes a subcommand marked with `default=True` if any subcommand not chosen.
+    """Invokes a subcommand marked with ``default=True`` if any subcommand not chosen.
 
     :param default_if_no_args: resolves to the default command if no arguments
                                passed.
