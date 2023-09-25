@@ -280,14 +280,9 @@ class TestRayRuntimeMethods:
                 .env_setup
             )
 
-            # TODO: this is a stopgap due to differences between behaviour on CI and
-            # local. See ORQSDK-978 for details.
-            assert run.message in [
-                f"Could not set up runtime environment. See environment setup logs for details. `orq wf logs {run_id} --env-setup`",  # noqa: E501
-                f"The workflow encountered an issue. Please consult the logs for more information. `orq wf logs {run_id}`",  # noqa: E501
-            ], (
-                "OUT\n" + "\n".join(logs.out) + "ERR\n" + "\n".join(logs.err)
-            )
+            assert run.message == (
+                f"Could not set up runtime environment ('pip.py:418 -- Failed to install pip packages'). See environment setup logs for details. `orq wf logs {run_id} --env-setup`"  # noqa: E501
+            ), f"\n-MESSAGE: {run.message}\n-OUT:\n{logs.out}\n-ERR:\n{logs.err}"
 
         def test_exception_in_task_stops_execution(self, runtime: _dag.RayRuntime):
             """

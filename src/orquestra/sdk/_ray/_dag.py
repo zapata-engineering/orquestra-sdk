@@ -477,17 +477,23 @@ class RayRuntime(RuntimeInterface):
 
             # Scan the logs for telltales of known failure modes.
             # Currently this only covers failure to set up the environment.
-            env_logs = self.get_workflow_logs(workflow_run_id).env_setup
-            for line in reversed(env_logs.err + env_logs.out):
-                if re.search(
-                    r"Runtime env creation failed for \d* times, don't retry any more"
-                    "|"
-                    r"ray.exceptions.RuntimeEnvSetupError: "
-                    r"Failed to set up runtime environment.",
-                    line,
-                ):
+            logs = self.get_workflow_logs(workflow_run_id)
+            for line in reversed(logs.env_setup.err + logs.env_setup.out):
+                # If there's an ERROR level message in the env setup logs, and no task
+                # logs, we interpret this as a failure to set up the environment.
+                # We search backwards as the error is likely to be one of the last
+                # things to have happened.
+                error_log_pattern = re.compile(
+                    r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(,\d*)?"  # date and time
+                    r"\s*ERROR "  # log level
+                    r"(?P<msg>.*)"  # capture the message that follows "ERROR"
+                )
+                if (match := re.search(error_log_pattern, line)) and len(
+                    logs.per_task
+                ) == 0:
                     message = (
-                        "Could not set up runtime environment. "
+                        "Could not set up runtime environment "
+                        f"('{match.group('msg').strip(' .')}'). "
                         "See environment setup logs for details. "
                         f"`orq wf logs {workflow_run_id} --env-setup`"
                     )
