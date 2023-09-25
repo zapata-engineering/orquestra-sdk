@@ -16,7 +16,7 @@ from ._login_server import LoginServer
 
 
 class Action:
-    """Encapsulates app-related logic for handling `orq login`."""
+    """Encapsulates app-related logic for handling ``orq login``."""
 
     def __init__(
         self,
