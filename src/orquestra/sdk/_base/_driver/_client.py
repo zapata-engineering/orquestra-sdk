@@ -222,7 +222,8 @@ class DriverClient:
             project: the projectref under which to store the workflow def.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowDef: TODO
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowDef: when an invalid
+                Workflow Definition is sent to the Workflow Driver.
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
             orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
@@ -454,8 +455,10 @@ class DriverClient:
             dry_run: Run the workflow without actually executing any task code.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunRequest: TODO
-            orquestra.sdk._base._driver._exceptions.UnsupportedSDKVersion: TODO
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunRequest: when an
+                invalid Workflow Run request is sent to the Workflow Driver.
+            orquestra.sdk._base._driver._exceptions.UnsupportedSDKVersion: when an
+                unsupported Workflow SDK version is used to submit a workflow run.
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
                 authorization token is rejected by the remote cluster.
             orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to

@@ -128,7 +128,7 @@ class DirectLogReader:
     """
 
     def __init__(self, ray_temp: Path):
-        """TODO.
+        """Initialiser for DirectLogReader.
 
         Args:
             ray_temp: directory where Ray keeps its data, like ``~/.orquestra/ray``.
