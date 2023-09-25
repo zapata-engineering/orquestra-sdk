@@ -37,8 +37,7 @@ class State(enum.Enum):
         return cls.UNKNOWN
 
     def is_completed(self) -> bool:
-        """
-        Check whether the state indicates that execution of the workflow run has ended.
+        """Check whether the state indicates that execution of the wf run has ended.
 
         Returns:
             True if the execution has ended for any reason, False if the workflow run

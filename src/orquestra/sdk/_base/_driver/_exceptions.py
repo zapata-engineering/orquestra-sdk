@@ -21,6 +21,8 @@ class InvalidTokenError(Exception):
     because of an invalid token.
     """  # noqa: D205, D212, D415
 
+    pass
+
 
 class InvalidWorkflowDef(Exception):
     """Raised when an invalid Workflow Definition is sent to the Workflow Driver."""

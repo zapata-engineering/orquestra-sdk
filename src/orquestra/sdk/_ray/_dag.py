@@ -187,7 +187,6 @@ def _task_status_from_ray_meta(
     Returns:
         The inferred status of the task.
     """
-
     start_time = task_meta["stats"].get("start_time")
     end_time = task_meta["stats"].get("end_time")
     # We've stored an extra item in the metadata of a failed task

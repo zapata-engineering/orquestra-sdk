@@ -31,6 +31,8 @@ class InvalidTokenError(Exception):
     because of an invalid token.
     """  # noqa: D205, D212
 
+    pass
+
 
 class UnknownHTTPError(Exception):
     """Raised when there's an error we don't handle otherwise."""
