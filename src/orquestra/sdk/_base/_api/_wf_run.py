@@ -377,7 +377,7 @@ class WorkflowRun:
 
         Args:
             wait: whether or not to wait for workflow run completion.
-                Uses the default options for waiting, use `wait_until_finished()` for
+                Uses the default options for waiting, use ``wait_until_finished()`` for
                 more control.
 
         Raises:
