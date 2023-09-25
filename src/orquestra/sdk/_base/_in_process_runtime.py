@@ -107,7 +107,7 @@ def _get_kwargs(
 class InProcessRuntime(abc.RuntimeInterface):
     """Result of calling workflow function directly.
 
-    Empty at first, filled each time `create_workflow_run` is called.
+    Empty at first, filled each time ``create_workflow_run`` is called.
 
     Implements orquestra.sdk._base.abc.RuntimeInterface methods.
     """
