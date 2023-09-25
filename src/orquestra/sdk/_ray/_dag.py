@@ -83,6 +83,7 @@ def _task_state_from_ray_meta(
     wf_status: _client.WorkflowStatus,
     start_time: t.Optional[float],
     end_time: t.Optional[float],
+    failed_flag: t.Optional[bool],
 ) -> State:
     """
     Heuristic to figure out SDK task run state from Ray's workflow status and times.
@@ -95,23 +96,51 @@ def _task_state_from_ray_meta(
     elif wf_status == _client.WorkflowStatus.CANCELED:
         return State.TERMINATED
 
+    if failed_flag:
+        return State.FAILED
+
     if start_time:
         if end_time:
             return State.SUCCEEDED
-        elif wf_status == _client.WorkflowStatus.FAILED:
-            return State.FAILED
-
-    if not start_time:
+        else:
+            return State.RUNNING
+    else:
         return State.WAITING
-
-    return RAY_ORQ_STATUS[wf_status]
 
 
 def _workflow_state_from_ray_meta(
     wf_status: _client.WorkflowStatus,
     start_time: t.Optional[float],
     end_time: t.Optional[float],
+    ray_task_metas: t.List[t.Dict[str, t.Any]],
 ) -> State:
+    if wf_status == _client.WorkflowStatus.FAILED:
+        # If Ray said the workflow has failed, we'll check to see if all the tasks are
+        # in a completed state.
+        # Note that unlike when reporting states for individual tasks, we regard
+        # 'WAITING' as completed as we only want tasks that have actually started to
+        # prevent the workflow from being reported as FAILED.
+        tasks_completed = (
+            (
+                state := _task_state_from_ray_meta(
+                    wf_status,
+                    task_meta["stats"].get("start_time"),
+                    task_meta["stats"].get("end_time"),
+                    task_meta["stats"].get("failed"),
+                )
+            ).is_completed()
+            or state == State.WAITING
+            for task_meta in ray_task_metas
+        )
+
+        if all(tasks_completed):
+            # If all the tasks are completed, we will say the workflow failed.
+            return State.FAILED
+        else:
+            # If there is at least one task that is not in a completed state, we'll
+            # say the workflow is still running.
+            return State.RUNNING
+
     if start_time and end_time and wf_status == _client.WorkflowStatus.RUNNING:
         # If we ask Ray right after a workflow has been completed, Ray reports
         # workflow status as "RUNNING". This happens even after we await Ray
@@ -130,14 +159,50 @@ def _workflow_state_from_ray_meta(
 
 def _task_status_from_ray_meta(
     wf_status: _client.WorkflowStatus,
-    start_time: t.Optional[float],
-    end_time: t.Optional[float],
+    task_meta: t.Dict[str, t.Any],
 ) -> RunStatus:
+    """Determine that status of a task from the task metadata and workflow status.
+
+    The mapping is::
+
+        +===========+=============+============+==========+=============+
+        | wf status | task failed | task start | task end | returned    |
+        |           | flag        | time       | time     | task status |
+        +===========+=============+============+==========+=============+
+        | RESUMABLE | any                                 | FAILED      |
+        +-----------+                                     +-------------+
+        | CANCELED  |                                     | TERMINATED  |
+        +-----------+-------------+------------+----------+-------------+
+        | any other | YES         | any                   | FAILED      |
+        + status    +-------------+------------+----------+-------------+
+        |           | NO          | NO         | NO       | WAITING     |
+        |           |             | YES        | NO       | RUNNING     |
+        |           |             | YES        | YES      | SUCCEEDED   |
+        |           |             | NO         | YES      | WAITING     |
+        +===========+=============+============+==========+=============+
+
+    Args:
+        wf_status: State of the workflow containing this task as reported by the
+            runtime.
+        task_meta: Metadata for this task.
+
+    Returns:
+        The inferred status of the task.
+    """
+
+    start_time = task_meta["stats"].get("start_time")
+    end_time = task_meta["stats"].get("end_time")
+    # We've stored an extra item in the metadata of a failed task
+    # This "failed" flag can be used to accurately determine when a
+    # task has failed.
+    failed = task_meta["stats"].get("failed")
+
     return RunStatus(
         state=_task_state_from_ray_meta(
             wf_status=wf_status,
             start_time=start_time,
             end_time=end_time,
+            failed_flag=failed,
         ),
         start_time=_instant_from_timestamp(start_time),
         end_time=_instant_from_timestamp(end_time),
@@ -148,15 +213,80 @@ def _workflow_status_from_ray_meta(
     wf_status: _client.WorkflowStatus,
     start_time: t.Optional[float],
     end_time: t.Optional[float],
+    ray_task_metas: t.List[t.Dict[str, t.Any]],
 ) -> RunStatus:
+    """Determine the status of a workflow from the reported status and the task states.
+
+    The mapping is::
+
+        +============+==========+==========+========+============+
+        | wf status  | tasks in | wf start | wf end | returned   |
+        |            | progress | time     | time   | wf status  |
+        +============+==========+==========+========+============+
+        | FAILED     | NO       | any               | FAILED     |
+        +            +----------+                   +------------+
+        |            | YES      |                   | RUNNING    |
+        +------------+----------+----------+--------+------------+
+        | RUNNING    | any      | YES      | YES    | SUCCEEDED  |
+        +            +          +----------+--------+------------+
+        |            |          | NO       | NO     | WAITING    |
+        +            +          +----------+--------+------------+
+        |            |          | YES      | NO     | RUNNING    |
+        +            +          +----------+--------+            +
+        |            |          | NO       | YES    |            |
+        +------------+----------+----------+--------+------------+
+        | CANCELLED  | any                          | TERMINATED |
+        +------------+                              +------------+
+        | SUCCESSFUL |                              | SUCCEEDED  |
+        +------------+                              +------------+
+        | RESUMABLE  |                              | FAILED     |
+        +------------+                              +------------+
+        | PENDING    |                              | WAITING    |
+        +------------+----------+----------+--------+------------+
+
+    Args:
+        wf_status: Status of the workflow as reported by the runtime.
+        start_time: Start time of the workflow as reported by the runtime.
+        end_time: End time of the workflow as reported by the runtime.
+        ray_task_metas: Metadata for the tasks in this workflow.
+            Used to determine the task statuses that inform the workflow status.
+
+    Returns:
+        The inferred status of the workflow run.
+    """
+    # We'll use our workflow state heuristic to return a better
+    # description of the workflow state.
+    state = _workflow_state_from_ray_meta(
+        wf_status=wf_status,
+        start_time=start_time,
+        end_time=end_time,
+        ray_task_metas=ray_task_metas,
+    )
+    if not state.is_completed() and end_time is not None:
+        # If the workflow isn't completed and the metadata contained an end_time,
+        # we'll use None as the end_time
+        # This is because a "failed" workflow will have its end_time set, even if
+        # there are tasks still running.
+        _end_time = None
+    elif state == State.FAILED:
+        # If the workflow failed, we'll pick the latest end_time from the tasks.
+        # This is because the end_time stored with the workflow is when the workflow
+        # was marked as failed, not when the last task ended. Note that workflows can
+        # fail with waiting tasks, so we filter out any tasks that don't have a start
+        # time.
+        _end_time = max(
+            task_meta["stats"].get("end_time")
+            for task_meta in ray_task_metas
+            if task_meta["stats"].get("start_time")
+        )
+    else:
+        # In all other scenarios, we can just use the end_time the workflow
+        # metadata provides.
+        _end_time = end_time
     return RunStatus(
-        state=_workflow_state_from_ray_meta(
-            wf_status=wf_status,
-            start_time=start_time,
-            end_time=end_time,
-        ),
+        state=state,
         start_time=_instant_from_timestamp(start_time),
-        end_time=_instant_from_timestamp(end_time),
+        end_time=_instant_from_timestamp(_end_time),
     )
 
 
@@ -372,8 +502,7 @@ class RayRuntime(RuntimeInterface):
                     invocation_id=task_meta["user_metadata"]["task_invocation_id"],
                     status=_task_status_from_ray_meta(
                         wf_status=wf_status,
-                        start_time=task_meta["stats"].get("start_time"),
-                        end_time=task_meta["stats"].get("end_time"),
+                        task_meta=task_meta,
                     ),
                     message=None,
                 )
@@ -383,6 +512,7 @@ class RayRuntime(RuntimeInterface):
                 wf_status=wf_status,
                 start_time=wf_meta["stats"].get("start_time"),
                 end_time=wf_meta["stats"].get("end_time"),
+                ray_task_metas=ray_task_metas,
             ),
             message=message,
         )

@@ -45,8 +45,6 @@ from ..abc import RuntimeInterface
 from ._config import RuntimeConfig, resolve_config
 from ._task_run import TaskRun
 
-COMPLETED_STATES = [State.FAILED, State.TERMINATED, State.SUCCEEDED, State.KILLED]
-
 
 class WorkflowRun:
     """
@@ -291,7 +289,7 @@ class WorkflowRun:
         status_model = self.get_status_model()
         status = status_model.status.state
 
-        while status == State.RUNNING or status == State.WAITING:
+        while not status.is_completed():
             sleep_time = 1.0 / frequency
 
             if verbose:
@@ -303,12 +301,6 @@ class WorkflowRun:
             time.sleep(sleep_time)
             status_model = self.get_status_model()
             status = status_model.status.state
-
-        if status not in COMPLETED_STATES:
-            raise NotImplementedError(
-                f'Workflow run with id "{self.run_id}" '
-                f'finished with unrecognised state "{status}"'
-            )
 
         if verbose:
             print(
@@ -376,7 +368,7 @@ class WorkflowRun:
         if wait:
             self.wait_until_finished()
 
-        if (state := self.get_status()) not in COMPLETED_STATES:
+        if not (state := self.get_status()).is_completed():
             raise WorkflowRunNotFinished(
                 f"Workflow run with id {self.run_id} has not finished. "
                 f"Current state: {state}",
