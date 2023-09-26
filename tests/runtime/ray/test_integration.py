@@ -282,18 +282,21 @@ class TestRayRuntimeMethods:
                 run.status.state == State.FAILED
             ), f"Invalid state. Full status: {run.status}. Task runs: {run.task_runs}"
             # Grab the logs so we can debug when the test fails
-            logs = (
-                _ray_logs.DirectLogReader(Path(shared_ray_conn._temp_dir))
-                .get_workflow_logs(wf_run_id=run_id)
-                .env_setup
-            )
+            logs = _ray_logs.DirectLogReader(
+                Path(shared_ray_conn._temp_dir)
+            ).get_workflow_logs(wf_run_id=run_id)
 
             assert re.match(
                 r"Could not set up runtime environment \('pip\.py:\d* -- Failed to install pip packages'\)\. See environment setup logs for details. `orq wf logs "  # noqa: E501
                 + str(run_id)
                 + r" --env-setup`",
                 str(run.message),
-            ), f"\n-MESSAGE: {run.message}\n-OUT:\n{logs.out}\n-ERR:\n{logs.err}"
+            ), (
+                f"\n-MESSAGE: {run.message}"
+                f"\n-ENV SETUP OUT:\n{logs.env_setup.out}"
+                f"\n-ENV SETUP ERR:\n{logs.env_setup.err}"
+                f"\n-OTHER:\n{logs}"
+            )
 
         def test_exception_in_task_stops_execution(self, runtime: _dag.RayRuntime):
             """
