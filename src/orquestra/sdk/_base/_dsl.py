@@ -964,9 +964,12 @@ class ArtifactFuture:
     def _check_if_destructured(self, fn_name: str, assign_type: str):
         """Check if an ArtifactFuture has been destructured.
 
+        The fn_name and assign_type are used to construct an informative error message
+        if the ArtifactFuture is destructured.
+
         Args:
-            fn_name: TODO
-            assign_type: TODO
+            fn_name: The name of the function that created this ArtifactFuture.
+            assign_type: The type of metadata being added to the ArtifactFuture.
 
         Raises:
             WorkflowSyntaxError: if the ArtifactFuture has been destructured
