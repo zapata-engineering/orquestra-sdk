@@ -322,7 +322,8 @@ class DriverClient:
         """First step in the auth flow. Fetches the URL that the user has to visit.
 
         Args:
-            redirect_port: TODO
+            redirect_port: The localhost port (http://localhost:<port>) to which the
+                browser will redirect after a successful login.
 
         Raises:
             requests.ConnectionError: when the request fails.
