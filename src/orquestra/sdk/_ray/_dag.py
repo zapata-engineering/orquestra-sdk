@@ -491,7 +491,7 @@ class RayRuntime(RuntimeInterface):
                 # things to have happened.
                 error_log_pattern = re.compile(
                     r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(,\d*)?"  # date and time
-                    r"\s*ERROR "  # log level
+                    r"\tERROR "  # log level
                     r"(?P<msg>.*)"  # capture the message that follows "ERROR"
                 )
                 if (match := re.search(error_log_pattern, line)) and len(
