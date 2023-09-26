@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-"""
-Code for 'orq workflow view'.
-"""
+"""Code for 'orq workflow view'."""
 import typing as t
 
 from orquestra.sdk.schema.configs import ConfigName
@@ -14,8 +12,8 @@ from .._ui import _presenters
 
 
 class Action:
-    """
-    Encapsulates app-related logic for handling ``orq workflow view``.
+    """Encapsulates app-related logic for handling ``orq workflow view``.
+
     It's the glue code that connects resolving missing arguments, reading data, and
     presenting the results back to the user.
 

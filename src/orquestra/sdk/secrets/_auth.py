@@ -46,10 +46,19 @@ def _authorize_with_config(
 
 
 def authorized_client(config_name: t.Optional[ConfigName]) -> SecretsClient:
-    """
+    """Create an authorized secrets client.
+
+    If the passport file environment variable is set, this will be preferentially used
+    for authorisation.
+    Otherwise, the named config will be used.
+
+    Args:
+        config_name: the config to be used for authorisation.
+
     Raises:
         orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was
             found.
+
     """
     # At the moment there are only two ways to authorize the secrets client: passport
     # and config file. If more schemes are developed in the future, they should be

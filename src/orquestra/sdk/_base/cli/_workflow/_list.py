@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Code for 'orq workflow list'.
-"""
+"""Code for 'orq workflow list'."""
 import typing as t
 
 from orquestra.sdk import exceptions as exceptions
@@ -15,8 +13,8 @@ from .._ui import _presenters
 
 
 class Action:
-    """
-    Encapsulates app-related logic for handling ``orq workflow list``.
+    """Encapsulates app-related logic for handling ``orq workflow list``.
+
     It's the glue code that connects resolving missing arguments, reading data, and
     presenting the results back to the user.
 

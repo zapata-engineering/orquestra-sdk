@@ -11,8 +11,7 @@ from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 def build_runtime_from_config(
     project_dir: Path, config: RuntimeConfiguration, verbose: bool = False
 ) -> RuntimeInterface:
-    """
-    Centralized place to get runtime object based on config.
+    """Centralized place to get runtime object based on config.
 
     There are a couple of runtime integrations implemented as separate
     classes. This factory function solves the problem of figuring out which

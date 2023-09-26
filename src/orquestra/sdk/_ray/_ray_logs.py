@@ -1,11 +1,10 @@
 ################################################################################
 # © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Class to get logs from Ray for particular Workflow, both historical and live.
-"""
+"""Class to get logs from Ray for particular Workflow, both historical and live."""
 import typing as t
 from pathlib import Path
+from typing import Iterator
 
 from orquestra.sdk._base._logs import _markers, _regrouping
 from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
@@ -49,9 +48,8 @@ def _iter_log_lines(paths: t.Iterable[Path]) -> t.Iterator[bytes]:
 
 def iter_task_logs(
     worker_file_path: Path,
-) -> t.Iterator[CapturedLogLines]:
-    """
-    A generator over logs contained in a Ray worker's output file
+) -> Iterator[CapturedLogLines]:
+    """A generator over logs contained in a Ray worker's output file.
 
     Ray workers can be reused, so this generator has to handle a number of edge cases.
         - Happy path: a Ray worker has a single "task start" and "task end" marker.
@@ -66,11 +64,10 @@ def iter_task_logs(
     Args:
         worker_file_path: The path to the output of a Ray worker.
 
-    Returns:
-        A generator that yields batches of logs relating to specific workflow runs and
-        task invocations.
+    Yields:
+        CapturedLogLines: A generator that yields batches of logs relating to specific
+            workflow runs and task invocations.
     """
-
     with worker_file_path.open() as f:
         marker_context: t.Optional[_markers.TaskStartMarker] = None
         collected_lines: t.List[str] = []
@@ -116,8 +113,8 @@ def iter_task_logs(
 
 
 class DirectLogReader:
-    """
-    Directly reads log files produced by Ray.
+    """Directly reads log files produced by Ray.
+
     Implements the ``LogReader`` interface.
 
     Requires ``ray_temp`` to be consistent with the path passed when initializing the
@@ -131,7 +128,8 @@ class DirectLogReader:
     """
 
     def __init__(self, ray_temp: Path):
-        """
+        """Initialiser for DirectLogReader.
+
         Args:
             ray_temp: directory where Ray keeps its data, like ``~/.orquestra/ray``.
         """

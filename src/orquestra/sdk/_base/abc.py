@@ -1,8 +1,7 @@
 ################################################################################
 # © Copyright 2021-2023 Zapata Computing Inc.
 ################################################################################
-"""
-Interfaces exposed by orquestra-sdk.
+"""Interfaces exposed by orquestra-sdk.
 
 `abc` might be a misnomer because we have protocols here, but it's close-enough
 to let the leader know to expect interfaces here.
@@ -34,19 +33,19 @@ ArtifactValue = t.Any
 
 
 class RuntimeInterface(ABC, LogReader):
-    """
-    The main abstraction for managing Orquestra workflows. Allows swapping the
-    implementations related to local vs remote runs.
+    """The main abstraction for managing Orquestra workflows.
+
+    Allows swapping the implementations related to local vs remote runs.
     """
 
     @abstractmethod
     def create_workflow_run(
         self, workflow_def: WorkflowDef, project: t.Optional[ProjectRef], dry_run: bool
     ) -> WorkflowRunId:
-        """Schedules a workflow definition for execution
+        """Schedules a workflow definition for execution.
 
         Args:
-            workflow_def: IR definition of workflow to be executed
+            workflow_def: IR definition of workflow to be executed.
             project: project in which workflow is going to be executed
                 used currently only on CE runtime.
                 When omitted, WF will be scheduled at default project
@@ -57,7 +56,7 @@ class RuntimeInterface(ABC, LogReader):
 
     @abstractmethod
     def get_workflow_run_status(self, workflow_run_id: WorkflowRunId) -> WorkflowRun:
-        """Gets the status of a workflow run"""
+        """Gets the status of a workflow run."""
         raise NotImplementedError()
 
     @abstractmethod
@@ -66,10 +65,14 @@ class RuntimeInterface(ABC, LogReader):
     ) -> t.Sequence[WorkflowResult]:
         """Non-blocking version of get_workflow_run_outputs.
 
-        This method raises exceptions if the workflow output artifacts are not available
+        This method raises exceptions if the workflow output artifacts are not
+        available.
+
+        Args:
+            workflow_run_id: ID identifying the workflow run.
 
         Raises:
-            WorkflowRunNotSucceeded if the workflow has not yet finished
+            WorkflowRunNotSucceeded: if the workflow has not yet finished.
         """
         raise NotImplementedError()
 
@@ -77,31 +80,40 @@ class RuntimeInterface(ABC, LogReader):
     def get_available_outputs(
         self, workflow_run_id: WorkflowRunId
     ) -> t.Dict[TaskInvocationId, WorkflowResult]:
-        """Returns all available outputs for a workflow
+        """Returns all available outputs for a workflow run.
 
-        This method returns all available artifacts. When the workflow fails it returns
-        artifacts only for the steps that did success. Might raise an exception if
-        runtime doesn't support getting artifacts from in-progress workflow.
+        This method returns all available artifacts.
+        When the workflow fails it returns artifacts only for the steps that did
+        success.
+        Might raise an exception if runtime doesn't support getting artifacts from
+        in-progress workflow.
 
-        Either we have access to all outputs of a given task, or none. If a given task
-        invocation didn't succeed yet, there shouldn't be an entry in the returned dict.
+        Either we have access to all outputs of a given task, or none.
+        If a given task invocation didn't succeed yet, there shouldn't be an entry in
+        the returned dict.
 
         This method should return all output values for a task even if some of them
-        aren't used in the workflow function. Reasons:
+        aren't used in the workflow function.
+        Reasons:
 
         * Users might be interested in the computed value after running, even though
           the workflow didn't make an explicit use of it.
         * Position in the task output tuple is significant. We can't just drop some of
           the elements because this would shift indices.
 
-        Careful: This method does NOT return status of a workflow. Verify it beforehand
-        to make sure if workflow failed/succeeded/is running. You might get incomplete
-        results
+        Careful: This method does NOT return status of a workflow.
+        Verify it beforehand to make sure if workflow failed/succeeded/is running.
+        You might get incomplete results.
+
+        Args:
+            workflow_run_id: ID identifying the workflow run.
+
 
         Returns:
-            A mapping with an entry for each task run in the workflow. The key is the
-                task's invocation ID. The value is whatever the task function returned,
-                independent of the ``@task(n_outputs=...)`` value.
+            A mapping with an entry for each task run in the workflow.
+                The key is the task's invocation ID.
+                The value is whatever the task function returned, independent of the
+                ``@task(n_outputs=...)`` value.
         """
         raise NotImplementedError()
 
@@ -111,8 +123,15 @@ class RuntimeInterface(ABC, LogReader):
     ) -> None:
         """Stops a workflow run.
 
+        Args:
+            workflow_run_id: ID identifying the workflow run.
+            force: Asks the runtime to terminate the workflow without waiting for the
+                workflow to gracefully exit.
+                By default, this behavior is up to the runtime, but can be overridden
+                with True/False.
+
         Raises:
-        WorkflowRunCanNotBeTerminated if workflow run is cannot be terminated.
+            WorkflowRunCanNotBeTerminated: if workflow run is cannot be terminated.
         """
         raise NotImplementedError()
 
@@ -125,8 +144,7 @@ class RuntimeInterface(ABC, LogReader):
         state: t.Optional[t.Union[State, t.List[State]]] = None,
         workspace: t.Optional[WorkspaceId] = None,
     ) -> t.Sequence[WorkflowRunMinimal]:
-        """
-        List the workflow runs, with some filters
+        """List the workflow runs, with some filters.
 
         Args:
             limit: Restrict the number of runs to return, prioritising the most recent.
@@ -134,8 +152,9 @@ class RuntimeInterface(ABC, LogReader):
             state: Only return runs of runs with the specified status.
             workspace: Only return runs from the specified workspace. Supported only
                 on CE.
+
         Returns:
-                A list of the workflow runs
+                A list of the workflow runs.
         """
         raise NotImplementedError()
 
@@ -148,17 +167,16 @@ class RuntimeInterface(ABC, LogReader):
         state: t.Optional[t.Union[State, t.List[State]]] = None,
         workspace: t.Optional[WorkspaceId] = None,
     ) -> t.List[WorkflowRunSummary]:
-        """
-        List summaries of the workflow runs, with some filters
+        """List summaries of the workflow runs, with some filters.
 
         Args:
             limit: Restrict the number of runs to return, prioritising the most recent.
             max_age: Only return runs younger than the specified maximum age.
-            status: Only return runs of runs with the specified status.
+            state: Only return runs of runs with the specified status.
             workspace: Only return runs from the specified workspace.
 
         Raises:
-            UnauthorizedError: if the remote cluster rejects the token
+            UnauthorizedError: if the remote cluster rejects the token.
 
         Returns:
             A list of the workflow run summaries.
@@ -167,21 +185,15 @@ class RuntimeInterface(ABC, LogReader):
 
     @abstractmethod
     def get_workflow_project(self, wf_run_id: WorkflowRunId):
-        """
-        Returns project and workspace IDs of given workflow
-        """
+        """Returns project and workspace IDs of given workflow."""
         raise NotImplementedError()
 
     def list_workspaces(self) -> t.Sequence[Workspace]:
-        """
-        List workspaces available to a user. Works only on CE
-        """
+        """List workspaces available to a user. Works only on CE."""
         raise WorkspacesNotSupportedError()
 
     def list_projects(self, workspace_id: str) -> t.Sequence[Project]:
-        """
-        List workspaces available to a user. Works only on CE
-        """
+        """List workspaces available to a user. Works only on CE."""
         raise WorkspacesNotSupportedError()
 
     @abstractmethod
@@ -196,37 +208,34 @@ class RuntimeInterface(ABC, LogReader):
 
 
 class WorkflowRepo(ABC):
-    """
-    This is the interface for accessing workflow runs that have been submitted
+    """This is the interface for accessing workflow runs that have been submitted.
 
-    The results and status is still delegated to the Runtime
+    The results and status is still delegated to the Runtime.
     """
 
     @abstractmethod
     def save_workflow_run(self, workflow_run: StoredWorkflowRun):
-        """
-        Save a workflow run
+        """Save a workflow run.
 
         Arguments:
-            workflow_run: the workflow run with run ID, stored config, and WorkflowDef
+            workflow_run: the workflow run with run ID, stored config, and WorkflowDef.
 
         Raises:
-            RuntimeError if the workflow ID has already been used
+            RuntimeError: if the workflow ID has already been used.
         """
         raise NotImplementedError()
 
     @abstractmethod
     def get_workflow_run(self, workflow_run_id: WorkflowRunId) -> StoredWorkflowRun:
-        """
-        Retrieve a workflow run based on ID
+        """Retrieve a workflow run based on ID.
 
         Arguments:
-            workflow_run_id: the run ID to load
+            workflow_run_id: the run ID to load.
 
         Raises:
-            NotFoundError if the workflow run is not found
+            NotFoundError: if the workflow run is not found.
 
         Returns:
-            the workflow run with run ID, stored config, and WorkflowDef
+            the workflow run with run ID, stored config, and WorkflowDef.
         """
         raise NotImplementedError()

@@ -41,8 +41,12 @@ def topological_sort(graph_to_sort: Graph) -> t.List[Node]:
 
     Args:
         graph_to_sort: key – node of interest, value – successors. The key needs to be
-        visited before any of the successors.
-    """
+            visited before any of the successors.
+
+    Raises:
+        ValueError: When the nodes cannot be sorted because there is a least one cycle
+            in the graph.
+    """  # noqa: D205
     # We need a local copy because Kahn's algorithm mutates data.
     graph = {node: copy(successors) for node, successors in graph_to_sort.items()}
 

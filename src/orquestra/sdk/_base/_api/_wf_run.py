@@ -2,6 +2,11 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 
+"""User-facing ``WorkflowRun`` object.
+
+WorkflowRun represents, and allows interaction with, an individual workflow run.
+"""
+
 import re
 import sys
 import time
@@ -21,6 +26,7 @@ from ...exceptions import (
     WorkflowRunNotFinished,
     WorkflowRunNotFoundError,
     WorkflowRunNotSucceeded,
+    WorkspacesNotSupportedError,
 )
 from ...schema import ir
 from ...schema.configs import ConfigName
@@ -47,23 +53,32 @@ from ._task_run import TaskRun
 
 
 class WorkflowRun:
-    """
-    Represents a single "execution" of a workflow. Used to get the workflow results.
+    """Represents a single "execution" of a workflow.
+
+    Used to get the workflow results.
     """
 
     @staticmethod
     def _get_stored_run(_project_dir: Path, run_id: WorkflowRunId) -> StoredWorkflowRun:
-        """
+        """Get the run details from the database.
+
+        Extracted from by_id method to mock it in unit tests.
+
+        Args:
+            _project_dir: The location of the project directory.
+            run_id: The ID of the workflow run to be loaded.
+
         Raises:
             orquestra.sdk.exceptions.WorkflowNotFoundError: raised when no matching
-            workflow exists in the database.
+                workflow exists in the database.
         """
         from orquestra.sdk._base._db import WorkflowDB
 
-        # Get the run details from the database. Extracted from by_id method
-        # to mock it in unit tests.
-        with WorkflowDB.open_project_db(_project_dir) as db:
-            return db.get_workflow_run(run_id)
+        try:
+            with WorkflowDB.open_project_db(_project_dir) as db:
+                return db.get_workflow_run(run_id)
+        except WorkflowRunNotFoundError:
+            raise
 
     @classmethod
     def by_id(
@@ -142,8 +157,7 @@ class WorkflowRun:
         dry_run: bool = False,
         project_dir: t.Optional[t.Union[str, Path]] = None,
     ):
-        """
-        Start workflow run from its IR representation
+        """Start workflow run from its IR representation.
 
         Args:
             wf_def: IR definition of a workflow.
@@ -187,9 +201,7 @@ class WorkflowRun:
         dry_run: bool,
         project: t.Optional[ProjectRef] = None,
     ):
-        """
-        Schedule workflow for execution and return WorkflowRun.
-        """
+        """Schedule workflow for execution and return WorkflowRun."""
         run_id = runtime.create_workflow_run(wf_def, project, dry_run)
 
         workflow_run = WorkflowRun(
@@ -208,18 +220,22 @@ class WorkflowRun:
         runtime: RuntimeInterface,
         config: t.Optional["RuntimeConfig"] = None,
     ):
-        """
-        Users aren't expected to use __init__() directly. Please use
-        `WorkflowRun.by_id` or `WorkflowDef.run()`.
+        """Initialiser for the WorkflowRun class.
+
+        Note:
+        Users aren't expected to use __init__() directly.
+        Please use ``WorkflowRun.by_id`` or ``WorkflowDef.run()``.
 
         Args:
+            run_id: The ID of this workflow run.
             wf_def: the workflow being run. Workflow definition in the model
                 (serializable) form.
             runtime: the adapter object used to interact with the runtime to
                 submit workflow, get results, etc. Different "runtimes" like
                 Ray or Compute Engine have corresponding classes.
+            config: the configuration defining the runtime by which this workflow run
+                was executed.
         """
-
         self._run_id = run_id
         self._wf_def = wf_def
         self._runtime = runtime
@@ -238,9 +254,7 @@ class WorkflowRun:
 
     @property
     def config(self):
-        """
-        The configuration for this workflow run.
-        """
+        """The configuration for this workflow run."""
         if self._config is None:
             no_config_message = (
                 "This workflow run was created without a runtime configuration. "
@@ -252,24 +266,27 @@ class WorkflowRun:
 
     @property
     def run_id(self):
-        """
-        The run_id for this workflow run.
-        """
+        """The run_id for this workflow run."""
         return self._run_id
 
     @cached_property
     def project(self):
-        """Get the project and workspace id of a workflowrun,
-        Currently supported only on CE
+        """Get the project and workspace id of a workflowrun.
+
+        Currently supported only on CE.
 
         Raises:
             orquestra.sdk.exceptions.WorkspacesNotSupportedError: when runtime
-            does not support workspaces and projects
+                does not support workspaces and projects
         """
+        try:
+            return self._runtime.get_workflow_project(self.run_id)
+        except WorkspacesNotSupportedError:
+            raise
 
-        return self._runtime.get_workflow_project(self.run_id)
-
-    def wait_until_finished(self, frequency: float = 0.25, verbose=True) -> State:
+    def wait_until_finished(
+        self, frequency: float = 0.25, verbose: bool = True
+    ) -> State:
         """Block until the workflow run finishes.
 
         This method draws no distinctions between whether the workflow run completes
@@ -283,7 +300,6 @@ class WorkflowRun:
         Returns:
             orquestra.sdk.schema.workflow_run.State: The state of the finished workflow.
         """
-
         assert frequency > 0.0, "Frequency must be a positive non-zero value"
 
         status_model = self.get_status_model()
@@ -313,8 +329,7 @@ class WorkflowRun:
         return status
 
     def stop(self, *, force: t.Optional[bool] = None):
-        """
-        Asks the runtime to stop the workflow run.
+        """Asks the runtime to stop the workflow run.
 
         Args:
             force: Asks the runtime to terminate the workflow without waiting for the
@@ -325,7 +340,7 @@ class WorkflowRun:
         Raises:
             orquestra.sdk.exceptions.UnauthorizedError: when communication with runtime
                 failed because of an auth error
-            orquestra.sdk.exceptions.WorkflowRunCanNotBeTerminated if the termination
+            orquestra.sdk.exceptions.WorkflowRunCanNotBeTerminated: if the termination
                 attempt failed
         """
         try:
@@ -334,36 +349,34 @@ class WorkflowRun:
             raise
 
     def get_status(self) -> State:
-        """
-        Return the current status of the workflow.
-        """
+        """Return the current status of the workflow."""
         return self.get_status_model().status.state
 
     def get_status_model(self) -> WorkflowRunModel:
-        """
-        Serializable representation of the workflow run state at a given point in time.
+        """Serializable representation of the workflow run state.
+
+        This reflects the state of the workflow run at a given point in time.
         """
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=VersionMismatch)
             return self._runtime.get_workflow_run_status(self.run_id)
 
     def get_results_serialized(self, wait: bool = False) -> t.Sequence[WorkflowResult]:
-        """
-        Retrieves workflow results in serialized form.
+        """Retrieves workflow results in serialized form.
 
         Result value is a sequence of WorkflowResult objects where each can be
         deserialized separately
 
         Args:
-            wait:  whether or not to wait for workflow run completion.
-                   Uses the default options for waiting, use `wait_until_finished()` for
-                   more control.
+            wait: whether or not to wait for workflow run completion.
+                Uses the default options for waiting, use ``wait_until_finished()`` for
+                more control.
 
         Raises:
             WorkflowRunNotFinished: when the workflow run has not finished and `wait` is
-                                   False
-            WorkflowRunNotSucceeded: when the workflow is no longer executing, but it did not
-                succeed.
+                False
+            WorkflowRunNotSucceeded: when the workflow is no longer executing, but it
+                did not succeed.
         """  # noqa 501
         if wait:
             self.wait_until_finished()
@@ -417,8 +430,7 @@ class WorkflowRun:
     def get_artifacts_serialized(
         self,
     ) -> t.Mapping[ir.TaskInvocationId, WorkflowResult]:
-        """
-        Unstable: this API will change.
+        """Unstable: this API will change.
 
         Returns values calculated by this workflow's tasks in serialized form.
         If a given task hasn't succeeded yet, the mapping won't
@@ -432,8 +444,7 @@ class WorkflowRun:
         return self._runtime.get_available_outputs(self.run_id)
 
     def get_artifacts(self) -> t.Mapping[ir.TaskInvocationId, t.Any]:
-        """
-        Unstable: this API will change.
+        """Unstable: this API will change.
 
         Returns values calculated by this workflow's tasks. If a given task hasn't
         succeeded yet, the mapping won't contain the corresponding entry.
@@ -457,8 +468,7 @@ class WorkflowRun:
         }
 
     def get_logs(self) -> WorkflowLogs:
-        """
-        Unstable: this API will change.
+        """Unstable: this API will change.
 
         Returns logs produced this workflow. See ``WorkflowLogs`` attributes for log
         categories or ``TaskRun.get_logs()`` for logs related to only a single task.
@@ -473,9 +483,7 @@ class WorkflowRun:
         task_run_id: t.Optional[t.Union[str, TaskRunId]] = None,
         task_invocation_id: t.Optional[t.Union[str, ir.TaskInvocationId]] = None,
     ) -> bool:
-        """
-        Filters that can be applied to orquestra.sdk.schema.workflow_run.TaskRun
-        """
+        """Filters that can be applied to orquestra.sdk.schema.workflow_run.TaskRun."""
         if state:
             states: t.List[State]
             if isinstance(state, State):
@@ -501,9 +509,7 @@ class WorkflowRun:
         task_run: TaskRun,
         task_fn_name: t.Optional[str] = None,
     ) -> bool:
-        """
-        Filters that can applied to orquestra.sdk._base._api._task_run.TaskRun.
-        """
+        """Filters that can applied to orquestra.sdk._base._api._task_run.TaskRun."""
         if task_fn_name and not re.compile(task_fn_name).fullmatch(task_run.fn_name):
             return False
         return True
@@ -516,8 +522,7 @@ class WorkflowRun:
         task_run_id: t.Optional[t.Union[str, TaskRunId]] = None,
         task_invocation_id: t.Optional[t.Union[str, ir.TaskInvocationId]] = None,
     ) -> t.List[TaskRun]:
-        """
-        Returns TaskRun representations of the tasks executed as part of this workflow.
+        """Returns TaskRun representations of the tasks executed in this workflow.
 
         Args:
             state: If specified, only tasks with matching states will be returned.
@@ -534,7 +539,6 @@ class WorkflowRun:
         Returns:
             An iterable of TaskRuns
         """
-
         wf_run_model: WorkflowRunModel = self.get_status_model()
         wf_ir = self._wf_def
         sorted_invs: t.List[ir.TaskInvocationId] = [
@@ -571,9 +575,18 @@ class WorkflowRun:
         return tasks
 
 
-def _handle_common_project_errors(
+def _handle_common_listing_project_errors(
     project: t.Optional[ProjectId], workspace: t.Optional[WorkspaceId]
 ):
+    """Handle common errors when specifying a project for listing wfs.
+
+    Args:
+        project: ID of a specific project.
+        workspace: ID of a specific workspace.
+
+    Raises:
+        ProjectInvalidError: When a project is specified without a workspace.
+    """
     if project and not workspace:
         raise ProjectInvalidError(
             f"The project `{project}` cannot be uniquely identified "
@@ -586,11 +599,10 @@ def _handle_common_project_errors(
             "removed in the next release.",
             FutureWarning,
         )
-        # Null project - it is ignored by platform anyway - left as parameter for
-        # backward compatibility only
-        project = None
 
-    return project
+    # Null project - it is ignored by platform anyway - left as parameter for
+    # backward compatibility only
+    return None
 
 
 def list_workflow_run_summaries(
@@ -602,8 +614,7 @@ def list_workflow_run_summaries(
     workspace: t.Optional[WorkspaceId] = None,
     project: t.Optional[ProjectId] = None,
 ) -> t.List[WorkflowRunSummary]:
-    """
-    List summaries of the workflow runs, with some filters.
+    """List summaries of the workflow runs, with some filters.
 
     Note: this function returns ``WorkflowRunSummary`` objects that are static overviews
     of the workflow runs. If you need to perform operations on the workflows, you
@@ -623,11 +634,14 @@ def list_workflow_run_summaries(
         NotImplementedError: when a filter is specified for a runtime that does not
             support it.
     """
-    project = _handle_common_project_errors(project, workspace)
+    project = _handle_common_listing_project_errors(project, workspace)
     workspace = resolve_studio_workspace_ref(workspace_id=workspace)
 
     # Resolve config
-    resolved_config: RuntimeConfig = resolve_config(config)
+    try:
+        resolved_config: RuntimeConfig = resolve_config(config)
+    except ConfigNameNotFoundError:
+        raise
 
     # resolve runtime
     runtime = resolved_config._get_runtime(Path.cwd())
@@ -635,12 +649,17 @@ def list_workflow_run_summaries(
     # Grab the workflow summaries from the runtime.
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=VersionMismatch)
-        run_summaries: t.List[WorkflowRunSummary] = runtime.list_workflow_run_summaries(
-            limit=limit,
-            max_age=_parse_max_age(max_age),
-            state=state,
-            workspace=workspace,
-        )
+        try:
+            run_summaries: t.List[
+                WorkflowRunSummary
+            ] = runtime.list_workflow_run_summaries(
+                limit=limit,
+                max_age=_parse_max_age(max_age),
+                state=state,
+                workspace=workspace,
+            )
+        except NotImplementedError:
+            raise
 
     return run_summaries
 
@@ -655,8 +674,7 @@ def list_workflow_runs(
     workspace: t.Optional[WorkspaceId] = None,
     project: t.Optional[ProjectId] = None,
 ) -> t.List[WorkflowRun]:
-    """
-    List the workflow runs, with some filters.
+    """List the workflow runs, with some filters.
 
     Note: this function returns a list of full ``WorkflowRun`` objects.
     This will allow you to iterate through workflow runs performing actions on them,
@@ -669,9 +687,11 @@ def list_workflow_runs(
         limit: Restrict the number of runs to return, prioritising the most recent.
         max_age: Only return runs younger than the specified maximum age.
         state: Only return runs of runs with the specified status.
-        project_dir: The location of the project directory. This directory must
-            contain the workflows database to which this run was saved. If omitted,
-            the current working directory is assumed to be the project directory.
+        project_dir: The location of the project directory.
+            This directory must contain the workflows database to which this run was
+            saved.
+            If omitted, the current working directory is assumed to be the project
+            directory.
         workspace: Only return runs from the specified workspace when using CE.
         project: will be used to list workflows from specific workspace and project
             when using CE.
@@ -686,13 +706,16 @@ def list_workflow_runs(
     """
     # TODO: update docstring when platform workspace/project filtering is merged [ORQP-1479](https://zapatacomputing.atlassian.net/browse/ORQP-1479?atlOrigin=eyJpIjoiZWExMWI4MDUzYTI0NDQ0ZDg2ZTBlNzgyNjE3Njc4MDgiLCJwIjoiaiJ9) # noqa: E501
 
-    project = _handle_common_project_errors(project, workspace)
+    project = _handle_common_listing_project_errors(project, workspace)
     workspace = resolve_studio_workspace_ref(workspace_id=workspace)
 
     _project_dir = Path(project_dir or Path.cwd())
 
     # Resolve config
-    resolved_config: RuntimeConfig = resolve_config(config)
+    try:
+        resolved_config: RuntimeConfig = resolve_config(config)
+    except ConfigNameNotFoundError:
+        raise
     # If user wasn't specific with workspace and project, we might want to resolve it
 
     # resolve runtime
@@ -703,12 +726,15 @@ def list_workflow_runs(
     #       import is aliased to WorkflowRunStatus in here.
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=VersionMismatch)
-        run_statuses: t.Sequence[WorkflowRunMinimal] = runtime.list_workflow_runs(
-            limit=limit,
-            max_age=_parse_max_age(max_age),
-            state=state,
-            workspace=workspace,
-        )
+        try:
+            run_statuses: t.Sequence[WorkflowRunMinimal] = runtime.list_workflow_runs(
+                limit=limit,
+                max_age=_parse_max_age(max_age),
+                state=state,
+                workspace=workspace,
+            )
+        except NotImplementedError:
+            raise
 
     # We need to convert to the public API notion of a WorkflowRun
     runs = []
@@ -726,13 +752,12 @@ def list_workflow_runs(
 
 def _parse_max_age(age: t.Optional[str]) -> t.Optional[timedelta]:
     """Parse a string specifying an age into a timedelta object.
-    If the string cannot be parsed, an exception is raises.
 
     Args:
         age: the string to be parsed.
 
     Raises:
-        ValueError if the age string cannot be parsed
+        ValueError: if the age string cannot be parsed
 
     Returns:
         datetime.timedelta: the age specified by the 'age' string, as a timedelta.

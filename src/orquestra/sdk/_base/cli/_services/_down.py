@@ -11,8 +11,8 @@ from .._ui import _presenters
 
 
 class Action:
-    """
-    Encapsulates app-related logic for handling ``orq services down``.
+    """Encapsulates app-related logic for handling ``orq services down``.
+
     It's the glue code that connects resolving missing arguments, reading data, and
     presenting the results back to the user.
 

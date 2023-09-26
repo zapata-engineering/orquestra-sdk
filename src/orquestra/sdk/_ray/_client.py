@@ -1,10 +1,10 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-"""
-Facade module for Ray API.
-"""
+"""Facade module for Ray API."""
 import typing as t
+
+from orquestra.sdk.exceptions import WorkflowRunNotFoundError
 
 try:
     import ray
@@ -46,9 +46,7 @@ else:
         WorkflowStorage(wf_run_id).save_task_postrun_metadata(task_inv_id, metadata)
 
     class RayClient:
-        """
-        Layer of abstraction between our Orquestra-specific RayRuntime code and
-        Ray's API.
+        """Abstraction layer between our Orquestra-specific RayRuntime and Ray's API.
 
         We should never use Ray's API directly; rather access it via this object's
         methods.
@@ -137,27 +135,47 @@ else:
             ray.workflow.run_async(dag_node, workflow_id=workflow_id, metadata=metadata)
 
         def get_workflow_metadata(self, workflow_id: str) -> t.Dict[str, t.Any]:
-            """
+            """Get the metadata for the workflow run, using Ray Workflow API.
+
+            Args:
+                workflow_id: ID of the workflow run, used to identify the correct run
+                    in Ray.
+
             Raises:
                 ValueError: if there's no workflow with this ID.
             """
-            return ray.workflow.get_metadata(workflow_id)
+            try:
+                return ray.workflow.get_metadata(workflow_id)
+            except ValueError:
+                raise
 
         def get_workflow_status(self, workflow_id: str):
-            """
+            """Get the current status of the workflow run, using Ray Workflow API.
+
+            Args:
+                workflow_id: ID of the workflow run, used to identify the correct run
+                    in Ray.
+
             Raises:
                 ray.workflow.exceptions.WorkflowNotFoundError: if there's no
                     workflow with this ID.
             """
-            return ray.workflow.get_status(workflow_id)
+            try:
+                return ray.workflow.get_status(workflow_id)
+            except WorkflowRunNotFoundError:
+                raise
 
         def get_task_metadata(self, workflow_id: str, name: str):
             return ray.workflow.get_metadata(workflow_id, name)
 
         def get_workflow_output(self, workflow_id: str) -> t.Any:
-            """
-            Get values computed by the the whole workflow, using Ray Workflow API.
+            """Get values computed by the the whole workflow, using Ray Workflow API.
+
             Blocks until the workflow is completed.
+
+            Args:
+                workflow_id: ID of the workflow run, used to identify the correct run
+                    in Ray.
 
             Returns:
                 Deserialized values produced by the workflow's last node.
@@ -165,18 +183,23 @@ else:
             Raises:
                 ValueError: if there's no workflow with this ID.
             """
-            return ray.workflow.get_output(workflow_id)
+            try:
+                return ray.workflow.get_output(workflow_id)
+            except ValueError:
+                raise
 
         def get_task_output_async(self, workflow_id: str, task_id: str) -> ObjectRef:
-            """
-            Get values computed by a single task node in a workflow, using Ray
-            Workflow API. Blocks until the workflow is completed.
+            """Get values computed by a single task node in a workflow.
+
+            Uses the Ray Workflow API.
+            Blocks until the workflow is completed.
 
             The "async" in the name refers to the returned type – an ObjectRef
             instead of a deserialized value.
 
             It won't raise errors if the 'workflow_id'-'task_id' combination wasn't
-            found. A ValueError will be raised at ray.get() time.
+            found.
+            A ValueError will be raised at ray.get() time.
             """
             return ray.workflow.get_output_async(workflow_id, task_id=task_id)
 

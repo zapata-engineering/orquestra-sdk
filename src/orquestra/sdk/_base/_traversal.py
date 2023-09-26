@@ -27,7 +27,7 @@ N_BYTES_IN_HASH = 8
 
 
 def _make_key(obj: t.Any):
-    """Returns a hashable key for all types
+    """Returns a hashable key for all types.
 
     BIG SCARY WARNING: Only use when all elements stay in scope
                        id() can return the same value for different objects if the
@@ -133,9 +133,10 @@ class GraphTraversal:
         self._wf_artifact_counter = 0
 
     def _point_future_to_artifact(self, future: _dsl.ArtifactFuture):
-        """
-        Helper subroutine used in ``traverse()``. Mutates ``self._future_artifacts`` to
-        point ``future`` to an already generated artifact node.
+        """Helper subroutine used in ``traverse()``.
+
+        Mutates ``self._future_artifacts`` to point ``future`` to an already generated
+        artifact node.
         """
         if future.output_index is not None:
             # This future is a result of unpacking another future ("bar"
@@ -157,9 +158,7 @@ class GraphTraversal:
         format: ir.ArtifactFormat,
         invocation_output_index: t.Optional[int],
     ) -> ir.ArtifactNode:
-        """
-        Creates artifact node models with workflow-def-scoped IDs.
-        """
+        """Creates artifact node models with workflow-def-scoped IDs."""
         artifact = ir.ArtifactNode(
             id=_make_artifact_id(
                 source_task=task_def,
@@ -174,8 +173,7 @@ class GraphTraversal:
         return artifact
 
     def traverse(self, output_nodes: t.Sequence[DSLDataNode]):
-        """
-        Traverse the DSL workflow graph and collect the IR models.
+        """Traverse the DSL workflow graph and collect the IR models.
 
         We iterate over the futures returned from the workflow find the artifacts,
         constants, and secrets.
@@ -249,7 +247,7 @@ class GraphTraversal:
 
                     self._point_future_to_artifact(n)
 
-                # due dilligence
+                # due diligence
                 seen_futures.add(n)
                 seen_invocations.add(n.invocation)
 
@@ -435,13 +433,20 @@ def _make_import_model(imp: _dsl.Import):
         raise ValueError(f"Invalid DSL import type: {type(imp)}")
 
 
-def _make_resources_model(resources: _dsl.Resources, is_task=True):
-    """Create a resources object of the IR based on a resources
-    of the DSL. If no resources are allocated then returns None.
+def _make_resources_model(
+    resources: _dsl.Resources, is_task: bool = True
+) -> t.Optional[ir.Resources]:
+    """Create a resources object of the IR based on a resources of the DSL.
+
+    If no resources are allocated then returns None.
+
     Args:
-        resources: resources object from the DSL
+        resources: resources object from the DSL.
+        is_task: toggle indicating whether the resources are for the workflow, or an
+            individual task.
+
     Returns:
-        resources object from the IR
+        resources object from the IR.
     """
     if resources.is_empty():
         return None
@@ -477,12 +482,14 @@ def _k8s_compliant_name(name: str) -> str:
 
     Running a workflow remotely means submitting it to a k8s cluster.
     We have some constraints on the naming of tasks. See also:
+
         - https://kubernetes.io/docs/concepts/overview/working-with-objects/names/
         - https://zapatacomputing.atlassian.net/browse/ORQSDK-367
 
     Based on the requirements we:
-    Make sure there is nothing else then [a-z0-9] and dash (-)
-    Make sure that string is no longer than 128 characters long
+
+        - Make sure there is nothing else then [a-z0-9] and dash (-)
+        - Make sure that string is no longer than 128 characters long
     """
     return re.sub(r"[^a-z\d\-]", "-", name.lower())[:128]
 
@@ -586,9 +593,9 @@ def _make_task_model(
 
 
 def _get_nested_objects(obj) -> t.Iterable:
-    """
-    Figure out an object's neighbors in the reference graph using best-effort
-    heuristics.
+    """Figure out an object's neighbors in the reference graph.
+
+    Note: This function uses best-effort heuristics.
     """
     try:
         vs = vars(obj)
@@ -610,13 +617,12 @@ def _get_nested_objects(obj) -> t.Iterable:
 
 
 def _find_nested_objs_in_fields(root_obj, predicate) -> t.Sequence:
-    """
-    Traverses the `root_obj`'s reference graph, applies `predicate` over each
+    """Traverses the `root_obj`'s reference graph, applies `predicate` over each
     node, and collects a list of nodes where the predicate was truthy.
 
     A "reference graph" means that each object holds references to its fields.
     Each field is another object with fields.
-    """
+    """  # noqa: D205
     stack = [root_obj]
     collected = []
     # Required for robustness against cycles.
@@ -746,9 +752,7 @@ def _make_invocation_model(
 
 
 def extract_root_futures(wf_def: _workflow.WorkflowDef) -> t.Sequence[_dsl.Argument]:
-    """
-    Executes the ``wf_def`` function to get the workflow output futures.
-    """
+    """Executes the ``wf_def`` function to get the workflow output futures."""
     with _exec_ctx.workflow_build():
         futures = wf_def._fn(*wf_def._workflow_args, **wf_def._workflow_kwargs)
 

@@ -1,10 +1,12 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-"""
+"""Tools to resolve information not passed as CLI arguments.
+
 When the user doesn't pass in all the required information as CLI arguments we need to
-resolve the information from other sources. This module contains the CLI argument
-resolution logic extracted as components reusable across similar CLI commands.
+resolve the information from other sources.
+This module contains the CLI argument resolution logic extracted as components reusable
+across similar CLI commands.
 """
 import typing as t
 import warnings
@@ -34,9 +36,7 @@ def _check_for_in_process(config_names: t.Sequence[ConfigName]):
 
 
 class ConfigResolver:
-    """
-    Resolves value of `config` CLI arg, using only config name passed
-    """
+    """Resolves value of `config` CLI arg, using only config name passed."""
 
     def __init__(
         self,
@@ -59,8 +59,7 @@ class ConfigResolver:
     def resolve_stored_config_for_login(
         self, config: t.Optional[ConfigName]
     ) -> ConfigName:
-        """
-        Resolve the name of a config for logging in.
+        """Resolve the name of a config for logging in.
 
         This functions similarly to `resolve`, however we enforce two conditions:
         1. The resolved config name must correspond to a stored config
@@ -90,8 +89,9 @@ class ConfigResolver:
 
 
 class WFConfigResolver:
-    """
-    Resolves value of `config` CLI arg, making use of `wf_run_id` if already passed.
+    """Resolves value of `config` CLI arg.
+
+    Makes use of `wf_run_id` if already passed.
     """
 
     def __init__(
@@ -126,9 +126,7 @@ class WFConfigResolver:
 
 
 class SpacesResolver:
-    """
-    Resolve values related to the workspace / project paradigm.
-    """
+    """Resolve values related to the workspace / project paradigm."""
 
     def __init__(
         self,
@@ -145,8 +143,7 @@ class SpacesResolver:
         config: ConfigName,
         workspace_id: t.Optional[WorkspaceId] = None,
     ) -> WorkspaceId:
-        """
-        Resolve the value of the workspace ID.
+        """Resolve the value of the workspace ID.
 
         If the ID hasn't been specified, prompts the user to pick from the available
         workspaces.
@@ -169,8 +166,7 @@ class SpacesResolver:
         project_id: t.Optional[ProjectId] = None,
         optional: bool = False,
     ) -> t.Optional[ProjectId]:
-        """
-        Resolve the value of the Project ID.
+        """Resolve the value of the Project ID.
 
         If the ID hasn't been specified, prompts the user to pick from the available
         projects.
@@ -178,7 +174,6 @@ class SpacesResolver:
         If `optional` is set to True, adds an `All` option that returns `None` for the
         ID.
         """
-
         if project_id is not None:
             return project_id
 
@@ -196,9 +191,7 @@ class SpacesResolver:
 
 
 class WFRunResolver:
-    """
-    Resolves value of `wf_run_id` based on `config`.
-    """
+    """Resolves value of `wf_run_id` based on `config`."""
 
     def __init__(
         self,
@@ -248,13 +241,12 @@ class WFRunResolver:
         other: t.Optional[bool],
         logs: WorkflowLogs,
     ) -> t.Mapping[WorkflowLogs.WorkflowLogTypeName, bool]:
-        """
-        Resolve the switches for various types of logs.
+        """Resolve the switches for various types of logs.
 
-        Each switch controls whether a specific type of log is shown. If any of the
-        switches are active we assume that the user has specified what they want and we
-        don't interfere. If none are active we prompt the user to select one log type,
-        or all of them.
+        Each switch controls whether a specific type of log is shown.
+        If any of the switches are active we assume that the user has specified what
+        they want and we don't interfere.
+        If none are active we prompt the user to select one log type, or all of them.
         """
         user_switch_values: t.Mapping[
             WorkflowLogs.WorkflowLogTypeName, t.Optional[bool]
@@ -313,9 +305,9 @@ class WFRunResolver:
 
 
 class TaskInvIDResolver:
-    """
-    Finds task invocation ID. Assumes workflow run ID and config were already
-    resolved.
+    """Finds task invocation ID.
+
+    Assumes workflow run ID and config were already resolved.
     """
 
     def __init__(
@@ -366,9 +358,7 @@ class TaskInvIDResolver:
 
 
 class TaskRunIDResolver:
-    """
-    Finds task run ID. Assumes ``config`` name was already resolved.
-    """
+    """Finds task run ID. Assumes ``config`` name was already resolved."""
 
     def __init__(
         self,
@@ -415,9 +405,7 @@ class TaskRunIDResolver:
 
 
 class ServiceResolver:
-    """
-    Resolves the services to manage
-    """
+    """Resolves the services to manage."""
 
     def resolve(
         self,
@@ -439,9 +427,7 @@ class ServiceResolver:
 
 
 class WFRunFilterResolver:
-    """
-    Resolves the values of filters to be applied to lists of workflow runs.
-    """
+    """Resolves the values of filters to be applied to lists of workflow runs."""
 
     def __init__(self, prompter=_prompts.Prompter()):
         self._prompter = prompter
@@ -487,9 +473,9 @@ class WFRunFilterResolver:
         states: t.Optional[t.List[str]] = [],
         interactive: t.Optional[bool] = False,
     ) -> t.Union[t.List[State], None]:
-        """
-        Resolve a string representing one or more workflow run states into a list of
-        State enums. Where a string is not provided, or is not a valid State,
+        """Resolve a string representing workflow run state(s) to a list of State enums.
+
+        Where a string is not provided, or is not a valid State, returns None.
         """
         _selected_states: t.List[str] = []
         _invalid_states: t.List[str] = []

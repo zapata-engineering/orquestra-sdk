@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Internal models for the workflow driver API
-"""
+"""Internal models for the workflow driver API."""
 from enum import Enum, IntEnum
 from typing import (
     Generic,
@@ -51,16 +49,14 @@ MetaT = TypeVar("MetaT")
 class Pagination(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/259481b9240547bccf4fa40df4e92bf6c617a25f/openapi/src/schemas/MetaSuccessPaginated.yaml
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/259481b9240547bccf4fa40df4e92bf6c617a25f/openapi/src/schemas/MetaSuccessPaginated.yaml.
+    """  # noqa: D205, D212
 
     nextPageToken: str
 
 
 class Response(GenericModel, Generic[DataT, MetaT]):
-    """
-    A generic to help with the structure of driver responses
-    """
+    """A generic to help with the structure of driver responses."""
 
     data: DataT
     meta: Optional[MetaT]
@@ -73,8 +69,8 @@ class MetaEmpty(pydantic.BaseModel):
 class ErrorCode(IntEnum):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/59eb3985151a813c69fec5a4777e8ed5c9a1f718/openapi/src/resources/workflow-runs.yaml#L59
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/59eb3985151a813c69fec5a4777e8ed5c9a1f718/openapi/src/resources/workflow-runs.yaml#L59.
+    """  # noqa: D205, D212
 
     REQUEST_BODY_INVALID_JSON = 1
     WORKFLOW_DEF_ID_MISSING = 2
@@ -87,8 +83,8 @@ class ErrorCode(IntEnum):
 class Error(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/2b3534/openapi/src/schemas/Error.yaml
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/2b3534/openapi/src/schemas/Error.yaml.
+    """  # noqa: D205, D212
 
     code: Optional[int]
     message: str
@@ -101,8 +97,8 @@ class Error(pydantic.BaseModel):
 class CreateWorkflowDefResponse(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/2b3534/openapi/src/responses/CreateWorkflowDefinitionResponse.yaml
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/2b3534/openapi/src/responses/CreateWorkflowDefinitionResponse.yaml.
+    """  # noqa: D205, D212
 
     id: WorkflowDefID
 
@@ -110,8 +106,8 @@ class CreateWorkflowDefResponse(pydantic.BaseModel):
 class GetWorkflowDefResponse(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/cb61512e9f3da24addd933c7259aa4584ab04e4f/openapi/src/schemas/WorkflowDefinition.yaml
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/cb61512e9f3da24addd933c7259aa4584ab04e4f/openapi/src/schemas/WorkflowDefinition.yaml.
+    """  # noqa: D205, D212
 
     id: WorkflowDefID
     created: Instant
@@ -125,8 +121,8 @@ class GetWorkflowDefResponse(pydantic.BaseModel):
 class ListWorkflowDefsRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/cdb667ef6d1053876250daff27e19fb50374c0d4/openapi/src/resources/workflow-definitions.yaml#L8
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/cdb667ef6d1053876250daff27e19fb50374c0d4/openapi/src/resources/workflow-definitions.yaml#L8.
+    """  # noqa: D205, D212
 
     pageSize: Optional[int]
     pageToken: Optional[str]
@@ -135,8 +131,8 @@ class ListWorkflowDefsRequest(pydantic.BaseModel):
 class CreateWorkflowDefsRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/dc8a2a37d92324f099afefc048f6486a5061850f/openapi/src/resources/workflow-definitions.yaml#L39
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/dc8a2a37d92324f099afefc048f6486a5061850f/openapi/src/resources/workflow-definitions.yaml#L39.
+    """  # noqa: D205, D212
 
     workspaceId: Optional[str]
     projectId: Optional[str]
@@ -150,8 +146,8 @@ ListWorkflowDefsResponse = List[GetWorkflowDefResponse]
 class StateResponse(str, Enum):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/RunStatus.yaml#L7
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/RunStatus.yaml#L7.
+    """  # noqa: D205, D212
 
     WAITING = "WAITING"
     RUNNING = "RUNNING"
@@ -169,8 +165,8 @@ class StateResponse(str, Enum):
 class RunStatusResponse(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/RunStatus.yaml#L1
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/RunStatus.yaml#L1.
+    """  # noqa: D205, D212
 
     state: StateResponse
     startTime: Optional[Instant]
@@ -187,8 +183,8 @@ class RunStatusResponse(pydantic.BaseModel):
 class TaskRunResponse(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml#L17
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml#L17.
+    """  # noqa: D205, D212
 
     id: TaskRunID
     invocationId: TaskInvocationID
@@ -213,8 +209,8 @@ class TaskRunResponse(pydantic.BaseModel):
 class MinimalWorkflowRunResponse(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml#L1
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml#L1.
+    """  # noqa: D205, D212
 
     id: WorkflowRunID
     definitionId: WorkflowDefID
@@ -227,11 +223,10 @@ class MinimalWorkflowRunResponse(pydantic.BaseModel):
 
 
 class WorkflowRunSummaryResponse(pydantic.BaseModel):
-    """
-    Contains all of the information needed to give a basic overview of the workflow.
+    """Contains all of the information needed to give a basic overview of the workflow.
 
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml#L1
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml#L1
     """
 
     id: WorkflowRunID
@@ -257,8 +252,8 @@ class WorkflowRunSummaryResponse(pydantic.BaseModel):
 class WorkflowRunResponse(MinimalWorkflowRunResponse):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml#L1
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml#L1.
+    """  # noqa: D205, D212
 
     owner: str
     status: RunStatusResponse
@@ -276,8 +271,8 @@ class WorkflowRunResponse(MinimalWorkflowRunResponse):
 class Resources(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/580c8d8835b1cccd085ea716c514038e85eb28d7/openapi/src/schemas/Resources.yaml
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/580c8d8835b1cccd085ea716c514038e85eb28d7/openapi/src/schemas/Resources.yaml.
+    """  # noqa: D205, D212
 
     # If this schema is changed, the documentation in
     # docs/guides/ce-resource-management.rst should also be updated.
@@ -295,8 +290,8 @@ class Resources(pydantic.BaseModel):
 class CreateWorkflowRunRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/be7f293b052a0fee7b012badebef72dee02a2ebe/openapi/src/schemas/CreateWorkflowRunRequest.yaml
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/be7f293b052a0fee7b012badebef72dee02a2ebe/openapi/src/schemas/CreateWorkflowRunRequest.yaml.
+    """  # noqa: D205, D212
 
     workflowDefinitionID: WorkflowDefID
     resources: Resources
@@ -304,10 +299,9 @@ class CreateWorkflowRunRequest(pydantic.BaseModel):
 
 
 class CreateWorkflowRunResponse(pydantic.BaseModel):
-    """
-    Based on source code:
-        https://github.com/zapatacomputing/workflow-driver/blob/2e999a76019e8f8de8082409daddf7789dc2f430/pkg/server/server.go#L376
-    """
+    """Implements:
+    https://github.com/zapatacomputing/workflow-driver/blob/2e999a76019e8f8de8082409daddf7789dc2f430/pkg/server/server.go#L376.
+    """  # noqa: D205, D212
 
     id: WorkflowRunID
 
@@ -315,8 +309,8 @@ class CreateWorkflowRunResponse(pydantic.BaseModel):
 class ListWorkflowRunsRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-runs.yaml#L9
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-runs.yaml#L9.
+    """  # noqa: D205, D212
 
     workflowDefinitionID: Optional[WorkflowDefID]
     pageSize: Optional[int]
@@ -333,8 +327,8 @@ ListWorkflowRunSummariesResponse = List[WorkflowRunSummaryResponse]
 class GetWorkflowRunResponse(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-run.yaml#L17
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-run.yaml#L17.
+    """  # noqa: D205, D212
 
     data: WorkflowRunResponse
 
@@ -342,8 +336,8 @@ class GetWorkflowRunResponse(pydantic.BaseModel):
 class TerminateWorkflowRunRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/873437f8157226c451220306a6ce90c80e8c8f9e/openapi/src/resources/workflow-run-terminate.yaml#L12
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/873437f8157226c451220306a6ce90c80e8c8f9e/openapi/src/resources/workflow-run-terminate.yaml#L12.
+    """  # noqa: D205, D212
 
     force: Optional[bool]
 
@@ -354,8 +348,8 @@ class TerminateWorkflowRunRequest(pydantic.BaseModel):
 class GetWorkflowRunArtifactsRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/artifacts.yaml#L10
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/artifacts.yaml#L10.
+    """  # noqa: D205, D212
 
     workflowRunId: WorkflowRunID
 
@@ -368,8 +362,8 @@ GetWorkflowRunArtifactsResponse = Mapping[TaskRunID, List[WorkflowRunArtifactID]
 class GetWorkflowRunResultsRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/run-results.yaml#L10
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/run-results.yaml#L10.
+    """  # noqa: D205, D212
 
     workflowRunId: WorkflowRunID
 
@@ -383,8 +377,8 @@ GetWorkflowRunResultsResponse = List[WorkflowRunResultID]
 class GetWorkflowRunLogsRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-run-logs.yaml
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-run-logs.yaml.
+    """  # noqa: D205, D212
 
     workflowRunId: WorkflowRunID
 
@@ -392,8 +386,8 @@ class GetWorkflowRunLogsRequest(pydantic.BaseModel):
 class GetTaskRunLogsRequest(pydantic.BaseModel):
     """
     Implements:
-        https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml
-    """
+    https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml.
+    """  # noqa: D205, D212
 
     workflowRunId: WorkflowRunID
     taskInvocationId: TaskInvocationID
@@ -457,8 +451,7 @@ RayFilename = NewType("RayFilename", str)
 
 
 class WorkflowLogMessage(pydantic.BaseModel):
-    """
-    Represents a single line indexed by the server side log service.
+    """Represents a single line indexed by the server side log service.
 
     Based on:
     https://github.com/zapatacomputing/workflow-driver/blob/972aaa3ca75780a52d01872bc294be419a761209/openapi/src/resources/workflow-run-logs.yaml#L25.
@@ -484,8 +477,7 @@ class WorkflowLogMessage(pydantic.BaseModel):
 
 
 class WorkflowLogEvent(NamedTuple):
-    """
-    A pair of ``[timestamp, message]``.
+    """A pair of ``[timestamp, message]``.
 
     Based on:
     https://github.com/zapatacomputing/workflow-driver/blob/972aaa3ca75780a52d01872bc294be419a761209/openapi/src/resources/workflow-run-logs.yaml#L18
@@ -494,22 +486,20 @@ class WorkflowLogEvent(NamedTuple):
     timestamp: float
     """
     Unix timestamp in seconds with fraction for the moment when a log line is exported
-    from Ray system to Orquestra. It does not necessarily correspond to the particular
-    time that the message is logged by Ray runtime.
+    from Ray system to Orquestra.
+    It does not necessarily correspond to the particular time that the message is
+    logged by Ray runtime.
     """
 
     message: WorkflowLogMessage
-    """
-    A single indexed log line.
-    """
+    """A single indexed log line."""
 
 
 WorkflowLogSection = List[WorkflowLogEvent]
 
 
 class TaskLogMessage(pydantic.BaseModel):
-    """
-    Represents a single line indexed by the server side log service.
+    """Represents a single line indexed by the server side log service.
 
     Based on:
     https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml#L16
@@ -519,25 +509,20 @@ class TaskLogMessage(pydantic.BaseModel):
     """
 
     log: str
-    """
-    Single line content.
-    """
+    """Single line content."""
 
     log_filename: LogFilename
-    """
-    Server-side file path of the indexed file.
-    """
+    """Server-side file path of the indexed file."""
 
     tag: str
-    """
-    An identifier in the form of:
-        "workflow.logs.ray.<workflow run ID>.<task invocation ID>"
+    """An identifier in the form of:
+
+    "workflow.logs.ray.<workflow run ID>.<task invocation ID>"
     """
 
 
 class TaskLogEvent(NamedTuple):
-    """
-    A pair of ``[timestamp, task log message]``.
+    """A pair of ``[timestamp, task log message]``.
 
     Based on:
     https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml#L16
@@ -546,8 +531,9 @@ class TaskLogEvent(NamedTuple):
     timestamp: float
     """
     Unix timestamp in seconds with fraction for the moment when a log line is exported
-    from Ray system to Orquestra. It does not necessarily correspond to the particular
-    time that the message is logged by Ray runtime.
+    from Ray system to Orquestra.
+    It does not necessarily correspond to the particular time that the message is
+    logged by Ray runtime.
     """
 
     message: TaskLogMessage
@@ -629,8 +615,7 @@ SysLog = Annotated[
 
 
 class SysMessage(NamedTuple):
-    """
-    A pair of ``[timestamp, syslog]``.
+    """A pair of ``[timestamp, syslog]``.
 
     Based on:
     https://github.com/zapatacomputing/workflow-driver/blob/92d9ff32189c580fd0a2ff6eec03cc977fd01502/openapi/src/resources/workflow-run-system-logs.yaml#L2
@@ -639,8 +624,9 @@ class SysMessage(NamedTuple):
     timestamp: float
     """
     Unix timestamp in seconds with fraction for the moment when a log line is exported
-    from system to Orquestra. It does not necessarily correspond to the particular
-    time that the message is logged by the system.
+    from system to Orquestra.
+    It does not necessarily correspond to the particular time that the message is
+    logged by the system.
     """
 
     message: SysLog

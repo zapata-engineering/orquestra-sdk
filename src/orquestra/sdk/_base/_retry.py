@@ -11,8 +11,7 @@ def retry(
     allowed_exceptions: Tuple[Type[Exception]],
     delay: Optional[float] = None,
 ):
-    """
-    A decorator useful for when a function should be retried.
+    """A decorator useful for when a function should be retried.
 
     Usage::
 

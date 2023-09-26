@@ -1,11 +1,10 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Logging configuration for the ``orq`` CLI.
+"""Logging configuration for the ``orq`` CLI.
 
-Note: we distribute a library (``orquestra-sdk``) and an app (the ``orq`` CLI). Logging
-should be only configured by apps.
+Note: we distribute a library (``orquestra-sdk``) and an app (the ``orq`` CLI).
+Logging should be only configured by apps.
 """
 
 import logging

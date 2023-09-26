@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Utilities rearranging log lines emitted by Ray into groups suitable for our user-facing
-APIs.
+"""Utilities grouping Ray logs into groups suitable for our user-facing APIs.
 
 We want to use similar rules for parsing both CE responses and local runtime logs.
 """

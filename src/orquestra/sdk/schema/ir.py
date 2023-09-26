@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2021-2022 Zapata Computing Inc.
+# © Copyright 2021-2023 Zapata Computing Inc.
 ################################################################################
 """Workflow Intermediate Representation.
 
@@ -19,9 +19,7 @@ SecretNodeId = str
 
 
 class SecretNode(BaseModel):
-    """
-    A reference to a secret stored in an external secret/config service.
-    """
+    """A reference to a secret stored in an external secret/config service."""
 
     # Workflow-scope unique ID used to refer from task invocations
     id: SecretNodeId
@@ -60,7 +58,7 @@ class GitImport(BaseModel):
 
     @pydantic.validator("repo_url", pre=True)
     def _backwards_compatible_repo_url(cls, v):
-        """Allows older models with a string URL to be imported"""
+        """Allows older models with a string URL to be imported."""
         # Prevent circular imports
         from .._base._git_url_utils import parse_git_url
 
@@ -71,8 +69,9 @@ class GitImport(BaseModel):
 
 
 class LocalImport(BaseModel):
-    """Used to specify that the source code is only available locally (e.g. not
-    committed to any git repo)
+    """Used to specify that the source code is only available locally.
+
+    (e.g. not committed to any git repo).
     """
 
     id: ImportId
@@ -88,7 +87,7 @@ class InlineImport(BaseModel):
 
 class PackageSpec(BaseModel):
     # noqa E501
-    """Representation of single package import
+    """Representation of single package import.
 
     The fields in this class are based on:
     https://packaging.pypa.io/en/latest/requirements.html#packaging.requirements.Requirement
@@ -103,7 +102,7 @@ class PackageSpec(BaseModel):
 
 
 class PythonImports(BaseModel):
-    """List of imports for given task"""
+    """List of imports for given task."""
 
     id: ImportId
 
@@ -197,9 +196,7 @@ class TaskParameter(BaseModel):
 
 
 class TaskOutputMetadata(BaseModel):
-    """
-    Information about the data shape returned by a task function.
-    """
+    """Information about the data shape returned by a task function."""
 
     # If yes, it's possible to unpack the output in the workflow like:
     # foo, bar = my_task()

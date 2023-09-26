@@ -2,9 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 
-"""
-Snippets and tests used in the "Using the Workflow SDK with Jupyter" tutorial.
-"""
+"""Snippets and tests used in the "Using the Workflow SDK with Jupyter" tutorial."""
 import sys
 
 from orquestra.sdk._base._testing import _reloaders

@@ -38,8 +38,8 @@ class RuntimeConfiguration(BaseModel):
 
 
 class RuntimeConfigurationFile(BaseModel):
-    """
-    This schema is for the storage of "Runtime configurations".
+    """This schema is for the storage of "Runtime configurations".
+
     The major version number should be bumped when:
 
     * The values inside the configuration file are modified, for example if
