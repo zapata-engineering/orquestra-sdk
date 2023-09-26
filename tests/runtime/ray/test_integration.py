@@ -8,9 +8,12 @@ RuntimeInterface mocks instead of extending this file.
 """
 import json
 import os
+import re
+import sys
 import time
 import typing as t
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -36,16 +39,18 @@ pytestmark = pytest.mark.filterwarnings(
 def runtime(
     shared_ray_conn, tmp_path_factory: pytest.TempPathFactory, change_db_location
 ):
-    # We need to set this env variable to let our logging code know the
-    # tmp location has changed.
-    os.environ[RAY_TEMP_PATH_ENV] = str(shared_ray_conn._temp_dir)
-
     project_dir = tmp_path_factory.mktemp("ray-integration")
     config = LOCAL_RUNTIME_CONFIGURATION
     client = _client.RayClient()
     rt = _dag.RayRuntime(config, project_dir, client)
 
     yield rt
+
+
+@pytest.fixture
+def mock_ray_temp_path(shared_ray_conn):
+    with mock.patch.dict(os.environ, {RAY_TEMP_PATH_ENV: shared_ray_conn._temp_dir}):
+        yield
 
 
 def _poll_loop(
@@ -255,9 +260,12 @@ class TestRayRuntimeMethods:
                 # during start and finish of a task. Thus it is >=, not >
                 assert (status.end_time - status.start_time).total_seconds() >= 0
 
+        @pytest.mark.skipif(
+            sys.platform.startswith("win32"), reason="File writing on windows is slow."
+        )
         @pytest.mark.parametrize("trial", range(5))
         def test_handles_ray_environment_setup_error(
-            self, runtime: _dag.RayRuntime, trial, shared_ray_conn
+            self, runtime: _dag.RayRuntime, trial, shared_ray_conn, mock_ray_temp_path
         ):
             # Given
             wf_def = _example_wfs.cause_env_setup_error.model
@@ -280,8 +288,11 @@ class TestRayRuntimeMethods:
                 .env_setup
             )
 
-            assert run.message == (
-                f"Could not set up runtime environment ('pip.py:418 -- Failed to install pip packages'). See environment setup logs for details. `orq wf logs {run_id} --env-setup`"  # noqa: E501
+            assert re.match(
+                r"Could not set up runtime environment \('pip\.py:\d* -- Failed to install pip packages'\)\. See environment setup logs for details. `orq wf logs "  # noqa: E501
+                + str(run_id)
+                + r" --env-setup`",
+                run.message,
             ), f"\n-MESSAGE: {run.message}\n-OUT:\n{logs.out}\n-ERR:\n{logs.err}"
 
         def test_exception_in_task_stops_execution(self, runtime: _dag.RayRuntime):
