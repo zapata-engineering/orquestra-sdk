@@ -7,6 +7,7 @@ as possible, because it's slow to run. Please consider using unit tests and
 RuntimeInterface mocks instead of extending this file.
 """
 import json
+import sys
 import time
 import typing as t
 from pathlib import Path
@@ -68,6 +69,10 @@ def _count_task_runs(wf_run, state: State) -> int:
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(
+    sys.platform.startswith("win32"),
+    reason="Windows file writing/reading is slow.",
+)
 class TestRayRuntimeMethods:
     """
     Tests that call RayRuntime methods with a real Ray connection and
@@ -500,6 +505,10 @@ class TestRayRuntimeMethods:
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(
+    sys.platform.startswith("win32"),
+    reason="Windows file writing/reading is slow.",
+)
 @pytest.mark.parametrize(
     "wf,expected_outputs,expected_intermediate",
     [
@@ -637,6 +646,10 @@ def test_run_and_get_output(
 # - Installing packages on company machines is very slow because of the antivirus
 #   scanning.
 @pytest.mark.slow
+@pytest.mark.skipif(
+    sys.platform.startswith("win32"),
+    reason="Windows file writing/reading is slow.",
+)
 class Test3rdPartyLibraries:
     @staticmethod
     # We're reading a serialized workflow def. The SDK version inside that JSON is
@@ -745,6 +758,10 @@ class Test3rdPartyLibraries:
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(
+    sys.platform.startswith("win32"),
+    reason="Windows file writing/reading is slow.",
+)
 class TestRayRuntimeErrors:
     @pytest.mark.parametrize(
         "method",
@@ -772,6 +789,10 @@ def _run_and_await_wf(
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(
+    sys.platform.startswith("win32"),
+    reason="Windows file writing/reading is slow.",
+)
 class TestDirectLogReader:
     """
     Verifies that our code can read log files produced by Ray.
@@ -908,6 +929,10 @@ class TestDirectLogReader:
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(
+    sys.platform.startswith("win32"),
+    reason="Windows file writing/reading is slow.",
+)
 def test_ray_direct_reader_no_duplicate_lines(
     shared_ray_conn,
     runtime,
@@ -943,6 +968,10 @@ def test_ray_direct_reader_no_duplicate_lines(
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(
+    sys.platform.startswith("win32"),
+    reason="Windows file writing/reading is slow.",
+)
 def test_task_code_unavailable_at_building_dag(runtime: _dag.RayRuntime):
     """
     Verifies that the task code is required only at the task-execution time, and it is
@@ -973,6 +1002,10 @@ def test_task_code_unavailable_at_building_dag(runtime: _dag.RayRuntime):
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(
+    sys.platform.startswith("win32"),
+    reason="Windows file writing/reading is slow.",
+)
 class TestGetCurrentIDs:
     def test_during_running_workflow(self, runtime: _dag.RayRuntime, tmp_path: Path):
         # Given
@@ -1033,6 +1066,10 @@ class TestGetCurrentIDs:
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(
+    sys.platform.startswith("win32"),
+    reason="Windows file writing/reading is slow.",
+)
 class TestDictReturnValue:
     """
     Tasks that had dicts in return statement used to cause WF failures.
