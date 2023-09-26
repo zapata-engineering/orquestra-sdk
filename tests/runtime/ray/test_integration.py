@@ -292,7 +292,7 @@ class TestRayRuntimeMethods:
                 r"Could not set up runtime environment \('pip\.py:\d* -- Failed to install pip packages'\)\. See environment setup logs for details. `orq wf logs "  # noqa: E501
                 + str(run_id)
                 + r" --env-setup`",
-                run.message,
+                str(run.message),
             ), f"\n-MESSAGE: {run.message}\n-OUT:\n{logs.out}\n-ERR:\n{logs.err}"
 
         def test_exception_in_task_stops_execution(self, runtime: _dag.RayRuntime):
