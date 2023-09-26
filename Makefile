@@ -139,8 +139,8 @@ style:
 
 .PHONY:
 style-fix:
-	black src tests docs/examples
-	isort --profile=black src tests docs/examples
+	$(PYTHON) -m black src tests docs/examples
+	$(PYTHON) -m isort --profile=black src tests docs/examples
 
 # Run tests, but discard the ones that exceptionally slow to run locally.
 test-fast:
