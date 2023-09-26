@@ -396,7 +396,8 @@ def cause_env_setup_error_task() -> bool:
 
 @sdk.workflow
 def cause_env_setup_error():
-    """
+    """This WF errors out during environment setup so we can test how it is handled.
+
     Jinja2 relies on a higher version of MarkupSafe, so the dependency imports for the
     cause_env_setup_error_task task will cause pip to throw an error.
     """
