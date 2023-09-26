@@ -15,6 +15,7 @@ import pytest
 
 import orquestra.sdk as sdk
 from orquestra.sdk._base import _dsl, loader
+from orquestra.sdk._base.serde import deserialize_pickle, serialize_pickle
 from orquestra.sdk.exceptions import DirtyGitRepo, InvalidTaskDefinitionError
 
 DEFAULT_LOCAL_REPO_PATH = Path(__file__).parent.resolve()
@@ -761,6 +762,15 @@ class TestResources:
 
         # should not raise
         wf().model
+
+
+def test_secret_pickles():
+    secret = sdk.Secret("name", config_name="cfg", workspace_id="workspace")
+
+    pkl = serialize_pickle(secret)
+    de_pkl = deserialize_pickle(pkl)
+
+    assert secret == de_pkl
 
 
 class TestSecretAsString:
