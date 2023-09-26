@@ -10,6 +10,10 @@ import pytest
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(
+    sys.platform.startswith("win32"),
+    reason="Windows file writing/reading is slow.",
+)
 class TestRayLogger:
     def test_ray_logs_silenced(self, tmp_path: Path):
         # Given
