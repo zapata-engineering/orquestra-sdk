@@ -1,8 +1,7 @@
 ################################################################################
 # © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Code for accessing the Workflow Driver API.
+"""Code for accessing the Workflow Driver API.
 
 Implemented API spec:
     https://github.com/zapatacomputing/workflow-driver/tree/2b3534/openapi
@@ -108,8 +107,7 @@ T = TypeVar("T")
 
 
 class Paginated(Generic[T]):
-    """
-    Represents a paginated response.
+    """Represents a paginated response.
 
     The contents of the current page can be accessed via ``contents``.
 
@@ -150,17 +148,18 @@ class Paginated(Generic[T]):
 
 
 class DriverClient:
-    """
-    Client for interacting with the Workflow Driver API via HTTP.
-    """
+    """Client for interacting with the Workflow Driver API via HTTP."""
 
     def __init__(self, session: requests.Session, uri_provider: ExternalUriProvider):
         self._uri_provider = uri_provider
         self._session = session
 
     @classmethod
-    def from_token(cls, token: str, uri_provider: ExternalUriProvider):
-        """
+    def from_token(
+        cls, token: str, uri_provider: ExternalUriProvider
+    ) -> "DriverClient":
+        """Create a driver client from a token and URI.
+
         Args:
             token: Auth token taken from logging in.
             uri_provider: Class that provides URIS for http requests
@@ -178,7 +177,7 @@ class DriverClient:
         query_params: Optional[Mapping],
         allow_redirects: bool = True,
     ) -> requests.Response:
-        """Helper method for GET requests"""
+        """Helper method for GET requests."""
         response = self._session.get(
             uri,
             params=query_params,
@@ -193,7 +192,7 @@ class DriverClient:
         body_params: Optional[Mapping],
         query_params: Optional[Mapping] = None,
     ) -> requests.Response:
-        """Helper method for POST requests"""
+        """Helper method for POST requests."""
         response = self._session.post(
             uri,
             json=body_params,
@@ -202,7 +201,7 @@ class DriverClient:
         return response
 
     def _delete(self, uri: str) -> requests.Response:
-        """Helper method for DELETE requests"""
+        """Helper method for DELETE requests."""
         response = self._session.delete(uri)
 
         return response
@@ -216,14 +215,21 @@ class DriverClient:
         workflow_def: WorkflowDef,
         project: Optional[ProjectRef],
     ) -> _models.WorkflowDefID:
-        """
-        Stores a workflow definition for future submission
+        """Stores a workflow definition for future submission.
+
+        Args:
+            workflow_def: The workflow definition to be stored.
+            project: the projectref under which to store the workflow def.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowDef
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError
-            orquestra.sdk._base._driver._exceptions.ForbiddenError
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowDef: when an invalid
+                Workflow Definition is sent to the Workflow Driver.
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
 
         Returns:
             the WorkflowDefID associated with the stored definition
@@ -248,7 +254,14 @@ class DriverClient:
                 message=error.message, detail=error.detail
             )
 
-        _handle_common_errors(resp)
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
         return (
             _models.Response[_models.CreateWorkflowDefResponse, _models.MetaEmpty]
@@ -259,13 +272,20 @@ class DriverClient:
     def list_workflow_defs(
         self, page_size: Optional[int] = None, page_token: Optional[str] = None
     ) -> Paginated[WorkflowDef]:
-        """
-        Lists all known workflow definitions
+        """Lists all known workflow definitions.
+
+        Args:
+            page_size: Maximum number of results returned in a single page.
+            page_token: Token for the requested page of the list results.
+                If omitted the first page will be returned.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError
-            orquestra.sdk._base._driver._exceptions.ForbiddenError
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                list workflow runs from a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
         """
         resp = self._get(
             self._uri_provider.uri_for("list_workflow_defs"),
@@ -275,7 +295,14 @@ class DriverClient:
             ).dict(),
         )
 
-        _handle_common_errors(resp)
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
         parsed_response = _models.Response[
             _models.ListWorkflowDefsResponse, _models.Pagination
@@ -294,33 +321,59 @@ class DriverClient:
     def get_login_url(self, redirect_port: int) -> str:
         """First step in the auth flow. Fetches the URL that the user has to visit.
 
+        Args:
+            redirect_port: The localhost port (http://localhost:<port>) to which the
+                browser will redirect after a successful login.
+
         Raises:
-            requests.ConnectionError: if the request fails.
-            KeyError: if the URL couldn't be found in the response.
+            requests.ConnectionError: when the request fails.
+            KeyError: when the URL couldn't be found in the response.
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
         """
         resp = self._get(
             self._uri_provider.uri_for("get_login_url"),
             query_params={"port": f"{redirect_port}"},
             allow_redirects=False,
         )
-        _handle_common_errors(resp)
+
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
+
         return resp.headers["Location"]
 
     def get_workflow_def(
         self, workflow_def_id: _models.WorkflowDefID
     ) -> _models.GetWorkflowDefResponse:
-        """
-        Gets a stored workflow definition
+        """Gets a stored workflow definition.
+
+        Args:
+            workflow_def_id: Id of the stored workflow definition to be loaded.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowDefID
-            orquestra.sdk._base._driver._exceptions.WorkflowDefNotFound
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError
-            orquestra.sdk._base._driver._exceptions.ForbiddenError
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowDefID: when the
+                workflow def ID is incorrectly formatted.
+            orquestra.sdk._base._driver._exceptions.WorkflowDefNotFound: when no
+                 workflow with the specified ID is found.
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
 
         Returns:
-            a parsed WorkflowDef
+            The parsed WorkflowDef.
         """
         resp = self._get(
             self._uri_provider.uri_for(
@@ -334,7 +387,14 @@ class DriverClient:
         elif resp.status_code == codes.NOT_FOUND:
             raise _exceptions.WorkflowDefNotFound(workflow_def_id)
 
-        _handle_common_errors(resp)
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
         parsed_resp = _models.Response[
             _models.GetWorkflowDefResponse, _models.MetaEmpty
@@ -343,15 +403,22 @@ class DriverClient:
         return parsed_resp.data
 
     def delete_workflow_def(self, workflow_def_id: _models.WorkflowDefID):
-        """
-        Gets a stored workflow definition
+        """Gets a stored workflow definition.
+
+        Args:
+            workflow_def_id: the ID of the workflow definition to be loaded.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowDefID
-            orquestra.sdk._base._driver._exceptions.WorkflowDefNotFound
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError
-            orquestra.sdk._base._driver._exceptions.ForbiddenError
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowDefID: when the
+                workflow def ID is incorrectly formatted.
+            orquestra.sdk._base._driver._exceptions.WorkflowDefNotFound: when no
+                 workflow with the specified ID is found.
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
         """
         resp = self._delete(
             self._uri_provider.uri_for(
@@ -364,7 +431,14 @@ class DriverClient:
         elif resp.status_code == codes.NOT_FOUND:
             raise _exceptions.WorkflowDefNotFound(workflow_def_id)
 
-        _handle_common_errors(resp)
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
     # ---- Workflow Runs ----
 
@@ -374,15 +448,24 @@ class DriverClient:
         resources: _models.Resources,
         dry_run: bool,
     ) -> _models.WorkflowRunID:
-        """
-        Submit a workflow def to run in the workflow driver
+        """Submit a workflow def to run in the workflow driver.
+
+        Args:
+            workflow_def_id: ID of the workflow definition to be submitted.
+            resources: The resources required to execute the workflow.
+            dry_run: Run the workflow without actually executing any task code.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunRequest
-            orquestra.sdk._base._driver._exceptions.UnsupportedSDKVersion
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError
-            orquestra.sdk._base._driver._exceptions.ForbiddenError
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunRequest: when an
+                invalid Workflow Run request is sent to the Workflow Driver.
+            orquestra.sdk._base._driver._exceptions.UnsupportedSDKVersion: when an
+                unsupported Workflow SDK version is used to submit a workflow run.
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
         """
         resp = self._post(
             self._uri_provider.uri_for("create_workflow_run"),
@@ -402,7 +485,14 @@ class DriverClient:
                 message=error.message, detail=error.detail
             )
 
-        _handle_common_errors(resp)
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
         return (
             _models.Response[_models.CreateWorkflowRunResponse, _models.MetaEmpty]
@@ -417,21 +507,38 @@ class DriverClient:
         page_token: Optional[str] = None,
         workspace: Optional[WorkspaceId] = None,
     ) -> Paginated[WorkflowRunMinimal]:
-        """
-        List workflow runs with a specified workflow def ID from the workflow driver.
+        """List workflow runs with a specified workflow def ID from the workflow driver.
+
+        Args:
+            workflow_def_id: Only list workflow runs matching this workflow def. If
+                omitted, workflow runs with any workflow definition will be returned.
+            page_size: Maximum number of results returned in a single page.
+            page_token: Token for the requested page of the list results.
+                If omitted the first page will be returned.
+            workspace: Only list workflow runs in the specified workspace. If omitted,
+                workflow runs from all workspaces will be returned.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError
-            orquestra.sdk._base._driver._exceptions.ForbiddenError
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                list workflow runs from a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
         """
-
-        resp = self._list_workflow_runs(
-            workflow_def_id,
-            page_size,
-            page_token,
-            workspace,
-        )
+        try:
+            resp = self._list_workflow_runs(
+                workflow_def_id,
+                page_size,
+                page_token,
+                workspace,
+            )
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
         parsed_response = _models.Response[
             _models.ListWorkflowRunsResponse, _models.Pagination
@@ -459,21 +566,38 @@ class DriverClient:
         page_token: Optional[str] = None,
         workspace: Optional[WorkspaceId] = None,
     ) -> Paginated[WorkflowRunSummary]:
-        """
-        List workflow runs summaries with a specified workflow def ID.
+        """List workflow runs summaries with a specified workflow def ID.
+
+        Args:
+            workflow_def_id: Only list workflow runs matching this workflow def. If
+                omitted, workflow runs with any workflow definition will be returned.
+            page_size: Maximum number of results returned in a single page.
+            page_token: Token for the requested page of the list results.
+                If omitted the first page will be returned.
+            workspace: Only list workflow runs in the specified workspace. If omitted,
+                workflow runs from all workspaces will be returned.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError
-            orquestra.sdk._base._driver._exceptions.ForbiddenError
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                list workflow runs from a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
         """
-
-        resp = self._list_workflow_runs(
-            workflow_def_id,
-            page_size,
-            page_token,
-            workspace,
-        )
+        try:
+            resp = self._list_workflow_runs(
+                workflow_def_id,
+                page_size,
+                page_token,
+                workspace,
+            )
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
         parsed_response = _models.Response[
             _models.ListWorkflowRunSummariesResponse, _models.Pagination
@@ -500,13 +624,30 @@ class DriverClient:
         page_token: Optional[str] = None,
         workspace: Optional[WorkspaceId] = None,
     ):
-        """
-        Get a list of wf runs from the workflow driver.
+        """Get a list of wf runs from the workflow driver.
 
         The responses will be parsed using the specified response model.
 
         This method consolidates the logic used by both list_workflow_runs and
         list_workflow_run_summaries.
+
+        Args:
+            workflow_def_id: Only list workflow runs matching this workflow def. If
+                omitted, workflow runs with any workflow definition will be returned.
+            page_size: Maximum number of results returned in a single page.
+            page_token: Token for the requested page of the list results.
+                If omitted the first page will be returned.
+            workspace: Only list workflow runs in the specified workspace. If omitted,
+                workflow runs from all workspaces will be returned.
+
+
+        Raises:
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                list workflow runs from a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
         """
         # Schema: https://github.com/zapatacomputing/workflow-driver/blob/fa3eb17f1132d9c7f4960331ffe7ddbd31e02f8c/openapi/src/resources/workflow-runs.yaml#L10 # noqa: E501
 
@@ -520,22 +661,35 @@ class DriverClient:
             ).dict(),
         )
 
-        _handle_common_errors(resp)
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
         return resp
 
     def get_workflow_run(self, wf_run_id: _models.WorkflowRunID) -> WorkflowRun:
-        """
-        Gets the status of a workflow run from the workflow driver
+        """Gets the status of a workflow run from the workflow driver.
+
+        Args:
+            wf_run_id: ID of the workflow run to be loaded.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
-            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError
-            orquestra.sdk._base._driver._exceptions.ForbiddenError
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID: when the
+                wf_run_id is empty or incorrectly formatted.
+            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound: when the
+                workflow run cannot be found
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
         """
-
         resp = self._get(
             self._uri_provider.uri_for("get_workflow_run", parameters=(wf_run_id,)),
             query_params=None,
@@ -546,7 +700,14 @@ class DriverClient:
         elif resp.status_code == codes.NOT_FOUND:
             raise _exceptions.WorkflowRunNotFound(wf_run_id)
 
-        _handle_common_errors(resp)
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
         parsed_response = _models.Response[
             _models.WorkflowRunResponse, _models.MetaEmpty
@@ -559,20 +720,23 @@ class DriverClient:
     def terminate_workflow_run(
         self, wf_run_id: _models.WorkflowRunID, force: Optional[bool] = None
     ):
-        """
-        Asks the workflow driver to terminate a workflow run
+        """Asks the workflow driver to terminate a workflow run.
 
         Args:
             wf_run_id: the workflow to terminate
             force: if the workflow should be forcefully terminated
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError
-            orquestra.sdk._base._driver._exceptions.ForbiddenError
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound: when the
+                workflow run cannot be found
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                terminate a workflow run from a workspace that does not belong to the
+                user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
         """
-
         resp = self._post(
             self._uri_provider.uri_for(
                 "terminate_workflow_run", parameters=(wf_run_id,)
@@ -584,24 +748,37 @@ class DriverClient:
         if resp.status_code == codes.NOT_FOUND:
             raise _exceptions.WorkflowRunNotFound(wf_run_id)
 
-        _handle_common_errors(resp)
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
     # --- Workflow Run Artifacts ---
 
     def get_workflow_run_artifacts(
         self, wf_run_id: _models.WorkflowRunID
     ) -> Mapping[_models.TaskRunID, List[_models.WorkflowRunArtifactID]]:
-        """
-        Gets the workflow run artifact IDs of a workflow run from the workflow driver
+        """Gets the artifact IDs of a workflow run from the workflow driver.
+
+        Args:
+            wf_run_id: ID of the workflow run whose artifacts we want.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
-            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError
-            orquestra.sdk._base._driver._exceptions.ForbiddenError
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID: when the
+                wf_run_id is empty or incorrectly formatted.
+            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound: when the
+                workflow run cannot be found
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
         """
-
         resp = self._get(
             self._uri_provider.uri_for(
                 "get_workflow_run_artifacts",
@@ -616,7 +793,14 @@ class DriverClient:
         elif resp.status_code == codes.BAD_REQUEST:
             raise _exceptions.InvalidWorkflowRunID(wf_run_id)
 
-        _handle_common_errors(resp)
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
         parsed_response = _models.Response[
             _models.GetWorkflowRunArtifactsResponse, _models.MetaEmpty
@@ -627,17 +811,23 @@ class DriverClient:
     def get_workflow_run_artifact(
         self, artifact_id: _models.WorkflowRunArtifactID
     ) -> WorkflowResult:
-        """
-        Gets workflow run artifacts from the workflow driver
+        """Gets workflow run artifacts from the workflow driver.
+
+        Args:
+            artifact_id: ID of the artifact to be loaded.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunArtifactID
-            orquestra.sdk._base._driver._exceptions.WorkflowRunArtifactNotFound
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError
-            orquestra.sdk._base._driver._exceptions.ForbiddenError
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunArtifactID: when
+                the artifact_id is empty or incorrectly formatted.
+            orquestra.sdk._base._driver._exceptions.WorkflowRunArtifactNotFound: when
+                the artifact cannot be found.
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
         """
-
         resp = self._get(
             self._uri_provider.uri_for("get_artifact", parameters=(artifact_id,)),
             query_params=None,
@@ -648,7 +838,14 @@ class DriverClient:
         elif resp.status_code == codes.BAD_REQUEST:
             raise _exceptions.InvalidWorkflowRunArtifactID(artifact_id)
 
-        _handle_common_errors(resp)
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
         # Bug with mypy and Pydantic:
         #   Unions cannot be passed to parse_obj_as: pydantic/pydantic#1847
@@ -661,17 +858,23 @@ class DriverClient:
     def get_workflow_run_results(
         self, wf_run_id: _models.WorkflowRunID
     ) -> List[_models.WorkflowRunResultID]:
-        """
-        Gets the workflow run result IDs of a workflow run from the workflow driver
+        """Gets the workflow run result IDs of a workflow run from the workflow driver.
+
+        Args:
+            wf_run_id: ID of the workflow run whose results we want.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
-            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError
-            orquestra.sdk._base._driver._exceptions.ForbiddenError
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID: when the
+                wf_run_id is empty or incorrectly formatted.
+            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound: when the
+                workflow run cannot be found
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
         """
-
         resp = self._get(
             self._uri_provider.uri_for("get_workflow_run_results"),
             query_params=_models.GetWorkflowRunResultsRequest(
@@ -684,7 +887,14 @@ class DriverClient:
         elif resp.status_code == codes.NOT_FOUND:
             raise _exceptions.WorkflowRunNotFound(wf_run_id)
 
-        _handle_common_errors(resp)
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
         parsed_response = _models.Response[
             _models.GetWorkflowRunResultsResponse, _models.MetaEmpty
@@ -695,17 +905,23 @@ class DriverClient:
     def get_workflow_run_result(
         self, result_id: _models.WorkflowRunResultID
     ) -> Union[WorkflowResult, ComputeEngineWorkflowResult]:
-        """
-        Gets workflow run results from the workflow driver
+        """Gets workflow run results from the workflow driver.
+
+        Args:
+            result_id: ID of the result to be loaded.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunResultID
-            orquestra.sdk._base._driver._exceptions.WorkflowRunResultNotFound
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError
-            orquestra.sdk._base._driver._exceptions.ForbiddenError
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunResultID: when the
+                result_id is empty or incorrectly formatted.
+            orquestra.sdk._base._driver._exceptions.WorkflowRunResultNotFound: when the
+                workflow run result cannot be found
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
         """
-
         resp = self._get(
             self._uri_provider.uri_for(
                 "get_workflow_run_result", parameters=(result_id,)
@@ -718,7 +934,14 @@ class DriverClient:
         elif resp.status_code == codes.BAD_REQUEST:
             raise _exceptions.InvalidWorkflowRunResultID(result_id)
 
-        _handle_common_errors(resp)
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
         # To ensure the correct ordering of results, we serialize the results on CE as:
         # {
@@ -747,18 +970,25 @@ class DriverClient:
     def get_workflow_run_logs(
         self, wf_run_id: _models.WorkflowRunID
     ) -> List[_models.WorkflowLogMessage]:
-        """
-        Gets the logs of a workflow run from the workflow driver
+        """Gets the logs of a workflow run from the workflow driver.
+
+        Args:
+            wf_run_id: ID of the workflow run whose logs we want.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
-            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError
-            orquestra.sdk._base._driver._exceptions.ForbiddenError
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
-            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotReadable
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID: when the
+                wf_run_id is empty or incorrectly formatted.
+            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound: when the
+                workflow run cannot be found
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotReadable: when
+                the logs exist, but cannot be decoded.
         """
-
         resp = self._get(
             self._uri_provider.uri_for("get_workflow_run_logs"),
             query_params=_models.GetWorkflowRunLogsRequest(
@@ -772,7 +1002,14 @@ class DriverClient:
         elif resp.status_code == codes.BAD_REQUEST:
             raise _exceptions.InvalidWorkflowRunID(wf_run_id)
 
-        _handle_common_errors(resp)
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
         # Decompress data
         try:
@@ -802,18 +1039,26 @@ class DriverClient:
         wf_run_id: _models.WorkflowRunID,
         task_inv_id: _models.TaskInvocationID,
     ) -> List[_models.TaskLogMessage]:
-        """
-        Gets the logs of a task run from the workflow driver
+        """Gets the logs of a task run from the workflow driver.
+
+        Args:
+            wf_run_id: ID of the workflow run containing the task.
+            task_inv_id: ID of the task invocation, the logs of which should be loaded.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
-            orquestra.sdk._base._driver._exceptions.TaskRunLogsNotFound
-            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotReadable
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError
-            orquestra.sdk._base._driver._exceptions.ForbiddenError
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID: when the
+                wf_run_id is empty or incorrectly formatted.
+            orquestra.sdk._base._driver._exceptions.TaskRunLogsNotFound: when the
+                task run logs cannot be found.
+            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotReadable: when
+                the logs exist, but cannot be decoded.
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
         """
-
         resp = self._get(
             self._uri_provider.uri_for("get_task_run_logs"),
             query_params=_models.GetTaskRunLogsRequest(
@@ -827,7 +1072,14 @@ class DriverClient:
         elif resp.status_code == codes.BAD_REQUEST:
             raise _exceptions.InvalidWorkflowRunID(wf_run_id)
 
-        _handle_common_errors(resp)
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
         # Decompress data
         try:
@@ -853,16 +1105,24 @@ class DriverClient:
         return messages
 
     def get_system_logs(self, wf_run_id: _models.WorkflowRunID) -> List[_models.SysLog]:
-        """
-        Get the logs of a workflow run from the workflow driver.
+        """Get the system-level logs of a workflow run from the workflow driver.
+
+        Args:
+            wf_run_id: ID of the workflow runs the logs of which should be loaded.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.ForbiddenError
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
-            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotFound
-            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotReadable
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID: when the
+                wf_run_id is empty or incorrectly formatted.
+            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotFound: when the
+                workflow run logs cannot be found.
+            orquestra.sdk._base._driver._exceptions.WorkflowRunLogsNotReadable: when
+                the logs exist, but cannot be decoded.
             NotImplementedError: when a log object's source_type is not a recognised
                 value, or is a value for a schema has not been defined.
         """
@@ -879,7 +1139,14 @@ class DriverClient:
         elif resp.status_code == codes.BAD_REQUEST:
             raise _exceptions.InvalidWorkflowRunID(wf_run_id)
 
-        _handle_common_errors(resp)
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
         # Decompress data
         try:
@@ -905,16 +1172,29 @@ class DriverClient:
         return messages
 
     def list_workspaces(self):
-        """
-        Gets the list of all workspaces
-        """
+        """Gets the list of all workspaces.
 
+        Raises:
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
+        """
         resp = self._get(
             self._uri_provider.uri_for("list_workspaces"),
             query_params=None,
         )
 
-        _handle_common_errors(resp)
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
         parsed_response = pydantic.parse_obj_as(
             _models.ListWorkspacesResponse, resp.json()
@@ -922,11 +1202,20 @@ class DriverClient:
 
         return parsed_response
 
-    def list_projects(self, workspace_id):
-        """
-        Gets the list of all projects in given workspace
-        """
+    def list_projects(self, workspace_id: WorkspaceId):
+        """Gets the list of all projects in given workspace.
 
+        Args:
+            workspace_id: ID of the target workspace.
+
+        Raises:
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
+        """
         workspace_zri = make_workspace_zri(workspace_id)
 
         resp = self._get(
@@ -937,7 +1226,14 @@ class DriverClient:
         if resp.status_code == codes.BAD_REQUEST:
             raise _exceptions.InvalidWorkspaceZRI(workspace_zri)
 
-        _handle_common_errors(resp)
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
         parsed_response = pydantic.parse_obj_as(
             _models.ListProjectResponse, resp.json()
@@ -946,17 +1242,23 @@ class DriverClient:
         return parsed_response
 
     def get_workflow_project(self, wf_run_id: _models.WorkflowRunID) -> ProjectRef:
-        """
-        Gets the status of a workflow run from the workflow driver
+        """Gets the status of a workflow run from the workflow driver.
+
+        Args:
+            wf_run_id: ID of the workflow run.
 
         Raises:
-            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID
-            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound
-            orquestra.sdk._base._driver._exceptions.InvalidTokenError
-            orquestra.sdk._base._driver._exceptions.ForbiddenError
-            orquestra.sdk._base._driver._exceptions.UnknownHTTPError
+            orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
+                authorization token is rejected by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.ForbiddenError: when attempting to
+                access a workflow run from a workspace that does not belong to the user.
+            orquestra.sdk._base._driver._exceptions.UnknownHTTPError: when any other
+                error is raised by the remote cluster.
+            orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunID: when the
+                wf_run_id is empty or incorrectly formatted.
+            orquestra.sdk._base._driver._exceptions.WorkflowRunNotFound: when the
+                workflow run cannot be found
         """
-
         resp = self._get(
             self._uri_provider.uri_for("get_workflow_run", parameters=(wf_run_id,)),
             query_params=None,
@@ -967,7 +1269,14 @@ class DriverClient:
         elif resp.status_code == codes.NOT_FOUND:
             raise _exceptions.WorkflowRunNotFound(wf_run_id)
 
-        _handle_common_errors(resp)
+        try:
+            _handle_common_errors(resp)
+        except (
+            _exceptions.InvalidTokenError,
+            _exceptions.ForbiddenError,
+            _exceptions.UnknownHTTPError,
+        ):
+            raise
 
         parsed_response = _models.Response[
             _models.WorkflowRunResponse, _models.MetaEmpty

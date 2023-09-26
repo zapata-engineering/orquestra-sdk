@@ -1,9 +1,9 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Code related to setting up Ray connection in tests. Functions instead of pytest
-fixtures for better reusability across scopes.
+"""Code related to setting up Ray connection in tests.
+
+Functions instead of pytest fixtures for better reusability across scopes.
 """
 
 import os
@@ -19,10 +19,11 @@ from orquestra.sdk._ray import _dag
 
 @contextmanager
 def ray_suitable_temp_dir():
-    """
-    Context manager that generates a temporary directory and removes the content at
-    exit. Generates shorter paths than `tempfile` would on a macOS. Workaround for Ray
-    complaining about too long socket file path.
+    """Context manager that generates a temporary directory.
+
+    The content of the directory is removed at content at exit.
+    Generates shorter paths than `tempfile` would on a macOS.
+    Workaround for Ray complaining about too long socket file path.
 
     Ray source code:
     https://github.com/ray-project/ray/blob/223ce3988e0a424d33a557c616eff6dd140b812c/python/ray/_private/node.py#L772-L776
@@ -57,17 +58,16 @@ def ray_suitable_temp_dir():
 
 @contextmanager
 def make_ray_conn(storage_path: t.Optional[str] = None) -> t.Iterator[_dag.RayParams]:
-    """
-    Initializes ray connection. By default, starts a linked cluster on its
-    own.
-    Can be changed to run against a background cluster that needs to
-    be started separately ('ray start --head'). To do that, set the
-    'RAY_CLUSTER_URL' env variable. `RAY_CLUSTER_URL="auto"` tells Ray to
-    discover a running cluster.
+    """Initializes ray connection.
+
+    By default, starts a linked cluster on its own.
+    Can be changed to run against a background cluster that needs to be started
+    separately ('ray start --head').
+    To do that, set the 'RAY_CLUSTER_URL' env variable.
+    `RAY_CLUSTER_URL="auto"` tells Ray to discover a running cluster.
 
     Yields the params used to initialize the connection.
     """
-
     cluster_url_env = os.getenv("RAY_CLUSTER_URL")
 
     with ray_suitable_temp_dir() as tmp_path:

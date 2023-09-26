@@ -1,8 +1,8 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-"""
-This is the internal module for saving and loading runtime configurations.
+"""This is the internal module for saving and loading runtime configurations.
+
 See docs/runtime_configurations.rst for more information.
 """
 import os
@@ -100,8 +100,7 @@ BOOLEAN_RUNTIME_OPTIONS: List[str] = ["log_to_driver", "configure_logging"]
 
 
 def get_config_file_path() -> Path:
-    """
-    Get the absolute path to the config file.
+    """Get the absolute path to the config file.
 
     Returns:
         Path: Path to the configuration file. The default is `~/.orquestra/config.json`
@@ -121,8 +120,7 @@ def is_passport_file_available() -> bool:
 
 
 def _get_config_directory() -> Path:
-    """
-    Get the path to the directory that contains the configuration file.
+    """Get the path to the directory that contains the configuration file.
 
     Returns:
         Path: path to the parent directory.
@@ -273,8 +271,7 @@ def _resolve_runtime_options_for_writing(
     new_runtime_options: Optional[Mapping[str, Any]],
     resolved_prev_config_entry: Optional[RuntimeConfiguration],
 ) -> dict:
-    """
-    Resolve the runtime options that need to be written for this config.
+    """Resolve the runtime options that need to be written for this config.
 
     If there are previously existing runtime options, updates the old set with the new
     values.
@@ -299,8 +296,7 @@ def _validate_runtime_options(
     runtime_name: RuntimeName,
     runtime_options: Mapping[str, Any],
 ) -> dict:
-    """
-    Check that the combination of configuration options is valid.
+    """Check that the combination of configuration options is valid.
 
     Args:
         runtime_name: the intended runtime.
@@ -349,8 +345,7 @@ def write_config(
     runtime_name: RuntimeName,
     runtime_options: dict,
 ):
-    """
-    Write a new configuration to the file.
+    """Write a new configuration to the file.
 
     Args:
         config_name: The name under which to save the configuration.
@@ -376,27 +371,22 @@ def update_config(
     runtime_name: RuntimeName,
     new_runtime_options: Optional[Mapping[str, Any]] = None,
 ):
-    """
+    """Update the values of a stored configuration.
+
     Ensures that whatever non-None argument is passed here will end up saved to
     the config file under `~/.orquestra/config.json`.
 
-    Note that a single config file has multiple "entry" configurations, a
-    reserved "local"
-
     Args:
-        config_name: A config file has multiple "entry" configurations. This
-            tells which entry we want to update.
+        config_name: A config file has multiple "entry" configurations.
+            This tells which entry we want to update.
         runtime_name: Name of the runtime
         new_runtime_options: if not None, any entries in this dictionary will
-            be added to the config entry's runtime options. The remaining
-            runtime_options key-values that are already in the file will be
-            left intact.
+            be added to the config entry's runtime options.
+            The remaining runtime_options key-values that are already in the file will
+            be left intact.
 
     Raises:
-        ValueError:
-            - if `config_name` was resolved to "local".
-            - if `config_name` couldn't be resolved automatically.
-        KeyError:
+        RuntimeConfigError:
             - if one or more runtime options are not valid for this runtime.
     """
     with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME):
@@ -413,9 +403,12 @@ def update_config(
             resolved_prev_config_entry,
         )
 
-        resolved_runtime_options = _validate_runtime_options(
-            runtime_name, resolved_options
-        )
+        try:
+            resolved_runtime_options = _validate_runtime_options(
+                runtime_name, resolved_options
+            )
+        except exceptions.RuntimeConfigError:
+            raise
 
         _save_new_config_file(
             config_name,
@@ -428,11 +421,10 @@ def update_config(
 def generate_config_name(
     runtime_name: Union[RuntimeName, str], uri: Optional[str]
 ) -> ConfigName:
-    """
-    Generate a for the specified runtime configuration options.
+    """Generate a name for the specified runtime configuration options.
 
-    CE_REMOTE configurations are named based on their cluster uri. All other
-    configurations have static names assigned.
+    CE_REMOTE configurations are named based on their cluster uri.
+    All other configurations have static names assigned.
     """
     if runtime_name == RuntimeName.CE_REMOTE:
         if not uri:
@@ -459,22 +451,20 @@ def _generate_cluster_uri_name(uri: str) -> str:
 def read_config(
     config_name: str,
 ) -> RuntimeConfiguration:
-    """
-    Reads a runtime configuration from the configuration file
+    """Reads a runtime configuration from the configuration file.
 
     Arguments:
         config_name: the name of the configuration to read
             - if it's 'local': this function returns the hardcoded local configuration
 
     Returns:
-        a runtime configuration
+        a runtime configuration.
 
     Raises:
         orquestra.sdk.exceptions.ConfigNameNotFoundError: when no runtime
             config matching `config_name` exists.
         orquestra.sdk.exceptions.ConfigFileNotFoundError: when no config file exists.
     """
-
     if config_name in SPECIAL_CONFIG_NAME_DICT:
         return _handle_config_name_special_cases(config_name)
 
@@ -492,12 +482,11 @@ def read_config(
 
 
 def read_config_names() -> List[str]:
-    """
-    Reads the names of all configurations stored in the configuration file.
+    """Reads the names of all configurations stored in the configuration file.
 
     Returns:
-        list: a list of strings, each containing the name of a saved configuration. If
-            the file does not exist, returns an empty list.
+        list: a list of strings, each containing the name of a saved configuration.
+            If the file does not exist, returns an empty list.
     """
     try:
         with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME, timeout=3):

@@ -2,9 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 
-"""
-Global constants used to access environment variables.
-"""
+"""Global constants used to access environment variables."""
 
 import os
 import typing as t

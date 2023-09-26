@@ -1,8 +1,8 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-"""
-Centralized place to store the information about where the code runs.
+"""Centralized place to store the information about where the code runs.
+
 This module is likely to be used from many places. It shouldn't import any
 3rd-party libraries (like ray).
 
@@ -53,18 +53,14 @@ def _set_context(ctx: ExecContext):
 
 @contextmanager
 def workflow_build():
-    """
-    Helper. Sets the context for workflow traversal
-    """
+    """Helper. Sets the context for workflow traversal."""
     with _set_context(ExecContext.WORKFLOW_BUILD):
         yield
 
 
 @contextmanager
 def ray():  # pragma: no cover - tested inside a Ray task via an integration test.
-    """
-    Helper. Sets the context for running code in a task managed by Ray.
-    """
+    """Helper. Sets the context for running code in a task managed by Ray."""
     with _set_context(ExecContext.RAY):
         yield
 

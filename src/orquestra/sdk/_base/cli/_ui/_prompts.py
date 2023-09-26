@@ -23,13 +23,13 @@ T = t.TypeVar("T")
 
 
 class Prompter:
-    """
-    This is the last layer before handing off the interaction to ``inquirer``, a
-    3rd-party library.
+    """This is the last layer before handing off the interaction to ``inquirer``.
+
+    ``inquirer`` is a 3rd-party library.
 
     Given it's our system's boundary it would be nice to write tests that perform real
-    stdin/stdout IO, but simulating arrow key strokes is very tricky! ATM this class
-    isn't covered by tests.
+    stdin/stdout IO, but simulating arrow key strokes is very tricky!
+    ATM this class isn't covered by tests.
     """
 
     @overload
@@ -59,8 +59,7 @@ class Prompter:
         default: t.Optional[str] = None,
         allow_all: t.Optional[bool] = False,
     ) -> t.Union[ChoiceID, T]:
-        """
-        Presents the user a choice and returns what they selected.
+        """Presents the user a choice and returns what they selected.
 
         If only one option is available, the user is prompted to confirm that this is
         the intended outcome and, if so, that option is selected automatically.
@@ -72,13 +71,14 @@ class Prompter:
             message: The message to prompt the user.
             default: The value to return as the default, if the user doesn't choose
                 anything.
+            allow_all: if True, add an 'all' option to the bottom of the list.
 
         Returns:
             The item the user chose, either a ChoiceID or an object if ``choices`` was
-            a tuple.
+                a tuple.
 
         Raises:
-            UserCancelledPrompt if the user cancels the prompt
+            UserCancelledPrompt: if the user cancels the prompt.
         """
         # If there are no choices, report it to the user and exit.
         if len(choices) == 0:
@@ -111,18 +111,17 @@ class Prompter:
         return answers[SINGLE_INPUT]
 
     def confirm(self, message: str, default: bool) -> bool:
-        """
-        Ask the user for confirmation
+        """Ask the user for confirmation.
 
         Args:
             message: The message to prompt the user.
             default: The value to return as the default.
 
         Returns:
-            The result from the prompt
+            The result from the prompt.
 
         Raises:
-            UserCancelledPrompt if the user cancels the prompt
+            UserCancelledPrompt: if the user cancels the prompt.
         """
         answer = inquirer.confirm(message, default=default)
 
@@ -159,8 +158,7 @@ class Prompter:
         message: str,
         default: t.Optional[t.Union[str, t.List[str]]] = None,
     ) -> t.Union[t.List[ChoiceID], t.List[T]]:
-        """
-        Presents the user a multiple choice and returns what they selected
+        """Presents the user a multiple choice and returns what they selected.
 
         Args:
             choices: The list of choices to present to the user. If this is of the shape
@@ -175,7 +173,7 @@ class Prompter:
             ``choices`` was a tuple.
 
         Raises:
-            UserCancelledPrompt if the user cancels the prompt
+            UserCancelledPrompt: if the user cancels the prompt.
         """
         # If there are no choices, report it to the user and exit.
         if len(choices) == 0:
@@ -211,10 +209,9 @@ class Prompter:
         default: t.Optional[int],
         allow_none: t.Optional[bool] = False,
     ) -> t.Union[int, None]:
-        """
-        Asks the user to enter an integer
+        """Asks the user to enter an integer.
 
-        If the user's input is not an integer, the prompt will ask again
+        If the user's input is not an integer, the prompt will ask again.
 
         Args:
             message: The message to prompt the user.
@@ -223,12 +220,11 @@ class Prompter:
             allow_none: allow 'None' as a valid response.
 
         Returns:
-            an integer parsed from the user's input
+            an integer parsed from the user's input.
 
         Raises:
-            UserCancelledPrompt if the user cancels the prompt
+            UserCancelledPrompt: if the user cancels the prompt.
         """
-
         nonestrings: t.List[str] = []
         if allow_none:
             nonestrings = ["", "None"]
@@ -268,21 +264,21 @@ class Prompter:
         default: t.Optional[str],
         allow_none: t.Optional[bool] = True,
     ) -> t.Union[str, None]:
-        """
-        Asks the user to enter a string.
+        """Asks the user to enter a string.
 
         Args:
             message: The message to prompt the user.
             default: The value to return as the default, if the user doesn't choose
                 anything.
+            allow_none: If True, the prompter will accept 'None' or an empty string as
+                a response, and return None if one of these is given.
 
         Returns:
-            an integer parsed from the user's input
+            an integer parsed from the user's input.
 
         Raises:
-            UserCancelledPrompt if the user cancels the prompt
+            UserCancelledPrompt: if the user cancels the prompt.
         """
-
         nonestrings: t.List[str] = []
         if allow_none:
             nonestrings = ["", "None"]
@@ -304,8 +300,10 @@ class Prompter:
     def _handle_single_option(
         self, message: str, choice: t.Union[ChoiceID, t.Tuple[ChoiceID, T]]
     ) -> t.Union[ChoiceID, T]:
-        """
-        Rather than ask the user to choose between 1 option, prompt for confirmation.
+        """Prompt for confirmation.
+
+        This method exists to avoid the scenario of asking a user to choose between 1
+        option.
         """
         name: ChoiceID
         value: t.Union[ChoiceID, T]

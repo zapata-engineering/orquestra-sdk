@@ -1,9 +1,7 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Workflow visualization using graphviz.
-"""
+"""Workflow visualization using graphviz."""
 
 import itertools
 import typing as t
@@ -27,9 +25,7 @@ Edge = t.Tuple[NodeId, NodeId]
 
 @dataclass(frozen=True)
 class BiGraph:
-    """
-    Bipartite graph with two groups of nodes. Renderer-agnostic.
-    """
+    """Bipartite graph with two groups of nodes. Renderer-agnostic."""
 
     nodes1: t.Sequence[Node]
     nodes2: t.Sequence[Node]
@@ -37,14 +33,13 @@ class BiGraph:
 
 
 def wf_def_graph(wf_def: ir.WorkflowDef) -> BiGraph:
-    """
-    Builds a bipartite graph from the workflow def. The output is renderer-agnostic,
-    but it's close to the shape we pass to graphviz.
+    """Builds a bipartite graph from the workflow def.
 
-    The "logic" layer. All the data we want to put on the visualization should be
-    generated here.
-    """
+    The output is renderer-agnostic, but it's close to the shape we pass to graphviz.
 
+    The "logic" layer.
+    All the data we want to put on the visualization should be generated here.
+    """
     task_nodes: t.List[Node] = []
     artifact_nodes: t.List[Node] = []
     edges: t.List[Edge] = []
@@ -112,10 +107,10 @@ def wf_def_graph(wf_def: ir.WorkflowDef) -> BiGraph:
 
 
 def translate_to_graphviz(graph: BiGraph) -> graphviz.Digraph:
-    """
-    Builds a graphviz object based on the renderer-agnostic bigraph.
+    """Builds a graphviz object based on the renderer-agnostic bigraph.
 
-    The "presentation" layer. Any styling should be done here.
+    The "presentation" layer.
+    Any styling should be done here.
     """
     digraph = graphviz.Digraph()
     # Make the plot a little less eye gouging.
@@ -142,7 +137,5 @@ def translate_to_graphviz(graph: BiGraph) -> graphviz.Digraph:
 
 
 def wf_def_to_graphviz(wf_def: ir.WorkflowDef) -> graphviz.Digraph:
-    """
-    Helper, combines the "logic" and "presentation" layers.
-    """
+    """Helper, combines the "logic" and "presentation" layers."""
     return translate_to_graphviz(wf_def_graph(wf_def))

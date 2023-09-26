@@ -30,6 +30,8 @@
 
 📃 *Docs*
 
+* Fixed formatting errors in docstrings preventing them from rendering correctly in docs.
+
 ## v0.56.0
 
 🚨 *Breaking Changes*

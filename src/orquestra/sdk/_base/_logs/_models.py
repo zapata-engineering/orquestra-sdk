@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Models for managing logs, used internally.
-"""
+"""Models for managing logs, used internally."""
 from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Sequence

@@ -1,8 +1,7 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-"""
-"dorq" CLI entrypoint.
+""""dorq" CLI entrypoint.
 
 ``click`` uses function name as the group and command name.
 """
@@ -82,9 +81,7 @@ def dorq():
 
 @dorq.group(aliases=["wf"])
 def workflow():
-    """
-    Commands related to workflow runs.
-    """
+    """Commands related to workflow runs."""
     pass
 
 
@@ -127,8 +124,7 @@ def submit(
     project_id: t.Optional[str],
     force: bool,
 ):
-    """
-    Submits a workflow for execution.
+    """Submits a workflow for execution.
 
     Loads workflow definition from a Python module,
     creates a new workflow run, and returns the workflow run ID for use in other
@@ -147,10 +143,7 @@ def submit(
 @cloup.argument("wf_run_id", required=False)
 @CONFIG_OPTION
 def view(wf_run_id: t.Optional[str], config: t.Optional[str]):
-    """
-    Prints details of a single workflow run that was already submitted.
-    """
-
+    """Prints details of a single workflow run that was already submitted."""
     from ._workflow._view import Action
 
     action = Action()
@@ -166,19 +159,20 @@ def wf_results(
     config: t.Optional[str],
     download_dir: t.Optional[Path],
 ):
-    """
-    Shows preview of a workflow output values corresponding to the variables
-    returned from the ``@workflow`` function.
+    """Shows a preview of a workflow's output values.
 
-    Only works with succeeded workflows. If a workflow is still running this command
-    won't wait for the workflow's completion.
+    The values shown correspond to the variables returned from the ``@workflow``
+    function.
+
+    Only works with succeeded workflows.
+    If a workflow is still running this command won't wait for the workflow's
+    completion.
 
     This command tries to print a human-friendly values preview, but the output isn't
-    guaranteed to be a valid parseable value. If you need the artifact value for
-    further processing, use the ``download-dir`` option or use
-    ``orquestra.sdk.WorkflowRun.get_results()`` directly from Python.
+    guaranteed to be a valid parseable value.
+    If you need the artifact value for further processing, use the ``download-dir``
+    option or use ``orquestra.sdk.WorkflowRun.get_results()`` directly from Python.
     """
-
     from ._workflow._results import Action
 
     action = Action()
@@ -220,10 +214,7 @@ def wf_logs(
     env_setup: t.Optional[bool],
     other: t.Optional[bool],
 ):
-    """
-    Shows logs gathered during execution of a workflow produced by all tasks.
-    """
-
+    """Shows logs gathered during execution of a workflow produced by all tasks."""
     from ._workflow._logs import Action
 
     action = Action()
@@ -252,9 +243,7 @@ workflow should be forcefully stopped.
     """,
 )
 def stop(wf_run_id: t.Optional[str], config: t.Optional[str], force: t.Optional[bool]):
-    """
-    Stops a running workflow.
-    """
+    """Stops a running workflow."""
     from ._workflow._stop import Action
 
     action = Action()
@@ -289,10 +278,7 @@ def list(
     state: t.Optional[t.List[str]] = None,
     workspace_id: t.Optional[str] = None,
 ):
-    """
-    Lists the available workflows
-    """
-
+    """Lists the available workflows."""
     from ._workflow._list import Action
 
     action = Action()
@@ -304,9 +290,7 @@ def list(
 
 @dorq.group()
 def task():
-    """
-    Commands related to task runs.
-    """
+    """Commands related to task runs."""
     pass
 
 
@@ -333,17 +317,16 @@ TASK_INV_ID_OPTION = cloup.option(
 @CONFIG_OPTION
 @DOWNLOAD_DIR_OPTION
 def task_results(*args, **kwargs):
-    """
-    Shows preview of a single task's output values corresponding to the variables
-    returned from the ``@task`` function.
+    """Shows a preview of a task's output values.
+
+    The values shown correspond to the variables returned from the ``@task`` function.
 
     This command tries to print a human-friendly values preview, but the output isn't
-    guaranteed to be a valid parseable value. If you need the artifact value for
-    further processing, use the ``download-dir`` option or use
-    ``orquestra.sdk.WorkflowRun.get_tasks()`` and ``task.get_results()`` directly from
-    Python.
+    guaranteed to be a valid parseable value.
+    If you need the artifact value for further processing, use the ``download-dir``
+    option or use ``orquestra.sdk.WorkflowRun.get_tasks()`` and ``task.get_results()``
+    directly from Python.
     """
-
     from ._task._results import Action
 
     action = Action()
@@ -357,10 +340,7 @@ def task_results(*args, **kwargs):
 @CONFIG_OPTION
 @DOWNLOAD_DIR_OPTION
 def task_logs(*args, **kwargs):
-    """
-    Shows logs gathered during execution of a single task run.
-    """
-
+    """Shows logs gathered during execution of a single task run."""
     from ._task._logs import Action
 
     action = Action()
@@ -377,8 +357,7 @@ def task_logs(*args, **kwargs):
     cloup.option("--all", is_flag=True, default=None, help="Start all known services"),
 )
 def up(ray: t.Optional[bool], all: t.Optional[bool]):
-    """
-    Starts managed services required to execute workflows locally.
+    """Starts managed services required to execute workflows locally.
 
     By default, this command only starts a Ray cluster.
     """
@@ -395,8 +374,7 @@ def up(ray: t.Optional[bool], all: t.Optional[bool]):
     cloup.option("--all", is_flag=True, default=None, help="Stop all known services"),
 )
 def down(ray: t.Optional[bool], all: t.Optional[bool]):
-    """
-    Stops managed services required to execute workflows locally.
+    """Stops managed services required to execute workflows locally.
 
     By default, this command only stops the Ray cluster.
     """
@@ -413,8 +391,7 @@ def down(ray: t.Optional[bool], all: t.Optional[bool]):
     cloup.option("--all", is_flag=True, default=None, help="Stop all known services"),
 )
 def restart(ray: t.Optional[bool], all: t.Optional[bool]):
-    """
-    Stops and then restarts managed services required to execute workflows locally.
+    """Stops and then restarts managed services required to execute workflows locally.
 
     By default, this command only restarts the ray cluster.
     """
@@ -430,8 +407,7 @@ def restart(ray: t.Optional[bool], all: t.Optional[bool]):
 
 @cloup.command()
 def status():
-    """
-    Prints the status of known services.
+    """Prints the status of known services.
 
     Currently, this will print the status of the managed Ray cluster.
     """
@@ -493,9 +469,7 @@ server_config_group = cloup.OptionGroup(
     constraint=cloup.constraints.mutually_exclusive,
 )
 def auth(config: str, server: str, token: t.Optional[str], ce: bool):
-    """
-    Log in to remote cluster
-    """
+    """Log in to remote cluster."""
     from ._login._login import Action
 
     action = Action()

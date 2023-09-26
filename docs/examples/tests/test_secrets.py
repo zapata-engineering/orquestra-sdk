@@ -1,8 +1,8 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-"""
-Parts of this file are embedded in the "secrets" tutorial.
+"""Parts of this file are embedded in the "secrets" tutorial.
+
 The snippets are extracted between "<snippet my-snippet-name></snippet>".
 
 This file is a coarse-grained integration test. Ideally we would use end-to-end test,
@@ -25,9 +25,7 @@ from orquestra.sdk.schema import configs
 
 
 class Snippets:
-    """
-    Contains snippets of code that will be embedded inside the tutorial page.
-    """
+    """Contains snippets of code that will be embedded inside the tutorial page."""
 
     @staticmethod
     def get_secret_from_repl():

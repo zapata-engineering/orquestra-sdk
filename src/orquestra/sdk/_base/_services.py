@@ -2,9 +2,7 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 
-"""
-Class to manage local Orquestra services.
-"""
+"""Class to manage local Orquestra services."""
 
 import os
 import subprocess
@@ -37,12 +35,11 @@ class Service(Protocol):
 
 
 def ray_temp_path():
-    """
-    Used by RayRuntime to know where to look for the log files to read.
+    """Used by RayRuntime to know where to look for the log files to read.
 
-    Studio/Portal may need to override this in a special case. We will use an
-    environment variable to override the location. This is unsupported outside of
-    Studio/Portal
+    Studio/Portal may need to override this in a special case.
+    We will use an environment variable to override the location.
+    This is unsupported outside of Studio/Portal.
     """
     try:
         return Path(os.environ[RAY_TEMP_PATH_ENV])
@@ -51,9 +48,7 @@ def ray_temp_path():
 
 
 def ray_storage_path():
-    """
-    See ``ray_temp_path``
-    """
+    """See ``ray_temp_path``."""
     try:
         return Path(os.environ[RAY_STORAGE_PATH_ENV])
     except KeyError:
@@ -61,9 +56,7 @@ def ray_storage_path():
 
 
 def ray_plasma_path():
-    """
-    See ``ray_temp_path``
-    """
+    """See ``ray_temp_path``."""
     try:
         return Path(os.environ[RAY_PLASMA_PATH_ENV])
     except KeyError:
@@ -71,8 +64,7 @@ def ray_plasma_path():
 
 
 def redirected_logs_dir():
-    """
-    Used by log redirection to store workflow logs
+    """Used by log redirection to store workflow logs.
 
     By default, this is `~/.orquestra/logs` and each workflow will have log files like:
      * `~/.orquestra/logs/wf/<wf run ID>/task/<task invocation ID>.err`
@@ -91,12 +83,13 @@ IPC_TIMEOUT = 20
 class RayManager:
     @property
     def name(self) -> str:
-        """The human readable name for this service"""
+        """The human readable name for this service."""
         return "Ray"
 
     def up(self):
-        """
-        Starts a Ray cluster. If a Ray is already running, this does nothing.
+        """Starts a Ray cluster.
+
+        If Ray is already running, this does nothing.
 
         Raises:
             subprocess.CalledProcessError: if calling the `ray` CLI failed.
@@ -129,11 +122,15 @@ class RayManager:
             stderr=subprocess.PIPE,
         )
         if not self.is_running():
-            proc.check_returncode()
+            try:
+                proc.check_returncode()
+            except subprocess.CalledProcessError:
+                raise
 
     def down(self):
-        """
-        Shuts down the managed Ray cluster. If Ray isn't running, this does nothing.
+        """Shuts down the managed Ray cluster.
+
+        If Ray isn't running, this does nothing.
 
         Raises:
             subprocess.CalledProcessError: if calling the `ray` CLI failed. This
@@ -141,17 +138,19 @@ class RayManager:
         """
         # 'ray stop' can be ran multiple times. It doesn't fail if no cluster is
         # running.
-        _ = subprocess.run(
-            ["ray", "stop"],
-            check=True,
-            timeout=IPC_TIMEOUT,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+        try:
+            _ = subprocess.run(
+                ["ray", "stop"],
+                check=True,
+                timeout=IPC_TIMEOUT,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except subprocess.CalledProcessError:
+            raise
 
     def is_running(self):
-        """
-        Checks if a Ray cluster is running
+        """Checks if a Ray cluster is running.
 
         Returns:
             True if the cluster is running, False otherwise
@@ -160,11 +159,14 @@ class RayManager:
             subprocess.CalledProcessError: if calling the `ray` CLI failed. This
                 shouldn't happen in regular conditions.
         """
-        proc = subprocess.run(
-            ["ray", "status"],
-            check=False,
-            timeout=IPC_TIMEOUT,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+        try:
+            proc = subprocess.run(
+                ["ray", "status"],
+                check=False,
+                timeout=IPC_TIMEOUT,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except subprocess.CalledProcessError:
+            raise
         return proc.returncode == 0

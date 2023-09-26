@@ -1,10 +1,7 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Single place to handle datetimes and timezones without shooting yourself in the
-foot.
-"""
+"""Utilities to handle datetimes and timezones without shooting yourself in the foot."""
 
 import typing as t
 from datetime import datetime, timedelta, timezone
@@ -14,16 +11,12 @@ Instant = t.NewType("Instant", datetime)
 
 
 def now() -> Instant:
-    """
-    Generates a timezone-aware current instant. The timezone is set to UTC.
-    """
+    """Generates a timezone-aware current instant. The timezone is set to UTC."""
     return Instant(datetime.now(timezone.utc))
 
 
 def isoformat(instant: Instant) -> str:
-    """
-    Formats the instant using ISO8601 format with explicit time zone.
-    """
+    """Formats the instant using ISO8601 format with explicit time zone."""
     if instant.tzinfo is None:
         raise ValueError("We only work with timezone-aware datetimes")
 
@@ -31,9 +24,9 @@ def isoformat(instant: Instant) -> str:
 
 
 def local_isoformat(instant: Instant) -> str:
-    """
-    Formats the instant using ISO8601 format with explicit time zone. The instant is
-    shifted to a local timezone for human-friendliness.
+    """Formats the instant using ISO8601 format with explicit time zone.
+
+    The instant is shifted to a local timezone for human-friendliness.
     """
     # We need to check it as soon as possible. `.astimezone()` overrides empty tzinfo
     # with local time zone.
@@ -53,9 +46,9 @@ def from_isoformat(formatted: str) -> Instant:
 
 
 def unix_time(instant: Instant) -> float:
-    """
-    Generates a timezone-aware datetime object from a UNIX epoch timestamp (UTC seconds
-    since 1970).
+    """Generates a timezone-aware datetime object from a UNIX epoch timestamp.
+
+    (Unix epoch timestamp is UTC seconds since 1970)
     """
     if instant.tzinfo is None:
         raise ValueError("We only work with timezone-aware datetimes")
@@ -63,9 +56,9 @@ def unix_time(instant: Instant) -> float:
 
 
 def from_unix_time(epoch_seconds: float) -> Instant:
-    """
-    Parses a unix epoch timestamp (UTC seconds since 1970) into a
-    timezone-aware datetime object.
+    """Parses a unix epoch timestamp into a timezone-aware datetime object.
+
+    (Unix epoch timestamp is UTC seconds since 1970)
     """
     return Instant(datetime.fromtimestamp(epoch_seconds, timezone.utc))
 
@@ -75,11 +68,10 @@ def from_comps(
     utc_hour_offset,
     **kwargs,
 ) -> Instant:
-    """
-    Builds an instant from from timezone-local date components. Uses the same components
-    as ``datetime.datetime(...)``, apart from ``tzinfo``.
-    """
+    """Builds an instant from from timezone-local date components.
 
+    Uses the same components as ``datetime.datetime(...)``, apart from ``tzinfo``.
+    """
     new_kwargs: t.Dict[str, t.Any] = {
         **kwargs,
         "tzinfo": timezone(timedelta(hours=utc_hour_offset)),
@@ -89,9 +81,9 @@ def from_comps(
 
 
 def utc_from_comps(*args, **kwargs) -> Instant:
-    """
-    Builds an timezone-aware instant from specific date components. The components
-    should be in UTC.
+    """Builds an timezone-aware instant from specific date components.
+
+    The components should be in UTC.
     """
     new_kwargs = {**kwargs, "utc_hour_offset": 0}
     return from_comps(*args, **new_kwargs)

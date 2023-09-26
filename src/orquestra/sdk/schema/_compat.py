@@ -3,17 +3,18 @@
 ################################################################################
 """
 Backwards-compatibility layer for accessing models generated with previous SDK versions.
-"""
+"""  # noqa: D200, D212
 from . import ir
 
 
 def result_is_packed(task_def: ir.TaskDef) -> bool:
-    """
-    Tasks can return one or multiple values. We call multi-valued result "packed"
-    because it can be unpacked in the workflow function.
+    """Tasks can return one or multiple values.
 
-    Nowadays, we base this information on the task definition's metadata. With
-    orquestra-sdk<=0.45.1 the behavior was unreliable.
+    We call multi-valued result "packed" because it can be unpacked in the workflow
+    function.
+
+    Nowadays, we base this information on the task definition's metadata.
+    With orquestra-sdk<=0.45.1 the behavior was unreliable.
     """
     if (meta := task_def.output_metadata) is not None:
         return meta.is_subscriptable
@@ -24,8 +25,7 @@ def result_is_packed(task_def: ir.TaskDef) -> bool:
 
 
 def versions_are_compatible(generated_at: ir.Version, current: ir.Version) -> bool:
-    """
-    Checks if we can assume that we're okay with consuming the given IR.
+    """Checks if we can assume that we're okay with consuming the given IR.
 
     Args:
         generated_at: version of the Workflow SDK used to generate the IR.

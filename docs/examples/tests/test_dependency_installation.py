@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Snippets and tests used in the "Dependency Installation" guide.
-"""
+"""Snippets and tests used in the "Dependency Installation" guide."""
 import typing as t
 
 import pytest
@@ -163,7 +161,8 @@ class Snippets:
 def _import_models(
     dsl_task,
 ) -> t.Tuple[ir.Import, t.Optional[t.Sequence[ir.Import]]]:
-    """
+    """Extract import models from the workflow model.
+
     Uses the ``dsl_task`` exactly once in a workflow, builds the workflow model, and
     extracts imports used by the corresponding task def model.
     """
@@ -188,9 +187,7 @@ def _import_models(
 class TestSnippets:
     @staticmethod
     def test_good_practice_defaults():
-        """
-        Expecting inline source import and no dependency imports.
-        """
+        """Expecting inline source import and no dependency imports."""
         # Given
         task = Snippets.good_practice_defaults()
 
@@ -229,9 +226,7 @@ class TestSnippets:
 
     @staticmethod
     def test_simple_task_explicit():
-        """
-        Expecting inline source import and no dependency imports.
-        """
+        """Expecting inline source import and no dependency imports."""
         # Given
         task = Snippets.simple_task_explicit()
 

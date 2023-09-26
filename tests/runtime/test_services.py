@@ -1,9 +1,11 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
+
 """
 Unit tests for orquestra.sdk._base._services.
 """
+
 
 import builtins
 import subprocess
@@ -58,6 +60,12 @@ def _mock_subprocess_module(monkeypatch):
         "subprocess",
         mock_subprocess,
     )
+
+    # 'try - except' statements don't work with exceptions that don't inherit from
+    # BaseException. Since we catch CalledProcessErrors, we need to make sure that the
+    # mocked subprocess module's CalledProcessErrpr is not a mock.
+    mock_subprocess.CalledProcessError = subprocess.CalledProcessError
+
     return mock_subprocess
 
 

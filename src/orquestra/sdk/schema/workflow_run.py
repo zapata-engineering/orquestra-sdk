@@ -37,8 +37,7 @@ class State(enum.Enum):
         return cls.UNKNOWN
 
     def is_completed(self) -> bool:
-        """
-        Check whether the state indicates that execution of the workflow run has ended.
+        """Check whether the state indicates that execution of the wf run has ended.
 
         Returns:
             True if the execution has ended for any reason, False if the workflow run
@@ -70,34 +69,26 @@ class TaskRun(BaseModel):
 
 
 class WorkflowRunOnlyID(BaseModel):
-    """
-    A WorkflowRun that only contains the ID
-    """
+    """A WorkflowRun that only contains the ID."""
 
     id: WorkflowRunId
 
 
 class WorkflowRunMinimal(WorkflowRunOnlyID):
-    """
-    The minimal amount of information to create a WorkflowRun in the public API
-    """
+    """The minimal amount of information to create a WorkflowRun in the public API."""
 
     workflow_def: WorkflowDef
 
 
 class WorkflowRun(WorkflowRunMinimal):
-    """
-    A full workflow run with TaskRuns and WorkflowRun status
-    """
+    """A full workflow run with TaskRuns and WorkflowRun status."""
 
     task_runs: t.List[TaskRun]
     status: RunStatus
 
 
 class WorkflowRunSummary(WorkflowRunOnlyID):
-    """
-    A summary overview of a workflow run.
-    """
+    """A summary overview of a workflow run."""
 
     status: RunStatus
     owner: t.Optional[str]

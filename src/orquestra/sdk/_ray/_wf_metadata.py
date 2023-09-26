@@ -1,3 +1,7 @@
+################################################################################
+# © Copyright 2023 Zapata Computing Inc.
+################################################################################
+
 import json
 import typing as t
 
@@ -7,8 +11,7 @@ from ..schema import ir, workflow_run
 
 
 class WfUserMetadata(pydantic.BaseModel):
-    """
-    Information about a workflow run we store as a Ray metadata dict.
+    """Information about a workflow run we store as a Ray metadata dict.
 
     Pydantic helps us check that the thing we read from Ray is indeed a dictionary we
     set (i.e. it has proper fields).
@@ -19,8 +22,7 @@ class WfUserMetadata(pydantic.BaseModel):
 
 
 class InvUserMetadata(pydantic.BaseModel):
-    """
-    Information about a task invocation we store as a Ray metadata dict.
+    """Information about a task invocation we store as a Ray metadata dict.
 
     Pydantic helps us check that the thing we read from Ray is indeed a dictionary we
     set (i.e. it has proper fields).
@@ -37,7 +39,5 @@ class InvUserMetadata(pydantic.BaseModel):
 
 
 def pydatic_to_json_dict(pydantic_obj) -> t.Mapping[str, t.Any]:
-    """
-    Produces a JSON-serializable dict.
-    """
+    """Produces a JSON-serializable dict."""
     return json.loads(pydantic_obj.json())

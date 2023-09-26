@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Code for 'orq workflow stop'.
-"""
+"""Code for 'orq workflow stop'."""
 import typing as t
 
 from orquestra.sdk import exceptions
@@ -15,8 +13,7 @@ from .._ui import _presenters
 
 
 class Action:
-    """
-    Encapsulates app-related logic for handling ``orq workflow submit``.
+    """Encapsulates app-related logic for handling ``orq workflow stop``.
 
     The module is considered part of the name, so this class should be read as
     ``_dorq._workflow._submit.Action``.
@@ -60,9 +57,7 @@ class Action:
         config: t.Optional[ConfigName],
         force: t.Optional[bool],
     ):
-        """
-        Implementation of the command action. Doesn't catch exceptions.
-        """
+        """Implementation of the command action. Doesn't catch exceptions."""
         # The order of resolving config and run ID is important. It dictates the flow
         # user sees, and possible choices in the prompts.
         resolved_config = self._config_resolver.resolve(wf_run_id, config)

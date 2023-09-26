@@ -1,8 +1,7 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-"""
-Utility for accessing secrets managed by Orquestra.
+"""Utility for accessing secrets managed by Orquestra.
 
 You can use it both within an Orquestra Task code and a standalone script.
 

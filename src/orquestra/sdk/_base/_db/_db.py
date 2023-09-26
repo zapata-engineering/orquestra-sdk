@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 import os
 import sqlite3
@@ -38,9 +38,7 @@ def _get_default_db_location() -> Path:
 
 
 class WorkflowDB(WorkflowRepo, AbstractContextManager):
-    """
-    SQLite storage for workflow runs
-    """
+    """SQLite storage for workflow runs."""
 
     @classmethod
     def open_project_db(cls, project_dir: Union[Path, str]):
@@ -90,7 +88,7 @@ class WorkflowDB(WorkflowRepo, AbstractContextManager):
 
         Raises:
             WorkflowRunNotFoundError: raised when no matching workflow exists in the
-            database.
+                database.
 
         Returns:
             StoredWorkflowRun: the details of the stored workflow.

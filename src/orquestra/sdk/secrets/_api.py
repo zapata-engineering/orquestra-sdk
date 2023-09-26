@@ -1,9 +1,7 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Code for user-facing utilities related to secrets.
-"""
+"""Code for user-facing utilities related to secrets."""
 import typing as t
 import warnings
 
@@ -14,9 +12,7 @@ from . import _auth, _exceptions, _models
 
 
 def _translate_to_zri(workspace_id: WorkspaceId, secret_name: str) -> str:
-    """
-    Create ZRI from workspace_id and secret_name
-    """
+    """Create ZRI from workspace_id and secret_name."""
     return f"zri:v1::0:{workspace_id}:secret:{secret_name}"
 
 
@@ -35,8 +31,7 @@ def get(
     workspace_id: t.Optional[str] = None,
     config_name: t.Optional[str] = None,
 ) -> str:
-    """
-    Retrieves secret value from the remote vault.
+    """Retrieves secret value from the remote vault.
 
     Args:
         name: secret identifier.
@@ -91,15 +86,14 @@ def list(
     workspace_id: t.Optional[str] = None,
     config_name: t.Optional[str] = None,
 ) -> t.Sequence[str]:
-    """
-    Lists all secret names.
+    """Lists all secret names.
 
     Args:
         workspace_id: ID of the workspace. Using platform-defined default if omitted -
-            - currently it is personal workspace
+            - currently it is personal workspace.
         config_name: config entry to use to communicate with Orquestra Platform.
-            Required when used from a local machine. Ignored when
-            ORQUESTRA_PASSPORT_FILE env variable is set.
+            Required when used from a local machine.
+            Ignored when the ORQUESTRA_PASSPORT_FILE env variable is set.
 
     Raises:
         orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was
@@ -130,17 +124,16 @@ def set(
     workspace_id: t.Optional[str] = None,
     config_name: t.Optional[str] = None,
 ):
-    """
-    Sets secret value at the remote vault. Overwrites already existing secrets.
+    """Sets secret value at the remote vault. Overwrites already existing secrets.
 
     Args:
         name: secret identifier.
         value: new secret name.
         workspace_id: workspace in which secret will be created. Using platform-defined
-            default if omitted - currently it is personal workspace
+            default if omitted - currently it is personal workspace.
         config_name: config entry to use to communicate with Orquestra Platform.
-            Required when used from a local machine. Ignored when
-            ORQUESTRA_PASSPORT_FILE env variable is set.
+            Required when used from a local machine.
+            Ignored when the ORQUESTRA_PASSPORT_FILE env variable is set.
 
     Raises:
         orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was
@@ -177,16 +170,15 @@ def delete(
     workspace_id: t.Optional[str] = None,
     config_name: t.Optional[str] = None,
 ):
-    """
-    Deletes secret from the remote vault.
+    """Deletes secret from the remote vault.
 
     Args:
         name: secret identifier.
         workspace_id: ID of the workspace. Using platform-defined default if omitted -
-            - currently it is personal workspace
+            - currently it is personal workspace.
         config_name: config entry to use to communicate with Orquestra Platform.
-            Required when used from a local machine. Ignored when
-            ORQUESTRA_PASSPORT_FILE env variable is set.
+            Required when used from a local machine.
+            Ignored when the ORQUESTRA_PASSPORT_FILE env variable is set.
 
     Raises:
         orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was

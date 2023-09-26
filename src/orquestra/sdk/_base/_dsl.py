@@ -113,10 +113,9 @@ class Secret(NamedTuple):
 
 @dataclass(frozen=True, eq=True)
 class GitImportWithAuth:
-    """
-    A task import that uses a private Git repo
+    """A task import that uses a private Git repo.
 
-    Please use a helper method, such as GithubImport, instead of this class
+    Please use a helper, such as GithubImport, instead of this class.
     """
 
     repo_url: str
@@ -127,7 +126,7 @@ class GitImportWithAuth:
 
 @dataclass(frozen=True, eq=True)
 class GitImport:
-    """A task import that uses a Git repository"""
+    """A task import that uses a Git repository."""
 
     repo_url: str
     git_ref: str
@@ -138,14 +137,15 @@ class GitImport:
         git_ref: Optional[str] = None,
     ) -> "DeferredGitImport":
         """Get local Git info for a specific local repo.
-           The current git repo info is retrieved as default.
+
+        The current git repo info is retrieved as default.
 
         Args:
-            local_repo_path - path to the local repo
-            git_ref - branch/commit/tag
+            local_repo_path: path to the local repo.
+            git_ref: branch/commit/tag.
 
         Usage:
-            GitImport.infer()
+            ``GitImport.infer()``
         """
         return DeferredGitImport(local_repo_path, git_ref)
 
@@ -156,8 +156,15 @@ def GithubImport(
     username: Optional[str] = None,
     personal_access_token: Optional[Secret] = None,
 ):
-    """
-    Helper to create GitImports from Github repos.
+    """Helper to create GitImports from Github repos.
+
+    Args:
+        repo: The name of the repo from which to import.
+        git_ref: the reference to be imported
+            (see https://docs.github.com/en/rest/git/refs for details).
+        username: the username used to access GitHub
+        personal_access_token: must be configured in GitHub for access to the specified
+            repo.
 
     Raises:
         TypeError: when a value that is not a `sdk.Secret` is passed as
@@ -212,7 +219,7 @@ class DeferredGitImport:
                 NotAGitRepo: when the local directory is not a valid git repo
                 NoRemoteRepo: when the remote git repo doesn't exist
                 DirtyGitRep: when there is uncommitted change or unpushed commit
-                in a git repo
+                    in a git repo
         """
         import git
 
@@ -251,7 +258,7 @@ class DeferredGitImport:
 
 
 class PythonImports:
-    """A task import that uses Python packages"""
+    """A task import that uses Python packages."""
 
     def __init__(
         self,
@@ -310,6 +317,7 @@ class PythonImports:
 @dataclass(frozen=True, eq=True)
 class LocalImport:
     """Used to specify that the source code is only available locally.
+
     e.g. not committed to any git repo or in a Python package
     """
 
@@ -318,9 +326,7 @@ class LocalImport:
 
 @dataclass(frozen=True, eq=True)
 class InlineImport:
-    """
-    A task import that stores the function "inline" with the workflow definition.
-    """
+    """A task import that stores the function "inline" with the workflow definition."""
 
     pass
 
@@ -348,8 +354,7 @@ Import = Union[
 
 
 class Resources(NamedTuple):
-    """
-    The computational resources a workflow or task requires.
+    """The computational resources a workflow or task requires.
 
     If any of these options are omitted, (or is None) the runtime's default value will
     be used.
@@ -381,8 +386,7 @@ class Resources(NamedTuple):
 
 
 class DataAggregation(NamedTuple):
-    """
-    A class representing information for data aggregation task
+    """A class representing information for data aggregation task.
 
     run - a boolean specifying whether data aggregation should be run (default to True)
     resources - desired resources for data aggregation step (default to:
@@ -482,8 +486,9 @@ _R = TypeVar("_R")
 
 
 class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
-    """A function exposed to Orquestra. This is the result of applying the @task
-    decorator.
+    """A function exposed to Orquestra.
+
+    This is the result of applying the @task decorator.
 
     We do some magic to transform Python code in the workflow function decorated
     function to build the computational workflow graph. Use the `.model` property to
@@ -577,16 +582,18 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
                     raise InvalidTaskDefinitionError(err)
 
     def validate_task(self):
-        """Validate tasks for possible incompatibilities
+        """Validate tasks for possible incompatibilities.
 
         Raises:
             InvalidTaskDefinitionError: If task is defined in __main__module and is not
-            inlined using source_import==InlineImport()
-            or
-            When invalid number of resources was requested
+                inlined using ``source_import==InlineImport()`` or when an invalid
+                number of resources was requested
         """
-        self._validate_task_not_in_main()
-        self._validate_task_resources()
+        try:
+            self._validate_task_not_in_main()
+            self._validate_task_resources()
+        except InvalidTaskDefinitionError:
+            raise
 
     def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
@@ -784,8 +791,7 @@ class ArtifactFuture:
         return iter(futures)
 
     def __reduce_ex__(self, protocol):
-        """
-        Handles Pickling for ArtifactFuture
+        """Handles Pickling for ArtifactFuture.
 
         We currently do not support pickling ArtifactFutures and instead have a
         different format for passing artifacts between tasks.
@@ -821,7 +827,8 @@ class ArtifactFuture:
             Union[str, "orquestra.sdk._base._dsl.Sentinel"]
         ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
-        """Assigns optional metadata related to task invocation used to generate this
+        """
+        Assigns optional metadata related to task invocation used to generate this
         artifact.
 
         Doesn't modify existing invocations, returns a new one.
@@ -838,7 +845,7 @@ class ArtifactFuture:
             disk: amount of disk assigned to the task invocation
             gpu: amount of gpu assigned to the task invocation
             custom_image: docker image used to run the task invocation
-        """
+        """  # noqa: D205, D212
         self._check_if_destructured(
             fn_name=self.invocation.task._fn_name,
             assign_type="invocation metadata",
@@ -900,7 +907,8 @@ class ArtifactFuture:
             Union[str, "orquestra.sdk._base._dsl.Sentinel"]
         ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
-        """Assigns optional metadata related to task invocation used to generate this
+        """
+        Assigns optional metadata related to task invocation used to generate this
         artifact.
 
         Doesn't modify existing invocations, returns a new one.
@@ -914,7 +922,7 @@ class ArtifactFuture:
             memory: amount of memory assigned to the task invocation
             disk: amount of disk assigned to the task invocation
             gpu: amount of gpu assigned to the task invocation
-        """
+        """  # noqa: D205, D212
         self._check_if_destructured(
             fn_name=self.invocation.task._fn_name,
             assign_type="resources",
@@ -931,7 +939,8 @@ class ArtifactFuture:
             Union[str, "orquestra.sdk._base._dsl.Sentinel"]
         ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
-        """Assigns optional metadata related to task invocation used to generate this
+        """
+        Assigns optional metadata related to task invocation used to generate this
         artifact.
 
         Doesn't modify existing invocations, returns a new one.
@@ -944,7 +953,7 @@ class ArtifactFuture:
 
         Args:
             custom_image: docker image used to run the task invocation
-        """
+        """  # noqa: D205, D212
         self._check_if_destructured(
             fn_name=self.invocation.task._fn_name,
             assign_type="custom image",
@@ -953,9 +962,17 @@ class ArtifactFuture:
         return self.with_invocation_meta(custom_image=custom_image)
 
     def _check_if_destructured(self, fn_name: str, assign_type: str):
-        """
-        Check if an ArtifactFuture has been destructured and raise a
-        WorkflowSyntaxError with the appropriate error message if so
+        """Check if an ArtifactFuture has been destructured.
+
+        The fn_name and assign_type are used to construct an informative error message
+        if the ArtifactFuture is destructured.
+
+        Args:
+            fn_name: The name of the function that created this ArtifactFuture.
+            assign_type: The type of metadata being added to the ArtifactFuture.
+
+        Raises:
+            WorkflowSyntaxError: if the ArtifactFuture has been destructured
         """
         if self.output_index is not None:
             summary = traceback.StackSummary.extract(
@@ -1098,8 +1115,7 @@ def task(
     custom_image: Optional[str] = None,
     custom_name: Optional[str] = None,
 ) -> Union[TaskDef[_P, _R], Callable[[Callable[_P, _R]], TaskDef[_P, _R]]]:
-    """
-    Wraps a function into an Orquestra Task.
+    """Wraps a function into an Orquestra Task.
 
     The result is something you can use inside your `@sdk.workflow` function. If you
     need to call the task's underlying function directly, see
@@ -1129,6 +1145,9 @@ def task(
             result of other task) - it will be placeholded. Every character that is
             non-alphanumeric will be changed to dash ("-").
             Also only first 128 characters of the name will be used
+
+    Raises:
+        ValueError: when a task has fewer than 1 outputs.
     """
     task_dependency_imports: Optional[Tuple[Import, ...]]
 

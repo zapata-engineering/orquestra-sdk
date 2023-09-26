@@ -1,8 +1,7 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-"""
-User-facing API for controlling workflows.
+"""User-facing API for controlling workflows.
 
 We re-export symbols here for grouping concepts under the "api" umbrella, e.g.
 "_api.WorkflowRun".

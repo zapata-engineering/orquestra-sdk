@@ -233,9 +233,9 @@ def serial_wf_with_slow_middle_task():
 
 @sdk.task
 def add_with_trigger(a, b, port, timeout: float):
-    """
-    Simulates a task that takes some time to run. Waits until a message
-    in given socket appears
+    """Simulates a task that takes some time to run.
+
+    Waits until a message in given socket appears.
     """
     ipc.TriggerClient(port).wait_on_trigger(timeout)
 
@@ -252,23 +252,23 @@ def long_task(*_):
 
 @sdk.workflow
 def infinite_workflow():
-    """
-    Allows reproducing scenario where tasks take some time to run.
-    This workflow is used to test termination as it will never complete
+    """Allows reproducing scenario where tasks take some time to run.
+
+    This workflow is used to test termination as it will never complete.
     This workflow isn't actually infinite - it just takes an hour of sleep time to
-    complete
+    complete.
     """
     return long_task()
 
 
 @sdk.workflow
 def serial_wf_with_file_triggers(ports: Sequence[int], task_timeout: float):
-    """
-    Allows reproducing scenario where tasks take some time to run. Uses
-    socket-based coordination.
+    """Allows reproducing scenario where tasks take some time to run.
 
-    There are as many workflow graph nodes as there are `ports`. Each
-    task in the series waits for message to be present at a corresponding port.
+    Uses socket-based coordination.
+
+    There are as many workflow graph nodes as there are `ports`.
+    Each task in the series waits for message to be present at a corresponding port.
     """
     first_future = add_with_trigger(21, 37, ports[0], timeout=task_timeout)
     future = first_future
@@ -280,9 +280,7 @@ def serial_wf_with_file_triggers(ports: Sequence[int], task_timeout: float):
 
 @sdk.task
 def add_with_error(a, b):
-    """
-    Simulates a task with inputs that raises an exception.
-    """
+    """Simulates a task with inputs that raises an exception."""
     # Raises ZeroDivisionError
     42 / 0
 
@@ -291,21 +289,20 @@ def add_with_error(a, b):
 
 @sdk.workflow
 def exception_wf_with_multiple_values():
-    """
-    ::
+    """::
 
-           [1]
-            │
-            ▼
-           [2] => exception
-            │
-            ▼
-           [3] => won't run
-            │
-            ▼
-        [return]
+    [1]
+    │
+    ▼
+    [2] => exception
+    │
+    ▼
+    [3] => won't run
+    │
+    ▼
+    [return]
 
-    """
+    """  # noqa: D415
     future1 = add(37, 21)
     future2 = add_with_error(future1, future1)
     future3 = add(future2, future2)

@@ -11,12 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from decimal import Decimal, InvalidOperation
+from typing import Any
 
 
-def parse_quantity(quantity):
-    """
-    Parse kubernetes canonical form quantity like 200Mi to a decimal number.
+def parse_quantity(quantity: Any):
+    """Parse kubernetes canonical form quantity like 200Mi to a decimal number.
+
     Supported SI suffixes:
     base1024: Ki | Mi | Gi | Ti | Pi | Ei
     base1000: n | u | m | "" | k | M | G | T | P | E
@@ -24,14 +26,14 @@ def parse_quantity(quantity):
     See:
     https://github.com/kubernetes/apimachinery/blob/master/pkg/api/resource/quantity.go
 
-    Input:
-    quantity: string. kubernetes canonical form quantity
+    Args:
+        quantity: kubernetes canonical form quantity
 
     Returns:
-    Decimal
+        Decimal
 
     Raises:
-    ValueError on invalid or unknown input
+        ValueError: on invalid or unknown input
     """
     if isinstance(quantity, (int, float, Decimal)):
         return Decimal(quantity)

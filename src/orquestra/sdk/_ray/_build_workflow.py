@@ -1,9 +1,7 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-"""
-Translates IR workflow def into a Ray workflow.
-"""
+"""Translates IR workflow def into a Ray workflow."""
 import os
 import time
 import typing as t
@@ -45,9 +43,10 @@ def _arg_from_graph(argument_id: ir.ArgumentId, workflow_def: ir.WorkflowDef):
 
 
 def _locate_user_fn(fn_ref: ir.FunctionRef):
-    """
-    Dereferences 'fn_ref', loads the module attribute, and extracts the
-    underlying user function if it was a TaskDef.
+    """Extract the underlying user functions from a 'fn_ref'.
+
+    Dereferences 'fn_ref', loads the module attribute, and extracts the underlying user
+    function if it was a TaskDef.
     """
     obj: t.Any = dispatch.locate_fn_ref(fn_ref)
 
@@ -71,9 +70,7 @@ class TaskResult(t.NamedTuple):
 
 
 class ArgumentUnwrapper:
-    """
-    Unwraps arguments (constants, secrets, artifacts) before passing to a task
-    """
+    """Unwraps arguments (constants, secrets, artifacts) before passing to a task."""
 
     def __init__(
         self,
@@ -82,20 +79,24 @@ class ArgumentUnwrapper:
         kwargs_artifact_nodes: t.Mapping[str, ir.ArtifactNode],
         deserialize: bool,
     ):
-        """
+        """Initilaiser for the ArgumentUnwrapper.
+
         Args:
-            user_fn: the task function to wrap
+            user_fn: the task function to wrap.
             args_artifact_nodes: A map of positional argument index to workflow artifact
-                node. This is to assist with unpacking artifact results.
+                node.
+                This is to assist with unpacking artifact results.
                 Not all positional arguments will be included, i.e. a constant or secret
             kwargs_artifact_nodes: A map of keyword argument name to workflow artifact
-                node. This is to assist with unpacking artifact results.
+                node.
+                This is to assist with unpacking artifact results.
                 Not all positional arguments will be included, i.e. a constant or secret
             deserialize: If true, we will first deserialize the argument before passing
-                to the task function. If false, the serialized argument is passed to
-                the underlying task function. This is used to avoid the deserialization
-                problem of having the Python dependencies for Pickles when aggregating
-                the outputs of a workflow.
+                to the task function.
+                If false, the serialized argument is passed to the underlying task
+                function.
+                This is used to avoid the deserialization problem of having the Python
+                dependencies for Pickles when aggregating the outputs of a workflow.
         """
         self._user_fn = user_fn
         self._args_artifact_nodes = args_artifact_nodes
@@ -193,24 +194,24 @@ def _make_ray_dag_node(
     output_metadata: t.Optional[ir.TaskOutputMetadata],
     dry_run: bool,
 ) -> _client.FunctionNode:
-    """
-    Prepares a Ray task that fits a single ir.TaskInvocation. The result is a
-    node in a Ray DAG.
+    """Prepares a Ray task that fits a single ir.TaskInvocation.
+
+    The result is a node in a Ray DAG.
 
     Args:
-        client: Ray API facade
-        ray_options: dict passed to _client.RayClient.add_options()
-        ray_args: constants or futures required to build the DAG
-        ray_kwargs: constants or futures required to build the DAG
+        client: Ray API facade.
+        ray_options: dict passed to _client.RayClient.add_options().
+        ray_args: constants or futures required to build the DAG.
+        ray_kwargs: constants or futures required to build the DAG.
         args_artifact_nodes: a map of positional arg index to artifact node
-            see ArgumentUnwrapper
+            see ArgumentUnwrapper.
         kwargs_artifact_nodes: a map of keyword arg name to artifact node
-            see ArgumentUnwrapper
-        project_dir: the working directory the workflow was submitted from
+            see ArgumentUnwrapper.
+        project_dir: the working directory the workflow was submitted from.
         user_fn_ref: function reference for a function to be executed by Ray.
-            if None - executes data aggregation step
-        output_metadata: output metadata for the user task function. Keeps number
-            of outputs and if the output is subscriptable
+            if None - executes data aggregation step.
+        output_metadata: output metadata for the user task function.
+            Keeps number of outputs and if the output is subscriptable.
         dry_run: Run the task without actually executing any user code.
             Useful for testing infrastructure, dependency imports, etc.
     """
@@ -298,12 +299,12 @@ def _make_ray_dag_node(
 def _gen_task_run_id(wf_run_id: str, invocation: ir.TaskInvocation):
     """
     Loosely corresponds to the "unified ID" in the tagging design doc:
-    https://zapatacomputing.atlassian.net/wiki/spaces/ORQSRUN/pages/479920161/Logging+Tagging
+    https://zapatacomputing.atlassian.net/wiki/spaces/ORQSRUN/pages/479920161/Logging+Tagging.
 
     Assumed to be globally unique.
 
     Example value: "wf.multioutput_wf.91aa7aa@invocation-3-task-make-company-name.91e4b"
-    """
+    """  # noqa: D205, D212
     inv_id = invocation.id
     hex_str = _id_gen.gen_short_uid(char_length=5)
 
@@ -378,8 +379,9 @@ def _gather_kwargs(kwargs, workflow_def, ray_futures):
 def _ray_resources_for_custom_image(image_name: str) -> t.Mapping[str, float]:
     """
     Custom Ray resources we set to power running Orquestra tasks on custom Docker
-    images. The values are coupled with Compute Engine server-side set up.
-    """
+    images.
+    The values are coupled with Compute Engine server-side set up.
+    """  # noqa: D205, D212
     # The format for custom image strings is described in the ADR:
     # https://zapatacomputing.atlassian.net/wiki/spaces/ORQSRUN/pages/688259073/2023-05-05+Ray+resources+syntax+for+custom+images
     return {f"image:{image_name}": 1}
@@ -542,12 +544,10 @@ def get_current_ids() -> (
         t.Optional[workflow_run.TaskRunId],
     ]
 ):
-    """
-    Uses Ray context to figure out what are the IDs of the currently running workflow
-    and task.
+    """Use Ray context to figure out the IDs of the currently running workflow and task.
 
     The returned TaskInvocationID and TaskRunID are None if we weren't able to get them
-    from current Ray context.
+    from the current Ray context.
     """
     # NOTE: this is tightly coupled with how we create Ray workflow DAG, how we assign
     # IDs and metadata.

@@ -2,9 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 
-"""
-Snippets and tests used in the "MLFlow Utilities" tutorial.
-"""
+"""Snippets and tests used in the "MLFlow Utilities" tutorial."""
 
 import os
 import pickle
@@ -154,9 +152,7 @@ class TestSnippets:
     class TestTrackingURIToken:
         @staticmethod
         def test_local(mocked_environ, monkeypatch, tmp_path):
-            """
-            Simulates using the snippets from standalone scripts or the local runtimes.
-            """
+            """Simulates using snippets from standalone scripts or local runtimes."""
             # Given
             monkeypatch.setattr(mlflow, "log_metric", Mock())
             base_uri = "https://foo.example.com"
@@ -179,9 +175,7 @@ class TestSnippets:
         def test_var_env_override(
             mocked_environ, monkeypatch, tmp_path, mocked_responses
         ):
-            """
-            Simulates using the snippets from Studio or CE.
-            """
+            """Simulates using the snippets from Studio or CE."""
             # Given
             monkeypatch.setattr(mlflow, "log_metric", Mock())
             monkeypatch.setenv("ORQ_CURRENT_CLUSTER", "mock orq current cluster")
@@ -230,9 +224,7 @@ class TestSnippets:
     class TestTrackingTask:
         @staticmethod
         def test_local(mocked_environ, monkeypatch, tmp_path):
-            """
-            Simulates using the snippets from standalone scripts or the local runtimes.
-            """
+            """Simulates using snippets from standalone scripts or local runtimes."""
             # Given
             monkeypatch.setattr(mlflow, "log_metric", Mock())
             base_uri = "https://foo.example.com"
