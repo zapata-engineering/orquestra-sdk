@@ -13,7 +13,6 @@ import sys
 import time
 import typing as t
 from pathlib import Path
-from unittest import mock
 
 import pytest
 
@@ -39,18 +38,16 @@ pytestmark = pytest.mark.filterwarnings(
 def runtime(
     shared_ray_conn, tmp_path_factory: pytest.TempPathFactory, change_db_location
 ):
+    # We need to set this env variable to let our logging code know the
+    # tmp location has changed.
+    os.environ[RAY_TEMP_PATH_ENV] = str(shared_ray_conn._temp_dir)
+
     project_dir = tmp_path_factory.mktemp("ray-integration")
     config = LOCAL_RUNTIME_CONFIGURATION
     client = _client.RayClient()
     rt = _dag.RayRuntime(config, project_dir, client)
 
     yield rt
-
-
-@pytest.fixture
-def mock_ray_temp_path(shared_ray_conn):
-    with mock.patch.dict(os.environ, {RAY_TEMP_PATH_ENV: shared_ray_conn._temp_dir}):
-        yield
 
 
 def _poll_loop(
@@ -265,7 +262,7 @@ class TestRayRuntimeMethods:
         )
         @pytest.mark.parametrize("trial", range(5))
         def test_handles_ray_environment_setup_error(
-            self, runtime: _dag.RayRuntime, trial, shared_ray_conn, mock_ray_temp_path
+            self, runtime: _dag.RayRuntime, trial, shared_ray_conn
         ):
             # Given
             wf_def = _example_wfs.cause_env_setup_error.model
