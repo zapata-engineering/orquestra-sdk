@@ -39,6 +39,7 @@ The following sections give a more complete explanation of these importers and t
      - * Works well as a ``dependency_imports=[...]`` addition to ``InlineImport`` to allow using 3rd-party libraries.
        * Best suited for referencing libraries available on `PyPI <https://pypi.org/>`_ like ``torch``.
      - * Can't be reliably used to refer to an unpublished, WIP projects.
+       * Be cautious when including ``orquestra-sdk`` as a dependency - the version installed inside the task *must* match the version used to submit the workflow.
 
    * - ``GithubImport``
      - * Well-suited for unpublished, WIP projects.
@@ -178,6 +179,15 @@ The required packages can be specified as arguments, or listed in a ``requiremen
     :end-before: </snippet>
     :language: python
     :dedent: 8
+
+.. warning::
+    Take care when declaring ``orquestra-sdk`` as a dependency!
+    ``PythonImports`` allows you to install any available python package in the environment that executes the task.
+    Consequently, it is possible to create a situation where the environment that executes the task and the environment that submits a task have different versions of ``orquestra-sdk`` installed.
+    This will cause workflow runs to fail!
+
+    Note that this also applies to transitive dependencies - if you depend on a package with a strict dependency on an older version of ``orquestra-sdk`` then the mismatch will arise even if you don't declare a dependency on ``orquestra-sdk`` directly.
+
 
 
 ``GithubImport`` With A Private Repo
