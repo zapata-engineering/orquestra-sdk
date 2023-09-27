@@ -12,7 +12,7 @@ import webbrowser
 from contextlib import contextmanager
 from functools import singledispatchmethod
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import List, Optional, Sequence
 
 import click
 from rich.box import SIMPLE_HEAVY
@@ -362,6 +362,30 @@ class WFRunPresenter(RichPresenter):
         self._console.print(self.get_wf_run(summary))
 
     def show_wf_list(self, summary: ui_models.WFList):
+        """Display a list of workflow runs.
+
+        The list is shown as a table with the following headings:
+        - Workflow Run ID
+        - Status
+        - Succeeded Tasks
+        - Start Time
+        - [Owner]
+
+        The 'Owner' column is displayed as long as at least one run in the list has a
+        populated ``owner`` field.
+
+        Example output::
+
+            Workflow Run ID   Status     Succeeded Tasks   Start Time                 Owner
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            wf1               SUCCEEDED  1/1               Fri Feb 24 08:26:07 2023   taylor.swift@zapatacomputing.com
+            wf2               WAITING    0/1                                          taylor.swift@zapatacomputing.com
+
+        Args:
+            summary: A list of workflow run summaries to be displayed.
+        """  # noqa: E501
+        show_owner: bool = any(row.owner for row in summary.wf_rows)
+
         table = Table(
             "Workflow Run ID",
             "Status",
@@ -369,13 +393,21 @@ class WFRunPresenter(RichPresenter):
             "Start Time",
             box=SIMPLE_HEAVY,
         )
+        if show_owner:
+            table.add_column(header="Owner")
+
         for run in summary.wf_rows:
-            table.add_row(
+            values: List[Optional[str]] = [
                 run.workflow_run_id,
                 run.status,
                 run.tasks_succeeded,
                 _format_datetime(run.start_time),
-            )
+            ]
+            if show_owner:
+                values.append(run.owner)
+
+            table.add_row(*values)
+
         self._console.print(table)
 
 

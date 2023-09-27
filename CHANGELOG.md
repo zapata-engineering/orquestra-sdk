@@ -8,7 +8,9 @@
 * CE: When a task fails, the workflow will continue to be `RUNNING` while all other started tasks complete.
 
 🔥 *Features*
+
 * Added `sdk.list_workflow_run_summeries()` as a partner to `sdk.list_workflow_runs()` - the new function provides a static overview of workflow runs as a way to quickly check on their statuses.
+* `orq wf list` now displays the `owner` for each CE workflow run.
 * `WorkflowRun` objects in the API now have a "message" field, similar to that of `TaskRun`, to provide additional context to the status. If populated, this field is displayed alongside other workflow run info.
 
 🧟 *Deprecations*
