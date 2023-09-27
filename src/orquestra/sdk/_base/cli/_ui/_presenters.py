@@ -384,7 +384,7 @@ class WFRunPresenter(RichPresenter):
         Args:
             summary: A list of workflow run summaries to be displayed.
         """  # noqa: E501
-        show_owner = any(row.owner for row in summary.wf_rows)
+        show_owner: bool = any(row.owner for row in summary.wf_rows)
 
         table = Table(
             "Workflow Run ID",
@@ -397,13 +397,17 @@ class WFRunPresenter(RichPresenter):
             table.add_column(header="Owner")
 
         for run in summary.wf_rows:
-            table.add_row(
+            values = [
                 run.workflow_run_id,
                 run.status,
                 run.tasks_succeeded,
                 _format_datetime(run.start_time),
-                run.owner,
-            )
+            ]
+            if show_owner:
+                values.append(run.owner)
+
+            table.add_row(*values)
+
         self._console.print(table)
 
 
