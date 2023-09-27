@@ -293,7 +293,7 @@ class TestRayRuntimeMethods:
                 r"Could not set up runtime environment \('pip\.py:\d* -- Failed to install pip packages'\)\. See environment setup logs for details. `orq wf logs "  # noqa: E501
                 + str(run_id)
                 + r" --env-setup`",
-                re.escape(str(run.message)),
+                str(run.message),
             ), (
                 f"\n-MESSAGE: {run.message}"
                 f"\n-ENV SETUP OUT:\n{logs.env_setup.out}"
