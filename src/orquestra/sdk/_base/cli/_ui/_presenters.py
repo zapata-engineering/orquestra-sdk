@@ -12,7 +12,7 @@ import webbrowser
 from contextlib import contextmanager
 from functools import singledispatchmethod
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import List, Optional, Sequence
 
 import click
 from rich.box import SIMPLE_HEAVY
@@ -397,7 +397,7 @@ class WFRunPresenter(RichPresenter):
             table.add_column(header="Owner")
 
         for run in summary.wf_rows:
-            values = [
+            values: List[Optional[str]] = [
                 run.workflow_run_id,
                 run.status,
                 run.tasks_succeeded,
