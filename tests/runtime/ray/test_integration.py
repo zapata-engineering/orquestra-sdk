@@ -40,6 +40,7 @@ def runtime(
 ):
     # We need to set this env variable to let our logging code know the
     # tmp location has changed.
+    old_env = os.getenv(RAY_TEMP_PATH_ENV)
     os.environ[RAY_TEMP_PATH_ENV] = str(shared_ray_conn._temp_dir)
 
     project_dir = tmp_path_factory.mktemp("ray-integration")
@@ -48,6 +49,11 @@ def runtime(
     rt = _dag.RayRuntime(config, project_dir, client)
 
     yield rt
+
+    if old_env is None:
+        del os.environ[RAY_TEMP_PATH_ENV]
+    else:
+        os.environ[RAY_TEMP_PATH_ENV] = old_env
 
 
 def _poll_loop(
