@@ -384,11 +384,7 @@ class WFRunPresenter(RichPresenter):
         Args:
             summary: A list of workflow run summaries to be displayed.
         """  # noqa: E501
-        show_owner: bool = False
-        for row in summary.wf_rows:
-            if row.owner:
-                show_owner = True
-                break
+        show_owner = any(row.owner for row in summary.wf_rows)
 
         table = Table(
             "Workflow Run ID",
