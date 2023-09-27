@@ -384,3 +384,21 @@ def task_with_single_output_explicit():
 @sdk.workflow
 def wf_with_explicit_n_outputs():
     return task_with_single_output_explicit()
+
+
+@sdk.task(
+    source_import=sdk.InlineImport(),
+    dependency_imports=sdk.PythonImports("MarkupSafe==1.0.0", "Jinja2==2.7.2"),
+)
+def cause_env_setup_error_task() -> bool:
+    return True
+
+
+@sdk.workflow
+def cause_env_setup_error():
+    """This WF errors out during environment setup so we can test how it is handled.
+
+    Jinja2 relies on a higher version of MarkupSafe, so the dependency imports for the
+    cause_env_setup_error_task task will cause pip to throw an error.
+    """
+    return [cause_env_setup_error_task()]

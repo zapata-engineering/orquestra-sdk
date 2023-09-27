@@ -7,6 +7,9 @@ as possible, because it's slow to run. Please consider using unit tests and
 RuntimeInterface mocks instead of extending this file.
 """
 import json
+import os
+import re
+import sys
 import time
 import typing as t
 from pathlib import Path
@@ -16,6 +19,7 @@ import pytest
 from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._base._config import LOCAL_RUNTIME_CONFIGURATION
+from orquestra.sdk._base._env import RAY_TEMP_PATH_ENV
 from orquestra.sdk._base._testing import _example_wfs, _ipc
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk._ray import _build_workflow, _client, _dag, _ray_logs
@@ -34,11 +38,22 @@ pytestmark = pytest.mark.filterwarnings(
 def runtime(
     shared_ray_conn, tmp_path_factory: pytest.TempPathFactory, change_db_location
 ):
+    # We need to set this env variable to let our logging code know the
+    # tmp location has changed.
+    old_env = os.getenv(RAY_TEMP_PATH_ENV)
+    os.environ[RAY_TEMP_PATH_ENV] = str(shared_ray_conn._temp_dir)
+
     project_dir = tmp_path_factory.mktemp("ray-integration")
     config = LOCAL_RUNTIME_CONFIGURATION
     client = _client.RayClient()
     rt = _dag.RayRuntime(config, project_dir, client)
+
     yield rt
+
+    if old_env is None:
+        del os.environ[RAY_TEMP_PATH_ENV]
+    else:
+        os.environ[RAY_TEMP_PATH_ENV] = old_env
 
 
 def _poll_loop(
@@ -247,6 +262,46 @@ class TestRayRuntimeMethods:
                 # On Windows - timer resolution might not detect the change in time
                 # during start and finish of a task. Thus it is >=, not >
                 assert (status.end_time - status.start_time).total_seconds() >= 0
+
+        @pytest.mark.skipif(
+            sys.platform.startswith("win32"), reason="File writing on windows is slow."
+        )
+        @pytest.mark.parametrize("trial", range(5))
+        def test_handles_ray_environment_setup_error(
+            self, runtime: _dag.RayRuntime, trial, shared_ray_conn
+        ):
+            # Given
+            wf_def = _example_wfs.cause_env_setup_error.model
+            run_id = runtime.create_workflow_run(wf_def, None, False)
+
+            # Block until wf completes
+            _wait_to_finish_wf(run_id, runtime, timeout=100)
+
+            # When
+            run = runtime.get_workflow_run_status(run_id)
+
+            # Then
+            assert (
+                run.status.state == State.FAILED
+            ), f"Invalid state. Full status: {run.status}. Task runs: {run.task_runs}"
+            # Grab the logs so we can debug when the test fails
+            logs = _ray_logs.DirectLogReader(
+                Path(shared_ray_conn._temp_dir)
+            ).get_workflow_logs(wf_run_id=run_id)
+
+            re_pattern = (
+                r"Could not set up runtime environment "
+                r"\('pip\.py:\d* -- Failed to install pip packages'\)\. "
+                r"See environment setup logs for details. "
+                r"`orq wf logs " + re.escape(str(run_id)) + r" --env-setup`"
+            )
+
+            assert re.match(re_pattern, str(run.message)), (
+                f"\n-MESSAGE: {run.message}"
+                f"\n-ENV SETUP OUT:\n{logs.env_setup.out}"
+                f"\n-ENV SETUP ERR:\n{logs.env_setup.err}"
+                f"\n-OTHER:\n{logs}"
+            )
 
         def test_exception_in_task_stops_execution(self, runtime: _dag.RayRuntime):
             """

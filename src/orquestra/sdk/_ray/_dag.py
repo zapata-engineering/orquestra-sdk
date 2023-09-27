@@ -271,11 +271,17 @@ def _workflow_status_from_ray_meta(
         # was marked as failed, not when the last task ended. Note that workflows can
         # fail with waiting tasks, so we filter out any tasks that don't have a start
         # time.
-        _end_time = max(
+        task_end_times = [
             task_meta["stats"].get("end_time")
             for task_meta in ray_task_metas
             if task_meta["stats"].get("start_time")
-        )
+        ]
+        if len(task_end_times) == 0:
+            # If there are no usable task end times, use the workflow end time.
+            # This can occur if a workflow fails during environment setup.
+            _end_time = end_time
+        else:
+            _end_time = max(task_end_times)
     else:
         # In all other scenarios, we can just use the end_time the workflow
         # metadata provides.
@@ -468,6 +474,40 @@ class RayRuntime(RuntimeInterface):
             self._client.get_task_metadata(workflow_id=workflow_run_id, name=inv_id)
             for inv_id in inv_ids
         ]
+        message: t.Optional[str] = None
+
+        if wf_status == _client.WorkflowStatus.FAILED:
+            # Set the default message. This is the fallback in case we can't determine
+            # any more precide information.
+            message = (
+                "The workflow encountered an issue. "
+                "Please consult the logs for more information. "
+                f"`orq wf logs {workflow_run_id}`"
+            )
+
+            # Scan the logs for telltales of known failure modes.
+            # Currently this only covers failure to set up the environment.
+            logs = self.get_workflow_logs(workflow_run_id)
+            for line in reversed(logs.env_setup.err + logs.env_setup.out):
+                # If there's an ERROR level message in the env setup logs, and no task
+                # logs, we interpret this as a failure to set up the environment.
+                # We search backwards as the error is likely to be one of the last
+                # things to have happened.
+                error_log_pattern = re.compile(
+                    r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(,\d*)?"  # date and time
+                    r".*ERROR"  # log level
+                    r"(?P<msg>.*)"  # capture the message that follows "ERROR"
+                )
+                if (match := re.search(error_log_pattern, line)) and len(
+                    logs.per_task
+                ) == 0:
+                    message = (
+                        "Could not set up runtime environment "
+                        f"('{match.group('msg').strip(' .')}'). "
+                        "See environment setup logs for details. "
+                        f"`orq wf logs {workflow_run_id} --env-setup`"
+                    )
+                    break
 
         return WorkflowRun(
             id=workflow_run_id,
@@ -490,6 +530,7 @@ class RayRuntime(RuntimeInterface):
                 end_time=wf_meta["stats"].get("end_time"),
                 ray_task_metas=ray_task_metas,
             ),
+            message=message,
         )
 
     def get_workflow_run_outputs_non_blocking(
