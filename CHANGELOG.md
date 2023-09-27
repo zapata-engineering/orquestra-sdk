@@ -9,6 +9,7 @@
 
 🔥 *Features*
 * Added `sdk.list_workflow_run_summeries()` as a partner to `sdk.list_workflow_runs()` - the new function provides a static overview of workflow runs as a way to quickly check on their statuses.
+* `orq wf list` now displays the `owner` for each CE workflow run.
 
 🧟 *Deprecations*
 
