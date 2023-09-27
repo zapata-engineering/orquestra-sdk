@@ -186,6 +186,8 @@ The required packages can be specified as arguments, or listed in a ``requiremen
     Consequently, it is possible to create a situation where the environment that executes the task and the environment that submits a task have different versions of ``orquestra-sdk`` installed.
     This will cause workflow runs to fail!
 
+    Note that this also applies to transitive dependencies - if you depend on a package with a strict dependency on an older version of ``orquestra-sdk`` then the mismatch will arise even if you don't declare a dependency on ``orquestra-sdk`` directly.
+
 
 
 ``GithubImport`` With A Private Repo
