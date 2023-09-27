@@ -1,6 +1,6 @@
-                                                                                
-  Workflow Run ID   Status          Succeeded Tasks   Start Time                
- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 
-  wf1               mocked status   x/y               Fri Feb 24 08:26:07 2023  
-  wf2               mocked status   x/y                                         
-                                                                                
+                                                                                   
+  Workflow Run ID   Status          Succeeded Tasks   Start Time                   
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 
+  wf1               mocked status   x/y               Fri Feb 24 08:26:07 2023     
+  wf2               mocked status   x/y                                            
+                                                                                   
