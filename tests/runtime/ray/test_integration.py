@@ -289,12 +289,14 @@ class TestRayRuntimeMethods:
                 Path(shared_ray_conn._temp_dir)
             ).get_workflow_logs(wf_run_id=run_id)
 
-            assert re.match(
-                r"Could not set up runtime environment \('pip\.py:\d* -- Failed to install pip packages'\)\. See environment setup logs for details. `orq wf logs "  # noqa: E501
-                + str(run_id)
-                + r" --env-setup`",
-                str(run.message),
-            ), (
+            re_pattern = (
+                r"Could not set up runtime environment "
+                r"\('pip\.py:\d* -- Failed to install pip packages'\)\. "
+                r"See environment setup logs for details. "
+                r"`orq wf logs " + re.escape(str(run_id)) + r" --env-setup`"
+            )
+
+            assert re.match(re_pattern, str(run.message)), (
                 f"\n-MESSAGE: {run.message}"
                 f"\n-ENV SETUP OUT:\n{logs.env_setup.out}"
                 f"\n-ENV SETUP ERR:\n{logs.env_setup.err}"
