@@ -362,6 +362,13 @@ class WFRunPresenter(RichPresenter):
         self._console.print(self.get_wf_run(summary))
 
     def show_wf_list(self, summary: ui_models.WFList):
+        """TODO"""
+        show_owner: bool = False
+        for row in summary.wf_rows:
+            if row.owner:
+                show_owner = True
+                break
+
         table = Table(
             "Workflow Run ID",
             "Status",
@@ -369,12 +376,16 @@ class WFRunPresenter(RichPresenter):
             "Start Time",
             box=SIMPLE_HEAVY,
         )
+        if show_owner:
+            table.add_column(header="Owner")
+
         for run in summary.wf_rows:
             table.add_row(
                 run.workflow_run_id,
                 run.status,
                 run.tasks_succeeded,
                 _format_datetime(run.start_time),
+                run.owner,
             )
         self._console.print(table)
 

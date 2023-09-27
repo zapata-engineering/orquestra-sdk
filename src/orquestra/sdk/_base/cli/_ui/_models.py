@@ -48,5 +48,6 @@ class WFList:
         status: str
         tasks_succeeded: str
         start_time: t.Optional[Instant]
+        owner: t.Optional[str] = None
 
     wf_rows: t.Sequence[WFRow]

@@ -6,7 +6,7 @@ import typing as t
 
 from orquestra.sdk import exceptions as exceptions
 from orquestra.sdk.schema.configs import ConfigName
-from orquestra.sdk.schema.workflow_run import WorkspaceId
+from orquestra.sdk.schema.workflow_run import WorkflowRunSummary, WorkspaceId
 
 from .. import _arg_resolvers, _repos
 from .._ui import _presenters
@@ -100,7 +100,7 @@ class Action:
         except exceptions.WorkspacesNotSupportedError:
             pass
 
-        wf_runs = self._wf_run_repo.list_wf_run_summaries(
+        wf_runs: t.List[WorkflowRunSummary] = self._wf_run_repo.list_wf_run_summaries(
             resolved_config,
             workspace=workspace,
             limit=resolved_limit,
