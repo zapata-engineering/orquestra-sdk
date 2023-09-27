@@ -37,7 +37,6 @@
 
 * Fixed formatting errors in docstrings preventing them from rendering correctly in docs.
 * Updated the "Dependency Installation" guide to reflect the requirement of matching `orquestra-sdk` versions between worker and head nodes.
-* ```
 
 ## v0.56.0
 
