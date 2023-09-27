@@ -362,7 +362,28 @@ class WFRunPresenter(RichPresenter):
         self._console.print(self.get_wf_run(summary))
 
     def show_wf_list(self, summary: ui_models.WFList):
-        """TODO"""
+        """Display a list of workflow runs.
+
+        The list is shown as a table with the following headings:
+        - Workflow Run ID
+        - Status
+        - Succeeded Tasks
+        - Start Time
+        - [Owner]
+
+        The 'Owner' column is displayed as long as at least one run in the list has a
+        populated ``owner`` field.
+
+        Example output::
+
+            Workflow Run ID   Status     Succeeded Tasks   Start Time                 Owner
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            wf1               SUCCEEDED  1/1               Fri Feb 24 08:26:07 2023   evil/emiliano.zapata@zapatacomputing…
+            wf2               WAITING    0/1                                          evil/emiliano.zapata@zapatacomputing…
+
+        Args:
+            summary: A list of workflow run summaries to be displayed.
+        """  # noqa: E501
         show_owner: bool = False
         for row in summary.wf_rows:
             if row.owner:
