@@ -39,7 +39,7 @@ The following sections give a more complete explanation of these importers and t
      - * Works well as a ``dependency_imports=[...]`` addition to ``InlineImport`` to allow using 3rd-party libraries.
        * Best suited for referencing libraries available on `PyPI <https://pypi.org/>`_ like ``torch``.
      - * Can't be reliably used to refer to an unpublished, WIP projects.
-     - * Be cautious when including ``orquestra-sdk`` as a dependency - the version installed inside the task *must* match the version used to submit the workflow.
+       * Be cautious when including ``orquestra-sdk`` as a dependency - the version installed inside the task *must* match the version used to submit the workflow.
 
    * - ``GithubImport``
      - * Well-suited for unpublished, WIP projects.
