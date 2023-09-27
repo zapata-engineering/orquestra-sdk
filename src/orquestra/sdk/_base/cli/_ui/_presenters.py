@@ -377,9 +377,9 @@ class WFRunPresenter(RichPresenter):
         Example output::
 
             Workflow Run ID   Status     Succeeded Tasks   Start Time                 Owner
-            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            wf1               SUCCEEDED  1/1               Fri Feb 24 08:26:07 2023   evil/emiliano.zapata@zapatacomputing…
-            wf2               WAITING    0/1                                          evil/emiliano.zapata@zapatacomputing…
+            ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            wf1               SUCCEEDED  1/1               Fri Feb 24 08:26:07 2023   taylor.swift@zapatacomputing.com
+            wf2               WAITING    0/1                                          taylor.swift@zapatacomputing.com
 
         Args:
             summary: A list of workflow run summaries to be displayed.

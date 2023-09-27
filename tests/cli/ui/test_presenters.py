@@ -769,7 +769,7 @@ class TestWorkflowRunPresenter:
                         status="mocked status",
                         tasks_succeeded="x/y",
                         start_time=None,
-                        owner="evil/emiliano.zapata@zapatacomputing.com",
+                        owner="taylor.swift@zapatacomputing.com",
                     ),
                 ]
             )
