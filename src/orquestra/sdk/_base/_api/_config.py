@@ -406,8 +406,8 @@ def migrate_config_file():
     print(
         f"Successfully migrated file {_config_file_path} to version "
         f"{CONFIG_FILE_CURRENT_VERSION}. "
-        f"Updated {len(changed)} entr{'y' if len(changed)==1 else 'ies'}"
-        f"{'.' if len(changed)==0 else ':'}"
+        f"Updated {len(changed)} entr{'y' if len(changed) == 1 else 'ies'}"
+        f"{'.' if len(changed) == 0 else ':'}"
     )
     for config_name in changed:
         print(f" - {config_name}")

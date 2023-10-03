@@ -153,4 +153,4 @@ class TestSnippets:
         proc.check_returncode()
         std_out = str(proc.stdout, "utf-8")
         for i in range(5):
-            assert f"{i*2+1}" in std_out
+            assert f"{i * 2 + 1}" in std_out
