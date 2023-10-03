@@ -2,11 +2,14 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 
-from typing import Dict, Optional, Union
+from importlib.metadata import version
+from typing import Dict, List, Optional, Union
 from unittest.mock import ANY, Mock, call, create_autospec
 
 import pytest
 
+from orquestra import sdk
+from orquestra.sdk._base._graphs import iter_invocations_topologically
 from orquestra.sdk._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
 )
@@ -16,19 +19,23 @@ from orquestra.sdk.schema.responses import WorkflowResult
 
 
 class TestPipString:
+    @pytest.fixture()
+    def mock_serde(self, monkeypatch: pytest.MonkeyPatch):
+        """We're not testing the serde package, so we're mocking it."""
+        monkeypatch.setattr(
+            _build_workflow.serde,
+            "stringify_package_spec",
+            Mock(return_value="mocked"),
+        )
+
+    @pytest.mark.usefixtures("mock_serde")
     class TestPythonImports:
         def test_empty(self):
             imp = ir.PythonImports(id="mock-import", packages=[], pip_options=[])
             pip = _build_workflow._pip_string(imp)
             assert pip == []
 
-        def test_with_package(self, monkeypatch: pytest.MonkeyPatch):
-            # We're not testing the serde package, so we're mocking it
-            monkeypatch.setattr(
-                _build_workflow.serde,
-                "stringify_package_spec",
-                Mock(return_value="mocked"),
-            )
+        def test_with_package(self):
             imp = ir.PythonImports(
                 id="mock-import",
                 packages=[
@@ -44,13 +51,7 @@ class TestPipString:
             pip = _build_workflow._pip_string(imp)
             assert pip == ["mocked"]
 
-        def test_with_two_packages(self, monkeypatch: pytest.MonkeyPatch):
-            # We're not testing the serde package, so we're mocking it
-            monkeypatch.setattr(
-                _build_workflow.serde,
-                "stringify_package_spec",
-                Mock(return_value="mocked"),
-            )
+        def test_with_two_packages(self):
             imp = ir.PythonImports(
                 id="mock-import",
                 packages=[
@@ -412,3 +413,129 @@ class TestArgumentUnwrapper:
 
             calls = [call(packed), call(unpacked[0]), call(unpacked[1])]
             mock_deserialize.assert_has_calls(calls)
+
+
+def make_workflow_with_dependencies(deps):
+    """Generate a workflow definition with the specified dependencies."""
+
+    @sdk.task(dependency_imports=deps)
+    def hello_orquestra() -> str:
+        return "Hello Orquestra!"
+
+    @sdk.workflow()
+    def hello_orquestra_wf():
+        return [hello_orquestra()]
+
+    return hello_orquestra_wf()
+
+
+class TestHandlingSDKVersions:
+    """``_import_pip_env`` handles adding the current SDK version as a dependency.
+
+    Note that these tests don't mock serde - we're interested in whether the correct
+    package list gets constructed so we can't just return 'mocked' for imports.
+    """
+
+    @staticmethod
+    def test_with_no_dependencies():
+        # Given
+        wf = make_workflow_with_dependencies([]).model
+        task_inv = [inv for inv in iter_invocations_topologically(wf)][0]
+
+        # When
+        pip = _build_workflow._import_pip_env(task_inv, wf)
+
+        # Then
+        assert pip == [f"orquestra-sdk=={version('orquestra-sdk')}"]
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "python_imports",
+        [
+            ["MarkupSafe==1.0.0"],
+            ["MarkupSafe==1.0.0", "Jinja2==2.7.2"],
+        ],
+    )
+    def test_with_multiple_dependentest_with_dependencies(python_imports: List[str]):
+        # Given
+        wf = make_workflow_with_dependencies([sdk.PythonImports(*python_imports)]).model
+        task_inv = [inv for inv in iter_invocations_topologically(wf)][0]
+
+        # When
+        pip = _build_workflow._import_pip_env(task_inv, wf)
+
+        # Then
+        assert sorted(pip) == sorted(
+            python_imports + [f"orquestra-sdk=={version('orquestra-sdk')}"]
+        )
+
+    @pytest.mark.parametrize(
+        "sdk_import",
+        [
+            "orquestra-sdk",
+            "orquestra-sdk>=1.2.3",
+            "orquestra-sdk<=1.2.3",
+            "orquestra-sdk~=1.2.3",
+            "orquestra-sdk==1.2.3",
+            "orquestra-sdk!=1.2.3",
+            "orquestra-sdk===1.2.3",
+            "orquestra-sdk >= 1.2.3",
+            "orquestra-sdk <= 1.2.3",
+            "orquestra-sdk ~= 1.2.3",
+            "orquestra-sdk == 1.2.3",
+            "orquestra-sdk != 1.2.3",
+            "orquestra-sdk === 1.2.3",
+        ],
+    )
+    @pytest.mark.parametrize(
+        "python_imports",
+        [
+            [],
+            ["MarkupSafe==1.0.0"],
+            ["MarkupSafe==1.0.0", "Jinja2==2.7.2"],
+        ],
+    )
+    class TestHandlesSDkDependency:
+        @staticmethod
+        @pytest.mark.filterwarnings("ignore:The definition for task ")
+        def test_replaces_declared_SDK_dependency(sdk_import, python_imports):
+            # Given
+            wf = make_workflow_with_dependencies(
+                [sdk.PythonImports(*python_imports + [sdk_import])]
+            ).model
+            task_inv = [inv for inv in iter_invocations_topologically(wf)][0]
+
+            # When
+            pip = _build_workflow._import_pip_env(task_inv, wf)
+
+            # Then
+            assert sorted(pip) == sorted(
+                python_imports + [f"orquestra-sdk=={version('orquestra-sdk')}"]
+            )
+
+        @staticmethod
+        @pytest.mark.filterwarnings("error")
+        def test_warns_user_that_declared_sdk_dependency_is_ignored(
+            sdk_import, python_imports
+        ):
+            # Given
+            wf = make_workflow_with_dependencies(
+                [sdk.PythonImports(*python_imports + [sdk_import])]
+            ).model
+            task_inv = [inv for inv in iter_invocations_topologically(wf)][0]
+
+            # When
+            with pytest.raises(DeprecationWarning) as e:
+                _ = _build_workflow._import_pip_env(task_inv, wf)
+
+            # Then
+            warning: str = e.exconly()
+            assert warning.startswith(
+                "DeprecationWarning: The definition for task `task-hello-orquestra-"
+            )
+            assert warning.endswith(
+                f"` declares `{sdk_import.replace(' ', '')}` as a dependency. "
+                f"The current SDK version ({version('orquestra-sdk')}) is automatically"
+                " installed in task environments. The specified dependency will be "
+                "ignored."
+            )
