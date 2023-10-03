@@ -3,9 +3,12 @@
 ################################################################################
 """Translates IR workflow def into a Ray workflow."""
 import os
+import re
 import time
 import typing as t
+import warnings
 from functools import singledispatch
+from importlib.metadata import version
 from pathlib import Path
 
 import pydantic
@@ -334,7 +337,16 @@ def _(imp: ir.GitImport):
     return [f"{url}@{imp.git_ref}"]
 
 
-def _import_pip_env(ir_invocation: ir.TaskInvocation, wf: ir.WorkflowDef):
+def _import_pip_env(
+    ir_invocation: ir.TaskInvocation, wf: ir.WorkflowDef
+) -> t.List[str]:
+    """Gather a list of python imports required for the task.
+
+    The list will consist of the python imports declared in the task definition, and the
+    current Orquestra SDK version.
+    The latter is included to prevent tasks from executing with different SDK versions
+    to the head node.
+    """
     task_def = wf.tasks[ir_invocation.task_id]
     imports = [
         wf.imports[id_]
@@ -343,7 +355,28 @@ def _import_pip_env(ir_invocation: ir.TaskInvocation, wf: ir.WorkflowDef):
             *(task_def.dependency_import_ids or []),
         )
     ]
-    return [chunk for imp in imports for chunk in _pip_string(imp)]
+    sdk_version = version("orquestra-sdk")
+
+    sdk_dependency = None
+    pip_list = [
+        chunk
+        for imp in imports
+        for chunk in _pip_string(imp)
+        if not (sdk_dependency := re.match(r"^orquestra-sdk([<|!|=|>|~].*)?$", chunk))
+    ]
+
+    # If the task definition includes the SDK, warn the user that this does nothing.
+    if sdk_dependency:
+        warnings.warn(
+            f"The definition for task `{ir_invocation.task_id}` "
+            f"declares `{sdk_dependency[0]}` as a dependency. "
+            f"The current SDK version ({sdk_version}) is automatically installed in "
+            "task environments. "
+            "The specified dependency will be ignored.",
+            DeprecationWarning,
+        )
+
+    return pip_list + [f"orquestra-sdk=={sdk_version}"]
 
 
 def _gather_args(arg_ids, workflow_def, ray_futures):
