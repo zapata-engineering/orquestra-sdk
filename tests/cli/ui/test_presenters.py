@@ -58,7 +58,7 @@ class TestLogsPresenter:
             line = "─" * CONSOLE_WIDTH
             if prefix is None:
                 return line
-            return f"{prefix} {line[len(prefix)+1:]}"
+            return f"{prefix} {line[len(prefix) + 1:]}"
 
         return _inner
 
