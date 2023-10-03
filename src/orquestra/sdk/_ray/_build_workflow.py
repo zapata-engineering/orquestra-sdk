@@ -342,10 +342,10 @@ def _import_pip_env(
 ) -> t.List[str]:
     """Gather a list of python imports required for the task.
 
-    The list will consist of the python imports declared in the task definition, and the
-    current Orquestra SDK version.
-    The latter is included to prevent tasks from executing with different SDK versions
-    to the head node.
+    Returns:
+        A list consisting of the python imports declared in the task definition, and the
+            current Orquestra SDK version. The latter is included to prevent tasks from
+            executing with different SDK versions to the head node.
     """
     task_def = wf.tasks[ir_invocation.task_id]
     imports = [
