@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 import ast
 import inspect
@@ -45,7 +45,7 @@ def function_with_calls():
     print(artifact.custom_name)
     artifact.with_resources(cpu="2000m")
     for ii in range(5):
-        artifact.with_resources(cpu=f"{ii*5}000m")
+        artifact.with_resources(cpu=f"{ii * 5}000m")
 
 
 # Calls inside the 'function_with_calls' function
