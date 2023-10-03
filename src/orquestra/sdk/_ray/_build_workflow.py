@@ -342,6 +342,10 @@ def _import_pip_env(
 ) -> t.List[str]:
     """Gather a list of python imports required for the task.
 
+    Args:
+        ir_invocation: The task invocation to be executed in this environment.
+        wf: The overall workflow definition.
+
     Returns:
         A list consisting of the python imports declared in the task definition, and the
             current Orquestra SDK version. The latter is included to prevent tasks from
