@@ -4,6 +4,8 @@
 
 🚨 *Breaking Changes*
 
+* The `orquestra-sdk` version used to submit a workflow is automatically added as a dependency for task execution environments. Consequently, specifying the SDK as a dependency in the `sdk.task()` decorator is no longer supported, and such declarations will be ignored.
+
 🔥 *Features*
 
 🧟 *Deprecations*
