@@ -8,7 +8,7 @@ import time
 import typing as t
 import warnings
 from functools import singledispatch
-from importlib.metadata import version
+from orquestra.sdk.packaging import get_installed_version
 from pathlib import Path
 
 import pydantic
