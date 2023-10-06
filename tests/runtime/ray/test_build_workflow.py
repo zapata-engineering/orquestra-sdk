@@ -495,7 +495,7 @@ class TestHandlingSDKVersions:
             ["MarkupSafe==1.0.0", "Jinja2==2.7.2"],
         ],
     )
-    class TestHandlesSDkDependency:
+    class TestHandlesSDKDependency:
         @staticmethod
         @pytest.mark.filterwarnings("ignore:The definition for task ")
         def test_replaces_declared_SDK_dependency(sdk_import, python_imports):
