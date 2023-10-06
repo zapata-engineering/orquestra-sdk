@@ -359,7 +359,7 @@ def _import_pip_env(
             *(task_def.dependency_import_ids or []),
         )
     ]
-    sdk_version = version("orquestra-sdk")
+    sdk_version = get_installed_version("orquestra-sdk")
 
     sdk_dependency = None
     pip_list = [
