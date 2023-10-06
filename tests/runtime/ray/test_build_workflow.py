@@ -456,7 +456,7 @@ class TestHandlingSDKVersions:
             ["MarkupSafe==1.0.0", "Jinja2==2.7.2"],
         ],
     )
-    def test_with_multiple_dependentest_with_dependencies(python_imports: List[str]):
+    def test_with_multiple_dependencies(python_imports: List[str]):
         # Given
         wf = make_workflow_with_dependencies([sdk.PythonImports(*python_imports)]).model
         task_inv = [inv for inv in iter_invocations_topologically(wf)][0]
