@@ -8,11 +8,12 @@ import time
 import typing as t
 import warnings
 from functools import singledispatch
-from orquestra.sdk.packaging import get_installed_version
 from pathlib import Path
 
 import pydantic
 from typing_extensions import assert_never
+
+from orquestra.sdk.packaging import get_installed_version
 
 from .. import exceptions, secrets
 from .._base import _exec_ctx, _git_url_utils, _graphs, _services, dispatch, serde

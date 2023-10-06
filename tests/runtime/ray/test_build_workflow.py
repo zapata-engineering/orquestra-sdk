@@ -507,7 +507,9 @@ class TestHandlingSDKVersions:
     class TestHandlesSDKDependency:
         @staticmethod
         @pytest.mark.filterwarnings("ignore:The definition for task ")
-        def test_replaces_declared_sdk_dependency(sdk_import, python_imports, mock_sdk_version):
+        def test_replaces_declared_sdk_dependency(
+            sdk_import, python_imports, mock_sdk_version
+        ):
             # Given
             wf = make_workflow_with_dependencies(
                 [sdk.PythonImports(*python_imports + [sdk_import])]
