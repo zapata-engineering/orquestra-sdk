@@ -455,7 +455,6 @@ class TestHandlingSDKVersions:
 
         # Then
         assert pip == [f"orquestra-sdk=={mock_sdk_version}"]
-        assert False
 
     @staticmethod
     @pytest.mark.parametrize(
