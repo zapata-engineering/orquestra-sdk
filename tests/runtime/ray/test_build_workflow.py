@@ -2,7 +2,6 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 
-from importlib.metadata import version
 from typing import Dict, List, Optional, Union
 from unittest.mock import ANY, Mock, call, create_autospec
 
@@ -437,7 +436,16 @@ class TestHandlingSDKVersions:
     """
 
     @staticmethod
-    def test_with_no_dependencies():
+    @pytest.fixture()
+    def mock_sdk_version(monkeypatch: pytest.MonkeyPatch):
+        mocked_version = "mocked_version"
+        monkeypatch.setattr(
+            _build_workflow, "get_installed_version", Mock(return_value=mocked_version)
+        )
+        return mocked_version
+
+    @staticmethod
+    def test_with_no_dependencies(mock_sdk_version):
         # Given
         wf = make_workflow_with_dependencies([]).model
         task_inv = [inv for inv in iter_invocations_topologically(wf)][0]
@@ -446,7 +454,8 @@ class TestHandlingSDKVersions:
         pip = _build_workflow._import_pip_env(task_inv, wf)
 
         # Then
-        assert pip == [f"orquestra-sdk=={version('orquestra-sdk')}"]
+        assert pip == [f"orquestra-sdk=={mock_sdk_version}"]
+        assert False
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -456,7 +465,7 @@ class TestHandlingSDKVersions:
             ["MarkupSafe==1.0.0", "Jinja2==2.7.2"],
         ],
     )
-    def test_with_multiple_dependencies(python_imports: List[str]):
+    def test_with_multiple_dependencies(python_imports: List[str], mock_sdk_version):
         # Given
         wf = make_workflow_with_dependencies([sdk.PythonImports(*python_imports)]).model
         task_inv = [inv for inv in iter_invocations_topologically(wf)][0]
@@ -466,7 +475,7 @@ class TestHandlingSDKVersions:
 
         # Then
         assert sorted(pip) == sorted(
-            python_imports + [f"orquestra-sdk=={version('orquestra-sdk')}"]
+            python_imports + [f"orquestra-sdk=={mock_sdk_version}"]
         )
 
     @pytest.mark.parametrize(
@@ -498,7 +507,7 @@ class TestHandlingSDKVersions:
     class TestHandlesSDKDependency:
         @staticmethod
         @pytest.mark.filterwarnings("ignore:The definition for task ")
-        def test_replaces_declared_sdk_dependency(sdk_import, python_imports):
+        def test_replaces_declared_sdk_dependency(sdk_import, python_imports, mock_sdk_version):
             # Given
             wf = make_workflow_with_dependencies(
                 [sdk.PythonImports(*python_imports + [sdk_import])]
@@ -510,13 +519,13 @@ class TestHandlingSDKVersions:
 
             # Then
             assert sorted(pip) == sorted(
-                python_imports + [f"orquestra-sdk=={version('orquestra-sdk')}"]
+                python_imports + [f"orquestra-sdk=={mock_sdk_version}"]
             )
 
         @staticmethod
         @pytest.mark.filterwarnings("error")
         def test_warns_user_that_declared_sdk_dependency_is_ignored(
-            sdk_import, python_imports
+            sdk_import, python_imports, mock_sdk_version
         ):
             # Given
             wf = make_workflow_with_dependencies(
@@ -535,7 +544,7 @@ class TestHandlingSDKVersions:
             )
             assert warning.endswith(
                 f"` declares `{sdk_import.replace(' ', '')}` as a dependency. "
-                f"The current SDK version ({version('orquestra-sdk')}) is automatically"
+                f"The current SDK version ({mock_sdk_version}) is automatically"
                 " installed in task environments. The specified dependency will be "
                 "ignored."
             )
