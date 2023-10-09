@@ -13,6 +13,7 @@ from orquestra.sdk._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
 )
 from orquestra.sdk._ray import _build_workflow, _client
+from orquestra.sdk.exceptions import OrquestraSDKVersionMismatchWarning
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.responses import WorkflowResult
 
@@ -535,13 +536,14 @@ class TestHandlingSDKVersions:
             task_inv = [inv for inv in iter_invocations_topologically(wf)][0]
 
             # When
-            with pytest.raises(DeprecationWarning) as e:
+            with pytest.raises(OrquestraSDKVersionMismatchWarning) as e:
                 _ = _build_workflow._import_pip_env(task_inv, wf)
 
             # Then
             warning: str = e.exconly()
             assert warning.startswith(
-                "DeprecationWarning: The definition for task `task-hello-orquestra-"
+                "orquestra.sdk.exceptions.OrquestraSDKVersionMismatchWarning: "
+                "The definition for task `task-hello-orquestra-"
             )
             assert warning.endswith(
                 f"` declares `{sdk_import.replace(' ', '')}` as a dependency. "

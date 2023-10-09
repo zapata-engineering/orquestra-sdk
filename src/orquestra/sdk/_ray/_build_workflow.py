@@ -378,7 +378,7 @@ def _import_pip_env(
             f"The current SDK version ({sdk_version}) is automatically installed in "
             "task environments. "
             "The specified dependency will be ignored.",
-            DeprecationWarning,
+            exceptions.OrquestraSDKVersionMismatchWarning,
         )
 
     return pip_list + [f"orquestra-sdk=={sdk_version}"]
