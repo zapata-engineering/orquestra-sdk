@@ -502,7 +502,7 @@ class TaskLogMessage(pydantic.BaseModel):
     """Represents a single line indexed by the server side log service.
 
     Based on:
-    https://github.com/zapatacomputing/workflow-driver/blob/f55bd3d5203a42ee42fc2405cd44cfaa94993f4a/openapi/src/resources/task-run-logs.yaml#L16
+    https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml#L16
 
     The name is borrowed from Fluent Bit nomenclature:
     https://docs.fluentbit.io/manual/concepts/key-concepts#event-format.
