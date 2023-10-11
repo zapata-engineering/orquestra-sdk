@@ -390,6 +390,7 @@ def _import_pip_env(
 def _normalise_prerelease_version(version: str) -> str:
     """Remove prerelease version information from the version string."""
     match = re.match(SEMVER_REGEX, version)
+    assert match, f"Version {version} did not parse as valid SemVer."
     if match.group("prerelease"):
         return (
             f"{match.group('major')}"
