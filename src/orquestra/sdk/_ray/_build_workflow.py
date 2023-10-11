@@ -391,13 +391,13 @@ def _normalise_prerelease_version(version: str) -> str:
     """Remove prerelease version information from the version string."""
     match = re.match(SEMVER_REGEX, version)
     assert match, f"Version {version} did not parse as valid SemVer."
+    vernums = [int(match.group("major")), int(match.group("minor"))]
+    if match.group("patch"):
+        vernums.append(int(match.group("patch")))
     if match.group("prerelease"):
-        return (
-            f"{match.group('major')}"
-            f".{match.group('minor')}"
-            f".{int(match.group('patch')) - 1}"
-        )
-    return f"{match.group('major')}.{match.group('minor')}.{match.group('patch')}"
+        vernums[-1] -= 1
+
+    return ".".join([str(vernum) for vernum in vernums])
 
 
 def _gather_args(arg_ids, workflow_def, ray_futures):

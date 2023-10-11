@@ -431,7 +431,11 @@ def make_workflow_with_dependencies(deps):
 
 @pytest.mark.parametrize(
     "installed_sdk_version, expected_sdk_dependency",
-    [("0.57.1.dev3+g3ef9f57.d20231003", "0.57.0"), ("1.2.3", "1.2.3")],
+    [
+        ("0.57.1.dev3+g3ef9f57.d20231003", "0.57.0"),
+        ("1.2.3", "1.2.3"),
+        ("0.1.dev1+g25df81e", "0.0"),
+    ],
 )
 class TestHandlingSDKVersions:
     """``_import_pip_env`` handles adding the current SDK version as a dependency.
