@@ -22,6 +22,7 @@ from .._base._env import (
     RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV,
 )
 from .._base._logs import _markers
+from .._base._regex import SEMVER_REGEX
 from ..kubernetes.quantity import parse_quantity
 from ..schema import ir, responses, workflow_run
 from . import _client, _id_gen
@@ -360,8 +361,10 @@ def _import_pip_env(
             *(task_def.dependency_import_ids or []),
         )
     ]
-    sdk_version = get_installed_version("orquestra-sdk")
 
+    current_sdk_version: str = _normalise_prerelease_version(
+        get_installed_version("orquestra-sdk")
+    )
     sdk_dependency = None
     pip_list = [
         chunk
@@ -375,13 +378,25 @@ def _import_pip_env(
         warnings.warn(
             f"The definition for task `{ir_invocation.task_id}` "
             f"declares `{sdk_dependency[0]}` as a dependency. "
-            f"The current SDK version ({sdk_version}) is automatically installed in "
-            "task environments. "
+            f"The current SDK version ({current_sdk_version}) is automatically "
+            "installed in task environments. "
             "The specified dependency will be ignored.",
             exceptions.OrquestraSDKVersionMismatchWarning,
         )
 
-    return pip_list + [f"orquestra-sdk=={sdk_version}"]
+    return pip_list + [f"orquestra-sdk=={current_sdk_version}"]
+
+
+def _normalise_prerelease_version(version: str) -> str:
+    """Remove prerelease version information from the version string."""
+    match = re.match(SEMVER_REGEX, version)
+    if match.group("prerelease"):
+        return (
+            f"{match.group('major')}"
+            f".{match.group('minor')}"
+            f".{int(match.group('patch')) - 1}"
+        )
+    return f"{match.group('major')}.{match.group('minor')}.{match.group('patch')}"
 
 
 def _gather_args(arg_ids, workflow_def, ray_futures):
