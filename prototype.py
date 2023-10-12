@@ -25,70 +25,105 @@ class OrqPool:
             Iterable[Import], Import, None
         ] = dependency_imports
 
-    def map(
-        self, function: Callable, iterable: Iterable, chunksize: Optional[int] = None
-    ):
-        # Convert the callable function into a task definition
-        task: TaskDef = sdk.task(
-            function,
-            source_import=sdk.InlineImport(),
-            dependency_imports=self.dependency_imports,
-            # resources=self.resources,
-        )
+    @property
+    def _task_decorator_kwargs(self) -> dict:
+        kwargs = {
+            "source_import": sdk.InlineImport(),
+        }
+        if self.dependency_imports:
+            kwargs["dependency_imports"] = self.dependency_imports
+        if self.resources:
+            kwargs["resources"] = self.resources
+        return kwargs
 
-        @sdk.workflow()
+    @property
+    def _workflow_decorator_kwargs(self) -> dict:
+        kwargs = {}
+        return kwargs
+
+    @property
+    def _workflow_run_args(self) -> tuple:
+        args = (self.config,)
+        return args
+
+    @property
+    def _workflow_run_kwargs(self) -> dict:
+        kwargs = {}
+        if self.workspace_id:
+            kwargs["workspace_id"] = self.workspace_id
+        if self.project_id:
+            kwargs["project_id"] = self.project_id
+        return kwargs
+
+    def map(self, function: Callable, iterable: Iterable):
+        return self.map_async(function, iterable).get_results(wait=True)
+
+    def map_async(
+        self, function: Callable, iterable: Iterable, name: Optional[str] = None
+    ):
+        task: TaskDef = sdk.task(function, **self._task_decorator_kwargs)
+
+        @sdk.workflow(**self._workflow_decorator_kwargs, custom_name=name)
         def wf():
             return [task(x) for x in iterable]
 
-        return wf().run(
-            self.config, workspace_id=self.workspace_id, project_id=self.project_id
-        )
+        return wf().run(*self._workflow_run_args, **self._workflow_run_kwargs)
+
+    def starmap(self, function: Callable, iterable: Iterable[Iterable]):
+        return self.starmap_async(function, iterable).get_results(wait=True)
+
+    def starmap_async(
+        self,
+        function: Callable,
+        iterable: Iterable[Iterable],
+        name: Optional[str] = None,
+    ):
+        task: TaskDef = sdk.task(function, **self._task_decorator_kwargs)
+
+        @sdk.workflow(**self._workflow_decorator_kwargs, custom_name=name)
+        def wf():
+            return [task(*x) for x in iterable]
+
+        return wf().run(*self._workflow_run_args, **self._workflow_run_kwargs)
 
 
-config = "prod-d"
-dependency_imports = None
-resources = sdk.Resources()
-
-# ======================================================================================
-# Current SDK version
-
-
-@sdk.task(
-    source_import=sdk.InlineImport(),
-    dependency_imports=dependency_imports,
-    # resources=resources,
+# ====================================== DEMO ==========================================
+orq_pool = OrqPool(
+    "local",
+    workspace_id="my_workspace",
+    project_id="my_project",
+    resources=sdk.Resources(cpu=1),
+    dependency_imports=[],
 )
-def my_decorated_func(x):
+
+
+# Map
+def single_input_func(x):
     return x * x
 
 
-@sdk.workflow()
-def my_decorated_workflow():
-    return [my_decorated_func(x) for x in [1, 2, 3, 4]]
+print(orq_pool.map(single_input_func, [1, 2, 3, 4]))  # prints (1,4,9,16)
 
 
-decorated_wf = my_decorated_workflow().run(config)
+# Starmap
+def multiple_input_func(x, y):
+    return x * y
 
 
-# ======================================================================================
-# Simplified version
+print(
+    orq_pool.starmap(multiple_input_func, [[1, 2], [3, 4], [5, 6], [7, 8]])
+)  # prints (2, 12, 30, 56)
 
+# Map async
+map_async_run = orq_pool.map_async(
+    single_input_func, [1, 2, 3, 4], name="map_async_run"
+)
+print(map_async_run.get_results(wait=True))  # prints (1,4,9,16)
 
-def my_func(x):
-    return x * x
+# Starmap async
+starmap_async_run = orq_pool.starmap_async(
+    multiple_input_func, [[1, 2], [3, 4], [5, 6], [7, 8]]
+)
+print(starmap_async_run.get_results(wait=True))  # prints (2, 12, 30, 56)
 
-
-orq_pool = OrqPool(config, dependency_imports=dependency_imports)
-undecorated_wf = orq_pool.map(my_func, [1, 2, 3, 4])
-
-# ======================================================================================
-# Comparison
-
-results_decorated = decorated_wf.get_results(wait=True)
-results_undecorated = undecorated_wf.get_results(wait=True)
-
-
-print("Full workflow run results:", results_decorated)
-print("Simplified run results:   ", results_undecorated)
-assert results_undecorated == results_decorated
 # ======================================================================================
