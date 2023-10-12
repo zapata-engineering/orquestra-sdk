@@ -2,6 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 
+import re
 from typing import Dict, List, Optional, Union
 from unittest.mock import ANY, Mock, call, create_autospec
 
@@ -432,9 +433,9 @@ def make_workflow_with_dependencies(deps):
 @pytest.mark.parametrize(
     "installed_sdk_version, expected_sdk_dependency",
     [
-        ("0.57.1.dev3+g3ef9f57.d20231003", "0.57.0"),
-        ("1.2.3", "1.2.3"),
-        ("0.1.dev1+g25df81e", "0.0"),
+        ("0.57.1.dev3+g3ef9f57.d20231003", "==0.57.0"),
+        ("1.2.3", "==1.2.3"),
+        ("0.1.dev1+g25df81e", ""),
     ],
 )
 class TestHandlingSDKVersions:
@@ -463,7 +464,7 @@ class TestHandlingSDKVersions:
         pip = _build_workflow._import_pip_env(task_inv, wf)
 
         # Then
-        assert pip == [f"orquestra-sdk=={expected_sdk_dependency}"]
+        assert pip == [f"orquestra-sdk{expected_sdk_dependency}"]
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -493,7 +494,7 @@ class TestHandlingSDKVersions:
 
         # Then
         assert sorted(pip) == sorted(
-            python_imports + [f"orquestra-sdk=={expected_sdk_dependency}"]
+            python_imports + [f"orquestra-sdk{expected_sdk_dependency}"]
         )
 
     @pytest.mark.parametrize(
@@ -548,7 +549,7 @@ class TestHandlingSDKVersions:
 
             # Then
             assert sorted(pip) == sorted(
-                python_imports + [f"orquestra-sdk=={expected_sdk_dependency}"]
+                python_imports + [f"orquestra-sdk{expected_sdk_dependency}"]
             )
 
         @staticmethod
@@ -576,14 +577,8 @@ class TestHandlingSDKVersions:
                 _ = _build_workflow._import_pip_env(task_inv, wf)
 
             # Then
-            warning: str = e.exconly()
-            assert warning.startswith(
-                "orquestra.sdk.exceptions.OrquestraSDKVersionMismatchWarning: "
-                "The definition for task `task-hello-orquestra-"
-            )
-            assert warning.endswith(
-                f"` declares `{sdk_import.replace(' ', '')}` as a dependency. "
-                f"The current SDK version ({expected_sdk_dependency}) is automatically"
-                " installed in task environments. The specified dependency will be "
-                "ignored."
-            )
+            warning: str = e.exconly().strip()
+            assert re.match(
+                r"^orquestra\.sdk\.exceptions\.OrquestraSDKVersionMismatchWarning: The definition for task `task-hello-orquestra-.*` declares `orquestra-sdk(?P<dependency>.*)` as a dependency. The current SDK version (\((?P<installed>.*)\) )?is automatically installed in task environments. The specified dependency will be ignored.$",  # noqa: E501
+                warning,
+            ), warning

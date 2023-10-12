@@ -362,7 +362,7 @@ def _import_pip_env(
         )
     ]
 
-    current_sdk_version: str = _normalise_prerelease_version(
+    current_sdk_version: t.Optional[str] = _normalise_prerelease_version(
         get_installed_version("orquestra-sdk")
     )
     sdk_dependency = None
@@ -378,24 +378,33 @@ def _import_pip_env(
         warnings.warn(
             f"The definition for task `{ir_invocation.task_id}` "
             f"declares `{sdk_dependency[0]}` as a dependency. "
-            f"The current SDK version ({current_sdk_version}) is automatically "
-            "installed in task environments. "
+            "The current SDK version "
+            + (f"({current_sdk_version}) " if current_sdk_version else "")
+            + "is automatically installed in task environments. "
             "The specified dependency will be ignored.",
             exceptions.OrquestraSDKVersionMismatchWarning,
         )
 
-    return pip_list + [f"orquestra-sdk=={current_sdk_version}"]
+    return pip_list + [
+        "orquestra-sdk" + (f"=={current_sdk_version}" if current_sdk_version else "")
+    ]
 
 
-def _normalise_prerelease_version(version: str) -> str:
+def _normalise_prerelease_version(version: str) -> t.Optional[str]:
     """Remove prerelease version information from the version string."""
     match = re.match(SEMVER_REGEX, version)
     assert match, f"Version {version} did not parse as valid SemVer."
     vernums = [int(match.group("major")), int(match.group("minor"))]
     if match.group("patch"):
         vernums.append(int(match.group("patch")))
+
+    # If the version is a prerelease, go back to the previous iteration.
     if match.group("prerelease"):
         vernums[-1] -= 1
+
+    # Safety hatch - returning a version less than 0.1 is nonsensical.
+    if vernums[0:2] == [0, 0]:
+        return None
 
     return ".".join([str(vernum) for vernum in vernums])
 
