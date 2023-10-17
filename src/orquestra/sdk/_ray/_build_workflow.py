@@ -363,7 +363,7 @@ def _import_pip_env(
         )
     ]
 
-    current_sdk_version: t.Optional[str] = get_installed_version("orquestra-sdk")
+    current_sdk_version: str = get_installed_version("orquestra-sdk")
 
     sdk_dependency = None
     pip_list = [
