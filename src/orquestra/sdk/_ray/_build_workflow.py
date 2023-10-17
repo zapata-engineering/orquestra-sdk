@@ -11,6 +11,7 @@ from functools import singledispatch
 from pathlib import Path
 
 import pydantic
+from packaging import version
 from typing_extensions import assert_never
 
 from orquestra.sdk.packaging import get_installed_version
@@ -362,9 +363,8 @@ def _import_pip_env(
         )
     ]
 
-    current_sdk_version: t.Optional[str] = _normalise_prerelease_version(
-        get_installed_version("orquestra-sdk")
-    )
+    current_sdk_version: t.Optional[str] = get_installed_version("orquestra-sdk")
+
     sdk_dependency = None
     pip_list = [
         chunk
@@ -385,9 +385,12 @@ def _import_pip_env(
             exceptions.OrquestraSDKVersionMismatchWarning,
         )
 
-    return pip_list + [
-        "orquestra-sdk" + (f"=={current_sdk_version}" if current_sdk_version else "")
-    ]
+    # Don't add sdk dependency if submitting from a prerelease or dev version.
+    parsed_sdk_version = version.parse(current_sdk_version)
+    if not (parsed_sdk_version.is_devrelease or parsed_sdk_version.is_prerelease):
+        pip_list += [f"orquestra-sdk=={current_sdk_version}"]
+
+    return pip_list
 
 
 def _normalise_prerelease_version(version: str) -> t.Optional[str]:

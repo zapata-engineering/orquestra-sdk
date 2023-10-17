@@ -433,9 +433,9 @@ def make_workflow_with_dependencies(deps):
 @pytest.mark.parametrize(
     "installed_sdk_version, expected_sdk_dependency",
     [
-        ("0.57.1.dev3+g3ef9f57.d20231003", "==0.57.0"),
-        ("1.2.3", "==1.2.3"),
-        ("0.1.dev1+g25df81e", ""),
+        ("0.57.1.dev3+g3ef9f57.d20231003", None),
+        ("1.2.3", "1.2.3"),
+        ("0.1.dev1+g25df81e", None),
     ],
 )
 class TestHandlingSDKVersions:
@@ -464,7 +464,10 @@ class TestHandlingSDKVersions:
         pip = _build_workflow._import_pip_env(task_inv, wf)
 
         # Then
-        assert pip == [f"orquestra-sdk{expected_sdk_dependency}"]
+        if expected_sdk_dependency:
+            assert pip == [f"orquestra-sdk=={expected_sdk_dependency}"]
+        else:
+            assert pip == []
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -493,9 +496,12 @@ class TestHandlingSDKVersions:
         pip = _build_workflow._import_pip_env(task_inv, wf)
 
         # Then
-        assert sorted(pip) == sorted(
-            python_imports + [f"orquestra-sdk{expected_sdk_dependency}"]
-        )
+        if expected_sdk_dependency:
+            assert sorted(pip) == sorted(
+                python_imports + [f"orquestra-sdk=={expected_sdk_dependency}"]
+            )
+        else:
+            assert sorted(pip) == sorted(python_imports)
 
     @pytest.mark.parametrize(
         "sdk_import",
@@ -548,9 +554,12 @@ class TestHandlingSDKVersions:
             pip = _build_workflow._import_pip_env(task_inv, wf)
 
             # Then
-            assert sorted(pip) == sorted(
-                python_imports + [f"orquestra-sdk{expected_sdk_dependency}"]
-            )
+            if expected_sdk_dependency:
+                assert sorted(pip) == sorted(
+                    python_imports + [f"orquestra-sdk=={expected_sdk_dependency}"]
+                )
+            else:
+                assert sorted(pip) == sorted(python_imports)
 
         @staticmethod
         @pytest.mark.filterwarnings("error")
