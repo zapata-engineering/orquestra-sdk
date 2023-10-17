@@ -211,6 +211,10 @@ class WorkflowRunIDNotFoundError(NotFoundError):
     # We have a workflow but can't recover the ID: WorkflowRunIDNotFoundError
 
 
+class OrquestraSDKVersionMismatchWarning(Warning):
+    """Raised when there are multiple SDK dependency declarations for one task env."""
+
+
 # Auth Errors
 class UnauthorizedError(BaseRuntimeError):
     """Raised when the remote cluster rejects the auth token."""
