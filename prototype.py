@@ -9,7 +9,7 @@ import orquestra.sdk as sdk
 from orquestra.sdk.schema.ir import Import, Resources, TaskDef
 
 
-class OrqPool:
+class OrqRunner:
     def __init__(
         self,
         config: str,
@@ -74,41 +74,26 @@ class OrqPool:
             kwargs["project_id"] = self.project_id
         return kwargs
 
-    def map(self, function: Callable, iterable: Iterable, name: Optional[str] = None):
-        return self.map_async(function, iterable, name=name).get_results(wait=True)
-
-    def map_async(
-        self, function: Callable, iterable: Iterable, name: Optional[str] = None
-    ):
+    def run(self, function: Callable, iterable: Iterable, name: Optional[str] = None):
         task: TaskDef = sdk.task(function, **self.task_decorator_kwargs)
 
         @sdk.workflow(**self.workflow_decorator_kwargs, custom_name=name)
-        def wf():
+        def map_wf():
             return [task(x) for x in iterable]
 
-        return wf().run(*self.workflow_run_args, **self.workflow_run_kwargs)
-
-    def starmap(
-        self,
-        function: Callable,
-        iterable: Iterable[Iterable],
-        name: Optional[str] = None,
-    ):
-        return self.starmap_async(function, iterable, name=name).get_results(wait=True)
-
-    def starmap_async(
-        self,
-        function: Callable,
-        iterable: Iterable[Iterable],
-        name: Optional[str] = None,
-    ):
-        task: TaskDef = sdk.task(function, **self.task_decorator_kwargs)
-
         @sdk.workflow(**self.workflow_decorator_kwargs, custom_name=name)
-        def wf():
+        def starmap_wf():
             return [task(*x) for x in iterable]
 
-        return wf().run(*self.workflow_run_args, **self.workflow_run_kwargs)
+        if len(inspect.signature(function).parameters) == 1:
+            return map_wf().run(*self.workflow_run_args, **self.workflow_run_kwargs)
+        else:
+            return starmap_wf().run(*self.workflow_run_args, **self.workflow_run_kwargs)
+
+    def run_blocking(
+        self, function: Callable, iterable: Iterable, name: Optional[str] = None
+    ):
+        return self.run(function, iterable, name=name).get_results(wait=True)
 
     def generate_decorated_workflow(self, func: Callable, iterable: Iterable):
         """Generate source code for an equivalent workflow run using the decorators.
@@ -172,8 +157,8 @@ class OrqPool:
 
 # ====================================== DEMO ==========================================
 # Set up the execution environment
-orq_pool = OrqPool(
-    "prod-d",
+orq_runner = OrqRunner(
+    "local",
     workspace_id=None,
     project_id=None,
     resources=sdk.Resources(cpu=1, nodes=4),
@@ -192,33 +177,31 @@ def multiple_input_func(x, y):
 
 # Map
 print(
-    orq_pool.map(single_input_func, [1, 2, 3, 4]), name="map_run"
+    orq_runner.run_blocking(single_input_func, [1, 2, 3, 4], name="map_run")
 )  # prints (1,4,9,16)
 
 # Starmap
 print(
-    orq_pool.starmap(
+    orq_runner.run_blocking(
         multiple_input_func, [[1, 2], [3, 4], [5, 6], [7, 8]], name="starmap_run"
     )
 )  # prints (2, 12, 30, 56)
 
 # Map async
-map_async_run = orq_pool.map_async(
-    single_input_func, [1, 2, 3, 4], name="map_async_run"
-)
+map_async_run = orq_runner.run(single_input_func, [1, 2, 3, 4], name="map_async_run")
 print(map_async_run.get_results(wait=True))  # prints (1,4,9,16)
 
 # Starmap async
-starmap_async_run = orq_pool.starmap_async(
+starmap_async_run = orq_runner.run(
     multiple_input_func, [[1, 2], [3, 4], [5, 6], [7, 8]]
 )
 print(starmap_async_run.get_results(wait=True))  # prints (2, 12, 30, 56)
 
 
 # generate decorated equivalents.
-print(orq_pool.generate_decorated_workflow(single_input_func, [1, 2, 3, 4]))
+print(orq_runner.generate_decorated_workflow(single_input_func, [1, 2, 3, 4]))
 print(
-    orq_pool.generate_decorated_workflow(
+    orq_runner.generate_decorated_workflow(
         multiple_input_func, [[1, 2], [3, 4], [5, 6], [7, 8]]
     )
 )
