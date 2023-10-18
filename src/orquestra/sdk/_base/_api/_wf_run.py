@@ -20,6 +20,7 @@ from ...exceptions import (
     ConfigFileNotFoundError,
     ConfigNameNotFoundError,
     ProjectInvalidError,
+    RuntimeQuerySummaryError,
     UnauthorizedError,
     VersionMismatch,
     WorkflowRunCanNotBeTerminated,
@@ -48,7 +49,8 @@ from .._logs._interfaces import WorkflowLogs
 from .._spaces._resolver import resolve_studio_ref, resolve_studio_workspace_ref
 from .._spaces._structs import ProjectRef
 from ..abc import RuntimeInterface
-from ._config import RuntimeConfig, resolve_config
+from . import repos
+from ._config import RuntimeConfig
 from ._task_run import TaskRun
 
 
@@ -94,53 +96,46 @@ class WorkflowRun:
             config: Determines where to look for the workflow run record. If omitted,
                 we will retrieve the config name from a local cache of workflow runs
                 submitted from this machine.
-            project_dir: The location of the project directory. This directory must
-                contain the workflows database to which this run was saved. If omitted,
-                the current working directory is assumed to be the project directory.
+            project_dir: Unused. Obsolete parameter.
 
         Raises:
-            orquestra.sdk.exceptions.WorkflowRunNotFoundError: when the run_id doesn't
-                match a stored run ID.
-            orquestra.sdk.exceptions.UnauthorizedError: when authorization with the
-                remote runtime failed.
             orquestra.sdk.exceptions.ConfigFileNotFoundError: when the config file
-                couldn't be read
-            orquestra.sdk.exceptions.ConfigNameNotFoundError: when there's no
-                corresponding config entry in the config file.
+                couldn't be read.
+            orquestra.sdk.exceptions.ConfigNameNotFoundError: when the ``config``
+                argument doesn't match any configuration stored in the config file.
+            orquestra.sdk.exceptions.RuntimeQuerySummaryError: when it wasn't possible
+                to find the ``run_id`` in any of the queried runtimes.
+            orquestra.sdk.exceptions.WorkflowRunNotFoundError: when the runtime doesn't
+                know of this ``run_id``. In standard circumstances this is covered by
+                a ``RuntimeQuerySummaryError`` instead.
+            orquestra.sdk.exceptions.UnauthorizedError: when authorization with the
+                remote runtime failed. In standard circumstances this is covered by
+                a ``RuntimeQuerySummaryError`` instead.
         """
-        _project_dir = Path(project_dir or Path.cwd())
-
         # Resolve config
-        resolved_config: RuntimeConfig
-        if config is None:
-            # Shorthand: use the cached value.
-            # We need to read the config name from the local DB and load the config
-            # entry.
-            try:
-                stored_run = cls._get_stored_run(_project_dir, run_id)
-            except WorkflowRunNotFoundError:
-                raise
-
-            try:
-                resolved_config = RuntimeConfig.load(stored_run.config_name)
-            except (ConfigFileNotFoundError, ConfigNameNotFoundError):
-                raise
-        else:
-            resolved_config = resolve_config(config)
-
-        # Retrieve workflow def from the runtime:
-        # - Ray stores wf def for us under a metadata entry.
-        # - CE will have endpoints for getting [wf def] by [wf run ID]. See:
-        #   https://zapatacomputing.atlassian.net/browse/ORQP-1317
-        runtime = resolved_config._get_runtime(_project_dir)
+        config_repo = repos.ConfigByIDRepo()
         try:
-            wf_run_model = runtime.get_workflow_run_status(run_id)
+            resolved_config = config_repo.get_config(wf_run_id=run_id, config=config)
+        except (
+            ConfigFileNotFoundError,
+            ConfigNameNotFoundError,
+            RuntimeQuerySummaryError,
+        ):
+            raise
+
+        runtime_repo = repos.RuntimeRepo()
+        runtime = runtime_repo.get_runtime(config=resolved_config)
+
+        # Resolve workflow definition IR
+        wf_def_repo = repos.WFDefRepo()
+        try:
+            wf_def = wf_def_repo.get_wf_def(wf_run_id=run_id, runtime=runtime)
         except (UnauthorizedError, WorkflowRunNotFoundError):
             raise
 
         workflow_run = WorkflowRun(
             run_id=run_id,
-            wf_def=wf_run_model.workflow_def,
+            wf_def=wf_def,
             runtime=runtime,
             config=resolved_config,
         )
@@ -171,11 +166,8 @@ class WorkflowRun:
             project_dir: the path to the project directory. If omitted, the current
                 working directory is used.
         """
-        _config = resolve_config(config)
-
-        runtime = _config._get_runtime(project_dir)
-
-        assert runtime is not None
+        _config = repos.ConfigByNameRepo().normalize_config(config)
+        runtime = repos.RuntimeRepo().get_runtime(_config)
 
         _project: t.Optional[ProjectRef] = resolve_studio_ref(
             workspace_id,
@@ -637,14 +629,8 @@ def list_workflow_run_summaries(
     project = _handle_common_listing_project_errors(project, workspace)
     workspace = resolve_studio_workspace_ref(workspace_id=workspace)
 
-    # Resolve config
-    try:
-        resolved_config: RuntimeConfig = resolve_config(config)
-    except ConfigNameNotFoundError:
-        raise
-
-    # resolve runtime
-    runtime = resolved_config._get_runtime(Path.cwd())
+    resolved_config = repos.ConfigByNameRepo().normalize_config(config)
+    runtime = repos.RuntimeRepo().get_runtime(resolved_config)
 
     # Grab the workflow summaries from the runtime.
     with warnings.catch_warnings():
@@ -709,17 +695,14 @@ def list_workflow_runs(
     project = _handle_common_listing_project_errors(project, workspace)
     workspace = resolve_studio_workspace_ref(workspace_id=workspace)
 
-    _project_dir = Path(project_dir or Path.cwd())
-
-    # Resolve config
+    config_repo = repos.ConfigByNameRepo()
     try:
-        resolved_config: RuntimeConfig = resolve_config(config)
-    except ConfigNameNotFoundError:
+        resolved_config = config_repo.normalize_config(config)
+    except (ConfigFileNotFoundError, ConfigNameNotFoundError, TypeError):
         raise
     # If user wasn't specific with workspace and project, we might want to resolve it
 
-    # resolve runtime
-    runtime = resolved_config._get_runtime(_project_dir)
+    runtime = repos.RuntimeRepo().get_runtime(resolved_config)
 
     # Grab the "workflow runs" from the runtime.
     # Note: WorkflowRun means something else in runtime land. To avoid overloading, this

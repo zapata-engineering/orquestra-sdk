@@ -2,40 +2,26 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
+from orquestra.sdk._base._api import RuntimeConfig
+from orquestra.sdk._base._api.repos import RuntimeRepo
 from orquestra.sdk._base._driver import _client
-from orquestra.sdk._base._factory import build_runtime_from_config
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 
 
 @pytest.fixture
 def runtime(mock_workflow_db_location):
-    config = RuntimeConfiguration(
+    config_model = RuntimeConfiguration(
         config_name="hello",
         runtime_name=RuntimeName.CE_REMOTE,
         runtime_options={"uri": "http://localhost", "token": "blah"},
     )
+    config = RuntimeConfig._config_from_runtimeconfiguration(config_model)
 
-    return build_runtime_from_config(project_dir=Path.cwd(), config=config)
-
-
-@pytest.fixture
-def runtime_verbose(tmp_path):
-    (tmp_path / ".orquestra").mkdir(exist_ok=True)
-    # Fake CE configuration
-    config = RuntimeConfiguration(
-        config_name="hello",
-        runtime_name=RuntimeName.CE_REMOTE,
-        runtime_options={"uri": "http://localhost", "token": "blah"},
-    )
-    # Return a runtime object
-    return build_runtime_from_config(
-        project_dir=Path.cwd(), config=config, verbose=True
-    )
+    return RuntimeRepo().get_runtime(config)
 
 
 @pytest.fixture

@@ -6,17 +6,24 @@ Tests for orquestra.sdk._base._api._wf_run.
 """
 
 import itertools
-import json
 import time
 import typing as t
 import warnings
 from contextlib import suppress as do_not_raise
 from datetime import timedelta
-from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospec
+from unittest.mock import (
+    DEFAULT,
+    MagicMock,
+    Mock,
+    PropertyMock,
+    create_autospec,
+    sentinel,
+)
 
 import pytest
 
 from orquestra.sdk._base import _api, _dsl, _traversal, _workflow, serde
+from orquestra.sdk._base._api import repos
 from orquestra.sdk._base._api._task_run import TaskRun
 from orquestra.sdk._base._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
 from orquestra.sdk._base._in_process_runtime import InProcessRuntime
@@ -25,7 +32,10 @@ from orquestra.sdk._base._spaces._api import list_projects, list_workspaces
 from orquestra.sdk._base._spaces._structs import ProjectRef, Workspace
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import (
+    ConfigFileNotFoundError,
+    ConfigNameNotFoundError,
     ProjectInvalidError,
+    RuntimeQuerySummaryError,
     UnauthorizedError,
     VersionMismatch,
     WorkflowRunCanNotBeTerminated,
@@ -34,7 +44,6 @@ from orquestra.sdk.exceptions import (
 )
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeName
-from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import JSONResult
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
@@ -44,7 +53,6 @@ from ..data.complex_serialization.workflow_defs import (
     join_strings,
     wf_pass_tuple,
 )
-from ..data.configs import TEST_CONFIG_JSON
 
 
 def _fake_completed_workflow(end_state: State = State.SUCCEEDED):
@@ -59,21 +67,6 @@ def _fake_completed_workflow(end_state: State = State.SUCCEEDED):
     run_model.message = None
     run_model.status.state = end_state
     return run_model
-
-
-@pytest.fixture
-def tmp_default_config_json(patch_config_location):
-    json_file = patch_config_location / "config.json"
-
-    with json_file.open("w") as f:
-        json.dump(TEST_CONFIG_JSON, f)
-
-    return json_file
-
-
-@pytest.fixture(autouse=True)
-def set_config_location(patch_config_location):
-    pass
 
 
 class TestRunningInProcess:
@@ -95,7 +88,8 @@ class TestRunningInProcess:
             assert results == 3
 
         @staticmethod
-        def test_pass_builtin_config_name_with_file(tmp_default_config_json):
+        @pytest.mark.usefixtures("patch_config_location")
+        def test_pass_builtin_config_name_with_file():
             run = wf_pass_tuple().run("in_process")
             results = run.get_results()
 
@@ -216,185 +210,183 @@ class TestWorkflowRun:
             dry_run=False,
         )
 
+    @staticmethod
+    @pytest.fixture
+    def runtime_repo_mock(monkeypatch):
+        runtime_repo = create_autospec(repos.RuntimeRepo)
+        monkeypatch.setattr(repos, "RuntimeRepo", Mock(return_value=runtime_repo))
+        return runtime_repo
+
     class TestByID:
-        class TestResolvingConfig:
-            """
-            Verifies logic for figuring out what config to use.
-            """
+        @staticmethod
+        @pytest.fixture
+        def config_by_id_repo_mock(monkeypatch):
+            config_repo = create_autospec(repos.ConfigByIDRepo)
+            monkeypatch.setattr(repos, "ConfigByIDRepo", Mock(return_value=config_repo))
+            return config_repo
 
+        @staticmethod
+        @pytest.fixture
+        def wf_def_repo_mock(monkeypatch):
+            wf_def_repo = create_autospec(repos.WFDefRepo)
+            monkeypatch.setattr(repos, "WFDefRepo", Mock(return_value=wf_def_repo))
+            return wf_def_repo
+
+        @staticmethod
+        @pytest.mark.parametrize("pass_config", [False, True])
+        def test_passing_values(
+            config_by_id_repo_mock,
+            wf_def_repo_mock,
+            runtime_repo_mock,
+            pass_config: bool,
+        ):
+            """Verifies we pass args to the underlying repos."""
+            # Given
+            run_id = sentinel.wf_run_id
+            config = sentinel.config
+            wf_def = sentinel.wf_def
+            runtime = sentinel.runtime
+            resolved_config = sentinel.resolved_config
+
+            config_by_id_repo_mock.get_config.return_value = resolved_config
+            runtime_repo_mock.get_runtime.return_value = runtime
+            wf_def_repo_mock.get_wf_def.return_value = wf_def
+
+            # When
+            if pass_config:
+                run = _api.WorkflowRun.by_id(run_id=run_id, config=config)
+            else:
+                run = _api.WorkflowRun.by_id(run_id=run_id)
+
+            # Then
+            # Sets attrs appropriately
+            assert run._config == resolved_config
+            assert run._run_id == run_id
+            assert run._wf_def == wf_def
+            assert run._runtime == runtime
+
+        class TestPassingErrors:
             @staticmethod
-            def test_passing_config_obj():
+            @pytest.mark.parametrize(
+                "exception,msg",
+                [
+                    (ConfigFileNotFoundError(), "None"),
+                    (ConfigNameNotFoundError(), "None"),
+                    (
+                        RuntimeQuerySummaryError(
+                            wf_run_id=sentinel.wf_run_id,
+                            not_found_runtimes=[
+                                RuntimeQuerySummaryError.RuntimeInfo(
+                                    runtime_name=RuntimeName.CE_REMOTE,
+                                    config_name="cluster1",
+                                    server_uri="https://cluster1.example.com",
+                                ),
+                            ],
+                            unauthorized_runtimes=[
+                                RuntimeQuerySummaryError.RuntimeInfo(
+                                    runtime_name=RuntimeName.CE_REMOTE,
+                                    config_name="cluster2",
+                                    server_uri="https://cluster2.example.com",
+                                ),
+                            ],
+                            not_running_runtimes=[
+                                RuntimeQuerySummaryError.RuntimeInfo(
+                                    runtime_name=RuntimeName.RAY_LOCAL,
+                                    config_name="ray",
+                                    server_uri=None,
+                                ),
+                            ],
+                        ),
+                        (
+                            "Couldn't find any runtime that knows about this workflow "
+                            "run ID. Runtimes with 'not found' response: ['cluster1']. "
+                            "Runtimes with 'unauthorized' response: ['cluster2']. "
+                            "Runtimes that weren't up: ['ray']."
+                        ),
+                    ),
+                ],
+            )
+            def test_config_repo_errors(config_by_id_repo_mock, exception, msg):
                 # Given
-                run_id = "wf.mine.1234"
+                config_by_id_repo_mock.get_config.side_effect = exception
 
-                # Set up config
-                config = _api.RuntimeConfig(
-                    runtime_name=RuntimeName.IN_PROCESS,
-                    bypass_factory_methods=True,
-                )
-
-                # Set up runtime
-                runtime = Mock()
-                setattr(config, "_get_runtime", lambda _: runtime)
-                wf_def = "<wf def sentinel>"
-                runtime.get_workflow_run_status().workflow_def = wf_def
-
-                # When
-                run = _api.WorkflowRun.by_id(
-                    run_id=run_id,
-                    config=config,
-                )
-
-                # Then
-                # Uses the passed in config
-                assert run._config == config
-
-                # Sets other attrs appropriately
-                assert run._run_id == run_id
-                assert run._wf_def == wf_def
-                assert run._runtime == runtime
-
-            @staticmethod
-            def test_passing_config_name(monkeypatch):
-                # Given
-                run_id = "wf.mine.1234"
-
-                # Set up config
-                config_name = "ray"
-                config_obj = _api.RuntimeConfig(
-                    runtime_name=RuntimeName.RAY_LOCAL,
-                    name=config_name,
-                    bypass_factory_methods=True,
-                )
-                monkeypatch.setattr(
-                    _api.RuntimeConfig, "load", Mock(return_value=config_obj)
-                )
-
-                # Set up runtime
-                runtime = Mock()
-                setattr(config_obj, "_get_runtime", lambda _: runtime)
-                wf_def = "<wf def sentinel>"
-                runtime.get_workflow_run_status().workflow_def = wf_def
-
-                # When
-                run = _api.WorkflowRun.by_id(
-                    run_id=run_id,
-                    config=config_name,
-                )
-
-                # Then
-                # Uses the passed in config
-                assert run._config == config_obj
-
-                # Sets other attrs appropriately
-                assert run._run_id == run_id
-                assert run._wf_def == wf_def
-                assert run._runtime == runtime
-
-            @staticmethod
-            def test_passing_invalid_obj():
-                # Given
-                run_id = "wf.mine.1234"
-                config: t.Any = object()
-
-                # Then
-                with pytest.raises(TypeError):
+                with pytest.raises(type(exception)) as exc_info:
                     # When
                     _ = _api.WorkflowRun.by_id(
-                        run_id=run_id,
-                        config=config,
+                        run_id=sentinel.wf_run_id, config=sentinel.config
                     )
+                # Then
+                assert str(exc_info.value) == msg
 
-            class TestNotPassingConfig:
-                @staticmethod
-                def test_exists_in_local_db(monkeypatch):
-                    # Given
-                    run_id = "wf.mine.1234"
-                    config_name = "ray"
+            @staticmethod
+            @pytest.mark.usefixtures("config_by_id_repo_mock")
+            @pytest.mark.usefixtures("runtime_repo_mock")
+            @pytest.mark.parametrize(
+                "exception",
+                [
+                    UnauthorizedError(),
+                    WorkflowRunNotFoundError(),
+                ],
+            )
+            def test_wf_def_repo_errors(wf_def_repo_mock, exception):
+                # Given
+                wf_def_repo_mock.get_wf_def.side_effect = exception
 
-                    # Simulate filled DB
-                    monkeypatch.setattr(
-                        _api.WorkflowRun,
-                        "_get_stored_run",
-                        Mock(
-                            return_value=StoredWorkflowRun(
-                                workflow_run_id=run_id,
-                                config_name=config_name,
-                                workflow_def=wf_pass_tuple().model,
-                                is_qe=False,
-                            )
-                        ),
-                    )
-
-                    # Set up config
-                    config_obj = _api.RuntimeConfig(
-                        runtime_name=RuntimeName.RAY_LOCAL,
-                        name=config_name,
-                        bypass_factory_methods=True,
-                    )
-                    monkeypatch.setattr(
-                        _api.RuntimeConfig, "load", Mock(return_value=config_obj)
-                    )
-
-                    # Set up runtime
-                    runtime = Mock()
-                    setattr(config_obj, "_get_runtime", lambda _: runtime)
-                    wf_def = "<wf def sentinel>"
-                    runtime.get_workflow_run_status().workflow_def = wf_def
-
+                # Then
+                with pytest.raises(type(exception)):
                     # When
-                    run = _api.WorkflowRun.by_id(run_id=run_id)
-
-                    # Then
-                    # Uses the passed in config
-                    assert run._config == config_obj
-
-                    # Sets other attrs appropriately
-                    assert run._run_id == run_id
-                    assert run._wf_def == wf_def
-                    assert run._runtime == runtime
-
-                @staticmethod
-                def test_missing_from_db(monkeypatch):
-                    # Given
-                    run_id = "wf.mine.1234"
-
-                    # Simulate empty DB
-                    monkeypatch.setattr(
-                        _api.WorkflowRun,
-                        "_get_stored_run",
-                        Mock(side_effect=WorkflowRunNotFoundError),
+                    _ = _api.WorkflowRun.by_id(
+                        run_id=sentinel.wf_run_id, config=sentinel.config
                     )
-
-                    # Then
-                    with pytest.raises(WorkflowRunNotFoundError):
-                        # When
-                        _ = _api.WorkflowRun.by_id(run_id=run_id)
 
     class TestStartFromIR:
+        @staticmethod
         @pytest.fixture
-        def wf_ir_def(self, sample_wf_def):
+        def wf_ir_def(sample_wf_def):
             return sample_wf_def.model
 
-        @pytest.mark.parametrize(
-            "config", ["in_process", _api.RuntimeConfig.in_process()]
-        )
-        def test_happy_path(self, wf_ir_def, config):
-            wf_run = _api.WorkflowRun.start_from_ir(wf_ir_def, config)
+        class TestIntegration:
+            """Runs a real workflow with in-process runtime."""
 
-            assert wf_run.get_results() == ("Hellothere", "Generalkenobi")
+            @staticmethod
+            @pytest.mark.parametrize(
+                "config", ["in_process", _api.RuntimeConfig.in_process()]
+            )
+            def test_happy_path(wf_ir_def, config):
+                wf_run = _api.WorkflowRun.start_from_ir(wf_ir_def, config)
 
-        def test_wrong_config_type(self, wf_ir_def):
-            with pytest.raises(TypeError):
-                _api.WorkflowRun.start_from_ir(wf_ir_def, 123)  # type: ignore
+                assert wf_run.get_results() == ("Hellothere", "Generalkenobi")
 
-        def test_different_runtime(self, wf_ir_def, mock_runtime):
-            mock_config = MagicMock(_api.RuntimeConfig)
-            mock_config._runtime_name = "runtime_name"
-            mock_config._get_runtime.return_value = mock_runtime
+            @staticmethod
+            def test_wrong_config_type(wf_ir_def):
+                with pytest.raises(TypeError):
+                    _api.WorkflowRun.start_from_ir(wf_ir_def, 123)  # type: ignore
 
-            wf_run = _api.WorkflowRun.start_from_ir(wf_ir_def, mock_config)
+        @staticmethod
+        @pytest.fixture
+        def config_by_name_repo_mock(monkeypatch):
+            config_repo = create_autospec(repos.ConfigByNameRepo)
+            monkeypatch.setattr(
+                repos, "ConfigByNameRepo", Mock(return_value=config_repo)
+            )
+            return config_repo
 
+        @staticmethod
+        def test_uses_mocked_runtime(
+            wf_ir_def, config_by_name_repo_mock, runtime_repo_mock, mock_runtime
+        ):
+            # Given
+            input_config = sentinel.input_config
+            config_by_name_repo_mock.normalize_config.return_value = (
+                sentinel.resolved_config
+            )
+
+            runtime_repo_mock.get_runtime.return_value = mock_runtime
+
+            # When
+            wf_run = _api.WorkflowRun.start_from_ir(wf_ir_def, input_config)
+
+            # Then
             assert wf_run.run_id == "wf_pass_tuple-1"
 
     class TestGetStatus:

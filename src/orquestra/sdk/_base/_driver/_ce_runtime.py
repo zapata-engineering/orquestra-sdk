@@ -117,6 +117,7 @@ class CERuntime(RuntimeInterface):
         Raises:
             RuntimeConfigError: when the config is invalid.
         """
+        # TODO (ORQSDK-971): remove the config field
         self._config = config
         self._verbose = verbose
 

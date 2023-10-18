@@ -3,11 +3,12 @@
 ################################################################################
 import typing as t
 
-from orquestra.sdk.exceptions import ConfigNameNotFoundError
+from orquestra.sdk.exceptions import ConfigFileNotFoundError, ConfigNameNotFoundError
 
 from ...schema.configs import ConfigName
 from ...schema.workflow_run import WorkspaceId
-from .._api._config import RuntimeConfig, resolve_config
+from .._api import repos
+from .._api._config import RuntimeConfig
 from ._structs import Project, Workspace
 
 
@@ -25,13 +26,13 @@ def list_workspaces(
         orquestra.sdk.exceptions.ConfigNameNotFoundError: When the specified config
             name is not present in the config file.
     """
-    # Resolve config
+    config_repo = repos.ConfigByNameRepo()
     try:
-        resolved_config = resolve_config(config)
-    except ConfigNameNotFoundError:
+        resolved_config = config_repo.normalize_config(config)
+    except (ConfigFileNotFoundError, ConfigNameNotFoundError, TypeError):
         raise
 
-    runtime = resolved_config._get_runtime()
+    runtime = repos.RuntimeRepo().get_runtime(resolved_config)
 
     return runtime.list_workspaces()
 
@@ -51,11 +52,12 @@ def list_projects(
     Raises:
         ConfigNameNotFoundError: when the named config is not found in the file.
     """
-    # Resolve config
+    config_repo = repos.ConfigByNameRepo()
     try:
-        resolved_config = resolve_config(config)
-    except ConfigNameNotFoundError:
+        resolved_config = config_repo.normalize_config(config)
+    except (ConfigFileNotFoundError, ConfigNameNotFoundError, TypeError):
         raise
+
     resolved_workspace_id: str
 
     resolved_workspace_id = (
@@ -64,7 +66,8 @@ def list_projects(
         else workspace_id
     )
 
-    runtime = resolved_config._get_runtime()
+    runtime_repo = repos.RuntimeRepo()
+    runtime = runtime_repo.get_runtime(config=resolved_config)
 
     return runtime.list_projects(resolved_workspace_id)
 

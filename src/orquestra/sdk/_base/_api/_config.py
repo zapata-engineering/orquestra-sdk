@@ -6,11 +6,8 @@ import json
 import logging
 import typing as t
 import warnings
-from pathlib import Path
 
 from packaging.version import parse as parse_version
-
-from orquestra.sdk._base._factory import build_runtime_from_config
 
 from ...exceptions import ConfigFileNotFoundError, ConfigNameNotFoundError
 from ...schema.configs import (
@@ -20,7 +17,6 @@ from ...schema.configs import (
     RuntimeName,
 )
 from .. import _config
-from ..abc import RuntimeInterface
 
 
 class RuntimeConfig:
@@ -97,7 +93,17 @@ class RuntimeConfig:
 
     @property
     def name(self) -> t.Optional[str]:
+        """Human-readable name used to reference this configuration.
+
+        For remote runtimes, the config name is inferred from the server URI.
+        Local runtimes have special, reserved names.
+        """
         return self._name
+
+    @property
+    def runtime_name(self) -> RuntimeName:
+        """Name of the runtime type this config refers to."""
+        return self._runtime_name
 
     def _get_runtime_options(self) -> dict:
         """Construct a dictionary of the current runtime options.
@@ -173,42 +179,12 @@ class RuntimeConfig:
         return config
 
     # endregion factories
-    def _get_runtime(
-        self, project_dir: t.Optional[t.Union[str, Path]] = None
-    ) -> RuntimeInterface:
-        """Build the run.
-
-        Args:
-            project_dir: the path to the project directory. If omitted, the current
-                working directory is used.
-
-        Returns:
-            Runtime: The runtime specified by the configuration.
-        """
-        _project_dir: Path = Path(project_dir or Path.cwd())
-
-        runtime_options = {}
-        for key in _config.RUNTIME_OPTION_NAMES:
-            try:
-                runtime_options[key] = getattr(self, key)
-            except AttributeError:
-                continue
-
-        runtime_configuration = RuntimeConfiguration(
-            config_name=str(self._name),
-            runtime_name=self._runtime_name,
-            runtime_options=runtime_options,
-        )
-
-        return build_runtime_from_config(
-            project_dir=_project_dir, config=runtime_configuration
-        )
 
     # region LOADING FROM FILE
     @classmethod
     def list_configs(
         cls,
-    ) -> list:
+    ) -> t.List[ConfigName]:
         """List previously saved configurations.
 
         Returns:
@@ -411,18 +387,3 @@ def migrate_config_file():
     )
     for config_name in changed:
         print(f" - {config_name}")
-
-
-def resolve_config(
-    config: t.Union[ConfigName, "RuntimeConfig"],
-) -> "RuntimeConfig":
-    if isinstance(config, RuntimeConfig):
-        # EZ. Passed-in explicitly.
-        resolved_config = config
-    elif isinstance(config, str):
-        # Shorthand: just the config name.
-        resolved_config = RuntimeConfig.load(config)
-    else:
-        raise TypeError(f"'config' is of unsupported type {type(config)}.")
-
-    return resolved_config

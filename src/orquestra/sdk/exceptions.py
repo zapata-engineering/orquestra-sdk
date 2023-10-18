@@ -5,8 +5,9 @@
 """Custom exceptions for the SDK."""
 
 import typing as t
+from dataclasses import dataclass
 
-from orquestra.sdk.schema import ir
+from orquestra.sdk.schema import configs, ir
 from orquestra.sdk.schema.workflow_run import State, TaskInvocationId, WorkflowRunId
 
 
@@ -177,6 +178,48 @@ class WorkflowRunNotFoundError(NotFoundError):
     """Raised when no run with the specified ID is found."""
 
     pass
+
+
+class RuntimeQuerySummaryError(NotFoundError):
+    """Raised when of the queried runtimes could find this workflow run.
+
+    Args:
+        wf_run_id: identifier of the workflow run we were looking for.
+        not_found_runtimes: runtimes we queried and the reponse was "this workflow run
+            is not found"
+        unauthorized_runtimes: runtimes we queried and the reponse was "you're not
+            authorized to access this resource"
+        not_running_runtimes: runtimes we queried but the cluster wasn't running
+    """
+
+    @dataclass(frozen=True)
+    class RuntimeInfo:
+        runtime_name: configs.RuntimeName
+        config_name: t.Optional[configs.ConfigName]
+        server_uri: t.Optional[str]
+
+    def __init__(
+        self,
+        wf_run_id: WorkflowRunId,
+        not_found_runtimes: t.Sequence[RuntimeInfo],
+        unauthorized_runtimes: t.Sequence[RuntimeInfo],
+        not_running_runtimes: t.Sequence[RuntimeInfo],
+    ):
+        not_found_configs = [info.config_name for info in not_found_runtimes]
+        unauthorized_configs = [info.config_name for info in unauthorized_runtimes]
+        not_running_configs = [info.config_name for info in not_running_runtimes]
+        super().__init__(
+            message=(
+                "Couldn't find any runtime that knows about this workflow run ID. "
+                f"Runtimes with 'not found' response: {not_found_configs}. "
+                f"Runtimes with 'unauthorized' response: {unauthorized_configs}. "
+                f"Runtimes that weren't up: {not_running_configs}."
+            )
+        )
+        self.wf_run_id = wf_run_id
+        self.not_found_runtimes = not_found_runtimes
+        self.unauthorized_runtimes = unauthorized_runtimes
+        self.not_running_runtimes = not_running_runtimes
 
 
 class WorkflowRunNotStarted(WorkflowRunNotFoundError):
