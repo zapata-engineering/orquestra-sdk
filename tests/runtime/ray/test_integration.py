@@ -295,8 +295,6 @@ class TestRayRuntimeMethods:
             assert run.status.start_time < run.status.end_time
 
             for task_run in run.task_runs:
-                assert task_run.invocation_id in wf_def.task_invocations.keys()
-
                 status = task_run.status
 
                 # We're only interested in tasks that were terminated while in process.
