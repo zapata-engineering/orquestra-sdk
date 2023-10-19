@@ -534,12 +534,12 @@ class RayRuntime(RuntimeInterface):
         )
 
         if model.status.state.is_completed():
-            model = self._normalize_endtime(model)
+            model = self._normalize_endtimes(model)
 
         return model
 
     @staticmethod
-    def _normalize_endtime(model: WorkflowRun) -> WorkflowRun:
+    def _normalize_endtimes(model: WorkflowRun) -> WorkflowRun:
         """Set the current time as end_time for tasks and workflows that don't have one.
 
         Ray doesn't provide an end time for terminated tasks and workflows.
