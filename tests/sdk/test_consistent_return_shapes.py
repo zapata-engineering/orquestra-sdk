@@ -592,6 +592,8 @@ class TestCLIDownloadDir:
         run_id_ray = m.group("run_id").strip()
         assert mock_ce_run_single in run_ce.stdout.decode()
 
+        sdk.WorkflowRun.by_id(run_id_ray).wait_until_finished()
+
         # WHEN
         run_ray = subprocess.run(
             [
@@ -604,9 +606,11 @@ class TestCLIDownloadDir:
                 "local",
                 run_id_ray,
             ],
-            check=True,
             capture_output=True,
         )
+        assert (
+            run_ray.returncode == 0
+        ), f"STDOUT: {run_ray.stdout.decode()}\n\nSTDERR: {run_ray.stderr.decode()}"
         run_ce = subprocess.run(
             [
                 "orq",
@@ -618,9 +622,11 @@ class TestCLIDownloadDir:
                 "CE",
                 mock_ce_run_single,
             ],
-            check=True,
             capture_output=True,
         )
+        assert (
+            run_ce.returncode == 0
+        ), f"STDOUT: {run_ce.stdout.decode()}\n\nSTDERR: {run_ce.stderr.decode()}"
 
         # THEN
         with open(

@@ -39,7 +39,6 @@ The following sections give a more complete explanation of these importers and t
      - * Works well as a ``dependency_imports=[...]`` addition to ``InlineImport`` to allow using 3rd-party libraries.
        * Best suited for referencing libraries available on `PyPI <https://pypi.org/>`_ like ``torch``.
      - * Can't be reliably used to refer to an unpublished, WIP projects.
-       * Be cautious when including ``orquestra-sdk`` as a dependency - the version installed inside the task *must* match the version used to submit the workflow.
 
    * - ``GithubImport``
      - * Well-suited for unpublished, WIP projects.
@@ -92,7 +91,7 @@ See also `Imports In Detail`_ for more info about each one.
       # file: setup.cfg
       [options]
       install_requires =
-          orquestra-sdk>=0.51.0
+          scikit-learn~=1.3.1
           torch~=2.0
 
 
@@ -112,7 +111,7 @@ See also `Imports In Detail`_ for more info about each one.
       # file: setup.cfg
       [options]
       install_requires =
-          orquestra-sdk>=0.51.0
+          scikit-learn~=1.3.1
           torch~=2.0
 
 
@@ -180,13 +179,10 @@ The required packages can be specified as arguments, or listed in a ``requiremen
     :language: python
     :dedent: 8
 
-.. warning::
-    Take care when declaring ``orquestra-sdk`` as a dependency!
-    ``PythonImports`` allows you to install any available python package in the environment that executes the task.
-    Consequently, it is possible to create a situation where the environment that executes the task and the environment that submits a task have different versions of ``orquestra-sdk`` installed.
-    This will cause workflow runs to fail!
-
-    Note that this also applies to transitive dependencies - if you depend on a package with a strict dependency on an older version of ``orquestra-sdk`` then the mismatch will arise even if you don't declare a dependency on ``orquestra-sdk`` directly.
+.. note::
+    The surrent version of Orquestra SDK (i.e. the one being used to submit the workflow) is automatically included as a dependency for the task execution environments.
+    This is to prevent version mismatches between the various nodes.
+    Declarations of ``orquestra-sdk`` as a dependency will be ignored.
 
 
 
@@ -225,7 +221,7 @@ The remote runtime clones the repo and pip-installs the project when the workflo
    # file: setup.cfg
    [options]
    install_requires =
-       orquestra-sdk>=0.51.0
+       as a dependency
        torch~=2.0
 
 
