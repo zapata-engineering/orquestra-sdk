@@ -546,8 +546,6 @@ class RayRuntime(RuntimeInterface):
         This brought some issues on Workflow Driver, we so fill up the missing status
         fields with the current datetime for all terminated tasks and workflow.
         """
-        # TODO use SDK's dates module:
-        # https://zapatacomputing.atlassian.net/browse/ORQSDK-943
         now: _dates.Instant = _dates.now()
         new_model = model.copy(deep=True)
 
