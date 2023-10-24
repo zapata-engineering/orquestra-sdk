@@ -1,106 +1,106 @@
 {
-    "name": "wf",
-    "fn_ref": {
-        "module": "__main__",
-        "function_name": "wf",
-        "file_path": "tests/runtime/ray/data/python_package/original_workflow.py",
-        "line_number": 18,
-        "type": "MODULE_FUNCTION_REF"
+  "name": "wf",
+  "fn_ref": {
+    "module": "__main__",
+    "function_name": "wf",
+    "file_path": "original_workflow.py",
+    "line_number": 18,
+    "type": "MODULE_FUNCTION_REF"
+  },
+  "imports": {
+    "inline-import-1": {
+      "id": "inline-import-1",
+      "type": "INLINE_IMPORT"
     },
-    "imports": {
-        "inline-import-1": {
-            "id": "inline-import-1",
-            "type": "INLINE_IMPORT"
-        },
-        "python-import-dac5d03ef0": {
-            "id": "python-import-dac5d03ef0",
-            "packages": [
-                {
-                    "name": "polars",
-                    "extras": [],
-                    "version_constraints": [
-                        "==0.17.3"
-                    ],
-                    "environment_markers": ""
-                }
-            ],
-            "pip_options": [],
-            "type": "PYTHON_IMPORT"
+    "python-import-bd8cf950ad": {
+      "id": "python-import-bd8cf950ad",
+      "packages": [
+        {
+          "name": "polars",
+          "extras": [],
+          "version_constraints": [
+            "==0.17.3"
+          ],
+          "environment_markers": ""
         }
-    },
-    "tasks": {
-        "task-my-fn-6d73c7e55a": {
-            "id": "task-my-fn-6d73c7e55a",
-            "fn_ref": {
-                "function_name": "my_fn",
-                "encoded_function": [
-                    "gASVYwQAAAAAAACMF2Nsb3VkcGlja2xlLmNsb3VkcGlja2xllIwOX21ha2VfZnVuY3Rpb26Uk5Qo\naACMDV9idWlsdGluX3R5cGWUk5SMCENvZGVUeXBllIWUUpQoSwFLAEsASwFLAktDQwh8AKAAoQBT\nAJROhZSMBGl0ZW2UhZSMAmRmlIWUjIUvVXNlcnMvYWxleC9Db2RlL3phcGF0YS9ldmFuZ2VsaXNt\nLXdvcmtmbG93cy92ZW5kb3Ivb3JxdWVzdHJhLXdvcmtmbG93LXNkay90ZXN0cy9ydW50aW1lL3Jh\neS9kYXRhL3B5dGhvbl9wYWNrYWdlL29yaWdpbmFsX3dvcmtmbG93LnB5lIwFbXlfZm6USwpDAgAF\nlCkpdJRSlH2UKIwLX19wYWNrYWdlX1+UTowIX19uYW1lX1+UjAhfX21haW5fX5SMCF9fZmlsZV9f\nlGgOdU5OTnSUUpSMHGNsb3VkcGlja2xlLmNsb3VkcGlja2xlX2Zhc3SUjBJfZnVuY3Rpb25fc2V0\nc3RhdGWUk5RoGX2UKIwXX1Rhc2tEZWZfX3Nka190YXNrX2JvZHmUaBmMB19mbl9yZWaUjBhvcnF1\nZXN0cmEuc2RrLl9iYXNlLl9kc2yUjBFJbmxpbmVGdW5jdGlvblJlZpSTlGgPaBmGlIGUjAhfZm5f\nbmFtZZRoD4wQX291dHB1dF9tZXRhZGF0YZRoIIwSVGFza091dHB1dE1ldGFkYXRhlJOUiUsBhpSB\nlIwLX3BhcmFtZXRlcnOUjAtjb2xsZWN0aW9uc5SMC09yZGVyZWREaWN0lJOUKVKUaAxoIIwNVGFz\na1BhcmFtZXRlcpSTlGgMaCCMDVBhcmFtZXRlcktpbmSUk5SMFVBPU0lUSU9OQUxfT1JfS0VZV09S\nRJSFlFKUhpSBlHOMCl9yZXNvdXJjZXOUaCCMCVJlc291cmNlc5STlChOTk5OTnSUgZSMDV9jdXN0\nb21faW1hZ2WUTowMX2N1c3RvbV9uYW1llE6ME19kZXBlbmRlbmN5X2ltcG9ydHOUaCCMDVB5dGhv\nbkltcG9ydHOUk5QpgZR9lCiMBV9maWxllE6MCV9wYWNrYWdlc5SMDnBvbGFycz09MC4xNy4zlIWU\ndWKFlIwfX3VzZV9kZWZhdWx0X2RlcGVuZGVuY3lfaW1wb3J0c5SJjA5fc291cmNlX2ltcG9ydJRo\nIIwMSW5saW5lSW1wb3J0lJOUKYGUjBpfdXNlX2RlZmF1bHRfc291cmNlX2ltcG9ydJSJdX2UKGgV\naA+MDF9fcXVhbG5hbWVfX5RoD4wPX19hbm5vdGF0aW9uc19flH2UjA5fX2t3ZGVmYXVsdHNfX5RO\njAxfX2RlZmF1bHRzX1+UTowKX19tb2R1bGVfX5RoFowHX19kb2NfX5ROjAtfX2Nsb3N1cmVfX5RO\njBdfY2xvdWRwaWNrbGVfc3VibW9kdWxlc5RdlIwLX19nbG9iYWxzX1+UfZR1hpSGUjAu\n"
-                ],
-                "type": "INLINE_FUNCTION_REF"
-            },
-            "parameters": [
-                {
-                    "name": "df",
-                    "kind": "POSITIONAL_OR_KEYWORD"
-                }
-            ],
-            "output_metadata": {
-                "is_subscriptable": false,
-                "n_outputs": 1
-            },
-            "source_import_id": "inline-import-1",
-            "dependency_import_ids": [
-                "python-import-dac5d03ef0"
-            ]
-        }
-    },
-    "artifact_nodes": {
-        "artifact-0-my-fn": {
-            "id": "artifact-0-my-fn",
-            "serialization_format": "AUTO"
-        }
-    },
-    "constant_nodes": {
-        "constant-0": {
-            "id": "constant-0",
-            "chunks": [
-                "gASVeAAAAAAAAACMFnBvbGFycy5kYXRhZnJhbWUuZnJhbWWUjAlEYXRhRnJhbWWUk5QpgZRdlIwU\ncG9sYXJzLnNlcmllcy5zZXJpZXOUjAZTZXJpZXOUk5QpgZRDIKNkbmFtZWFhaGRhdGF0eXBlZUlu\ndDY0ZnZhbHVlc4EVlGJhYi4=\n"
-            ],
-            "serialization_format": "ENCODED_PICKLE",
-            "value_preview": "shape: (1, 1"
-        }
-    },
-    "secret_nodes": {},
-    "task_invocations": {
-        "invocation-0-task-my-fn": {
-            "id": "invocation-0-task-my-fn",
-            "task_id": "task-my-fn-6d73c7e55a",
-            "args_ids": [
-                "constant-0"
-            ],
-            "kwargs_ids": {},
-            "output_ids": [
-                "artifact-0-my-fn"
-            ]
-        }
-    },
-    "output_ids": [
-        "artifact-0-my-fn"
-    ],
-    "metadata": {
-        "sdk_version": {
-            "original": "0.47.1.dev21+g54ad067",
-            "major": 0,
-            "minor": 47,
-            "patch": 1,
-            "is_prerelease": true
-        },
-        "python_version": {
-            "original": "3.9.16 (main, May  8 2023, 17:01:20) \n[Clang 14.0.3 (clang-1403.0.22.14.1)]",
-            "major": 3,
-            "minor": 9,
-            "patch": 16,
-            "is_prerelease": false
-        }
+      ],
+      "pip_options": [],
+      "type": "PYTHON_IMPORT"
     }
+  },
+  "tasks": {
+    "task-my-fn-40bbab0916": {
+      "id": "task-my-fn-40bbab0916",
+      "fn_ref": {
+        "function_name": "my_fn",
+        "encoded_function": [
+          "gASVqAQAAAAAAACMF2Nsb3VkcGlja2xlLmNsb3VkcGlja2xllIwOX21ha2VfZnVuY3Rpb26Uk5Qo\naACMDV9idWlsdGluX3R5cGWUk5SMCENvZGVUeXBllIWUUpQoSwFLAEsASwFLAksDQyqXAHwAoAAA\nAAAAAAAAAAAAAAAAAAAAAAAAAKYAAACrAAAAAAAAAAAAUwCUToWUjARpdGVtlIWUjAJkZpSFlIx8\nL1VzZXJzL2phbWVzY2xhcmsvRG9jdW1lbnRzL2NvZGUvcHl0aG9uMzExL29ycXVlc3RyYS13b3Jr\nZmxvdy1zZGsvdGVzdHMvcnVudGltZS9yYXkvZGF0YS9weXRob25fcGFja2FnZS9vcmlnaW5hbF93\nb3JrZmxvdy5weZSMBW15X2ZulGgPSwpDEoAA8AoADA6PN4o3iTmMOdAEFJRDAJQpKXSUUpR9lCiM\nC19fcGFja2FnZV9flE6MCF9fbmFtZV9flIwIX19tYWluX1+UjAhfX2ZpbGVfX5RoDnVOTk50lFKU\njBxjbG91ZHBpY2tsZS5jbG91ZHBpY2tsZV9mYXN0lIwSX2Z1bmN0aW9uX3NldHN0YXRllJOUaBp9\nlCiMF19UYXNrRGVmX19zZGtfdGFza19ib2R5lGgajAdfZm5fcmVmlIwYb3JxdWVzdHJhLnNkay5f\nYmFzZS5fZHNslIwRSW5saW5lRnVuY3Rpb25SZWaUk5RoD2gahpSBlIwIX2ZuX25hbWWUaA+MEF9v\ndXRwdXRfbWV0YWRhdGGUaCGMElRhc2tPdXRwdXRNZXRhZGF0YZSTlIlLAYaUgZSMC19wYXJhbWV0\nZXJzlIwLY29sbGVjdGlvbnOUjAtPcmRlcmVkRGljdJSTlClSlGgMaCGMDVRhc2tQYXJhbWV0ZXKU\nk5RoDIwIYnVpbHRpbnOUjAdnZXRhdHRylJOUaCGMDVBhcmFtZXRlcktpbmSUk5SMFVBPU0lUSU9O\nQUxfT1JfS0VZV09SRJSGlFKUhpSBlHOMCl9yZXNvdXJjZXOUaCGMCVJlc291cmNlc5STlChOTk5O\nTnSUgZSMDV9jdXN0b21faW1hZ2WUTowMX2N1c3RvbV9uYW1llE6ME19kZXBlbmRlbmN5X2ltcG9y\ndHOUaCGMDVB5dGhvbkltcG9ydHOUk5QpgZR9lCiMBV9maWxllE6MCV9wYWNrYWdlc5SMDnBvbGFy\ncz09MC4xNy4zlIWUdWKFlIwfX3VzZV9kZWZhdWx0X2RlcGVuZGVuY3lfaW1wb3J0c5SJjA5fc291\ncmNlX2ltcG9ydJRoIYwMSW5saW5lSW1wb3J0lJOUKYGUjBpfdXNlX2RlZmF1bHRfc291cmNlX2lt\ncG9ydJSJdX2UKGgWaA+MDF9fcXVhbG5hbWVfX5RoD4wPX19hbm5vdGF0aW9uc19flH2UjA5fX2t3\nZGVmYXVsdHNfX5ROjAxfX2RlZmF1bHRzX1+UTowKX19tb2R1bGVfX5RoF4wHX19kb2NfX5ROjAtf\nX2Nsb3N1cmVfX5ROjBdfY2xvdWRwaWNrbGVfc3VibW9kdWxlc5RdlIwLX19nbG9iYWxzX1+UfZR1\nhpSGUjAu\n"
+        ],
+        "type": "INLINE_FUNCTION_REF"
+      },
+      "parameters": [
+        {
+          "name": "df",
+          "kind": "POSITIONAL_OR_KEYWORD"
+        }
+      ],
+      "output_metadata": {
+        "is_subscriptable": false,
+        "n_outputs": 1
+      },
+      "source_import_id": "inline-import-1",
+      "dependency_import_ids": [
+        "python-import-bd8cf950ad"
+      ]
+    }
+  },
+  "artifact_nodes": {
+    "artifact-0-my-fn": {
+      "id": "artifact-0-my-fn",
+      "serialization_format": "AUTO"
+    }
+  },
+  "constant_nodes": {
+    "constant-0": {
+      "id": "constant-0",
+      "chunks": [
+        "gASVeAAAAAAAAACMFnBvbGFycy5kYXRhZnJhbWUuZnJhbWWUjAlEYXRhRnJhbWWUk5QpgZRdlIwU\ncG9sYXJzLnNlcmllcy5zZXJpZXOUjAZTZXJpZXOUk5QpgZRDIKNkbmFtZWFhaGRhdGF0eXBlZUlu\ndDY0ZnZhbHVlc4EVlGJhYi4=\n"
+      ],
+      "serialization_format": "ENCODED_PICKLE",
+      "value_preview": "shape: (1, 1"
+    }
+  },
+  "secret_nodes": {},
+  "task_invocations": {
+    "invocation-0-task-my-fn": {
+      "id": "invocation-0-task-my-fn",
+      "task_id": "task-my-fn-40bbab0916",
+      "args_ids": [
+        "constant-0"
+      ],
+      "kwargs_ids": {},
+      "output_ids": [
+        "artifact-0-my-fn"
+      ]
+    }
+  },
+  "output_ids": [
+    "artifact-0-my-fn"
+  ],
+  "metadata": {
+    "sdk_version": {
+      "original": "0.57.1.dev8+g1768a3b.d20231024",
+      "major": 0,
+      "minor": 57,
+      "patch": 1,
+      "is_prerelease": true
+    },
+    "python_version": {
+      "original": "3.11.4 (main, Jun 29 2023, 18:06:53) [Clang 14.0.0 (clang-1400.0.29.202)]",
+      "major": 3,
+      "minor": 11,
+      "patch": 4,
+      "is_prerelease": false
+    }
+  }
 }
