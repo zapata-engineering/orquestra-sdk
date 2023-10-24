@@ -29,11 +29,11 @@ jobs:
         os: ["ubuntu-latest"]
         python: ["3.9", "3.10", "3.11"]
         # Extend the matrix with a job that prints coverage.
-        # Because { os: "ubuntu-latest", python: "3.9" } is already in the matrix,
+        # Because { os: "ubuntu-latest", python: "3.11" } is already in the matrix,
         # print_coverage: true is added to that job.
         include:
           - os: "ubuntu-latest"
-            python: "3.9"
+            python: "3.11"
             print_coverage: true
 
     timeout-minutes: 25
