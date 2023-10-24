@@ -17,6 +17,9 @@ class RuntimeName(str, Enum):
     QE_REMOTE = "QE_REMOTE"
     IN_PROCESS = "IN_PROCESS"
 
+    def __format__(self, format_spec: str) -> str:
+        return format(self.value, format_spec)
+
 
 RemoteRuntime = Literal[RuntimeName.CE_REMOTE]
 
