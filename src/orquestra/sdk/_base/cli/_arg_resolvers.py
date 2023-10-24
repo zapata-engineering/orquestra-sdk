@@ -112,17 +112,11 @@ class WFConfigResolver:
             return config
 
         if wf_run_id is not None:
-            # 1.1. Attempt to get config from local cache.
-            try:
-                stored_name = self._wf_run_repo.get_config_name_by_run_id(wf_run_id)
-                return stored_name
-            except exceptions.WorkflowRunNotFoundError:
-                # Ignore the exception and roll over to the "else" branch. We
-                # need to ask the user for the config.
-                pass
-
-        # 1.2. Prompt the user
-        return ConfigResolver(self._config_repo, self._prompter).resolve(config)
+            # 1.1. Attempt to find config by querying all runtimes.
+            return self._wf_run_repo.get_config_name_by_run_id(wf_run_id)
+        else:
+            # 1.2. Prompt the user
+            return ConfigResolver(self._config_repo, self._prompter).resolve(config)
 
 
 class SpacesResolver:

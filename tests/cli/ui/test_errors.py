@@ -99,6 +99,15 @@ class TestPrettyPrintException:
                 "An issue submitting the workflow",
             ),
             (exceptions.QERemoved("<qe removal text>"), "<qe removal text>"),
+            (
+                exceptions.RuntimeQuerySummaryError(
+                    wf_run_id="wf.abc123.123",
+                    not_found_runtimes=[],
+                    unauthorized_runtimes=[],
+                    not_running_runtimes=[],
+                ),
+                "Couldn't find any runtime",
+            ),
         ],
     )
     def tests_prints_exception_without_traceback(capsys, exc, stdout_marker: str):

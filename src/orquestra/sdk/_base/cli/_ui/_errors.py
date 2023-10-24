@@ -176,3 +176,9 @@ def _(e: exceptions.WorkflowRunNotStarted) -> ResponseStatusCode:
 def _(e: exceptions.QERemoved) -> ResponseStatusCode:
     click.echo(e)
     return ResponseStatusCode.CONNECTION_ERROR
+
+
+@pretty_print_exception.register
+def _(e: exceptions.RuntimeQuerySummaryError) -> ResponseStatusCode:
+    click.echo(e)
+    return ResponseStatusCode.WORKFLOW_RUN_NOT_FOUND
