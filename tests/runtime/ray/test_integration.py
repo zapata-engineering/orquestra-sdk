@@ -12,9 +12,11 @@ import re
 import sys
 import time
 import typing as t
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
+from freezegun import freeze_time
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
@@ -167,13 +169,14 @@ class TestRayRuntimeMethods:
                 res,
             )
 
+    @pytest.mark.parametrize("trial", range(5))
+    @pytest.mark.usefixtures("trial")
     class TestGetWorkflowRunStatus:
         """
         Tests that validate .get_workflow_run_status().
         """
 
-        @pytest.mark.parametrize("trial", range(5))
-        def test_status_right_after_start(self, runtime: _dag.RayRuntime, trial):
+        def test_status_right_after_start(self, runtime: _dag.RayRuntime):
             """
             Verifies that we report status correctly before workflow ends.
             It's difficult to synchronize, so there's a bunch of ifs in this
@@ -218,8 +221,7 @@ class TestRayRuntimeMethods:
                     assert status.start_time is not None
                     assert status.end_time is not None
 
-        @pytest.mark.parametrize("trial", range(5))
-        def test_status_after_awaiting(self, runtime: _dag.RayRuntime, trial):
+        def test_status_after_awaiting(self, runtime: _dag.RayRuntime):
             """
             Verifies that we report status correctly when all tasks are
             completed.
@@ -263,12 +265,58 @@ class TestRayRuntimeMethods:
                 # during start and finish of a task. Thus it is >=, not >
                 assert (status.end_time - status.start_time).total_seconds() >= 0
 
+        @freeze_time("9999-01-01")
+        def test_normalizes_end_times(self, runtime: _dag.RayRuntime):
+            # Given
+            wf_def = _example_wfs.serial_wf_with_slow_middle_task.model
+            run_id = runtime.create_workflow_run(wf_def, None, False)
+            runtime.stop_workflow_run(run_id)
+
+            # Block until wf completes
+            _wait_to_finish_wf(run_id, runtime)
+
+            # When
+            run = runtime.get_workflow_run_status(run_id)
+
+            # Then
+            assert run.id == run_id
+            assert (
+                run.status.state == State.TERMINATED
+            ), f"Invalid state. Full status: {run.status}. Task runs: {run.task_runs}"
+            assert run.status.start_time is not None
+            assert run.status.end_time is not None
+            assert run.workflow_def == wf_def
+
+            # The added end times should be 'now'
+            assert run.status.end_time == datetime(9999, 1, 1, tzinfo=timezone.utc)
+            # freeze_time doesn't affect the ray process, so the start times
+            # are real and therefore earlier than the end time (if this is
+            # untrue, hello from the distant past).
+            assert run.status.start_time < run.status.end_time
+
+            for task_run in run.task_runs:
+                status = task_run.status
+
+                # We're only interested in tasks that were terminated while in process.
+                if not (
+                    task_run.status.state == State.TERMINATED
+                    and status.start_time is not None
+                ):
+                    continue
+
+                assert status.end_time is not None
+                assert status.start_time.tzinfo is not None
+                assert status.end_time.tzinfo is not None
+                assert (status.end_time - status.start_time).total_seconds() >= 0
+                assert task_run.status.end_time == datetime(
+                    9999, 1, 1, tzinfo=timezone.utc
+                )
+
         @pytest.mark.skipif(
             sys.platform.startswith("win32"), reason="File writing on windows is slow."
         )
-        @pytest.mark.parametrize("trial", range(5))
         def test_handles_ray_environment_setup_error(
-            self, runtime: _dag.RayRuntime, trial, shared_ray_conn
+            self, runtime: _dag.RayRuntime, shared_ray_conn
         ):
             # Given
             wf_def = _example_wfs.cause_env_setup_error.model
