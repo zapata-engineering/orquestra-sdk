@@ -1,43 +1,33 @@
 # syntax=docker/dockerfile:1.5
-# Base image for running Orquestra tasks that require a GPU.
-# Published at hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base with -cuda suffix
-# Mounted gpu has cuda v11.5
-FROM nvcr.io/nvidia/cuquantum-appliance:22.03-cirq
+# This is based on the previous QML image.
+
+# Possible base images
+# nvcr.io/nvidia/cuquantum-appliance:22.11      python 3.8, CUDA v11.8, CUDNN 8.7
+# nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04 python n/a, CUDA v11.8, CUDNN 8.7
+# pytorch/pytorch:2.0.1-cuda11.7-cudnn8-runtime python 3.10 (conda),
+ARG CUDA_MINOR_VERSION=11.8
+FROM nvidia/cuda:${CUDA_MINOR_VERSION}.0-runtime-ubuntu22.04
+
 ARG SDK_REQUIREMENT
+ARG PYTHON_VERSION=3.11.6
+ARG TARGETARCH="amd64"
 
-WORKDIR /app
-
-# https://askubuntu.com/questions/1408016/the-following-signatures-couldnt-be-verified-because-the-public-key-is-not-avai
 RUN <<EOF
-apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/3bf863cc.pub
+set -ex
 apt-get update --yes
 apt-get upgrade --yes
-apt-get install --yes wget build-essential gcc git openssh-client
-apt-get install --yes python3-pip
-EOF
+#pyenv requires wget, gcc, and make
+apt-get install curl wget git ssh gcc make -y
+# pyenv requirements https://github.com/pyenv/pyenv/wiki#suggested-build-environment
+DEBIAN_FRONTEND=noninteractive apt install build-essential libssl-dev zlib1g-dev \
+    libbz2-dev libreadline-dev libsqlite3-dev curl \
+    libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev -y
 
-#download cuquantum from https://developer.nvidia.com/cuquantum-downloads?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=20.04&target_type=deb_local
-RUN <<EOF
-wget https://developer.download.nvidia.com/compute/cuquantum/22.07.0/local_installers/cuquantum-local-repo-ubuntu2004-22.07.0_1.0-1_amd64.deb
-dpkg -i cuquantum-local-repo-ubuntu2004-22.07.0_1.0-1_amd64.deb
-cp /var/cuquantum-local-repo-ubuntu2004-22.07.0/cuquantum-*-keyring.gpg /usr/share/keyrings/
-apt-get update --yes
-apt-get install --yes cuquantum cuquantum-dev cuquantum-doc
-EOF
-
-RUN <<EOF
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/nvidia/cuquantum/lib/
-echo "export PATH=/usr/local/cuda-11.5/bin${PATH:+:${PATH} }" >> ~/.bashrc
-. ~/.bashrc
-EOF
-
-ENV CUQUANTUM_DIR=/opt/nvidia/cuquantum
-
-# get required tools to build qsim
-RUN <<EOF
-apt-get install --yes git
-export DEBIAN_FRONTEND=noninteractive
-apt-get install --yes cmake
+# If statement installs any additional dependencies needed for building for ARM
+# (development using an M1 is fun :') )
+if [ "$TARGETARCH" = "arm64" ]; then
+  apt-get install --yes --no-install-recommends gcc libc-dev
+fi
 
 rm -rf /var/lib/apt/lists/*
 
@@ -50,22 +40,22 @@ EOF
 USER 1000
 WORKDIR /home/orquestra
 
+#juliacall requires libpython shared object file, so building from source with pyenv and `--enable-shared`
+# TODO: python3.10 still gets installed somewhere along the way. Any way to avoid this?
+RUN <<EOF
+git clone https://github.com/pyenv/pyenv.git /home/orquestra/.pyenv
+PYTHON_CONFIGURE_OPTS="--enable-shared" /home/orquestra/.pyenv/bin/pyenv install ${PYTHON_VERSION}
+EOF
+
+ENV PATH="/home/orquestra/.pyenv/versions/${PYTHON_VERSION}/bin:$PATH"
+
 ENV VIRTUAL_ENV=/opt/orquestra/venv
 RUN python -m venv "$VIRTUAL_ENV" --prompt system
 
-# install qsimcirq and orquestra SDK
 RUN <<EOF
 set -ex
 . "$VIRTUAL_ENV/bin/activate"
-
-python -m pip install pybind11
-
-git clone https://github.com/quantumlib/qsim.git
-cd qsim
-make clean
-make
-
-python -m pip install --no-cache-dir .
+python -m pip install --no-cache-dir -U pip wheel
 python -m pip install --no-cache-dir "${SDK_REQUIREMENT}"
 EOF
 
@@ -77,6 +67,7 @@ ENV PATH="/opt/orquestra/venv/bin:$PATH"
 # https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html#Bash-Startup-Files
 RUN echo "source ${VIRTUAL_ENV}/bin/activate" >> /opt/orquestra/source-venv
 ENV BASH_ENV=/opt/orquestra/source-venv
+
 
 ENV RAY_STORAGE=/tmp
 # This environment variable configures the Ray runtime to download Git imports.
