@@ -698,6 +698,7 @@ class Test3rdPartyLibraries:
     # likely to be different from the one we're using for development. The SDK shows a
     # warning when deserializing a workflow def like this.
     @pytest.mark.filterwarnings("ignore::orquestra.sdk.exceptions.VersionMismatch")
+    @pytest.mark.skipif(sys.version_info < (3, 11), reason="Pickle internals changed in Python 3.11")
     def test_constants_and_inline_imports(runtime: _dag.RayRuntime):
         """
         This test uses already generated workflow def from json file. If necessary, it
