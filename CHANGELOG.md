@@ -5,6 +5,7 @@
 🚨 *Breaking Changes*
 
 * The `orquestra-sdk` version used to submit a workflow is automatically added as a dependency for task execution environments. Specifying the SDK as a dependency in the `sdk.task()` decorator will be ignored.
+* The base image for workflows is now Python 3.11.6. Submitting a remote workflow with this version of the SDK with a different version of Python may result in failed workflows.
 
 🔥 *Features*
 
