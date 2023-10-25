@@ -8,6 +8,8 @@
 
 🧟 *Deprecations*
 
+* Un-deprecated not passing `workspace_id` when accessing secrets.
+
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
