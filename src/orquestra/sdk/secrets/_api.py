@@ -3,7 +3,6 @@
 ################################################################################
 """Code for user-facing utilities related to secrets."""
 import typing as t
-import warnings
 
 from .. import exceptions as sdk_exc
 from .._base import _dsl, _exec_ctx
@@ -14,15 +13,6 @@ from . import _auth, _exceptions, _models
 def _translate_to_zri(workspace_id: WorkspaceId, secret_name: str) -> str:
     """Create ZRI from workspace_id and secret_name."""
     return f"zri:v1::0:{workspace_id}:secret:{secret_name}"
-
-
-def _raise_warning_for_none_workspace(workspace: t.Optional[WorkspaceId]):
-    if workspace is None:
-        warnings.warn(
-            "Please specify workspace ID directly for accessing secrets."
-            " Support for default workspaces will be sunset in the future.",
-            FutureWarning,
-        )
 
 
 def get(
@@ -56,8 +46,6 @@ def get(
             this function will return a "future" which will be used to retrieve the
             secret at execution time.
     """
-    _raise_warning_for_none_workspace(workspace_id)
-
     if _exec_ctx.global_context == _exec_ctx.ExecContext.WORKFLOW_BUILD:
         return t.cast(
             str,
@@ -103,8 +91,6 @@ def list(
         orquestra.sdk.exceptions.UnauthorizedError: when the authorization with the
             remote vault failed.
     """
-    _raise_warning_for_none_workspace(workspace_id)
-
     try:
         client = _auth.authorized_client(config_name)
     except sdk_exc.ConfigNameNotFoundError:
@@ -141,8 +127,6 @@ def set(
         orquestra.sdk.exceptions.UnauthorizedError: when the authorization with the
             remote vault failed.
     """
-    _raise_warning_for_none_workspace(workspace_id)
-
     try:
         client = _auth.authorized_client(config_name)
     except sdk_exc.ConfigNameNotFoundError:
@@ -188,8 +172,6 @@ def delete(
         orquestra.sdk.exceptions.UnauthorizedError: when the authorization with the
             remote vault failed.
     """
-    _raise_warning_for_none_workspace(workspace_id)
-
     try:
         client = _auth.authorized_client(config_name)
     except sdk_exc.ConfigNameNotFoundError:
