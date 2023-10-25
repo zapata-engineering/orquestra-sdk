@@ -478,7 +478,7 @@ class RayRuntime(RuntimeInterface):
 
         if wf_status == _client.WorkflowStatus.FAILED:
             # Set the default message. This is the fallback in case we can't determine
-            # any more precide information.
+            # any more precise information.
             message = (
                 "The workflow encountered an issue. "
                 "Please consult the logs for more information. "
@@ -509,7 +509,7 @@ class RayRuntime(RuntimeInterface):
                     )
                     break
 
-        return WorkflowRun(
+        model = WorkflowRun(
             id=workflow_run_id,
             workflow_def=wf_def,
             task_runs=[
@@ -532,6 +532,33 @@ class RayRuntime(RuntimeInterface):
             ),
             message=message,
         )
+
+        if model.status.state.is_completed():
+            model = self._normalize_endtimes(model)
+
+        return model
+
+    @staticmethod
+    def _normalize_endtimes(model: WorkflowRun) -> WorkflowRun:
+        """Set the current time as end_time for tasks and workflows that don't have one.
+
+        Ray doesn't provide an end time for terminated tasks and workflows.
+        This brought some issues on Workflow Driver, we so fill up the missing status
+        fields with the current datetime for all terminated tasks and workflow.
+        """
+        now: _dates.Instant = _dates.now()
+        new_model = model.copy(deep=True)
+
+        if model.status.start_time is not None and model.status.end_time is None:
+            assert now >= model.status.start_time
+            new_model.status.end_time = now
+
+        for task in new_model.task_runs:
+            if task.status.start_time is not None and task.status.end_time is None:
+                assert now >= task.status.start_time
+                task.status.end_time = now
+
+        return new_model
 
     def get_workflow_run_outputs_non_blocking(
         self, workflow_run_id: WorkflowRunId

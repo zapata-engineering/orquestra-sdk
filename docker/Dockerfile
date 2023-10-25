@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.5
 # Base image for running Orquestra tasks.
 # Published at hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base
-FROM python:3.9-slim-bullseye
+FROM python:3.11.6-slim-bullseye
 ARG SDK_REQUIREMENT
 
 # Set by BuildKit

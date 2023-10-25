@@ -3,13 +3,18 @@
 ################################################################################
 """Translates IR workflow def into a Ray workflow."""
 import os
+import re
 import time
 import typing as t
+import warnings
 from functools import singledispatch
 from pathlib import Path
 
 import pydantic
+from packaging import version
 from typing_extensions import assert_never
+
+from orquestra.sdk.packaging import get_installed_version
 
 from .. import exceptions, secrets
 from .._base import _exec_ctx, _git_url_utils, _graphs, _services, dispatch, serde
@@ -18,6 +23,7 @@ from .._base._env import (
     RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV,
 )
 from .._base._logs import _markers
+from .._base._regex import SEMVER_REGEX
 from ..kubernetes.quantity import parse_quantity
 from ..schema import ir, responses, workflow_run
 from . import _client, _id_gen
@@ -334,7 +340,20 @@ def _(imp: ir.GitImport):
     return [f"{url}@{imp.git_ref}"]
 
 
-def _import_pip_env(ir_invocation: ir.TaskInvocation, wf: ir.WorkflowDef):
+def _import_pip_env(
+    ir_invocation: ir.TaskInvocation, wf: ir.WorkflowDef
+) -> t.List[str]:
+    """Gather a list of python imports required for the task.
+
+    Args:
+        ir_invocation: The task invocation to be executed in this environment.
+        wf: The overall workflow definition.
+
+    Returns:
+        A list consisting of the python imports declared in the task definition, and the
+            current Orquestra SDK version. The latter is included to prevent tasks from
+            executing with different SDK versions to the head node.
+    """
     task_def = wf.tasks[ir_invocation.task_id]
     imports = [
         wf.imports[id_]
@@ -343,7 +362,54 @@ def _import_pip_env(ir_invocation: ir.TaskInvocation, wf: ir.WorkflowDef):
             *(task_def.dependency_import_ids or []),
         )
     ]
-    return [chunk for imp in imports for chunk in _pip_string(imp)]
+
+    current_sdk_version: str = get_installed_version("orquestra-sdk")
+
+    sdk_dependency = None
+    pip_list = [
+        chunk
+        for imp in imports
+        for chunk in _pip_string(imp)
+        if not (sdk_dependency := re.match(r"^orquestra-sdk([<|!|=|>|~].*)?$", chunk))
+    ]
+
+    # If the task definition includes the SDK, warn the user that this does nothing.
+    if sdk_dependency:
+        warnings.warn(
+            f"The definition for task `{ir_invocation.task_id}` "
+            f"declares `{sdk_dependency[0]}` as a dependency. "
+            "The current SDK version "
+            + (f"({current_sdk_version}) " if current_sdk_version else "")
+            + "is automatically installed in task environments. "
+            "The specified dependency will be ignored.",
+            exceptions.OrquestraSDKVersionMismatchWarning,
+        )
+
+    # Don't add sdk dependency if submitting from a prerelease or dev version.
+    parsed_sdk_version = version.parse(current_sdk_version)
+    if not (parsed_sdk_version.is_devrelease or parsed_sdk_version.is_prerelease):
+        pip_list += [f"orquestra-sdk=={current_sdk_version}"]
+
+    return pip_list
+
+
+def _normalise_prerelease_version(version: str) -> t.Optional[str]:
+    """Remove prerelease version information from the version string."""
+    match = re.match(SEMVER_REGEX, version)
+    assert match, f"Version {version} did not parse as valid SemVer."
+    vernums = [int(match.group("major")), int(match.group("minor"))]
+    if match.group("patch"):
+        vernums.append(int(match.group("patch")))
+
+    # If the version is a prerelease, go back to the previous iteration.
+    if match.group("prerelease"):
+        vernums[-1] -= 1
+
+    # Safety hatch - returning a version less than 0.1 is nonsensical.
+    if vernums[0:2] == [0, 0]:
+        return None
+
+    return ".".join([str(vernum) for vernum in vernums])
 
 
 def _gather_args(arg_ids, workflow_def, ray_futures):
