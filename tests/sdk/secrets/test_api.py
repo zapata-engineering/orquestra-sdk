@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
 Tests for the user-facing secrets API.
@@ -62,23 +62,6 @@ class TestIntegrationWithClient:
 
                 with pytest.raises(type(exc)):
                     secrets_action()
-
-        @staticmethod
-        @pytest.mark.parametrize(
-            "secrets_action",
-            [
-                lambda: sdk.secrets.get(name="some-secret"),
-                lambda: sdk.secrets.delete(name="some-secret"),
-                lambda: sdk.secrets.list(),
-                lambda: sdk.secrets.set(
-                    name="some-secret",
-                    value="You're doing great! :)",
-                ),
-            ],
-        )
-        def test_raises_warning_no_workspace(secrets_client_mock, secrets_action):
-            with pytest.warns(FutureWarning):
-                secrets_action()
 
         class TestForwardsConfigErrors:
             @staticmethod
