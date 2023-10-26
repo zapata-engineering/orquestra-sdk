@@ -4,14 +4,9 @@
 
 🚨 *Breaking Changes*
 
-* The `orquestra-sdk` version used to submit a workflow is automatically added as a dependency for task execution environments. Specifying the SDK as a dependency in the `sdk.task()` decorator will be ignored.
-* The base image for workflows is now Python 3.11.6. Submitting a remote workflow with this version of the SDK with a different version of Python may result in failed workflows.
-
 🔥 *Features*
 
 🧟 *Deprecations*
-
-* Un-deprecated not passing `workspace_id` when accessing secrets.
 
 👩‍🔬 *Experimental*
 
@@ -22,6 +17,17 @@
 🥷 *Internal*
 
 📃 *Docs*
+
+## v0.58.0
+
+🚨 *Breaking Changes*
+
+* The `orquestra-sdk` version used to submit a workflow is automatically added as a dependency for task execution environments. Specifying the SDK as a dependency in the `sdk.task()` decorator will be ignored.
+* The base image for workflows is now Python 3.11.6. Submitting a remote workflow with this version of the SDK with a different version of Python may result in failed workflows.
+
+🧟 *Deprecations*
+
+* Un-deprecated not passing `workspace_id` when accessing secrets.
 
 ## v0.57.0
 
