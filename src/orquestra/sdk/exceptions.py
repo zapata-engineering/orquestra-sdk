@@ -213,10 +213,11 @@ class RuntimeQuerySummaryError(NotFoundError):
         not_running_configs = [info.config_name for info in not_running_runtimes]
         super().__init__(
             message=(
-                "Couldn't find any runtime that knows about this workflow run ID. "
-                f"Runtimes with 'not found' response: {not_found_configs}. "
-                f"Runtimes with 'unauthorized' response: {unauthorized_configs}. "
-                f"Runtimes that weren't up: {not_running_configs}."
+                "Couldn't find a config that knows about workflow run ID"
+                f" {wf_run_id} \n"
+                f"Configs with 'not found' response: {not_found_configs}.\n"
+                f"Configs with 'unauthorized' response: {unauthorized_configs}.\n"
+                f"Configs that weren't up: {not_running_configs}."
             )
         )
         self.wf_run_id = wf_run_id

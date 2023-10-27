@@ -52,7 +52,9 @@ class TestRuntimeQuerySummaryError:
 
         # Then
         assert description == (
-            "Couldn't find any runtime that knows about this workflow run ID. Runtimes "
-            "with 'not found' response: ['cluster1']. Runtimes with 'unauthorized' "
-            "response: ['cluster2']. Runtimes that weren't up: ['ray']."
+            "Couldn't find a config that knows about workflow run ID "
+            "wf.abcde12.hello \n"
+            "Configs with 'not found' response: ['cluster1'].\n"
+            "Configs with 'unauthorized' response: ['cluster2'].\n"
+            "Configs that weren't up: ['ray']."
         )

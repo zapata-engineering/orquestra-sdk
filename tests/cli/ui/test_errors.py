@@ -106,7 +106,7 @@ class TestPrettyPrintException:
                     unauthorized_runtimes=[],
                     not_running_runtimes=[],
                 ),
-                "Couldn't find any runtime",
+                "Couldn't find a config",
             ),
         ],
     )
