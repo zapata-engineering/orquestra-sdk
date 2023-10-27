@@ -121,7 +121,7 @@ class WorkflowRun:
         if config is None:
             # Shorthand: query all known runtimes.
             try:
-                resolved_config = _ask_runtimes_for_config(
+                resolved_config = _find_config_for_workflow(
                     wf_run_id=run_id,
                     project_dir=_project_dir,
                 )
@@ -611,7 +611,7 @@ def _handle_common_listing_project_errors(
     return None
 
 
-def _ask_runtimes_for_config(
+def _find_config_for_workflow(
     wf_run_id: WorkflowRunId, project_dir: Path
 ) -> RuntimeConfig:
     not_found_configs: t.List[RuntimeConfig] = []
@@ -656,7 +656,6 @@ def _ask_runtimes_for_config(
 
 
 def _make_runtime_info(config: RuntimeConfig) -> RuntimeQuerySummaryError.RuntimeInfo:
-    # TODO: add public properties to config
     try:
         uri = getattr(config, "uri")
     except AttributeError:

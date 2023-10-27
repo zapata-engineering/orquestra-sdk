@@ -290,10 +290,10 @@ class TestWFConfigResolver:
             prompter.choice.assert_not_called()
 
         @staticmethod
-        def test_foreign_wf_run_id_passed():
+        def test_wf_not_found_in():
             """
             Example use case: ``orq wf stop wf-run`` but we've never logged in to this
-            cluster.
+            cluster or there is typo in wf-run-id
             """
             # Given
             wf_run_id = "<wf run ID sentinel>"
