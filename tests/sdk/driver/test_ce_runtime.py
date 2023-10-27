@@ -1467,7 +1467,11 @@ class TestListWorkflowRunSummaries:
 
         # Then
         mocked_client.list_workflow_run_summaries.assert_called_once_with(
-            max_age=max_age, limit=limit, state=state
+            page_size=None,
+            page_token=None,
+            workspace=None,
+            max_age=max_age,
+            state=state,
         )
 
     def test_unknown_http(
