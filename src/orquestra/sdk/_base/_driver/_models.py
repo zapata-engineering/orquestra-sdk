@@ -309,7 +309,17 @@ class CreateWorkflowRunResponse(pydantic.BaseModel):
 class ListWorkflowRunsRequest(pydantic.BaseModel):
     """
     Implements:
-    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-runs.yaml#L9.
+    https://github.com/zapatacomputing/workflow-driver/blob/c52013c0f4df066159fc32ad38d489b3eaff5850/openapi/src/resources/workflow-runs.yaml#L14.
+
+    Returns all workflow runs along with their definition IDs, statuses and owners.
+    Following optional query parameters can be passed to narrow the list down:
+
+    * `workflowDefinitionId`: ID of the workflow definition that the run was created
+        from
+    * `workspaceId`: ID of the workspace that the run was created in
+    * `maxAge`: Maximum age of the workflow run in seconds (computed by using the time
+        it's created)
+    * `state`: Comma-separated list of possible states that the workflow run might be in
     """  # noqa: D205, D212
 
     workflowDefinitionID: Optional[WorkflowDefID]
@@ -317,6 +327,8 @@ class ListWorkflowRunsRequest(pydantic.BaseModel):
     pageToken: Optional[str]
     workspaceId: Optional[WorkspaceId]
     projectId: Optional[ProjectId]
+    maxAge: Optional[int]
+    state: Optional[str]
 
 
 ListWorkflowRunsResponse = List[MinimalWorkflowRunResponse]
