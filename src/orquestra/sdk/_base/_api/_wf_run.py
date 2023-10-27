@@ -20,6 +20,8 @@ from ...exceptions import (
     ConfigFileNotFoundError,
     ConfigNameNotFoundError,
     ProjectInvalidError,
+    RayNotRunningError,
+    RuntimeQuerySummaryError,
     UnauthorizedError,
     VersionMismatch,
     WorkflowRunCanNotBeTerminated,
@@ -99,12 +101,16 @@ class WorkflowRun:
                 the current working directory is assumed to be the project directory.
 
         Raises:
-            orquestra.sdk.exceptions.WorkflowRunNotFoundError: when the run_id doesn't
-                match a stored run ID.
-            orquestra.sdk.exceptions.UnauthorizedError: when authorization with the
-                remote runtime failed.
+            orquestra.sdk.exceptions.RuntimeQuerySummaryError: when ``config``
+                wasn't passed, and it wasn't possible to infer the runtime
+                matching ``wf_run_id``.
+            orquestra.sdk.exceptions.WorkflowRunNotFoundError: when ``config`` was
+                passed, but a matching workflow run couldn't be found.
+            orquestra.sdk.exceptions.UnauthorizedError: when ``config`` was passed,
+                but authorization with the remote runtime failed when getting the run
+                details.
             orquestra.sdk.exceptions.ConfigFileNotFoundError: when the config file
-                couldn't be read
+                couldn't be read.
             orquestra.sdk.exceptions.ConfigNameNotFoundError: when there's no
                 corresponding config entry in the config file.
         """
@@ -113,17 +119,17 @@ class WorkflowRun:
         # Resolve config
         resolved_config: RuntimeConfig
         if config is None:
-            # Shorthand: use the cached value.
-            # We need to read the config name from the local DB and load the config
-            # entry.
+            # Shorthand: query all known runtimes.
             try:
-                stored_run = cls._get_stored_run(_project_dir, run_id)
-            except WorkflowRunNotFoundError:
-                raise
-
-            try:
-                resolved_config = RuntimeConfig.load(stored_run.config_name)
-            except (ConfigFileNotFoundError, ConfigNameNotFoundError):
+                resolved_config = _find_config_for_workflow(
+                    wf_run_id=run_id,
+                    project_dir=_project_dir,
+                )
+            except (
+                RuntimeQuerySummaryError,
+                ConfigNameNotFoundError,
+                ConfigFileNotFoundError,
+            ):
                 raise
         else:
             resolved_config = resolve_config(config)
@@ -603,6 +609,62 @@ def _handle_common_listing_project_errors(
     # Null project - it is ignored by platform anyway - left as parameter for
     # backward compatibility only
     return None
+
+
+def _find_config_for_workflow(
+    wf_run_id: WorkflowRunId, project_dir: Path
+) -> RuntimeConfig:
+    not_found_configs: t.List[RuntimeConfig] = []
+    unauthorized_configs: t.List[RuntimeConfig] = []
+    not_running_configs: t.List[RuntimeConfig] = []
+
+    config_names = RuntimeConfig.list_configs()
+    for config_name in config_names:
+        config_obj = RuntimeConfig.load(config_name)
+        try:
+            runtime = config_obj._get_runtime(project_dir)
+        except RayNotRunningError:
+            # Ray connection is set up in `RayRuntime.__init__()`. We'll get the
+            # exception when runtime object is created.
+            not_running_configs.append(config_obj)
+            continue
+
+        try:
+            _ = runtime.get_workflow_run_status(wf_run_id)
+        except WorkflowRunNotFoundError:
+            not_found_configs.append(config_obj)
+            continue
+        except UnauthorizedError:
+            # TODO (ORQSDK-990): short circuit remote call by checking token validity
+            # on the client side
+            unauthorized_configs.append(config_obj)
+            continue
+
+        # We're here = the runtime knows about this run ID.
+        return config_obj
+
+    raise RuntimeQuerySummaryError(
+        wf_run_id=wf_run_id,
+        not_found_runtimes=[_make_runtime_info(config) for config in not_found_configs],
+        unauthorized_runtimes=[
+            _make_runtime_info(config) for config in unauthorized_configs
+        ],
+        not_running_runtimes=[
+            _make_runtime_info(config) for config in not_running_configs
+        ],
+    )
+
+
+def _make_runtime_info(config: RuntimeConfig) -> RuntimeQuerySummaryError.RuntimeInfo:
+    try:
+        uri = getattr(config, "uri")
+    except AttributeError:
+        uri = None
+    return RuntimeQuerySummaryError.RuntimeInfo(
+        runtime_name=config._runtime_name,
+        config_name=config.name,
+        server_uri=uri,
+    )
 
 
 def list_workflow_run_summaries(

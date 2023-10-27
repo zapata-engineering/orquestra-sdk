@@ -13,7 +13,7 @@ from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk._base._spaces._structs import Project, Workspace
 from orquestra.sdk._base.cli import _arg_resolvers, _repos
 from orquestra.sdk._base.cli._ui import _presenters, _prompts
-from orquestra.sdk.schema.configs import RuntimeConfiguration
+from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 
 
@@ -290,46 +290,59 @@ class TestWFConfigResolver:
             prompter.choice.assert_not_called()
 
         @staticmethod
-        def test_foreign_wf_run_id_passed():
+        def test_wf_not_found_in():
             """
-            Example use case: ``orq wf stop other-colleagues-wf-run``. We don't have
-            this workflow in the local DB, but it doesn't mean the workflow doesn't
-            exist on the cluster. We should ask the user for the config and proceed
-            with the action.
+            Example use case: ``orq wf stop wf-run`` but we've never logged in to this
+            cluster or there is typo in wf-run-id
             """
             # Given
             wf_run_id = "<wf run ID sentinel>"
             config = None
 
-            config_repo = Mock()
+            config_repo = create_autospec(_repos.ConfigRepo)
             local_config_names = ["cfg1", "cfg2"]
             config_repo.list_config_names.return_value = local_config_names
 
-            wf_run_repo = Mock()
-            wf_run_repo.get_config_name_by_run_id.side_effect = (
-                exceptions.WorkflowRunNotFoundError()
+            # Set up workflow run repo. It raises RuntimeQuerySummaryError. All known
+            # runtimes have been queried, but none can be used to interact with this
+            # workflow run.
+            wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
+            rt_info1 = exceptions.RuntimeQuerySummaryError.RuntimeInfo(
+                runtime_name=RuntimeName.RAY_LOCAL,
+                config_name="ray",
+                server_uri=None,
             )
-
-            prompter = Mock()
-            selected_config = local_config_names[1]
-            prompter.choice.return_value = selected_config
+            rt_info2 = exceptions.RuntimeQuerySummaryError.RuntimeInfo(
+                runtime_name=RuntimeName.CE_REMOTE,
+                config_name=local_config_names[0],
+                server_uri="foo",
+            )
+            rt_info3 = exceptions.RuntimeQuerySummaryError.RuntimeInfo(
+                runtime_name=RuntimeName.CE_REMOTE,
+                config_name=local_config_names[1],
+                server_uri="bar",
+            )
+            wf_run_repo.get_config_name_by_run_id.side_effect = (
+                exceptions.RuntimeQuerySummaryError(
+                    wf_run_id=wf_run_id,
+                    not_found_runtimes=[rt_info1],
+                    unauthorized_runtimes=[rt_info2],
+                    not_running_runtimes=[rt_info3],
+                )
+            )
 
             resolver = _arg_resolvers.WFConfigResolver(
                 wf_run_repo=wf_run_repo,
                 config_repo=config_repo,
-                prompter=prompter,
             )
-
-            # When
-            resolved_config = resolver.resolve(wf_run_id=wf_run_id, config=config)
 
             # Then
-            prompter.choice.assert_called_with(
-                local_config_names, message="Runtime config"
-            )
-
-            # Resolver should return the user's choice.
-            assert resolved_config == selected_config
+            # There should be an error presented to the user. There's no point in
+            # prompting for config selection, because apparently the user needs to log
+            # in, or there's a typo in the workflow run ID.
+            with pytest.raises(exceptions.RuntimeQuerySummaryError):
+                # When
+                _ = resolver.resolve(wf_run_id=wf_run_id, config=config)
 
         @staticmethod
         def test_no_wf_run_id():

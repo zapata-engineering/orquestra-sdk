@@ -19,12 +19,11 @@ from typing_extensions import assert_never
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import _config, _dates, _db, loader
+from orquestra.sdk._base import _config, _dates, loader
 from orquestra.sdk._base._driver._client import DriverClient, ExternalUriProvider
 from orquestra.sdk._base._jwt import check_jwt_without_signature_verification
 from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk._base.abc import ArtifactValue
-from orquestra.sdk.exceptions import WorkflowRunNotFoundError
 from orquestra.sdk.schema import _compat
 from orquestra.sdk.schema.configs import (
     ConfigName,
@@ -59,15 +58,35 @@ class WorkflowRunRepo:
             wf_run_id: ID of the workflow run.
 
         Raises:
-            orquestra.sdk.exceptions.WorkflowRunNotFoundError: when a matching record
-                couldn't be found.
+            orquestra.sdk.exceptions.RuntimeQuerySummaryError: when it wasn't possible
+                to infer the runtime matching ``wf_run_id``.
+            orquestra.sdk.exceptions.WorkflowRunNotFoundError: when it wasn't possible
+                to fetch run details.
+            orquestra.sdk.exceptions.UnauthorizedError: when authorization with the
+                remote runtime failed when getting the run details.
+            orquestra.sdk.exceptions.ConfigFileNotFoundError: when the config file
+                couldn't be read.
+            orquestra.sdk.exceptions.ConfigNameNotFoundError: when there's no
+                corresponding config entry in the config file.
         """
-        with _db.WorkflowDB.open_db() as db:
-            try:
-                stored_run = db.get_workflow_run(workflow_run_id=wf_run_id)
-            except WorkflowRunNotFoundError:
-                raise
-            return stored_run.config_name
+        try:
+            run = sdk.WorkflowRun.by_id(wf_run_id)
+        except (
+            exceptions.ConfigNameNotFoundError,
+            exceptions.ConfigFileNotFoundError,
+            exceptions.WorkflowRunNotFoundError,
+            exceptions.UnauthorizedError,
+            exceptions.RuntimeQuerySummaryError,
+        ):
+            raise
+        assert run.config is not None, (
+            "Workflow run without a config. It's only possible for in-process "
+            "runtime. However, it should never be a result of using by_id()"
+        )
+        assert (
+            run.config.name is not None
+        ), "Config without a name. This shouldn't happen in normal circumstances"
+        return run.config.name
 
     def list_wf_run_summaries(
         self,

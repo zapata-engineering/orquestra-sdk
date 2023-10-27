@@ -18,7 +18,7 @@ import requests
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import _dates, _db
+from orquestra.sdk._base import _dates
 from orquestra.sdk._base._config import SPECIAL_CONFIG_NAME_DICT
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
@@ -65,42 +65,43 @@ class TestWorkflowRunRepo:
 
         Test boundary::
 
-            [WorkflowRunRepo]->[WorkflowDB]
-                             ->[sdk.WorkflowRun]
+            [WorkflowRunRepo]->[sdk.WorkflowRun]
                              ->[sdk.WorkflowDef]
         """
 
-        @staticmethod
-        @pytest.fixture
-        def db_mock(monkeypatch):
-            """
-            Mock object suitable for stubbing 'with WorkflowDB.open_db() as db'
-            """
-            db = Mock()
+        class TestGetConfigNameByRunID:
+            @staticmethod
+            @pytest.mark.usefixtures("mock_by_id")
+            def test_happy_path(mock_wf_run):
+                # Given
+                config = sdk.RuntimeConfig.ray()
+                mock_wf_run.config = config
 
-            ctx_manager = Mock()
-            ctx_manager().__enter__ = Mock(return_value=db)
-            ctx_manager().__exit__ = Mock()
+                repo = _repos.WorkflowRunRepo()
+                wf_run_id = "wf.1"
 
-            monkeypatch.setattr(_db.WorkflowDB, "open_db", ctx_manager)
+                # When
+                result_config_name = repo.get_config_name_by_run_id(wf_run_id)
 
-            return db
+                # Then
+                assert result_config_name == config.name
 
-        @staticmethod
-        def test_get_config_name_by_run_id(db_mock):
-            # Given
-            config = "test_cfg"
-            db_mock.get_workflow_run().config_name = config
+            @staticmethod
+            @pytest.mark.parametrize(
+                "exc",
+                [exceptions.ConfigFileNotFoundError()],
+            )
+            def test_passes_errors(mock_by_id, exc):
+                # Given
+                mock_by_id.side_effect = exc
 
-            repo = _repos.WorkflowRunRepo()
-            wf_run_id = "wf.1"
+                repo = _repos.WorkflowRunRepo()
+                wf_run_id = "wf.1"
 
-            # When
-            result_config = repo.get_config_name_by_run_id(wf_run_id)
-
-            # Then
-            assert result_config == config
-            db_mock.get_workflow_run.assert_called_with(workflow_run_id=wf_run_id)
+                # Then
+                with pytest.raises(type(exc)):
+                    # When
+                    _ = repo.get_config_name_by_run_id(wf_run_id)
 
         @staticmethod
         def test_get_wf_by_run_id(mock_by_id, mock_wf_run):
