@@ -990,58 +990,101 @@ class TestListWorkflowRuns:
             page_size=None,
             page_token=None,
             workspace=None,
+            max_age=None,
+            state=None,
         )
         assert runs == wf_runs
 
     @pytest.mark.parametrize(
         "limit, expected_requests",
         [
-            (89, [call(page_size=89, page_token=None, workspace=None)]),
+            (
+                89,
+                [
+                    call(
+                        page_size=89,
+                        page_token=None,
+                        workspace=None,
+                        max_age=None,
+                        state=None,
+                    )
+                ],
+            ),
             (
                 144,
                 [
-                    call(page_size=100, page_token=None, workspace=None),
+                    call(
+                        page_size=100,
+                        page_token=None,
+                        workspace=None,
+                        max_age=None,
+                        state=None,
+                    ),
                     call(
                         page_size=44,
                         page_token="<token sentinel 0>",
                         workspace=None,
+                        max_age=None,
+                        state=None,
                     ),
                 ],
             ),
             (
                 233,
                 [
-                    call(page_size=100, page_token=None, workspace=None),
+                    call(
+                        page_size=100,
+                        page_token=None,
+                        workspace=None,
+                        max_age=None,
+                        state=None,
+                    ),
                     call(
                         page_size=100,
                         page_token="<token sentinel 0>",
                         workspace=None,
+                        max_age=None,
+                        state=None,
                     ),
                     call(
                         page_size=33,
                         page_token="<token sentinel 1>",
                         workspace=None,
+                        max_age=None,
+                        state=None,
                     ),
                 ],
             ),
             (
                 377,
                 [
-                    call(page_size=100, page_token=None, workspace=None),
+                    call(
+                        page_size=100,
+                        page_token=None,
+                        workspace=None,
+                        max_age=None,
+                        state=None,
+                    ),
                     call(
                         page_size=100,
                         page_token="<token sentinel 0>",
                         workspace=None,
+                        max_age=None,
+                        state=None,
                     ),
                     call(
                         page_size=100,
                         page_token="<token sentinel 1>",
                         workspace=None,
+                        max_age=None,
+                        state=None,
                     ),
                     call(
                         page_size=77,
                         page_token="<token sentinel 2>",
                         workspace=None,
+                        max_age=None,
+                        state=None,
                     ),
                 ],
             ),
@@ -1072,10 +1115,54 @@ class TestListWorkflowRuns:
     @pytest.mark.parametrize(
         "limit, expected_requests",
         [
-            (89, [call(page_size=89, page_token=None, workspace=None)]),
-            (144, [call(page_size=100, page_token=None, workspace=None)]),
-            (233, [call(page_size=100, page_token=None, workspace=None)]),
-            (377, [call(page_size=100, page_token=None, workspace=None)]),
+            (
+                89,
+                [
+                    call(
+                        page_size=89,
+                        page_token=None,
+                        workspace=None,
+                        max_age=None,
+                        state=None,
+                    )
+                ],
+            ),
+            (
+                144,
+                [
+                    call(
+                        page_size=100,
+                        page_token=None,
+                        workspace=None,
+                        max_age=None,
+                        state=None,
+                    )
+                ],
+            ),
+            (
+                233,
+                [
+                    call(
+                        page_size=100,
+                        page_token=None,
+                        workspace=None,
+                        max_age=None,
+                        state=None,
+                    )
+                ],
+            ),
+            (
+                377,
+                [
+                    call(
+                        page_size=100,
+                        page_token=None,
+                        workspace=None,
+                        max_age=None,
+                        state=None,
+                    )
+                ],
+            ),
         ],
     )
     def test_limit_applied_when_there_are_fewer_workflows(
@@ -1100,7 +1187,6 @@ class TestListWorkflowRuns:
         # Then
         mocked_client.list_workflow_runs.assert_has_calls(expected_requests)
 
-    @pytest.mark.xfail(reason="Filtering not available in CE runtime yet")
     def test_filter_args_passed_to_client(
         self,
         mocked_client: MagicMock,
@@ -1115,7 +1201,11 @@ class TestListWorkflowRuns:
 
         # Then
         mocked_client.list_workflow_runs.assert_called_once_with(
-            max_age=max_age, limit=limit, state=state
+            page_size=None,
+            page_token=None,
+            workspace=None,
+            max_age=max_age,
+            state=state,
         )
 
     def test_unknown_http(
@@ -1165,61 +1255,100 @@ class TestListWorkflowRunSummaries:
 
         # Then
         mocked_client.list_workflow_run_summaries.assert_called_once_with(
-            page_size=None,
-            page_token=None,
-            workspace=None,
+            page_size=None, page_token=None, workspace=None, max_age=None, state=None
         )
         assert runs == wf_runs
 
     @pytest.mark.parametrize(
         "limit, expected_requests",
         [
-            (89, [call(page_size=89, page_token=None, workspace=None)]),
+            (
+                89,
+                [
+                    call(
+                        page_size=89,
+                        page_token=None,
+                        workspace=None,
+                        max_age=None,
+                        state=None,
+                    )
+                ],
+            ),
             (
                 144,
                 [
-                    call(page_size=100, page_token=None, workspace=None),
+                    call(
+                        page_size=100,
+                        page_token=None,
+                        workspace=None,
+                        max_age=None,
+                        state=None,
+                    ),
                     call(
                         page_size=44,
                         page_token="<token sentinel 0>",
                         workspace=None,
+                        max_age=None,
+                        state=None,
                     ),
                 ],
             ),
             (
                 233,
                 [
-                    call(page_size=100, page_token=None, workspace=None),
+                    call(
+                        page_size=100,
+                        page_token=None,
+                        workspace=None,
+                        max_age=None,
+                        state=None,
+                    ),
                     call(
                         page_size=100,
                         page_token="<token sentinel 0>",
                         workspace=None,
+                        max_age=None,
+                        state=None,
                     ),
                     call(
                         page_size=33,
                         page_token="<token sentinel 1>",
                         workspace=None,
+                        max_age=None,
+                        state=None,
                     ),
                 ],
             ),
             (
                 377,
                 [
-                    call(page_size=100, page_token=None, workspace=None),
+                    call(
+                        page_size=100,
+                        page_token=None,
+                        workspace=None,
+                        max_age=None,
+                        state=None,
+                    ),
                     call(
                         page_size=100,
                         page_token="<token sentinel 0>",
                         workspace=None,
+                        max_age=None,
+                        state=None,
                     ),
                     call(
                         page_size=100,
                         page_token="<token sentinel 1>",
                         workspace=None,
+                        max_age=None,
+                        state=None,
                     ),
                     call(
                         page_size=77,
                         page_token="<token sentinel 2>",
                         workspace=None,
+                        max_age=None,
+                        state=None,
                     ),
                 ],
             ),
@@ -1250,10 +1379,54 @@ class TestListWorkflowRunSummaries:
     @pytest.mark.parametrize(
         "limit, expected_requests",
         [
-            (89, [call(page_size=89, page_token=None, workspace=None)]),
-            (144, [call(page_size=100, page_token=None, workspace=None)]),
-            (233, [call(page_size=100, page_token=None, workspace=None)]),
-            (377, [call(page_size=100, page_token=None, workspace=None)]),
+            (
+                89,
+                [
+                    call(
+                        page_size=89,
+                        page_token=None,
+                        workspace=None,
+                        max_age=None,
+                        state=None,
+                    )
+                ],
+            ),
+            (
+                144,
+                [
+                    call(
+                        page_size=100,
+                        page_token=None,
+                        workspace=None,
+                        max_age=None,
+                        state=None,
+                    )
+                ],
+            ),
+            (
+                233,
+                [
+                    call(
+                        page_size=100,
+                        page_token=None,
+                        workspace=None,
+                        max_age=None,
+                        state=None,
+                    )
+                ],
+            ),
+            (
+                377,
+                [
+                    call(
+                        page_size=100,
+                        page_token=None,
+                        workspace=None,
+                        max_age=None,
+                        state=None,
+                    )
+                ],
+            ),
         ],
     )
     def test_limit_applied_when_there_are_fewer_workflows(
@@ -1278,7 +1451,6 @@ class TestListWorkflowRunSummaries:
         # Then
         mocked_client.list_workflow_run_summaries.assert_has_calls(expected_requests)
 
-    @pytest.mark.xfail(reason="Filtering not available in CE runtime yet")
     def test_filter_args_passed_to_client(
         self,
         mocked_client: MagicMock,
