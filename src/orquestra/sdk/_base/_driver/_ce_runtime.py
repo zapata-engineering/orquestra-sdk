@@ -460,7 +460,6 @@ class CERuntime(RuntimeInterface):
 
         for page_size in page_sizes:
             try:
-                # https://github.com/zapatacomputing/workflow-driver/blob/c52013c0f4df066159fc32ad38d489b3eaff5850/openapi/src/resources/workflow-runs.yaml#L14 # noqa: E501
                 paginated_runs = func(
                     page_size=page_size,
                     page_token=page_token,
