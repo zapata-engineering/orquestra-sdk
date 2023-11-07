@@ -208,7 +208,7 @@ class RuntimeConfig:
     @classmethod
     def list_configs(
         cls,
-    ) -> list:
+    ) -> t.List[ConfigName]:
         """List config names.
 
         Returns:
@@ -222,7 +222,7 @@ class RuntimeConfig:
     @classmethod
     def load(
         cls,
-        config_name: str,
+        config_name: ConfigName,
     ):
         """Load an existing runtime configuration.
 

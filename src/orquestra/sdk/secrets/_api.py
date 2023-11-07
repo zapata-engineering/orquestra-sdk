@@ -6,6 +6,7 @@ import typing as t
 
 from .. import exceptions as sdk_exc
 from .._base import _dsl, _exec_ctx
+from ..schema.configs import ConfigName
 from ..schema.workflow_run import WorkspaceId
 from . import _auth, _exceptions, _models
 
@@ -18,8 +19,8 @@ def _translate_to_zri(workspace_id: WorkspaceId, secret_name: str) -> str:
 def get(
     name: str,
     *,
-    workspace_id: t.Optional[str] = None,
-    config_name: t.Optional[str] = None,
+    workspace_id: t.Optional[WorkspaceId] = None,
+    config_name: t.Optional[ConfigName] = None,
 ) -> str:
     """Retrieves secret value from the remote vault.
 
@@ -75,8 +76,8 @@ def get(
 
 def list(
     *,
-    workspace_id: t.Optional[str] = None,
-    config_name: t.Optional[str] = None,
+    workspace_id: t.Optional[WorkspaceId] = None,
+    config_name: t.Optional[ConfigName] = None,
 ) -> t.Sequence[str]:
     """Lists all secret names.
 
@@ -115,8 +116,8 @@ def set(
     name: str,
     value: str,
     *,
-    workspace_id: t.Optional[str] = None,
-    config_name: t.Optional[str] = None,
+    workspace_id: t.Optional[WorkspaceId] = None,
+    config_name: t.Optional[ConfigName] = None,
 ):
     """Sets secret value at the remote vault. Overwrites already existing secrets.
 
@@ -163,8 +164,8 @@ def set(
 def delete(
     name: str,
     *,
-    workspace_id: t.Optional[str] = None,
-    config_name: t.Optional[str] = None,
+    workspace_id: t.Optional[WorkspaceId] = None,
+    config_name: t.Optional[ConfigName] = None,
 ):
     """Deletes secret from the remote vault.
 
