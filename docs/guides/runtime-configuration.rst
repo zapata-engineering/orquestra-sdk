@@ -1,61 +1,38 @@
 Runtime Configuration
 =====================
 
-.. decide where to expose this in the docs
+Most productive things you can do with Orquestra Workflow SDK require interacting with runtimes.
+A *runtime* is execution environment for workflows; it knows about your workflow runs, can host web UIs, stores Orquestra secrets.
 
-Orquestra can support different execution environments for workflows, called runtimes.
-Currently there are two supported runtimes: local execution via Ray, and remote execution via Compute Engine.
+Runtimes fall into two general categories:
 
-In some cases, additional configuration options are required in order to use a runtime.
-For example, a URL is required to connect to Compute Engine.
-Choosing a runtime and supplying options is called a *Runtime Configuration*.
+#. *Remote*. Orquestra Compute Engine. Managed clusters.
+#. *Local*. These runtimes support a subset of Orquestra functionality for local use.
 
-There is always one *Runtime Configuration* defined, called ``local``.
-This configuration option is reserved and cannot be updated or saved to.
-Manually editing the configuration file will not change this reserved option.
+Runtime Selection
+-----------------
 
-This is used by default in the CLI and executes a workflow locally with the default runtime options.
+Many of Workflow SDK APIs need specifying the runtime to use. Runtimes are identified by **config name**.
 
-..
-    TODO: Add how CLI uses configurations
-
-Configuration File
-------------------
-
-These *Runtime Configurations* are stored in a configuration file located at ``~/.orquestra/config.json``.
-The configuration file is a JSON file that is defined by:
-
-.. list-table::
-   :widths: 25 75
-   :header-rows: 1
-
-   * - Option
-     - Description
-   * - ``version``
-     - The version of the runtime configuration schema currently in use.
-   * - ``configs``
-     - Key-value pairs where the key is the configuration name and the value is the ``RuntimeConfiguration``.
-       See RuntimeConfiguration_.
+* ``auto`` -- guesses the runtime to use based on contextual information. See the section below for more information.
+* ``in_process`` -- refers to a local runtime that executes tasks sequentially in the same Python process. Useful for debugging.
+* ``ray`` -- refers to a local Ray runtime that executes workflows in the background. Allows running tasks in parallel. Requires starting the runtime daemon with ``orq up``.
+* ``local`` -- alias for ``ray``. Created at a time when there was just a single local runtime kind.
+* ``<subdomain>`` -- refers to a remote runtime. The config name is inferred from the URI, as most of the remote runtime URIs have the form ``https://<subdomain>.<domain>.<tld>``. Connection details for remote runtimes are stored in ``~/.orquestra/config.json``.
 
 
-.. _RuntimeConfiguration:
-
-``RuntimeConfiguration``
-------------------------
-
-Inside the configuration file, each *Runtime Configuration* is defined by:
+``auto`` Config Resolution
+--------------------------
 
 .. list-table::
-   :widths: 25 75
+   :widths: 50 50
    :header-rows: 1
 
-   * - Configuration option
-     - Description
-   * - ``config_name``
-     - The human readable configuration name.
-       This is what you should use in the :doc:`CLI <../quickref/cli-reference>` or SDK to reference a configuration.
-   * - ``runtime_name``
-     - The internal reference to the Orquestra runtime.
-       Currently supported options: ``RAY_LOCAL``, ``CE_REMOTE``.
-   * - ``runtime_options``
-     - A key-value pair of options passed to the specific runtime.
+   * - Scenario
+     - Resolved Runtime
+   * - You're in Orquestra Studio (the web IDE you can access by visiting Orquestra cluster URI in your web browser) -- either your code in a Jupyter cell or a terminal prompt.
+     - The same Orquestra cluster as the Studio instance.
+   * - Code inside a task being executed by Compute Engine (the remote runtime).
+     - The same Orquestra cluster as Compute Engine.
+   * - Code in a script running on your local machine.
+     - Contents of the ``ORQ_CURRENT_CONFIG`` environment variable.
