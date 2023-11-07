@@ -209,7 +209,7 @@ class RuntimeConfig:
     def list_configs(
         cls,
     ) -> list:
-        """List previously saved configurations.
+        """List config names.
 
         Returns:
             list: list of configurations within the save file.
@@ -224,10 +224,14 @@ class RuntimeConfig:
         cls,
         config_name: str,
     ):
-        """Load an existing configuration from a file.
+        """Load an existing runtime configuration.
+
+        For more information about the supported names, visit the
+        `Runtime Configuration guide
+        <https://docs.orquestra.io/docs/core/sdk/guides/runtime-configuration.html>`_.
 
         Args:
-            config_name: The name of the configuration to be loaded.
+            config_name: The runtime name to load.
 
         Raises:
             orquestra.sdk.exceptions.ConfigFileNotFoundError: When the config file is
