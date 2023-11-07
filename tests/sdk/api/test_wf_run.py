@@ -12,7 +12,14 @@ import typing as t
 import warnings
 from contextlib import suppress as do_not_raise
 from datetime import timedelta
-from unittest.mock import DEFAULT, MagicMock, Mock, PropertyMock, create_autospec
+from unittest.mock import (
+    DEFAULT,
+    MagicMock,
+    Mock,
+    PropertyMock,
+    create_autospec,
+    sentinel,
+)
 
 import pytest
 
@@ -26,6 +33,8 @@ from orquestra.sdk._base._spaces._structs import ProjectRef, Workspace
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import (
     ProjectInvalidError,
+    RayNotRunningError,
+    RuntimeQuerySummaryError,
     UnauthorizedError,
     VersionMismatch,
     WorkflowRunCanNotBeTerminated,
@@ -34,7 +43,6 @@ from orquestra.sdk.exceptions import (
 )
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeName
-from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import JSONResult
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
@@ -306,70 +314,344 @@ class TestWorkflowRun:
                     )
 
             class TestNotPassingConfig:
-                @staticmethod
-                def test_exists_in_local_db(monkeypatch):
-                    # Given
-                    run_id = "wf.mine.1234"
-                    config_name = "ray"
+                class TestHappyPath:
+                    """The config is resolved eventually, even if there are
+                    intermediate errors."""
 
-                    # Simulate filled DB
-                    monkeypatch.setattr(
-                        _api.WorkflowRun,
-                        "_get_stored_run",
-                        Mock(
-                            return_value=StoredWorkflowRun(
-                                workflow_run_id=run_id,
-                                config_name=config_name,
-                                workflow_def=wf_pass_tuple().model,
-                                is_qe=False,
-                            )
-                        ),
-                    )
+                    @staticmethod
+                    def test_found_in_ray(monkeypatch):
+                        # Given
+                        run_id = sentinel.wf_run_id
 
-                    # Set up config
-                    config_obj = _api.RuntimeConfig(
-                        runtime_name=RuntimeName.RAY_LOCAL,
-                        name=config_name,
-                        bypass_factory_methods=True,
-                    )
-                    monkeypatch.setattr(
-                        _api.RuntimeConfig, "load", Mock(return_value=config_obj)
-                    )
+                        # Set up config
+                        config_obj = _api.RuntimeConfig.ray()
+                        monkeypatch.setattr(
+                            _api.RuntimeConfig,
+                            "list_configs",
+                            Mock(return_value=[config_obj.name]),
+                        )
+                        monkeypatch.setattr(
+                            _api.RuntimeConfig, "load", Mock(return_value=config_obj)
+                        )
 
-                    # Set up runtime
-                    runtime = Mock()
-                    setattr(config_obj, "_get_runtime", lambda _: runtime)
-                    wf_def = "<wf def sentinel>"
-                    runtime.get_workflow_run_status().workflow_def = wf_def
+                        # Set up runtime
+                        runtime = create_autospec(RuntimeInterface)
+                        monkeypatch.setattr(
+                            config_obj, "_get_runtime", lambda _: runtime
+                        )
+                        wf_def = sentinel.wf_def
+                        runtime.get_workflow_run_status(run_id).workflow_def = wf_def
 
-                    # When
-                    run = _api.WorkflowRun.by_id(run_id=run_id)
-
-                    # Then
-                    # Uses the passed in config
-                    assert run._config == config_obj
-
-                    # Sets other attrs appropriately
-                    assert run._run_id == run_id
-                    assert run._wf_def == wf_def
-                    assert run._runtime == runtime
-
-                @staticmethod
-                def test_missing_from_db(monkeypatch):
-                    # Given
-                    run_id = "wf.mine.1234"
-
-                    # Simulate empty DB
-                    monkeypatch.setattr(
-                        _api.WorkflowRun,
-                        "_get_stored_run",
-                        Mock(side_effect=WorkflowRunNotFoundError),
-                    )
-
-                    # Then
-                    with pytest.raises(WorkflowRunNotFoundError):
                         # When
-                        _ = _api.WorkflowRun.by_id(run_id=run_id)
+                        run = _api.WorkflowRun.by_id(run_id=run_id)
+
+                        # Then
+                        # Uses the passed in config
+                        assert run._config == config_obj
+
+                        # Sets other attrs appropriately
+                        assert run._run_id == run_id
+                        assert run._wf_def == wf_def
+                        assert run._runtime == runtime
+
+                    @staticmethod
+                    def test_not_found_in_ray_found_in_ce(monkeypatch):
+                        # Given
+                        run_id = sentinel.wf_run_id
+
+                        # Set up configs
+                        config1 = _api.RuntimeConfig.ray()
+                        config2 = _api.RuntimeConfig.ce(
+                            uri="https://cluster2.example.com", token="a token"
+                        )
+                        configs_dict = {
+                            config.name: config for config in [config1, config2]
+                        }
+                        monkeypatch.setattr(
+                            _api.RuntimeConfig,
+                            "list_configs",
+                            Mock(return_value=list(configs_dict.keys())),
+                        )
+
+                        monkeypatch.setattr(
+                            _api.RuntimeConfig, "load", configs_dict.__getitem__
+                        )
+
+                        # Set up runtimes
+                        runtime1 = create_autospec(RuntimeInterface)
+                        runtime2 = create_autospec(RuntimeInterface)
+                        monkeypatch.setattr(config1, "_get_runtime", lambda _: runtime1)
+                        monkeypatch.setattr(config2, "_get_runtime", lambda _: runtime2)
+
+                        wf_def = sentinel.wf_def
+
+                        runtime1.get_workflow_run_status.side_effect = (
+                            WorkflowRunNotFoundError
+                        )
+                        runtime2.get_workflow_run_status(run_id).workflow_def = wf_def
+
+                        # When
+                        run = _api.WorkflowRun.by_id(run_id=run_id)
+
+                        # Then
+                        # Uses the passed in config
+                        assert run._config == config2
+
+                        # Sets other attrs appropriately
+                        assert run._run_id == run_id
+                        assert run._wf_def == wf_def
+                        assert run._runtime == runtime2
+
+                    @staticmethod
+                    def test_ray_not_running_found_in_ce(monkeypatch):
+                        # Given
+                        run_id = sentinel.wf_run_id
+
+                        # Set up configs
+                        config1 = _api.RuntimeConfig.ray()
+                        config2 = _api.RuntimeConfig.ce(
+                            uri="https://cluster2.example.com", token="a token"
+                        )
+                        configs_dict = {
+                            config.name: config for config in [config1, config2]
+                        }
+                        monkeypatch.setattr(
+                            _api.RuntimeConfig,
+                            "list_configs",
+                            Mock(return_value=list(configs_dict.keys())),
+                        )
+
+                        monkeypatch.setattr(
+                            _api.RuntimeConfig, "load", configs_dict.__getitem__
+                        )
+
+                        # Set up runtimes
+                        runtime2 = create_autospec(RuntimeInterface)
+                        # RayRuntime attempts to establish connection when the object
+                        # is created.
+                        monkeypatch.setattr(
+                            config1,
+                            "_get_runtime",
+                            Mock(side_effect=RayNotRunningError),
+                        )
+                        monkeypatch.setattr(config2, "_get_runtime", lambda _: runtime2)
+
+                        wf_def = sentinel.wf_def
+
+                        runtime2.get_workflow_run_status(run_id).workflow_def = wf_def
+
+                        # When
+                        run = _api.WorkflowRun.by_id(run_id=run_id)
+
+                        # Then
+                        # Uses the passed in config
+                        assert run._config == config2
+
+                        # Sets other attrs appropriately
+                        assert run._run_id == run_id
+                        assert run._wf_def == wf_def
+                        assert run._runtime == runtime2
+
+                    @staticmethod
+                    def test_found_in_another_ce(monkeypatch):
+                        # Given
+                        run_id = sentinel.wf_run_id
+
+                        # Set up configs
+                        config1 = _api.RuntimeConfig.ray()
+                        config2 = _api.RuntimeConfig.ce(
+                            uri="https://cluster2.example.com", token="a token"
+                        )
+                        config3 = _api.RuntimeConfig.ce(
+                            uri="https://cluster3.example.com", token="a token"
+                        )
+                        configs_dict = {
+                            config.name: config
+                            for config in [config1, config2, config3]
+                        }
+                        monkeypatch.setattr(
+                            _api.RuntimeConfig,
+                            "list_configs",
+                            Mock(return_value=list(configs_dict.keys())),
+                        )
+
+                        monkeypatch.setattr(
+                            _api.RuntimeConfig, "load", configs_dict.__getitem__
+                        )
+
+                        # Set up runtimes
+                        # RayRuntime attempts to establish connection when the object
+                        # is created.
+                        monkeypatch.setattr(
+                            config1,
+                            "_get_runtime",
+                            Mock(side_effect=RayNotRunningError),
+                        )
+
+                        runtime2 = create_autospec(RuntimeInterface)
+                        runtime3 = create_autospec(RuntimeInterface)
+                        monkeypatch.setattr(config2, "_get_runtime", lambda _: runtime2)
+                        monkeypatch.setattr(config3, "_get_runtime", lambda _: runtime3)
+
+                        wf_def = sentinel.wf_def
+
+                        runtime2.get_workflow_run_status.side_effect = (
+                            WorkflowRunNotFoundError
+                        )
+                        runtime3.get_workflow_run_status(run_id).workflow_def = wf_def
+
+                        # When
+                        run = _api.WorkflowRun.by_id(run_id=run_id)
+
+                        # Then
+                        # Uses the passed in config
+                        assert run._config == config3
+
+                        # Sets other attrs appropriately
+                        assert run._run_id == run_id
+                        assert run._wf_def == wf_def
+                        assert run._runtime == runtime3
+
+                class TestErrorSummary:
+                    """It wasn't possible to resolve the config"""
+
+                    @staticmethod
+                    def test_ray_not_running_no_ce(monkeypatch):
+                        """There are no known remote runtimes, and Ray wasn't
+                        started."""
+                        # Given
+                        run_id = sentinel.wf_run_id
+
+                        # Set up configs
+                        config_obj = _api.RuntimeConfig.ray()
+                        monkeypatch.setattr(
+                            _api.RuntimeConfig,
+                            "list_configs",
+                            Mock(return_value=[config_obj.name]),
+                        )
+                        monkeypatch.setattr(
+                            _api.RuntimeConfig, "load", Mock(return_value=config_obj)
+                        )
+
+                        # Set up runtimes
+                        # RayRuntime attempts to establish connection when the object
+                        # is created.
+                        monkeypatch.setattr(
+                            config_obj,
+                            "_get_runtime",
+                            Mock(side_effect=RayNotRunningError),
+                        )
+
+                        # When
+                        with pytest.raises(RuntimeQuerySummaryError) as exc_info:
+                            _ = _api.WorkflowRun.by_id(run_id=run_id)
+
+                        # Then
+                        assert exc_info.value.not_found_runtimes == []
+                        assert exc_info.value.unauthorized_runtimes == []
+                        assert len(exc_info.value.not_running_runtimes) == 1
+
+                        info = exc_info.value.not_running_runtimes[0]
+                        assert info.runtime_name == RuntimeName.RAY_LOCAL
+                        assert info.config_name == config_obj.name
+                        assert info.server_uri is None
+
+                    @staticmethod
+                    def test_not_found_in_ray_no_ce(monkeypatch):
+                        """There are no known remote runtimes, and the run is unknown
+                        to the local runtime."""
+                        # Given
+                        run_id = sentinel.wf_run_id
+
+                        # Set up configs
+                        config_obj = _api.RuntimeConfig.ray()
+                        monkeypatch.setattr(
+                            _api.RuntimeConfig,
+                            "list_configs",
+                            Mock(return_value=[config_obj.name]),
+                        )
+                        monkeypatch.setattr(
+                            _api.RuntimeConfig, "load", Mock(return_value=config_obj)
+                        )
+
+                        # Set up runtimes
+                        runtime = create_autospec(RuntimeInterface)
+                        monkeypatch.setattr(
+                            config_obj, "_get_runtime", lambda _: runtime
+                        )
+
+                        runtime.get_workflow_run_status.side_effect = (
+                            WorkflowRunNotFoundError
+                        )
+
+                        # When
+                        with pytest.raises(RuntimeQuerySummaryError) as exc_info:
+                            _ = _api.WorkflowRun.by_id(run_id=run_id)
+
+                        # Then
+                        assert len(exc_info.value.not_found_runtimes) == 1
+                        not_found_info = exc_info.value.not_found_runtimes[0]
+
+                        assert not_found_info.runtime_name == RuntimeName.RAY_LOCAL
+                        assert not_found_info.config_name == config_obj.name
+                        assert not_found_info.server_uri is None
+
+                        assert exc_info.value.unauthorized_runtimes == []
+                        assert exc_info.value.not_running_runtimes == []
+
+                    @staticmethod
+                    def test_not_found_in_ray_ce_unauthorized(monkeypatch):
+                        run_id = sentinel.wf_run_id
+
+                        # Set up configs
+                        config1 = _api.RuntimeConfig.ray()
+                        uri2 = "https://cluster2.example.com"
+                        config2 = _api.RuntimeConfig.ce(uri=uri2, token="a token")
+                        configs_dict = {
+                            config.name: config for config in [config1, config2]
+                        }
+                        monkeypatch.setattr(
+                            _api.RuntimeConfig,
+                            "list_configs",
+                            Mock(return_value=list(configs_dict.keys())),
+                        )
+
+                        monkeypatch.setattr(
+                            _api.RuntimeConfig, "load", configs_dict.__getitem__
+                        )
+
+                        # Set up runtimes
+                        runtime1 = create_autospec(RuntimeInterface)
+                        runtime2 = create_autospec(RuntimeInterface)
+
+                        monkeypatch.setattr(config1, "_get_runtime", lambda _: runtime1)
+                        monkeypatch.setattr(config2, "_get_runtime", lambda _: runtime2)
+
+                        runtime1.get_workflow_run_status.side_effect = (
+                            WorkflowRunNotFoundError
+                        )
+                        runtime2.get_workflow_run_status.side_effect = UnauthorizedError
+
+                        # When
+                        with pytest.raises(RuntimeQuerySummaryError) as exc_info:
+                            _ = _api.WorkflowRun.by_id(run_id=run_id)
+
+                        # Then
+                        assert len(exc_info.value.not_found_runtimes) == 1
+                        not_found_info = exc_info.value.not_found_runtimes[0]
+
+                        assert not_found_info.runtime_name == RuntimeName.RAY_LOCAL
+                        assert not_found_info.config_name == config1.name
+                        assert not_found_info.server_uri is None
+
+                        assert len(exc_info.value.unauthorized_runtimes) == 1
+                        unauthorized_info = exc_info.value.unauthorized_runtimes[0]
+
+                        assert unauthorized_info.runtime_name == RuntimeName.CE_REMOTE
+                        assert unauthorized_info.config_name == config2.name
+                        assert unauthorized_info.server_uri == uri2
+
+                        assert exc_info.value.not_running_runtimes == []
 
     class TestStartFromIR:
         @pytest.fixture

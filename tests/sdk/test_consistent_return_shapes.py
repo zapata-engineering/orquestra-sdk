@@ -149,7 +149,7 @@ def get(httpserver: pytest_httpserver.HTTPServer):
 
 
 @pytest.fixture
-def mock_ce_run_single(post, get) -> str:
+def mock_ce_run_single(post, get, httpserver: pytest_httpserver.HTTPServer) -> str:
     wf_id: str = "wf_id_sentinel_ce_single"
     wf_def_id: str = "wf_def_ce_sentinel"
     result_ids = ["result_id_sentinel_0"]
@@ -160,6 +160,7 @@ def mock_ce_run_single(post, get) -> str:
         resp_mocks.make_create_wf_def_response(id_=wf_def_id),
     )
     post("/api/workflow-runs", resp_mocks.make_submit_wf_run_response(wf_id))
+    # Mock the known workflow run request.
     get(
         f"/api/workflow-runs/{wf_id}",
         resp_mocks.make_get_wf_run_response(
@@ -175,6 +176,12 @@ def mock_ce_run_single(post, get) -> str:
             ],
         ),
     )
+    # Requests for other workflow runs should return "Not Found". Used by the "query
+    # all runtimes" machinery under sdk.WorkflowRun.by_id().
+    httpserver.expect_request(
+        re.compile(r"/api/workflow-runs/.+"), method="GET"
+    ).respond_with_json({}, status=404)
+
     get(
         f"/api/workflow-definitions/{wf_def_id}",
         resp_mocks.make_get_wf_def_response(

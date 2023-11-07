@@ -6,6 +6,9 @@ import traceback
 from functools import singledispatch
 
 import click
+from rich.box import SIMPLE_HEAVY
+from rich.console import Console
+from rich.table import Column, Table
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base._config import IN_PROCESS_CONFIG_NAME, RAY_CONFIG_NAME_ALIAS
@@ -176,3 +179,39 @@ def _(e: exceptions.WorkflowRunNotStarted) -> ResponseStatusCode:
 def _(e: exceptions.QERemoved) -> ResponseStatusCode:
     click.echo(e)
     return ResponseStatusCode.CONNECTION_ERROR
+
+
+@pretty_print_exception.register
+def _(e: exceptions.RuntimeQuerySummaryError) -> ResponseStatusCode:
+    first_string = (
+        "Couldn't find a config that knows about workflow run ID "
+        f"[bold]{e.wf_run_id}[/bold]"
+    )
+    summary_table = Table(
+        Column("Config name", style="bold", justify="right"),
+        Column("Reason"),
+        box=SIMPLE_HEAVY,
+    )
+
+    for config in e.not_found_runtimes:
+        if config.config_name is not None:
+            summary_table.add_row(config.config_name, "Workflow run not found")
+
+    for config in e.unauthorized_runtimes:
+        if config.config_name is not None:
+            summary_table.add_row(
+                config.config_name, "Authorization error " "- Login expired"
+            )
+
+    for config in e.not_running_runtimes:
+        if config.config_name is not None:
+            summary_table.add_row(config.config_name, "Not running")
+
+    last_string = (
+        "Please make sure that the workflow ID is correct, "
+        "and you're logged in to the correct cluster.\n"
+    )
+
+    Console().print(first_string, summary_table, last_string)
+
+    return ResponseStatusCode.WORKFLOW_RUN_NOT_FOUND
