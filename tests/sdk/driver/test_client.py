@@ -4,8 +4,9 @@
 """
 Tests for orquestra.sdk._base._driver._client.
 """
+from datetime import timedelta
 from typing import Any, Dict, List, Optional
-from unittest.mock import create_autospec
+from unittest.mock import Mock, create_autospec
 
 import numpy as np
 import pytest
@@ -933,6 +934,13 @@ class TestClient:
                     (
                         {"page_size": 100, "page_token": "abc"},
                         {"pageSize": 100, "pageToken": "abc"},
+                    ),
+                    ({"workspace": "abc"}, {"workspaceId": "abc"}),
+                    ({"max_age": timedelta(seconds=42)}, {"maxAge": 42}),
+                    ({"state": Mock(value="abc")}, {"state": "abc"}),
+                    (
+                        {"state": [Mock(value="abc"), Mock(value="cde")]},
+                        {"state": "abc,cde"},
                     ),
                 ],
             )
