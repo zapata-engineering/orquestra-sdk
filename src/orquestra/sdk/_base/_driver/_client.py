@@ -105,6 +105,28 @@ def _handle_common_errors(response: requests.Response):
         raise _exceptions.UnknownHTTPError(response)
 
 
+def _get_state_query(state: Optional[Union[State, List[State]]]) -> Optional[str]:
+    """Construct the state query from the required states.
+
+    Uses the following heuristic:
+    - state is None - no state filtering to be done, returns None
+    - single state arg - return the state value.
+    - multiple states - return a comma-separated list of state values.
+
+    Args:
+        state: The required state filters.
+
+    Returns:
+        str: The constructed query that can be passed as the state parameter to
+            ListWorkflowRunsRequest.
+    """
+    if state is None:
+        return None
+    if isinstance(state, list):
+        return ",".join([st.value for st in state])
+    return state.value
+
+
 T = TypeVar("T")
 
 
@@ -677,17 +699,7 @@ class DriverClient:
                 pageToken=page_token,
                 workspaceId=workspace,
                 maxAge=(int(max_age.total_seconds()) if max_age else None),
-                state=(
-                    ",".join(
-                        (
-                            [state.value]
-                            if not isinstance(state, list)
-                            else [st.value for st in state]
-                        )
-                    )
-                    if state
-                    else None
-                ),
+                state=_get_state_query(state),
             ).dict(),
         )
 
