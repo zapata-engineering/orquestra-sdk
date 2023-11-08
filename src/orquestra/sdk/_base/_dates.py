@@ -26,11 +26,25 @@ class SDKInstant:
             )
         self._enforce_timezone_aware()
 
+    def __sub__(self, other):
+        if isinstance(other, datetime):
+            return self._datetime_object - other
+        if isinstance(other, timedelta):
+            newtime: datetime = self._datetime_object - other
+            return SDKInstant(newtime)
+
+    def __repr__(self):
+        return self._datetime_object.__repr__()
+
     def __str__(self):
         return self._datetime_object.__str__()
 
-    def __eq__(self, *args, **kwargs):
-        return self._datetime_object.__eq__(*args, **kwargs)
+    def __eq__(self, other):
+        if isinstance(other, datetime):
+            return self._datetime_object.__eq__(other)
+        elif isinstance(other, SDKInstant):
+            return self._datetime_object == other._datetime_object
+        return NotImplemented
 
     def _enforce_timezone_aware(self):
         """Enforce the requirement that the Instant includes timezone information.
