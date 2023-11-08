@@ -90,6 +90,16 @@ class TestSDKInstant:
                 f"(difference of {datetime - my_instant._datetime_object})"
             )
 
+        @staticmethod
+        def test_from_local_comps():
+            my_instant = SDKInstant.from_local_comps(
+                1312, 1, 1, 14, 30, utc_hour_offset=4
+            )
+
+            assert my_instant == datetime(
+                1312, 1, 1, 14, 30, tzinfo=timezone(timedelta(seconds=14400))
+            )
+
     class TestFormatting:
         @staticmethod
         def test_iso_formatting(my_instant: SDKInstant):
