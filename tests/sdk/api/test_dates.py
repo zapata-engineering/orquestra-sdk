@@ -92,8 +92,12 @@ class TestSDKInstant:
             return SDKInstant("1312-01-01T11:00+04:00")
 
         @staticmethod
-        def test_iso_formatting(my_instant):
+        def test_iso_formatting(my_instant: SDKInstant):
             assert my_instant.isoformat() == "1312-01-01T11:00:00+04:00"
+
+        @staticmethod
+        def test_local_iso_formatting(my_instant: SDKInstant):
+            assert my_instant.local_isoformat() == "1312-01-01T06:58:45-00:01:15"
 
     class TestFailureStates:
         @staticmethod
