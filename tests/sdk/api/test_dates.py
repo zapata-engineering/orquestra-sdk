@@ -13,6 +13,11 @@ from freezegun import freeze_time
 from orquestra.sdk import SDKInstant
 
 
+@pytest.fixture()
+def my_instant() -> SDKInstant:
+    return SDKInstant("1312-01-01T11:00+04:00")
+
+
 class TestSDKInstant:
     class TestInitiation:
         @staticmethod
@@ -33,8 +38,8 @@ class TestSDKInstant:
             "iso_string, expected_datetime",
             [
                 (
-                    "2007-04-05T14:30Z",
-                    datetime(2007, 4, 5, 14, 30, tzinfo=timezone.utc),
+                    "2000-01-01T14:30Z",
+                    datetime(2000, 1, 1, 14, 30, tzinfo=timezone.utc),
                 ),
                 (
                     "1312-01-01T11:00+00:00",
@@ -87,11 +92,6 @@ class TestSDKInstant:
 
     class TestFormatting:
         @staticmethod
-        @pytest.fixture()
-        def my_instant() -> SDKInstant:
-            return SDKInstant("1312-01-01T11:00+04:00")
-
-        @staticmethod
         def test_iso_formatting(my_instant: SDKInstant):
             assert my_instant.isoformat() == "1312-01-01T11:00:00+04:00"
 
@@ -119,3 +119,16 @@ class TestSDKInstant:
             assert e.exconly() == (
                 "NotImplementedError: Cannot initialise SDKInstant from type <class 'dict'>"  # noqa: E501
             )
+
+    class TestInteractionWithDatetime:
+        @staticmethod
+        def test_subtract_datetime_from_instant(my_instant: SDKInstant):
+            dt = my_instant - datetime(2000, 1, 1, 14, 30, tzinfo=timezone.utc)
+
+            assert dt == timedelta(days=-251288, hours=16, minutes=30)
+
+        @staticmethod
+        def test_subtract_timedelta_from_instant(my_instant: SDKInstant):
+            dt = my_instant - timedelta(days=14, hours=15, minutes=9)
+            assert isinstance(dt, SDKInstant)
+            assert dt == SDKInstant("1311-12-17T19:51+04:00")
