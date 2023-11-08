@@ -6,6 +6,30 @@
 import typing as t
 from datetime import datetime, timedelta, timezone
 
+
+class SDKInstant:
+    """Wrapper around datetime.datetime that provides our custom datetime utilities."""
+
+    def __init__(self):
+        self._datetime_object: datetime = datetime.now(timezone.utc)
+        self._enforce_timezone_aware()
+
+    def __str__(self):
+        return self._datetime_object.__str__()
+
+    def __eq__(self, *args, **kwargs):
+        return self._datetime_object.__eq__(*args, **kwargs)
+
+    def _enforce_timezone_aware(self):
+        """Enforce the requirement that the Instant includes timezone information.
+
+        Raises:
+            ValueError: when the Instant is not timezone-aware.
+        """
+        if self._datetime_object.tzinfo is None:
+            raise ValueError("We only work with timezone-aware datetimes")
+
+
 # Timezone-aware datetime. Represents an unambiguous time instant.
 Instant = t.NewType("Instant", datetime)
 

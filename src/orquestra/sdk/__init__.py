@@ -14,6 +14,7 @@ from ._base._api import (
     list_workflow_runs,
     migrate_config_file,
 )
+from ._base._dates import SDKInstant
 from ._base._dsl import (
     ArtifactFuture,
     DataAggregation,
@@ -47,6 +48,7 @@ __all__ = [
     "GitImportWithAuth",
     "Import",
     "InlineImport",
+    "SDKInstant",
     "LocalImport",
     "mlflow",
     "NotATaskWarning",
