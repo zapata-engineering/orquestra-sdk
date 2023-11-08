@@ -100,6 +100,18 @@ class TestSDKInstant:
                 1312, 1, 1, 14, 30, tzinfo=timezone(timedelta(seconds=14400))
             )
 
+        @staticmethod
+        def test_from_utc_comps():
+            my_instant = SDKInstant.from_utc_comps(
+                1312,
+                1,
+                1,
+                14,
+                30,
+            )
+
+            assert my_instant == datetime(1312, 1, 1, 14, 30, tzinfo=timezone.utc)
+
     class TestFormatting:
         @staticmethod
         def test_iso_formatting(my_instant: SDKInstant):
