@@ -39,6 +39,15 @@ class SDKInstant:
 
         return cls(datetime(*args, **new_kwargs))
 
+    @classmethod
+    def from_utc_comps(cls, *args, **kwargs) -> "SDKInstant":
+        """Builds an timezone-aware instant from specific date components.
+
+        The components should be in UTC.
+        """
+        new_kwargs = {**kwargs, "utc_hour_offset": 0}
+        return cls.from_local_comps(*args, **new_kwargs)
+
     def __sub__(self, other):
         if isinstance(other, datetime):
             return self._datetime_object - other
