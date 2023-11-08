@@ -41,14 +41,14 @@ class SDKInstant:
         if self._datetime_object.tzinfo is None:
             raise ValueError("We only work with timezone-aware datetimes")
 
+    def isoformat(self) -> str:
+        """Formats the instant using ISO8601 format with explicit time zone."""
+        self._enforce_timezone_aware()
+        return self._datetime_object.isoformat()
+
 
 # Timezone-aware datetime. Represents an unambiguous time instant.
 Instant = t.NewType("Instant", datetime)
-
-
-def now() -> Instant:
-    """Generates a timezone-aware current instant. The timezone is set to UTC."""
-    return Instant(datetime.now(timezone.utc))
 
 
 def isoformat(instant: Instant) -> str:
