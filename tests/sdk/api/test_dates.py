@@ -28,7 +28,7 @@ class TestInitiation:
         assert str(my_instant) == "1312-01-01 04:00:00+00:00"
 
     @staticmethod
-    @freeze_time("1312-01-01", tz_offset=4)
+    @freeze_time("9999-01-01", tz_offset=4)
     @pytest.mark.parametrize(
         "iso_string, expected_datetime",
         [
@@ -52,7 +52,7 @@ class TestInitiation:
         )
 
     @staticmethod
-    @freeze_time("1312-01-01", tz_offset=4)
+    @freeze_time("9999-01-01", tz_offset=4)
     @pytest.mark.parametrize(
         "timestamp, expected_datetime",
         [
@@ -65,4 +65,17 @@ class TestInitiation:
         assert my_instant == expected_datetime, (
             f"Expected {expected_datetime}, got {my_instant} "
             f"(difference of {expected_datetime - my_instant._datetime_object})"
+        )
+
+    @staticmethod
+    @freeze_time("9999-01-01", tz_offset=4)
+    @pytest.mark.parametrize(
+        "datetime", [datetime(1312, 1, 1, 7, 0, tzinfo=timezone.utc)]
+    )
+    def test_from_datetime(datetime: datetime):
+        my_instant = SDKInstant(datetime)
+
+        assert my_instant == datetime, (
+            f"Expected {datetime}, got {my_instant} "
+            f"(difference of {datetime - my_instant._datetime_object})"
         )
