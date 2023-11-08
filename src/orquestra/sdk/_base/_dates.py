@@ -46,6 +46,14 @@ class SDKInstant:
         self._enforce_timezone_aware()
         return self._datetime_object.isoformat()
 
+    def local_isoformat(self) -> str:
+        """Formats the instant using ISO8601 format with explicit time zone.
+
+        The instant is shifted to a local timezone for human-friendliness.
+        """
+        self._enforce_timezone_aware()
+        return self._datetime_object.astimezone().isoformat()
+
 
 # Timezone-aware datetime. Represents an unambiguous time instant.
 Instant = t.NewType("Instant", datetime)
