@@ -18,6 +18,12 @@ class SDKInstant:
             self._datetime_object = datetime.fromisoformat(base.replace("Z", "+00:00"))
         elif isinstance(base, (int, float)):
             self._datetime_object = datetime.fromtimestamp(base, timezone.utc)
+        elif isinstance(base, datetime):
+            self._datetime_object = base
+        else:
+            raise NotImplementedError(
+                f"Cannot initialise SDKInstant from type {type(base)}"
+            )
         self._enforce_timezone_aware()
 
     def __str__(self):
