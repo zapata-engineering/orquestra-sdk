@@ -99,6 +99,10 @@ class TestSDKInstant:
         def test_local_iso_formatting(my_instant: SDKInstant):
             assert my_instant.local_isoformat() == "1312-01-01T06:58:45-00:01:15"
 
+        @staticmethod
+        def test_unix_formatting(my_instant: SDKInstant):
+            assert my_instant.unix_time() == -20764486800.0
+
     class TestFailureStates:
         @staticmethod
         def test_initialising_from_timezone_unaware_datetime_raises_exception():
