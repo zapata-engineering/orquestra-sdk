@@ -10,8 +10,12 @@ from datetime import datetime, timedelta, timezone
 class SDKInstant:
     """Wrapper around datetime.datetime that provides our custom datetime utilities."""
 
-    def __init__(self):
-        self._datetime_object: datetime = datetime.now(timezone.utc)
+    def __init__(self, base: t.Optional[str] = None):
+        self._datetime_object: datetime
+        if base is None:
+            self._datetime_object = datetime.now(timezone.utc)
+        elif isinstance(base, str):
+            self._datetime_object = datetime.fromisoformat(base.replace("Z", "+00:00"))
         self._enforce_timezone_aware()
 
     def __str__(self):
