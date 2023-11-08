@@ -85,6 +85,16 @@ class TestSDKInstant:
                 f"(difference of {datetime - my_instant._datetime_object})"
             )
 
+    class TestFormatting:
+        @staticmethod
+        @pytest.fixture()
+        def my_instant() -> SDKInstant:
+            return SDKInstant("1312-01-01T11:00+04:00")
+
+        @staticmethod
+        def test_iso_formatting(my_instant):
+            assert my_instant.isoformat() == "1312-01-01T11:00:00+04:00"
+
     class TestFailureStates:
         @staticmethod
         def test_initialising_from_timezone_unaware_datetime_raises_exception():
