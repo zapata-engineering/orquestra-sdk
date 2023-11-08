@@ -130,5 +130,14 @@ class TestSDKInstant:
         @staticmethod
         def test_subtract_timedelta_from_instant(my_instant: SDKInstant):
             dt = my_instant - timedelta(days=14, hours=15, minutes=9)
+
             assert isinstance(dt, SDKInstant)
             assert dt == SDKInstant("1311-12-17T19:51+04:00")
+
+    class TestSelfInteraction:
+        @staticmethod
+        def test_subtraction(my_instant: SDKInstant):
+            dt = my_instant - my_instant
+
+            assert isinstance(dt, timedelta)
+            assert dt == timedelta(0)
