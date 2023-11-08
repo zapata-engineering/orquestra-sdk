@@ -26,6 +26,19 @@ class SDKInstant:
             )
         self._enforce_timezone_aware()
 
+    @classmethod
+    def from_local_comps(cls, *args, utc_hour_offset: int, **kwargs) -> "SDKInstant":
+        """Builds an instant from from timezone-local date components.
+
+        Uses the same components as ``datetime.datetime(...)``, apart from ``tzinfo``.
+        """
+        new_kwargs: t.Dict[str, t.Any] = {
+            **kwargs,
+            "tzinfo": timezone(timedelta(hours=utc_hour_offset)),
+        }
+
+        return cls(datetime(*args, **new_kwargs))
+
     def __sub__(self, other):
         if isinstance(other, datetime):
             return self._datetime_object - other
