@@ -54,6 +54,14 @@ class SDKInstant:
         self._enforce_timezone_aware()
         return self._datetime_object.astimezone().isoformat()
 
+    def unix_time(self) -> int:
+        """Formats the isntant as a UNIX epoch timestamp.
+
+        (Unix epoch timestamp is UTC seconds since 1970)
+        """
+        self._enforce_timezone_aware()
+        return self._datetime_object.timestamp()
+
 
 # Timezone-aware datetime. Represents an unambiguous time instant.
 Instant = t.NewType("Instant", datetime)
