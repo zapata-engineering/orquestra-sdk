@@ -7,24 +7,43 @@ import typing as t
 from datetime import datetime, timedelta, timezone
 
 
-class SDKInstant:
-    """Wrapper around datetime.datetime that provides our custom datetime utilities."""
-
-    def __init__(self, base: t.Optional[str] = None):
-        self._datetime_object: datetime
-        if base is None:
-            self._datetime_object = datetime.now(timezone.utc)
-        elif isinstance(base, str):
-            self._datetime_object = datetime.fromisoformat(base.replace("Z", "+00:00"))
-        elif isinstance(base, (int, float)):
-            self._datetime_object = datetime.fromtimestamp(base, timezone.utc)
-        elif isinstance(base, datetime):
-            self._datetime_object = base
+class SDKInstant(datetime):
+    def __new__(cls, *args, **kwargs):
+        if len(args) == 0:
+            self = super().now(timezone.utc)
+        elif len(args) > 1:
+            self = super().__new__(cls, *args, **kwargs)
+        elif isinstance(args[0], str):
+            self = super().fromisoformat(args[0].replace("Z", "+00:00"))
+        elif isinstance(args[0], (int, float)):
+            self = super().fromtimestamp(args[0], timezone.utc)
+        elif isinstance(args[0], datetime):
+            self = super().__new__(
+                cls,
+                args[0].year,
+                args[0].month,
+                args[0].day,
+                args[0].hour,
+                args[0].minute,
+                args[0].second,
+                args[0].microsecond,
+                args[0].tzinfo,
+            )
         else:
             raise NotImplementedError(
-                f"Cannot initialise SDKInstant from type {type(base)}"
+                f"Cannot initialise SDKInstant from type {type(args[0])}"
             )
         self._enforce_timezone_aware()
+        return self
+
+    def _enforce_timezone_aware(self):
+        """Enforce the requirement that the Instant includes timezone information.
+
+        Raises:
+            ValueError: when the Instant is not timezone-aware.
+        """
+        if self.tzinfo is None:
+            raise ValueError("We only work with timezone-aware datetimes")
 
     @classmethod
     def from_local_comps(cls, *args, utc_hour_offset: int, **kwargs) -> "SDKInstant":
@@ -48,58 +67,13 @@ class SDKInstant:
         new_kwargs = {**kwargs, "utc_hour_offset": 0}
         return cls.from_local_comps(*args, **new_kwargs)
 
-    def __sub__(self, other):
-        if isinstance(other, datetime):
-            return self._datetime_object - other
-        if isinstance(other, timedelta):
-            newtime: datetime = self._datetime_object - other
-            return SDKInstant(newtime)
-        if isinstance(other, SDKInstant):
-            return self._datetime_object - other._datetime_object
-        return NotImplemented
-
-    def __repr__(self):
-        return self._datetime_object.__repr__()
-
-    def __str__(self):
-        return self._datetime_object.__str__()
-
-    def __eq__(self, other):
-        if isinstance(other, datetime):
-            return self._datetime_object.__eq__(other)
-        elif isinstance(other, SDKInstant):
-            return self._datetime_object == other._datetime_object
-        return NotImplemented
-
-    def _enforce_timezone_aware(self):
-        """Enforce the requirement that the Instant includes timezone information.
-
-        Raises:
-            ValueError: when the Instant is not timezone-aware.
-        """
-        if self._datetime_object.tzinfo is None:
-            raise ValueError("We only work with timezone-aware datetimes")
-
-    def isoformat(self) -> str:
-        """Formats the instant using ISO8601 format with explicit time zone."""
-        self._enforce_timezone_aware()
-        return self._datetime_object.isoformat()
-
     def local_isoformat(self) -> str:
         """Formats the instant using ISO8601 format with explicit time zone.
 
         The instant is shifted to a local timezone for human-friendliness.
         """
         self._enforce_timezone_aware()
-        return self._datetime_object.astimezone().isoformat()
-
-    def unix_time(self) -> int:
-        """Formats the isntant as a UNIX epoch timestamp.
-
-        (Unix epoch timestamp is UTC seconds since 1970)
-        """
-        self._enforce_timezone_aware()
-        return self._datetime_object.timestamp()
+        return self.astimezone().isoformat()
 
 
 # Timezone-aware datetime. Represents an unambiguous time instant.

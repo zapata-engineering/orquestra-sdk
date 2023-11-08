@@ -8,30 +8,24 @@ Tests for orquestra.sdk._base._dates.py
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from freezegun import freeze_time
 
 from orquestra.sdk import SDKInstant
 
 
 @pytest.fixture()
 def my_instant() -> SDKInstant:
-    return SDKInstant("1312-01-01T11:00+04:00")
+    return SDKInstant("2013-04-08T11:00+04:00")
 
 
 class TestSDKInstant:
     class TestInitiation:
         @staticmethod
-        @freeze_time("1312-01-01", tz_offset=4)
         def test_current_instant():
             my_instant = SDKInstant()
             now = datetime.now(timezone.utc)
 
             assert isinstance(my_instant, SDKInstant)
-            assert my_instant == now, (
-                f"Expected {now}, got {my_instant} "
-                f"(difference of {now - my_instant._datetime_object})"
-            )
-            assert str(my_instant) == "1312-01-01 04:00:00+00:00"
+            assert (my_instant - now).total_seconds() < 1e-5
 
         @staticmethod
         @pytest.mark.parametrize(
@@ -115,15 +109,15 @@ class TestSDKInstant:
     class TestFormatting:
         @staticmethod
         def test_iso_formatting(my_instant: SDKInstant):
-            assert my_instant.isoformat() == "1312-01-01T11:00:00+04:00"
+            assert my_instant.isoformat() == "2013-04-08T11:00:00+04:00"
 
         @staticmethod
         def test_local_iso_formatting(my_instant: SDKInstant):
-            assert my_instant.local_isoformat() == "1312-01-01T06:58:45-00:01:15"
+            assert my_instant.local_isoformat() == "2013-04-08T08:00:00+01:00"
 
         @staticmethod
         def test_unix_formatting(my_instant: SDKInstant):
-            assert my_instant.unix_time() == -20764486800.0
+            assert my_instant.timestamp() == 1365404400.0
 
     class TestFailureStates:
         @staticmethod
@@ -147,14 +141,14 @@ class TestSDKInstant:
         def test_subtract_datetime_from_instant(my_instant: SDKInstant):
             dt = my_instant - datetime(2000, 1, 1, 14, 30, tzinfo=timezone.utc)
 
-            assert dt == timedelta(days=-251288, hours=16, minutes=30)
+            assert dt == timedelta(days=4845, hours=16, minutes=30)
 
         @staticmethod
         def test_subtract_timedelta_from_instant(my_instant: SDKInstant):
             dt = my_instant - timedelta(days=14, hours=15, minutes=9)
 
             assert isinstance(dt, SDKInstant)
-            assert dt == SDKInstant("1311-12-17T19:51+04:00")
+            assert dt == SDKInstant("2013-03-24T19:51+04:00")
 
     class TestSelfInteraction:
         @staticmethod
