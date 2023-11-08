@@ -32,6 +32,9 @@ class SDKInstant:
         if isinstance(other, timedelta):
             newtime: datetime = self._datetime_object - other
             return SDKInstant(newtime)
+        if isinstance(other, SDKInstant):
+            return self._datetime_object - other._datetime_object
+        return NotImplemented
 
     def __repr__(self):
         return self._datetime_object.__repr__()
