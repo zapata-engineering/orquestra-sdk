@@ -84,3 +84,20 @@ class TestSDKInstant:
                 f"Expected {datetime}, got {my_instant} "
                 f"(difference of {datetime - my_instant._datetime_object})"
             )
+
+    class TestFailureStates:
+        @staticmethod
+        def test_initialising_from_timezone_unaware_datetime_raises_exception():
+            with pytest.raises(ValueError) as e:
+                SDKInstant(datetime(1312, 1, 1, 7, 0))
+            assert e.exconly() == (
+                "ValueError: We only work with timezone-aware datetimes"
+            )
+
+        @staticmethod
+        def test_initialising_from_unsupported_type_raises_exception():
+            with pytest.raises(NotImplementedError) as e:
+                SDKInstant({})
+            assert e.exconly() == (
+                "NotImplementedError: Cannot initialise SDKInstant from type <class 'dict'>"  # noqa: E501
+            )
