@@ -2,7 +2,7 @@ Runtime Configuration
 =====================
 
 Most productive things you can do with Orquestra Workflow SDK require interacting with runtimes.
-A *runtime* is execution environment for workflows; it knows about your workflow runs, can host web UIs, stores Orquestra secrets.
+A *runtime* is execution environment for workflows; it knows about your workflow runs, can host web UIs, and stores Orquestra secrets.
 
 Runtimes fall into two general categories:
 
@@ -12,13 +12,13 @@ Runtimes fall into two general categories:
 Runtime Selection
 -----------------
 
-Many of Workflow SDK APIs need specifying the runtime to use. Runtimes are identified by **config name**.
+Using many of the Workflow SDK's APIs requires that you first specify which runtime to use. Runtimes are identified by **config name**:
 
-* ``auto`` -- guesses the runtime to use based on contextual information. See the section below for more information.
+* ``auto`` -- infers the runtime to use based on contextual information. See the section below for more information.
 * ``in_process`` -- refers to a local runtime that executes tasks sequentially in the same Python process. Useful for debugging.
 * ``ray`` -- refers to a local Ray runtime that executes workflows in the background. Allows running tasks in parallel. Requires starting the runtime daemon with ``orq up``.
 * ``local`` -- alias for ``ray``. Created at a time when there was just a single local runtime kind.
-* ``<subdomain>`` -- refers to a remote runtime. The config name is inferred from the URI, as most of the remote runtime URIs have the form ``https://<subdomain>.<domain>.<tld>``. Connection details for remote runtimes are stored in ``~/.orquestra/config.json``.
+* **other config name** -- refers to a remote runtime. Most of the remote runtime URIs have the form ``https://<subdomain>.<domain>.<tld>``, we use the ``<subdomain>`` as the identifying config name. Connection details for remote runtimes are stored in ``~/.orquestra/config.json``.
 
 
 ``auto`` Config Resolution
@@ -35,4 +35,4 @@ Many of Workflow SDK APIs need specifying the runtime to use. Runtimes are ident
    * - Code inside a task being executed by Compute Engine (the remote runtime).
      - The same Orquestra cluster as Compute Engine.
    * - Code in a script running on your local machine.
-     - Contents of the ``ORQ_CURRENT_CONFIG`` environment variable.
+     - Contents of the ``ORQ_CURRENT_CONFIG`` environment variable, or error if this variable is unset.
