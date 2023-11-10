@@ -32,7 +32,7 @@ def get(
         name: secret identifier.
         workspace_id: ID of the workspace. Using platform-defined default if omitted -
             - currently it is personal workspace
-        config_name: name of the runtime use to communicate with Orquestra Platform.
+        config_name: name of the runtime used to communicate with Orquestra Platform.
             Required when used from a local machine. Ignored when already running on a
             remote Orquestra cluster.
 
@@ -88,7 +88,7 @@ def list(
     Args:
         workspace_id: ID of the workspace. Using platform-defined default if omitted -
             - currently it is personal workspace.
-        config_name: name of the runtime use to communicate with Orquestra Platform.
+        config_name: name of the runtime used to communicate with Orquestra Platform.
             Required when used from a local machine. Ignored when already running on a
             remote Orquestra cluster.
 
@@ -130,7 +130,7 @@ def set(
         value: new secret name.
         workspace_id: workspace in which secret will be created. Using platform-defined
             default if omitted - currently it is personal workspace.
-        config_name: name of the runtime use to communicate with Orquestra Platform.
+        config_name: name of the runtime used to communicate with Orquestra Platform.
             Required when used from a local machine. Ignored when already running on a
             remote Orquestra cluster.
 
@@ -177,7 +177,7 @@ def delete(
         name: secret identifier.
         workspace_id: ID of the workspace. Using platform-defined default if omitted -
             - currently it is personal workspace.
-        config_name: name of the runtime use to communicate with Orquestra Platform.
+        config_name: name of the runtime used to communicate with Orquestra Platform.
             Required when used from a local machine. Ignored when already running on a
             remote Orquestra cluster.
 
