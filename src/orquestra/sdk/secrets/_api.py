@@ -6,6 +6,7 @@ import typing as t
 
 from .. import exceptions as sdk_exc
 from .._base import _dsl, _exec_ctx
+from ..schema.configs import ConfigName
 from ..schema.workflow_run import WorkspaceId
 from . import _auth, _exceptions, _models
 
@@ -18,18 +19,22 @@ def _translate_to_zri(workspace_id: WorkspaceId, secret_name: str) -> str:
 def get(
     name: str,
     *,
-    workspace_id: t.Optional[str] = None,
-    config_name: t.Optional[str] = None,
+    workspace_id: t.Optional[WorkspaceId] = None,
+    config_name: t.Optional[ConfigName] = None,
 ) -> str:
     """Retrieves secret value from the remote vault.
+
+    For more information about the supported config/runtime names, visit the
+    `Runtime Configuration guide
+    <https://docs.orquestra.io/docs/core/sdk/guides/runtime-configuration.html>`_.
 
     Args:
         name: secret identifier.
         workspace_id: ID of the workspace. Using platform-defined default if omitted -
             - currently it is personal workspace
-        config_name: config entry to use to communicate with Orquestra Platform.
-            Required when used from a local machine. Ignored when
-            ORQUESTRA_PASSPORT_FILE env variable is set.
+        config_name: name of the runtime used to communicate with Orquestra Platform.
+            Required when used from a local machine. Ignored when already running on a
+            remote Orquestra cluster.
 
     Raises:
         orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was
@@ -71,17 +76,21 @@ def get(
 
 def list(
     *,
-    workspace_id: t.Optional[str] = None,
-    config_name: t.Optional[str] = None,
+    workspace_id: t.Optional[WorkspaceId] = None,
+    config_name: t.Optional[ConfigName] = None,
 ) -> t.Sequence[str]:
     """Lists all secret names.
+
+    For more information about the supported config/runtime names, visit the
+    `Runtime Configuration guide
+    <https://docs.orquestra.io/docs/core/sdk/guides/runtime-configuration.html>`_.
 
     Args:
         workspace_id: ID of the workspace. Using platform-defined default if omitted -
             - currently it is personal workspace.
-        config_name: config entry to use to communicate with Orquestra Platform.
-            Required when used from a local machine.
-            Ignored when the ORQUESTRA_PASSPORT_FILE env variable is set.
+        config_name: name of the runtime used to communicate with Orquestra Platform.
+            Required when used from a local machine. Ignored when already running on a
+            remote Orquestra cluster.
 
     Raises:
         orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was
@@ -107,19 +116,23 @@ def set(
     name: str,
     value: str,
     *,
-    workspace_id: t.Optional[str] = None,
-    config_name: t.Optional[str] = None,
+    workspace_id: t.Optional[WorkspaceId] = None,
+    config_name: t.Optional[ConfigName] = None,
 ):
     """Sets secret value at the remote vault. Overwrites already existing secrets.
+
+    For more information about the supported config/runtime names, visit the
+    `Runtime Configuration guide
+    <https://docs.orquestra.io/docs/core/sdk/guides/runtime-configuration.html>`_.
 
     Args:
         name: secret identifier.
         value: new secret name.
         workspace_id: workspace in which secret will be created. Using platform-defined
             default if omitted - currently it is personal workspace.
-        config_name: config entry to use to communicate with Orquestra Platform.
-            Required when used from a local machine.
-            Ignored when the ORQUESTRA_PASSPORT_FILE env variable is set.
+        config_name: name of the runtime used to communicate with Orquestra Platform.
+            Required when used from a local machine. Ignored when already running on a
+            remote Orquestra cluster.
 
     Raises:
         orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was
@@ -151,18 +164,22 @@ def set(
 def delete(
     name: str,
     *,
-    workspace_id: t.Optional[str] = None,
-    config_name: t.Optional[str] = None,
+    workspace_id: t.Optional[WorkspaceId] = None,
+    config_name: t.Optional[ConfigName] = None,
 ):
     """Deletes secret from the remote vault.
+
+    For more information about the supported config/runtime names, visit the
+    `Runtime Configuration guide
+    <https://docs.orquestra.io/docs/core/sdk/guides/runtime-configuration.html>`_.
 
     Args:
         name: secret identifier.
         workspace_id: ID of the workspace. Using platform-defined default if omitted -
             - currently it is personal workspace.
-        config_name: config entry to use to communicate with Orquestra Platform.
-            Required when used from a local machine.
-            Ignored when the ORQUESTRA_PASSPORT_FILE env variable is set.
+        config_name: name of the runtime used to communicate with Orquestra Platform.
+            Required when used from a local machine. Ignored when already running on a
+            remote Orquestra cluster.
 
     Raises:
         orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was
