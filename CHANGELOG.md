@@ -22,6 +22,8 @@
 
 📃 *Docs*
 
+* Update _Runtime Configuration_ guide and config-related docstrings to align them with the ``auto`` config.
+
 ## v0.58.0
 
 🚨 *Breaking Changes*
