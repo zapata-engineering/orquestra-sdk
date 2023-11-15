@@ -16,13 +16,6 @@ Example:
     ORQ_CONFIG_PATH=/tmp/config.json
 """
 
-DB_PATH_ENV = "ORQ_DB_PATH"
-"""
-Used to configure the location of the `workflows.db`
-Example:
-    ORQ_DB_PATH=/tmp/workflows.db
-"""
-
 PASSPORT_FILE_ENV = "ORQUESTRA_PASSPORT_FILE"
 """
 Consumed by the Workflow SDK to set auth in remote contexts
