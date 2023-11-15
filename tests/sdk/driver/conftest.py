@@ -13,7 +13,7 @@ from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 
 
 @pytest.fixture
-def runtime(mock_workflow_db_location):
+def runtime():
     config = RuntimeConfiguration(
         config_name="hello",
         runtime_name=RuntimeName.CE_REMOTE,

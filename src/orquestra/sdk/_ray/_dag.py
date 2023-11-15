@@ -18,14 +18,12 @@ from orquestra.sdk.schema.responses import WorkflowResult
 
 from .. import exceptions
 from .._base import _dates, _services, serde
-from .._base._db import WorkflowDB
 from .._base._env import RAY_GLOBAL_WF_RUN_ID_ENV
 from .._base._logs._interfaces import LogReader
 from .._base._spaces._structs import ProjectRef
 from .._base.abc import RuntimeInterface
 from ..schema import ir
 from ..schema.configs import RuntimeConfiguration
-from ..schema.local_database import StoredWorkflowRun
 from ..schema.workflow_run import (
     RunStatus,
     State,
@@ -432,15 +430,6 @@ class RayRuntime(RuntimeInterface):
             workflow_id=wf_run_id,
             metadata=pydatic_to_json_dict(wf_user_metadata),
         )
-
-        wf_run = StoredWorkflowRun(
-            workflow_run_id=wf_run_id,
-            config_name=self._config.config_name,
-            workflow_def=workflow_def,
-            is_qe=False,
-        )
-        with WorkflowDB.open_project_db(self._project_dir) as db:
-            db.save_workflow_run(wf_run)
 
         return wf_run_id
 

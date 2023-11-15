@@ -32,7 +32,6 @@ from ...exceptions import (
 )
 from ...schema import ir
 from ...schema.configs import ConfigName
-from ...schema.local_database import StoredWorkflowRun
 from ...schema.responses import WorkflowResult
 from ...schema.workflow_run import ProjectId, State
 from ...schema.workflow_run import TaskRun as TaskRunModel
@@ -59,28 +58,6 @@ class WorkflowRun:
 
     Used to get the workflow results.
     """
-
-    @staticmethod
-    def _get_stored_run(_project_dir: Path, run_id: WorkflowRunId) -> StoredWorkflowRun:
-        """Get the run details from the database.
-
-        Extracted from by_id method to mock it in unit tests.
-
-        Args:
-            _project_dir: The location of the project directory.
-            run_id: The ID of the workflow run to be loaded.
-
-        Raises:
-            orquestra.sdk.exceptions.WorkflowNotFoundError: raised when no matching
-                workflow exists in the database.
-        """
-        from orquestra.sdk._base._db import WorkflowDB
-
-        try:
-            with WorkflowDB.open_project_db(_project_dir) as db:
-                return db.get_workflow_run(run_id)
-        except WorkflowRunNotFoundError:
-            raise
 
     @classmethod
     def by_id(
