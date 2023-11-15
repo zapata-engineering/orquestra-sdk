@@ -3,14 +3,11 @@
 ################################################################################
 """Pytest's requirement to share fixtures across test files.
 """
-import sqlite3
-from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
 
 import orquestra.sdk._base._config
-from orquestra.sdk._base import _db
 
 
 @pytest.fixture
@@ -35,6 +32,7 @@ def patch_config_name_generation(monkeypatch):
         Mock(return_value=patched_name),
     )
     return patched_name
+
 
 @pytest.fixture
 def patch_runtime_option_validation(monkeypatch):
