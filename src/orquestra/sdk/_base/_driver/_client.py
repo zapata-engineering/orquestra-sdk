@@ -10,6 +10,7 @@ Implemented API spec:
 import io
 import re
 import zlib
+from datetime import timedelta
 from tarfile import TarFile
 from typing import Generic, List, Mapping, Optional, Tuple, TypeVar, Union
 from urllib.parse import urljoin
@@ -23,6 +24,7 @@ from orquestra.sdk._base._spaces._api import make_workspace_zri
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
+    State,
     WorkflowRun,
     WorkflowRunMinimal,
     WorkflowRunSummary,
@@ -101,6 +103,28 @@ def _handle_common_errors(response: requests.Response):
         raise _exceptions.ForbiddenError()
     elif not response.ok:
         raise _exceptions.UnknownHTTPError(response)
+
+
+def _get_state_query(state: Optional[Union[State, List[State]]]) -> Optional[str]:
+    """Construct the state query from the required states.
+
+    Uses the following heuristic:
+    - state is None - no state filtering to be done, returns None
+    - single state arg - return the state value.
+    - multiple states - return a comma-separated list of state values.
+
+    Args:
+        state: The required state filters.
+
+    Returns:
+        str: The constructed query that can be passed as the state parameter to
+            ListWorkflowRunsRequest.
+    """
+    if state is None:
+        return None
+    if isinstance(state, list):
+        return ",".join([st.value for st in state])
+    return state.value
 
 
 T = TypeVar("T")
@@ -506,6 +530,8 @@ class DriverClient:
         page_size: Optional[int] = None,
         page_token: Optional[str] = None,
         workspace: Optional[WorkspaceId] = None,
+        max_age: Optional[timedelta] = None,
+        state: Optional[Union[State, List[State]]] = None,
     ) -> Paginated[WorkflowRunMinimal]:
         """List workflow runs with a specified workflow def ID from the workflow driver.
 
@@ -517,6 +543,8 @@ class DriverClient:
                 If omitted the first page will be returned.
             workspace: Only list workflow runs in the specified workspace. If omitted,
                 workflow runs from all workspaces will be returned.
+            max_age: Only list workflows younger than the specified age.
+            state: Only list workflows in the specified state(s).
 
         Raises:
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
@@ -532,6 +560,8 @@ class DriverClient:
                 page_size,
                 page_token,
                 workspace,
+                max_age,
+                state,
             )
         except (
             _exceptions.InvalidTokenError,
@@ -565,6 +595,8 @@ class DriverClient:
         page_size: Optional[int] = None,
         page_token: Optional[str] = None,
         workspace: Optional[WorkspaceId] = None,
+        max_age: Optional[timedelta] = None,
+        state: Optional[Union[State, List[State]]] = None,
     ) -> Paginated[WorkflowRunSummary]:
         """List workflow runs summaries with a specified workflow def ID.
 
@@ -576,6 +608,8 @@ class DriverClient:
                 If omitted the first page will be returned.
             workspace: Only list workflow runs in the specified workspace. If omitted,
                 workflow runs from all workspaces will be returned.
+            max_age: Only list workflows younger than the specified age.
+            state: Only list workflows in the specified state(s).
 
         Raises:
             orquestra.sdk._base._driver._exceptions.InvalidTokenError: when the
@@ -591,6 +625,8 @@ class DriverClient:
                 page_size,
                 page_token,
                 workspace,
+                max_age,
+                state,
             )
         except (
             _exceptions.InvalidTokenError,
@@ -623,6 +659,8 @@ class DriverClient:
         page_size: Optional[int] = None,
         page_token: Optional[str] = None,
         workspace: Optional[WorkspaceId] = None,
+        max_age: Optional[timedelta] = None,
+        state: Optional[Union[State, List[State]]] = None,
     ):
         """Get a list of wf runs from the workflow driver.
 
@@ -639,6 +677,8 @@ class DriverClient:
                 If omitted the first page will be returned.
             workspace: Only list workflow runs in the specified workspace. If omitted,
                 workflow runs from all workspaces will be returned.
+            max_age: Only list workflows younger than the specified age.
+            state: Only list workflows in the specified state(s).
 
 
         Raises:
@@ -658,6 +698,8 @@ class DriverClient:
                 pageSize=page_size,
                 pageToken=page_token,
                 workspaceId=workspace,
+                maxAge=(int(max_age.total_seconds()) if max_age else None),
+                state=_get_state_query(state),
             ).dict(),
         )
 

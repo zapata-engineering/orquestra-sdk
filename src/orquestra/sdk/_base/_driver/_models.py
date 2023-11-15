@@ -309,7 +309,7 @@ class CreateWorkflowRunResponse(pydantic.BaseModel):
 class ListWorkflowRunsRequest(pydantic.BaseModel):
     """
     Implements:
-    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-runs.yaml#L9.
+    https://github.com/zapatacomputing/workflow-driver/blob/c52013c0f4df066159fc32ad38d489b3eaff5850/openapi/src/resources/workflow-runs.yaml#L14.
     """  # noqa: D205, D212
 
     workflowDefinitionID: Optional[WorkflowDefID]
@@ -317,6 +317,8 @@ class ListWorkflowRunsRequest(pydantic.BaseModel):
     pageToken: Optional[str]
     workspaceId: Optional[WorkspaceId]
     projectId: Optional[ProjectId]
+    maxAge: Optional[int]
+    state: Optional[str]
 
 
 ListWorkflowRunsResponse = List[MinimalWorkflowRunResponse]

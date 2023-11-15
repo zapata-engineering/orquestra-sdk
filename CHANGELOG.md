@@ -6,6 +6,8 @@
 
 🔥 *Features*
 
+* Listing workflow runs on CE now supports filtering by state and max age.
+
 🧟 *Deprecations*
 
 👩‍🔬 *Experimental*

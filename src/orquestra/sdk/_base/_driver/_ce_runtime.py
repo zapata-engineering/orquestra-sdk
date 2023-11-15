@@ -2,7 +2,6 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 """RuntimeInterface implementation that uses Compute Engine."""
-import warnings
 from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Protocol, Sequence, Union
@@ -41,6 +40,8 @@ class PaginatedListFunc(Protocol):
         page_size: Optional[int] = None,
         page_token: Optional[str] = None,
         workspace: Optional[WorkspaceId] = None,
+        max_age: Optional[timedelta] = None,
+        state: Optional[Union[State, List[State]]] = None,
     ) -> _client.Paginated:
         ...
 
@@ -441,12 +442,6 @@ class CERuntime(RuntimeInterface):
             A list of workflow runs, expressed either as WorkflowRun or
                 WorkflowRunSummary objects.
         """
-        if max_age or state:
-            warnings.warn(
-                "Filtering CE workflow runs by max age and/or state is not currently "
-                "supported. These filters will not be applied."
-            )
-
         # Calculate how many pages of what sizes we need.
         # The max_page_size should be the same as the maximum defined in
         # https://github.com/zapatacomputing/workflow-driver/blob/fc3964d37e05d9421029fe28fa844699e2f99a52/openapi/src/parameters/query/pageSize.yaml#L10 # noqa: E501
@@ -465,12 +460,12 @@ class CERuntime(RuntimeInterface):
 
         for page_size in page_sizes:
             try:
-                # TODO(ORQSDK-684): driver client cannot do filtering via API yet
-                # https://zapatacomputing.atlassian.net/browse/ORQSDK-684?atlOrigin=eyJpIjoiYmNiZjUyMjZiNzg5NDI2YWJmNGU5NzAxZDI1MmJlNzEiLCJwIjoiaiJ9 # noqa: E501
                 paginated_runs = func(
                     page_size=page_size,
                     page_token=page_token,
                     workspace=workspace,
+                    max_age=max_age,
+                    state=state,
                 )
             except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
                 raise exceptions.UnauthorizedError(
