@@ -46,9 +46,7 @@ class TestRunningLocalInBackground:
 
     class TestTwoStepForm:
         @staticmethod
-        def test_single_run(
-            patch_config_location, ray, monkeypatch, tmp_path, mock_workflow_db_location
-        ):
+        def test_single_run(patch_config_location, ray, monkeypatch, tmp_path):
             monkeypatch.setattr(Path, "cwd", Mock(return_value=tmp_path))
 
             run = wf_pass_tuple().run(sdk.RuntimeConfig.ray())
@@ -59,9 +57,7 @@ class TestRunningLocalInBackground:
 
     class TestStartFromIR:
         @staticmethod
-        def test_single_run(
-            patch_config_location, ray, monkeypatch, tmp_path, mock_workflow_db_location
-        ):
+        def test_single_run(patch_config_location, ray, monkeypatch, tmp_path):
             monkeypatch.setattr(Path, "cwd", Mock(return_value=tmp_path))
             run = sdk.WorkflowRun.start_from_ir(
                 wf_pass_tuple().model, sdk.RuntimeConfig.ray()
@@ -78,7 +74,6 @@ class TestRunningLocalInBackground:
             ray,
             tmp_path,
             monkeypatch,
-            mock_workflow_db_location,
         ):
             # GIVEN
             monkeypatch.setattr(Path, "cwd", Mock(return_value=tmp_path))

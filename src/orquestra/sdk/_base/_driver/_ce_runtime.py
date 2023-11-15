@@ -8,7 +8,6 @@ from typing import Dict, List, Optional, Protocol, Sequence, Union
 
 from orquestra.sdk import Project, ProjectRef, Workspace, exceptions
 from orquestra.sdk._base import _retry, serde
-from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base._logs import _regrouping
 from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk._base._logs._models import LogAccumulator, LogStreamType
@@ -16,7 +15,6 @@ from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.kubernetes.quantity import parse_quantity
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import ArtifactFormat, TaskInvocationId, WorkflowDef
-from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
 from orquestra.sdk.schema.workflow_run import (
     State,
@@ -203,15 +201,6 @@ class CERuntime(RuntimeInterface):
                 "- the authorization token was rejected by the remote cluster."
             ) from e
 
-        with WorkflowDB.open_db() as db:
-            db.save_workflow_run(
-                StoredWorkflowRun(
-                    workflow_run_id=workflow_run_id,
-                    config_name=self._config.config_name,
-                    workflow_def=workflow_def,
-                    is_qe=False,
-                )
-            )
         return workflow_run_id
 
     def get_workflow_run_status(self, workflow_run_id: WorkflowRunId) -> WorkflowRun:

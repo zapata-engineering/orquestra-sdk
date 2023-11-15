@@ -3,14 +3,11 @@
 ################################################################################
 """Pytest's requirement to share fixtures across test files.
 """
-import sqlite3
-from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
 
 import orquestra.sdk._base._config
-from orquestra.sdk._base import _db
 
 
 @pytest.fixture
@@ -35,34 +32,6 @@ def patch_config_name_generation(monkeypatch):
         Mock(return_value=patched_name),
     )
     return patched_name
-
-
-@pytest.fixture
-def mock_workflow_db_location(tmp_path, monkeypatch):
-    """Set up a realistic Orquestra workflow database under a temporary path, and mocks
-    `WorkflowDB.open_db()` to return the temporary database rather than the real one.
-    """
-    mock_db_location = tmp_path / "workflows.db"
-    monkeypatch.setattr(
-        _db._db,
-        "_get_default_db_location",
-        lambda: mock_db_location,
-    )
-    return mock_db_location
-
-
-@pytest.fixture
-def mock_project_workflow_db(tmp_path: Path):
-    """Set up a realistic Orquestra workflow database under a temporary path, and mocks
-    `WorkflowDB.open_db()` to return the temporary database rather than the real one.
-    """
-
-    db_path = tmp_path / ".orquestra" / "workflows.db"
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-    db = sqlite3.connect(db_path, isolation_level="EXCLUSIVE")
-    with db:
-        _db._db._create_workflow_table(db)
-    return _db.WorkflowDB(db)
 
 
 @pytest.fixture

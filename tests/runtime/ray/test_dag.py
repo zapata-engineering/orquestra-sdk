@@ -17,10 +17,8 @@ from orquestra.sdk._base._config import (
     LOCAL_RUNTIME_CONFIGURATION,
     RuntimeConfiguration,
 )
-from orquestra.sdk._base._db import WorkflowDB
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._ray import _client, _dag, _ray_logs
-from orquestra.sdk.schema.local_database import StoredWorkflowRun
 from orquestra.sdk.schema.workflow_run import State
 
 TEST_TIME = _dates.now()
@@ -344,8 +342,6 @@ class TestRayRuntime:
             monkeypatch.setattr(_dag, "make_ray_dag", Mock())
             monkeypatch.setattr(_dag, "WfUserMetadata", Mock())
             monkeypatch.setattr(_dag, "pydatic_to_json_dict", Mock())
-            monkeypatch.setattr(StoredWorkflowRun, "__init__", lambda *_, **__: None)
-            monkeypatch.setattr(WorkflowDB, "save_workflow_run", Mock())
 
             runtime = _dag.RayRuntime(
                 client=client,

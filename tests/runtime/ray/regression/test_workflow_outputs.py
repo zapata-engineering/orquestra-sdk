@@ -34,7 +34,10 @@ class TestOutputs:
             yield ray_params
 
     @pytest.fixture(scope="class")
-    def runtime(self, tmp_path_factory: pytest.TempPathFactory, change_db_location):
+    def runtime(
+        self,
+        tmp_path_factory: pytest.TempPathFactory,
+    ):
         project_dir = tmp_path_factory.mktemp("ray-regression")
         config = LOCAL_RUNTIME_CONFIGURATION
         client = _client.RayClient()

@@ -29,7 +29,6 @@ import sys
 import tempfile
 import typing as t
 from pathlib import Path
-from unittest import mock
 
 import pytest
 import pytest_httpserver
@@ -320,12 +319,6 @@ def orq_project_dir_multiple():
         shutil.rmtree(tmp_path)
 
 
-@pytest.fixture
-def mock_db_env_var(tmp_path):
-    with mock.patch.dict(os.environ, {"ORQ_DB_PATH": str(tmp_path / "workflows.db")}):
-        yield
-
-
 @pytest.fixture(scope="module")
 def single_result_vanilla():
     return wf_return_single_packed_value_vanilla()
@@ -342,7 +335,6 @@ def multiple_result_vanilla():
 @pytest.mark.usefixtures(
     "ray",
     "mock_config_env_var",
-    "mock_db_env_var",
 )
 @pytest.mark.filterwarnings("ignore::FutureWarning")
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
@@ -434,7 +426,6 @@ class TestAPI:
 @pytest.mark.usefixtures(
     "ray",
     "mock_config_env_var",
-    "mock_db_env_var",
 )
 @pytest.mark.skipif(
     sys.platform.startswith("win32"),
@@ -564,7 +555,6 @@ class TestCLI:
 @pytest.mark.usefixtures(
     "ray",
     "mock_config_env_var",
-    "mock_db_env_var",
 )
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.slow

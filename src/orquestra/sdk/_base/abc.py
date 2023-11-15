@@ -15,7 +15,6 @@ from datetime import timedelta
 
 from ..exceptions import WorkspacesNotSupportedError
 from ..schema.ir import TaskInvocationId, WorkflowDef
-from ..schema.local_database import StoredWorkflowRun
 from ..schema.responses import WorkflowResult
 from ..schema.workflow_run import (
     State,
@@ -204,38 +203,4 @@ class RuntimeInterface(ABC, LogReader):
 
     @abstractmethod
     def get_workflow_logs(self, wf_run_id: WorkflowRunId) -> WorkflowLogs:
-        raise NotImplementedError()
-
-
-class WorkflowRepo(ABC):
-    """This is the interface for accessing workflow runs that have been submitted.
-
-    The results and status is still delegated to the Runtime.
-    """
-
-    @abstractmethod
-    def save_workflow_run(self, workflow_run: StoredWorkflowRun):
-        """Save a workflow run.
-
-        Arguments:
-            workflow_run: the workflow run with run ID, stored config, and WorkflowDef.
-
-        Raises:
-            RuntimeError: if the workflow ID has already been used.
-        """
-        raise NotImplementedError()
-
-    @abstractmethod
-    def get_workflow_run(self, workflow_run_id: WorkflowRunId) -> StoredWorkflowRun:
-        """Retrieve a workflow run based on ID.
-
-        Arguments:
-            workflow_run_id: the run ID to load.
-
-        Raises:
-            NotFoundError: if the workflow run is not found.
-
-        Returns:
-            the workflow run with run ID, stored config, and WorkflowDef.
-        """
         raise NotImplementedError()
