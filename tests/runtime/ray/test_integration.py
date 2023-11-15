@@ -38,7 +38,8 @@ pytestmark = pytest.mark.filterwarnings(
 
 @pytest.fixture(scope="module")
 def runtime(
-    shared_ray_conn, tmp_path_factory: pytest.TempPathFactory, change_db_location
+    shared_ray_conn,
+    tmp_path_factory: pytest.TempPathFactory,
 ):
     # We need to set this env variable to let our logging code know the
     # tmp location has changed.

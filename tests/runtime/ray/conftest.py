@@ -20,10 +20,3 @@ def change_test_dir(tmp_path_factory, request):
 def shared_ray_conn():
     with _connections.make_ray_conn() as ray_params:
         yield ray_params
-
-
-@pytest.fixture(scope="module")
-def change_db_location(change_test_dir):
-    os.environ["ORQ_DB_LOCATION"] = os.path.join(change_test_dir, "db.db")
-    yield
-    del os.environ["ORQ_DB_LOCATION"]
