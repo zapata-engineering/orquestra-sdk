@@ -677,7 +677,7 @@ def list_workflow_run_summaries(
         NotImplementedError: when a filter is specified for a runtime that does not
             support it.
     """
-    project = _handle_common_listing_project_errors(project, workspace)
+    _handle_common_listing_project_errors(project, workspace)
     workspace = resolve_studio_workspace_ref(workspace_id=workspace)
 
     # Resolve config
@@ -687,7 +687,7 @@ def list_workflow_run_summaries(
         raise
 
     # resolve runtime
-    runtime = resolved_config._get_runtime(Path.cwd())
+    runtime = resolved_config._get_runtime()
 
     # Grab the workflow summaries from the runtime.
     with warnings.catch_warnings():
