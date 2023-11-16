@@ -2,7 +2,6 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 
-from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -20,7 +19,7 @@ def runtime():
         runtime_options={"uri": "http://localhost", "token": "blah"},
     )
 
-    return build_runtime_from_config(project_dir=Path.cwd(), config=config)
+    return build_runtime_from_config(config=config)
 
 
 @pytest.fixture
@@ -33,9 +32,7 @@ def runtime_verbose(tmp_path):
         runtime_options={"uri": "http://localhost", "token": "blah"},
     )
     # Return a runtime object
-    return build_runtime_from_config(
-        project_dir=Path.cwd(), config=config, verbose=True
-    )
+    return build_runtime_from_config(config=config, verbose=True)
 
 
 @pytest.fixture
