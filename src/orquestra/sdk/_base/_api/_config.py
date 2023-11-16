@@ -46,7 +46,7 @@ class RuntimeConfig:
     def __init__(
         self,
         runtime_name: str,
-        name: t.Optional[str] = None,
+        name: str,
         bypass_factory_methods=False,
     ):
         if not bypass_factory_methods:
@@ -58,7 +58,7 @@ class RuntimeConfig:
                 "`RuntimeConfig.ce()` for Compute Engine. \n"
             )
 
-        self._name = name
+        self._name: str = name
         try:
             self._runtime_name: RuntimeName = RuntimeName(runtime_name)
         except ValueError as e:
@@ -96,7 +96,7 @@ class RuntimeConfig:
         )
 
     @property
-    def name(self) -> t.Optional[str]:
+    def name(self) -> str:
         return self._name
 
     def _get_runtime_options(self) -> dict:
@@ -195,7 +195,7 @@ class RuntimeConfig:
                 continue
 
         runtime_configuration = RuntimeConfiguration(
-            config_name=str(self._name),
+            config_name=self._name,
             runtime_name=self._runtime_name,
             runtime_options=runtime_options,
         )
@@ -339,10 +339,6 @@ class RuntimeConfig:
                 "This runtime configuration does not require an authorization token. "
                 "Nothing has been saved."
             )
-
-        assert (
-            self._name is not None
-        ), "We have a save location but not a name for this configuration. "
 
         old_config = self._config_from_runtimeconfiguration(
             _config.read_config(self._name)

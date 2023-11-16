@@ -83,9 +83,6 @@ class WorkflowRunRepo:
             "Workflow run without a config. It's only possible for in-process "
             "runtime. However, it should never be a result of using by_id()"
         )
-        assert (
-            run.config.name is not None
-        ), "Config without a name. This shouldn't happen in normal circumstances"
         return run.config.name
 
     def list_wf_run_summaries(
