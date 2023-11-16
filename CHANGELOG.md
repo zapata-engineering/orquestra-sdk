@@ -20,6 +20,8 @@
 
 🥷 *Internal*
 
+* Change `RuntimeConfig._name` typing from `Optional[str]` to `str`
+
 📃 *Docs*
 
 * Update _Runtime Configuration_ guide and config-related docstrings to align them with the ``auto`` config.
