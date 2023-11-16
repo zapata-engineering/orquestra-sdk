@@ -9,6 +9,7 @@
 * Listing workflow runs on CE now supports filtering by state and max age.
 
 🧟 *Deprecations*
+* Deprecation of `project_dir` argument for all public API functions.
 
 👩‍🔬 *Experimental*
 
