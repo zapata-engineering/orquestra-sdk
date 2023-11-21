@@ -280,7 +280,6 @@ class TestRayRuntime:
                 rt = _dag.RayRuntime(
                     client=Mock(),
                     config=runtime_config,
-                    project_dir=tmp_path,
                 )
 
                 logs_dict = {"inv_id1": ["Hello, there!", "General Kenobi!"]}
@@ -314,7 +313,6 @@ class TestRayRuntime:
                 rt = _dag.RayRuntime(
                     client=Mock(),
                     config=runtime_config,
-                    project_dir=tmp_path,
                 )
 
                 logs_list = ["hello", "there!"]
@@ -346,7 +344,6 @@ class TestRayRuntime:
             runtime = _dag.RayRuntime(
                 client=client,
                 config=runtime_config,
-                project_dir=tmp_path,
             )
             with pytest.warns(expected_warning=exceptions.UnsupportedRuntimeFeature):
                 runtime.create_workflow_run(
@@ -364,7 +361,6 @@ class TestRayRuntime:
             runtime = _dag.RayRuntime(
                 client=client,
                 config=runtime_config,
-                project_dir=tmp_path,
             )
             mock_status = Mock()
             monkeypatch.setattr(
@@ -384,7 +380,6 @@ class TestRayRuntime:
             runtime = _dag.RayRuntime(
                 client=client,
                 config=runtime_config,
-                project_dir=tmp_path,
             )
             monkeypatch.setattr(
                 runtime,
@@ -404,7 +399,6 @@ class TestRayRuntime:
             runtime = _dag.RayRuntime(
                 client=client,
                 config=runtime_config,
-                project_dir=tmp_path,
             )
             # Given
             mock_status = Mock()
@@ -432,7 +426,6 @@ class TestRayRuntime:
             runtime = _dag.RayRuntime(
                 client=client,
                 config=runtime_config,
-                project_dir=tmp_path,
             )
             # Given
             mock_status = Mock()
@@ -460,7 +453,6 @@ class TestRayRuntime:
             runtime = _dag.RayRuntime(
                 client=client,
                 config=runtime_config,
-                project_dir=tmp_path,
             )
             mock_status = Mock()
             type(mock_status.status).start_time = PropertyMock(
@@ -487,7 +479,6 @@ class TestRayRuntime:
             runtime = _dag.RayRuntime(
                 client=client,
                 config=runtime_config,
-                project_dir=tmp_path,
             )
             mock_status = Mock()
             type(mock_status.status).start_time = PropertyMock(

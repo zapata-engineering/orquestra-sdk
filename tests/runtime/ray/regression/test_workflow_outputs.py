@@ -36,12 +36,10 @@ class TestOutputs:
     @pytest.fixture(scope="class")
     def runtime(
         self,
-        tmp_path_factory: pytest.TempPathFactory,
     ):
-        project_dir = tmp_path_factory.mktemp("ray-regression")
         config = LOCAL_RUNTIME_CONFIGURATION
         client = _client.RayClient()
-        rt = _dag.RayRuntime(config, project_dir, client)
+        rt = _dag.RayRuntime(config, client)
         yield rt
 
     @pytest.mark.parametrize(

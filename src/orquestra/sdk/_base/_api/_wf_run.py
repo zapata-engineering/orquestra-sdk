@@ -73,9 +73,7 @@ class WorkflowRun:
             config: Determines where to look for the workflow run record. If omitted,
                 we will retrieve the config name from a local cache of workflow runs
                 submitted from this machine.
-            project_dir: The location of the project directory. This directory must
-                contain the workflows database to which this run was saved. If omitted,
-                the current working directory is assumed to be the project directory.
+            project_dir: DEPRECATED
 
         Raises:
             orquestra.sdk.exceptions.RuntimeQuerySummaryError: when ``config``
@@ -91,7 +89,11 @@ class WorkflowRun:
             orquestra.sdk.exceptions.ConfigNameNotFoundError: when there's no
                 corresponding config entry in the config file.
         """
-        _project_dir = Path(project_dir or Path.cwd())
+        if project_dir:
+            warnings.warn(
+                "project_dir argument is deprecated and will be removed"
+                "in upcoming versions of orquestra-sdk"
+            )
 
         # Resolve config
         resolved_config: RuntimeConfig
@@ -100,7 +102,6 @@ class WorkflowRun:
             try:
                 resolved_config = _find_config_for_workflow(
                     wf_run_id=run_id,
-                    project_dir=_project_dir,
                 )
             except (
                 RuntimeQuerySummaryError,
@@ -115,7 +116,7 @@ class WorkflowRun:
         # - Ray stores wf def for us under a metadata entry.
         # - CE will have endpoints for getting [wf def] by [wf run ID]. See:
         #   https://zapatacomputing.atlassian.net/browse/ORQP-1317
-        runtime = resolved_config._get_runtime(_project_dir)
+        runtime = resolved_config._get_runtime()
         try:
             wf_run_model = runtime.get_workflow_run_status(run_id)
         except (UnauthorizedError, WorkflowRunNotFoundError):
@@ -151,12 +152,17 @@ class WorkflowRun:
             project_id: ID of the project for workflow - supported only on CE
             dry_run: Run the workflow without actually executing any task code.
                 Useful for testing infrastructure, dependency imports, etc.
-            project_dir: the path to the project directory. If omitted, the current
-                working directory is used.
+            project_dir: DEPRECATED
         """
+        if project_dir:
+            warnings.warn(
+                "project_dir argument is deprecated and will be removed"
+                "in upcoming versions of orquestra-sdk"
+            )
+
         _config = resolve_config(config)
 
-        runtime = _config._get_runtime(project_dir)
+        runtime = _config._get_runtime()
 
         assert runtime is not None
 
@@ -588,9 +594,7 @@ def _handle_common_listing_project_errors(
     return None
 
 
-def _find_config_for_workflow(
-    wf_run_id: WorkflowRunId, project_dir: Path
-) -> RuntimeConfig:
+def _find_config_for_workflow(wf_run_id: WorkflowRunId) -> RuntimeConfig:
     not_found_configs: t.List[RuntimeConfig] = []
     unauthorized_configs: t.List[RuntimeConfig] = []
     not_running_configs: t.List[RuntimeConfig] = []
@@ -599,7 +603,7 @@ def _find_config_for_workflow(
     for config_name in config_names:
         config_obj = RuntimeConfig.load(config_name)
         try:
-            runtime = config_obj._get_runtime(project_dir)
+            runtime = config_obj._get_runtime()
         except RayNotRunningError:
             # Ray connection is set up in `RayRuntime.__init__()`. We'll get the
             # exception when runtime object is created.
@@ -673,7 +677,7 @@ def list_workflow_run_summaries(
         NotImplementedError: when a filter is specified for a runtime that does not
             support it.
     """
-    project = _handle_common_listing_project_errors(project, workspace)
+    _handle_common_listing_project_errors(project, workspace)
     workspace = resolve_studio_workspace_ref(workspace_id=workspace)
 
     # Resolve config
@@ -683,7 +687,7 @@ def list_workflow_run_summaries(
         raise
 
     # resolve runtime
-    runtime = resolved_config._get_runtime(Path.cwd())
+    runtime = resolved_config._get_runtime()
 
     # Grab the workflow summaries from the runtime.
     with warnings.catch_warnings():
@@ -726,11 +730,7 @@ def list_workflow_runs(
         limit: Restrict the number of runs to return, prioritising the most recent.
         max_age: Only return runs younger than the specified maximum age.
         state: Only return runs of runs with the specified status.
-        project_dir: The location of the project directory.
-            This directory must contain the workflows database to which this run was
-            saved.
-            If omitted, the current working directory is assumed to be the project
-            directory.
+        project_dir: DEPRECATED
         workspace: Only return runs from the specified workspace when using CE.
         project: will be used to list workflows from specific workspace and project
             when using CE.
@@ -745,10 +745,14 @@ def list_workflow_runs(
     """
     # TODO: update docstring when platform workspace/project filtering is merged [ORQP-1479](https://zapatacomputing.atlassian.net/browse/ORQP-1479?atlOrigin=eyJpIjoiZWExMWI4MDUzYTI0NDQ0ZDg2ZTBlNzgyNjE3Njc4MDgiLCJwIjoiaiJ9) # noqa: E501
 
-    project = _handle_common_listing_project_errors(project, workspace)
-    workspace = resolve_studio_workspace_ref(workspace_id=workspace)
+    if project_dir:
+        warnings.warn(
+            "project_dir argument is deprecated and will be removed"
+            "in upcoming versions of orquestra-sdk"
+        )
 
-    _project_dir = Path(project_dir or Path.cwd())
+    _handle_common_listing_project_errors(project, workspace)
+    workspace = resolve_studio_workspace_ref(workspace_id=workspace)
 
     # Resolve config
     try:
@@ -758,7 +762,7 @@ def list_workflow_runs(
     # If user wasn't specific with workspace and project, we might want to resolve it
 
     # resolve runtime
-    runtime = resolved_config._get_runtime(_project_dir)
+    runtime = resolved_config._get_runtime()
 
     # Grab the "workflow runs" from the runtime.
     # Note: WorkflowRun means something else in runtime land. To avoid overloading, this

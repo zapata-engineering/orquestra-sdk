@@ -39,17 +39,15 @@ pytestmark = pytest.mark.filterwarnings(
 @pytest.fixture(scope="module")
 def runtime(
     shared_ray_conn,
-    tmp_path_factory: pytest.TempPathFactory,
 ):
     # We need to set this env variable to let our logging code know the
     # tmp location has changed.
     old_env = os.getenv(RAY_TEMP_PATH_ENV)
     os.environ[RAY_TEMP_PATH_ENV] = str(shared_ray_conn._temp_dir)
 
-    project_dir = tmp_path_factory.mktemp("ray-integration")
     config = LOCAL_RUNTIME_CONFIGURATION
     client = _client.RayClient()
-    rt = _dag.RayRuntime(config, project_dir, client)
+    rt = _dag.RayRuntime(config, client)
 
     yield rt
 

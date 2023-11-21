@@ -9,6 +9,7 @@
 * Listing workflow runs on CE now supports filtering by state and max age.
 
 🧟 *Deprecations*
+* Deprecation of `project_dir` argument for all public API functions.
 
 👩‍🔬 *Experimental*
 
@@ -19,6 +20,7 @@
 * When the user doesn't pass `config` directly to `sdk.WorkflowRun.by_id(run_id="...")` and `orq` commands, the SDK will query all known runtimes about this workflow run. This change improves accessing workflow runs submitted by other users.
 
 🥷 *Internal*
+* Remove unused `_db` code
 
 * Change `RuntimeConfig._name` typing from `Optional[str]` to `str`
 

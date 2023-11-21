@@ -244,7 +244,7 @@ class TestWorkflowRun:
 
                 # Set up runtime
                 runtime = Mock()
-                setattr(config, "_get_runtime", lambda _: runtime)
+                setattr(config, "_get_runtime", lambda: runtime)
                 wf_def = "<wf def sentinel>"
                 runtime.get_workflow_run_status().workflow_def = wf_def
 
@@ -281,7 +281,7 @@ class TestWorkflowRun:
 
                 # Set up runtime
                 runtime = Mock()
-                setattr(config_obj, "_get_runtime", lambda _: runtime)
+                setattr(config_obj, "_get_runtime", lambda: runtime)
                 wf_def = "<wf def sentinel>"
                 runtime.get_workflow_run_status().workflow_def = wf_def
 
@@ -337,9 +337,7 @@ class TestWorkflowRun:
 
                         # Set up runtime
                         runtime = create_autospec(RuntimeInterface)
-                        monkeypatch.setattr(
-                            config_obj, "_get_runtime", lambda _: runtime
-                        )
+                        monkeypatch.setattr(config_obj, "_get_runtime", lambda: runtime)
                         wf_def = sentinel.wf_def
                         runtime.get_workflow_run_status(run_id).workflow_def = wf_def
 
@@ -381,8 +379,8 @@ class TestWorkflowRun:
                         # Set up runtimes
                         runtime1 = create_autospec(RuntimeInterface)
                         runtime2 = create_autospec(RuntimeInterface)
-                        monkeypatch.setattr(config1, "_get_runtime", lambda _: runtime1)
-                        monkeypatch.setattr(config2, "_get_runtime", lambda _: runtime2)
+                        monkeypatch.setattr(config1, "_get_runtime", lambda: runtime1)
+                        monkeypatch.setattr(config2, "_get_runtime", lambda: runtime2)
 
                         wf_def = sentinel.wf_def
 
@@ -435,7 +433,7 @@ class TestWorkflowRun:
                             "_get_runtime",
                             Mock(side_effect=RayNotRunningError),
                         )
-                        monkeypatch.setattr(config2, "_get_runtime", lambda _: runtime2)
+                        monkeypatch.setattr(config2, "_get_runtime", lambda: runtime2)
 
                         wf_def = sentinel.wf_def
 
@@ -491,8 +489,8 @@ class TestWorkflowRun:
 
                         runtime2 = create_autospec(RuntimeInterface)
                         runtime3 = create_autospec(RuntimeInterface)
-                        monkeypatch.setattr(config2, "_get_runtime", lambda _: runtime2)
-                        monkeypatch.setattr(config3, "_get_runtime", lambda _: runtime3)
+                        monkeypatch.setattr(config2, "_get_runtime", lambda: runtime2)
+                        monkeypatch.setattr(config3, "_get_runtime", lambda: runtime3)
 
                         wf_def = sentinel.wf_def
 
@@ -577,9 +575,7 @@ class TestWorkflowRun:
 
                         # Set up runtimes
                         runtime = create_autospec(RuntimeInterface)
-                        monkeypatch.setattr(
-                            config_obj, "_get_runtime", lambda _: runtime
-                        )
+                        monkeypatch.setattr(config_obj, "_get_runtime", lambda: runtime)
 
                         runtime.get_workflow_run_status.side_effect = (
                             WorkflowRunNotFoundError
@@ -625,8 +621,8 @@ class TestWorkflowRun:
                         runtime1 = create_autospec(RuntimeInterface)
                         runtime2 = create_autospec(RuntimeInterface)
 
-                        monkeypatch.setattr(config1, "_get_runtime", lambda _: runtime1)
-                        monkeypatch.setattr(config2, "_get_runtime", lambda _: runtime2)
+                        monkeypatch.setattr(config1, "_get_runtime", lambda: runtime1)
+                        monkeypatch.setattr(config2, "_get_runtime", lambda: runtime2)
 
                         runtime1.get_workflow_run_status.side_effect = (
                             WorkflowRunNotFoundError

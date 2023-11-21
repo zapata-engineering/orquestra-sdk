@@ -12,7 +12,6 @@ import re
 import typing as t
 import warnings
 from datetime import timedelta
-from pathlib import Path
 
 from orquestra.sdk.schema.responses import WorkflowResult
 
@@ -316,7 +315,6 @@ class RayRuntime(RuntimeInterface):
     def __init__(
         self,
         config: RuntimeConfiguration,
-        project_dir: Path,
         client: t.Optional[_client.RayClient] = None,
     ):
         self._client = client or _client.RayClient()
@@ -331,7 +329,6 @@ class RayRuntime(RuntimeInterface):
         self.startup(ray_params)
 
         self._config = config
-        self._project_dir = project_dir
 
         self._log_reader: LogReader = _ray_logs.DirectLogReader(
             _services.ray_temp_path()
@@ -418,7 +415,6 @@ class RayRuntime(RuntimeInterface):
             self._client,
             workflow_def=workflow_def,
             workflow_run_id=wf_run_id,
-            project_dir=self._project_dir,
             dry_run=dry_run,
         )
         wf_user_metadata = WfUserMetadata(workflow_def=workflow_def)

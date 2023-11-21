@@ -6,7 +6,6 @@ import json
 import logging
 import typing as t
 import warnings
-from pathlib import Path
 
 from packaging.version import parse as parse_version
 
@@ -174,19 +173,13 @@ class RuntimeConfig:
 
     # endregion factories
     def _get_runtime(
-        self, project_dir: t.Optional[t.Union[str, Path]] = None
+        self,
     ) -> RuntimeInterface:
         """Build the run.
-
-        Args:
-            project_dir: the path to the project directory. If omitted, the current
-                working directory is used.
 
         Returns:
             Runtime: The runtime specified by the configuration.
         """
-        _project_dir: Path = Path(project_dir or Path.cwd())
-
         runtime_options = {}
         for key in _config.RUNTIME_OPTION_NAMES:
             try:
@@ -200,9 +193,7 @@ class RuntimeConfig:
             runtime_options=runtime_options,
         )
 
-        return build_runtime_from_config(
-            project_dir=_project_dir, config=runtime_configuration
-        )
+        return build_runtime_from_config(config=runtime_configuration)
 
     # region LOADING FROM FILE
     @classmethod

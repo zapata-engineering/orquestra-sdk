@@ -2,7 +2,6 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 
-from pathlib import Path
 
 import pytest
 
@@ -43,9 +42,7 @@ class TestBuildRuntimeFromConfig:
             runtime_name=config_type,
             runtime_options=runtime_options,
         )
-        runtime = build_runtime_from_config(
-            project_dir=Path.cwd(), config=runtime_config
-        )
+        runtime = build_runtime_from_config(config=runtime_config)
         assert isinstance(runtime, expected_runtime)
 
     @pytest.mark.parametrize(
@@ -62,7 +59,7 @@ class TestBuildRuntimeFromConfig:
         )
 
         with pytest.raises(RuntimeConfigError):
-            build_runtime_from_config(project_dir=Path.cwd(), config=runtime_config)
+            build_runtime_from_config(config=runtime_config)
 
     def test_qe_removed(self):
         runtime_config = RuntimeConfiguration(
@@ -71,4 +68,4 @@ class TestBuildRuntimeFromConfig:
         )
 
         with pytest.raises(QERemoved):
-            build_runtime_from_config(project_dir=Path.cwd(), config=runtime_config)
+            build_runtime_from_config(config=runtime_config)
