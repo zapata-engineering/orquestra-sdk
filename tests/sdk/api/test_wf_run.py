@@ -238,6 +238,7 @@ class TestWorkflowRun:
                 # Set up config
                 config = _api.RuntimeConfig(
                     runtime_name=RuntimeName.IN_PROCESS,
+                    name="name",
                     bypass_factory_methods=True,
                 )
 

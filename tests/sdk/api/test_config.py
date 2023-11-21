@@ -50,7 +50,7 @@ class TestRuntimeConfiguration:
         @staticmethod
         def test_raises_value_error_if_called_directly():
             with pytest.raises(ValueError) as exc_info:
-                api_cfg.RuntimeConfig("test_runtime_name")
+                api_cfg.RuntimeConfig("test_runtime_name", "name")
             assert (
                 "Please use the appropriate factory method for your desired runtime."
                 in str(exc_info.value)
@@ -62,7 +62,9 @@ class TestRuntimeConfiguration:
         @staticmethod
         def test_raises_exception_for_invalid_config_name():
             with pytest.raises(ValueError) as exc_info:
-                api_cfg.RuntimeConfig("bad_runtime_name", bypass_factory_methods=True)
+                api_cfg.RuntimeConfig(
+                    "bad_runtime_name", "name", bypass_factory_methods=True
+                )
             for valid_name in RuntimeName:
                 assert valid_name.value in str(exc_info)
 
@@ -186,8 +188,10 @@ class TestRuntimeConfiguration:
         def test_with_essential_params_only(change_test_dir):
             with warnings.catch_warnings():
                 warnings.simplefilter("error")
-                config = api_cfg.RuntimeConfig("RAY_LOCAL", bypass_factory_methods=True)
-            assert "RuntimeConfiguration 'None' for runtime RAY_LOCAL" in str(config)
+                config = api_cfg.RuntimeConfig(
+                    "RAY_LOCAL", "NAME", bypass_factory_methods=True
+                )
+            assert "RuntimeConfiguration 'NAME' for runtime RAY_LOCAL" in str(config)
 
         @staticmethod
         def test_with_optional_params():
