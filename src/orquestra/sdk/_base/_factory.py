@@ -1,7 +1,6 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-from pathlib import Path
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base.abc import RuntimeInterface
@@ -9,7 +8,7 @@ from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 
 
 def build_runtime_from_config(
-    project_dir: Path, config: RuntimeConfiguration, verbose: bool = False
+    config: RuntimeConfiguration, verbose: bool = False
 ) -> RuntimeInterface:
     """Centralized place to get runtime object based on config.
 
@@ -24,7 +23,6 @@ def build_runtime_from_config(
         import orquestra.sdk._ray._dag
 
         return orquestra.sdk._ray._dag.RayRuntime(
-            project_dir=project_dir,
             config=config,
         )
     elif config.runtime_name == RuntimeName.IN_PROCESS:

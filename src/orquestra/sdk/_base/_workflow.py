@@ -163,8 +163,7 @@ class WorkflowDef(Generic[_R]):
             config: SDK needs to know where to execute the workflow. The config
                 contains the required details. This can be a RuntimeConfig object, or
                 the name of a saved configuration.
-            project_dir: the path to the project directory. If omitted, the current
-                working directory is used.
+            project_dir: DEPRECATED
             workspace_id: ID of the workspace for workflow - supported only on CE
             project_id: ID of the project for workflow - supported only on CE
             dry_run: Run the workflow without actually executing any task code.
@@ -177,6 +176,12 @@ class WorkflowDef(Generic[_R]):
             orquestra.sdk.exceptions.ProjectInvalidError: when only 1 out of project and
                 workspace is passed.
         """
+        if project_dir:
+            warnings.warn(
+                "project_dir argument is deprecated and will be removed"
+                "in upcoming versions of orquestra-sdk"
+            )
+
         try:
             wf_def_model = self.model
         except exceptions.DirtyGitRepo:
@@ -188,7 +193,6 @@ class WorkflowDef(Generic[_R]):
                 config=config,
                 workspace_id=workspace_id,
                 project_id=project_id,
-                project_dir=project_dir,
                 dry_run=dry_run,
             )
         except exceptions.ProjectInvalidError:

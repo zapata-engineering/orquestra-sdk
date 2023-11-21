@@ -195,7 +195,6 @@ def _make_ray_dag_node(
     ray_kwargs: t.Mapping[str, t.Any],
     args_artifact_nodes: t.Mapping,
     kwargs_artifact_nodes: t.Mapping,
-    project_dir: t.Optional[Path],
     user_fn_ref: t.Optional[ir.FunctionRef],
     output_metadata: t.Optional[ir.TaskOutputMetadata],
     dry_run: bool,
@@ -213,7 +212,6 @@ def _make_ray_dag_node(
             see ArgumentUnwrapper.
         kwargs_artifact_nodes: a map of keyword arg name to artifact node
             see ArgumentUnwrapper.
-        project_dir: the working directory the workflow was submitted from.
         user_fn_ref: function reference for a function to be executed by Ray.
             if None - executes data aggregation step.
         output_metadata: output metadata for the user task function.
@@ -221,6 +219,7 @@ def _make_ray_dag_node(
         dry_run: Run the task without actually executing any user code.
             Useful for testing infrastructure, dependency imports, etc.
     """
+    current_path = Path.cwd()
 
     @client.remote
     def _ray_remote(*inner_args, **inner_kwargs):
@@ -236,8 +235,7 @@ def _make_ray_dag_node(
                 wf_run_id=wf_run_id,
                 task_inv_id=task_inv_id,
             ):
-                if project_dir is not None:
-                    dispatch.ensure_sys_paths([str(project_dir)])
+                dispatch.ensure_sys_paths([str(current_path)])
 
                 # True for all the steps except data aggregation
                 serialization = user_fn_ref is not None
@@ -458,7 +456,6 @@ def make_ray_dag(
     workflow_def: ir.WorkflowDef,
     workflow_run_id: workflow_run.WorkflowRunId,
     dry_run: bool,
-    project_dir: t.Optional[Path] = None,
 ):
     # a mapping of "artifact ID" <-> "the ray Future needed to get the value"
     ray_futures: t.Dict[ir.ArtifactNodeId, t.Any] = {}
@@ -540,7 +537,6 @@ def make_ray_dag(
             ray_kwargs=kwargs,
             args_artifact_nodes=pos_args_artifact_nodes,
             kwargs_artifact_nodes=kwargs_artifact_nodes,
-            project_dir=project_dir,
             user_fn_ref=user_task.fn_ref,
             output_metadata=user_task.output_metadata,
             dry_run=dry_run,
@@ -573,7 +569,6 @@ def make_ray_dag(
         ray_kwargs={},
         args_artifact_nodes=pos_args_artifact_nodes,
         kwargs_artifact_nodes={},
-        project_dir=None,
         user_fn_ref=None,
         output_metadata=ir.TaskOutputMetadata(
             n_outputs=len(pos_args), is_subscriptable=False
