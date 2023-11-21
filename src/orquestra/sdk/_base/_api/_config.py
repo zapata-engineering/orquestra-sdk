@@ -57,7 +57,7 @@ class RuntimeConfig:
                 "`RuntimeConfig.ce()` for Compute Engine. \n"
             )
 
-        self._name: str = name
+        self._name = name
         try:
             self._runtime_name: RuntimeName = RuntimeName(runtime_name)
         except ValueError as e:
