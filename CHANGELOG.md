@@ -15,6 +15,8 @@
 
 🐛 *Bug Fixes*
 
+* Workaround for Ray cluster not starting because of a missing dependency, `async_timeout`.
+
 💅 *Improvements*
 
 * When the user doesn't pass `config` directly to `sdk.WorkflowRun.by_id(run_id="...")` and `orq` commands, the SDK will query all known runtimes about this workflow run. This change improves accessing workflow runs submitted by other users.
