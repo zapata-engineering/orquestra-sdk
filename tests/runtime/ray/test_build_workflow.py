@@ -160,7 +160,9 @@ class TestMakeDag:
         ]
         workflow_def = make_workflow_with_dependencies(imps, n_tasks=100).model
         _ = _build_workflow.make_ray_dag(client, workflow_def, wf_run_id, False)
-        assert pip_string.mock_calls == [call(imp) for imp in workflow_def.imports.values()]
+        assert pip_string.mock_calls == [
+            call(imp) for imp in workflow_def.imports.values()
+        ]
 
     class TestResourcesInMakeDag:
         @pytest.mark.parametrize(
