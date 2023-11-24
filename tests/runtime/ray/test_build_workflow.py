@@ -19,6 +19,20 @@ from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.responses import WorkflowResult
 
 
+def make_workflow_with_dependencies(deps, *, n_tasks=1):
+    """Generate a workflow definition with the specified dependencies."""
+
+    @sdk.task(dependency_imports=deps)
+    def hello_orquestra() -> str:
+        return "Hello Orquestra!"
+
+    @sdk.workflow()
+    def hello_orquestra_wf():
+        return [hello_orquestra() for _ in range(n_tasks)]
+
+    return hello_orquestra_wf()
+
+
 class TestPipString:
     @pytest.fixture()
     def mock_serde(self, monkeypatch: pytest.MonkeyPatch):
@@ -119,126 +133,60 @@ class TestPipString:
             assert pip == []
 
 
-class TestResourcesInMakeDag:
-    @pytest.fixture
-    def wf_run_id(self):
-        return "mocked_wf_run_id"
-
+class TestMakeDag:
     @pytest.fixture
     def client(self):
         return create_autospec(_client.RayClient)
 
-    @pytest.mark.parametrize(
-        "resources, expected, types",
-        [
-            ({}, {}, {}),
-            ({"cpu": "1000m"}, {"num_cpus": 1.0}, {"num_cpus": int}),
-            ({"memory": "1Gi"}, {"memory": 1073741824}, {"memory": int}),
-            ({"gpu": "1"}, {"num_gpus": 1}, {"num_gpus": int}),
-            (
-                {"cpu": "2500m", "memory": "10G", "gpu": "1"},
-                {"num_cpus": 2.5, "memory": 10000000000, "num_gpus": 1},
-                {"num_cpus": float, "memory": int, "num_gpus": int},
-            ),
-        ],
-    )
-    def test_setting_resources(
-        self,
-        client: Mock,
-        wf_run_id: str,
-        resources: Dict[str, str],
-        expected: Dict[str, Union[int, float]],
-        types: Dict[str, type],
+    @pytest.fixture
+    def wf_run_id(self):
+        return "mocked_wf_run_id"
+
+    def test_import_pip_string_resolved_once_per_import(
+        self, monkeypatch: pytest.MonkeyPatch, client: Mock, wf_run_id: str
     ):
-        # Given
-        workflow = workflow_parametrised_with_resources(**resources).model
-
-        # When
-        _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, False)
-
-        # Then
-        calls = client.add_options.call_args_list
-
-        # We should only have two calls: our invocation and the aggregation step
-        assert len(calls) == 2
-        # Checking our call did not have any resources included
-        assert calls[0] == call(
-            ANY,
-            name=ANY,
-            metadata=ANY,
-            runtime_env=ANY,
-            catch_exceptions=ANY,
-            max_retries=ANY,
-            **expected,
-        )
-        for kwarg_name, type_ in types.items():
-            assert isinstance(calls[0].kwargs[kwarg_name], type_)
-
-    @pytest.mark.parametrize(
-        "custom_image, expected_resources",
-        (
-            ("a_custom_image:latest", {"image:a_custom_image:latest": 1}),
-            (
-                None,
-                {
-                    "image:hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:mocked": 1  # noqa: E501
-                },
+        pip_string = create_autospec(_build_workflow._pip_string)
+        pip_string.return_value = ["mocked"]
+        monkeypatch.setattr(_build_workflow, "_pip_string", pip_string)
+        imps = [
+            sdk.GithubImport(
+                "zapatacomputing/orquestra-workflow-sdk",
+                personal_access_token=sdk.Secret(
+                    "mock-secret", config_name="mock-config", workspace_id="mock-ws"
+                ),
             ),
-        ),
-    )
-    class TestSettingCustomImage:
-        def test_with_env_set(
+            sdk.PythonImports("numpy", "polars"),
+            sdk.InlineImport(),
+        ]
+        workflow_def = make_workflow_with_dependencies(imps, n_tasks=100).model
+        _ = _build_workflow.make_ray_dag(client, workflow_def, wf_run_id, False)
+        assert pip_string.mock_calls == [call(imp) for imp in workflow_def.imports.values()]
+
+    class TestResourcesInMakeDag:
+        @pytest.mark.parametrize(
+            "resources, expected, types",
+            [
+                ({}, {}, {}),
+                ({"cpu": "1000m"}, {"num_cpus": 1.0}, {"num_cpus": int}),
+                ({"memory": "1Gi"}, {"memory": 1073741824}, {"memory": int}),
+                ({"gpu": "1"}, {"num_gpus": 1}, {"num_gpus": int}),
+                (
+                    {"cpu": "2500m", "memory": "10G", "gpu": "1"},
+                    {"num_cpus": 2.5, "memory": 10000000000, "num_gpus": 1},
+                    {"num_cpus": float, "memory": int, "num_gpus": int},
+                ),
+            ],
+        )
+        def test_setting_resources(
             self,
             client: Mock,
             wf_run_id: str,
-            monkeypatch: pytest.MonkeyPatch,
-            custom_image: Optional[str],
-            expected_resources: Dict[str, int],
+            resources: Dict[str, str],
+            expected: Dict[str, Union[int, float]],
+            types: Dict[str, type],
         ):
             # Given
-            monkeypatch.setenv("ORQ_RAY_SET_CUSTOM_IMAGE_RESOURCES", "1")
-            workflow = workflow_parametrised_with_resources(
-                custom_image=custom_image
-            ).model
-
-            # To prevent hardcoding a version number, let's override the version for
-            # this test.
-
-            # We can be certain the workfloe def metadata is available
-            assert workflow.metadata is not None
-            workflow.metadata.sdk_version.original = "mocked"
-
-            # When
-            _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, False)
-
-            # Then
-            calls = client.add_options.call_args_list
-
-            # We should only have two calls: our invocation and the aggregation step
-            assert len(calls) == 2
-            # Checking our call did not have any resources included
-
-            assert calls[0] == call(
-                ANY,
-                name=ANY,
-                metadata=ANY,
-                runtime_env=ANY,
-                catch_exceptions=ANY,
-                max_retries=ANY,
-                resources=expected_resources,
-            )
-
-        def test_with_env_not_set(
-            self,
-            client: Mock,
-            wf_run_id: str,
-            custom_image: Optional[str],
-            expected_resources: Dict[str, int],
-        ):
-            # Given
-            workflow = workflow_parametrised_with_resources(
-                custom_image=custom_image
-            ).model
+            workflow = workflow_parametrised_with_resources(**resources).model
 
             # When
             _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, False)
@@ -256,7 +204,94 @@ class TestResourcesInMakeDag:
                 runtime_env=ANY,
                 catch_exceptions=ANY,
                 max_retries=ANY,
+                **expected,
             )
+            for kwarg_name, type_ in types.items():
+                assert isinstance(calls[0].kwargs[kwarg_name], type_)
+
+        @pytest.mark.parametrize(
+            "custom_image, expected_resources",
+            (
+                ("a_custom_image:latest", {"image:a_custom_image:latest": 1}),
+                (
+                    None,
+                    {
+                        "image:hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:mocked": 1  # noqa: E501
+                    },
+                ),
+            ),
+        )
+        class TestSettingCustomImage:
+            def test_with_env_set(
+                self,
+                client: Mock,
+                wf_run_id: str,
+                monkeypatch: pytest.MonkeyPatch,
+                custom_image: Optional[str],
+                expected_resources: Dict[str, int],
+            ):
+                # Given
+                monkeypatch.setenv("ORQ_RAY_SET_CUSTOM_IMAGE_RESOURCES", "1")
+                workflow = workflow_parametrised_with_resources(
+                    custom_image=custom_image
+                ).model
+
+                # To prevent hardcoding a version number, let's override the version for
+                # this test.
+
+                # We can be certain the workfloe def metadata is available
+                assert workflow.metadata is not None
+                workflow.metadata.sdk_version.original = "mocked"
+
+                # When
+                _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, False)
+
+                # Then
+                calls = client.add_options.call_args_list
+
+                # We should only have two calls: our invocation and the aggregation step
+                assert len(calls) == 2
+                # Checking our call did not have any resources included
+
+                assert calls[0] == call(
+                    ANY,
+                    name=ANY,
+                    metadata=ANY,
+                    runtime_env=ANY,
+                    catch_exceptions=ANY,
+                    max_retries=ANY,
+                    resources=expected_resources,
+                )
+
+            def test_with_env_not_set(
+                self,
+                client: Mock,
+                wf_run_id: str,
+                custom_image: Optional[str],
+                expected_resources: Dict[str, int],
+            ):
+                # Given
+                workflow = workflow_parametrised_with_resources(
+                    custom_image=custom_image
+                ).model
+
+                # When
+                _ = _build_workflow.make_ray_dag(client, workflow, wf_run_id, False)
+
+                # Then
+                calls = client.add_options.call_args_list
+
+                # We should only have two calls: our invocation and the aggregation step
+                assert len(calls) == 2
+                # Checking our call did not have any resources included
+                assert calls[0] == call(
+                    ANY,
+                    name=ANY,
+                    metadata=ANY,
+                    runtime_env=ANY,
+                    catch_exceptions=ANY,
+                    max_retries=ANY,
+                )
 
 
 class TestArgumentUnwrapper:
@@ -416,20 +451,6 @@ class TestArgumentUnwrapper:
             mock_deserialize.assert_has_calls(calls)
 
 
-def make_workflow_with_dependencies(deps):
-    """Generate a workflow definition with the specified dependencies."""
-
-    @sdk.task(dependency_imports=deps)
-    def hello_orquestra() -> str:
-        return "Hello Orquestra!"
-
-    @sdk.workflow()
-    def hello_orquestra_wf():
-        return [hello_orquestra()]
-
-    return hello_orquestra_wf()
-
-
 @pytest.mark.parametrize(
     "installed_sdk_version, expected_sdk_dependency",
     [
@@ -459,9 +480,12 @@ class TestHandlingSDKVersions:
         )
         wf = make_workflow_with_dependencies([]).model
         task_inv = [inv for inv in iter_invocations_topologically(wf)][0]
+        imports = {
+            id: _build_workflow._pip_string(imp) for id, imp in wf.imports.items()
+        }
 
         # When
-        pip = _build_workflow._import_pip_env(task_inv, wf)
+        pip = _build_workflow._import_pip_env(task_inv, wf, imports)
 
         # Then
         if expected_sdk_dependency:
@@ -491,9 +515,12 @@ class TestHandlingSDKVersions:
         )
         wf = make_workflow_with_dependencies([sdk.PythonImports(*python_imports)]).model
         task_inv = [inv for inv in iter_invocations_topologically(wf)][0]
+        imports = {
+            id: _build_workflow._pip_string(imp) for id, imp in wf.imports.items()
+        }
 
         # When
-        pip = _build_workflow._import_pip_env(task_inv, wf)
+        pip = _build_workflow._import_pip_env(task_inv, wf, imports)
 
         # Then
         if expected_sdk_dependency:
@@ -549,9 +576,12 @@ class TestHandlingSDKVersions:
                 [sdk.PythonImports(*python_imports + [sdk_import])]
             ).model
             task_inv = [inv for inv in iter_invocations_topologically(wf)][0]
+            imports = {
+                id: _build_workflow._pip_string(imp) for id, imp in wf.imports.items()
+            }
 
             # When
-            pip = _build_workflow._import_pip_env(task_inv, wf)
+            pip = _build_workflow._import_pip_env(task_inv, wf, imports)
 
             # Then
             if expected_sdk_dependency:
@@ -580,10 +610,13 @@ class TestHandlingSDKVersions:
                 [sdk.PythonImports(*python_imports + [sdk_import])]
             ).model
             task_inv = [inv for inv in iter_invocations_topologically(wf)][0]
+            imports = {
+                id: _build_workflow._pip_string(imp) for id, imp in wf.imports.items()
+            }
 
             # When
             with pytest.raises(OrquestraSDKVersionMismatchWarning) as e:
-                _ = _build_workflow._import_pip_env(task_inv, wf)
+                _ = _build_workflow._import_pip_env(task_inv, wf, imports)
 
             # Then
             warning: str = e.exconly().strip()

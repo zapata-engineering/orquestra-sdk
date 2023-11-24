@@ -339,13 +339,17 @@ def _(imp: ir.GitImport):
 
 
 def _import_pip_env(
-    ir_invocation: ir.TaskInvocation, wf: ir.WorkflowDef
+    ir_invocation: ir.TaskInvocation,
+    wf: ir.WorkflowDef,
+    imports_pip_string: t.Dict[ir.ImportId, t.List[str]],
 ) -> t.List[str]:
     """Gather a list of python imports required for the task.
 
     Args:
         ir_invocation: The task invocation to be executed in this environment.
         wf: The overall workflow definition.
+        imports_pip_string: a mapping between the ID and the list of pip strings for a
+            specific import
 
     Returns:
         A list consisting of the python imports declared in the task definition, and the
@@ -367,7 +371,7 @@ def _import_pip_env(
     pip_list = [
         chunk
         for imp in imports
-        for chunk in _pip_string(imp)
+        for chunk in imports_pip_string[imp.id]
         if not (sdk_dependency := re.match(r"^orquestra-sdk([<|!|=|>|~].*)?$", chunk))
     ]
 
@@ -460,6 +464,12 @@ def make_ray_dag(
     # a mapping of "artifact ID" <-> "the ray Future needed to get the value"
     ray_futures: t.Dict[ir.ArtifactNodeId, t.Any] = {}
 
+    # this resolves all imports to their final "pip string" once,
+    # instead of per-task invocation
+    imports_pip_strings = {
+        id_: _pip_string(imp) for id_, imp in workflow_def.imports.items()
+    }
+
     for invocation in _graphs.iter_invocations_topologically(workflow_def):
         user_task = workflow_def.tasks[invocation.task_id]
         pos_args, pos_args_artifact_nodes = _gather_args(
@@ -478,7 +488,7 @@ def make_ray_dag(
             task_invocation_id=invocation.id,
         )
 
-        pip = _import_pip_env(invocation, workflow_def)
+        pip = _import_pip_env(invocation, workflow_def, imports_pip_strings)
 
         ray_options = {
             # We're using task invocation ID as the Ray "task ID" instead of task run ID
