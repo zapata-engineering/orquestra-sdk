@@ -14,6 +14,7 @@
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
+* Secrets are only fetched once for imports in a workflow, instead of for each task invocation.
 
 * Workaround for Ray cluster not starting because of a missing dependency, `async_timeout`.
 
