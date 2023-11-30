@@ -7,6 +7,9 @@ from typing import Optional
 from aiohttp import web
 
 
+CLUSTER_URL_KEY = web.AppKey("cluster_url", str)
+
+
 class LoginServer:
     def __init__(self):
         self._token: Optional[str] = None
@@ -18,7 +21,7 @@ class LoginServer:
 
     async def start(self, cluster_url: str, listen_host: str = "127.0.0.1") -> int:
         app = web.Application()
-        app["cluster_url"] = cluster_url
+        app[CLUSTER_URL_KEY] = cluster_url
         app.add_routes([web.get("/state", self._state_handler)])
         self._runner = web.AppRunner(app)
         await self._runner.setup()
@@ -34,7 +37,7 @@ class LoginServer:
         res = web.StreamResponse(
             status=status_code,
             headers={
-                "Access-Control-Allow-Origin": request.app["cluster_url"],
+                "Access-Control-Allow-Origin": request.app[CLUSTER_URL_KEY],
                 "Content-Length": "0",
             },
         )

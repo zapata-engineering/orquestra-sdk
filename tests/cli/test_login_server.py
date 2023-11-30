@@ -8,7 +8,7 @@ import sys
 import pytest
 from aiohttp import ClientResponse, ClientSession, web
 
-from orquestra.sdk._base.cli._login._login_server import LoginServer
+from orquestra.sdk._base.cli._login._login_server import CLUSTER_URL_KEY, LoginServer
 
 
 class TestLoginServer:
@@ -48,7 +48,7 @@ class TestHandlers:
         server = LoginServer()
 
         app = web.Application()
-        app["cluster_url"] = cluster_url
+        app[CLUSTER_URL_KEY] = cluster_url
         app.router.add_get("/state", server._state_handler)
 
         resp = asyncio.run(make_request(app, "/state"))
@@ -63,7 +63,7 @@ class TestHandlers:
         server = LoginServer()
 
         app = web.Application()
-        app["cluster_url"] = cluster_url
+        app[CLUSTER_URL_KEY] = cluster_url
         app.router.add_get("/state", server._state_handler)
 
         with pytest.raises(web.GracefulExit):

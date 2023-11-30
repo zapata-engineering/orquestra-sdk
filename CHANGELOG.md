@@ -33,6 +33,7 @@
 🐛 *Bug Fixes*
 
 * Workaround for Ray cluster not starting because of a missing dependency, `async_timeout`.
+* Fix warnings when used with `aiohttp>3.9`.
 
 💅 *Improvements*
 
