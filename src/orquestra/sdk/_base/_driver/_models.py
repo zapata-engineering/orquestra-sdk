@@ -296,6 +296,7 @@ class CreateWorkflowRunRequest(pydantic.BaseModel):
     workflowDefinitionID: WorkflowDefID
     resources: Resources
     dryRun: bool
+    headNodeResources: Optional[Resources]
 
 
 class CreateWorkflowRunResponse(pydantic.BaseModel):

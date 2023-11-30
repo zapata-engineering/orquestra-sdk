@@ -539,6 +539,7 @@ def workflow(fn: Callable[_P, _R]) -> WorkflowTemplate[_P, _R]:
 def workflow(
     *,
     resources: Optional[_dsl.Resources] = None,
+    head_node_resources: Optional[_dsl.Resources] = None,
     data_aggregation: Optional[Union[DataAggregation, bool]] = None,
     custom_name: Optional[str] = None,
     default_source_import: Optional[Import] = None,
@@ -551,6 +552,7 @@ def workflow(
     fn: Optional[Callable[_P, _R]] = None,
     *,
     resources: Optional[_dsl.Resources] = None,
+    head_node_resources: Optional[_dsl.Resources] = None,
     data_aggregation: Optional[Union[DataAggregation, bool]] = None,
     custom_name: Optional[str] = None,
     default_source_import: Optional[Import] = None,
@@ -569,9 +571,10 @@ def workflow(
             10 nodes with 20 CPUs and a GPU each would be:
             resources=sdk.Resources(cpu="20", gpu="1", nodes=10)
             If omitted, the cluster's default resources will be used.
-        data_aggregation: Used to set up resources used during data step. If skipped,
-            or assigned True default values will be used. If assigned False
-            data aggregation step will not run.
+        head_node_resources: !Unstable API! The resources that the head node requires.
+            Only used on Compute Engine. If omitted, the cluster's default head node
+            resources will be used.
+        data_aggregation: Deprecated.
         custom_name: custom name for the workflow
         default_source_import: Set the default source import for all tasks inside
            this workflow.
@@ -622,6 +625,19 @@ def workflow(
     elif default_dependency_imports is not None:
         workflow_default_dependency_imports = tuple(default_dependency_imports)
 
+    if data_aggregation is not None:
+        warnings.warn(
+            "data_aggregation argument is deprecated and will be removed "
+            "in upcoming versions of orquestra-sdk. It will be ignored "
+            "for this workflow.",
+            category=FutureWarning,
+        )
+
+    if head_node_resources is not None:
+        data_agg = DataAggregation(resources=head_node_resources)
+    else:
+        data_agg = None
+
     def _inner(fn: Callable[_P, _R]):
         signature = inspect.signature(fn)
         name = custom_name
@@ -632,7 +648,7 @@ def workflow(
             workflow_fn=fn,
             fn_ref=fn_ref,
             is_parametrized=len(signature.parameters) > 0,
-            data_aggregation=data_aggregation,
+            data_aggregation=data_agg,
             default_source_import=default_source_import,
             default_dependency_imports=workflow_default_dependency_imports,
         )

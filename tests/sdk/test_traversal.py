@@ -323,27 +323,6 @@ def constant_collisions():
     return [1.0, 1, True, simple_task(1)]
 
 
-@_workflow.workflow(
-    data_aggregation=_dsl.DataAggregation(run=False, resources=_dsl.Resources(cpu="1"))
-)
-def workflow_with_data_aggregation():
-    return [simple_task(1)]
-
-
-@_workflow.workflow(data_aggregation=_dsl.DataAggregation(run=True))
-def workflow_with_data_aggregation_no_resources():
-    return [simple_task(1)]
-
-
-@_workflow.workflow(
-    data_aggregation=_dsl.DataAggregation(
-        run=True, resources=_dsl.Resources(cpu="1", gpu="123")
-    )
-)
-def workflow_with_data_aggregation_set_gpu():
-    return [simple_task(1)]
-
-
 @_dsl.task()
 def simple_task(a):
     return a
@@ -466,29 +445,18 @@ class TestFlattenGraph:
         wf = constant_return.model
         assert wf.data_aggregation is None
 
+    @pytest.mark.filterwarnings("ignore:data_aggregation")
     def test_workflow_with_data_aggregation(self):
+        @_workflow.workflow(
+            data_aggregation=_workflow.DataAggregation(
+                resources=_dsl.Resources(cpu="1")
+            )
+        )
+        def workflow_with_data_aggregation():
+            return capitalize("hello there")
+
         wf = workflow_with_data_aggregation.model
-        assert wf.data_aggregation is not None
-        assert wf.data_aggregation.resources is not None
-        assert wf.data_aggregation.run is False
-        assert wf.data_aggregation.resources.cpu == "1"
-
-    def test_workflow_with_data_aggregation_no_resources(self):
-        wf = workflow_with_data_aggregation_no_resources.model
-        assert wf.data_aggregation is not None
-        assert wf.data_aggregation.resources is None
-        assert wf.data_aggregation.run is True
-
-    def test_workflow_with_data_aggregation_set_gpu(self):
-        # setting decorator explicitly to check for warnings
-        with pytest.warns(Warning) as warns:
-            wf = workflow_with_data_aggregation_set_gpu.model
-            assert len(warns.list) == 1
-            assert wf.data_aggregation is not None
-            assert wf.data_aggregation.resources is not None
-            assert wf.data_aggregation.run is True
-            assert wf.data_aggregation.resources.gpu == "0"
-            assert wf.data_aggregation.resources.cpu == "1"
+        assert wf.data_aggregation is None
 
     def test_large_workflow(self):
         wf = large_workflow.model

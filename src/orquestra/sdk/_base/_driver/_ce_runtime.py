@@ -156,11 +156,24 @@ class CERuntime(RuntimeInterface):
 
         _verify_workflow_resources(resources, max_invocation_resources)
 
+        if (
+            workflow_def.data_aggregation is not None
+            and workflow_def.data_aggregation.resources is not None
+        ):
+            head_node_resources = _models.Resources(
+                cpu=workflow_def.data_aggregation.resources.cpu,
+                memory=workflow_def.data_aggregation.resources.memory,
+                gpu=workflow_def.data_aggregation.resources.gpu,
+                nodes=workflow_def.data_aggregation.resources.nodes,
+            )
+        else:
+            head_node_resources = None
+
         try:
             workflow_def_id = self._client.create_workflow_def(workflow_def, project)
 
             workflow_run_id = self._client.create_workflow_run(
-                workflow_def_id, resources, dry_run
+                workflow_def_id, resources, dry_run, head_node_resources
             )
         except _exceptions.InvalidWorkflowDef as e:
             raise exceptions.WorkflowSyntaxError(
