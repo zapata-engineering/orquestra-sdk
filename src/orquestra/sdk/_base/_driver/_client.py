@@ -471,7 +471,7 @@ class DriverClient:
         workflow_def_id: _models.WorkflowDefID,
         resources: _models.Resources,
         dry_run: bool,
-        head_node_resources: Optional[_models.Resources],
+        head_node_resources: Optional[_models.HeadNodeResources],
     ) -> _models.WorkflowRunID:
         """Submit a workflow def to run in the workflow driver.
 
