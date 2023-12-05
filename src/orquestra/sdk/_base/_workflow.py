@@ -634,9 +634,9 @@ def workflow(
         )
 
     if head_node_resources is not None:
-        data_agg = DataAggregation(resources=head_node_resources)
+        _data_aggregation = DataAggregation(resources=head_node_resources)
     else:
-        data_agg = None
+        _data_aggregation = None
 
     def _inner(fn: Callable[_P, _R]):
         signature = inspect.signature(fn)
@@ -648,7 +648,7 @@ def workflow(
             workflow_fn=fn,
             fn_ref=fn_ref,
             is_parametrized=len(signature.parameters) > 0,
-            data_aggregation=data_agg,
+            data_aggregation=_data_aggregation,
             default_source_import=default_source_import,
             default_dependency_imports=workflow_default_dependency_imports,
         )
