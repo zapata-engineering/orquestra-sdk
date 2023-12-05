@@ -308,7 +308,7 @@ class TestCreateWorkflowRun:
             workflow_def_id,
             _models.Resources(cpu=None, memory=None, nodes=None, gpu=None),
             False,
-            _models.Resources(cpu=cpu, memory=memory, nodes=None, gpu=None),
+            _models.HeadNodeResources(cpu=cpu, memory=memory),
         )
 
     class TestWorkflowDefFailure:

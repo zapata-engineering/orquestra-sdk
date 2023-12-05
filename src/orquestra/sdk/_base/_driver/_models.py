@@ -287,6 +287,20 @@ class Resources(pydantic.BaseModel):
     gpu: Optional[str] = pydantic.Field(regex="^[01]+$")
 
 
+class HeadNodeResources(pydantic.BaseModel):
+    """
+    Implements:
+    https://github.com/zapatacomputing/workflow-driver/blob/ac1e97ea00fc3526c93187a1da02170bff45b74f/openapi/src/schemas/HeadNodeResources.yaml.
+    """  # noqa: D205, D212
+
+    cpu: Optional[str] = pydantic.Field(
+        regex=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+    )
+    memory: Optional[str] = pydantic.Field(
+        regex=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+    )
+
+
 class CreateWorkflowRunRequest(pydantic.BaseModel):
     """
     Implements:
