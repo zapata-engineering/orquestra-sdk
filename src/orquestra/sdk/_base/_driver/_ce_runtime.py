@@ -2,6 +2,7 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 """RuntimeInterface implementation that uses Compute Engine."""
+import warnings
 from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Protocol, Sequence, Union
@@ -12,6 +13,7 @@ from orquestra.sdk._base._logs import _regrouping
 from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk._base._logs._models import LogAccumulator, LogStreamType
 from orquestra.sdk._base.abc import RuntimeInterface
+from orquestra.sdk.exceptions import IgnoredFieldWarning
 from orquestra.sdk.kubernetes.quantity import parse_quantity
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 from orquestra.sdk.schema.ir import ArtifactFormat, TaskInvocationId, WorkflowDef
@@ -156,11 +158,32 @@ class CERuntime(RuntimeInterface):
 
         _verify_workflow_resources(resources, max_invocation_resources)
 
+        if (
+            workflow_def.data_aggregation is not None
+            and workflow_def.data_aggregation.resources is not None
+        ):
+            head_node_resources = _models.HeadNodeResources(
+                cpu=workflow_def.data_aggregation.resources.cpu,
+                memory=workflow_def.data_aggregation.resources.memory,
+            )
+            if workflow_def.data_aggregation.resources.gpu:
+                warnings.warn(
+                    "Head node resources will ignore GPU settings",
+                    category=IgnoredFieldWarning,
+                )
+            if workflow_def.data_aggregation.resources.nodes:
+                warnings.warn(
+                    'Head node resources will ignore "nodes" settings',
+                    category=IgnoredFieldWarning,
+                )
+        else:
+            head_node_resources = None
+
         try:
             workflow_def_id = self._client.create_workflow_def(workflow_def, project)
 
             workflow_run_id = self._client.create_workflow_run(
-                workflow_def_id, resources, dry_run
+                workflow_def_id, resources, dry_run, head_node_resources
             )
         except _exceptions.InvalidWorkflowDef as e:
             raise exceptions.WorkflowSyntaxError(

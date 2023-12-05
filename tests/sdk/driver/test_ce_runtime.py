@@ -12,6 +12,7 @@ from orquestra.sdk import LogOutput, Project, Workspace, exceptions
 from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _models
 from orquestra.sdk._base._spaces._structs import ProjectRef
 from orquestra.sdk._base._testing._example_wfs import (
+    add,
     my_workflow,
     workflow_parametrised_with_resources,
     workflow_with_different_resources,
@@ -94,6 +95,7 @@ class TestCreateWorkflowRun:
             workflow_def_id,
             _models.Resources(cpu=None, memory=None, gpu=None, nodes=None),
             False,
+            None,
         )
         assert isinstance(wf_run_id, WorkflowRunId)
         assert (
@@ -124,6 +126,7 @@ class TestCreateWorkflowRun:
                 workflow_def_id,
                 _models.Resources(cpu=None, memory="10Gi", gpu=None, nodes=None),
                 False,
+                None,
             )
 
         def test_with_cpu(
@@ -149,6 +152,7 @@ class TestCreateWorkflowRun:
                 workflow_def_id,
                 _models.Resources(cpu="1000m", memory=None, gpu=None, nodes=None),
                 False,
+                None,
             )
 
         def test_with_gpu(
@@ -172,6 +176,7 @@ class TestCreateWorkflowRun:
                 workflow_def_id,
                 _models.Resources(cpu=None, memory=None, gpu="1", nodes=None),
                 False,
+                None,
             )
 
         def test_maximum_resource(
@@ -195,6 +200,7 @@ class TestCreateWorkflowRun:
                 workflow_def_id,
                 _models.Resources(cpu="5000m", memory="3G", gpu="1", nodes=None),
                 False,
+                None,
             )
 
         def test_resources_from_workflow(
@@ -222,7 +228,88 @@ class TestCreateWorkflowRun:
                 workflow_def_id,
                 _models.Resources(cpu="1", memory="1.5G", gpu="1", nodes=20),
                 False,
+                None,
             )
+
+    @pytest.mark.parametrize(
+        "head_node_resources",
+        (
+            sdk.Resources(cpu=None, memory=None),
+            None,
+        ),
+    )
+    def test_with_no_head_node_resources(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        workflow_def_id: str,
+        workflow_run_id: str,
+        head_node_resources: sdk.Resources,
+    ):
+        # Given
+        @sdk.workflow(
+            head_node_resources=head_node_resources,
+        )
+        def wf():
+            return add(1, 2)
+
+        mocked_client.create_workflow_def.return_value = workflow_def_id
+        mocked_client.create_workflow_run.return_value = workflow_run_id
+
+        # When
+        _ = runtime.create_workflow_run(
+            wf().model,
+            None,
+            dry_run=False,
+        )
+
+        # Then
+        mocked_client.create_workflow_run.assert_called_once_with(
+            workflow_def_id,
+            _models.Resources(cpu=None, memory=None, nodes=None, gpu=None),
+            False,
+            None,
+        )
+
+    @pytest.mark.parametrize(
+        "cpu, memory,",
+        (
+            ("1", None),
+            (None, "10Gi"),
+            ("2", "20Gi"),
+        ),
+    )
+    def test_with_head_node_resources(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        workflow_def_id: str,
+        workflow_run_id: str,
+        cpu: str,
+        memory: str,
+    ):
+        # Given
+        @sdk.workflow(head_node_resources=sdk.Resources(cpu=cpu, memory=memory))
+        def wf():
+            return add(1, 2)
+
+        mocked_client.create_workflow_def.return_value = workflow_def_id
+        mocked_client.create_workflow_run.return_value = workflow_run_id
+
+        # When
+        _ = runtime.create_workflow_run(
+            wf().model,
+            None,
+            dry_run=False,
+        )
+
+        # Then
+        mocked_client.create_workflow_run.assert_called_once_with(
+            workflow_def_id,
+            _models.Resources(cpu=None, memory=None, nodes=None, gpu=None),
+            False,
+            _models.HeadNodeResources(cpu=cpu, memory=memory),
+        )
 
     class TestWorkflowDefFailure:
         def test_invalid_wf_def(
@@ -1988,5 +2075,8 @@ def test_ce_resources(
         assert all([telltale in str(exec_info) for telltale in telltales])
     else:
         mocked_client.create_workflow_run.assert_called_once_with(
-            workflow_def_id, expected_resources, False
+            workflow_def_id,
+            expected_resources,
+            False,
+            None,
         )

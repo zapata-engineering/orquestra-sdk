@@ -335,3 +335,9 @@ class WorkspacesNotSupportedError(BaseRuntimeError):
     """When a non-workspaces supporting runtime gets a workspaces-related request."""
 
     pass
+
+
+class IgnoredFieldWarning(Warning):
+    """Raised when a requested feature is not supported on the selected runtime."""
+
+    pass

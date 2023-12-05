@@ -7,9 +7,11 @@
 🔥 *Features*
 
 * Listing workflow runs on CE now supports filtering by state and max age.
+* `head_node_resources` keyword argument has been added to the `@sdk.workflow` decorator to control the resources that the head node has available on CE.
 
 🧟 *Deprecations*
 * Deprecation of `project_dir` argument for all public API functions.
+* `data_aggregation` keyword argument to `@sdk.workflow` decorator is deprecated and will be removed in a future version.
 
 👩‍🔬 *Experimental*
 

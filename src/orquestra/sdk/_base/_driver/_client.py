@@ -471,6 +471,7 @@ class DriverClient:
         workflow_def_id: _models.WorkflowDefID,
         resources: _models.Resources,
         dry_run: bool,
+        head_node_resources: Optional[_models.HeadNodeResources],
     ) -> _models.WorkflowRunID:
         """Submit a workflow def to run in the workflow driver.
 
@@ -478,6 +479,7 @@ class DriverClient:
             workflow_def_id: ID of the workflow definition to be submitted.
             resources: The resources required to execute the workflow.
             dry_run: Run the workflow without actually executing any task code.
+            head_node_resources: the requested resources for the head node
 
         Raises:
             orquestra.sdk._base._driver._exceptions.InvalidWorkflowRunRequest: when an
@@ -497,6 +499,7 @@ class DriverClient:
                 workflowDefinitionID=workflow_def_id,
                 resources=resources,
                 dryRun=dry_run,
+                headNodeResources=head_node_resources,
             ).dict(),
         )
 

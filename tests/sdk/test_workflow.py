@@ -77,51 +77,43 @@ def test_workflow_with_fake_imported_task():
         _ = faked_task_wf()
 
 
-class TestDataAggregationResources:
-    @staticmethod
-    @sdk.workflow(
-        data_aggregation=sdk.DataAggregation(resources=sdk.Resources(gpu="1g"))
-    )
-    def _workflow_gpu_set_for_data_aggregation():
-        return [_an_empty_task()]
+@pytest.mark.parametrize(
+    "data_agg",
+    (
+        True,
+        False,
+        sdk.DataAggregation(),
+        sdk.DataAggregation(resources=sdk.Resources(cpu="1")),
+    ),
+)
+def test_workflow_with_data_aggregation(data_agg):
+    with pytest.warns(Warning) as warns:
 
-    @staticmethod
-    @sdk.workflow(data_aggregation=False)
-    def _workflow_data_aggregation_false():
-        return [_an_empty_task()]
-
-    @staticmethod
-    @sdk.workflow(data_aggregation=True)
-    def _workflow_data_aggregation_true():
-        return [_an_empty_task()]
-
-    @staticmethod
-    @sdk.workflow
-    def _workflow_no_data_aggregation():
-        return [_an_empty_task()]
-
-    def test_workflow_with_gpu_set(self):
-        with pytest.warns(Warning) as warns:
-            wf = self._workflow_gpu_set_for_data_aggregation()
-            assert len(warns.list) == 1
-            assert wf.model.data_aggregation is not None
-            assert wf.model.data_aggregation.resources is not None
-            assert wf.model.data_aggregation.resources.gpu == "0"
-
-    def test_workflow_data_aggregation_false(self):
-        wf = self._workflow_data_aggregation_false()
-        assert wf.model.data_aggregation is not None
-        assert wf.model.data_aggregation.run is False
-
-    def test_workflow_data_aggregation_true(self):
-        # verify that if user passes dataAggregation=True, it falls back to default
-        # as if nothing was provided
-        wf_data_aggregation_true = self._workflow_data_aggregation_true()
-        wf_data_aggregation_default = self._workflow_no_data_aggregation()
-        assert (
-            wf_data_aggregation_true.model.data_aggregation
-            == wf_data_aggregation_default.data_aggregation
+        @sdk.workflow(
+            data_aggregation=data_agg,
         )
+        def _():
+            return [_an_empty_task()]
+
+    assert len(warns.list) == 1
+
+
+@pytest.mark.parametrize(
+    "head_node_resources, expected_data_agg",
+    (
+        (sdk.Resources(), sdk.DataAggregation(resources=sdk.Resources())),
+        (None, None),
+        (sdk.Resources(cpu="1"), sdk.DataAggregation(resources=sdk.Resources(cpu="1"))),
+    ),
+)
+def test_workflow_with_head_node_resources(head_node_resources, expected_data_agg):
+    @sdk.workflow(
+        head_node_resources=head_node_resources,
+    )
+    def wf():
+        return [_an_empty_task()]
+
+    assert wf._data_aggregation == expected_data_agg
 
 
 class TestModelsSerializeProperly:
