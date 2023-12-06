@@ -1,8 +1,25 @@
 # Changelog
 
-## v0.59.0
+## Unreleased
 
 🚨 *Breaking Changes*
+
+🔥 *Features*
+
+🧟 *Deprecations*
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+
+## v0.59.0
 
 🔥 *Features*
 
@@ -10,10 +27,9 @@
 * `head_node_resources` keyword argument has been added to the `@sdk.workflow` decorator to control the resources that the head node has available on CE.
 
 🧟 *Deprecations*
+
 * Deprecation of `project_dir` argument for all public API functions.
 * `data_aggregation` keyword argument to `@sdk.workflow` decorator is deprecated and will be removed in a future version.
-
-👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
 
