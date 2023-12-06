@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.59.0
 
 🚨 *Breaking Changes*
 
