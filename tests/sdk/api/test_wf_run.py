@@ -22,7 +22,6 @@ from unittest.mock import (
 )
 
 import pytest
-import requests.exceptions
 
 from orquestra.sdk._base import _api, _dsl, _traversal, _workflow, serde
 from orquestra.sdk._base._api._task_run import TaskRun
@@ -33,6 +32,7 @@ from orquestra.sdk._base._spaces._api import list_projects, list_workspaces
 from orquestra.sdk._base._spaces._structs import ProjectRef, Workspace
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import (
+    ClusterConnectionError,
     ProjectInvalidError,
     RayNotRunningError,
     RuntimeQuerySummaryError,
@@ -741,7 +741,7 @@ class TestWorkflowRun:
                             WorkflowRunNotFoundError
                         )
                         runtime2.get_workflow_run_status.side_effect = (
-                            requests.exceptions.ConnectionError
+                            ClusterConnectionError
                         )
 
                         # When

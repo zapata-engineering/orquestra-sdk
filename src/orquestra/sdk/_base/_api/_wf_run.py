@@ -16,7 +16,6 @@ from datetime import timedelta
 from functools import cached_property
 from pathlib import Path
 
-
 from ...exceptions import (
     ClusterConnectionError,
     ConfigFileNotFoundError,
