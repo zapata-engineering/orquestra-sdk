@@ -281,6 +281,12 @@ class InvalidTokenError(BaseRuntimeError):
     pass
 
 
+class ClusterConnectionError(BaseRuntimeError):
+    """Raised when we could not get the connection to the cluster."""
+
+    pass
+
+
 # Ray Errors
 class RayActorNameClashError(BaseRuntimeError):
     """Raised when multiple Ray actors exist with the same name."""
