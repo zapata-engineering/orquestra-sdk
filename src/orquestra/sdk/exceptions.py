@@ -284,7 +284,9 @@ class InvalidTokenError(BaseRuntimeError):
 class ClusterConnectionError(BaseRuntimeError):
     """Raised when we could not get the connection to the cluster."""
 
-    pass
+    def __init__(self, uri: str):
+        self.uri = uri
+        super().__init__(uri)
 
 
 # Ray Errors

@@ -628,6 +628,7 @@ def _find_config_for_workflow(wf_run_id: WorkflowRunId) -> RuntimeConfig:
             unauthorized_configs.append(config_obj)
             continue
         except ClusterConnectionError:
+            # Cluster might be decommissioned or temporarily unavailable
             unauthorized_configs.append(config_obj)
             continue
 

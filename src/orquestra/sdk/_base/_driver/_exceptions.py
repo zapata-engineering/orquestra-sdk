@@ -114,14 +114,6 @@ class UnknownHTTPError(Exception):
         super().__init__(response)
 
 
-class ClusterConnectionError(Exception):
-    """Raised when there's an error we don't handle otherwise."""
-
-    def __init__(self, uri: str):
-        self.response = uri
-        super().__init__(uri)
-
-
 class WorkflowDefNotFound(Exception):
     """Raised when a Workflow Definition cannot be found."""
 

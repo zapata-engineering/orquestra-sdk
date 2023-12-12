@@ -19,7 +19,7 @@ import pydantic
 import requests
 from requests import codes
 
-from orquestra.sdk import ProjectRef
+from orquestra.sdk import ProjectRef, exceptions
 from orquestra.sdk._base._spaces._api import make_workspace_zri
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
@@ -209,7 +209,7 @@ class DriverClient:
                 allow_redirects=allow_redirects,
             )
         except requests.exceptions.ConnectionError:
-            raise _exceptions.ClusterConnectionError(uri)
+            raise exceptions.ClusterConnectionError(uri)
 
         return response
 
@@ -227,7 +227,7 @@ class DriverClient:
                 params=query_params,
             )
         except requests.exceptions.ConnectionError:
-            raise _exceptions.ClusterConnectionError(uri)
+            raise exceptions.ClusterConnectionError(uri)
 
         return response
 
@@ -236,7 +236,7 @@ class DriverClient:
         try:
             response = self._session.delete(uri)
         except requests.exceptions.ConnectionError:
-            raise _exceptions.ClusterConnectionError(uri)
+            raise exceptions.ClusterConnectionError(uri)
 
         return response
 

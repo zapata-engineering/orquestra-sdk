@@ -251,8 +251,6 @@ class CERuntime(RuntimeInterface):
                 f"`{workflow_run_id}` "
                 "- the authorization token was rejected by the remote cluster."
             ) from e
-        except _exceptions.ClusterConnectionError as e:
-            raise exceptions.ClusterConnectionError from e
 
     @_retry.retry(
         attempts=5,
