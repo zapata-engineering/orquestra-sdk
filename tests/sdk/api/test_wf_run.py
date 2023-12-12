@@ -741,7 +741,7 @@ class TestWorkflowRun:
                             WorkflowRunNotFoundError
                         )
                         runtime2.get_workflow_run_status.side_effect = (
-                            ClusterConnectionError
+                            ClusterConnectionError("config2")
                         )
 
                         # When
