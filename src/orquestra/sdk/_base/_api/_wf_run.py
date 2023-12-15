@@ -455,14 +455,16 @@ class WorkflowRun:
         }
 
     def get_artifact_serialized(self, task_invocation_id: ir.TaskInvocationId):
-        """
+        """Unstable: this API is not implemented for all runtimes yet.
+
         Returns serialized value calculated by given task if the task is finished.
         Raises exception if given task did not finish yet.
         """
         self._runtime.get_output(self.run_id, task_invocation_id)
 
     def get_artifact(self, task_invocation_id: ir.TaskInvocationId):
-        """
+        """Unstable: this API is not implemented for all runtimes yet.
+
         Returns value calculated by given task if the task is finished.
         Raises exception if given task did not finish yet.
         """

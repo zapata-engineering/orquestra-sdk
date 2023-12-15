@@ -311,6 +311,7 @@ class RayParams:
 JUST_IN_CASE_TIMEOUT = 10.0
 QUICK_TIMEOUT = 1.0
 
+
 class RayRuntime(RuntimeInterface):
     def __init__(
         self,
@@ -668,12 +669,18 @@ class RayRuntime(RuntimeInterface):
             Whatever the task function returned, independent of the
             ``@task(n_outputs=...)`` value.
         """
+        try:
+            _ = self.get_workflow_run_status(workflow_run_id)
+        except exceptions.WorkflowRunNotFoundError as e:
+            # Explicitly re-raise.
+            raise e
+
         succeeded_obj_ref: _client.ObjectRef = self._client.get_task_output_async(
-                workflow_id=workflow_run_id,
-                # We rely on the fact that _make_ray_dag() assigns invocation
-                # ID as the Ray task name.
-                task_id=task_invocation_id,
-            )
+            workflow_id=workflow_run_id,
+            # We rely on the fact that _make_ray_dag() assigns invocation
+            # ID as the Ray task name.
+            task_id=task_invocation_id,
+        )
 
         # We don't know if the values are ready or not, quickly timeout and
         # throw if they are not
@@ -681,17 +688,19 @@ class RayRuntime(RuntimeInterface):
             succeeded_value: t.Any = self._client.get(
                 succeeded_obj_ref, timeout=QUICK_TIMEOUT
             )
-        except Exception as e:
-            iks demo
-            return
+        except exceptions.NotFoundError:
+            raise
 
         # We need to check if the task output was a TaskResult or any other value.
         # A TaskResult means this is a >=0.47.0 workflow and there is a serialized
         # value (WorkflowResult) in TaskResult.packed
         # Anything else is a <0.47.0 workflow and the value should be serialized
 
-        return succeeded_value.packed if isinstance(succeeded_value, TaskResult) else serde.result_from_artifact(succeeded_value, ir.ArtifactFormat.AUTO)
-
+        return (
+            succeeded_value.packed
+            if isinstance(succeeded_value, TaskResult)
+            else serde.result_from_artifact(succeeded_value, ir.ArtifactFormat.AUTO)
+        )
 
     def stop_workflow_run(
         self, workflow_run_id: WorkflowRunId, *, force: t.Optional[bool] = None

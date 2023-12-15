@@ -600,6 +600,111 @@ class TestRayRuntimeMethods:
             for trigger in triggers:
                 trigger.close()
 
+    class TestGetOutput:
+        """
+        Tests that validate .get_output().
+        """
+
+        def test_after_a_failed_task(self, runtime: _dag.RayRuntime):
+            """
+            The workflow graph:
+
+               [1]
+                │
+                ▼
+               [2] => exception
+                │
+                ▼
+               [3] => won't run
+                │
+                ▼
+            [return]
+            """
+            wf_def = _example_wfs.exception_wf_with_multiple_values().model
+            run_id = runtime.create_workflow_run(wf_def, None, False)
+
+            _wait_to_finish_wf(run_id, runtime)
+
+            wf_run = runtime.get_workflow_run_status(run_id)
+            invocation_ids = [task.invocation_id for task in wf_run.task_runs]
+
+            if wf_run.status.state != State.FAILED:
+                pytest.fail(
+                    "The workflow was supposed to fail, but it didn't. "
+                    f"Wf run: {wf_run}"
+                )
+
+            assert runtime.get_output(run_id, invocation_ids[2]) == JSONResult(
+                value="58"
+            )
+            with pytest.raises(exceptions.NotFoundError):
+                assert not runtime.get_output(run_id, invocation_ids[1])
+            with pytest.raises(exceptions.NotFoundError):
+                assert not runtime.get_output(run_id, invocation_ids[0])
+
+        @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+        def test_after_one_task_finishes(self, runtime: _dag.RayRuntime, tmp_path):
+            """
+            Workflow graph in the scenario under test:
+              [ ]  => finished
+               │
+               │
+               ▼
+              [ ]  => in progress
+               │
+               │
+               ▼
+              [ ]  => waiting
+               │
+               │
+               ▼
+            """
+            triggers = [_ipc.TriggerServer() for _ in range(3)]
+
+            wf = _example_wfs.serial_wf_with_file_triggers(
+                [trigger.port for trigger in triggers], task_timeout=10.0
+            ).model
+            wf_run_id = runtime.create_workflow_run(wf, None, False)
+
+            triggers[0].trigger()
+            # Await completion of the first task
+            loop_start = time.time()
+            while True:
+                wf_run = runtime.get_workflow_run_status(wf_run_id)
+                if wf_run.status.state not in {State.RUNNING, State.SUCCEEDED}:
+                    pytest.fail(f"Unexpected wf run state: {wf_run}")
+
+                succeeded_runs = [
+                    run
+                    for run in wf_run.task_runs
+                    if run.status.state == State.SUCCEEDED
+                ]
+                if len(succeeded_runs) >= 1:
+                    break
+
+                if time.time() - loop_start > 20.0:
+                    pytest.fail(
+                        f"Timeout when awaiting for workflow finish. Full run: {wf_run}"
+                    )
+
+                time.sleep(0.2)
+            invocation_ids = [task.invocation_id for task in wf_run.task_runs]
+
+            assert runtime.get_output(wf_run_id, invocation_ids[2]) == JSONResult(
+                value="58"
+            )
+            with pytest.raises(exceptions.NotFoundError):
+                assert not runtime.get_output(wf_run_id, invocation_ids[1])
+            with pytest.raises(exceptions.NotFoundError):
+                assert not runtime.get_output(wf_run_id, invocation_ids[0])
+
+            # let the workers complete the workflow
+            triggers[1].trigger()
+            triggers[2].trigger()
+
+            for trigger in triggers:
+                trigger.close()
+
 
 @pytest.mark.slow
 @pytest.mark.parametrize(
