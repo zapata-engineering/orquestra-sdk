@@ -976,6 +976,109 @@ class TestWorkflowRun:
             # Then
             assert artifacts_dict == values
 
+    class TestGetArtifact:
+        @staticmethod
+        def test_handling_n_outputs():
+            """
+            Some tasks return 1 value, some return multiple. The values
+            returned from `sdk.WorkflowRun.get_artifact()` are supposed
+            to correspond to whatever we would get if we ran the task function
+            directly.
+
+            Test boundary::
+                [sdk.WorkflowRun]->[RuntimeInterface]
+                                 ->[ir.WorkflowDef]
+            """
+            # Given
+            runtime = create_autospec(RuntimeInterface)
+
+            inv1 = "inv1"
+            inv2 = "inv2"
+
+            def return_mock(wf_run_id, task_inv_id):
+                if task_inv_id == inv1:
+                    return serde.result_from_artifact(42, ir.ArtifactFormat.AUTO)
+                elif task_inv_id == inv2:
+                    return serde.result_from_artifact((21, 38), ir.ArtifactFormat.AUTO)
+                else:
+                    raise ValueError("Invalid inv ID for the mock")
+
+            runtime.get_output.side_effect = return_mock
+
+            mock_inv1 = create_autospec(ir.TaskInvocation)
+            mock_inv1.output_ids = ["art1"]
+
+            mock_inv2 = create_autospec(ir.TaskInvocation)
+            mock_inv2.output_ids = ["art2", "art3"]
+
+            wf_def = create_autospec(ir.WorkflowDef)
+            wf_def.task_invocations = {
+                "inv1": mock_inv1,
+                "inv2": mock_inv2,
+            }
+
+            wf_run = _api.WorkflowRun(
+                run_id="wf.1",
+                wf_def=wf_def,
+                runtime=runtime,
+            )
+
+            # When
+            art1 = wf_run.get_artifact(task_invocation_id=inv1)
+            art2 = wf_run.get_artifact(task_invocation_id=inv2)
+
+            # Then
+            assert art1 == 42
+            assert art2 == (21, 38)
+
+    class TestGetArtifactSerialized:
+        @staticmethod
+        def test_serialized_artifacts():
+            # Given
+            runtime = create_autospec(RuntimeInterface)
+
+            inv1 = "inv1"
+            inv2 = "inv2"
+
+            art1_mock = serde.result_from_artifact(42, ir.ArtifactFormat.AUTO)
+            art2_mock = serde.result_from_artifact((21, 38), ir.ArtifactFormat.AUTO)
+
+            def return_mock(wf_run_id, task_inv_id):
+                if task_inv_id == inv1:
+                    return art1_mock
+                elif task_inv_id == inv2:
+                    return art2_mock
+                else:
+                    raise ValueError("Invalid inv ID for the mock")
+
+            runtime.get_output.side_effect = return_mock
+
+            mock_inv1 = create_autospec(ir.TaskInvocation)
+            mock_inv1.output_ids = ["art1"]
+
+            mock_inv2 = create_autospec(ir.TaskInvocation)
+            mock_inv2.output_ids = ["art2", "art3"]
+
+            wf_def = create_autospec(ir.WorkflowDef)
+            wf_def.task_invocations = {
+                "inv1": mock_inv1,
+                "inv2": mock_inv2,
+            }
+
+            wf_run = _api.WorkflowRun(
+                run_id="wf.1",
+                wf_def=wf_def,
+                runtime=runtime,
+            )
+
+            # When
+            art1 = wf_run.get_artifact_serialized(task_invocation_id=inv1)
+            art2 = wf_run.get_artifact_serialized(task_invocation_id=inv2)
+
+            # Then
+            assert art1 == art1_mock
+            assert art2 == art2_mock
+
     class TestTaskFilters:
         class TestTaskMatchesSchemaFilters:
             @pytest.fixture
