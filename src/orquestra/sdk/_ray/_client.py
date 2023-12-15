@@ -78,7 +78,9 @@ else:
             ray.shutdown()
 
         def get(
-            self, obj_refs: t.List[ray.ObjectRef], timeout: t.Optional[float] = None
+            self,
+            obj_refs: t.Union[ray.ObjectRef, t.List[ray.ObjectRef]],
+            timeout: t.Optional[float] = None,
         ):
             return ray.get(obj_refs, timeout=timeout)
 
