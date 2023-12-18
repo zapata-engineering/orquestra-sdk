@@ -1,13 +1,14 @@
 from unittest.mock import Mock, create_autospec, sentinel
 
 
-from orquestra.sdk.dremio import DremioClient
+from orquestra.sdk.dremio import _api, DremioClient
 from pyarrow.flight import FlightClient, FlightEndpoint, FlightStreamReader
 
 
 class TestDremioClient:
     @staticmethod
-    def test_basic_init(monkeypatch):
+    def test_from_config(monkeypatch):
+        """Isolated unit test for the basic init"""
         # Given
         user = "test_user"
         password = "test_password"
@@ -20,10 +21,15 @@ class TestDremioClient:
             port=port,
         )
 
-        cert_content = b"test cert contents"
+        cert_content = b"test certificate content"
+        monkeypatch.setattr(
+            _api,
+            "read_certificate",
+            create_autospec(_api.read_certificate, return_value=cert_content),
+        )
 
         flight_init_spy = Mock(name="FlightClient.__init__")
-        monkeypatch.setattr(FlightClient, "__init__", flight_init_spy)
+        monkeypatch.setattr(_api, "FlightClient", flight_init_spy)
 
         # When
         client = DremioClient.from_config(cfg)
@@ -31,7 +37,20 @@ class TestDremioClient:
         # Then
         assert client is not None
         assert client._flight_client is not None
-        flight_init_spy.assert_called_with("grpc+tls://test-host.orquestra.io:2037", tls_root_certs=cert_content)
+        flight_init_spy.assert_called_with(
+            "grpc+tls://test-host.orquestra.io:2037", tls_root_certs=cert_content
+        )
+
+    @staticmethod
+    def test_read_certificate():
+        """Integration test for reading certs from the file system."""
+        # When
+        cert_contents = _api.read_certificate()
+
+        # Then
+        assert len(cert_contents) > 0
+        assert "-----BEGIN CERTIFICATE-----" in cert_contents
+        assert "-----END CERTIFICATE-----" in cert_contents
 
     @staticmethod
     def test_using_flight_client():
