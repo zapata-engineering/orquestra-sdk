@@ -40,16 +40,18 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           architecture: x64
+          cache: 'pip'
 
+      # Installation method (venv/system/etc) affects Ray behavior. We're
+      # installing deps to a venv to align with the most common use case.
+      # Hence, we'll need to ensure the venv is always activated. More info:
+      # https://stackoverflow.com/questions/74668349/how-to-activate-a-virtualenv-in-a-github-action
       - name: Install deps
         shell: bash
-        run: make github_actions
-
-      # Ensure we don't run checks against stale, cached modules.
-      - name: Clean
-        shell: bash
         run: |
-          make clean
+          python3 -m venv ./venv
+          source ./venv/bin/activate
+          make github_actions
 
       # Pyright-specific step. Temporarily separated from the regular "style" check.
       # To be merged with 'make style' when we fix all pyright errors. Until then,
@@ -57,11 +59,13 @@ jobs:
       - name: Run pyright
         shell: bash
         run: |
+          source ./venv/bin/activate
           make pyright || true
 
       - name: Check style
         shell: bash
         run: |
+          source ./venv/bin/activate
           make style
 
   ruff:
