@@ -12,6 +12,8 @@
 
 🐛 *Bug Fixes*
 
+* Properly handle QE deprecated and connection timeout errors when using `WorkflowRun.by_id()` without `config` parameter passed
+
 💅 *Improvements*
 
 🥷 *Internal*
