@@ -32,9 +32,9 @@ from orquestra.sdk._base._spaces._api import list_projects, list_workspaces
 from orquestra.sdk._base._spaces._structs import ProjectRef, Workspace
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import (
-    ClusterConnectionError,
     ProjectInvalidError,
     RayNotRunningError,
+    RemoteConnectionError,
     RuntimeQuerySummaryError,
     UnauthorizedError,
     VersionMismatch,
@@ -741,7 +741,7 @@ class TestWorkflowRun:
                             WorkflowRunNotFoundError
                         )
                         runtime2.get_workflow_run_status.side_effect = (
-                            ClusterConnectionError("config2")
+                            RemoteConnectionError("config2")
                         )
 
                         # When

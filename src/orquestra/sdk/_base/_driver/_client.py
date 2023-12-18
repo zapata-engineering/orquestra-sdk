@@ -208,8 +208,8 @@ class DriverClient:
                 params=query_params,
                 allow_redirects=allow_redirects,
             )
-        except requests.exceptions.ConnectionError:
-            raise exceptions.ClusterConnectionError(uri)
+        except requests.exceptions.ConnectionError as e:
+            raise exceptions.RemoteConnectionError(uri) from e
 
         return response
 
@@ -226,8 +226,8 @@ class DriverClient:
                 json=body_params,
                 params=query_params,
             )
-        except requests.exceptions.ConnectionError:
-            raise exceptions.ClusterConnectionError(uri)
+        except requests.exceptions.ConnectionError as e:
+            raise exceptions.RemoteConnectionError(uri) from e
 
         return response
 
@@ -235,8 +235,8 @@ class DriverClient:
         """Helper method for DELETE requests."""
         try:
             response = self._session.delete(uri)
-        except requests.exceptions.ConnectionError:
-            raise exceptions.ClusterConnectionError(uri)
+        except requests.exceptions.ConnectionError as e:
+            raise exceptions.RemoteConnectionError(uri) from e
 
         return response
 

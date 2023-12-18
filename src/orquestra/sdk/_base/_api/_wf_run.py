@@ -17,12 +17,12 @@ from functools import cached_property
 from pathlib import Path
 
 from ...exceptions import (
-    ClusterConnectionError,
     ConfigFileNotFoundError,
     ConfigNameNotFoundError,
     ProjectInvalidError,
     QERemoved,
     RayNotRunningError,
+    RemoteConnectionError,
     RuntimeQuerySummaryError,
     UnauthorizedError,
     VersionMismatch,
@@ -627,7 +627,7 @@ def _find_config_for_workflow(wf_run_id: WorkflowRunId) -> RuntimeConfig:
             # on the client side
             unauthorized_configs.append(config_obj)
             continue
-        except ClusterConnectionError:
+        except RemoteConnectionError:
             # Cluster might be decommissioned or temporarily unavailable
             unauthorized_configs.append(config_obj)
             continue

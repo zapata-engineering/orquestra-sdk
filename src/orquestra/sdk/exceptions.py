@@ -281,8 +281,8 @@ class InvalidTokenError(BaseRuntimeError):
     pass
 
 
-class ClusterConnectionError(BaseRuntimeError):
-    """Raised when we could not get the connection to the cluster."""
+class RemoteConnectionError(BaseRuntimeError):
+    """Raised when we could not get the connection to the remote Orquestra cluster."""
 
     def __init__(self, uri: str):
         self.uri = uri
