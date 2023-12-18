@@ -427,6 +427,13 @@ class CERuntime(RuntimeInterface):
                 "- the authorization token was rejected by the remote cluster."
             ) from e
 
+    def get_output(
+        self, workflow_run_id: WorkflowRunId, task_invocation_id: TaskInvocationId
+    ) -> WorkflowResult:
+        raise exceptions.UnsupportedRuntimeFeature(
+            "CE runtime" "does not support get_output()" "function yet."
+        )
+
     @staticmethod
     def _list_wf_runs(
         func: PaginatedListFunc,

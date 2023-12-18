@@ -262,6 +262,13 @@ class InProcessRuntime(abc.RuntimeInterface):
             ),
         )
 
+    def get_output(
+        self, workflow_run_id: WorkflowRunId, task_invocation_id: ir.TaskInvocationId
+    ) -> WorkflowResult:
+        raise exceptions.UnsupportedRuntimeFeature(
+            "in_process runtime" "does not support get_output()" "function yet."
+        )
+
     def stop_workflow_run(
         self, workflow_run_id: WfRunId, *, force: t.Optional[bool] = None
     ):

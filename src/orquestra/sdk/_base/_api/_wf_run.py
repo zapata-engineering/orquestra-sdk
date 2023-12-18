@@ -446,8 +446,6 @@ class WorkflowRun:
                 task has 1 output, it's the dict entry's value. If the tasks has n
                 outputs, the dict entry's value is a n-tuple.
         """
-        # NOTE: this is a possible place for improvement. If future runtime APIs support
-        # getting a subset of artifacts, we should use them here.
         inv_outputs = self.get_artifacts_serialized()
 
         # The output shape differs across runtimes when the workflow functions returns a
@@ -457,6 +455,25 @@ class WorkflowRun:
             inv_id: serde.deserialize(inv_output)
             for inv_id, inv_output in inv_outputs.items()
         }
+
+    def get_artifact_serialized(
+        self, task_invocation_id: ir.TaskInvocationId
+    ) -> WorkflowResult:
+        """Unstable: this API is not implemented for all runtimes yet.
+
+        Returns serialized value calculated by given task if the task is finished.
+        Raises exception if given task did not finish yet.
+        """
+        return self._runtime.get_output(self.run_id, task_invocation_id)
+
+    def get_artifact(self, task_invocation_id: ir.TaskInvocationId) -> t.Any:
+        """Unstable: this API is not implemented for all runtimes yet.
+
+        Returns value calculated by given task if the task is finished.
+        Raises exception if given task did not finish yet.
+        """
+        serialized_artifact = self.get_artifact_serialized(task_invocation_id)
+        return serde.deserialize(serialized_artifact)
 
     def get_logs(self) -> WorkflowLogs:
         """Unstable: this API will change.

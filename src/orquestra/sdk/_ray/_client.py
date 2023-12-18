@@ -4,7 +4,11 @@
 """Facade module for Ray API."""
 import typing as t
 
-from orquestra.sdk.exceptions import WorkflowRunNotFoundError
+from orquestra.sdk.exceptions import (
+    NotFoundError,
+    UserTaskFailedError,
+    WorkflowRunNotFoundError,
+)
 
 try:
     import ray
@@ -78,9 +82,14 @@ else:
             ray.shutdown()
 
         def get(
-            self, obj_refs: t.List[ray.ObjectRef], timeout: t.Optional[float] = None
+            self,
+            obj_refs: t.Union[ray.ObjectRef, t.List[ray.ObjectRef]],
+            timeout: t.Optional[float] = None,
         ):
-            return ray.get(obj_refs, timeout=timeout)
+            try:
+                return ray.get(obj_refs, timeout=timeout)
+            except (UserTaskFailedError, exceptions.GetTimeoutError, ValueError):
+                raise NotFoundError
 
         def remote(self, fn):
             return ray.remote(fn)

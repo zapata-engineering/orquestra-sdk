@@ -309,6 +309,7 @@ class RayParams:
 # Defensive timeout for Ray operations that are expected to be instant.
 # Sometimes, Ray behaves unintuitively.
 JUST_IN_CASE_TIMEOUT = 10.0
+QUICK_TIMEOUT = 1.0
 
 
 class RayRuntime(RuntimeInterface):
@@ -646,6 +647,65 @@ class RayRuntime(RuntimeInterface):
                 succeeded_inv_ids,
                 serialized_succeeded_values,
             )
+        )
+
+    def get_output(
+        self, workflow_run_id: WorkflowRunId, task_invocation_id: TaskInvocationId
+    ) -> WorkflowResult:
+        """Returns single output for a workflow run.
+
+        This method returns single artifact for given task.
+        When the task failed or was not yet completed, this method throws an exception
+
+        Careful: This method does NOT return status of a task.
+        Verify it beforehand to make sure if task failed/succeeded/is running.
+        You might get an exception
+
+        Args:
+            workflow_run_id: ID identifying the workflow run.
+            task_invocation_id: ID identifying single task run
+
+        Returns:
+            Whatever the task function returned, independent of the
+            ``@task(n_outputs=...)`` value.
+
+        Raises:
+            orquestra.sdk.exceptions.WorkflowRunNotFoundError: if no run with
+                ``workflow_run_id`` was found.
+            orquestra.sdk.exceptions.exceptions.NotFoundError: if requested task
+                either failed, did not complete yet or outputs are not available
+        """
+        try:
+            _ = self.get_workflow_run_status(workflow_run_id)
+        except exceptions.WorkflowRunNotFoundError as e:
+            # Explicitly re-raise.
+            raise e
+
+        succeeded_obj_ref: _client.ObjectRef = self._client.get_task_output_async(
+            workflow_id=workflow_run_id,
+            # We rely on the fact that _make_ray_dag() assigns invocation
+            # ID as the Ray task name.
+            task_id=task_invocation_id,
+        )
+
+        # We don't know if the values are ready or not, quickly timeout and
+        # throw if they are not
+        try:
+            succeeded_value: t.Any = self._client.get(
+                succeeded_obj_ref, timeout=QUICK_TIMEOUT
+            )
+        except exceptions.NotFoundError:
+            raise
+
+        # We need to check if the task output was a TaskResult or any other value.
+        # A TaskResult means this is a >=0.47.0 workflow and there is a serialized
+        # value (WorkflowResult) in TaskResult.packed
+        # Anything else is a <0.47.0 workflow and the value should be serialized
+
+        return (
+            succeeded_value.packed
+            if isinstance(succeeded_value, TaskResult)
+            else serde.result_from_artifact(succeeded_value, ir.ArtifactFormat.AUTO)
         )
 
     def stop_workflow_run(

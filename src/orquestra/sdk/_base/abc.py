@@ -117,6 +117,29 @@ class RuntimeInterface(ABC, LogReader):
         raise NotImplementedError()
 
     @abstractmethod
+    def get_output(
+        self, workflow_run_id: WorkflowRunId, task_invocation_id: TaskInvocationId
+    ) -> WorkflowResult:
+        """Returns single output for a workflow run.
+
+        This method returns single artifact for given task.
+        When the task failed or was not yet completed, this method throws an exception
+
+        Careful: This method does NOT return status of a task.
+        Verify it beforehand to make sure if task failed/succeeded/is running.
+        You might get an exception
+
+        Args:
+            workflow_run_id: ID identifying the workflow run.
+            task_invocation_id: ID identifying single task run
+
+        Returns:
+            Whatever the task function returned, independent of the
+            ``@task(n_outputs=...)`` value.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
     def stop_workflow_run(
         self, workflow_run_id: WorkflowRunId, *, force: t.Optional[bool] = None
     ) -> None:
