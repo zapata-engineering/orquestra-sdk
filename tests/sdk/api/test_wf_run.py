@@ -34,6 +34,7 @@ from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import (
     ProjectInvalidError,
     RayNotRunningError,
+    RemoteConnectionError,
     RuntimeQuerySummaryError,
     UnauthorizedError,
     VersionMismatch,
@@ -511,6 +512,64 @@ class TestWorkflowRun:
                         assert run._wf_def == wf_def
                         assert run._runtime == runtime3
 
+                    @staticmethod
+                    def test_old_qe_config_stored(monkeypatch):
+                        # Given
+                        run_id = sentinel.wf_run_id
+
+                        # Set up configs
+                        config1 = _api.RuntimeConfig.ray()
+                        config2 = _api.RuntimeConfig.ce(
+                            uri="https://cluster2.example.com", token="a token"
+                        )
+                        config3 = _api.RuntimeConfig.ce(
+                            uri="https://cluster3.example.com", token="a token"
+                        )
+                        # pretend that config2 is old QE config
+                        config2._runtime_name = RuntimeName.QE_REMOTE
+
+                        configs_dict = {
+                            config.name: config
+                            for config in [config1, config2, config3]
+                        }
+                        monkeypatch.setattr(
+                            _api.RuntimeConfig,
+                            "list_configs",
+                            Mock(return_value=list(configs_dict.keys())),
+                        )
+
+                        monkeypatch.setattr(
+                            _api.RuntimeConfig, "load", configs_dict.__getitem__
+                        )
+
+                        # Set up runtimes
+                        # RayRuntime attempts to establish connection when the object
+                        # is created.
+                        monkeypatch.setattr(
+                            config1,
+                            "_get_runtime",
+                            Mock(side_effect=RayNotRunningError),
+                        )
+
+                        runtime3 = create_autospec(RuntimeInterface)
+                        monkeypatch.setattr(config3, "_get_runtime", lambda: runtime3)
+
+                        wf_def = sentinel.wf_def
+
+                        runtime3.get_workflow_run_status(run_id).workflow_def = wf_def
+
+                        # When
+                        run = _api.WorkflowRun.by_id(run_id=run_id)
+
+                        # Then
+                        # Uses the passed in config
+                        assert run._config == config3
+
+                        # Sets other attrs appropriately
+                        assert run._run_id == run_id
+                        assert run._wf_def == wf_def
+                        assert run._runtime == runtime3
+
                 class TestErrorSummary:
                     """It wasn't possible to resolve the config"""
 
@@ -628,6 +687,62 @@ class TestWorkflowRun:
                             WorkflowRunNotFoundError
                         )
                         runtime2.get_workflow_run_status.side_effect = UnauthorizedError
+
+                        # When
+                        with pytest.raises(RuntimeQuerySummaryError) as exc_info:
+                            _ = _api.WorkflowRun.by_id(run_id=run_id)
+
+                        # Then
+                        assert len(exc_info.value.not_found_runtimes) == 1
+                        not_found_info = exc_info.value.not_found_runtimes[0]
+
+                        assert not_found_info.runtime_name == RuntimeName.RAY_LOCAL
+                        assert not_found_info.config_name == config1.name
+                        assert not_found_info.server_uri is None
+
+                        assert len(exc_info.value.unauthorized_runtimes) == 1
+                        unauthorized_info = exc_info.value.unauthorized_runtimes[0]
+
+                        assert unauthorized_info.runtime_name == RuntimeName.CE_REMOTE
+                        assert unauthorized_info.config_name == config2.name
+                        assert unauthorized_info.server_uri == uri2
+
+                        assert exc_info.value.not_running_runtimes == []
+
+                    @staticmethod
+                    def test_not_found_in_ray_ce_no_connection(monkeypatch):
+                        run_id = sentinel.wf_run_id
+
+                        # Set up configs
+                        config1 = _api.RuntimeConfig.ray()
+                        uri2 = "https://cluster2.example.com"
+                        config2 = _api.RuntimeConfig.ce(uri=uri2, token="a token")
+                        configs_dict = {
+                            config.name: config for config in [config1, config2]
+                        }
+                        monkeypatch.setattr(
+                            _api.RuntimeConfig,
+                            "list_configs",
+                            Mock(return_value=list(configs_dict.keys())),
+                        )
+
+                        monkeypatch.setattr(
+                            _api.RuntimeConfig, "load", configs_dict.__getitem__
+                        )
+
+                        # Set up runtimes
+                        runtime1 = create_autospec(RuntimeInterface)
+                        runtime2 = create_autospec(RuntimeInterface)
+
+                        monkeypatch.setattr(config1, "_get_runtime", lambda: runtime1)
+                        monkeypatch.setattr(config2, "_get_runtime", lambda: runtime2)
+
+                        runtime1.get_workflow_run_status.side_effect = (
+                            WorkflowRunNotFoundError
+                        )
+                        runtime2.get_workflow_run_status.side_effect = (
+                            RemoteConnectionError("config2")
+                        )
 
                         # When
                         with pytest.raises(RuntimeQuerySummaryError) as exc_info:

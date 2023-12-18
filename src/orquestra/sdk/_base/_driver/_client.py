@@ -19,7 +19,7 @@ import pydantic
 import requests
 from requests import codes
 
-from orquestra.sdk import ProjectRef
+from orquestra.sdk import ProjectRef, exceptions
 from orquestra.sdk._base._spaces._api import make_workspace_zri
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, WorkflowResult
@@ -202,11 +202,14 @@ class DriverClient:
         allow_redirects: bool = True,
     ) -> requests.Response:
         """Helper method for GET requests."""
-        response = self._session.get(
-            uri,
-            params=query_params,
-            allow_redirects=allow_redirects,
-        )
+        try:
+            response = self._session.get(
+                uri,
+                params=query_params,
+                allow_redirects=allow_redirects,
+            )
+        except requests.exceptions.ConnectionError as e:
+            raise exceptions.RemoteConnectionError(uri) from e
 
         return response
 
@@ -217,16 +220,23 @@ class DriverClient:
         query_params: Optional[Mapping] = None,
     ) -> requests.Response:
         """Helper method for POST requests."""
-        response = self._session.post(
-            uri,
-            json=body_params,
-            params=query_params,
-        )
+        try:
+            response = self._session.post(
+                uri,
+                json=body_params,
+                params=query_params,
+            )
+        except requests.exceptions.ConnectionError as e:
+            raise exceptions.RemoteConnectionError(uri) from e
+
         return response
 
     def _delete(self, uri: str) -> requests.Response:
         """Helper method for DELETE requests."""
-        response = self._session.delete(uri)
+        try:
+            response = self._session.delete(uri)
+        except requests.exceptions.ConnectionError as e:
+            raise exceptions.RemoteConnectionError(uri) from e
 
         return response
 

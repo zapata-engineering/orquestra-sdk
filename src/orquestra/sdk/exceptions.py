@@ -281,6 +281,14 @@ class InvalidTokenError(BaseRuntimeError):
     pass
 
 
+class RemoteConnectionError(BaseRuntimeError):
+    """Raised when we could not get the connection to the remote Orquestra cluster."""
+
+    def __init__(self, uri: str):
+        self.uri = uri
+        super().__init__(uri)
+
+
 # Ray Errors
 class RayActorNameClashError(BaseRuntimeError):
     """Raised when multiple Ray actors exist with the same name."""
