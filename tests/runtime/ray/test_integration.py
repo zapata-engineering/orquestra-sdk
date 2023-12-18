@@ -24,6 +24,7 @@ from orquestra.sdk._base._config import LOCAL_RUNTIME_CONFIGURATION
 from orquestra.sdk._base._env import RAY_TEMP_PATH_ENV
 from orquestra.sdk._base._testing import _example_wfs, _ipc
 from orquestra.sdk._base.abc import RuntimeInterface
+from orquestra.sdk._base.serde import deserialize
 from orquestra.sdk._ray import _build_workflow, _client, _dag, _ray_logs
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.responses import JSONResult
@@ -719,11 +720,22 @@ class TestRayRuntimeMethods:
                 '{"__tuple__": true, "__values__": ["Zapata", "Computing"]}'
             )
 
+            artifacts = [
+                runtime.get_output(wf_run_id, inv_id) for inv_id in invocation_ids
+            ]
+
+            assert len(artifacts) == 4
             assert all(
                 [
-                    runtime.get_output(wf_run_id, inv_id)
-                    == JSONResult(value=expected_result)
-                    for inv_id in invocation_ids
+                    artifact == JSONResult(value=expected_result)
+                    for artifact in artifacts
+                ]
+            )
+
+            assert all(
+                [
+                    deserialize(artifact) == ("Zapata", "Computing")
+                    for artifact in artifacts
                 ]
             )
 
