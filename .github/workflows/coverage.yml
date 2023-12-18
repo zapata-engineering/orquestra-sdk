@@ -55,11 +55,16 @@ jobs:
 
       - name: Install deps
         shell: bash
-        run: make github_actions
+        run: |
+          python3 -m venv ./venv
+          source ./venv/bin/activate
+          make github_actions
 
       - name: Run tests and gather coverage stats
         shell: bash
-        run: make coverage
+        run: |
+          source ./venv/bin/activate
+          make coverage
 
       - name: Comment with code coverage
         # Conditionally run this step to prevent multiple comments
