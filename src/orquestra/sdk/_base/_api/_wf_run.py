@@ -20,7 +20,9 @@ from ...exceptions import (
     ConfigFileNotFoundError,
     ConfigNameNotFoundError,
     ProjectInvalidError,
+    QERemoved,
     RayNotRunningError,
+    RemoteConnectionError,
     RuntimeQuerySummaryError,
     UnauthorizedError,
     VersionMismatch,
@@ -609,6 +611,11 @@ def _find_config_for_workflow(wf_run_id: WorkflowRunId) -> RuntimeConfig:
             # exception when runtime object is created.
             not_running_configs.append(config_obj)
             continue
+        except QERemoved:
+            # When someone has old QE config stored in their config file
+            # adding it to unauthorized as someone might re-login into cluster using CE
+            unauthorized_configs.append(config_obj)
+            continue
 
         try:
             _ = runtime.get_workflow_run_status(wf_run_id)
@@ -618,6 +625,10 @@ def _find_config_for_workflow(wf_run_id: WorkflowRunId) -> RuntimeConfig:
         except UnauthorizedError:
             # TODO (ORQSDK-990): short circuit remote call by checking token validity
             # on the client side
+            unauthorized_configs.append(config_obj)
+            continue
+        except RemoteConnectionError:
+            # Cluster might be decommissioned or temporarily unavailable
             unauthorized_configs.append(config_obj)
             continue
 
