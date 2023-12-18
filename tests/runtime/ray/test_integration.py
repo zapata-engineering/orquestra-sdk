@@ -705,6 +705,28 @@ class TestRayRuntimeMethods:
             for trigger in triggers:
                 trigger.close()
 
+        @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+        def test_multioutput_task(self, runtime: _dag.RayRuntime, tmp_path):
+            wf = _example_wfs.multioutput_task_wf().model
+            wf_run_id = runtime.create_workflow_run(wf, None, False)
+
+            _wait_to_finish_wf(wf_run_id, runtime)
+
+            wf_run = runtime.get_workflow_run_status(wf_run_id)
+
+            invocation_ids = [task.invocation_id for task in wf_run.task_runs]
+            expected_result = (
+                '{"__tuple__": true, "__values__": ["Zapata", "Computing"]}'
+            )
+
+            assert all(
+                [
+                    runtime.get_output(wf_run_id, inv_id)
+                    == JSONResult(value=expected_result)
+                    for inv_id in invocation_ids
+                ]
+            )
+
 
 @pytest.mark.slow
 @pytest.mark.parametrize(
