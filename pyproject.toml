@@ -98,3 +98,9 @@ per-file-ignores = [
 max-line-length = 88
 count = true
 arg-type-hints-in-docstring = false
+
+[tool.pyright]
+exclude = [
+"./src/orquestra/sdk/_base/_traversal.py"
+]
+
