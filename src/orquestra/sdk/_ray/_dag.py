@@ -668,6 +668,12 @@ class RayRuntime(RuntimeInterface):
         Returns:
             Whatever the task function returned, independent of the
             ``@task(n_outputs=...)`` value.
+
+        Raises:
+            orquestra.sdk.exceptions.WorkflowRunNotFoundError: if no run with
+                ``workflow_run_id`` was found.
+            orquestra.sdk.exceptions.exceptions.NotFoundError: if requested task
+                either failed, did not complete yet or outputs are not available
         """
         try:
             _ = self.get_workflow_run_status(workflow_run_id)
