@@ -45,13 +45,12 @@ jobs:
         with:
           # Fetch depth 0 required to compare against `main`
           fetch-depth: 0
-      - uses: actions/setup-python@v4
+
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
           architecture: x64
-      # Used to create OS-agnostic python virtual env used for other steps.
-      - uses: syphar/restore-virtualenv@v1
-        id: cache-virtualenv
+          cache: 'pip'
 
       - name: Install deps
         shell: bash
