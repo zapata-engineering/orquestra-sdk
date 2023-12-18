@@ -27,7 +27,10 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest"]
-        python: ["3.9", "3.10", "3.11"]
+        # Choice of Python versions to run against:
+        # * 3.9: the oldest supported version
+        # * 3.11: the latest officially supported version. Used in CE images.
+        python: ["3.9", "3.11"]
         # Extend the matrix with a job that prints coverage.
         # Because { os: "ubuntu-latest", python: "3.11" } is already in the matrix,
         # print_coverage: true is added to that job.

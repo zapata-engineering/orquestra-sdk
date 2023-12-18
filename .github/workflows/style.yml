@@ -26,7 +26,10 @@ jobs:
     # Run jobs for a couple of Python versions.
     strategy:
       matrix:
-        python: ["3.9", "3.10", "3.11"]
+        # Choice of Python versions to run against:
+        # * 3.9: the oldest supported version
+        # * 3.11: the latest officially supported version. Used in CE images.
+        python: ["3.9", "3.11"]
 
     name: Style - Python ${{ matrix.python }}
     timeout-minutes: 25
