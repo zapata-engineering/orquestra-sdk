@@ -1067,9 +1067,12 @@ class TestDirectLogReader:
             assert len(logs.env_setup) > 0
 
             for tell_tale in ["Cloning virtualenv", "'pip', 'install'"]:
+                matched_lines = [
+                    line for line in logs.env_setup.out if tell_tale in line
+                ]
                 assert (
-                    len([line for line in logs.env_setup.out if tell_tale in line]) > 0
-                )
+                    len(matched_lines) > 0
+                ), f"No match. Full output:\n{logs.env_setup.out}"
 
     @staticmethod
     @pytest.mark.parametrize(

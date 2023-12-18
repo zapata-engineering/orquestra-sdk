@@ -100,7 +100,8 @@ count = true
 arg-type-hints-in-docstring = false
 
 [tool.pyright]
+# pyright 1.1.340 and newer hangs up when analyzing this file.
 exclude = [
-"./src/orquestra/sdk/_base/_traversal.py"
+    "./src/orquestra/sdk/_base/_traversal.py"
 ]
 

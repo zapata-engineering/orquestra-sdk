@@ -5,6 +5,7 @@
 🚨 *Breaking Changes*
 
 🔥 *Features*
+
 * New API `WorkflowRun.get_artifact()` and `WorkflowRun.get_artifact_serialized()` to get single task output
 
 🧟 *Deprecations*

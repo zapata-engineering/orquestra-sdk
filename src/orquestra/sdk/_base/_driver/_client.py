@@ -232,7 +232,7 @@ class DriverClient:
 
     # --- queries ---
 
-    # ---- Worklow Defs ----
+    # ---- Workflow Defs ----
 
     def create_workflow_def(
         self,
