@@ -27,8 +27,16 @@ jobs:
       - name: Git Checkout
         uses: actions/checkout@v3
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          architecture: x64
+          cache: 'pip'
+
+      - name: Install deps
+        shell: bash
+        run: make github_actions
+
       - name: Run type checking test
         shell: bash
-        run: |
-          make github_actions
-          make user-typing
+        run: make user-typing

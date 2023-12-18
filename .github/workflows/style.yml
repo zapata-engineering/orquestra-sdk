@@ -40,16 +40,11 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           architecture: x64
+          cache: 'pip'
 
       - name: Install deps
         shell: bash
         run: make github_actions
-
-      # Ensure we don't run checks against stale, cached modules.
-      - name: Clean
-        shell: bash
-        run: |
-          make clean
 
       # Pyright-specific step. Temporarily separated from the regular "style" check.
       # To be merged with 'make style' when we fix all pyright errors. Until then,
