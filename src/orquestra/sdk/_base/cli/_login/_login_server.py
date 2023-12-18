@@ -6,7 +6,6 @@ from typing import Optional
 
 from aiohttp import web
 
-
 CLUSTER_URL_KEY = web.AppKey("cluster_url", str)
 
 
