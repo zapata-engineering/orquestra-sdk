@@ -50,7 +50,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           architecture: x64
-          cache: 'pip'
+          # cache: 'pip'
 
       - name: Install deps
         shell: bash
