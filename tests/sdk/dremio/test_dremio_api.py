@@ -53,20 +53,34 @@ class TestDremioClient:
         assert "-----END CERTIFICATE-----" in cert_contents
 
     @staticmethod
-    def test_using_flight_client():
+    def test_read_query():
+        """Attemps to test as much integration with ``pyarrow.flight`` as possible
+        without sending data over the wire.
+
+        Test boundaries::
+
+            [.read_query]┬►[FlightClient]
+                         ├►[FlightEndpoint]
+                         └►[FlightStreamReader]
+        """
         # Given
         flight_client = create_autospec(FlightClient, name="flight_client")
 
         flight_endpoint = create_autospec(FlightEndpoint, "flight_endpoint")
         flight_client.get_flight_info().endpoints = [flight_endpoint]
 
-        reader = create_autospec(FlightStreamReader)
-        df_sentinel = sentinel.df
-        reader.read_pandas.return_value = df_sentinel
+        flight_client.authenticate_basic_token.return_value = (b"foo", b"test value")
 
+        df_sentinel = sentinel.df
+        reader = create_autospec(FlightStreamReader)
+        reader.read_pandas.return_value = df_sentinel
         flight_client.do_get.return_value = reader
 
-        client = DremioClient(flight_client=flight_client)
+        client = DremioClient(
+            flight_client=flight_client,
+            user=sentinel.user,
+            password=sentinel.password,
+        )
 
         query = "shouldn't matter"
 
