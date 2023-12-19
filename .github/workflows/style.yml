@@ -56,15 +56,6 @@ jobs:
           source ./venv/bin/activate
           make github_actions
 
-      # Pyright-specific step. Temporarily separated from the regular "style" check.
-      # To be merged with 'make style' when we fix all pyright errors. Until then,
-      # it only prints type errors, but doesn't fail the job.
-      - name: Run pyright
-        shell: bash
-        run: |
-          source ./venv/bin/activate
-          make pyright || true
-
       - name: Check style
         shell: bash
         run: |
