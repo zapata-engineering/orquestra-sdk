@@ -18,7 +18,6 @@ from orquestra.sdk._base._driver._models import (
 )
 from orquestra.sdk._base.serde import result_from_artifact
 from orquestra.sdk.schema.ir import ArtifactFormat, WorkflowDef
-from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult
 from orquestra.sdk.schema.workflow_run import RunStatus, TaskRun
 
 # --- Helpers ---
@@ -261,20 +260,6 @@ def make_get_wf_run_results_response():
             "80ba3c7c-70c0-11ed-a1eb-0242ac120002",
         ]
     }
-
-
-def make_get_wf_run_result_response(result_list: List[Any]):
-    """
-    Based on:
-        https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/run-result.yaml#L13
-    """
-
-    return ComputeEngineWorkflowResult(
-        results=[
-            result_from_artifact(result_obj, ArtifactFormat.AUTO).dict()
-            for result_obj in result_list
-        ]
-    ).json()
 
 
 def make_get_wf_run_result_legacy_response(result_obj: Any):

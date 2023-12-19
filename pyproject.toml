@@ -103,8 +103,6 @@ arg-type-hints-in-docstring = false
 
 [tool.pyright]
 exclude = [
-    "src/orquestra/sdk/_base/_driver/_client.py",
-    "src/orquestra/sdk/_base/_driver/_models.py",
     "src/orquestra/sdk/_base/_dsl.py",
     "src/orquestra/sdk/_base/_in_process_runtime.py",
     "src/orquestra/sdk/_base/_logs/_markers.py",
@@ -141,9 +139,6 @@ exclude = [
     "tests/sdk/api/test_config.py",
     "tests/sdk/api/test_task_run.py",
     "tests/sdk/api/test_wf_run.py",
-    "tests/sdk/driver/resp_mocks.py",
-    "tests/sdk/driver/test_ce_runtime.py",
-    "tests/sdk/driver/test_client.py",
     "tests/sdk/secrets/test_client.py",
     "tests/sdk/test_artifact_future_methods.py",
     "tests/sdk/test_ast.py",

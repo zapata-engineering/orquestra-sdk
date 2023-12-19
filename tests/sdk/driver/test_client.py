@@ -135,7 +135,7 @@ class TestClient:
 
     @pytest.fixture
     def status(self):
-        return RunStatus(state=State.SUCCEEDED)
+        return RunStatus(state=State.SUCCEEDED, start_time=None, end_time=None)
 
     @pytest.fixture
     def workflow_def(self):
@@ -669,7 +669,7 @@ class TestClient:
 
         @pytest.fixture
         def resources(self):
-            return Resources(cpu=None, memory=None, gpu=None)
+            return Resources(nodes=None, cpu=None, memory=None, gpu=None)
 
         class TestGet:
             @staticmethod

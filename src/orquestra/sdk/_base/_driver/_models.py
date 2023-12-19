@@ -158,7 +158,7 @@ class StateResponse(str, Enum):
     UNKNOWN = "UNKNOWN"
 
     @classmethod
-    def _missing_(cls, _):
+    def _missing_(cls, value):
         return cls.UNKNOWN
 
 
@@ -310,7 +310,7 @@ class CreateWorkflowRunRequest(pydantic.BaseModel):
     workflowDefinitionID: WorkflowDefID
     resources: Resources
     dryRun: bool
-    headNodeResources: Optional[Resources]
+    headNodeResources: Optional[HeadNodeResources]
 
 
 class CreateWorkflowRunResponse(pydantic.BaseModel):

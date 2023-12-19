@@ -547,7 +547,7 @@ class TestGetWorkflowRunResultsNonBlocking:
         # Given
         mocked_client.get_workflow_run_results.return_value = ["result_id"]
         mocked_client.get_workflow_run_result.return_value = (
-            ComputeEngineWorkflowResult(results=[JSONResult(value="[1]")])
+            ComputeEngineWorkflowResult(results=(JSONResult(value="[1]"),))
         )
 
         # When
@@ -570,7 +570,10 @@ class TestGetWorkflowRunResultsNonBlocking:
         ]
         mocked_client.get_workflow_run_result.side_effect = [
             ComputeEngineWorkflowResult(
-                results=[JSONResult(value="1"), JSONResult(value="2")],
+                results=(
+                    JSONResult(value="1"),
+                    JSONResult(value="2"),
+                ),
             )
         ]
 
@@ -1975,28 +1978,28 @@ class TestListProjects:
         (
             sdk.Resources(cpu="2000m"),
             sdk.Resources(cpu="1000m"),
-            _models.Resources(cpu="2000m"),
+            _models.Resources(nodes=None, cpu="2000m", memory=None, gpu=None),
             False,
             (),
         ),
         (
             sdk.Resources(cpu="2", gpu="1", memory="3000m"),
             sdk.Resources(cpu="1000m"),
-            _models.Resources(cpu="2", gpu="1", memory="3000m"),
+            _models.Resources(nodes=None, cpu="2", gpu="1", memory="3000m"),
             False,
             (),
         ),
         (
             sdk.Resources(cpu="2", gpu="1", memory="3000m"),
             sdk.Resources(cpu="2", gpu="1", memory="3000m"),
-            _models.Resources(cpu="2", gpu="1", memory="3000m"),
+            _models.Resources(nodes=None, cpu="2", gpu="1", memory="3000m"),
             False,
             (),
         ),
         (
             sdk.Resources(gpu="1"),
             sdk.Resources(cpu="2", memory="2Gi"),  # enough resources for defaults
-            _models.Resources(gpu="1"),
+            _models.Resources(nodes=None, cpu=None, gpu="1", memory=None),
             False,
             (),
         ),
