@@ -4,7 +4,7 @@
 from dataclasses import dataclass
 
 import certifi
-from pyarrow.flight import FlightCallOptions, FlightClient, FlightDescriptor
+from ._flight_facade import FlightCallOptions, FlightClient, FlightDescriptor
 
 
 class DremioClient:
