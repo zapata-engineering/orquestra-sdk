@@ -132,8 +132,6 @@ exclude = [
     "tests/cli/test_repos.py",
     "tests/cli/ui/test_presenters.py",
     "tests/cli/workflow/test_logs.py",
-    "tests/runtime/performance/conftest.py",
-    "tests/runtime/project_state.py",
     "tests/runtime/ray/test_build_workflow.py",
     "tests/sdk/api/test_config.py",
     "tests/sdk/api/test_task_run.py",
