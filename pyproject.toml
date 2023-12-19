@@ -104,7 +104,6 @@ arg-type-hints-in-docstring = false
 [tool.pyright]
 exclude = [
     "src/orquestra/sdk/_base/_dsl.py",
-    "src/orquestra/sdk/_base/_in_process_runtime.py",
     "src/orquestra/sdk/_base/_logs/_markers.py",
     "src/orquestra/sdk/_base/_logs/_models.py",
     "src/orquestra/sdk/_base/_testing/_example_wfs.py",
@@ -146,7 +145,6 @@ exclude = [
     "tests/sdk/test_dispatch.py",
     "tests/sdk/test_dispatch_integration.py",
     "tests/sdk/test_dsl.py",
-    "tests/sdk/test_in_process_runtime.py",
     "tests/sdk/test_serde.py",
     "tests/sdk/test_traversal.py",
     "tests/sdk/typing/task/assign_n_outputs.py",
