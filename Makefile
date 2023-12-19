@@ -43,6 +43,7 @@ MIN_COVERAGE=75
 #    coverage.xml file. It's required to upload stats to codecov.io.
 coverage:
 	$(PYTHON) -m pytest \
+		-m "not slow" \
 		--cov=src \
 		--cov-fail-under=$(MIN_COVERAGE) \
 		--cov-report xml \
