@@ -1,8 +1,8 @@
 from unittest.mock import Mock, create_autospec, sentinel
 
-
-from orquestra.sdk.dremio import _api, DremioClient
 from pyarrow.flight import FlightClient, FlightEndpoint, FlightStreamReader
+
+from orquestra.sdk.dremio import DremioClient, _api
 
 
 class TestDremioClient:

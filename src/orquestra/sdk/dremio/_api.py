@@ -39,13 +39,16 @@ class DremioClient:
         reader = self._flight_client.do_get(ticket, options)
         return reader.read_pandas()
 
-    def _get_ticket(self, descriptor: FlightDescriptor, call_options: FlightCallOptions):
+    def _get_ticket(
+        self, descriptor: FlightDescriptor, call_options: FlightCallOptions
+    ):
         flight_info = self._flight_client.get_flight_info(descriptor, call_options)
         return flight_info.endpoints[0].ticket
 
     def _get_call_options(self):
         token = self._flight_client.authenticate_basic_token(self._user, self._password)
         return FlightCallOptions(headers=[token])
+
 
 def read_certificate() -> str:
     return certifi.contents()

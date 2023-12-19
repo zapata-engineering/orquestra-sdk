@@ -4,7 +4,6 @@
 
 from ._api import DremioClient
 
-
 __all__ = [
     "DremioClient",
 ]
