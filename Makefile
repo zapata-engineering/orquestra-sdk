@@ -109,6 +109,10 @@ pymarkdown:
 pyright:
 	$(PYTHON) -m pyright src tests
 
+.PHONY: mypy
+mypy:
+	$(PYTHON) -m mypy src tests
+
 .PHONY: style
 style:
 	@$(MAKE) pymarkdown
@@ -117,6 +121,7 @@ style:
 	@$(MAKE) black
 	@$(MAKE) isort
 	@$(MAKE) pyright
+	@$(MAKE) mypy
 	@echo This project passes style!
 
 
