@@ -16,7 +16,6 @@ from pyarrow.flight import (
     FlightStreamReader,
 )
 
-
 __all__ = [
     "FlightCallOptions",
     "FlightClient",

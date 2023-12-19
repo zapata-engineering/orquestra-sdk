@@ -4,6 +4,7 @@
 from dataclasses import dataclass
 
 import certifi
+
 from ._flight_facade import FlightCallOptions, FlightClient, FlightDescriptor
 
 
