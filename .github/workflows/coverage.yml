@@ -78,7 +78,7 @@ jobs:
           path: |
             .coverage
             coverage.xml
-          name: coverage-reports
+          name: coverage-reports-python${{ matrix.python }}
 
       - name: Comment with code coverage
         # Conditionally run this step to prevent multiple comments
