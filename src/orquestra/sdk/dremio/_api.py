@@ -34,12 +34,12 @@ class DremioClient:
     def from_env_vars(cls) -> "DremioClient":
         cert_contents = read_certificate()
 
-        host_reader = EnvVarReader(_env.ORQ_DREMIO_HOST)
+        uri_reader = EnvVarReader(_env.ORQ_DREMIO_URI)
         user_reader = EnvVarReader(_env.ORQ_DREMIO_USER)
         pass_reader = EnvVarReader(_env.ORQ_DREMIO_PASS)
 
         flight_client = FlightClient(
-            f"{host_reader.read()}",
+            f"{uri_reader.read()}",
             tls_root_certs=cert_contents,
         )
 

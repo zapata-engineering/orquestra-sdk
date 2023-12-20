@@ -121,7 +121,7 @@ uploading.
 # --------------------------------- Dremio -----------------------------------
 
 # TODO: document
-ORQ_DREMIO_HOST = "ORQ_DREMIO_HOST"
+ORQ_DREMIO_URI = "ORQ_DREMIO_URI"
 ORQ_DREMIO_USER = "ORQ_DREMIO_USER"
 ORQ_DREMIO_PASS = "ORQ_DREMIO_PASS"
 
