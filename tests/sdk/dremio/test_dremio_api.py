@@ -40,7 +40,9 @@ class TestDremioClient:
         @staticmethod
         def test_standard_usage(monkeypatch, mock_flight_client):
             # Given
-            monkeypatch.setenv("ORQ_DREMIO_HOST", "test_host.orquestra.io:2037")
+            monkeypatch.setenv(
+                "ORQ_DREMIO_URI", "grpc+tls://test_host.orquestra.io:2037"
+            )
             monkeypatch.setenv("ORQ_DREMIO_USER", "test_user")
             monkeypatch.setenv("ORQ_DREMIO_PASS", "test_pass")
 
@@ -77,7 +79,9 @@ class TestDremioClient:
             them as instance variables.
             """
             # Given
-            monkeypatch.setenv("ORQ_DREMIO_HOST", "test_host.orquestra.io:2037")
+            monkeypatch.setenv(
+                "ORQ_DREMIO_URI", "grpc+tls://test_host.orquestra.io:2037"
+            )
             user = "test_user"
             password = "test_pass"
             monkeypatch.setenv("ORQ_DREMIO_USER", user)
