@@ -118,6 +118,13 @@ Used to set the temporary directory to which mlflow artifacts can be written bef
 uploading.
 """
 
+# --------------------------------- Dremio -----------------------------------
+
+# TODO: document
+ORQ_DREMIO_HOST = "ORQ_DREMIO_HOST"
+ORQ_DREMIO_USER = "ORQ_DREMIO_USER"
+ORQ_DREMIO_PASS = "ORQ_DREMIO_PASS"
+
 # ------------------------------- utilities ----------------------------------
 
 

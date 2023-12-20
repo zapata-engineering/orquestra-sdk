@@ -1,5 +1,7 @@
 from unittest.mock import Mock, create_autospec, sentinel
 
+import pytest
+
 from orquestra.sdk.dremio import DremioClient, _api
 from orquestra.sdk.dremio._flight_facade import (
     FlightClient,
@@ -8,7 +10,7 @@ from orquestra.sdk.dremio._flight_facade import (
 )
 
 
-class TestDremioClient:
+class TestDremioClient1:
     @staticmethod
     def test_from_config(monkeypatch):
         """Isolated unit test for the basic init"""
@@ -88,6 +90,52 @@ class TestDremioClient:
         query = "shouldn't matter"
 
         # When
+        df = client.read_query(query)
+
+        # Then
+        assert df == df_sentinel
+
+
+class TestDremioClient2:
+    @staticmethod
+    @pytest.fixture
+    def mock_flight_client(monkeypatch):
+        flight_init = Mock(name="FlightClient.__init__")
+        monkeypatch.setattr(_api, "FlightClient", flight_init)
+
+        flight_client = flight_init.return_value
+
+        flight_endpoint = create_autospec(FlightEndpoint, "flight_endpoint")
+        flight_client.get_flight_info().endpoints = [flight_endpoint]
+        flight_client.authenticate_basic_token.return_value = (b"foo", b"test value")
+        return flight_client
+
+
+    @staticmethod
+    def test_read_query(monkeypatch, mock_flight_client):
+        """Attemps to test as much integration with ``pyarrow.flight`` as possible
+        without sending data over the wire.
+
+        Test boundaries::
+
+            [.read_query]┬►[FlightClient]
+                         ├►[FlightEndpoint]
+                         └►[FlightStreamReader]
+        """
+        # Given
+        monkeypatch.setenv("ORQ_DREMIO_HOST", "test_host.orquestra.io:2037")
+        monkeypatch.setenv("ORQ_DREMIO_USER", "test_user")
+        monkeypatch.setenv("ORQ_DREMIO_PASS", "test_pass")
+
+        query = "shouldn't matter"
+
+        df_sentinel = sentinel.df
+        reader = create_autospec(FlightStreamReader)
+        reader.read_pandas.return_value = df_sentinel
+        mock_flight_client.do_get.return_value = reader
+
+        # When
+        client = DremioClient.from_env_vars()
         df = client.read_query(query)
 
         # Then

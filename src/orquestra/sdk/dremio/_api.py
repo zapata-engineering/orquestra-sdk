@@ -6,6 +6,8 @@ from dataclasses import dataclass
 import certifi
 
 from ._flight_facade import FlightCallOptions, FlightClient, FlightDescriptor
+from ._env_var_reader import EnvVarReader
+from .._base import _env
 
 
 class DremioClient:
@@ -25,6 +27,25 @@ class DremioClient:
         )
 
         return cls(flight_client=flight_client, user=cfg.user, password=cfg.password)
+
+    @classmethod
+    def from_env_vars(cls) -> "DremioClient":
+        cert_contents = read_certificate()
+
+        host_reader = EnvVarReader(_env.ORQ_DREMIO_HOST)
+        user_reader = EnvVarReader(_env.ORQ_DREMIO_USER)
+        pass_reader = EnvVarReader(_env.ORQ_DREMIO_PASS)
+
+        flight_client = FlightClient(
+            f"{host_reader.read()}",
+            tls_root_certs=cert_contents,
+        )
+
+        return cls(
+            flight_client=flight_client,
+            user=user_reader.read(),
+            password=pass_reader.read(),
+        )
 
     def __init__(self, flight_client: FlightClient, user: str, password: str):
         self._flight_client = flight_client
