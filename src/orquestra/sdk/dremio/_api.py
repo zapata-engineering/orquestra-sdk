@@ -3,9 +3,9 @@
 ################################################################################
 import certifi
 
-from ._flight_facade import FlightCallOptions, FlightClient, FlightDescriptor
-from ._env_var_reader import EnvVarReader
 from .._base import _env
+from ._env_var_reader import EnvVarReader
+from ._flight_facade import FlightCallOptions, FlightClient, FlightDescriptor
 
 
 class DremioClient:
@@ -30,6 +30,7 @@ class DremioClient:
        ``ORQ_DREMIO_USER`` is your Dremio account email.
        ``ORQ_DREMIO_PASS`` is your Dremio account password.
     """
+
     @classmethod
     def from_env_vars(cls) -> "DremioClient":
         cert_contents = read_certificate()

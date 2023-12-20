@@ -1,8 +1,7 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-"""Utility for reading data from Dremio managed by Orquestra.
-"""
+"""Utility for reading data from Dremio managed by Orquestra."""
 
 from ._api import DremioClient
 
