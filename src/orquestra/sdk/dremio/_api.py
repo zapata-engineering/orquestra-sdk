@@ -9,6 +9,27 @@ from .._base import _env
 
 
 class DremioClient:
+    """Reads dataframes from Dremio instance running on Orquestra.
+
+    Requires specifying connection details as environment variables:
+
+        * ``ORQ_DREMIO_HOST``: the full dremio URI, with protocol and port. Example
+          value: ``grpc+tls://ws2-12de2f.test-cluster.dremio-client.orquestra.io``
+        * ``ORQ_DREMIO_USER``: your Dremio account email.
+        * ``ORQ_DREMIO_PASS``: your Dremio account password.
+
+    To obtain the values described above, follow these steps:
+
+    #. Open Orquestra Portal—open your cluster's URI in a web browser.
+    #. Select workspace.
+    #. Open "Connectors".
+    #. Click "Connect" on the "Dremio" tab.
+    #. Click "Copy Flight Endpoint". This is the value for your ``ORQ_DREMIO_URI``.
+    #. Click "Lanuch".
+    #. Inside Dremio, go to settings and configure your user account.
+       ``ORQ_DREMIO_USER`` is your Dremio account email.
+       ``ORQ_DREMIO_PASS`` is your Dremio account password.
+    """
     @classmethod
     def from_env_vars(cls) -> "DremioClient":
         cert_contents = read_certificate()
