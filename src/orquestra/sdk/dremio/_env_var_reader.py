@@ -8,8 +8,15 @@ class EnvVarReader:
 
     def read(self) -> str:
         try:
-            return os.environ[self._var_name]
+            value = os.environ[self._var_name]
         except KeyError as e:
             raise EnvVarNotFoundError(
                 "Environment variable is required but isn't set", self._var_name
             ) from e
+
+        if value == "":
+            raise EnvVarNotFoundError(
+                "Environment variable is required but has no value", self._var_name
+            )
+        else:
+            return value
