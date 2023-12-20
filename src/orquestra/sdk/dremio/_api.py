@@ -19,16 +19,6 @@ class DremioClient:
         port: int
 
     @classmethod
-    def from_config(cls, cfg: Config) -> "DremioClient":
-        cert_contents = read_certificate()
-        flight_client = FlightClient(
-            f"{cfg.host}:{cfg.port}",
-            tls_root_certs=cert_contents,
-        )
-
-        return cls(flight_client=flight_client, user=cfg.user, password=cfg.password)
-
-    @classmethod
     def from_env_vars(cls) -> "DremioClient":
         cert_contents = read_certificate()
 
@@ -43,14 +33,19 @@ class DremioClient:
 
         return cls(
             flight_client=flight_client,
-            user=user_reader.read(),
-            password=pass_reader.read(),
+            user_reader=user_reader,
+            pass_reader=pass_reader,
         )
 
-    def __init__(self, flight_client: FlightClient, user: str, password: str):
+    def __init__(
+        self,
+        flight_client: FlightClient,
+        user_reader: EnvVarReader,
+        pass_reader: EnvVarReader,
+    ):
         self._flight_client = flight_client
-        self._user = user
-        self._password = password
+        self._user_reader = user_reader
+        self._pass_reader = pass_reader
 
     def read_query(self, query: str):
         flight_desc = FlightDescriptor.for_command(query)
@@ -68,7 +63,9 @@ class DremioClient:
         return flight_info.endpoints[0].ticket
 
     def _get_call_options(self):
-        token = self._flight_client.authenticate_basic_token(self._user, self._password)
+        user = self._user_reader.read()
+        password = self._pass_reader.read()
+        token = self._flight_client.authenticate_basic_token(user, password)
         return FlightCallOptions(headers=[token])
 
 
