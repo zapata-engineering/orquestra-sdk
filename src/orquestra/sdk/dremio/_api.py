@@ -1,8 +1,6 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-from dataclasses import dataclass
-
 import certifi
 
 from ._flight_facade import FlightCallOptions, FlightClient, FlightDescriptor
@@ -11,13 +9,6 @@ from .._base import _env
 
 
 class DremioClient:
-    @dataclass(frozen=True)
-    class Config:
-        user: str
-        password: str
-        host: str
-        port: int
-
     @classmethod
     def from_env_vars(cls) -> "DremioClient":
         cert_contents = read_certificate()
