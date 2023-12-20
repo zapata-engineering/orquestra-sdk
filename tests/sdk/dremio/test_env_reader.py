@@ -1,5 +1,8 @@
 import os
+
+from orquestra.sdk.exceptions import EnvVarNotFoundError
 from orquestra.sdk.dremio import _env_var_reader
+import pytest
 
 
 class TestEnvReader:
@@ -34,3 +37,16 @@ class TestEnvReader:
             assert read_val == value
         finally:
             del os.environ[name]
+
+    @staticmethod
+    def test_variable_not_set():
+        # Given
+        name = "TEST_VAR"
+        reader = _env_var_reader.EnvVarReader(name)
+
+        # Then
+        with pytest.raises(EnvVarNotFoundError) as exc_info:
+            # When
+            _ = reader.read()
+
+        assert exc_info.value.var_name == name

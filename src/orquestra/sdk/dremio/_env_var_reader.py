@@ -1,4 +1,5 @@
 import os
+from orquestra.sdk.exceptions import EnvVarNotFoundError
 
 
 class EnvVarReader:
@@ -6,4 +7,9 @@ class EnvVarReader:
         self._var_name = var_name
 
     def read(self) -> str:
-        return os.getenv(self._var_name)
+        try:
+            return os.environ[self._var_name]
+        except KeyError as e:
+            raise EnvVarNotFoundError(
+                "Environment variable is required but isn't set", self._var_name
+            ) from e
