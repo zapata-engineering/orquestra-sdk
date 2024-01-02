@@ -64,6 +64,13 @@ class TestDremioClient:
             assert df == df_sentinel
 
         def _iter_instance_var_dicts(self, root):
+            """Finds all instance variables, including nested ones.
+
+            Traverses the whole attribute graph. Yields attribute values for
+            ``root`` and it's children (``root``'s attribute's attributes).
+
+            Ignores ``Mock`` objects to avoid infinite recursion.
+            """
             try:
                 attr_dict = root.__dict__
             except AttributeError:
