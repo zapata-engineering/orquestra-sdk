@@ -1,3 +1,6 @@
+################################################################################
+# © Copyright 2023-2024 Zapata Computing Inc.
+################################################################################
 from unittest.mock import Mock, create_autospec, sentinel
 
 import pytest

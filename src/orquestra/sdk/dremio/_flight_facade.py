@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023-2024 Zapata Computing Inc.
 ################################################################################
 
 """Imports symbols we need from ``pyarrow.flight``.

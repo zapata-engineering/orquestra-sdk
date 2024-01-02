@@ -1,3 +1,6 @@
+################################################################################
+# © Copyright 2023-2024 Zapata Computing Inc.
+################################################################################
 import os
 
 from orquestra.sdk.exceptions import EnvVarNotFoundError
