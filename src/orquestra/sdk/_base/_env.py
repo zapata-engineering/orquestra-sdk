@@ -118,6 +118,23 @@ Used to set the temporary directory to which mlflow artifacts can be written bef
 uploading.
 """
 
+# --------------------------------- Dremio -----------------------------------
+
+ORQ_DREMIO_URI = "ORQ_DREMIO_URI"
+"""
+Used for passing the Flight endpoint URI for DremioClient.
+"""
+
+ORQ_DREMIO_USER = "ORQ_DREMIO_USER"
+"""
+Used for passing the basic auth user for DremioClient.
+"""
+
+ORQ_DREMIO_PASS = "ORQ_DREMIO_PASS"
+"""
+Used for passing the basic auth password for DremioClient.
+"""
+
 # ------------------------------- utilities ----------------------------------
 
 
