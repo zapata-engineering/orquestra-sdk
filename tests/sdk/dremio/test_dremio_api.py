@@ -104,14 +104,3 @@ class TestDremioClient:
             for child_obj in self._iter_instance_var_dicts(client):
                 assert child_obj != user
                 assert child_obj != password
-
-    @staticmethod
-    def test_read_certificate():
-        """Integration test for reading certs from the file system."""
-        # When
-        cert_contents = _api.read_certificate()
-
-        # Then
-        assert len(cert_contents) > 0
-        assert "-----BEGIN CERTIFICATE-----" in cert_contents
-        assert "-----END CERTIFICATE-----" in cert_contents

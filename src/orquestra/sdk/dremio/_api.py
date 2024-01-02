@@ -1,8 +1,6 @@
 ################################################################################
 # © Copyright 2023-2024 Zapata Computing Inc.
 ################################################################################
-import certifi
-
 from .._base import _env
 from ._env_var_reader import EnvVarReader
 from ._flight_facade import FlightCallOptions, FlightClient, FlightDescriptor
@@ -33,16 +31,11 @@ class DremioClient:
 
     @classmethod
     def from_env_vars(cls) -> "DremioClient":
-        cert_contents = read_certificate()
-
         uri_reader = EnvVarReader(_env.ORQ_DREMIO_URI)
         user_reader = EnvVarReader(_env.ORQ_DREMIO_USER)
         pass_reader = EnvVarReader(_env.ORQ_DREMIO_PASS)
 
-        flight_client = FlightClient(
-            f"{uri_reader.read()}",
-            tls_root_certs=cert_contents,
-        )
+        flight_client = FlightClient(f"{uri_reader.read()}")
 
         return cls(
             flight_client=flight_client,
@@ -80,7 +73,3 @@ class DremioClient:
         password = self._pass_reader.read()
         token = self._flight_client.authenticate_basic_token(user, password)
         return FlightCallOptions(headers=[token])
-
-
-def read_certificate() -> str:
-    return certifi.contents()
