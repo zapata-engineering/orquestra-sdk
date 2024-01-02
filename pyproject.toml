@@ -29,7 +29,7 @@ mypy_path = "src:src/python"
 exclude = [
     # Exclude anything in an examples directory, except the docs/examples dir.
     '^(?!docs\/examples\/).*examples\/.*$',
-    # Exclude our test files where we invoce mypy from pytest.
+    # Exclude our test files where we invoke mypy from pytest.
     "tests/sdk/typing",
     # Workaround for misbehaving 3rd-party libraries.
     "src/orquestra/sdk/dremio/_flight_facade.py",
