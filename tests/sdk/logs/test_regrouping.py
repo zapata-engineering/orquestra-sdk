@@ -2,14 +2,14 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 """
-Unit tests for ``orquestra.sdk._base._logs._regrouping``.
+Unit tests for ``orquestra.sdk._client._logs._regrouping``.
 """
 
 from pathlib import Path
 
 import pytest
 
-from orquestra.sdk._base._logs import _regrouping
+from orquestra.sdk._client._logs import _regrouping
 
 
 class TestIsWorker:

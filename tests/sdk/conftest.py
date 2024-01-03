@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-import orquestra.sdk._base._config
+import orquestra.sdk._client._config
 
 from .data.configs import TEST_CONFIG_JSON
 
@@ -15,7 +15,7 @@ from .data.configs import TEST_CONFIG_JSON
 @pytest.fixture
 def patch_config_location(tmp_path, monkeypatch):
     """
-    Makes the functions in orquestra.sdk._base._config read/write file from a
+    Makes the functions in orquestra.sdk._client._config read/write file from a
     temporary directory.
     """
     config_location = tmp_path / "config.json"
@@ -32,7 +32,7 @@ def patch_runtime_option_validation(monkeypatch):
             return input
 
     monkeypatch.setattr(
-        orquestra.sdk._base._config, "_validate_runtime_options", assume_valid
+        orquestra.sdk._client._config, "_validate_runtime_options", assume_valid
     )
 
 

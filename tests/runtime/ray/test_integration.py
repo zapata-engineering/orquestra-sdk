@@ -20,11 +20,11 @@ from freezegun import freeze_time
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
-from orquestra.sdk._base._config import LOCAL_RUNTIME_CONFIGURATION
-from orquestra.sdk._base._env import RAY_TEMP_PATH_ENV
-from orquestra.sdk._base._testing import _example_wfs, _ipc
-from orquestra.sdk._base.abc import RuntimeInterface
-from orquestra.sdk._base.serde import deserialize
+from orquestra.sdk._client._config import LOCAL_RUNTIME_CONFIGURATION
+from orquestra.sdk._client._env import RAY_TEMP_PATH_ENV
+from orquestra.sdk._client._testing import _example_wfs, _ipc
+from orquestra.sdk._client.abc import RuntimeInterface
+from orquestra.sdk._client.serde import deserialize
 from orquestra.sdk._ray import _build_workflow, _client, _dag, _ray_logs
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.responses import JSONResult
@@ -883,7 +883,7 @@ class Test3rdPartyLibraries:
     # We're reading a serialized workflow def. The SDK version inside that JSON is
     # likely to be different from the one we're using for development. The SDK shows a
     # warning when deserializing a workflow def like this.
-    @pytest.mark.filterwarnings("ignore::orquestra.sdk.exceptions.VersionMismatch")
+    @pytest.mark.filterwarnings("ignore::orquestra.sdk._client.exceptions.VersionMismatch")
     @pytest.mark.skipif(
         sys.version_info < (3, 11), reason="Pickle internals changed in Python 3.11"
     )

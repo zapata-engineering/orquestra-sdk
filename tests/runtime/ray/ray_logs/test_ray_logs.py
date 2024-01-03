@@ -11,8 +11,8 @@ from unittest.mock import Mock
 import pytest
 
 from orquestra.sdk import LogOutput
-from orquestra.sdk._base import _dates
-from orquestra.sdk._base._logs import _markers
+from orquestra.sdk._client import _dates
+from orquestra.sdk._client._logs import _markers
 from orquestra.sdk._ray import _ray_logs
 
 DATA_DIR = Path(__file__).parent / "data"

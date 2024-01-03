@@ -3,7 +3,7 @@
 ################################################################################
 
 """
-Unit tests for orquestra.sdk._base._services.
+Unit tests for orquestra.sdk._client._services.
 """
 
 
@@ -17,8 +17,8 @@ from unittest.mock import Mock, create_autospec
 
 import pytest
 
-from orquestra.sdk._base import _services
-from orquestra.sdk._base._testing._reloaders import restore_loaded_modules
+from orquestra.sdk._client import _services
+from orquestra.sdk._client._testing._reloaders import restore_loaded_modules
 
 
 def _fake_run_for_ray(

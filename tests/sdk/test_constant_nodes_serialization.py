@@ -4,8 +4,8 @@
 import pytest
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._base._workflow import WorkflowDef
-from orquestra.sdk._base.loader import get_attributes_of_type, get_workflow_defs_module
+from orquestra.sdk._client._workflow import WorkflowDef
+from orquestra.sdk._client.loader import get_attributes_of_type, get_workflow_defs_module
 
 
 def test_constant_serialization_when_loading_from_file():

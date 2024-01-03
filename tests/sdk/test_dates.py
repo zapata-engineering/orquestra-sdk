@@ -2,7 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 """
-Unit tests for ``orquestra.sdk._base._dates``.
+Unit tests for ``orquestra.sdk._client._dates``.
 """
 
 import re
@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from orquestra.sdk._base import _dates
+from orquestra.sdk._client import _dates
 
 
 class TestNow:

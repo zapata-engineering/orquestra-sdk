@@ -2,7 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 
-"""Unit tests for ``orquestra.sdk.exceptions``.
+"""Unit tests for ``orquestra.sdk._client.exceptions``.
 
 In general, exception classes shouldn't have any code apart from just data structures,
 so theorerically there should be nothing to test. However, there are occasional bits
@@ -12,7 +12,7 @@ Before extending this file with tests, please consider extracting your logic awa
 the exception class.
 """
 
-from orquestra.sdk.exceptions import RuntimeQuerySummaryError
+from orquestra.sdk._client.exceptions import RuntimeQuerySummaryError
 from orquestra.sdk.schema.configs import RuntimeName
 
 

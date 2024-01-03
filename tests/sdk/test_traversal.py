@@ -16,7 +16,7 @@ import pytest
 
 import orquestra.sdk.schema.ir as ir
 from orquestra.sdk import exceptions, secrets
-from orquestra.sdk._base import _dsl, _traversal, _workflow, dispatch, serde
+from orquestra.sdk._client import _dsl, _traversal, _workflow, dispatch, serde
 from orquestra.sdk.packaging import _versions
 
 from .data.complex_serialization.workflow_defs import (

@@ -12,12 +12,12 @@ from unittest.mock import Mock, PropertyMock, create_autospec
 import pytest
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import _dates
-from orquestra.sdk._base._config import (
+from orquestra.sdk._client import _dates
+from orquestra.sdk._client._config import (
     LOCAL_RUNTIME_CONFIGURATION,
     RuntimeConfiguration,
 )
-from orquestra.sdk._base._spaces._structs import ProjectRef
+from orquestra.sdk._client._spaces._structs import ProjectRef
 from orquestra.sdk._ray import _client, _dag, _ray_logs
 from orquestra.sdk.schema.workflow_run import State
 

@@ -2,7 +2,7 @@
 # © Copyright 2022 Zapata Computing Inc.
 ################################################################################
 """
-Tests for orquestra.sdk._base._secrets._client.
+Tests for orquestra.sdk._client._secrets._client.
 During the prototype phase, they interact with the live system. This should be
 refactored to be unit tests before going on with the target implementation.
 """

@@ -10,13 +10,13 @@ takes a lot of lines. Kept as a Python file for some DRY-ness.
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from orquestra.sdk._base._driver._models import (
+from orquestra.sdk._client._driver._models import (
     TaskInvocationID,
     TaskRunID,
     WorkflowDefID,
     WorkflowRunID,
 )
-from orquestra.sdk._base.serde import result_from_artifact
+from orquestra.sdk._client.serde import result_from_artifact
 from orquestra.sdk.schema.ir import ArtifactFormat, WorkflowDef
 from orquestra.sdk.schema.workflow_run import RunStatus, TaskRun
 

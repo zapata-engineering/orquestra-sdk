@@ -2,11 +2,11 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 """
-Tests for ``orquestra.sdk._base._env``.
+Tests for ``orquestra.sdk._client._env``.
 """
 import pytest
 
-from orquestra.sdk._base import _env
+from orquestra.sdk._client import _env
 
 
 class TestFlagSet:

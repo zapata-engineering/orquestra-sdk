@@ -7,7 +7,7 @@ from unittest.mock import Mock
 import pytest
 
 import orquestra.sdk as sdk
-from orquestra.sdk._base._testing import _connections
+from orquestra.sdk._client._testing import _connections
 
 # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
 # unraisable exceptions. Last tested with Ray 2.4.0.

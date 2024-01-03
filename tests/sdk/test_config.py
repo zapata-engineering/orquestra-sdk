@@ -21,8 +21,8 @@ from pathlib import Path
 import filelock
 import pytest
 
-import orquestra.sdk.exceptions as exceptions
-from orquestra.sdk._base import _config
+import orquestra.sdk._client.exceptions as exceptions
+from orquestra.sdk._client import _config
 from orquestra.sdk.schema.configs import RuntimeName
 
 from .data.configs import TEST_CONFIG_JSON

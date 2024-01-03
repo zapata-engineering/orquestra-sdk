@@ -2,7 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 """
-Tests for ``orquestra.sdk._base.cli._corq._cli_logs``.
+Tests for ``orquestra.sdk._client.cli._corq._cli_logs``.
 """
 import os
 import subprocess

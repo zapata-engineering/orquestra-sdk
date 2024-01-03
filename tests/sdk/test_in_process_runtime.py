@@ -2,7 +2,7 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 """
-Additional tests for orquestra.sdk._base._in_process_runtime. Most of the
+Additional tests for orquestra.sdk._client._in_process_runtime. Most of the
 functionality is covered inside tests/v2/test_api.py.
 
 We need this file because test_api.py might be too coarse for some scenarios.
@@ -15,10 +15,10 @@ import pytest
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import _dates, serde
-from orquestra.sdk._base._in_process_runtime import InProcessRuntime
-from orquestra.sdk._base._spaces._structs import ProjectRef
-from orquestra.sdk._base._testing._example_wfs import (
+from orquestra.sdk._client import _dates, serde
+from orquestra.sdk._client._in_process_runtime import InProcessRuntime
+from orquestra.sdk._client._spaces._structs import ProjectRef
+from orquestra.sdk._client._testing._example_wfs import (
     wf_with_explicit_n_outputs,
     wf_with_secrets,
 )

@@ -2,7 +2,7 @@
 # © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
-Tests for orquestra.sdk._base._driver._client.
+Tests for orquestra.sdk._client._driver._client.
 """
 from datetime import timedelta
 from typing import Any, Dict, List, Optional
@@ -13,19 +13,19 @@ import pytest
 import responses
 
 import orquestra.sdk as sdk
-from orquestra.sdk._base._driver import _exceptions
-from orquestra.sdk._base._driver._client import (
+from orquestra.sdk._client._driver import _exceptions
+from orquestra.sdk._client._driver._client import (
     DriverClient,
     ExternalUriProvider,
     Paginated,
     _match_unsupported_version,
 )
-from orquestra.sdk._base._driver._models import (
+from orquestra.sdk._client._driver._models import (
     GetWorkflowDefResponse,
     Resources,
     SystemLogSourceType,
 )
-from orquestra.sdk._base._spaces._structs import ProjectRef
+from orquestra.sdk._client._spaces._structs import ProjectRef
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import JSONResult, PickleResult
 from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun

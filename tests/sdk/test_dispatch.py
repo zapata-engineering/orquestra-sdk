@@ -8,7 +8,7 @@ import typing as t
 
 import pytest
 
-from orquestra.sdk._base import dispatch
+from orquestra.sdk._client import dispatch
 from orquestra.sdk.schema import ir
 
 

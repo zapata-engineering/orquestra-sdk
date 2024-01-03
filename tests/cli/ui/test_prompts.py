@@ -11,8 +11,8 @@ from unittest.mock import Mock
 import inquirer  # type: ignore # noqa
 import pytest
 
-from orquestra.sdk._base.cli._ui._prompts import SINGLE_INPUT, Prompter
-from orquestra.sdk.exceptions import NoOptionsAvailableError, UserCancelledPrompt
+from orquestra.sdk._client.cli._ui._prompts import SINGLE_INPUT, Prompter
+from orquestra.sdk._client.exceptions import NoOptionsAvailableError, UserCancelledPrompt
 
 prompter = Prompter()
 

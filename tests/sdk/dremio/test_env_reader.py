@@ -6,7 +6,7 @@ import os
 import pytest
 
 from orquestra.sdk.dremio import _env_var_reader
-from orquestra.sdk.exceptions import EnvVarNotFoundError
+from orquestra.sdk._client.exceptions import EnvVarNotFoundError
 
 
 class TestEnvReader:

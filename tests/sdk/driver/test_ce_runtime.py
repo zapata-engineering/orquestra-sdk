@@ -9,9 +9,9 @@ import pytest
 
 import orquestra.sdk as sdk
 from orquestra.sdk import LogOutput, Project, Workspace, exceptions
-from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _models
-from orquestra.sdk._base._spaces._structs import ProjectRef
-from orquestra.sdk._base._testing._example_wfs import (
+from orquestra.sdk._client._driver import _ce_runtime, _client, _exceptions, _models
+from orquestra.sdk._client._spaces._structs import ProjectRef
+from orquestra.sdk._client._testing._example_wfs import (
     add,
     my_workflow,
     workflow_parametrised_with_resources,
@@ -32,7 +32,7 @@ def mocked_client(monkeypatch: pytest.MonkeyPatch):
     mocked_client = MagicMock(spec=_client.DriverClient)
     mocked_client.from_token.return_value = mocked_client
     monkeypatch.setattr(
-        "orquestra.sdk._base._driver._client.DriverClient", mocked_client
+        "orquestra.sdk._client._driver._client.DriverClient", mocked_client
     )
     return mocked_client
 

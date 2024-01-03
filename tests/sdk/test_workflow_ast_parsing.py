@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 
 import orquestra.sdk as sdk
-from orquestra.sdk._base import _workflow
+from orquestra.sdk._client import _workflow
 
 
 def plain_function():

@@ -8,7 +8,7 @@ import sys
 import pytest
 from aiohttp import ClientResponse, ClientSession, web
 
-from orquestra.sdk._base.cli._login._login_server import CLUSTER_URL_KEY, LoginServer
+from orquestra.sdk._client.cli._login._login_server import CLUSTER_URL_KEY, LoginServer
 
 
 class TestLoginServer:

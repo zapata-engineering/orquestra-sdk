@@ -34,7 +34,7 @@ import pytest
 import pytest_httpserver
 
 import orquestra.sdk as sdk
-from orquestra.sdk._base._testing import _connections
+from orquestra.sdk._client._testing import _connections
 from orquestra.sdk.schema.workflow_run import RunStatus, TaskRun
 
 from .driver import resp_mocks

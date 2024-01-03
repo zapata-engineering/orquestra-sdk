@@ -6,8 +6,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from orquestra.sdk._base._driver import _client
-from orquestra.sdk._base._factory import build_runtime_from_config
+from orquestra.sdk._client._driver import _client
+from orquestra.sdk._client._factory import build_runtime_from_config
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 
 
@@ -40,7 +40,7 @@ def mocked_client(monkeypatch: pytest.MonkeyPatch):
     mocked_client = MagicMock(spec=_client.DriverClient)
     mocked_client.from_token.return_value = mocked_client
     monkeypatch.setattr(
-        "orquestra.sdk._base._driver._client.DriverClient", mocked_client
+        "orquestra.sdk._client._driver._client.DriverClient", mocked_client
     )
     return mocked_client
 

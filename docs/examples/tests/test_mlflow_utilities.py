@@ -17,7 +17,7 @@ import responses.matchers
 from pytest import MonkeyPatch
 
 from orquestra import sdk
-from orquestra.sdk._base import _config
+from orquestra.sdk._client import _config
 from orquestra.sdk.schema import configs
 
 

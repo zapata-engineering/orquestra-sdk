@@ -8,11 +8,11 @@ from unittest.mock import Mock, create_autospec
 import pytest
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import _dates
-from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
-from orquestra.sdk._base._spaces._structs import Project, Workspace
-from orquestra.sdk._base.cli import _arg_resolvers, _repos
-from orquestra.sdk._base.cli._ui import _presenters, _prompts
+from orquestra.sdk._client import _dates
+from orquestra.sdk._client._logs._interfaces import LogOutput, WorkflowLogs
+from orquestra.sdk._client._spaces._structs import Project, Workspace
+from orquestra.sdk._client.cli import _arg_resolvers, _repos
+from orquestra.sdk._client.cli._ui import _presenters, _prompts
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 from orquestra.sdk.schema.workflow_run import RunStatus, State
 

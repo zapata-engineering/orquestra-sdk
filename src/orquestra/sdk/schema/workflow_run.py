@@ -13,8 +13,8 @@ import warnings
 
 from pydantic import BaseModel
 
-from orquestra.sdk._base._dates import Instant
-from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
+from .dates import Instant
+from .ir import TaskInvocationId, WorkflowDef
 
 WorkflowRunId = str
 TaskRunId = str

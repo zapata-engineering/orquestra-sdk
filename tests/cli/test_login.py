@@ -8,15 +8,15 @@ from unittest.mock import Mock, PropertyMock, create_autospec
 import pytest
 from aiohttp import web
 
-from orquestra.sdk._base.cli._arg_resolvers import ConfigResolver
-from orquestra.sdk._base.cli._login import _login, _login_server
-from orquestra.sdk._base.cli._repos import ConfigRepo, RuntimeRepo
-from orquestra.sdk._base.cli._ui._presenters import (
+from orquestra.sdk._client.cli._arg_resolvers import ConfigResolver
+from orquestra.sdk._client.cli._login import _login, _login_server
+from orquestra.sdk._client.cli._repos import ConfigRepo, RuntimeRepo
+from orquestra.sdk._client.cli._ui._presenters import (
     LoginPresenter,
     WrappedCorqOutputPresenter,
 )
-from orquestra.sdk._base.cli._ui._prompts import Prompter
-from orquestra.sdk.exceptions import ExpiredTokenError, InvalidTokenError
+from orquestra.sdk._client.cli._ui._prompts import Prompter
+from orquestra.sdk._client.exceptions import ExpiredTokenError, InvalidTokenError
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
 
 

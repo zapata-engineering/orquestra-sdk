@@ -6,7 +6,7 @@ user's project state.
 """
 from pathlib import Path
 
-from orquestra.sdk._base import _config
+from orquestra.sdk._client import _config
 from orquestra.sdk.schema import configs
 
 

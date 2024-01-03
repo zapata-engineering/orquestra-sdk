@@ -2,7 +2,7 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 """
-Tests for orquestra.sdk._base._api._wf_run.
+Tests for orquestra.sdk._client._api._wf_run.
 """
 
 import itertools
@@ -23,15 +23,15 @@ from unittest.mock import (
 
 import pytest
 
-from orquestra.sdk._base import _api, _dsl, _traversal, _workflow, serde
-from orquestra.sdk._base._api._task_run import TaskRun
-from orquestra.sdk._base._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
-from orquestra.sdk._base._in_process_runtime import InProcessRuntime
-from orquestra.sdk._base._logs._interfaces import LogOutput, LogReader, WorkflowLogs
-from orquestra.sdk._base._spaces._api import list_projects, list_workspaces
-from orquestra.sdk._base._spaces._structs import ProjectRef, Workspace
-from orquestra.sdk._base.abc import RuntimeInterface
-from orquestra.sdk.exceptions import (
+from orquestra.sdk._client import _api, _dsl, _traversal, _workflow, serde
+from orquestra.sdk._client._api._task_run import TaskRun
+from orquestra.sdk._client._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
+from orquestra.sdk._client._in_process_runtime import InProcessRuntime
+from orquestra.sdk._client._logs._interfaces import LogOutput, LogReader, WorkflowLogs
+from orquestra.sdk._client._spaces._api import list_projects, list_workspaces
+from orquestra.sdk._client._spaces._structs import ProjectRef, Workspace
+from orquestra.sdk._client.abc import RuntimeInterface
+from orquestra.sdk._client.exceptions import (
     ProjectInvalidError,
     RayNotRunningError,
     RemoteConnectionError,
@@ -1753,7 +1753,7 @@ class TestListWorkflows:
 
         # THEN
         assert e.exconly() == (
-            "orquestra.sdk.exceptions.ProjectInvalidError: The project "
+            "orquestra.sdk._client.exceptions.ProjectInvalidError: The project "
             "`<project ID sentinel>` cannot be uniquely identified without a workspace "
             "parameter."
         )
@@ -1930,7 +1930,7 @@ class TestListWorkflowSummaries:
 
         # THEN
         assert e.exconly() == (
-            "orquestra.sdk.exceptions.ProjectInvalidError: The project "
+            "orquestra.sdk._client.exceptions.ProjectInvalidError: The project "
             "`<project ID sentinel>` cannot be uniquely identified without a workspace "
             "parameter."
         )

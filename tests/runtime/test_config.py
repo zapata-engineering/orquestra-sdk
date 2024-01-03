@@ -19,7 +19,7 @@ the user. It's a lot easier to figure out appropriate behavior this way.
 
 import pytest
 
-from orquestra.sdk._base import _config
+from orquestra.sdk._client import _config
 from orquestra.sdk.schema.configs import RuntimeName
 
 

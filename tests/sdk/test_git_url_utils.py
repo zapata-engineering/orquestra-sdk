@@ -7,7 +7,7 @@ from unittest.mock import create_autospec
 import pytest
 
 import orquestra.sdk.secrets
-from orquestra.sdk._base import _git_url_utils
+from orquestra.sdk._client import _git_url_utils
 from orquestra.sdk.schema.ir import GitURL, SecretNode
 
 

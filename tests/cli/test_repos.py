@@ -18,13 +18,13 @@ import requests
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import _dates
-from orquestra.sdk._base._config import SPECIAL_CONFIG_NAME_DICT
-from orquestra.sdk._base._driver._client import DriverClient
-from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
-from orquestra.sdk._base._testing import _example_wfs, _reloaders
-from orquestra.sdk._base.cli import _repos
-from orquestra.sdk._base.cli._ui import _models as ui_models
+from orquestra.sdk._client import _dates
+from orquestra.sdk._client._config import SPECIAL_CONFIG_NAME_DICT
+from orquestra.sdk._client._driver._client import DriverClient
+from orquestra.sdk._client._logs._interfaces import LogOutput, WorkflowLogs
+from orquestra.sdk._client._testing import _example_wfs, _reloaders
+from orquestra.sdk._client.cli import _repos
+from orquestra.sdk._client.cli._ui import _models as ui_models
 from orquestra.sdk._ray import _dag
 from orquestra.sdk.schema import ir
 from orquestra.sdk.schema.configs import RuntimeName

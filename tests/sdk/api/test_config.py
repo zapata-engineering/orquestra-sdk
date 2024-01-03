@@ -2,7 +2,7 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 """
-Tests for orquestra.sdk._base.api_cfg._config.
+Tests for orquestra.sdk._client.api_cfg._config.
 """
 
 import json
@@ -14,9 +14,9 @@ from unittest.mock import mock_open, patch
 import pytest
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import _config
-from orquestra.sdk._base._api import _config as api_cfg
-from orquestra.sdk.exceptions import ConfigNameNotFoundError
+from orquestra.sdk._client import _config
+from orquestra.sdk._client._api import _config as api_cfg
+from orquestra.sdk._client.exceptions import ConfigNameNotFoundError
 from orquestra.sdk.schema.configs import CONFIG_FILE_CURRENT_VERSION, RuntimeName
 
 from ..data.configs import TEST_CONFIG_JSON, TEST_CONFIGS_DICT

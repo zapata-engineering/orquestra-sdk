@@ -86,7 +86,7 @@ class TestResultIsPacked:
             return ir.WorkflowDef.parse_file(path)
 
         @staticmethod
-        @pytest.mark.filterwarnings("ignore::orquestra.sdk.exceptions.VersionMismatch")
+        @pytest.mark.filterwarnings("ignore::orquestra.sdk._client.exceptions.VersionMismatch")
         def test_single_output_task(wf_def: ir.WorkflowDef):
             # Given
             pairs = _get_task_by_name(wf_def=wf_def, task_name="single_output")
@@ -100,7 +100,7 @@ class TestResultIsPacked:
             assert packed is False
 
         @staticmethod
-        @pytest.mark.filterwarnings("ignore::orquestra.sdk.exceptions.VersionMismatch")
+        @pytest.mark.filterwarnings("ignore::orquestra.sdk._client.exceptions.VersionMismatch")
         def test_multi_output_task(wf_def: ir.WorkflowDef):
             # Given
             pairs = _get_task_by_name(wf_def=wf_def, task_name="two_outputs")

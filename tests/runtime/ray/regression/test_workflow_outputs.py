@@ -6,9 +6,9 @@ from typing import Any, Dict, Tuple, Union
 
 import pytest
 
-from orquestra.sdk._base._config import LOCAL_RUNTIME_CONFIGURATION
-from orquestra.sdk._base._testing import _connections
-from orquestra.sdk._base.serde import deserialize
+from orquestra.sdk._client._config import LOCAL_RUNTIME_CONFIGURATION
+from orquestra.sdk._client._testing import _connections
+from orquestra.sdk._client.serde import deserialize
 from orquestra.sdk._ray import _client, _dag
 
 PRODUCING_SDK_VERSIONS_TO_TEST = ["0.46.0", "0.47.0"]
@@ -24,7 +24,7 @@ pytestmark = pytest.mark.filterwarnings(
 # Uses real Ray connection
 @pytest.mark.slow
 # We intentionally load old workflow definitions
-@pytest.mark.filterwarnings("ignore::orquestra.sdk.exceptions.VersionMismatch")
+@pytest.mark.filterwarnings("ignore::orquestra.sdk._client.exceptions.VersionMismatch")
 class TestOutputs:
     @pytest.fixture(scope="class", autouse=True, params=PRODUCING_SDK_VERSIONS_TO_TEST)
     def shared_ray_cluster(self, request):

@@ -11,10 +11,10 @@ from unittest.mock import ANY, Mock
 
 import pytest
 
-from orquestra.sdk._base.cli import _entry
-from orquestra.sdk._base.cli._login import _login
-from orquestra.sdk._base.cli._services import _down, _up
-from orquestra.sdk._base.cli._workflow import _list
+from orquestra.sdk._client.cli import _entry
+from orquestra.sdk._client.cli._login import _login
+from orquestra.sdk._client.cli._services import _down, _up
+from orquestra.sdk._client.cli._workflow import _list
 from orquestra.sdk.schema.configs import RuntimeName
 
 
@@ -23,7 +23,7 @@ def entrypoint(monkeypatch):
     def _entrypoint(command: list):
         argv = [
             # Before we switch the setuptools entrypoint, the way to use dorq is
-            # 'python -m orquestra.sdk._base.cli._dorq._main'. In this case, Python
+            # 'python -m orquestra.sdk._client.cli._dorq._main'. In this case, Python
             # sets first argv to the module path.
             _entry.__file__,
             # The group and command.
