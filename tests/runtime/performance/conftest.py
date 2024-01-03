@@ -26,12 +26,15 @@ def pytest_runtest_call(item):
         nonlocal failed
         failed = True
 
+    timeout = 10
+
     for mark in item.iter_markers():
         if mark.name == "expect_under":
             try:
                 timeout = mark.args[0]
             except IndexError:
-                timeout = 10
+                # Use the default timeout value
+                pass
             signal.signal(signal.SIGALRM, _cancel)
             signal.setitimer(signal.ITIMER_REAL, timeout)
     try:

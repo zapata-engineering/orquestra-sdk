@@ -711,6 +711,7 @@ class DriverClient:
                 pageSize=page_size,
                 pageToken=page_token,
                 workspaceId=workspace,
+                projectId=None,
                 maxAge=(int(max_age.total_seconds()) if max_age else None),
                 state=_get_state_query(state),
             ).dict(),

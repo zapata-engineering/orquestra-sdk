@@ -6,7 +6,7 @@
 import typing as t
 import warnings
 from contextlib import contextmanager
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base import _dates, abc
@@ -118,8 +118,8 @@ class InProcessRuntime(abc.RuntimeInterface):
             WfRunId, t.Dict[ir.ArtifactNodeId, ArtifactValue]
         ] = {}
         self._workflow_def_store: t.Dict[WfRunId, ir.WorkflowDef] = {}
-        self._start_time_store: t.Dict[WfRunId, datetime] = {}
-        self._end_time_store: t.Dict[WfRunId, datetime] = {}
+        self._start_time_store: t.Dict[WfRunId, _dates.Instant] = {}
+        self._end_time_store: t.Dict[WfRunId, _dates.Instant] = {}
 
     def _gen_next_run_id(self, wf_def: ir.WorkflowDef):
         return f"{wf_def.name}-{len(self._output_store) + 1}"
