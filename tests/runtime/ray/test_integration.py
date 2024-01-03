@@ -1300,9 +1300,43 @@ class TestDictReturnValue:
 
         # When
         # The function-under-test is called inside the workflow.
-        wf_run_id = runtime.create_workflow_run(wf_model, None, False)
+        wf_run_id = runtime.create_workflow_run(wf_model, project=None, dry_run=False)
         _wait_to_finish_wf(wf_run_id, runtime)
 
+        # Precondition
+        wf_run = runtime.get_workflow_run_status(wf_run_id)
+        assert wf_run.status.state == State.SUCCEEDED
+
+
+@pytest.mark.slow
+class TestGraphComplexity:
+    """
+    Ray <2.9 had an issue where certain workflows with high graph complexity would
+    evaluate exponentially long. This test ensures that we can resolve high-complexity
+    graph workflows in reasonable time.
+    """
+
+    @pytest.mark.timeout(20)
+    def test_high_graph_complexity_workflow(self, runtime: _dag.RayRuntime):
+        @sdk.task
+        def generic_task(*args):
+            return 42
+
+        @sdk.workflow
+        def wf():
+            reduced = generic_task()
+            for _ in range(10):
+                fanned_out = [generic_task(reduced) for _ in range(10)]
+                reduced = generic_task(*fanned_out)
+            return reduced
+
+        wf_model = wf().model
+
+        # When
+        # The function-under-test is called inside the workflow.
+        wf_run_id = runtime.create_workflow_run(wf_model, project=None, dry_run=False)
+
+        _wait_to_finish_wf(wf_run_id, runtime)
         # Precondition
         wf_run = runtime.get_workflow_run_status(wf_run_id)
         assert wf_run.status.state == State.SUCCEEDED

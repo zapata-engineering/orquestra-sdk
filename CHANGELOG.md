@@ -19,6 +19,8 @@
 
 💅 *Improvements*
 
+* Bumped Ray to 2.9.0.
+
 🥷 *Internal*
 
 📃 *Docs*
