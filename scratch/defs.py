@@ -13,3 +13,7 @@ def wf():
         fanned_out = [generic_task(reduced) for _ in range(10)]
         reduced = generic_task(*fanned_out)
     return reduced
+
+
+if __name__ == "__main__":
+    wf_run = wf().run("ray")
