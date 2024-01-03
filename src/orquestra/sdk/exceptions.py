@@ -3,6 +3,12 @@
 ################################################################################
 
 """Custom exceptions for the SDK."""
+# Note for SDK developers
+#
+# This module is considered part of the "client".
+# * it can import from `orquestra.sdk._client`
+# * it can import from `orquestra.sdk.schema`
+# * it must not import from `orquestra.sdk.ray_wrapper`
 
 import typing as t
 from dataclasses import dataclass

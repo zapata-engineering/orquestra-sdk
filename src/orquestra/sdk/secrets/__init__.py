@@ -18,6 +18,12 @@ config file (set by ``orq login``).
 When ``orquestra.sdk.secrets`` is used inside a task running remotely on the Orquestra
 Platform, it uses a server-side authorization mechanism handled automatically.
 """
+# Note for developers
+#
+# This module is considered part of the "client".
+# * it can import from `orquestra.sdk._client`
+# * it can import from `orquestra.sdk.schema`
+# * it must not import from `orquestra.sdk.ray_wrapper`
 
 from ._api import delete, get, list, set
 
