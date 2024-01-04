@@ -5,6 +5,7 @@
 # Note: this module exposes the top-level, public API for whole Orquestra SDK. It
 # should only import from `orquestra.sdk._client`.
 
+from ._client import dremio, exceptions, mlflow, secrets
 from ._client._api import (
     CurrentRunIDs,
     RuntimeConfig,
