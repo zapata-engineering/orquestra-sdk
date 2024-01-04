@@ -6,6 +6,8 @@ import typing as t
 import warnings
 from typing import overload
 
+from inquirer import errors
+
 from orquestra.sdk import exceptions
 
 # One of our transitive dependencies shows DeprecationWarnings related to invalid usage
@@ -236,7 +238,7 @@ class Prompter:
             try:
                 int(current)
             except ValueError as e:
-                raise inquirer.errors.ValidationError(
+                raise errors.ValidationError(
                     "", reason="Value must be an integer."
                 ) from e
 

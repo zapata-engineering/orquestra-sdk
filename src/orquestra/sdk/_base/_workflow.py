@@ -122,9 +122,11 @@ class WorkflowDef(Generic[_R]):
         if len(model.task_invocations) < 1:
             helpstr = f"The workflow '{model.name}' "
             if hasattr(model.fn_ref, "file_path"):  # If possible add the file and line.
-                helpstr += f"(defined at {model.fn_ref.file_path}"
+                # pyright reports this line typing issue - bug reported
+                helpstr += f"(defined at {model.fn_ref.file_path}"  # pyright: ignore
                 if hasattr(model.fn_ref, "line_number"):
-                    helpstr += f" line {model.fn_ref.line_number}"
+                    # pyright reports this line as typing issue - bug reported
+                    helpstr += f" line {model.fn_ref.line_number}"  # pyright: ignore
                 helpstr += ") "
             helpstr += (
                 "cannot be submitted as it does not define any tasks to be executed. "

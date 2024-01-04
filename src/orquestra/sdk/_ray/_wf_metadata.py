@@ -38,6 +38,6 @@ class InvUserMetadata(pydantic.BaseModel):
     task_run_id: workflow_run.TaskRunId
 
 
-def pydatic_to_json_dict(pydantic_obj) -> t.Mapping[str, t.Any]:
+def pydatic_to_json_dict(pydantic_obj) -> t.Dict[str, t.Any]:
     """Produces a JSON-serializable dict."""
     return json.loads(pydantic_obj.json())
