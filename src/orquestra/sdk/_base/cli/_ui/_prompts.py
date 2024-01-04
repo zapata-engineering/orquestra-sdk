@@ -6,7 +6,7 @@ import typing as t
 import warnings
 from typing import overload
 
-from inquirer import errors
+from inquirer import errors  # type: ignore # noqa
 
 from orquestra.sdk import exceptions
 
