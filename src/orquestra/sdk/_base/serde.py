@@ -41,8 +41,8 @@ class _JSONTupleEncoder(json.JSONEncoder):
         else:
             return obj
 
-    def encode(self, obj):
-        return super(_JSONTupleEncoder, self).encode(self.encode_tuple(obj))
+    def encode(self, o):
+        return super(_JSONTupleEncoder, self).encode(self.encode_tuple(o))
 
 
 def _serialize_json(value: t.Any):

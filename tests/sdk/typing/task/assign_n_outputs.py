@@ -3,4 +3,4 @@
 ################################################################################
 from .task_base import task
 
-task.n_outputs = 0
+task.n_outputs = 0  # pyright: ignore

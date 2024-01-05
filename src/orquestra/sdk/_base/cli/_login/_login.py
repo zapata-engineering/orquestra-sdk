@@ -69,7 +69,7 @@ class Action:
             "should have been handled at CLI entry."
         )
 
-        _url: str
+        _url: str = ""
         if config:
             loaded_config = self._config_repo.read_config(
                 self._config_resolver.resolve_stored_config_for_login(config)

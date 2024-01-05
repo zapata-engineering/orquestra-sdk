@@ -121,10 +121,9 @@ class WorkflowDef(Generic[_R]):
 
         if len(model.task_invocations) < 1:
             helpstr = f"The workflow '{model.name}' "
-            if hasattr(model.fn_ref, "file_path"):  # If possible add the file and line.
+            if not isinstance(model.fn_ref, ir.InlineFunctionRef):
                 helpstr += f"(defined at {model.fn_ref.file_path}"
-                if hasattr(model.fn_ref, "line_number"):
-                    helpstr += f" line {model.fn_ref.line_number}"
+                helpstr += f" line {model.fn_ref.line_number}"
                 helpstr += ") "
             helpstr += (
                 "cannot be submitted as it does not define any tasks to be executed. "

@@ -12,7 +12,7 @@ class LogStreamType(Enum):
     STDERR = ".err"
 
     @classmethod
-    def _missing_(cls, _):
+    def _missing_(cls, value):
         return cls.STDOUT
 
     @classmethod
