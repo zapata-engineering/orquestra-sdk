@@ -3,4 +3,4 @@
 ################################################################################
 from .task_base import task
 
-task(1, 2, 3)  # type: ignore
+task(1, 2, 3)  # pyright: ignore

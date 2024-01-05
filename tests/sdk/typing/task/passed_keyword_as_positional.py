@@ -3,4 +3,4 @@
 ################################################################################
 from .task_base import kw_task
 
-kw_task(1)  # type: ignore
+kw_task(1)  # pyright: ignore
