@@ -16,6 +16,8 @@ try:
     import ray.runtime_env
     import ray.workflow
     from ray import exceptions  # noqa: F401
+    from ray.actor import ActorClass
+    from ray.remote_function import RemoteFunction
     from ray.workflow import exceptions as workflow_exceptions  # noqa: F401
     from ray.workflow import workflow_context
     from ray.workflow.common import WorkflowStatus as RayWorkflowStatus
@@ -94,7 +96,7 @@ else:
             except (UserTaskFailedError, exceptions.GetTimeoutError, ValueError):
                 raise NotFoundError
 
-        def remote(self, fn):
+        def remote(self, fn) -> t.Union[RemoteFunction, ActorClass]:
             return ray.remote(fn)
 
         def add_options(

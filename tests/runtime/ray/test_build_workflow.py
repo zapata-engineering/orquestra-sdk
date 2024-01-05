@@ -9,6 +9,7 @@ from unittest.mock import ANY, Mock, call, create_autospec
 import pytest
 
 from orquestra import sdk
+from orquestra.sdk._base import _git_url_utils
 from orquestra.sdk._base._graphs import iter_invocations_topologically
 from orquestra.sdk._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
@@ -95,28 +96,36 @@ class TestPipString:
 
         def test_http(self, patch_env):
             imp = ir.GitImport(
-                id="mock-import", repo_url="https://mock/mock/mock", git_ref="mock"
+                id="mock-import",
+                repo_url=_git_url_utils.parse_git_url("https://mock/mock/mock"),
+                git_ref="mock",
             )
             pip = _build_workflow._pip_string(imp)
             assert pip == ["git+https://mock/mock/mock@mock"]
 
         def test_pip_ssh_format(self, patch_env):
             imp = ir.GitImport(
-                id="mock-import", repo_url="ssh://git@mock/mock/mock", git_ref="mock"
+                id="mock-import",
+                repo_url=_git_url_utils.parse_git_url("ssh://git@mock/mock/mock"),
+                git_ref="mock",
             )
             pip = _build_workflow._pip_string(imp)
             assert pip == ["git+ssh://git@mock/mock/mock@mock"]
 
         def test_usual_ssh_format(self, patch_env):
             imp = ir.GitImport(
-                id="mock-import", repo_url="git@mock:mock/mock", git_ref="mock"
+                id="mock-import",
+                repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
+                git_ref="mock",
             )
             pip = _build_workflow._pip_string(imp)
             assert pip == ["git+ssh://git@mock/mock/mock@mock"]
 
         def test_no_env_set(self):
             imp = ir.GitImport(
-                id="mock-import", repo_url="git@mock:mock/mock", git_ref="mock"
+                id="mock-import",
+                repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
+                git_ref="mock",
             )
             pip = _build_workflow._pip_string(imp)
             assert pip == []

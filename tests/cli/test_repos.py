@@ -18,7 +18,7 @@ import requests
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
-from orquestra.sdk._base import _dates
+from orquestra.sdk._base import _config, _dates
 from orquestra.sdk._base._config import SPECIAL_CONFIG_NAME_DICT
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
@@ -130,7 +130,9 @@ class TestWorkflowRunRepo:
                 repo = _repos.WorkflowRunRepo()
 
                 # Mocks
-                status = RunStatus(state=State.SUCCEEDED)
+                status = RunStatus(
+                    state=State.SUCCEEDED, start_time=None, end_time=None
+                )
                 mock_wf_run.get_status_model().task_runs = [
                     TaskRunModel(
                         id="1",
@@ -168,7 +170,9 @@ class TestWorkflowRunRepo:
                 repo = _repos.WorkflowRunRepo()
 
                 # Mocks
-                status = RunStatus(state=State.SUCCEEDED)
+                status = RunStatus(
+                    state=State.SUCCEEDED, start_time=None, end_time=None
+                )
                 mock_wf_run.get_status_model().task_runs = [
                     TaskRunModel(
                         id="1",
@@ -854,6 +858,7 @@ class TestWorkflowRunRepo:
                     owner=owner,
                     total_task_runs=total_task_runs,
                     completed_task_runs=completed_task_runs,
+                    dry_run=None,
                 )
                 mock_wf_run_summaries.append(wf_run)
 
@@ -952,12 +957,16 @@ class TestSummaryRepo:
                     id="wf.2",
                     workflow_def=_example_wfs.complicated_wf().model,
                     task_runs=[],
-                    status=RunStatus(state=State.WAITING),
+                    status=RunStatus(
+                        state=State.WAITING, start_time=None, end_time=None
+                    ),
                 ),
                 ui_models.WFRunSummary(
                     wf_def_name="complicated_wf",
                     wf_run_id="wf.2",
-                    wf_run_status=RunStatus(state=State.WAITING),
+                    wf_run_status=RunStatus(
+                        state=State.WAITING, start_time=None, end_time=None
+                    ),
                     task_rows=[],
                     n_tasks_succeeded=0,
                     n_task_invocations_total=4,
@@ -982,17 +991,20 @@ class TestSummaryRepo:
                             id="task_run_2",
                             invocation_id="invocation-2-task-concat",
                             status=RunStatus(
-                                state=State.RUNNING,
-                                start_time=INSTANT_2,
+                                state=State.RUNNING, start_time=INSTANT_2, end_time=None
                             ),
                         ),
                     ],
-                    status=RunStatus(state=State.RUNNING, start_time=INSTANT_1),
+                    status=RunStatus(
+                        state=State.RUNNING, start_time=INSTANT_1, end_time=None
+                    ),
                 ),
                 ui_models.WFRunSummary(
                     wf_def_name="complicated_wf",
                     wf_run_id="wf.2",
-                    wf_run_status=RunStatus(state=State.RUNNING, start_time=INSTANT_1),
+                    wf_run_status=RunStatus(
+                        state=State.RUNNING, start_time=INSTANT_1, end_time=None
+                    ),
                     task_rows=[
                         ui_models.WFRunSummary.TaskRow(
                             task_fn_name="capitalize",
@@ -1010,6 +1022,7 @@ class TestSummaryRepo:
                             status=RunStatus(
                                 state=State.RUNNING,
                                 start_time=INSTANT_2,
+                                end_time=None,
                             ),
                             message=None,
                         ),
@@ -1044,6 +1057,7 @@ class TestSummaryRepo:
                         status=RunStatus(
                             state=State.RUNNING,
                             start_time=INSTANT_1 + datetime.timedelta(seconds=30),
+                            end_time=None,
                         ),
                         owner="taylor.swift@zapatacomputing.com",
                         total_task_runs=2,
@@ -1052,7 +1066,9 @@ class TestSummaryRepo:
                     ),
                     WorkflowRunSummary(
                         id="wf.1",
-                        status=RunStatus(state=State.WAITING, start_time=INSTANT_1),
+                        status=RunStatus(
+                            state=State.WAITING, start_time=INSTANT_1, end_time=None
+                        ),
                         owner="taylor.swift@zapatacomputing.com",
                         total_task_runs=0,
                         completed_task_runs=0,
@@ -1087,13 +1103,16 @@ class TestSummaryRepo:
                         status=RunStatus(
                             state=State.RUNNING,
                             start_time=INSTANT_1 + datetime.timedelta(seconds=30),
+                            end_time=None,
                         ),
                     ),
                     WorkflowRunModel(
                         id="wf.1",
                         workflow_def=_example_wfs.complicated_wf().model,
                         task_runs=[],
-                        status=RunStatus(state=State.WAITING),
+                        status=RunStatus(
+                            state=State.WAITING, start_time=None, end_time=None
+                        ),
                     ),
                 ],
                 ui_models.WFList(
@@ -1184,12 +1203,10 @@ class TestConfigRepo:
             mock_save_or_update = Mock()
 
             monkeypatch.setattr(
-                sdk._base._config, "generate_config_name", lambda n, m: generated_name
+                _config, "generate_config_name", lambda n, m: generated_name
             )
 
-            monkeypatch.setattr(
-                sdk._base._config, "save_or_update", mock_save_or_update
-            )
+            monkeypatch.setattr(_config, "save_or_update", mock_save_or_update)
 
             # When
             config_name = repo.store_token_in_config(uri, token, runtime_name)
