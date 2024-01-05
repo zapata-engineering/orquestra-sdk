@@ -13,6 +13,7 @@ from unittest.mock import Mock
 
 import git
 import pytest
+from git.remote import Remote
 
 import orquestra.sdk.schema.ir as ir
 from orquestra.sdk import exceptions, secrets
@@ -283,21 +284,23 @@ def unhashable_constants():
 
 @_workflow.workflow
 def two_task_outputs():
-    a, b = two_outputs()
-    _, c = two_outputs()
+    # We intentionally set wrong output number vs what is returned by task to see
+    # if parsing is correct
+    a, b = two_outputs()  # pyright:ignore
+    _, c = two_outputs()  # pyright:ignore
     return [a, b, c]
 
 
 @_workflow.workflow
 def two_task_outputs_all_used():
-    a, b = two_outputs()
+    a, b = two_outputs()  # pyright:ignore
     return a, b
 
 
 @_workflow.workflow
 def two_task_outputs_packed_returned():
     packed = two_outputs()
-    a, b = packed
+    a, b = packed  # pyright:ignore
     return a, b, packed
 
 
@@ -975,7 +978,7 @@ class TestNumberOfFetchesOnInferRepos:
     @pytest.fixture()
     def setup_fetch(self, monkeypatch):
         fake_fetch = Mock()
-        monkeypatch.setattr(git.remote.Remote, "fetch", fake_fetch)
+        monkeypatch.setattr(Remote, "fetch", fake_fetch)
 
         yield fake_fetch
 

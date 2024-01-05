@@ -105,7 +105,6 @@ arg-type-hints-in-docstring = false
 exclude = [
     "src/orquestra/sdk/_base/_dsl.py",
     "src/orquestra/sdk/_base/_logs/_markers.py",
-    "src/orquestra/sdk/_base/_testing/_example_wfs.py",
     "src/orquestra/sdk/_base/_ast.py",
     "src/orquestra/sdk/_base/cli/_entry.py",
     "src/orquestra/sdk/_base/cli/_task/_logs.py",

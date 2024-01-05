@@ -2,7 +2,7 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 import time
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Tuple
 
 import orquestra.sdk as sdk
 import orquestra.sdk._base._testing._ipc as ipc
@@ -56,7 +56,7 @@ def multioutput_task_failing():
 
 
 @sdk.task(n_outputs=2)
-def multioutput_task_failing_n_outpus():
+def multioutput_task_failing_n_outpus() -> Tuple:
     assert False
     return "Zapata", "Computing"
 
@@ -107,7 +107,7 @@ def multi_output_test():
 @sdk.task
 def make_exception():
     # we want to intentionally throw an exception for the purpose of the test
-    42 / 0
+    _ = 42 / 0
     return 42
 
 
@@ -282,7 +282,7 @@ def serial_wf_with_file_triggers(ports: Sequence[int], task_timeout: float):
 def add_with_error(a, b):
     """Simulates a task with inputs that raises an exception."""
     # Raises ZeroDivisionError
-    42 / 0
+    _ = 42 / 0
 
     return a + b
 
