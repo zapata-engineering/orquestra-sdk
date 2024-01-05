@@ -161,7 +161,8 @@ def get_tracking_uri(workspace_id: str, config_name: Optional[str] = None) -> st
 
         config = sdk.RuntimeConfig.load(config_name)
         try:
-            return f"{config.uri}/mlflow/{workspace_id}"
+            uri = getattr(config, "uri")
+            return f"{uri}/mlflow/{workspace_id}"
         except AttributeError as e:
             raise ValueError(
                 f"The config '{config_name}' has no URI associated with it. "

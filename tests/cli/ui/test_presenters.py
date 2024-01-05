@@ -680,6 +680,7 @@ class TestWorkflowRunPresenter:
                     wf_run_status=RunStatus(
                         state=State.WAITING,
                         start_time=UTC_INSTANT,
+                        end_time=None,
                     ),
                     task_rows=[],
                     n_tasks_succeeded=0,
@@ -695,6 +696,7 @@ class TestWorkflowRunPresenter:
                     wf_run_status=RunStatus(
                         state=State.RUNNING,
                         start_time=ET_INSTANT_1,
+                        end_time=None,
                     ),
                     task_rows=[
                         ui_models.WFRunSummary.TaskRow(
@@ -713,6 +715,7 @@ class TestWorkflowRunPresenter:
                             status=RunStatus(
                                 state=State.RUNNING,
                                 start_time=ET_INSTANT_2,
+                                end_time=None,
                             ),
                             message=None,
                         ),

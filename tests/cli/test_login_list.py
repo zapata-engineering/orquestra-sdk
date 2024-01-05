@@ -58,6 +58,7 @@ class TestAction:
         ]
         prompter.assert_not_called()
 
+    @staticmethod
     def test_no_remote_configs(monkeypatch, capsys):
         # Given
         exception_presenter = Mock()
