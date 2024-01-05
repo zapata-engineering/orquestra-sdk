@@ -193,22 +193,22 @@ class TestWorkflowRun:
             TaskRunModel(
                 id="task_run1",
                 invocation_id=invs[0],
-                status=RunStatus(state=State.SUCCEEDED),
+                status=RunStatus(state=State.SUCCEEDED, start_time=None, end_time=None),
             ),
             TaskRunModel(
                 id="task_run2",
                 invocation_id=invs[1],
-                status=RunStatus(state=State.FAILED),
+                status=RunStatus(state=State.FAILED, start_time=None, end_time=None),
             ),
             TaskRunModel(
                 id="task_run3",
                 invocation_id=invs[2],
-                status=RunStatus(state=State.FAILED),
+                status=RunStatus(state=State.FAILED, start_time=None, end_time=None),
             ),
             TaskRunModel(
                 id="task_run4",
                 invocation_id=invs[3],
-                status=RunStatus(state=State.FAILED),
+                status=RunStatus(state=State.FAILED, start_time=None, end_time=None),
             ),
         ]
 

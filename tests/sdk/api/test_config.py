@@ -316,7 +316,7 @@ class TestRuntimeConfiguration:
                     )
 
                     assert cfg.token == token
-                    assert cfg.uri == "https://cluster.io"
+                    assert getattr(cfg, "uri") == "https://cluster.io"
 
                 def test_on_cluster_with_default_config(self, monkeypatch, tmp_path):
                     # default config does not change behaviour on cluster
@@ -332,7 +332,7 @@ class TestRuntimeConfiguration:
                     )
 
                     assert cfg.token == token
-                    assert cfg.uri == "https://cluster.io"
+                    assert getattr(cfg, "uri") == "https://cluster.io"
 
                 def test_no_cluster_uri(self, tmp_path, monkeypatch):
                     token = "the best token you have ever seen"
@@ -365,7 +365,7 @@ class TestRuntimeConfiguration:
                     # then
                     assert config.name == existing_config
                     assert config.token == "this_token_best_token"
-                    assert config.uri == "http://actual_name.domain"
+                    assert getattr(config, "uri") == "http://actual_name.domain"
 
                 def test_on_local_env_default_config_set_to_local(self, monkeypatch):
                     # given

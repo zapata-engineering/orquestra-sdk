@@ -136,7 +136,7 @@ class TestAction:
                 task_logs = action._wf_run_repo.get_wf_logs.return_value.per_task
                 action._logs_presenter.show_logs.assert_any_call(
                     task_logs, log_type=_logs.WorkflowLogs.WorkflowLogTypeName.PER_TASK
-                ),
+                )
             if system_switch:
                 sys_logs = action._wf_run_repo.get_wf_logs.return_value.system
                 action._logs_presenter.show_logs.assert_any_call(

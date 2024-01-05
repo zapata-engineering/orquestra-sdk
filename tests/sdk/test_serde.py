@@ -28,7 +28,7 @@ ROUNDTRIP_EXAMPLES = [
 
 def test_sdk_can_be_serialised():
     def sdk_pickle_by_ref():
-        sdk
+        _ = sdk
 
     serde.serialize_pickle(sdk_pickle_by_ref)
 
@@ -82,7 +82,7 @@ def test_deserialization_fails_for_auto_format():
 
 def test_deserialize_constant_json():
     val = 2
-    constant = ir.ConstantNodeJSON(value=val, id="", value_preview="")
+    constant = ir.ConstantNodeJSON(value="2", id="", value_preview="")
     assert serde.deserialize_constant(constant) == val
 
 

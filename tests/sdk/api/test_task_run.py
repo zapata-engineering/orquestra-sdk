@@ -11,7 +11,7 @@ from unittest.mock import Mock, create_autospec
 import pytest
 
 import orquestra.sdk as sdk
-from orquestra.sdk._base import _api, _workflow, serde
+from orquestra.sdk._base import _api, _exec_ctx, _in_process_runtime, _workflow, serde
 from orquestra.sdk._base._logs._interfaces import LogReader
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk._ray import _build_workflow
@@ -542,9 +542,7 @@ def mock_ray_context(monkeypatch):
         "get_current_ids",
         Mock(return_value=(wf_run_id, task_inv_id, task_run_id)),
     )
-    monkeypatch.setattr(
-        sdk._base._exec_ctx, "global_context", sdk._base._exec_ctx.ExecContext.RAY
-    )
+    monkeypatch.setattr(_exec_ctx, "global_context", _exec_ctx.ExecContext.RAY)
 
     return wf_run_id, task_inv_id, task_run_id
 
@@ -555,11 +553,9 @@ def mock_in_process_context(monkeypatch):
     task_inv_id = "task_inv_id"
     task_run_id = "task_run_id"
 
+    monkeypatch.setattr(_exec_ctx, "global_context", _exec_ctx.ExecContext.DIRECT)
     monkeypatch.setattr(
-        sdk._base._exec_ctx, "global_context", sdk._base._exec_ctx.ExecContext.DIRECT
-    )
-    monkeypatch.setattr(
-        sdk._base._in_process_runtime,
+        _in_process_runtime,
         "global_current_run_ids",
         (wf_run_id, task_inv_id, task_run_id),
     )

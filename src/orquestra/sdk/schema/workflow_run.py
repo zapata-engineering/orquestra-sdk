@@ -33,7 +33,7 @@ class State(enum.Enum):
     UNKNOWN = "UNKNOWN"
 
     @classmethod
-    def _missing_(cls, _):
+    def _missing_(cls, value):
         return cls.UNKNOWN
 
     def is_completed(self) -> bool:

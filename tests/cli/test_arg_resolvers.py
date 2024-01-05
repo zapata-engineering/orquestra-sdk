@@ -600,7 +600,7 @@ class TestWFRunResolver:
             ],
         )
         def test_returns_unchanged_if_all_switches_are_set_and_all_logs_available(
-            switches, mocked_logs
+            switches: t.Tuple[bool, bool, bool, bool], mocked_logs
         ):
             """
             The most trivial case - all of the log types are available, and the user
