@@ -6,12 +6,24 @@
 
 🔥 *Features*
 
-* New API `WorkflowRun.get_artifact()` and `WorkflowRun.get_artifact_serialized()` to get single task output
-* New API: `orquestra.sdk.dremio.DremioClient` for reading dataframes from Orquestra-hosted Dremio.
-
 🧟 *Deprecations*
 
 👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+## v0.60.0
+
+🔥 *Features*
+
+* New API `WorkflowRun.get_artifact()` and `WorkflowRun.get_artifact_serialized()` to get single task output
+* New API: `orquestra.sdk.dremio.DremioClient` for reading dataframes from Orquestra-hosted Dremio.
 
 🐛 *Bug Fixes*
 
@@ -20,10 +32,6 @@
 💅 *Improvements*
 
 * Bumped Ray to 2.9.0.
-
-🥷 *Internal*
-
-📃 *Docs*
 
 ## v0.59.0
 
