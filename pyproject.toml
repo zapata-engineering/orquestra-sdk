@@ -109,5 +109,4 @@ exclude = [
     "src/orquestra/sdk/_base/cli/_task/_logs.py",
     "src/orquestra/sdk/_base/cli/_ui/_click_default_group.py",
     "src/orquestra/sdk/_base/cli/_workflow/_logs.py",
-    "tests/sdk/test_ast.py",
 ]
