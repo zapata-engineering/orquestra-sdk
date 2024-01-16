@@ -42,7 +42,7 @@ def main():
     wf_def_model = unpacking_wf().model
 
     target_path = Path(__file__).parent / "unpacking_wf.json"
-    target_path.write_text(wf_def_model.json(indent=2))
+    target_path.write_text(wf_def_model.model_dump_json(indent=2))
 
 
 if __name__ == "__main__":

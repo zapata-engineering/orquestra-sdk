@@ -6,7 +6,7 @@ import json
 import numpy as np
 import numpy.testing
 import pytest
-from pydantic.error_wrappers import ValidationError
+from pydantic import ValidationError
 
 import orquestra.sdk as sdk
 from orquestra.sdk._base import serde
@@ -47,12 +47,12 @@ class TestResultFromArtifact:
     )
     def test_model_can_be_dumped(self, artifact):
         model = serde.result_from_artifact(artifact, ir.ArtifactFormat.AUTO)
-        _ = model.json()
+        _ = model.model_dump_json()
 
     @pytest.mark.parametrize("artifact", ROUNDTRIP_EXAMPLES)
     def test_roundtrip_for_small_values(self, artifact):
         model = serde.result_from_artifact(artifact, ir.ArtifactFormat.AUTO)
-        json_dict = json.loads(model.json())
+        json_dict = json.loads(model.model_dump_json())
         value = serde.value_from_result_dict(json_dict)
         assert value == artifact
 
@@ -62,7 +62,7 @@ class TestResultFromArtifact:
         assert model.serialization_format == ir.ArtifactFormat.ENCODED_PICKLE
         assert len(model.chunks) > 1
 
-        json_dict = json.loads(model.json())
+        json_dict = json.loads(model.model_dump_json())
         retrieved = serde.value_from_result_dict(json_dict)
         np.testing.assert_array_equal(retrieved, artifact)
 

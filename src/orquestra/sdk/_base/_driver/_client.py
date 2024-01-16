@@ -1083,7 +1083,7 @@ class DriverClient:
             if len(section_str) < 1:
                 continue
 
-            events = pydantic.parse_raw_as(_models.WorkflowLogSection, section_str)
+            events = _models.WorkflowLogSection.validate_json(section_str)
 
             for event in events:
                 messages.append(event.message)
@@ -1153,7 +1153,7 @@ class DriverClient:
             if len(section_str) < 1:
                 continue
 
-            events = pydantic.parse_raw_as(_models.TaskLogSection, section_str)
+            events = _models.TaskLogSection.validate_json(section_str)
 
             for event in events:
                 messages.append(event.message)
@@ -1220,7 +1220,7 @@ class DriverClient:
         for section_str in decoded.split("\n"):
             if len(section_str) < 1:
                 continue
-            events = pydantic.parse_raw_as(_models.SysSection, section_str)
+            events = _models.SysSection.validate_json(section_str)
 
             for event in events:
                 messages.append(event.message)

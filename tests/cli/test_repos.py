@@ -817,12 +817,13 @@ class TestWorkflowRunRepo:
 
             for stub_id in stub_run_ids:
                 wf_run = Mock()
-                wf_run.get_status_model.return_value = WorkflowRunModel(
-                    id=stub_id,
-                    workflow_def=create_autospec(ir.WorkflowDef),
-                    task_runs=[],
-                    status=RunStatus(state=state, start_time=None, end_time=None),
+                run_model = create_autospec(WorkflowRunModel)
+                run_model.id = stub_id
+                run_model.status = RunStatus(
+                    state=state, start_time=None, end_time=None
                 )
+                wf_run.get_status_model.return_value = run_model
+
                 mock_wf_runs.append(wf_run)
 
             monkeypatch.setattr(

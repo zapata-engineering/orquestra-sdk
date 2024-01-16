@@ -47,7 +47,7 @@ class SecretDefinition(pydantic.BaseModel):
 
     name: SecretName
     value: SecretValue
-    resourceGroup: Optional[ResourceGroup]
+    resourceGroup: Optional[ResourceGroup] = None
 
 
 class ListSecretsRequest(pydantic.BaseModel):

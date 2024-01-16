@@ -911,7 +911,8 @@ class Test3rdPartyLibraries:
         path_to_json = Path(__file__).parent.joinpath(
             "data/python_package/python_package_dependent_workflow.json"
         )
-        wf = ir.WorkflowDef.parse_file(path_to_json)
+
+        wf = ir.WorkflowDef.model_validate_json(path_to_json.read_text())
 
         # When
         run_id = runtime.create_workflow_run(wf, None, False)

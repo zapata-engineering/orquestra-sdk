@@ -83,7 +83,7 @@ class TestResultIsPacked:
         @pytest.fixture
         def wf_def(snapshot_version: str):
             path = DATA_PATH / f"unpacking_wf_{snapshot_version}.json"
-            return ir.WorkflowDef.parse_file(path)
+            return ir.WorkflowDef.model_validate_json(path.read_text())
 
         @staticmethod
         @pytest.mark.filterwarnings("ignore::orquestra.sdk.exceptions.VersionMismatch")

@@ -17,7 +17,6 @@ from orquestra.sdk._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
     workflow_with_different_resources,
 )
-from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, JSONResult
 from orquestra.sdk.schema.workflow_run import (
     RunStatus,
@@ -55,17 +54,14 @@ def task_inv_id():
 @pytest.fixture
 def workflow_run_status(workflow_run_id: WorkflowRunId):
     def _workflow_run(state: State):
-        workflow_def_mock = create_autospec(WorkflowDef)
-        return WorkflowRun(
-            id=workflow_run_id,
-            workflow_def=workflow_def_mock,
-            task_runs=[],
-            status=RunStatus(
-                state=state,
-                start_time=None,
-                end_time=None,
-            ),
+        wf_run = create_autospec(WorkflowRun)
+        wf_run.id = workflow_run_id
+        wf_run.status = RunStatus(
+            state=state,
+            start_time=None,
+            end_time=None,
         )
+        return wf_run
 
     return _workflow_run
 

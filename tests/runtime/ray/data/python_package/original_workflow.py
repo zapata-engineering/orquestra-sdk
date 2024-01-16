@@ -22,4 +22,4 @@ def wf():
 
 
 if __name__ == "__main__":
-    print(wf.model.json(exclude_none=True))
+    print(wf.model.model_dump_json(exclude_none=True))
