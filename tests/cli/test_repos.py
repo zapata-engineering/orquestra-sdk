@@ -23,6 +23,7 @@ from orquestra.sdk._base._config import SPECIAL_CONFIG_NAME_DICT
 from orquestra.sdk._base._driver._client import DriverClient
 from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk._base._testing import _example_wfs, _reloaders
+from orquestra.sdk._base._testing._pydantic import model_autospec
 from orquestra.sdk._base.cli import _repos
 from orquestra.sdk._base.cli._ui import _models as ui_models
 from orquestra.sdk._ray import _dag
@@ -551,14 +552,14 @@ class TestWorkflowRunRepo:
                     task_run.task_invocation_id = inv_id
                     task_run.get_outputs.return_value = fake_task_run_outputs
 
-                    task_def = create_autospec(ir.TaskDef)
+                    task_def = model_autospec(ir.TaskDef)
                     task_def_id = "task_def_1"
                     task_def.output_metadata = task_meta
 
-                    inv = create_autospec(ir.TaskInvocation)
+                    inv = model_autospec(ir.TaskInvocation)
                     inv.task_id = task_def_id
 
-                    wf_def = create_autospec(ir.WorkflowDef)
+                    wf_def = model_autospec(ir.WorkflowDef)
                     wf_def.task_invocations = {inv_id: inv}
                     wf_def.tasks = {task_def_id: task_def}
 
@@ -817,7 +818,7 @@ class TestWorkflowRunRepo:
 
             for stub_id in stub_run_ids:
                 wf_run = Mock()
-                run_model = create_autospec(WorkflowRunModel)
+                run_model = model_autospec(WorkflowRunModel)
                 run_model.id = stub_id
                 run_model.status = RunStatus(
                     state=state, start_time=None, end_time=None

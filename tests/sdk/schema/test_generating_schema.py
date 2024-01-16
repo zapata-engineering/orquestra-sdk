@@ -16,4 +16,4 @@ from orquestra.sdk.schema import configs, ir, workflow_run
 )
 def test_schema_can_be_generated(root_cls):
     # if we did something wrong this would raise an error
-    root_cls.schema_json()
+    root_cls.model_json_schema()

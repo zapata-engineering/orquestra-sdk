@@ -13,6 +13,7 @@ import pytest
 import orquestra.sdk as sdk
 from orquestra.sdk._base import _api, _exec_ctx, _in_process_runtime, _workflow, serde
 from orquestra.sdk._base._logs._interfaces import LogReader
+from orquestra.sdk._base._testing._pydantic import model_autospec
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk._ray import _build_workflow
 from orquestra.sdk.exceptions import TaskRunNotFound
@@ -46,7 +47,7 @@ class TestTaskRun:
         wf_def_model = sample_wf_def.model
         task_invs = list(wf_def_model.task_invocations.values())
 
-        wf_run_model = create_autospec(WorkflowRunModel)
+        wf_run_model = model_autospec(WorkflowRunModel)
         wf_run_model.task_runs = [
             TaskRunModel(
                 id="task_run1",
@@ -183,7 +184,7 @@ class TestTaskRun:
         @staticmethod
         @pytest.fixture
         def wf_def_model() -> ir.WorkflowDef:
-            wf_def = create_autospec(ir.WorkflowDef)
+            wf_def = model_autospec(ir.WorkflowDef)
             wf_def.task_invocations = {
                 "inv1": ir.TaskInvocation(
                     id="inv1",
@@ -204,7 +205,7 @@ class TestTaskRun:
                     custom_image=None,
                 ),
             }
-            task_def = create_autospec(ir.TaskDef)
+            task_def = model_autospec(ir.TaskDef)
             task_def.fn_ref = Mock()
             wf_def.tasks = {"task_def1": task_def}
 
@@ -306,7 +307,7 @@ class TestTaskRun:
             wf_def_model = wf_task_with_two_parents().model
 
             def _mock_task_run_model(i: int):
-                model = create_autospec(TaskRunModel)
+                model = model_autospec(TaskRunModel)
                 model.id = f"run-{i}"
 
                 # this has to match the definition
@@ -314,7 +315,7 @@ class TestTaskRun:
 
                 return model
 
-            wf_run_model: WorkflowRunModel = create_autospec(WorkflowRunModel)
+            wf_run_model: WorkflowRunModel = model_autospec(WorkflowRunModel)
             wf_run_model.task_runs = [_mock_task_run_model(i) for i in range(4)]
 
             runtime = create_autospec(RuntimeInterface)
@@ -345,15 +346,15 @@ class TestTaskRun:
 
             wf_run_id = "wf.1"
 
-            task_run_model1: TaskRunModel = create_autospec(TaskRunModel)
+            task_run_model1: TaskRunModel = model_autospec(TaskRunModel)
             task_run_model1.id = "top-task-run"
             task_run_model1.invocation_id = "invocation-2-task-return-num"
 
-            task_run_model2 = create_autospec(TaskRunModel)
+            task_run_model2 = model_autospec(TaskRunModel)
             task_run_model2.id = "middle-task-run"
             task_run_model2.invocation_id = "invocation-1-task-return-num"
 
-            wf_run_model: WorkflowRunModel = create_autospec(WorkflowRunModel)
+            wf_run_model: WorkflowRunModel = model_autospec(WorkflowRunModel)
             wf_run_model.task_runs = [task_run_model1, task_run_model2]
 
             runtime = create_autospec(RuntimeInterface)

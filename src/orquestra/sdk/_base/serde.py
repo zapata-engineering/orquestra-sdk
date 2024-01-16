@@ -156,20 +156,16 @@ def result_from_artifact(
 
 
 def value_from_result_dict(result_dict: t.Mapping) -> t.Any:
-    # Bug with mypy and Pydantic:
-    #   Unions cannot be passed to parse_obj_as: pydantic/pydantic#1847
-    result: responses.WorkflowResult = pydantic.parse_obj_as(
-        responses.WorkflowResult, result_dict  # type: ignore[arg-type]
-    )
+    result: responses.WorkflowResult = pydantic.TypeAdapter(
+        responses.WorkflowResult
+    ).validate_python(result_dict)
     return deserialize(result)
 
 
 def deserialize_constant(node: ir.ConstantNode):
-    # Bug with mypy and Pydantic:
-    #   Unions cannot be passed to parse_obj_as: pydantic/pydantic#1847
     return deserialize(
-        pydantic.parse_obj_as(
-            responses.WorkflowResult, node.dict()  # type: ignore[arg-type]
+        pydantic.TypeAdapter(responses.WorkflowResult).validate_python(
+            node.model_dump()
         )
     )
 

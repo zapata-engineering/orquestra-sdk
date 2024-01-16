@@ -6,7 +6,7 @@ import typing as t
 from datetime import datetime, timezone
 from io import StringIO
 from pathlib import Path
-from unittest.mock import Mock, create_autospec
+from unittest.mock import Mock
 
 import pytest
 from rich.console import Console
@@ -16,6 +16,7 @@ from orquestra.sdk._base import serde
 from orquestra.sdk._base._dates import Instant
 from orquestra.sdk._base._logs._interfaces import LogOutput
 from orquestra.sdk._base._spaces._structs import Project, Workspace
+from orquestra.sdk._base._testing._pydantic import model_autospec
 from orquestra.sdk._base.cli._ui import _errors
 from orquestra.sdk._base.cli._ui import _models as ui_models
 from orquestra.sdk._base.cli._ui import _presenters
@@ -598,7 +599,7 @@ class TestConfigPresenter:
     @staticmethod
     def test_rpint_configs_list(capsys):
         presenter = _presenters.ConfigPresenter()
-        configs = [create_autospec(RuntimeConfiguration) for _ in range(3)]
+        configs = [model_autospec(RuntimeConfiguration) for _ in range(3)]
         for i, _ in enumerate(configs):
             configs[i].config_name = f"<config name sentinel {i}>"
             configs[i].runtime_name = f"<runtime name sentinel {i}>"

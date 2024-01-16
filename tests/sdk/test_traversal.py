@@ -852,7 +852,7 @@ def test_individual_task_models(task_def, has_arg, expected_model):
     wf_model = wf.model
     task_def = list(wf_model.tasks.values())[0]
 
-    assert task_def == expected_model.dict()
+    assert task_def == expected_model.model_dump()
 
 
 @pytest.mark.parametrize(

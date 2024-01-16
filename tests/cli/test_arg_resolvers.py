@@ -11,6 +11,7 @@ from orquestra.sdk import exceptions
 from orquestra.sdk._base import _dates
 from orquestra.sdk._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk._base._spaces._structs import Project, Workspace
+from orquestra.sdk._base._testing._pydantic import model_autospec
 from orquestra.sdk._base.cli import _arg_resolvers, _repos
 from orquestra.sdk._base.cli._ui import _presenters, _prompts
 from orquestra.sdk.schema.configs import RuntimeConfiguration, RuntimeName
@@ -94,7 +95,7 @@ class TestConfigResolver:
             config = "<config sentinel>"
 
             # Stored configs
-            stored_config = create_autospec(RuntimeConfiguration)
+            stored_config = model_autospec(RuntimeConfiguration)
             stored_config.config_name = config
             stored_config.runtime_options = {"uri": "<stored uri sentinel>"}
             stored_configs = [stored_config]
@@ -126,7 +127,7 @@ class TestConfigResolver:
             config = "<config sentinel>"
 
             # Stored configs
-            stored_config = create_autospec(RuntimeConfiguration)
+            stored_config = model_autospec(RuntimeConfiguration)
             stored_config.config_name = "<stored config name sentinel>"
             stored_config.runtime_options = {"uri": "<stored uri sentinel>"}
             stored_configs = [stored_config]
@@ -165,10 +166,10 @@ class TestConfigResolver:
             config = "<config sentinel>"
 
             # Stored configs
-            stored_config = create_autospec(RuntimeConfiguration)
+            stored_config = model_autospec(RuntimeConfiguration)
             stored_config.config_name = "<stored config name sentinel>"
             stored_config.runtime_options = {"uri": "<stored uri sentinel>"}
-            stored_local_config = create_autospec(RuntimeConfiguration)
+            stored_local_config = model_autospec(RuntimeConfiguration)
             stored_local_config.config_name = config
             stored_local_config.runtime_options = {}
             stored_configs = [stored_config, stored_local_config]

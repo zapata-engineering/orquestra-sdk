@@ -31,7 +31,7 @@ def _wf_def_resp(id_: WorkflowDefID, wf_def: WorkflowDef):
         "id": id_,
         "created": "2022-11-23T18:58:13.86752161Z",
         "owner": "evil/emiliano.zapata@zapatacomputing.com",
-        "workflow": wf_def.dict(),
+        "workflow": wf_def.model_dump(),
         "workspaceId": "evil/emiliano.zapata@zapatacomputing.com",
         "project": "emiliano's project",
         "sdkVersion": "0x859",
@@ -245,7 +245,7 @@ def make_get_wf_run_artifact_response(result_obj: Any):
         https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/artifact.yaml#L13
     """
 
-    return result_from_artifact(result_obj, ArtifactFormat.AUTO).dict()
+    return result_from_artifact(result_obj, ArtifactFormat.AUTO).model_dump()
 
 
 def make_get_wf_run_results_response():
@@ -268,7 +268,7 @@ def make_get_wf_run_result_legacy_response(result_obj: Any):
         https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/run-result.yaml#L13
     """
 
-    return result_from_artifact(result_obj, ArtifactFormat.AUTO).dict()
+    return result_from_artifact(result_obj, ArtifactFormat.AUTO).model_dump()
 
 
 DATA_DIR = Path(__file__).parent / "data"

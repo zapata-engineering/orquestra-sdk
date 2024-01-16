@@ -154,7 +154,7 @@ class TestSnippets:
                     "id": "def_id",
                     "created": "1989-12-13T09:03:49Z",
                     "owner": "taylor.swift@zapatacomputing.com",
-                    "workflow": my_workflow().model.dict(),
+                    "workflow": my_workflow().model.model_dump(),
                     "workspaceId": "eras_tour",
                     "project": "red",
                     "sdkVersion": "0.22.0",

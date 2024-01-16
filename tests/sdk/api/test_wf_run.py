@@ -30,6 +30,7 @@ from orquestra.sdk._base._in_process_runtime import InProcessRuntime
 from orquestra.sdk._base._logs._interfaces import LogOutput, LogReader, WorkflowLogs
 from orquestra.sdk._base._spaces._api import list_projects, list_workspaces
 from orquestra.sdk._base._spaces._structs import ProjectRef, Workspace
+from orquestra.sdk._base._testing._pydantic import model_autospec
 from orquestra.sdk._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import (
     ProjectInvalidError,
@@ -1037,13 +1038,13 @@ class TestWorkflowRun:
                 "inv2": serde.result_from_artifact((21, 38), ir.ArtifactFormat.AUTO),
             }
 
-            mock_inv1 = create_autospec(ir.TaskInvocation)
+            mock_inv1 = model_autospec(ir.TaskInvocation)
             mock_inv1.output_ids = ["art1"]
 
-            mock_inv2 = create_autospec(ir.TaskInvocation)
+            mock_inv2 = model_autospec(ir.TaskInvocation)
             mock_inv2.output_ids = ["art2", "art3"]
 
-            wf_def = create_autospec(ir.WorkflowDef)
+            wf_def = model_autospec(ir.WorkflowDef)
             wf_def.task_invocations = {
                 "inv1": mock_inv1,
                 "inv2": mock_inv2,
@@ -1077,7 +1078,7 @@ class TestWorkflowRun:
 
             runtime.get_available_outputs.return_value = values
 
-            wf_def = create_autospec(ir.WorkflowDef)
+            wf_def = model_autospec(ir.WorkflowDef)
 
             wf_run = _api.WorkflowRun(
                 run_id="wf.1",
@@ -1120,13 +1121,13 @@ class TestWorkflowRun:
 
             runtime.get_output.side_effect = return_mock
 
-            mock_inv1 = create_autospec(ir.TaskInvocation)
+            mock_inv1 = model_autospec(ir.TaskInvocation)
             mock_inv1.output_ids = ["art1"]
 
-            mock_inv2 = create_autospec(ir.TaskInvocation)
+            mock_inv2 = model_autospec(ir.TaskInvocation)
             mock_inv2.output_ids = ["art2", "art3"]
 
-            wf_def = create_autospec(ir.WorkflowDef)
+            wf_def = model_autospec(ir.WorkflowDef)
             wf_def.task_invocations = {
                 "inv1": mock_inv1,
                 "inv2": mock_inv2,
@@ -1168,13 +1169,13 @@ class TestWorkflowRun:
 
             runtime.get_output.side_effect = return_mock
 
-            mock_inv1 = create_autospec(ir.TaskInvocation)
+            mock_inv1 = model_autospec(ir.TaskInvocation)
             mock_inv1.output_ids = ["art1"]
 
-            mock_inv2 = create_autospec(ir.TaskInvocation)
+            mock_inv2 = model_autospec(ir.TaskInvocation)
             mock_inv2.output_ids = ["art2", "art3"]
 
-            wf_def = create_autospec(ir.WorkflowDef)
+            wf_def = model_autospec(ir.WorkflowDef)
             wf_def.task_invocations = {
                 "inv1": mock_inv1,
                 "inv2": mock_inv2,
@@ -1198,10 +1199,10 @@ class TestWorkflowRun:
         class TestTaskMatchesSchemaFilters:
             @pytest.fixture
             def schema_task_run(self):
-                task = create_autospec(TaskRunModel)
+                task = model_autospec(TaskRunModel)
                 task.id = "<id sentinel>"
                 task.invocation_id = "<inv id sentinel>"
-                task.status = create_autospec(RunStatus)
+                task.status = model_autospec(RunStatus)
                 task.status.state = State.SUCCEEDED
                 return task
 
@@ -1308,7 +1309,7 @@ class TestWorkflowRun:
         class TestTaskMatchesAPIFilters:
             @pytest.fixture
             def api_task_run(self):
-                task = create_autospec(TaskRun)
+                task = model_autospec(TaskRun)
                 task.fn_name = "<function name sentinel>"
                 return task
 

@@ -15,18 +15,18 @@ from orquestra.sdk.schema import ir
 def _locate_callable(fn_ref_dict) -> t.Callable:
     fn_ref: ir.FunctionRef
     if fn_ref_dict["type"] == "MODULE_FUNCTION_REF":
-        fn_ref = ir.ModuleFunctionRef.parse_obj(fn_ref_dict)
+        fn_ref = ir.ModuleFunctionRef.model_validate(fn_ref_dict)
         return locate_fn_ref(fn_ref)
 
     elif fn_ref_dict["type"] == "FILE_FUNCTION_REF":
-        fn_ref = ir.FileFunctionRef.parse_obj(fn_ref_dict)
+        fn_ref = ir.FileFunctionRef.model_validate(fn_ref_dict)
         # There's some kerkuffle with prepending components to the script file path.
         # Here, we assume that the fn_ref already contains a valid filepath relative to
         # the pwd. Hence, we don't need to pass a custom search path to
         # `locate_fn_ref()`.
         return locate_fn_ref(fn_ref)
     elif fn_ref_dict["type"] == "INLINE_FUNCTION_REF":
-        fn_ref = ir.InlineFunctionRef.parse_obj(fn_ref_dict)
+        fn_ref = ir.InlineFunctionRef.model_validate(fn_ref_dict)
         # We need to deserialize the pickled function
         return locate_fn_ref(fn_ref)
     else:

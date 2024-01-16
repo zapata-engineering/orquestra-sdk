@@ -3,7 +3,7 @@
 from contextlib import nullcontext as do_not_raise
 from datetime import timedelta
 from typing import ContextManager, List, Optional
-from unittest.mock import DEFAULT, MagicMock, Mock, call, create_autospec
+from unittest.mock import DEFAULT, MagicMock, Mock, call
 
 import pytest
 
@@ -17,6 +17,7 @@ from orquestra.sdk._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
     workflow_with_different_resources,
 )
+from orquestra.sdk._base._testing._pydantic import model_autospec
 from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, JSONResult
 from orquestra.sdk.schema.workflow_run import (
     RunStatus,
@@ -54,7 +55,7 @@ def task_inv_id():
 @pytest.fixture
 def workflow_run_status(workflow_run_id: WorkflowRunId):
     def _workflow_run(state: State):
-        wf_run = create_autospec(WorkflowRun)
+        wf_run = model_autospec(WorkflowRun)
         wf_run.id = workflow_run_id
         wf_run.status = RunStatus(
             state=state,

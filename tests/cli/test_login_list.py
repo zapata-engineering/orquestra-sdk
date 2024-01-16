@@ -2,8 +2,9 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 
-from unittest.mock import Mock, create_autospec
+from unittest.mock import Mock
 
+from orquestra.sdk._base._testing._pydantic import model_autospec
 from orquestra.sdk._base.cli._config._list import Action
 from orquestra.sdk.schema.configs import RuntimeConfiguration
 
@@ -25,8 +26,8 @@ class TestAction:
             return_value=["<config name sentinel 1>", "<config name sentinel 2>"]
         )
         configs = [
-            create_autospec(RuntimeConfiguration),
-            create_autospec(RuntimeConfiguration),
+            model_autospec(RuntimeConfiguration),
+            model_autospec(RuntimeConfiguration),
         ]
         configs[0].runtime_options = {"token": "<token sentinel 1>"}
         configs[0].config_name = "<config name sentinel 3>"

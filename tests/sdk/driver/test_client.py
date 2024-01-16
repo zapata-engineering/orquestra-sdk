@@ -26,6 +26,7 @@ from orquestra.sdk._base._driver._models import (
     SystemLogSourceType,
 )
 from orquestra.sdk._base._spaces._structs import ProjectRef
+from orquestra.sdk._base._testing._pydantic import model_autospec
 from orquestra.sdk.schema.ir import WorkflowDef
 from orquestra.sdk.schema.responses import JSONResult, PickleResult
 from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun
@@ -468,7 +469,9 @@ class TestClient:
                 endpoint_mocker(
                     json=resp_mocks.make_create_wf_def_response(id_=workflow_def_id),
                     match=[
-                        responses.matchers.json_params_matcher(workflow_def.dict()),
+                        responses.matchers.json_params_matcher(
+                            workflow_def.model_dump()
+                        ),
                         responses.matchers.query_param_matcher(params),
                     ],
                     # Based on:
@@ -692,7 +695,7 @@ class TestClient:
                 workflow_def: WorkflowDef,
                 monkeypatch: pytest.MonkeyPatch,
             ):
-                mock = create_autospec(GetWorkflowDefResponse)
+                mock = model_autospec(GetWorkflowDefResponse)
                 mock.workflow = workflow_def
                 function_mock = create_autospec(client.get_workflow_def)
                 function_mock.return_value = mock
@@ -861,7 +864,7 @@ class TestClient:
                 workflow_def: WorkflowDef,
                 monkeypatch: pytest.MonkeyPatch,
             ):
-                mock = create_autospec(GetWorkflowDefResponse)
+                mock = model_autospec(GetWorkflowDefResponse)
                 mock.workflow = workflow_def
                 function_mock = create_autospec(client.get_workflow_def)
                 function_mock.return_value = mock
@@ -2607,7 +2610,7 @@ class TestClient:
                 client: DriverClient,
                 monkeypatch: pytest.MonkeyPatch,
             ):
-                mock = create_autospec(GetWorkflowDefResponse)
+                mock = model_autospec(GetWorkflowDefResponse)
                 mock.workspaceId = workflow_workspace
                 mock.project = workflow_project
                 function_mock = create_autospec(client.get_workflow_def)

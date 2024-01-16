@@ -8,6 +8,7 @@ from unittest.mock import Mock, PropertyMock, create_autospec
 import pytest
 from aiohttp import web
 
+from orquestra.sdk._base._testing._pydantic import model_autospec
 from orquestra.sdk._base.cli._arg_resolvers import ConfigResolver
 from orquestra.sdk._base.cli._login import _login, _login_server
 from orquestra.sdk._base.cli._repos import ConfigRepo, RuntimeRepo
@@ -252,7 +253,7 @@ class TestAction:
         config_repo = create_autospec(ConfigRepo)
         login_server = create_autospec(_login_server.LoginServer)
         config_resolver = create_autospec(ConfigResolver)
-        loaded_runtime_config = create_autospec(RuntimeConfiguration)
+        loaded_runtime_config = model_autospec(RuntimeConfiguration)
 
         loaded_runtime_config.runtime_options = {"uri": login_url}
         loaded_runtime_config.runtime_name = runtime_name
@@ -304,7 +305,7 @@ class TestAction:
         config_repo = create_autospec(ConfigRepo)
         login_server = create_autospec(_login_server.LoginServer)
         config_resolver = create_autospec(ConfigResolver)
-        loaded_runtime_config = create_autospec(RuntimeConfiguration)
+        loaded_runtime_config = model_autospec(RuntimeConfiguration)
 
         loaded_runtime_config.runtime_options = {"uri": login_url}
         loaded_runtime_config.runtime_name = runtime_name
@@ -355,7 +356,7 @@ class TestAction:
         config_repo = create_autospec(ConfigRepo)
         login_server = create_autospec(_login_server.LoginServer)
         config_resolver = create_autospec(ConfigResolver)
-        loaded_runtime_config = create_autospec(RuntimeConfiguration)
+        loaded_runtime_config = model_autospec(RuntimeConfiguration)
 
         loaded_runtime_config.runtime_options = {"uri": login_url}
         loaded_runtime_config.runtime_name = runtime_name
@@ -406,7 +407,7 @@ class TestAction:
 
         prompter.confirm.return_value = True
 
-        loaded_runtime_config = create_autospec(RuntimeConfiguration)
+        loaded_runtime_config = model_autospec(RuntimeConfiguration)
         loaded_runtime_config.runtime_options = {"uri": login_url}
         loaded_runtime_config.runtime_name = RuntimeName.RAY_LOCAL
         loaded_runtime_config.config_name = config_name
@@ -470,7 +471,7 @@ class TestAction:
 
         prompter.confirm.return_value = False
 
-        loaded_runtime_config = create_autospec(RuntimeConfiguration)
+        loaded_runtime_config = model_autospec(RuntimeConfiguration)
         loaded_runtime_config.runtime_options = {"uri": login_url}
         loaded_runtime_config.runtime_name = RuntimeName.RAY_LOCAL
         loaded_runtime_config.config_name = config_name
