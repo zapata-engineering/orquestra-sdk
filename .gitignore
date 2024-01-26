@@ -121,3 +121,6 @@ chromedriver
 .DS_Store
 .idea/
 .vscode/
+
+# Direnv
+.envrc
