@@ -11,8 +11,7 @@ class DremioClient:
 
     Requires specifying connection details as environment variables:
 
-        * ``ORQ_DREMIO_HOST``: the full dremio URI, with protocol and port. Example
-          value: ``grpc+tls://ws2-12de2f.test-cluster.dremio-client.orquestra.io``
+        * ``ORQ_DREMIO_URI``: the full dremio URI, with protocol and port. Example
         * ``ORQ_DREMIO_USER``: your Dremio account email.
         * ``ORQ_DREMIO_PASS``: your Dremio account password.
 
