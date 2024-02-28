@@ -974,6 +974,26 @@ def test_custom_task_names(task_name, argument, expected):
     assert list(workflow.model.task_invocations.keys())[0] == expected
 
 
+@pytest.mark.parametrize(
+    "argument, expected",
+    [
+        (None, None),
+        (1, 1),
+        (999, 999),
+    ],
+)
+def test_max_calls(argument, expected):
+    @_dsl.task(max_calls=argument)
+    def task():
+        ...
+
+    @_workflow.workflow()
+    def workflow():
+        return task()
+
+    assert list(workflow.model.tasks.values())[0].max_calls == expected
+
+
 class TestNumberOfFetchesOnInferRepos:
     @pytest.fixture()
     def setup_fetch(self, monkeypatch):
