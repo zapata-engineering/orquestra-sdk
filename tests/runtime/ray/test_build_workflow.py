@@ -301,7 +301,7 @@ class TestMakeDag:
             ):
                 # Given
                 workflow = workflow_parametrised_with_resources(
-                    custom_image=custom_image
+                    gpu=gpu, custom_image=custom_image
                 ).model
 
                 # When
