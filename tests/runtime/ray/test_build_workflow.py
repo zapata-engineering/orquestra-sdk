@@ -221,29 +221,29 @@ class TestMakeDag:
                 assert isinstance(calls[0].kwargs[kwarg_name], type_)
 
         @pytest.mark.parametrize(
-            "custom_image, gpu, expected_kwargs",
+            "custom_image, gpu, expected_resources, expected_kwargs",
             (
                 (
                     "a_custom_image:latest",
                     None,
-                    {"resources": {"image:a_custom_image:latest": 1}},
+                    {"image:a_custom_image:latest": 1},
+                    {},
                 ),
                 (
                     None,
                     None,
                     {
-                        "resources": {
-                            "image:hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:mocked": 1  # noqa: E501
-                        }
+                        "image:hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:mocked": 1  # noqa: E501
                     },
+                    {},
                 ),
                 (
                     None,
                     1,
                     {
-                        "resources": {
-                            "image:hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:mocked-cuda": 1  # noqa: E501
-                        },
+                        "image:hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:mocked-cuda": 1  # noqa: E501
+                    },
+                    {
                         "num_gpus": 1,
                     },
                 ),
@@ -257,6 +257,7 @@ class TestMakeDag:
                 monkeypatch: pytest.MonkeyPatch,
                 custom_image: Optional[str],
                 gpu: Optional[int],
+                expected_resources: Dict[str, int],
                 expected_kwargs: Dict[str, Any],
             ):
                 # Given
@@ -288,6 +289,7 @@ class TestMakeDag:
                     runtime_env=ANY,
                     catch_exceptions=ANY,
                     max_retries=ANY,
+                    resources=expected_resources,
                     **expected_kwargs,
                 )
 
@@ -297,7 +299,8 @@ class TestMakeDag:
                 wf_run_id: str,
                 custom_image: Optional[str],
                 gpu: Optional[int],
-                expected_kwargs: Dict[str, int],
+                expected_resources: Dict[str, int],
+                expected_kwargs: Dict[str, Any],
             ):
                 # Given
                 workflow = workflow_parametrised_with_resources(
@@ -320,6 +323,7 @@ class TestMakeDag:
                     runtime_env=ANY,
                     catch_exceptions=ANY,
                     max_retries=ANY,
+                    **expected_kwargs,
                 )
 
 
