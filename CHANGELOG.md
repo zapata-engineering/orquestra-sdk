@@ -18,6 +18,8 @@
 
 🥷 *Internal*
 
+* Switch out packaging to `hatchling` instead of `setuptools`. This should not impact people installing from wheels.
+
 📃 *Docs*
 
 ## v0.60.0
