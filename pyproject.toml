@@ -1,16 +1,139 @@
 [build-system]
-requires = [
-    # The pin is a workaround for editable installs breaking IDEs.
-    # See this mypy issue: https://github.com/python/mypy/issues/13392#issuecomment-1213527559
-    # and our note: https://zapatacomputing.atlassian.net/wiki/spaces/ORQSRUN/pages/519012482/Editable+installs
-    "setuptools<=63",
-    "wheel",
-    "setuptools_scm>=6.0",
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+authors = [
+    { name = "Zapata Computing Inc.", email = "info@zapatacomputing.com" },
+]
+name = "orquestra-sdk"
+description = "Compose Orquestra workflows using a Python DSL"
+readme = "README.md"
+license = {file = "LICENSE"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: Apache Software License",
+    "Topic :: Scientific/Engineering",
+]
+dynamic = ["version"]
+requires-python = ">= 3.8"
+
+# As a rule of thumb, the dependencies should be specified with lower bound
+# only.
+#
+# For pratical reasons, when choosing the lower bound, we pick the oldest
+# version we can easily install and test, even if there are older versions with
+# the same API.
+dependencies = [
+    # Schema definition
+    "pydantic>=1.10.8,<2",
+    # Pickling library
+    "cloudpickle==2.2.1",
+    # We should keep `dill` to make sure old workflows can be unpickled.
+    "dill==0.3.6",
+    # Enhances wrapping of user's functions
+    "wrapt",
+    # Configuration file locking
+    "filelock>=3.3.2",
+    # Parse version strings
+    "packaging>=21",
+    # For different import types in SDK
+    "GitPython",
+    "pip-api==0.0.30",
+    # Python Standard Library Backports
+    "importlib_metadata~=4.0",
+    "typing-extensions>=4.1.0",
+    # Web requests for external services
+    "requests~=2.28",
+    # Nice workflow visualizations
+    "graphviz",
+    # CLI utilities
+    "argcomplete",
+    # click 8.1.4 introduced type checking errors
+    # see https://github.com/pallets/click/issues/2558
+    "click~=8.0, != 8.1.4",
+    "cloup~=2.0",
+    "inquirer~=3.0",
+    "tabulate",
+    "rich~=13.5",
+    # For automatic login
+    "aiohttp>=3.9.0",
+    # Decoding JWTs
+    "PyJWT~=2.6",
+    # Capture stdout/stderr
+    "wurlitzer~=3.0",
+    # For dremio client
+    "pyarrow>=10.0",
+    "pandas>=1.4",
 ]
 
-# Including this section is same as 'use_scm_version=True' in setup.py
-# See https://github.com/pypa/setuptools_scm for guidance
-[tool.setuptools_scm]
+[project.optional-dependencies]
+ray = [
+    "ray[default]==2.9.0",
+    "async-timeout", # Ray depends on this, but its missing from ray requirements. Can be removed when https://github.com/ray-project/ray/issues/41267 is fixed.
+    "pyarrow", # Ray workflows depend on this, but it's missing from ray requirements.
+]
+all = ["orquestra-sdk[ray]"]
+# Docs-specific deps. This list should match the requirements we're using in
+# the multi-repo docs builds.
+docs = [
+    "sphinx<7.0,>6.0",
+    "furo==2023.7.26",
+    "sphinx_design==0.4.1",
+    "sphinx-autobuild==2021.3.14",
+    "sphinx-autoapi==2.1.1",
+    "sphinxcontrib-youtube==1.2.0",
+    "sphinxcontrib-autoprogram==0.1.8",
+    "sphinx-copybutton==0.5.2",
+    "sphinx-click==4.4.0",
+    "sphinx-togglebutton==0.3.2",
+    "sphinxemoji==0.2.0",
+    "Jinja2>=3.0.0",
+]
+dev = [
+    "orquestra-sdk[all,docs]",
+    "black~=23.7",
+    "diff_cover",
+    "flake8>=4.0.0",
+    "Flake8-pyproject>=1.2.3",
+    "freezegun",
+    "isort~=5.9.0",
+    "mlflow-skinny", # Required for testing snippets in docs.
+    "mypy~=0.910",  # bumping caused issues - ORQSDK-966
+    "numpy",
+    "pydoclint", # Linter for python docstrings. Provides a flake8 plugin.
+    "pymarkdownlnt", # Linter for markdown files.
+    "pyright!=1.1.340,!=1.1.341", # those 2 versions had bug that caused infinite loops
+    "pytest~=6.2",
+    "pytest-cov>=2.12",
+    "pytest-dependency",
+    "pytest_httpserver",
+    "pytest-timeout>=2.0.0",
+    "responses~=0.20,!=0.24",
+    "ruff",
+    "scikit-learn",
+    "types-psutil",
+    "types-Pygments",
+    "types-requests",
+    "types-setuptools",
+    "types-tabulate",
+]
+
+[project.urls]
+Homepage = "https://github.com/zapatacomputing/orquestra-workflow-sdk"
+Documentation = "https://docs.orquestra.io"
+Repository = "https://github.com/zapatacomputing/orquestra-workflow-sdk.git"
+Issues = "https://github.com/zapatacomputing/orquestra-workflow-sdk/issues"
+
+[project.scripts]
+orq = "orquestra.sdk._base.cli._entry:dorq"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/orquestra"]
+
+[tool.hatch.version]
+source = "vcs"
 
 [tool.isort]
 profile = "black"
