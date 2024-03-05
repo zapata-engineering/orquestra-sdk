@@ -512,7 +512,7 @@ def make_ray_dag(
             # For example, if the worker process crashes or exits early.
             # Normal Python exceptions are NOT retried.
             # So, we turn max_retries down to 0.
-            "max_retries": 0,
+            "max_retries": 5,
         }
 
         # Non-custom task resources
