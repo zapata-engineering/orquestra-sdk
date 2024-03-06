@@ -32,6 +32,13 @@ from ._wf_metadata import InvUserMetadata, pydatic_to_json_dict
 DEFAULT_IMAGE_TEMPLATE = "hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:{}"
 
 
+def _get_default_image(template: str, sdk_version: str, num_gpus: t.Optional[int]):
+    image = template.format(sdk_version)
+    if num_gpus is not None and num_gpus > 0:
+        image = f"{image}-cuda"
+    return image
+
+
 def _arg_from_graph(argument_id: ir.ArgumentId, workflow_def: ir.WorkflowDef):
     try:
         return workflow_def.constant_nodes[argument_id]
@@ -511,21 +518,6 @@ def make_ray_dag(
             "max_retries": user_task.retries if user_task.retries else 0
         }
 
-        # Set custom image
-        if os.getenv(RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV) is not None:
-            # This makes an assumption that only "new" IRs will get to this point
-            assert workflow_def.metadata is not None, "Expected a >=0.45.0 IR"
-            sdk_version = workflow_def.metadata.sdk_version.original
-
-            # Custom "Ray resources" request. The entries need to correspond to the ones
-            # used when starting the Ray cluster. See also:
-            # https://docs.ray.io/en/latest/ray-core/scheduling/resources.html#custom-resources
-            ray_options["resources"] = _ray_resources_for_custom_image(
-                invocation.custom_image
-                or user_task.custom_image
-                or DEFAULT_IMAGE_TEMPLATE.format(sdk_version)
-            )
-
         # Non-custom task resources
         if invocation.resources is not None:
             if invocation.resources.cpu is not None:
@@ -542,6 +534,23 @@ def make_ray_dag(
                 # Fractional GPUs not supported currently
                 gpu = int(float(invocation.resources.gpu))
                 ray_options["num_gpus"] = gpu
+
+        # Set custom image
+        if os.getenv(RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV) is not None:
+            # This makes an assumption that only "new" IRs will get to this point
+            assert workflow_def.metadata is not None, "Expected a >=0.45.0 IR"
+            sdk_version = workflow_def.metadata.sdk_version.original
+
+            # Custom "Ray resources" request. The entries need to correspond to the ones
+            # used when starting the Ray cluster. See also:
+            # https://docs.ray.io/en/latest/ray-core/scheduling/resources.html#custom-resources
+            ray_options["resources"] = _ray_resources_for_custom_image(
+                invocation.custom_image
+                or user_task.custom_image
+                or _get_default_image(
+                    DEFAULT_IMAGE_TEMPLATE, sdk_version, ray_options.get("num_gpus")
+                )
+            )
 
         ray_result = _make_ray_dag_node(
             client=client,

@@ -12,9 +12,13 @@
 
 🐛 *Bug Fixes*
 
+* Requesting GPUs with the default image will now use a GPU image on CE.
+
 💅 *Improvements*
 
 🥷 *Internal*
+
+* Switch out packaging to `hatchling` instead of `setuptools`. This should not impact people installing from wheels.
 
 📃 *Docs*
 
