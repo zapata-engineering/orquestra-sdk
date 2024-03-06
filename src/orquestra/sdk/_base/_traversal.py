@@ -590,7 +590,7 @@ def _make_task_model(
         resources=resources,
         parameters=parameters,
         custom_image=task._custom_image,
-        max_calls=task._max_calls,
+        retries=task._retries,
     )
 
 

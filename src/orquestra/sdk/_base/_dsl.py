@@ -515,7 +515,7 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
         custom_image: Optional[str] = None,
         custom_name: Optional[str] = None,
         fn_ref: Optional[FunctionRef] = None,
-        max_calls: Optional[int] = None,
+        retries: Optional[int] = None,
     ):
         if isinstance(fn, BuiltinFunctionType):
             raise NotImplementedError("Built-in functions are not supported as Tasks")
@@ -532,7 +532,7 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
         self._use_default_dependency_imports = dependency_imports is None
         self._source_import = source_import
         self._use_default_source_import = source_import is None
-        self._max_calls = max_calls
+        self._retries = retries
 
         # task itself is not part of any workflow yet. Don't pass wf defaults
         self._resolve_task_source_data()
@@ -1095,7 +1095,7 @@ def task(
     n_outputs: Optional[int] = None,
     custom_image: Optional[str] = None,
     custom_name: Optional[str] = None,
-    max_calls: Optional[int] = None,
+    retries: Optional[int] = None,
 ) -> Callable[[Callable[_P, _R]], TaskDef[_P, _R]]:
     ...
 
@@ -1110,7 +1110,7 @@ def task(
     n_outputs: Optional[int] = None,
     custom_image: Optional[str] = None,
     custom_name: Optional[str] = None,
-    max_calls: Optional[int] = None,
+    retries: Optional[int] = None,
 ) -> TaskDef[_P, _R]:
     ...
 
@@ -1124,7 +1124,7 @@ def task(
     n_outputs: Optional[int] = None,
     custom_image: Optional[str] = None,
     custom_name: Optional[str] = None,
-    max_calls: Optional[int] = None,
+    retries: Optional[int] = None,
 ) -> Union[TaskDef[_P, _R], Callable[[Callable[_P, _R]], TaskDef[_P, _R]]]:
     """Wraps a function into an Orquestra Task.
 
@@ -1156,9 +1156,11 @@ def task(
             result of other task) - it will be placeholded. Every character that is
             non-alphanumeric will be changed to dash ("-").
             Also only first 128 characters of the name will be used
-        max_calls: Maximum number of times a single python process will be reused
-            for this task. Useful for cleaning-up resources when dealing with memory
-            leaks in 3rd-party libraries
+        retries: Maximum number of times a worker will try to retry after failure.
+            Useful if worker is killed by random events, or memory leaks from previously
+            executed tasks.
+            WARNING: retried workers might cause issues in MLFlow logging, as retried
+            workers are sharing invocationId, MLFlow tag will be shared across them.
 
     Raises:
         ValueError: when a task has fewer than 1 outputs.
@@ -1196,7 +1198,7 @@ def task(
             output_metadata=output_metadata,
             custom_image=custom_image,
             custom_name=custom_name,
-            max_calls=max_calls,
+            retries=retries,
         )
 
         return task_def

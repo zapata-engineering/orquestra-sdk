@@ -983,7 +983,7 @@ def test_custom_task_names(task_name, argument, expected):
     ],
 )
 def test_max_calls(argument, expected):
-    @_dsl.task(max_calls=argument)
+    @_dsl.task(retries=argument)
     def task():
         ...
 
@@ -991,7 +991,7 @@ def test_max_calls(argument, expected):
     def workflow():
         return task()
 
-    assert list(workflow.model.tasks.values())[0].max_calls == expected
+    assert list(workflow.model.tasks.values())[0].retries == expected
 
 
 class TestNumberOfFetchesOnInferRepos:

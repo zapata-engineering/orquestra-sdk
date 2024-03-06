@@ -545,12 +545,12 @@ def test_artifact_node_custom_names():
         assert len(warns.list) == 1
 
 
-def test_max_calls():
-    @_dsl.task(max_calls=5)
+def test_retries():
+    @_dsl.task(retries=5)
     def task():
         ...
 
-    assert task._max_calls == 5
+    assert task._retries == 5
 
 
 def test_default_import_type(monkeypatch):
