@@ -515,7 +515,7 @@ def make_ray_dag(
             # By default, Ray will only retry tasks that fail due to a "system error".
             # For example, if the worker process crashes or exits early.
             # Normal Python exceptions are NOT retried.
-            "max_retries": user_task.retries if user_task.retries else 0
+            "max_retries": user_task.retries if user_task.retries else 0,
         }
 
         # Non-custom task resources
