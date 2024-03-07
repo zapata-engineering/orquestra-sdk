@@ -1375,7 +1375,7 @@ class TestRetries:
         @sdk.workflow
         def wf():
             task_res = None
-            for _ in range(4):
+            for _ in range(5):
                 task_res = generic_task(task_res)
             return task_res
 
@@ -1392,8 +1392,21 @@ class TestRetries:
         import ray.workflow
         from ray.workflow.common import WorkflowStatus
 
-        time.sleep(5)
-        ray_status = ray.workflow.get_status(wf_run_id)
+        no_of_retries = 0
+
+        while True:
+            ray_status = ray.workflow.get_status(wf_run_id)
+            if no_of_retries >= 30:
+                break
+            if ray_status == WorkflowStatus.RUNNING:
+                time.sleep(1)
+                no_of_retries += 1
+                continue
+            if (
+                ray_status == WorkflowStatus.FAILED
+                or ray_status == WorkflowStatus.SUCCESSFUL
+            ):
+                break
 
         if should_fail:
             assert ray_status == WorkflowStatus.FAILED
