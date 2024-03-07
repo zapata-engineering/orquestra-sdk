@@ -903,11 +903,7 @@ class DriverClient:
         ):
             raise
 
-        # Bug with mypy and Pydantic:
-        #   Unions cannot be passed to parse_obj_as: pydantic/pydantic#1847
-        return pydantic.parse_obj_as(
-            WorkflowResult, resp.json()  # type: ignore[arg-type]
-        )
+        return pydantic.TypaAdapter(WorkflowResult).validate_python(resp.json())
 
     # --- Workflow Run Results ---
 
@@ -1013,11 +1009,7 @@ class DriverClient:
         json_response = resp.json()
         try:
             # Try an older response
-            # Bug with mypy and Pydantic:
-            #   Unions cannot be passed to parse_obj_as: pydantic/pydantic#1847
-            return pydantic.parse_obj_as(
-                WorkflowResult, json_response  # type: ignore[arg-type]
-            )
+            return pydantic.TypeAdapter(WorkflowResult).validate_python(json_response)
         except pydantic.ValidationError:
             # If we fail, try parsing each part of a list separately
             return ComputeEngineWorkflowResult.parse_obj(json_response)
@@ -1252,9 +1244,9 @@ class DriverClient:
         ):
             raise
 
-        parsed_response = pydantic.parse_obj_as(
-            _models.ListWorkspacesResponse, resp.json()
-        )
+        parsed_response = pydantic.TypeAdapter(
+            _models.ListWorkspacesResponse
+        ).validate_python(resp.json())
 
         return parsed_response
 
@@ -1291,9 +1283,9 @@ class DriverClient:
         ):
             raise
 
-        parsed_response = pydantic.parse_obj_as(
-            _models.ListProjectResponse, resp.json()
-        )
+        parsed_response = pydantic.TypeAdapter(
+            _models.ListProjectResponse
+        ).validate_python(resp.json())
 
         return parsed_response
 
