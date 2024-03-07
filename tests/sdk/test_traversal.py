@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2021-2022 Zapata Computing Inc.
+# © Copyright 2021 - 2024 Zapata Computing Inc.
 ################################################################################
 """Tests workflow graph traversal, i.e. extracting the serializable IR from
 functions decorated with @sdk.workflow and @sdk.task.
