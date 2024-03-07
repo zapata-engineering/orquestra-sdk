@@ -1349,18 +1349,18 @@ class TestRetries:
     """
 
     @pytest.mark.parametrize(
-        "retries,should_fail",
+        "max_retries,should_fail",
         [
-            (1, False),  # we should not fail with retries enabled
-            (50, False),  # we should not fail with retries enabled
+            (1, False),  # we should not fail with max_retries enabled
+            (50, False),  # we should not fail with max_retries enabled
             (0, True),  # 0 means do not retry
-            (None, True),  # We do not enable retries by default
+            (None, True),  # We do not enable max_retries by default
         ],
     )
     def test_high_graph_complexity_workflow(
-        self, runtime: _dag.RayRuntime, retries, should_fail
+        self, runtime: _dag.RayRuntime, max_retries, should_fail
     ):
-        @sdk.task(retries=retries)
+        @sdk.task(max_retries=max_retries)
         def generic_task(*args):
             if hasattr(sdk, "l"):
                 sdk.l.extend([0])
@@ -1377,7 +1377,7 @@ class TestRetries:
         @sdk.workflow
         def wf():
             task_res = None
-            for _ in range(4):
+            for _ in range(10):
                 task_res = generic_task(task_res)
             return task_res
 

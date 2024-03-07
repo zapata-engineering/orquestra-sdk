@@ -238,7 +238,7 @@ class TaskDef(BaseModel):
 
     resources: t.Optional[Resources] = None
 
-    retries: t.Optional[int] = None
+    max_retries: t.Optional[int] = None
     # Hints the runtime to run this task in a docker container with this image. Has no
     # effect if the runtime doesn't support it.
     custom_image: t.Optional[str] = None

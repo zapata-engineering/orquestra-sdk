@@ -494,7 +494,19 @@ class RayRuntime(RuntimeInterface):
                         f"`orq wf logs {workflow_run_id} --env-setup`"
                     )
                     break
+        inv1 = ray_task_metas[0]["user_metadata"]["task_invocation_id"]
+        inv2 = ray_task_metas[1]["user_metadata"]["task_invocation_id"]
+        breakpoint()
+        try:
+            _client.RayClient().get_task_output_async(workflow_run_id, inv1)
+        except Exception as e:
+            print()
+        try:
+            _client.RayClient().get_task_output_async(workflow_run_id, inv2)
+        except Exception as e:
+            print()
 
+        breakpoint()
         model = WorkflowRun(
             id=workflow_run_id,
             workflow_def=wf_def,

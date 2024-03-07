@@ -508,14 +508,14 @@ def make_ray_dag(
             "catch_exceptions": False,
             # We only want to execute workflow tasks once by default.
             # This is so there is only one task run ID per task, for scenarios where
-            # this is used (like in MLFlow). We allow setting this variable on
+            # this is used (like in MLflow). We allow setting this variable on
             # task-level for some particular edge-cases like memory leaks inside
             # 3rd party libraries - so in case of the OOMKilled worker it can be
             # restarted.
             # By default, Ray will only retry tasks that fail due to a "system error".
             # For example, if the worker process crashes or exits early.
             # Normal Python exceptions are NOT retried.
-            "max_retries": user_task.retries if user_task.retries else 0,
+            "max_retries": user_task.max_retries if user_task.max_retries else 0,
         }
 
         # Non-custom task resources
