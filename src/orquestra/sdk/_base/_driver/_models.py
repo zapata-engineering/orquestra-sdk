@@ -279,12 +279,12 @@ class Resources(pydantic.BaseModel):
 
     nodes: Optional[int]
     cpu: Optional[str] = pydantic.Field(
-        regex=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+        pattern=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
     )
     memory: Optional[str] = pydantic.Field(
-        regex=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+        pattern=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
     )
-    gpu: Optional[str] = pydantic.Field(regex="^[01]+$")
+    gpu: Optional[str] = pydantic.Field(pattern="^[01]+$")
 
 
 class HeadNodeResources(pydantic.BaseModel):
@@ -294,10 +294,10 @@ class HeadNodeResources(pydantic.BaseModel):
     """  # noqa: D205, D212
 
     cpu: Optional[str] = pydantic.Field(
-        regex=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+        pattern=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
     )
     memory: Optional[str] = pydantic.Field(
-        regex=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+        pattern=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
     )
 
 
