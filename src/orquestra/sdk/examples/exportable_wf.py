@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 - 2023 Zapata Computing Inc.
+# © Copyright 2022 - 2024 Zapata Computing Inc.
 ################################################################################
 """Example of a workflow file that can be exported to v1 (yaml) format and run on
 Orquestra cluster.
@@ -55,7 +55,7 @@ def capitalize_no_decorator(text: str) -> str:
 
 def main():
     # output the intermediate workflow representation as a JSON
-    print(my_workflow.model.json())
+    print(my_workflow.model.model_dump_json())
 
 
 if __name__ == "__main__":

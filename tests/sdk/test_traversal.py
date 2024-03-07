@@ -731,7 +731,7 @@ class TestWorkflowsTasksProperties:
         with expectation:
             wf = workflow_template.model
             for constant in wf.constant_nodes.values():
-                constant_dict = json.loads(constant.json())
+                constant_dict = json.loads(constant.model_dump_json())
                 _ = serde.value_from_result_dict(constant_dict)
 
     @staticmethod

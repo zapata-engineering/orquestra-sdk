@@ -998,13 +998,13 @@ class DriverClient:
         # To ensure the correct ordering of results, we serialize the results on CE as:
         # {
         #   "results": [
-        #       (JSONResult | PickleResult).json(),
-        #       (JSONResult | PickleResult).json(),
+        #       (JSONResult | PickleResult).model_dump_json(),
+        #       (JSONResult | PickleResult).model_dump_json(),
         #       ...
         #   ]
-        # } aka a ComputeEngineWorkflowResult.json()
+        # } aka a ComputeEngineWorkflowResult.model_dump_json()
         # For older workflows, we respond with:
-        # (JSONResult | PickleResult).json()
+        # (JSONResult | PickleResult).model_dump_json()
 
         json_response = resp.json()
         try:

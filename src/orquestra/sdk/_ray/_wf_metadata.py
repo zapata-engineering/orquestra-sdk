@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023 - 2024 Zapata Computing Inc.
 ################################################################################
 
 import json
@@ -40,4 +40,4 @@ class InvUserMetadata(pydantic.BaseModel):
 
 def pydatic_to_json_dict(pydantic_obj) -> t.Dict[str, t.Any]:
     """Produces a JSON-serializable dict."""
-    return json.loads(pydantic_obj.json())
+    return json.loads(pydantic_obj.model_dump_json())

@@ -146,7 +146,7 @@ def _save_config_file(
     config_file_contents: RuntimeConfigurationFile,
 ):
     config_file: Path = get_config_file_path()
-    config_file.write_text(data=config_file_contents.json(indent=2))
+    config_file.write_text(data=config_file_contents.model_dump_json(indent=2))
 
 
 EMPTY_CONFIG_FILE = RuntimeConfigurationFile(

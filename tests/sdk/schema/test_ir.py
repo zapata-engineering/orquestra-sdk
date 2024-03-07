@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023 - 2024 Zapata Computing Inc.
 ################################################################################
 """
 Tests for the little bits of code we have in ``orquestra.sdk.schema.ir``.
@@ -28,7 +28,7 @@ class TestWorkflowDef:
             wf_def = unpacking.unpacking_wf().model
 
             # When
-            json_str = wf_def.json()
+            json_str = wf_def.model_dump_json()
             wf_def2 = ir.WorkflowDef.parse_raw(json_str)
 
             # Then
