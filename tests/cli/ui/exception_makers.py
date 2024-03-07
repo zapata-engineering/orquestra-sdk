@@ -15,7 +15,7 @@ def except_from_within_except():
     try:
         try:
             raise KeyError("key")
-        except KeyError as e:
+        except KeyError:
             raise ValueError("Invalid file")
     except ValueError as e:
         raise RuntimeError("Unable to do thing") from e
@@ -25,9 +25,9 @@ def except_within_except():
     try:
         try:
             raise KeyError("key")
-        except KeyError as e:
+        except KeyError:
             raise ValueError("Invalid file")
-    except ValueError as e:
+    except ValueError:
         raise RuntimeError("Unable to do thing")
 
 

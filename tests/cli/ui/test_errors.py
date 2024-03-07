@@ -1,8 +1,8 @@
 ################################################################################
 # © Copyright 2023-2024 Zapata Computing Inc.
 ################################################################################
-from typing import Callable, List
 import re
+from typing import Callable, List
 
 import pytest
 
@@ -19,7 +19,7 @@ from . import exception_makers
         (
             exception_makers.except_plain,
             [
-                r"RuntimeError: Unable to do thing \(test_print_traceback:test_errors.py:[\d]+\)",
+                r"RuntimeError: Unable to do thing \(test_print_traceback:test_errors.py:[\d]+\)",  # noqa: E501
                 r"  test_print_traceback:test_errors.py:[\d]+",
                 r"  except_plain:exception_makers.py:[\d]+",
             ],
@@ -35,7 +35,7 @@ from . import exception_makers
         (
             exception_makers.except_stack,
             [
-                r"RuntimeError: Unable to do thing \(test_print_traceback:test_errors.py:[\d]+\)",
+                r"RuntimeError: Unable to do thing \(test_print_traceback:test_errors.py:[\d]+\)",  # noqa: E501
                 r"  test_print_traceback:test_errors.py:[\d]+",
                 r"  except_stack:exception_makers.py:[\d]+",
                 r"  _b:exception_makers.py:[\d]+",
@@ -46,7 +46,7 @@ from . import exception_makers
         (
             exception_makers.except_from,
             [
-                r"RuntimeError: Unable to do thing \(test_print_traceback:test_errors.py:[\d]+\)",
+                r"RuntimeError: Unable to do thing \(test_print_traceback:test_errors.py:[\d]+\)",  # noqa: E501
                 r"  test_print_traceback:test_errors.py:[\d]+",
                 r"  except_from:exception_makers.py:[\d]+",
                 r"Caused by:",
@@ -58,25 +58,25 @@ from . import exception_makers
         (
             exception_makers.except_within_except,
             [
-                r"RuntimeError: Unable to do thing \(test_print_traceback:test_errors.py:[\d]+\)",
+                r"RuntimeError: Unable to do thing \(test_print_traceback:test_errors.py:[\d]+\)",  # noqa: E501
                 r"  test_print_traceback:test_errors.py:[\d]+",
                 r"  except_within_except:exception_makers.py:[\d]+",
                 r"While handling:",
-                r"  ValueError: Invalid file \(except_within_except:exception_makers.py:[\d]+\)",
+                r"  ValueError: Invalid file \(except_within_except:exception_makers.py:[\d]+\)",  # noqa: E501
                 r"  While handling:",
-                r"    KeyError: 'key' \(except_within_except:exception_makers.py:[\d]+\)",
+                r"    KeyError: 'key' \(except_within_except:exception_makers.py:[\d]+\)",  # noqa: E501
             ],
         ),
         (
             exception_makers.except_from_within_except,
             [
-                r"RuntimeError: Unable to do thing \(test_print_traceback:test_errors.py:[\d]+\)",
+                r"RuntimeError: Unable to do thing \(test_print_traceback:test_errors.py:[\d]+\)",  # noqa: E501
                 r"  test_print_traceback:test_errors.py:[\d]+",
                 r"  except_from_within_except:exception_makers.py:[\d]+",
                 r"Caused by:",
-                r"  ValueError: Invalid file \(except_from_within_except:exception_makers.py:[\d]+\)",
+                r"  ValueError: Invalid file \(except_from_within_except:exception_makers.py:[\d]+\)",  # noqa: E501
                 r"  While handling:",
-                r"    KeyError: 'key' \(except_from_within_except:exception_makers.py:[\d]+\)",
+                r"    KeyError: 'key' \(except_from_within_except:exception_makers.py:[\d]+\)",  # noqa: E501
             ],
         ),
     ),
