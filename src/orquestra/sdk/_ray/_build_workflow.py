@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023 - 2024 Zapata Computing Inc.
 ################################################################################
 """Translates IR workflow def into a Ray workflow."""
 import os
@@ -650,7 +650,7 @@ def get_current_ids() -> (
     )
 
     try:
-        user_meta = InvUserMetadata.parse_obj(task_meta.get("user_metadata"))
+        user_meta = InvUserMetadata.model_validate(task_meta.get("user_metadata"))
     except pydantic.ValidationError:
         # This ray task wasn't annotated with InvUserMetadata. It happens when
         # `get_current_ids()` is used from a context that's not a regular Orquestra Task

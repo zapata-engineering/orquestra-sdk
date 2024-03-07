@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022 - 2024 Zapata Computing Inc.
 ################################################################################
 """RuntimeInterface implementation that uses Ray DAG/Ray Core API."""
 
@@ -448,7 +448,7 @@ class RayRuntime(RuntimeInterface):
                 f"Workflow run {workflow_run_id} wasn't found"
             ) from e
 
-        wf_user_metadata = WfUserMetadata.parse_obj(wf_meta["user_metadata"])
+        wf_user_metadata = WfUserMetadata.model_validate(wf_meta["user_metadata"])
         wf_def = wf_user_metadata.workflow_def
 
         inv_ids = wf_def.task_invocations.keys()
