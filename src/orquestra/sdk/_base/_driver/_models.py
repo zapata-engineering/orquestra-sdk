@@ -16,7 +16,7 @@ from typing import (
 )
 
 import pydantic
-from pydantic.generics import GenericModel
+from pydantic import BaseModel
 from typing_extensions import Annotated
 
 from orquestra.sdk._base._dates import Instant
@@ -55,7 +55,7 @@ class Pagination(pydantic.BaseModel):
     nextPageToken: str
 
 
-class Response(GenericModel, Generic[DataT, MetaT]):
+class Response(BaseModel, Generic[DataT, MetaT]):
     """A generic to help with the structure of driver responses."""
 
     data: DataT
