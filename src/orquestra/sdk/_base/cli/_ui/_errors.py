@@ -2,9 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 import sys
-import traceback
 from functools import singledispatch
-import itertools
 from pathlib import Path
 from types import TracebackType
 from typing import Optional
@@ -21,14 +19,10 @@ from orquestra.sdk.schema.responses import ResponseStatusCode
 
 
 def _compact_tb(tb: TracebackType):
-    return (
-        "{}:{}:{}".format(
-            tb.tb_frame.f_code.co_name,
-            Path(tb.tb_frame.f_code.co_filename).name,
-            tb.tb_lineno,
-        )
-        if tb is not None
-        else ""
+    return "{}:{}:{}".format(
+        tb.tb_frame.f_code.co_name,
+        Path(tb.tb_frame.f_code.co_filename).name,
+        tb.tb_lineno,
     )
 
 
@@ -37,7 +31,13 @@ def _compact_exc(e: BaseException, prefix: str = ""):
     exc_message = f"{e}"
     spacing = ": " if len(exc_message) > 0 else ""
     file_details = f"({_compact_tb(tb)})" if tb is not None else ""
-    return f"{prefix}[red][b]{type(e).__name__}{spacing}[/b]{exc_message} {file_details}[/red]"
+    return "{}[red][b]{}{}[/b]{} {}[/red]".format(
+        prefix,
+        type(e).__name__,
+        spacing,
+        exc_message,
+        file_details,
+    )
 
 
 def _print_traceback(
