@@ -1363,10 +1363,10 @@ class TestRetries:
         @sdk.task(max_retries=max_retries)
         def generic_task(*args):
             if hasattr(sdk, "l"):
-                sdk.l.extend([0])
+                sdk.l.extend([0])  # type: ignore # noqa
             else:
                 setattr(sdk, "l", [0])
-            if len(sdk.l) == 2:
+            if len(sdk.l) == 2:  # type: ignore # noqa
                 import os
                 import signal
 
