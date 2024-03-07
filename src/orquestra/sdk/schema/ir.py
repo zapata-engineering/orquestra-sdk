@@ -54,7 +54,9 @@ class GitImport(BaseModel):
     git_ref: str
 
     # we need this in the JSON to know which class to use when deserializing
-    type: str = pydantic.Field(default="GIT_IMPORT", const=True)
+    type: str = pydantic.Field(
+        default="GIT_IMPORT", json_schema_extra={"Literal": True}
+    )
 
     @pydantic.validator("repo_url", pre=True)
     def _backwards_compatible_repo_url(cls, v):
@@ -77,12 +79,16 @@ class LocalImport(BaseModel):
     id: ImportId
 
     # we need this in the JSON to know which class to use when deserializing
-    type: str = pydantic.Field(default="LOCAL_IMPORT", const=True)
+    type: str = pydantic.Field(
+        default="LOCAL_IMPORT", json_schema_extra={"Literal": True}
+    )
 
 
 class InlineImport(BaseModel):
     id: ImportId
-    type: str = pydantic.Field(default="INLINE_IMPORT", const=True)
+    type: str = pydantic.Field(
+        default="INLINE_IMPORT", json_schema_extra={"Literal": True}
+    )
 
 
 class PackageSpec(BaseModel):
@@ -111,7 +117,9 @@ class PythonImports(BaseModel):
     # List of pip options to put at start of the requirements
     pip_options: t.List[str]
 
-    type: str = pydantic.Field(default="PYTHON_IMPORT", const=True)
+    type: str = pydantic.Field(
+        default="PYTHON_IMPORT", json_schema_extra={"Literal": True}
+    )
 
 
 # If we need more import types, add them here.
@@ -131,7 +139,9 @@ class ModuleFunctionRef(BaseModel):
     line_number: t.Optional[int] = None
 
     # We need this in the JSON to know which class to use when deserializing
-    type: str = pydantic.Field(default="MODULE_FUNCTION_REF", const=True)
+    type: str = pydantic.Field(
+        default="MODULE_FUNCTION_REF", json_schema_extra={"Literal": True}
+    )
 
 
 class FileFunctionRef(BaseModel):
@@ -144,7 +154,9 @@ class FileFunctionRef(BaseModel):
     line_number: t.Optional[int] = None
 
     # We need this in the JSON to know which class to use when deserializing
-    type: str = pydantic.Field(default="FILE_FUNCTION_REF", const=True)
+    type: str = pydantic.Field(
+        default="FILE_FUNCTION_REF", json_schema_extra={"Literal": True}
+    )
 
 
 class InlineFunctionRef(BaseModel):
@@ -154,7 +166,9 @@ class InlineFunctionRef(BaseModel):
     encoded_function: t.List[str]
 
     # We need this in the JSON to know which class to use when deserializing
-    type: str = pydantic.Field(default="INLINE_FUNCTION_REF", const=True)
+    type: str = pydantic.Field(
+        default="INLINE_FUNCTION_REF", json_schema_extra={"Literal": True}
+    )
 
 
 FunctionRef = t.Union[ModuleFunctionRef, FileFunctionRef, InlineFunctionRef]
@@ -307,7 +321,7 @@ class ConstantNodeJSON(BaseModel):
     value: str
     serialization_format: ArtifactFormat = pydantic.Field(
         default=ArtifactFormat.JSON,
-        const=True,
+        json_schema_extra={"Literal": True},
     )
 
     # Human-readable string that can be rendered on the UI to represent the value.
@@ -329,7 +343,7 @@ class ConstantNodePickle(BaseModel):
     chunks: t.List[str]
     serialization_format: ArtifactFormat = pydantic.Field(
         default=ArtifactFormat.ENCODED_PICKLE,
-        const=True,
+        json_schema_extra={"Literal": True},
     )
 
     # Human-readable string that can be rendered on the UI to represent the value.
