@@ -1357,9 +1357,7 @@ class TestRetries:
             (None, True),  # We do not enable max_retries by default
         ],
     )
-    def test_max_retries(
-        self, runtime: _dag.RayRuntime, max_retries, should_fail
-    ):
+    def test_max_retries(self, runtime: _dag.RayRuntime, max_retries, should_fail):
         @sdk.task(max_retries=max_retries)
         def generic_task(*args):
             if hasattr(sdk, "l"):
