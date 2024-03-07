@@ -318,7 +318,7 @@ class TestArifactFutureMethodsCalls:
         assert len(set(invocation.task_id for invocation in invocations)) == 1
 
         assert invocations[0].resources is not None
-        assert invocations[0].resources.dict() == TASK_RESOURCES_EXPECTED
+        assert invocations[0].resources.model_dump() == TASK_RESOURCES_EXPECTED
         assert invocations[0].custom_image == CUSTOM_IMAGE_NOT_DEFAULT["custom_image"]
 
         assert invocations[1].resources is None
@@ -338,7 +338,7 @@ class TestArifactFutureMethodsCalls:
         invocations = [*wf_model.task_invocations.values()]
         assert len(set(invocation.task_id for invocation in invocations)) == 1
         assert invocations[0].resources is not None
-        assert invocations[0].resources.dict() == TASK_RESOURCES_EXPECTED
+        assert invocations[0].resources.model_dump() == TASK_RESOURCES_EXPECTED
 
         assert invocations[1].resources is None
         assert invocations[1].custom_image == invocations[0].custom_image
@@ -375,7 +375,7 @@ class TestArifactFutureMethodsCalls:
         invocations = [*wf_model.task_invocations.values()]
         assert len(set(invocation.task_id for invocation in invocations)) == 1
         assert invocations[0].resources is not None
-        assert invocations[0].resources.dict() == TASK_RESOURCES_EXPECTED
+        assert invocations[0].resources.model_dump() == TASK_RESOURCES_EXPECTED
         assert invocations[0].custom_image == CUSTOM_IMAGE_NOT_DEFAULT["custom_image"]
 
         assert invocations[1].resources is None

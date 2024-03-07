@@ -142,9 +142,11 @@ class SecretsClient:
         """
         resp = self._get(
             API_ACTIONS["list_secrets"],
-            query_params=ListSecretsRequest(workspace=workspace_id).dict()
-            if workspace_id
-            else None,
+            query_params=(
+                ListSecretsRequest(workspace=workspace_id).model_dump()
+                if workspace_id
+                else None
+            ),
         )
         try:
             _handle_common_errors(resp)
@@ -171,7 +173,7 @@ class SecretsClient:
         """
         resp = self._post(
             API_ACTIONS["create_secret"],
-            body_params={"data": new_secret.dict()},
+            body_params={"data": new_secret.model_dump()},
         )
 
         if resp.status_code == codes.BAD_REQUEST:
@@ -200,7 +202,7 @@ class SecretsClient:
         obj = SecretValueObj(value=value)
         resp = self._post(
             API_ACTIONS["update_secret"].format(name),
-            body_params={"data": obj.dict()},
+            body_params={"data": obj.model_dump()},
         )
 
         if resp.status_code == codes.NOT_FOUND:

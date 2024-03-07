@@ -164,7 +164,9 @@ def value_from_result_dict(result_dict: t.Mapping) -> t.Any:
 
 def deserialize_constant(node: ir.ConstantNode):
     return deserialize(
-        pydantic.TypeAdapter(responses.WorkflowResult).validate_python(node.dict())
+        pydantic.TypeAdapter(responses.WorkflowResult).validate_python(
+            node.model_dump()
+        )
     )
 
 

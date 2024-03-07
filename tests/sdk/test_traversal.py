@@ -588,7 +588,7 @@ class TestWorkflowsTasksProperties:
         expectation: ContextManager,
     ):
         """
-        Import IDs refered from task defs should be part of wf def IR.
+        Import IDs referred from task defs should be part of wf def IR.
         """
         with expectation:
             wf = workflow_template.model
@@ -851,7 +851,7 @@ def test_individual_task_models(task_def, has_arg, expected_model):
     wf_model = wf.model
     task_def = list(wf_model.tasks.values())[0]
 
-    assert task_def == expected_model.dict()
+    assert task_def == expected_model.model_dump()
 
 
 @pytest.mark.parametrize(

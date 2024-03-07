@@ -272,13 +272,13 @@ class DriverClient:
             _models.CreateWorkflowDefsRequest(
                 workspaceId=project.workspace_id,
                 projectId=project.project_id,
-            ).dict()
+            ).model_dump()
             if project
             else None
         )
         resp = self._post(
             self._uri_provider.uri_for("create_workflow_def"),
-            body_params=workflow_def.dict(),
+            body_params=workflow_def.model_dump(),
             query_params=query_params,
         )
 
@@ -326,7 +326,7 @@ class DriverClient:
             query_params=_models.ListWorkflowDefsRequest(
                 pageSize=page_size,
                 pageToken=page_token,
-            ).dict(),
+            ).model_dump(),
         )
 
         try:
@@ -510,7 +510,7 @@ class DriverClient:
                 resources=resources,
                 dryRun=dry_run,
                 headNodeResources=head_node_resources,
-            ).dict(),
+            ).model_dump(),
         )
 
         if resp.status_code == codes.BAD_REQUEST:
@@ -714,7 +714,7 @@ class DriverClient:
                 projectId=None,
                 maxAge=(int(max_age.total_seconds()) if max_age else None),
                 state=_get_state_query(state),
-            ).dict(),
+            ).model_dump(),
         )
 
         try:
@@ -798,7 +798,7 @@ class DriverClient:
                 "terminate_workflow_run", parameters=(wf_run_id,)
             ),
             body_params=None,
-            query_params=_models.TerminateWorkflowRunRequest(force=force).dict(),
+            query_params=_models.TerminateWorkflowRunRequest(force=force).model_dump(),
         )
 
         if resp.status_code == codes.NOT_FOUND:
@@ -841,7 +841,7 @@ class DriverClient:
             ),
             query_params=_models.GetWorkflowRunArtifactsRequest(
                 workflowRunId=wf_run_id
-            ).dict(),
+            ).model_dump(),
         )
 
         if resp.status_code == codes.NOT_FOUND:
@@ -931,7 +931,7 @@ class DriverClient:
             self._uri_provider.uri_for("get_workflow_run_results"),
             query_params=_models.GetWorkflowRunResultsRequest(
                 workflowRunId=wf_run_id
-            ).dict(),
+            ).model_dump(),
         )
 
         if resp.status_code == codes.BAD_REQUEST:
@@ -1041,7 +1041,7 @@ class DriverClient:
             self._uri_provider.uri_for("get_workflow_run_logs"),
             query_params=_models.GetWorkflowRunLogsRequest(
                 workflowRunId=wf_run_id
-            ).dict(),
+            ).model_dump(),
         )
 
         # Handle errors
@@ -1111,7 +1111,7 @@ class DriverClient:
             self._uri_provider.uri_for("get_task_run_logs"),
             query_params=_models.GetTaskRunLogsRequest(
                 workflowRunId=wf_run_id, taskInvocationId=task_inv_id
-            ).dict(),
+            ).model_dump(),
         )
 
         # Handle errors
@@ -1178,7 +1178,7 @@ class DriverClient:
             self._uri_provider.uri_for("get_workflow_run_system_logs"),
             query_params=_models.GetWorkflowRunLogsRequest(
                 workflowRunId=wf_run_id
-            ).dict(),
+            ).model_dump(),
         )
 
         # Handle errors
