@@ -6,6 +6,8 @@
 
 🔥 *Features*
 
+* Added `max_retries` in `sdk.task` decorator. This allows users to restart ray workers on system crashes (like OOMKills or sigterms). Restarts do not happen with Python exceptions.
+
 🧟 *Deprecations*
 
 👩‍🔬 *Experimental*
