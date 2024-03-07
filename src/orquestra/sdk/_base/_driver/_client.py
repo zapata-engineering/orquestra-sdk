@@ -903,7 +903,7 @@ class DriverClient:
         ):
             raise
 
-        return pydantic.TypaAdapter(WorkflowResult).validate_python(resp.json())
+        return pydantic.TypeAdapter(WorkflowResult).validate_python(resp.json())
 
     # --- Workflow Run Results ---
 
