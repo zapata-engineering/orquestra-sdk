@@ -1340,3 +1340,75 @@ class TestGraphComplexity:
         # Precondition
         wf_run = runtime.get_workflow_run_status(wf_run_id)
         assert wf_run.status.state == State.SUCCEEDED
+
+
+@pytest.mark.slow
+class TestRetries:
+    """
+    Test that retrying Ray Workers works properly
+    """
+
+    @pytest.mark.parametrize(
+        "max_retries,should_fail",
+        [
+            (1, False),  # we should not fail with max_retries enabled
+            (50, False),  # we should not fail with max_retries enabled
+            (0, True),  # 0 means do not retry
+            (None, True),  # We do not enable max_retries by default
+        ],
+    )
+    def test_max_retries(self, runtime: _dag.RayRuntime, max_retries, should_fail):
+        @sdk.task(max_retries=max_retries)
+        def generic_task(*args):
+            if hasattr(sdk, "l"):
+                sdk.l.extend([0])  # type: ignore # noqa
+            else:
+                setattr(sdk, "l", [0])
+            if len(sdk.l) == 2:  # type: ignore # noqa
+                import os
+                import signal
+
+                os.kill(os.getpid(), signal.SIGTERM)
+
+            return None
+
+        @sdk.workflow
+        def wf():
+            task_res = None
+            for _ in range(5):
+                task_res = generic_task(task_res)
+            return task_res
+
+        wf_model = wf().model
+
+        # When
+        # The function-under-test is called inside the workflow.
+        wf_run_id = runtime.create_workflow_run(wf_model, project=None, dry_run=False)
+
+        # we can't base our logic on SDK workflow status because of:
+        # https://zapatacomputing.atlassian.net/browse/ORQSDK-1024
+        # We can just look into the message at peek that the workflow actually failed
+        # even tho we report is as RUNNING.
+        import ray.workflow
+        from ray.workflow.common import WorkflowStatus
+
+        no_of_retries = 0
+
+        while True:
+            ray_status = ray.workflow.get_status(wf_run_id)
+            if no_of_retries >= 30:
+                break
+            if ray_status == WorkflowStatus.RUNNING:
+                time.sleep(1)
+                no_of_retries += 1
+                continue
+            if (
+                ray_status == WorkflowStatus.FAILED
+                or ray_status == WorkflowStatus.SUCCESSFUL
+            ):
+                break
+
+        if should_fail:
+            assert ray_status == WorkflowStatus.FAILED
+        else:
+            assert ray_status == WorkflowStatus.SUCCESSFUL
