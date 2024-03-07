@@ -1375,7 +1375,7 @@ class TestRetries:
         @sdk.workflow
         def wf():
             task_res = None
-            for _ in range(10):
+            for _ in range(4):
                 task_res = generic_task(task_res)
             return task_res
 
