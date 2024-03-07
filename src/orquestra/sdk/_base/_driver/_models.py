@@ -86,7 +86,7 @@ class Error(pydantic.BaseModel):
     https://github.com/zapatacomputing/workflow-driver/blob/2b3534/openapi/src/schemas/Error.yaml.
     """  # noqa: D205, D212
 
-    code: Optional[int]
+    code: Optional[int] = None
     message: str
     detail: str
 
@@ -124,8 +124,8 @@ class ListWorkflowDefsRequest(pydantic.BaseModel):
     https://github.com/zapatacomputing/workflow-driver/blob/cdb667ef6d1053876250daff27e19fb50374c0d4/openapi/src/resources/workflow-definitions.yaml#L8.
     """  # noqa: D205, D212
 
-    pageSize: Optional[int]
-    pageToken: Optional[str]
+    pageSize: Optional[int] = None
+    pageToken: Optional[str] = None
 
 
 class CreateWorkflowDefsRequest(pydantic.BaseModel):
@@ -134,8 +134,8 @@ class CreateWorkflowDefsRequest(pydantic.BaseModel):
     https://github.com/zapatacomputing/workflow-driver/blob/dc8a2a37d92324f099afefc048f6486a5061850f/openapi/src/resources/workflow-definitions.yaml#L39.
     """  # noqa: D205, D212
 
-    workspaceId: Optional[str]
-    projectId: Optional[str]
+    workspaceId: Optional[str] = None
+    projectId: Optional[str] = None
 
 
 ListWorkflowDefsResponse = List[GetWorkflowDefResponse]
@@ -169,8 +169,8 @@ class RunStatusResponse(pydantic.BaseModel):
     """  # noqa: D205, D212
 
     state: StateResponse
-    startTime: Optional[Instant]
-    endTime: Optional[Instant]
+    startTime: Optional[Instant] = None
+    endTime: Optional[Instant] = None
 
     def to_ir(self) -> RunStatus:
         return RunStatus(
@@ -188,7 +188,7 @@ class TaskRunResponse(pydantic.BaseModel):
 
     id: TaskRunID
     invocationId: TaskInvocationID
-    status: Optional[RunStatusResponse]
+    status: Optional[RunStatusResponse] = None
 
     def to_ir(self) -> TaskRun:
         if self.status is None:
@@ -277,7 +277,7 @@ class Resources(pydantic.BaseModel):
     # If this schema is changed, the documentation in
     # docs/guides/ce-resource-management.rst should also be updated.
 
-    nodes: Optional[int]
+    nodes: Optional[int] = None
     cpu: Optional[str] = pydantic.Field(
         pattern=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
     )
@@ -310,7 +310,7 @@ class CreateWorkflowRunRequest(pydantic.BaseModel):
     workflowDefinitionID: WorkflowDefID
     resources: Resources
     dryRun: bool
-    headNodeResources: Optional[HeadNodeResources]
+    headNodeResources: Optional[HeadNodeResources] = None
 
 
 class CreateWorkflowRunResponse(pydantic.BaseModel):
@@ -327,13 +327,13 @@ class ListWorkflowRunsRequest(pydantic.BaseModel):
     https://github.com/zapatacomputing/workflow-driver/blob/c52013c0f4df066159fc32ad38d489b3eaff5850/openapi/src/resources/workflow-runs.yaml#L14.
     """  # noqa: D205, D212
 
-    workflowDefinitionID: Optional[WorkflowDefID]
-    pageSize: Optional[int]
-    pageToken: Optional[str]
-    workspaceId: Optional[WorkspaceId]
-    projectId: Optional[ProjectId]
-    maxAge: Optional[int]
-    state: Optional[str]
+    workflowDefinitionID: Optional[WorkflowDefID] = None
+    pageSize: Optional[int] = None
+    pageToken: Optional[str] = None
+    workspaceId: Optional[WorkspaceId] = None
+    projectId: Optional[ProjectId] = None
+    maxAge: Optional[int] = None
+    state: Optional[str] = None
 
 
 ListWorkflowRunsResponse = List[MinimalWorkflowRunResponse]
@@ -356,7 +356,7 @@ class TerminateWorkflowRunRequest(pydantic.BaseModel):
     https://github.com/zapatacomputing/workflow-driver/blob/873437f8157226c451220306a6ce90c80e8c8f9e/openapi/src/resources/workflow-run-terminate.yaml#L12.
     """  # noqa: D205, D212
 
-    force: Optional[bool]
+    force: Optional[bool] = None
 
 
 # --- Workflow Artifacts ---
