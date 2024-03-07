@@ -58,7 +58,7 @@ class GitImport(BaseModel):
         default="GIT_IMPORT", json_schema_extra={"Literal": True}
     )
 
-    @pydantic.validator("repo_url", pre=True)
+    @pydantic.field_validator("repo_url", mode="before")
     def _backwards_compatible_repo_url(cls, v):
         """Allows older models with a string URL to be imported."""
         # Prevent circular imports
@@ -435,7 +435,7 @@ class WorkflowDef(BaseModel):
     # If none, the runtime will decide.
     resources: t.Optional[Resources] = None
 
-    @pydantic.validator("metadata", always=True)
+    @pydantic.field_validator("metadata", mode="before")
     def sdk_version_up_to_date(cls, v: t.Optional[WorkflowMetadata]):
         # Workaround for circular imports
         from orquestra.sdk import exceptions
