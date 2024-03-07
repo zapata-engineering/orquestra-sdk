@@ -12,7 +12,7 @@ from typing import Any, List, Mapping, Optional, Union
 from urllib.parse import ParseResult, urlparse
 
 import filelock
-from pydantic.error_wrappers import ValidationError
+from pydantic import ValidationError
 
 import orquestra.sdk.exceptions as exceptions
 from orquestra.sdk.schema.configs import (

@@ -6,7 +6,7 @@ import json
 import numpy as np
 import numpy.testing
 import pytest
-from pydantic.error_wrappers import ValidationError
+from pydantic import ValidationError
 
 import orquestra.sdk as sdk
 from orquestra.sdk._base import serde
