@@ -1212,7 +1212,7 @@ class DriverClient:
         for section_str in decoded.split("\n"):
             if len(section_str) < 1:
                 continue
-            events = _models.SysSection.model_validate_json(section_str)
+            events = _models.SysSection.parse_raw(section_str)
 
             for event in events:
                 messages.append(event.message)
