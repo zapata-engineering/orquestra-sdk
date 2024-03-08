@@ -1,6 +1,22 @@
 # Changelog
 
-## Unreleased
+🚨 *Breaking Changes*
+
+🔥 *Features*
+
+🧟 *Deprecations*
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+## ## v0.61.0
 
 🚨 *Breaking Changes*
 
