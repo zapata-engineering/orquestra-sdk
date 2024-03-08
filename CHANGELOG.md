@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 🚨 *Breaking Changes*
 
 🔥 *Features*
@@ -16,7 +18,7 @@
 
 📃 *Docs*
 
-## ## v0.61.0
+## v0.61.0
 
 🚨 *Breaking Changes*
 
