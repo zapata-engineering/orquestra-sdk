@@ -287,11 +287,13 @@ def _make_ray_dag_node(
 
                 if output_metadata is not None and output_metadata.n_outputs > 1:
                     unpacked = tuple(
-                        serde.result_from_artifact(
-                            wrapped_return[i], ir.ArtifactFormat.AUTO
+                        (
+                            serde.result_from_artifact(
+                                wrapped_return[i], ir.ArtifactFormat.AUTO
+                            )
+                            if serialization
+                            else wrapped_return[i]
                         )
-                        if serialization
-                        else wrapped_return[i]
                         for i in range(output_metadata.n_outputs)
                     )
                 else:
@@ -620,13 +622,11 @@ def make_ray_dag(
     return handle_data_aggregation_error.bind(last_future)
 
 
-def get_current_ids() -> (
-    t.Tuple[
-        t.Optional[workflow_run.WorkflowRunId],
-        t.Optional[ir.TaskInvocationId],
-        t.Optional[workflow_run.TaskRunId],
-    ]
-):
+def get_current_ids() -> t.Tuple[
+    t.Optional[workflow_run.WorkflowRunId],
+    t.Optional[ir.TaskInvocationId],
+    t.Optional[workflow_run.TaskRunId],
+]:
     """Use Ray context to figure out the IDs of the currently running workflow and task.
 
     The returned TaskInvocationID and TaskRunID are None if we weren't able to get them
@@ -650,7 +650,7 @@ def get_current_ids() -> (
     )
 
     try:
-        user_meta = InvUserMetadata.model_validate(task_meta.get("user_metadata"))
+        user_meta = InvUserMetadata.model_validate_json(task_meta.get("user_metadata"))
     except pydantic.ValidationError:
         # This ray task wasn't annotated with InvUserMetadata. It happens when
         # `get_current_ids()` is used from a context that's not a regular Orquestra Task

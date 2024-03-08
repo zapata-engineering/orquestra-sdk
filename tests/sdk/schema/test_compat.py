@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023 - 2024 Zapata Computing Inc.
 ################################################################################
 """
 Tests for ``orquestra.sdk.schema._compat``.
@@ -83,7 +83,9 @@ class TestResultIsPacked:
         @pytest.fixture
         def wf_def(snapshot_version: str):
             path = DATA_PATH / f"unpacking_wf_{snapshot_version}.json"
-            return ir.WorkflowDef.parse_file(path)
+            with open(path) as f:
+                data = f.read()
+            return ir.WorkflowDef.model_validate_json(data)
 
         @staticmethod
         @pytest.mark.filterwarnings("ignore::orquestra.sdk.exceptions.VersionMismatch")

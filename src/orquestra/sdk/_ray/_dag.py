@@ -448,7 +448,7 @@ class RayRuntime(RuntimeInterface):
                 f"Workflow run {workflow_run_id} wasn't found"
             ) from e
 
-        wf_user_metadata = WfUserMetadata.model_validate(wf_meta["user_metadata"])
+        wf_user_metadata = WfUserMetadata.model_validate_json(wf_meta["user_metadata"])
         wf_def = wf_user_metadata.workflow_def
 
         inv_ids = wf_def.task_invocations.keys()
@@ -636,9 +636,11 @@ class RayRuntime(RuntimeInterface):
         # Anything else is a <0.47.0 workflow and the value should be serialized
 
         serialized_succeeded_values = [
-            v.packed
-            if isinstance(v, TaskResult)
-            else serde.result_from_artifact(v, ir.ArtifactFormat.AUTO)
+            (
+                v.packed
+                if isinstance(v, TaskResult)
+                else serde.result_from_artifact(v, ir.ArtifactFormat.AUTO)
+            )
             for v in succeeded_values
         ]
 
