@@ -177,7 +177,7 @@ def _save_new_config_file(
     )
     new_config_file: RuntimeConfigurationFile
     if resolved_prev_config_file is not None:
-        new_config_file = resolved_prev_config_file.copy(deep=True)
+        new_config_file = resolved_prev_config_file.model_copy(deep=True)
     else:
         new_config_file = RuntimeConfigurationFile(
             version=CONFIG_FILE_CURRENT_VERSION,

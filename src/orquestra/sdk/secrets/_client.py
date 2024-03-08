@@ -124,7 +124,7 @@ class SecretsClient:
         except (_exceptions.InvalidTokenError, _exceptions.UnknownHTTPError):
             raise
 
-        return SecretDefinition.model_validate_json(resp.json()["data"]["details"])
+        return SecretDefinition.model_validate(resp.json()["data"]["details"])
 
     def list_secrets(
         self, workspace_id: t.Optional[WorkspaceId]
