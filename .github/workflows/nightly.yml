@@ -4,10 +4,6 @@
 name: NightlyDependencyCheck
 
 on:
-  # Triggers the workflow on push to main
-  push:
-    branches:
-      - Morawiec/wf
   # runs at midnight every work day
   schedule:
     - cron: '0 0 * * 1-5'
@@ -34,6 +30,8 @@ jobs:
           # Fetch depth 0 required to compare against `main`
           fetch-depth: 0
 
+      # Note no pip cache. We want to check the installation against the
+      # latest possible package versions.
       - uses: actions/setup-python@v5
         with:
           python-version: 3.11
