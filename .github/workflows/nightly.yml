@@ -1,0 +1,58 @@
+# This workflow runs tests and reports code coverage.
+
+# We need a workflow name to be able to schedule it from Github UI
+name: TestCoverage
+
+on:
+  # Triggers the workflow on push to main
+  push:
+    branches:
+      - Morawiec/wf
+  # runs at midnight every work day
+  schedule:
+    - cron: '0 0 * * 1-5'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The job ID has to match repo settings for PR required checks
+  Nightly:
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 25
+
+    name: Coverage - Python ${{ matrix.python }} - ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # Fetch depth 0 required to compare against `main`
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+          architecture: x64
+
+
+      # Installation method (venv/system/etc) affects Ray behavior. We're
+      # installing deps to a venv to align with the most common use case.
+      # Hence, we'll need to ensure the venv is always activated. More info:
+      # https://stackoverflow.com/questions/74668349/how-to-activate-a-virtualenv-in-a-github-action
+      - name: Install deps
+        shell: bash
+        run: |
+          python3 -m venv ./venv
+          source ./venv/bin/activate
+          make github_actions
+
+      - name: Run tests and gather coverage stats
+        shell: bash
+        run: |
+          source ./venv/bin/activate
+          make coverage
