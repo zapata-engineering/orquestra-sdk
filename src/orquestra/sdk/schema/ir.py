@@ -9,7 +9,6 @@ structure here is JSON-serializable.
 
 import enum
 import typing as t
-import warnings
 
 import pydantic
 from pydantic import BaseModel
@@ -40,12 +39,12 @@ class SecretNode(BaseModel):
 class GitURL(BaseModel):
     original_url: str
     protocol: str
-    user: t.Optional[str]
-    password: t.Optional[SecretNode]
+    user: t.Optional[str] = None
+    password: t.Optional[SecretNode] = None
     host: str
-    port: t.Optional[int]
+    port: t.Optional[int] = None
     path: str
-    query: t.Optional[str]
+    query: t.Optional[str] = None
 
 
 class GitImport(BaseModel):
@@ -236,7 +235,7 @@ class TaskDef(BaseModel):
     # Kinda like function signature.
     # None means we do not know the parameters for this Task (e.g. an external task)
     # An empty list [] means a Task with no parameters
-    parameters: t.Optional[t.List[TaskParameter]]
+    parameters: t.Optional[t.List[TaskParameter]] = None
 
     # Statically inferred from the task function. See also `TaskOutputMetadata`'s
     # docstring.
@@ -373,11 +372,11 @@ class TaskInvocation(BaseModel):
     output_ids: t.List[ArtifactNodeId]
 
     # TaskInvocation specific resources
-    resources: t.Optional[Resources]
+    resources: t.Optional[Resources] = None
 
     # Specification for custom image more scoped than TaskDef custom_image field
     # if not set, will fall back to TaskDef custom_image
-    custom_image: t.Optional[str]
+    custom_image: t.Optional[str] = None
 
 
 WorkflowDefName = str
@@ -435,45 +434,46 @@ class WorkflowDef(BaseModel):
     # If none, the runtime will decide.
     resources: t.Optional[Resources] = None
 
-    @pydantic.field_validator("metadata", mode="before")
-    def sdk_version_up_to_date(cls, v: t.Optional[WorkflowMetadata]):
-        # Workaround for circular imports
-        from orquestra.sdk import exceptions
-        from orquestra.sdk.packaging import _versions
-        from orquestra.sdk.schema import _compat
+    # TODO: OP-956 - uncomment and fix
+    # @pydantic.field_validator("metadata", mode="before")
+    # def sdk_version_up_to_date(cls, v: t.Optional[WorkflowMetadata]):
+    #     # Workaround for circular imports
+    #     from orquestra.sdk import exceptions
+    #     from orquestra.sdk.packaging import _versions
+    #     from orquestra.sdk.schema import _compat
 
-        current_version = _versions.get_current_sdk_version()
+    #     current_version = _versions.get_current_sdk_version()
 
-        if v is None:
-            warnings.warn(
-                exceptions.VersionMismatch(
-                    (
-                        "Attempting to read a workflow definition generated with an "
-                        "old version of Orquestra Workflow SDK. Please consider "
-                        "re-running your workflow or downgrading orquestra-sdk. "
-                        "For more information visit: https://docs.orquestra.io/docs/core/sdk/guides/version-compatibility.html"  # noqa: E501
-                    ),
-                    actual=current_version,
-                    needed=None,
-                )
-            )
-            return v
+    #     if v is None:
+    #         warnings.warn(
+    #             exceptions.VersionMismatch(
+    #                 (
+    #                     "Attempting to read a workflow definition generated with an "
+    #                     "old version of Orquestra Workflow SDK. Please consider "
+    #                     "re-running your workflow or downgrading orquestra-sdk. "
+    #                     "For more information visit: https://docs.orquestra.io/docs/core/sdk/guides/version-compatibility.html"  # noqa: E501
+    #                 ),
+    #                 actual=current_version,
+    #                 needed=None,
+    #             )
+    #         )
+    #         return v
 
-        if not _compat.versions_are_compatible(
-            generated_at=v.sdk_version, current=current_version
-        ):
-            warnings.warn(
-                exceptions.VersionMismatch(
-                    (
-                        "Attempting to read a workflow definition generated with a "
-                        "different version of Orquestra Workflow SDK. "
-                        "Please consider re-running your workflow or installing "
-                        f"'orquestra-sdk=={v.sdk_version.original}'. "
-                        "For more information visit: https://docs.orquestra.io/docs/core/sdk/guides/version-compatibility.html"  # noqa: E501
-                    ),
-                    actual=current_version,
-                    needed=v.sdk_version,
-                )
-            )
+    #     if not _compat.versions_are_compatible(
+    #         generated_at=v.sdk_version, current=current_version
+    #     ):
+    #         warnings.warn(
+    #             exceptions.VersionMismatch(
+    #                 (
+    #                     "Attempting to read a workflow definition generated with a "
+    #                     "different version of Orquestra Workflow SDK. "
+    #                     "Please consider re-running your workflow or installing "
+    #                     f"'orquestra-sdk=={v.sdk_version.original}'. "
+    #                     "For more information visit: https://docs.orquestra.io/docs/core/sdk/guides/version-compatibility.html"  # noqa: E501
+    #                 ),
+    #                 actual=current_version,
+    #                 needed=v.sdk_version,
+    #             )
+    #         )
 
-        return v
+    #     return v
