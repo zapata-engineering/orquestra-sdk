@@ -1,7 +1,7 @@
 # This workflow runs tests and reports code coverage.
 
 # We need a workflow name to be able to schedule it from Github UI
-name: TestCoverage
+name: NightlyDependencyCheck
 
 on:
   # Triggers the workflow on push to main
@@ -21,7 +21,7 @@ concurrency:
 
 jobs:
   # The job ID has to match repo settings for PR required checks
-  Nightly:
+  NightlyDependencyCheck:
     runs-on: ubuntu-latest
 
     timeout-minutes: 25
