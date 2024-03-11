@@ -912,7 +912,7 @@ class Test3rdPartyLibraries:
             "data/python_package/python_package_dependent_workflow.json"
         )
         with open(path_to_json) as f:
-            data = f.read()
+            data: str = f.read()
         wf = ir.WorkflowDef.model_validate_json(data)
 
         # When

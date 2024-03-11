@@ -426,7 +426,7 @@ class WorkflowDef(BaseModel):
     # can be constants or artifacts.
     output_ids: t.List[ArgumentId]
 
-    data_aggregation: t.Optional[DataAggregation]
+    data_aggregation: t.Optional[DataAggregation] = None
 
     # Metadata defaults to None to allow older JSON to be loaded
     metadata: t.Optional[WorkflowMetadata] = None

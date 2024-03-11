@@ -140,7 +140,7 @@ def _open_config_file() -> RuntimeConfigurationFile:
             f"Config file {config_file} not found."
         )
     with open(config_file) as f:
-        data = f.read()
+        data: str = f.read()
     return RuntimeConfigurationFile.model_validate_json(data)
 
 
