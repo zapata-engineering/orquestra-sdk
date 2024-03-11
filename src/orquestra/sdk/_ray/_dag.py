@@ -533,7 +533,7 @@ class RayRuntime(RuntimeInterface):
         fields with the current datetime for all terminated tasks and workflow.
         """
         now: _dates.Instant = _dates.now()
-        new_model = model.copy(deep=True)
+        new_model = model.model_copy(deep=True)
 
         if model.status.start_time is not None and model.status.end_time is None:
             assert now >= model.status.start_time
