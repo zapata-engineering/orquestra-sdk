@@ -6,23 +6,31 @@
 
 🔥 *Features*
 
-* Added `max_retries` in `sdk.task` decorator. This allows users to restart ray workers on system crashes (like OOMKills or sigterms). Restarts do not happen with Python exceptions.
-
 🧟 *Deprecations*
 
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
 
-* Requesting GPUs with the default image will now use a GPU image on CE.
-
 💅 *Improvements*
 
 🥷 *Internal*
 
-* Switch out packaging to `hatchling` instead of `setuptools`. This should not impact people installing from wheels.
-
 📃 *Docs*
+
+## v0.61.0
+
+🔥 *Features*
+
+* Added `max_retries` in `sdk.task` decorator. This allows users to restart ray workers on system crashes (like OOMKills or sigterms). Restarts do not happen with Python exceptions.
+
+🐛 *Bug Fixes*
+
+* Requesting GPUs with the default image will now use a GPU image on CE.
+
+🥷 *Internal*
+
+* Switch out packaging to `hatchling` instead of `setuptools`. This should not impact people installing from wheels.
 
 ## v0.60.0
 
