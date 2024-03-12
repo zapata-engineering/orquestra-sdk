@@ -11,7 +11,7 @@ import enum
 import typing as t
 
 import pydantic
-from pydantic import BaseModel
+from pydantic import BaseModel, BeforeValidator
 
 ImportId = str
 SecretNodeId = str
@@ -177,7 +177,7 @@ class Resources(BaseModel):
     cpu: t.Optional[str] = None
     memory: t.Optional[str] = None
     disk: t.Optional[str] = None
-    gpu: t.Optional[str] = None
+    gpu: t.Optional[t.Annotated[str, BeforeValidator(lambda x: str(x))]] = None
     # nodes should be a positive integer representing the number of nodes assigned
     # to a workflow. If None, the runtime will choose.
     # This only applies to workflows and not tasks.
