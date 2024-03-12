@@ -59,7 +59,7 @@ class Response(BaseModel, Generic[DataT, MetaT]):
     """A generic to help with the structure of driver responses."""
 
     data: DataT
-    meta: Optional[MetaT]
+    meta: Optional[MetaT] = None
 
 
 class MetaEmpty(pydantic.BaseModel):
@@ -598,9 +598,9 @@ class RayHeadNodeEventLog(pydantic.BaseModel):
 
     log: str
 
-    source_type: Literal[
+    source_type: Literal[SystemLogSourceType.RAY_HEAD_NODE] = (
         SystemLogSourceType.RAY_HEAD_NODE
-    ] = SystemLogSourceType.RAY_HEAD_NODE
+    )
 
 
 class RayWorkerNodeEventLog(pydantic.BaseModel):
@@ -610,9 +610,9 @@ class RayWorkerNodeEventLog(pydantic.BaseModel):
 
     log: str
 
-    source_type: Literal[
+    source_type: Literal[SystemLogSourceType.RAY_WORKER_NODE] = (
         SystemLogSourceType.RAY_WORKER_NODE
-    ] = SystemLogSourceType.RAY_WORKER_NODE
+    )
 
 
 class UnknownEventLog(pydantic.BaseModel):
