@@ -1012,7 +1012,7 @@ class DriverClient:
             return pydantic.TypeAdapter(WorkflowResult).validate_python(json_response)
         except pydantic.ValidationError:
             # If we fail, try parsing each part of a list separately
-            return ComputeEngineWorkflowResult.model_validate_json(json_response)
+            return ComputeEngineWorkflowResult.model_validate(json_response)
 
     # --- Workflow Logs ---
     def get_workflow_run_logs(
@@ -1075,7 +1075,9 @@ class DriverClient:
             if len(section_str) < 1:
                 continue
 
-            events = _models.WorkflowLogSection.model_validate_json(section_str)
+            events = pydantic.TypeAdapter(_models.WorkflowLogSection).validate_json(
+                section_str
+            )
 
             for event in events:
                 messages.append(event.message)
@@ -1145,7 +1147,9 @@ class DriverClient:
             if len(section_str) < 1:
                 continue
 
-            events = _models.TaskLogSection.model_validate_json(section_str)
+            events = pydantic.TypeAdapter(_models.TaskLogSection).validate_json(
+                section_str
+            )
 
             for event in events:
                 messages.append(event.message)
@@ -1212,7 +1216,7 @@ class DriverClient:
         for section_str in decoded.split("\n"):
             if len(section_str) < 1:
                 continue
-            events = _models.SysSection.parse_raw(section_str)
+            events = pydantic.TypeAdapter(_models.SysSection).validate_json(section_str)
 
             for event in events:
                 messages.append(event.message)

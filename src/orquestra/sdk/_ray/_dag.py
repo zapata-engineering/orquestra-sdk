@@ -448,7 +448,7 @@ class RayRuntime(RuntimeInterface):
                 f"Workflow run {workflow_run_id} wasn't found"
             ) from e
 
-        wf_user_metadata = WfUserMetadata.model_validate_json(wf_meta["user_metadata"])
+        wf_user_metadata = WfUserMetadata.model_validate(wf_meta["user_metadata"])
         wf_def = wf_user_metadata.workflow_def
 
         inv_ids = wf_def.task_invocations.keys()

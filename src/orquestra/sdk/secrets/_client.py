@@ -153,7 +153,7 @@ class SecretsClient:
         except (_exceptions.InvalidTokenError, _exceptions.UnknownHTTPError):
             raise
 
-        return [SecretNameObj.model_validate_json(d) for d in resp.json()["data"]]
+        return [SecretNameObj.model_validate(d) for d in resp.json()["data"]]
 
     # --- mutations ---
 

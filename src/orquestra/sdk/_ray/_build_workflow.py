@@ -650,7 +650,7 @@ def get_current_ids() -> t.Tuple[
     )
 
     try:
-        user_meta = InvUserMetadata.model_validate_json(task_meta.get("user_metadata"))
+        user_meta = InvUserMetadata.model_validate(task_meta.get("user_metadata"))
     except pydantic.ValidationError:
         # This ray task wasn't annotated with InvUserMetadata. It happens when
         # `get_current_ids()` is used from a context that's not a regular Orquestra Task
