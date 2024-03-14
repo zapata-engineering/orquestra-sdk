@@ -6,7 +6,8 @@ from typing import Any
 
 from pydantic.main import BaseModel
 
-TODO (ORQSDK-1025): remove the model base class 
+
+# TODO (ORQSDK-1025): remove the model base class
 class OrquestraBaseModel(BaseModel):
     """The pydantic BaseModel changed between V1 and V2.
 
@@ -15,8 +16,6 @@ class OrquestraBaseModel(BaseModel):
 
     This class adds a new `__setstate__` that wraps the V2 BaseModel `__setstate__` and
     adds the missing behaviour back in.
-
-
     """
 
     def __setstate__(self, state: dict[Any, Any]) -> None:
