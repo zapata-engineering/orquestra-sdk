@@ -56,8 +56,7 @@ class TestWorkflowDef:
         @pytest.mark.parametrize("snapshot_version", ["0.44.0", "0.45.1"])
         def test_old_ir(snapshot_version: str):
             path = DATA_PATH / f"unpacking_wf_{snapshot_version}.json"
-            with open(path) as f:
-                data = f.read()
+            data = path.read_text()
             # Then
             with pytest.warns(exceptions.VersionMismatch):
                 # When
