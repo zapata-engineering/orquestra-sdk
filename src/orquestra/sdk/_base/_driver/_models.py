@@ -16,7 +16,6 @@ from typing import (
 )
 
 import pydantic
-from pydantic import BaseModel
 from typing_extensions import Annotated
 
 from orquestra.sdk._base._dates import Instant
@@ -31,6 +30,8 @@ from orquestra.sdk.schema.workflow_run import (
     WorkflowRunSummary,
     WorkspaceId,
 )
+
+from ..._base._storage import OrquestraBaseModel
 
 WorkflowDefID = str
 WorkflowRunID = str
@@ -55,7 +56,7 @@ class Pagination(pydantic.BaseModel):
     nextPageToken: str
 
 
-class Response(BaseModel, Generic[DataT, MetaT]):
+class Response(OrquestraBaseModel, Generic[DataT, MetaT]):
     """A generic to help with the structure of driver responses."""
 
     data: DataT
@@ -598,9 +599,9 @@ class RayHeadNodeEventLog(pydantic.BaseModel):
 
     log: str
 
-    source_type: Literal[
+    source_type: Literal[SystemLogSourceType.RAY_HEAD_NODE] = (
         SystemLogSourceType.RAY_HEAD_NODE
-    ] = SystemLogSourceType.RAY_HEAD_NODE
+    )
 
 
 class RayWorkerNodeEventLog(pydantic.BaseModel):
@@ -610,9 +611,9 @@ class RayWorkerNodeEventLog(pydantic.BaseModel):
 
     log: str
 
-    source_type: Literal[
+    source_type: Literal[SystemLogSourceType.RAY_WORKER_NODE] = (
         SystemLogSourceType.RAY_WORKER_NODE
-    ] = SystemLogSourceType.RAY_WORKER_NODE
+    )
 
 
 class UnknownEventLog(pydantic.BaseModel):

@@ -12,13 +12,15 @@ import typing as t
 import warnings
 
 import pydantic
-from pydantic import BaseModel, BeforeValidator
+from pydantic import BeforeValidator
+
+from .._base._storage import OrquestraBaseModel
 
 ImportId = str
 SecretNodeId = str
 
 
-class SecretNode(BaseModel):
+class SecretNode(OrquestraBaseModel):
     """A reference to a secret stored in an external secret/config service."""
 
     # Workflow-scope unique ID used to refer from task invocations
@@ -37,7 +39,7 @@ class SecretNode(BaseModel):
     workspace_id: t.Optional[str] = None
 
 
-class GitURL(BaseModel):
+class GitURL(OrquestraBaseModel):
     original_url: str
     protocol: str
     user: t.Optional[str] = None
@@ -48,7 +50,7 @@ class GitURL(BaseModel):
     query: t.Optional[str] = None
 
 
-class GitImport(BaseModel):
+class GitImport(OrquestraBaseModel):
     id: ImportId
     repo_url: GitURL
     git_ref: str
@@ -68,7 +70,7 @@ class GitImport(BaseModel):
         return parse_git_url(v)
 
 
-class LocalImport(BaseModel):
+class LocalImport(OrquestraBaseModel):
     """Used to specify that the source code is only available locally.
 
     (e.g. not committed to any git repo).
@@ -80,12 +82,12 @@ class LocalImport(BaseModel):
     type: t.Literal["LOCAL_IMPORT"] = "LOCAL_IMPORT"
 
 
-class InlineImport(BaseModel):
+class InlineImport(OrquestraBaseModel):
     id: ImportId
     type: t.Literal["INLINE_IMPORT"] = "INLINE_IMPORT"
 
 
-class PackageSpec(BaseModel):
+class PackageSpec(OrquestraBaseModel):
     # noqa E501
     """Representation of single package import.
 
@@ -101,7 +103,7 @@ class PackageSpec(BaseModel):
     environment_markers: str
 
 
-class PythonImports(BaseModel):
+class PythonImports(OrquestraBaseModel):
     """List of imports for given task."""
 
     id: ImportId
@@ -121,7 +123,7 @@ Import = t.Union[GitImport, LocalImport, PythonImports, InlineImport]
 TaskDefId = str
 
 
-class ModuleFunctionRef(BaseModel):
+class ModuleFunctionRef(OrquestraBaseModel):
     # Required to dereference function for execution.
     module: str
     function_name: str
@@ -134,7 +136,7 @@ class ModuleFunctionRef(BaseModel):
     type: t.Literal["MODULE_FUNCTION_REF"] = "MODULE_FUNCTION_REF"
 
 
-class FileFunctionRef(BaseModel):
+class FileFunctionRef(OrquestraBaseModel):
     # Required to dereference function for execution.
     file_path: str
     function_name: str
@@ -147,7 +149,7 @@ class FileFunctionRef(BaseModel):
     type: t.Literal["FILE_FUNCTION_REF"] = "FILE_FUNCTION_REF"
 
 
-class InlineFunctionRef(BaseModel):
+class InlineFunctionRef(OrquestraBaseModel):
     function_name: str
     # Required to dereference function for execution. The function object is serialized
     # using `dill`, base64-encoded, and chunked to workaround JSON string length limits.
@@ -160,7 +162,7 @@ class InlineFunctionRef(BaseModel):
 FunctionRef = t.Union[ModuleFunctionRef, FileFunctionRef, InlineFunctionRef]
 
 
-class Resources(BaseModel):
+class Resources(OrquestraBaseModel):
     cpu: t.Optional[str] = None
     memory: t.Optional[str] = None
     disk: t.Optional[str] = None
@@ -171,7 +173,7 @@ class Resources(BaseModel):
     nodes: t.Optional[int] = None
 
 
-class DataAggregation(BaseModel):
+class DataAggregation(OrquestraBaseModel):
     run: t.Optional[bool] = None
     resources: t.Optional[Resources] = None
 
@@ -188,14 +190,14 @@ class ParameterKind(str, enum.Enum):
     VAR_KEYWORD = "VAR_KEYWORD"
 
 
-class TaskParameter(BaseModel):
+class TaskParameter(OrquestraBaseModel):
     name: ParameterName
     kind: ParameterKind
     # If we need more metadata related to parameters, like type hints or default values,
     # it should be added here.
 
 
-class TaskOutputMetadata(BaseModel):
+class TaskOutputMetadata(OrquestraBaseModel):
     """Information about the data shape returned by a task function."""
 
     # If yes, it's possible to unpack the output in the workflow like:
@@ -209,7 +211,7 @@ class TaskOutputMetadata(BaseModel):
     n_outputs: int
 
 
-class TaskDef(BaseModel):
+class TaskDef(OrquestraBaseModel):
     # workflow-unique ID used to refer from task invocations
     id: TaskDefId
 
@@ -267,7 +269,7 @@ ArtifactNodeId = str
 ConstantNodeId = str
 
 
-class ArtifactNode(BaseModel):
+class ArtifactNode(OrquestraBaseModel):
     # Workflow-scope unique ID used to refer from task invocations. If the task has
     # multiple outputs they will have distinct `id`s.
     id: ArtifactNodeId
@@ -292,7 +294,7 @@ class ArtifactNode(BaseModel):
     artifact_index: t.Optional[int] = None
 
 
-class ConstantNodeJSON(BaseModel):
+class ConstantNodeJSON(OrquestraBaseModel):
     """Piece of data that already exists at workflow submission time.
 
     The value is directly embedded in the workflow. To support arbitrary data shapes we
@@ -311,7 +313,7 @@ class ConstantNodeJSON(BaseModel):
     value_preview: pydantic.constr(max_length=12)  # type: ignore
 
 
-class ConstantNodePickle(BaseModel):
+class ConstantNodePickle(OrquestraBaseModel):
     """Piece of data that already exists at workflow submission time.
 
     The value is directly embedded in the workflow. To support arbitrary data shapes we
@@ -324,9 +326,9 @@ class ConstantNodePickle(BaseModel):
 
     # Serialized value
     chunks: t.List[str]
-    serialization_format: t.Literal[
+    serialization_format: t.Literal[ArtifactFormat.ENCODED_PICKLE] = (
         ArtifactFormat.ENCODED_PICKLE
-    ] = ArtifactFormat.ENCODED_PICKLE
+    )
 
     # Human-readable string that can be rendered on the UI to represent the value.
     value_preview: pydantic.constr(max_length=12)  # type: ignore
@@ -339,7 +341,7 @@ ConstantNode = t.Union[ConstantNodeJSON, ConstantNodePickle]
 ArgumentId = t.Union[ArtifactNodeId, ConstantNodeId, SecretNodeId]
 
 
-class TaskInvocation(BaseModel):
+class TaskInvocation(OrquestraBaseModel):
     id: TaskInvocationId
 
     # What task should be executed.
@@ -365,7 +367,7 @@ class TaskInvocation(BaseModel):
 WorkflowDefName = str
 
 
-class Version(BaseModel):
+class Version(OrquestraBaseModel):
     original: str
     major: int
     minor: int
@@ -373,12 +375,12 @@ class Version(BaseModel):
     is_prerelease: bool
 
 
-class WorkflowMetadata(BaseModel):
+class WorkflowMetadata(OrquestraBaseModel):
     sdk_version: Version
     python_version: Version
 
 
-class WorkflowDef(BaseModel):
+class WorkflowDef(OrquestraBaseModel):
     """The main data structure for intermediate workflow representation.
 
     The structure is as flat as possible with relation based on "id"s, e.g. a single

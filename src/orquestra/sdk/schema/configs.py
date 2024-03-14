@@ -1,10 +1,10 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023 - 2024 Zapata Computing Inc.
 ################################################################################
 from enum import Enum
 from typing import Any, Dict, Literal
 
-from pydantic.main import BaseModel
+from .._base._storage import OrquestraBaseModel
 
 CONFIG_FILE_CURRENT_VERSION = "0.0.2"
 
@@ -24,7 +24,7 @@ class RuntimeName(str, Enum):
 RemoteRuntime = Literal[RuntimeName.CE_REMOTE]
 
 
-class RuntimeConfiguration(BaseModel):
+class RuntimeConfiguration(OrquestraBaseModel):
     config_name: ConfigName
     runtime_name: RuntimeName
     runtime_options: Dict[str, Any] = {}
@@ -40,7 +40,7 @@ class RuntimeConfiguration(BaseModel):
         return outstr
 
 
-class RuntimeConfigurationFile(BaseModel):
+class RuntimeConfigurationFile(OrquestraBaseModel):
     """This schema is for the storage of "Runtime configurations".
 
     The major version number should be bumped when:

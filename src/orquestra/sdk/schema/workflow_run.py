@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 - 2023 Zapata Computing Inc.
+# © Copyright 2022 - 2024 Zapata Computing Inc.
 ################################################################################
 """Workflow Run model.
 
@@ -11,10 +11,10 @@ import enum
 import typing as t
 import warnings
 
-from pydantic import BaseModel
-
 from orquestra.sdk._base._dates import Instant
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
+
+from .._base._storage import OrquestraBaseModel
 
 WorkflowRunId = str
 TaskRunId = str
@@ -55,20 +55,20 @@ class State(enum.Enum):
         )
 
 
-class RunStatus(BaseModel):
+class RunStatus(OrquestraBaseModel):
     state: State
     start_time: t.Optional[Instant]
     end_time: t.Optional[Instant]
 
 
-class TaskRun(BaseModel):
+class TaskRun(OrquestraBaseModel):
     id: TaskRunId
     invocation_id: TaskInvocationId
     status: RunStatus
     message: t.Optional[str] = None
 
 
-class WorkflowRunOnlyID(BaseModel):
+class WorkflowRunOnlyID(OrquestraBaseModel):
     """A WorkflowRun that only contains the ID."""
 
     id: WorkflowRunId
