@@ -60,9 +60,9 @@ class PickleResult(OrquestraBaseModel):
     # chunks. Chunking is required because some JSON parsers have limitation on max
     # string field length.
     chunks: t.List[str]
-    serialization_format: t.Literal[ArtifactFormat.ENCODED_PICKLE] = (
+    serialization_format: t.Literal[
         ArtifactFormat.ENCODED_PICKLE
-    )
+    ] = ArtifactFormat.ENCODED_PICKLE
 
 
 WorkflowResult = Annotated[
