@@ -622,11 +622,13 @@ def make_ray_dag(
     return handle_data_aggregation_error.bind(last_future)
 
 
-def get_current_ids() -> t.Tuple[
-    t.Optional[workflow_run.WorkflowRunId],
-    t.Optional[ir.TaskInvocationId],
-    t.Optional[workflow_run.TaskRunId],
-]:
+def get_current_ids() -> (
+    t.Tuple[
+        t.Optional[workflow_run.WorkflowRunId],
+        t.Optional[ir.TaskInvocationId],
+        t.Optional[workflow_run.TaskRunId],
+    ]
+):
     """Use Ray context to figure out the IDs of the currently running workflow and task.
 
     The returned TaskInvocationID and TaskRunID are None if we weren't able to get them

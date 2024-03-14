@@ -598,9 +598,9 @@ class RayHeadNodeEventLog(pydantic.BaseModel):
 
     log: str
 
-    source_type: Literal[SystemLogSourceType.RAY_HEAD_NODE] = (
+    source_type: Literal[
         SystemLogSourceType.RAY_HEAD_NODE
-    )
+    ] = SystemLogSourceType.RAY_HEAD_NODE
 
 
 class RayWorkerNodeEventLog(pydantic.BaseModel):
@@ -610,9 +610,9 @@ class RayWorkerNodeEventLog(pydantic.BaseModel):
 
     log: str
 
-    source_type: Literal[SystemLogSourceType.RAY_WORKER_NODE] = (
+    source_type: Literal[
         SystemLogSourceType.RAY_WORKER_NODE
-    )
+    ] = SystemLogSourceType.RAY_WORKER_NODE
 
 
 class UnknownEventLog(pydantic.BaseModel):

@@ -324,9 +324,9 @@ class ConstantNodePickle(BaseModel):
 
     # Serialized value
     chunks: t.List[str]
-    serialization_format: t.Literal[ArtifactFormat.ENCODED_PICKLE] = (
+    serialization_format: t.Literal[
         ArtifactFormat.ENCODED_PICKLE
-    )
+    ] = ArtifactFormat.ENCODED_PICKLE
 
     # Human-readable string that can be rendered on the UI to represent the value.
     value_preview: pydantic.constr(max_length=12)  # type: ignore
