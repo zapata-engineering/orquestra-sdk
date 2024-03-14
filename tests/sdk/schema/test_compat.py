@@ -83,8 +83,7 @@ class TestResultIsPacked:
         @pytest.fixture
         def wf_def(snapshot_version: str):
             path = DATA_PATH / f"unpacking_wf_{snapshot_version}.json"
-            with open(path) as f:
-                data = f.read()
+            data = path.read_text()
             return ir.WorkflowDef.model_validate_json(data)
 
         @staticmethod
