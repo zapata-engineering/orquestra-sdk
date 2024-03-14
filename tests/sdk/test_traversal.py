@@ -851,7 +851,7 @@ PYTHON_IMPORTS_MANUAL_TASK_DEF_DUMP = {
         (python_imports_manual, True, PYTHON_IMPORTS_MANUAL_TASK_DEF_DUMP),
     ],
 )
-def test_individual_task_models(task: callable, has_arg: bool, expected_model: dict):
+def test_individual_task_models(task, has_arg: bool, expected_model: dict):
     @_workflow.workflow
     def wf():
         if has_arg:
