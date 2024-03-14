@@ -6,7 +6,7 @@ from typing import Any
 
 from pydantic.main import BaseModel
 
-
+TODO (ORQSDK-1025): remove the model base class 
 class OrquestraBaseModel(BaseModel):
     """The pydantic BaseModel changed between V1 and V2.
 
