@@ -139,8 +139,7 @@ def _open_config_file() -> RuntimeConfigurationFile:
         raise exceptions.ConfigFileNotFoundError(
             f"Config file {config_file} not found."
         )
-    with open(config_file) as f:
-        data: str = f.read()
+    data: str = config_file.read_text()
     return RuntimeConfigurationFile.model_validate_json(data)
 
 
