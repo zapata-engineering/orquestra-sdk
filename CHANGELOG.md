@@ -14,6 +14,8 @@
 
 💅 *Improvements*
 
+* Tracebacks in `orq` are made more compact to help with copy and pasting when an issue happens.
+
 🥷 *Internal*
 
 📃 *Docs*

@@ -1,11 +1,108 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023-2024 Zapata Computing Inc.
 ################################################################################
+import re
+from typing import Callable, List
+
 import pytest
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._base.cli._ui import _errors
 from orquestra.sdk.schema.workflow_run import State
+
+from . import exception_makers
+
+
+@pytest.mark.parametrize(
+    "exception_func, expected_lines",
+    (
+        (
+            exception_makers.except_plain,
+            [
+                r"RuntimeError: Unable to do thing \(test_print_traceback:test_errors.py:[\d]+\)",  # noqa: E501
+                r"  test_print_traceback:test_errors.py:[\d]+",
+                r"  except_plain:exception_makers.py:[\d]+",
+            ],
+        ),
+        (
+            exception_makers.except_no_message,
+            [
+                r"RuntimeError \(test_print_traceback:test_errors.py:[\d]+\)",
+                r"  test_print_traceback:test_errors.py:[\d]+",
+                r"  except_no_message:exception_makers.py:[\d]+",
+            ],
+        ),
+        (
+            exception_makers.except_stack,
+            [
+                r"RuntimeError: Unable to do thing \(test_print_traceback:test_errors.py:[\d]+\)",  # noqa: E501
+                r"  test_print_traceback:test_errors.py:[\d]+",
+                r"  except_stack:exception_makers.py:[\d]+",
+                r"  _b:exception_makers.py:[\d]+",
+                r"  _a:exception_makers.py:[\d]+",
+                r"  except_plain:exception_makers.py:[\d]+",
+            ],
+        ),
+        (
+            exception_makers.except_from,
+            [
+                r"RuntimeError: Unable to do thing \(test_print_traceback:test_errors.py:[\d]+\)",  # noqa: E501
+                r"  test_print_traceback:test_errors.py:[\d]+",
+                r"  except_from:exception_makers.py:[\d]+",
+                r"Caused by:",
+                r"  ValueError: Invalid file \(except_from:exception_makers.py:[\d]+\)",
+                r"  Caused by:",
+                r"    KeyError: 'key' \(except_from:exception_makers.py:[\d]+\)",
+            ],
+        ),
+        (
+            exception_makers.except_within_except,
+            [
+                r"RuntimeError: Unable to do thing \(test_print_traceback:test_errors.py:[\d]+\)",  # noqa: E501
+                r"  test_print_traceback:test_errors.py:[\d]+",
+                r"  except_within_except:exception_makers.py:[\d]+",
+                r"While handling:",
+                r"  ValueError: Invalid file \(except_within_except:exception_makers.py:[\d]+\)",  # noqa: E501
+                r"  While handling:",
+                r"    KeyError: 'key' \(except_within_except:exception_makers.py:[\d]+\)",  # noqa: E501
+            ],
+        ),
+        (
+            exception_makers.except_from_within_except,
+            [
+                r"RuntimeError: Unable to do thing \(test_print_traceback:test_errors.py:[\d]+\)",  # noqa: E501
+                r"  test_print_traceback:test_errors.py:[\d]+",
+                r"  except_from_within_except:exception_makers.py:[\d]+",
+                r"Caused by:",
+                r"  ValueError: Invalid file \(except_from_within_except:exception_makers.py:[\d]+\)",  # noqa: E501
+                r"  While handling:",
+                r"    KeyError: 'key' \(except_from_within_except:exception_makers.py:[\d]+\)",  # noqa: E501
+            ],
+        ),
+    ),
+)
+def test_print_traceback(
+    capsys: pytest.CaptureFixture[str],
+    exception_func: Callable[[], None],
+    expected_lines: List[str],
+):
+    """
+    This tests the traceback printing with some contrived examples.
+    Other tests in this file use proper `orquestra-sdk` exceptions
+    """
+    try:
+        exception_func()
+    except Exception as e:
+        _errors._print_traceback(e)
+
+    captured = capsys.readouterr()
+    actual_lines = captured.err.splitlines()
+
+    assert len(expected_lines) == len(actual_lines)
+
+    for expected_line, actual_line in zip(expected_lines, actual_lines):
+        match = re.match(expected_line, actual_line)
+        assert match is not None, (expected_line, actual_line)
 
 
 class TestPrettyPrintException:
@@ -55,7 +152,9 @@ class TestPrettyPrintException:
             ),
         ],
     )
-    def test_prints_to_std_streams(capsys, exc, stdout_marker: str):
+    def test_prints_to_std_streams(
+        capsys: pytest.CaptureFixture[str], exc: Exception, stdout_marker: str
+    ):
         # Given
         try:
             # Simulate raising the exception object. This is supposed to realistically
@@ -77,7 +176,9 @@ class TestPrettyPrintException:
 
         # Verifies that user sees the stack trace. This is useful for bug reports and
         # debugging.
-        assert "Traceback (most recent call last):\n  File" in captured.err
+        # We know the file and function, so let's search for that.
+        # We expect one instance on the Exception line, and one in the traceback
+        assert captured.err.count("test_prints_to_std_streams:test_errors.py") == 2
 
     @staticmethod
     @pytest.mark.parametrize(

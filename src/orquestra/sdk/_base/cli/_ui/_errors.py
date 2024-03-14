@@ -2,10 +2,13 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 import sys
-import traceback
 from functools import singledispatch
+from pathlib import Path
+from types import TracebackType
+from typing import Optional
 
 import click
+import rich
 from rich.box import SIMPLE_HEAVY
 from rich.console import Console
 from rich.table import Column, Table
@@ -15,12 +18,52 @@ from orquestra.sdk._base._config import IN_PROCESS_CONFIG_NAME, RAY_CONFIG_NAME_
 from orquestra.sdk.schema.responses import ResponseStatusCode
 
 
-def _print_traceback(e: Exception):
-    # Newer Python versions like 3.10 allow passing just the exception object to
-    # traceback.format_exception(). Python 3.8 requires an explicit 3-argument form.
+def _compact_tb(tb: TracebackType):
+    return "{}:{}:{}".format(
+        tb.tb_frame.f_code.co_name,
+        Path(tb.tb_frame.f_code.co_filename).name,
+        tb.tb_lineno,
+    )
 
-    tb_lines = traceback.format_exception(type(e), e, e.__traceback__)
-    click.secho("".join(tb_lines), fg="red", file=sys.stderr)
+
+def _compact_exc(e: BaseException, prefix: str = ""):
+    tb = e.__traceback__
+    exc_message = f"{e}"
+    spacing = ": " if len(exc_message) > 0 else ""
+    file_details = f"({_compact_tb(tb)})" if tb is not None else ""
+    return "{}[red][b]{}{}[/b]{} {}[/red]".format(
+        prefix,
+        type(e).__name__,
+        spacing,
+        exc_message,
+        file_details,
+    )
+
+
+def _print_traceback(
+    e: BaseException, level: int = 0, console: Optional[rich.console.Console] = None
+):
+    _console = (
+        rich.console.Console(file=sys.stderr, highlight=False)
+        if console is None
+        else console
+    )
+    indent = "  " * level
+    _console.print(f"{indent}{_compact_exc(e)}")
+    if level == 0:
+        tb = e.__traceback__
+        while tb is not None:
+            _console.print(f"  [red]{_compact_tb(tb)}[/red]")
+            tb = tb.tb_next
+    next_exc = e.__cause__
+    context_exc = e.__context__
+    suppress_context = e.__suppress_context__
+    if next_exc is not None:
+        _console.print(f"{indent}[red b]Caused by:[/red b]")
+        _print_traceback(next_exc, level + 1, _console)
+    elif context_exc is not None and not suppress_context:
+        _console.print(f"{indent}[red b]While handling:[/red b]")
+        _print_traceback(context_exc, level + 1, _console)
 
 
 @singledispatch
