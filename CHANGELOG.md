@@ -15,6 +15,7 @@
 💅 *Improvements*
 
 * Tracebacks in `orq` are made more compact to help with copy and pasting when an issue happens.
+* Bumped Pydantic version to `>=2.5.0,<3`
 
 🥷 *Internal*
 
