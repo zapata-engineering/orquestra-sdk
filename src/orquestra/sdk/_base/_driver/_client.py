@@ -30,7 +30,7 @@ from orquestra.sdk.schema.workflow_run import (
     WorkflowRunSummary,
     WorkspaceId,
 )
-
+from ..._base._storage import PYDANTICV1
 from .._regex import VERSION_REGEX
 from . import _exceptions, _models
 
@@ -903,7 +903,10 @@ class DriverClient:
         ):
             raise
 
-        return pydantic.TypeAdapter(WorkflowResult).validate_python(resp.json())
+        if PYDANTICV1:
+            return pydantic.parse_obj_as(WorkflowResult, resp.json())
+        else:
+            return pydantic.TypeAdapter(WorkflowResult).validate_python(resp.json())
 
     # --- Workflow Run Results ---
 
@@ -1009,7 +1012,10 @@ class DriverClient:
         json_response = resp.json()
         try:
             # Try an older response
-            return pydantic.TypeAdapter(WorkflowResult).validate_python(json_response)
+            if PYDANTICV1:
+                return pydantic.parse_obj_as(WorkflowResult, json_response)
+            else:
+                return pydantic.TypeAdapter(WorkflowResult).validate_python(json_response)
         except pydantic.ValidationError:
             # If we fail, try parsing each part of a list separately
             return ComputeEngineWorkflowResult.model_validate(json_response)
@@ -1075,9 +1081,12 @@ class DriverClient:
             if len(section_str) < 1:
                 continue
 
-            events = pydantic.TypeAdapter(_models.WorkflowLogSection).validate_json(
-                section_str
-            )
+            if PYDANTICV1:
+                events = pydantic.parse_raw_as(_models.WorkflowLogSection, section_str)
+            else:
+                events = pydantic.TypeAdapter(_models.WorkflowLogSection).validate_json(
+                    section_str
+                )
 
             for event in events:
                 messages.append(event.message)
@@ -1147,9 +1156,12 @@ class DriverClient:
             if len(section_str) < 1:
                 continue
 
-            events = pydantic.TypeAdapter(_models.TaskLogSection).validate_json(
-                section_str
-            )
+            if PYDANTICV1:
+                events = pydantic.parse_raw_as(_models.TaskLogSection, section_str)
+            else:
+                events = pydantic.TypeAdapter(_models.TaskLogSection).validate_json(
+                    section_str
+                )
 
             for event in events:
                 messages.append(event.message)
@@ -1216,7 +1228,10 @@ class DriverClient:
         for section_str in decoded.split("\n"):
             if len(section_str) < 1:
                 continue
-            events = pydantic.TypeAdapter(_models.SysSection).validate_json(section_str)
+            if PYDANTICV1:
+                events = pydantic.parse_raw_as(_models.SysSection, section_str)
+            else:
+                events = pydantic.TypeAdapter(_models.SysSection).validate_json(section_str)
 
             for event in events:
                 messages.append(event.message)
@@ -1248,9 +1263,14 @@ class DriverClient:
         ):
             raise
 
-        parsed_response = pydantic.TypeAdapter(
-            _models.ListWorkspacesResponse
-        ).validate_python(resp.json())
+        if PYDANTICV1:
+            parsed_response = pydantic.parse_obj_as(
+                _models.ListWorkspacesResponse, resp.json()
+            )
+        else:
+            parsed_response = pydantic.TypeAdapter(
+                _models.ListWorkspacesResponse
+            ).validate_python(resp.json())
 
         return parsed_response
 
@@ -1287,9 +1307,14 @@ class DriverClient:
         ):
             raise
 
-        parsed_response = pydantic.TypeAdapter(
-            _models.ListProjectResponse
-        ).validate_python(resp.json())
+        if PYDANTICV1:
+            parsed_response = pydantic.parse_obj_as(
+                _models.ListProjectResponse, resp.json()
+            )
+        else:
+            parsed_response = pydantic.TypeAdapter(
+                _models.ListProjectResponse
+            ).validate_python(resp.json())
 
         return parsed_response
 

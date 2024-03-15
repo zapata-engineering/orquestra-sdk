@@ -8,6 +8,7 @@ import typing as t
 from .._base._storage import OrquestraBaseModel
 from ..schema import ir, workflow_run
 
+
 class WfUserMetadata(OrquestraBaseModel):
     """Information about a workflow run we store as a Ray metadata dict.
 

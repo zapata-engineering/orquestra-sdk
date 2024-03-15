@@ -10,9 +10,7 @@ structure here is JSON-serializable.
 import enum
 import typing as t
 import warnings
-
 import pydantic
-from pydantic import BeforeValidator
 
 from .._base._storage import OrquestraBaseModel
 
@@ -50,6 +48,11 @@ class GitURL(OrquestraBaseModel):
     query: t.Optional[str] = None
 
 
+try:
+    repo_url_validator = pydantic.field_validator("repo_url", mode="before")
+except AttributeError:
+    repo_url_validator = pydantic.validator("repo_url", pre=True)
+
 class GitImport(OrquestraBaseModel):
     id: ImportId
     repo_url: GitURL
@@ -58,7 +61,7 @@ class GitImport(OrquestraBaseModel):
     # we need this in the JSON to know which class to use when deserializing
     type: t.Literal["GIT_IMPORT"] = "GIT_IMPORT"
 
-    @pydantic.field_validator("repo_url", mode="before")
+    @repo_url_validator
     def _backwards_compatible_repo_url(cls, v):
         """Allows older models with a string URL to be imported."""
         # Prevent circular imports
@@ -166,7 +169,10 @@ class Resources(OrquestraBaseModel):
     cpu: t.Optional[str] = None
     memory: t.Optional[str] = None
     disk: t.Optional[str] = None
-    gpu: t.Optional[t.Annotated[str, BeforeValidator(lambda x: str(x))]] = None
+    try:
+        gpu: t.Optional[t.Annotated[str, pydantic.BeforeValidator(lambda x: str(x))]] = None
+    except AttributeError:
+        gpu: t.Optional[str] = None
     # nodes should be a positive integer representing the number of nodes assigned
     # to a workflow. If None, the runtime will choose.
     # This only applies to workflows and not tasks.
@@ -380,6 +386,11 @@ class WorkflowMetadata(OrquestraBaseModel):
     python_version: Version
 
 
+try:
+    metadata_validator = pydantic.field_validator("metadata", mode="after")
+except AttributeError:
+    metadata_validator = pydantic.validator("metadata", always=True)
+    
 class WorkflowDef(OrquestraBaseModel):
     """The main data structure for intermediate workflow representation.
 
@@ -421,7 +432,7 @@ class WorkflowDef(OrquestraBaseModel):
     # If none, the runtime will decide.
     resources: t.Optional[Resources] = None
 
-    @pydantic.field_validator("metadata", mode="after")
+    @metadata_validator
     def sdk_version_up_to_date(cls, v: t.Optional[WorkflowMetadata]):
         # Workaround for circular imports
         from orquestra.sdk import exceptions
