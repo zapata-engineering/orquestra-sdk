@@ -249,9 +249,6 @@ class TestGraph:
     """
 
     @staticmethod
-    # graphviz is changing the signiture of `save()`.
-    # The change shouldn't affect our code.
-    @pytest.mark.filterwarnings("ignore::PendingDeprecationWarning")
     def test_is_exportable_to_dot(tmp_path):
         """
         Checks if the graph we build can be exported to a dot language.
@@ -262,7 +259,7 @@ class TestGraph:
 
         # When
         graph = _simple_workflow().graph
-        graph.save(dot_path)
+        graph.save(filename=dot_path)
 
         # Then
         assert dot_path.exists()
