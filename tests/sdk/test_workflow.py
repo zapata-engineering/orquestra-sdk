@@ -259,7 +259,7 @@ class TestGraph:
 
         # When
         graph = _simple_workflow().graph
-        graph.save(directory=dot_path)
+        graph.save(filename=dot_path)
 
         # Then
         assert dot_path.exists()
