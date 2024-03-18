@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022 - 2024 Zapata Computing Inc.
 ################################################################################
 import typing as t
 from pathlib import Path
@@ -184,8 +184,7 @@ def test_workflow_template_is_parametrized(
 )
 def test_simple_custom_names_of_workflows(name, args, expected):
     @sdk.workflow(custom_name=name)
-    def _local_workflow(args="default"):
-        ...
+    def _local_workflow(args="default"): ...
 
     x = _local_workflow(args)
     assert x.name == expected
@@ -193,8 +192,7 @@ def test_simple_custom_names_of_workflows(name, args, expected):
 
 def test_simple_custom_names_of_workflows_default_value():
     @sdk.workflow(custom_name="{args}")
-    def _local_workflow(args="default"):
-        ...
+    def _local_workflow(args="default"): ...
 
     x = _local_workflow()
     assert x.name == "default"
@@ -210,8 +208,7 @@ def test_simple_custom_names_of_workflows_default_value():
 )
 def test_error_case_custom_names_of_workflows(task_name):
     @sdk.workflow(custom_name=task_name)
-    def _local_workflow(args):
-        ...
+    def _local_workflow(args): ...
 
     with pytest.raises(InvalidPlaceholderInCustomTaskNameError):
         _ = _local_workflow("")
@@ -219,12 +216,10 @@ def test_error_case_custom_names_of_workflows(task_name):
 
 def test_artifact_node_custom_names():
     @sdk.task
-    def _local_task():
-        ...
+    def _local_task(): ...
 
     @sdk.workflow(custom_name="My_custom_name_{x}")
-    def _local_workflow(x):
-        ...
+    def _local_workflow(x): ...
 
     ret = _local_task()
     with pytest.raises(WorkflowSyntaxError):
@@ -249,6 +244,9 @@ class TestGraph:
     """
 
     @staticmethod
+    # graphviz is changing the signiture of `save()`.
+    # The change shouldn't affect our code.
+    @pytest.mark.filterwarnings("ignore::PendingDeprecationWarning")
     def test_is_exportable_to_dot(tmp_path):
         """
         Checks if the graph we build can be exported to a dot language.
