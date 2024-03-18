@@ -396,7 +396,6 @@ if PYDANTICV1:
 else:
     metadata_validator = pydantic.field_validator("metadata", mode="after")
 
-
 class WorkflowDef(OrquestraBaseModel):
     """The main data structure for intermediate workflow representation.
 
@@ -437,6 +436,7 @@ class WorkflowDef(OrquestraBaseModel):
     # The resources that are available for the workflow to use.
     # If none, the runtime will decide.
     resources: t.Optional[Resources] = None
+
 
     @metadata_validator
     def sdk_version_up_to_date(cls, v: t.Optional[WorkflowMetadata]):

@@ -158,6 +158,7 @@ def result_from_artifact(
 
 
 def value_from_result_dict(result_dict: t.Mapping) -> t.Any:
+
     if PYDANTICV1:
         result: responses.WorkflowResult = pydantic.parse_obj_as(
             responses.WorkflowResult, result_dict

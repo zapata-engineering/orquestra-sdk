@@ -1236,6 +1236,7 @@ class DriverClient:
         for section_str in decoded.split("\n"):
             if len(section_str) < 1:
                 continue
+
             if PYDANTICV1:
                 events = pydantic.parse_raw_as(_models.SysSection, section_str)
             else:
@@ -1282,6 +1283,7 @@ class DriverClient:
                 _models.ListWorkspacesResponse
             ).validate_python(resp.json())
 
+
         return parsed_response
 
     def list_projects(self, workspace_id: WorkspaceId):
@@ -1325,6 +1327,7 @@ class DriverClient:
             parsed_response = pydantic.TypeAdapter(
                 _models.ListProjectResponse
             ).validate_python(resp.json())
+
 
         return parsed_response
 

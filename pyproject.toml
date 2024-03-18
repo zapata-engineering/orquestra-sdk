@@ -27,7 +27,7 @@ requires-python = ">= 3.8"
 # the same API.
 dependencies = [
     # Schema definition
-    "pydantic>=1.10.8,<2",
+    "pydantic>=2.5",
     # Pickling library
     "cloudpickle==2.2.1",
     # We should keep `dill` to make sure old workflows can be unpickled.
