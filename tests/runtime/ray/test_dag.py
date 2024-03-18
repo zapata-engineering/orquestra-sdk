@@ -103,7 +103,7 @@ task_state_cases = [
     # Failed:
     # Tasks are still running, report as RUNNING
     + [
-        (_client.WorkflowStatus.FAILED, start, end, task_states, State.RUNNING)
+        (_client.WorkflowStatus.FAILED, start, end, task_states, State.FAILED)
         for start in [None, TEST_TIME]
         for end in [None, TEST_TIME]
         for task_states in [
@@ -141,7 +141,6 @@ def test_workflow_state_from_ray_meta(
             ray_wf_status,
             start_time,
             end_time,
-            ray_task_metas=[mock_ray_meta, mock_ray_meta],
         )
         == expected_orq_status
     )
