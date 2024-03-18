@@ -12,7 +12,7 @@ import re
 import zlib
 from datetime import timedelta
 from tarfile import TarFile
-from typing import Generic, List, Mapping, Optional, Tuple, TypeVar, Union
+from typing import Generic, List, Mapping, Optional, Tuple, TypeVar, Union, cast
 from urllib.parse import urljoin
 
 import pydantic
@@ -30,6 +30,7 @@ from orquestra.sdk.schema.workflow_run import (
     WorkflowRunSummary,
     WorkspaceId,
 )
+
 from ..._base._storage import PYDANTICV1
 from .._regex import VERSION_REGEX
 from . import _exceptions, _models
@@ -906,7 +907,10 @@ class DriverClient:
         if PYDANTICV1:
             return pydantic.parse_obj_as(WorkflowResult, resp.json())
         else:
-            return pydantic.TypeAdapter(WorkflowResult).validate_python(resp.json())
+            return cast(
+                WorkflowResult,
+                pydantic.TypeAdapter(WorkflowResult).validate_python(resp.json()),
+            )
 
     # --- Workflow Run Results ---
 
@@ -1015,7 +1019,11 @@ class DriverClient:
             if PYDANTICV1:
                 return pydantic.parse_obj_as(WorkflowResult, json_response)
             else:
-                return pydantic.TypeAdapter(WorkflowResult).validate_python(json_response)
+                return cast(
+                    WorkflowResult,
+                    pydantic.TypeAdapter(WorkflowResult).validate_python(json_response),
+                )
+
         except pydantic.ValidationError:
             # If we fail, try parsing each part of a list separately
             return ComputeEngineWorkflowResult.model_validate(json_response)
@@ -1231,7 +1239,9 @@ class DriverClient:
             if PYDANTICV1:
                 events = pydantic.parse_raw_as(_models.SysSection, section_str)
             else:
-                events = pydantic.TypeAdapter(_models.SysSection).validate_json(section_str)
+                events = pydantic.TypeAdapter(_models.SysSection).validate_json(
+                    section_str
+                )
 
             for event in events:
                 messages.append(event.message)

@@ -13,7 +13,9 @@ import cloudpickle  # type: ignore
 import pydantic
 
 from orquestra.sdk.schema import ir, responses
+
 from .._base._storage import PYDANTICV1
+
 CHUNK_SIZE = 40_000
 ENCODING = "base64"
 PICKLE_PROTOCOL = 4
@@ -161,16 +163,18 @@ def value_from_result_dict(result_dict: t.Mapping) -> t.Any:
             responses.WorkflowResult, result_dict
         )
     else:
-        result: responses.WorkflowResult = pydantic.TypeAdapter(
-            responses.WorkflowResult
-        ).validate_python(result_dict)
+        result = t.cast(
+            responses.WorkflowResult,
+            pydantic.TypeAdapter(responses.WorkflowResult).validate_python(result_dict),
+        )
+
     return deserialize(result)
 
 
 def deserialize_constant(node: ir.ConstantNode):
     if PYDANTICV1:
         constant = pydantic.parse_obj_as(responses.WorkflowResult, node.dict())
-    else:    
+    else:
         constant = pydantic.TypeAdapter(responses.WorkflowResult).validate_python(
             node.model_dump()
         )
