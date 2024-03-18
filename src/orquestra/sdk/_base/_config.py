@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022 - 2024 Zapata Computing Inc.
 ################################################################################
 """This is the internal module for saving and loading runtime configurations.
 
@@ -12,7 +12,7 @@ from typing import Any, List, Mapping, Optional, Union
 from urllib.parse import ParseResult, urlparse
 
 import filelock
-from pydantic.error_wrappers import ValidationError
+from pydantic import ValidationError
 
 import orquestra.sdk.exceptions as exceptions
 from orquestra.sdk.schema.configs import (
@@ -139,14 +139,15 @@ def _open_config_file() -> RuntimeConfigurationFile:
         raise exceptions.ConfigFileNotFoundError(
             f"Config file {config_file} not found."
         )
-    return RuntimeConfigurationFile.parse_file(config_file)
+    data: str = config_file.read_text()
+    return RuntimeConfigurationFile.model_validate_json(data)
 
 
 def _save_config_file(
     config_file_contents: RuntimeConfigurationFile,
 ):
     config_file: Path = get_config_file_path()
-    config_file.write_text(data=config_file_contents.json(indent=2))
+    config_file.write_text(data=config_file_contents.model_dump_json(indent=2))
 
 
 EMPTY_CONFIG_FILE = RuntimeConfigurationFile(
@@ -175,7 +176,7 @@ def _save_new_config_file(
     )
     new_config_file: RuntimeConfigurationFile
     if resolved_prev_config_file is not None:
-        new_config_file = resolved_prev_config_file.copy(deep=True)
+        new_config_file = resolved_prev_config_file.model_copy(deep=True)
     else:
         new_config_file = RuntimeConfigurationFile(
             version=CONFIG_FILE_CURRENT_VERSION,

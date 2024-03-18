@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2021-2023 Zapata Computing Inc.
+# © Copyright 2021 - 2024 Zapata Computing Inc.
 ################################################################################
 """Workflow Intermediate Representation.
 
@@ -12,13 +12,15 @@ import typing as t
 import warnings
 
 import pydantic
-from pydantic import BaseModel
+from pydantic import BeforeValidator
+
+from .._base._storage import OrquestraBaseModel
 
 ImportId = str
 SecretNodeId = str
 
 
-class SecretNode(BaseModel):
+class SecretNode(OrquestraBaseModel):
     """A reference to a secret stored in an external secret/config service."""
 
     # Workflow-scope unique ID used to refer from task invocations
@@ -37,26 +39,26 @@ class SecretNode(BaseModel):
     workspace_id: t.Optional[str] = None
 
 
-class GitURL(BaseModel):
+class GitURL(OrquestraBaseModel):
     original_url: str
     protocol: str
-    user: t.Optional[str]
-    password: t.Optional[SecretNode]
+    user: t.Optional[str] = None
+    password: t.Optional[SecretNode] = None
     host: str
-    port: t.Optional[int]
+    port: t.Optional[int] = None
     path: str
-    query: t.Optional[str]
+    query: t.Optional[str] = None
 
 
-class GitImport(BaseModel):
+class GitImport(OrquestraBaseModel):
     id: ImportId
     repo_url: GitURL
     git_ref: str
 
     # we need this in the JSON to know which class to use when deserializing
-    type: str = pydantic.Field(default="GIT_IMPORT", const=True)
+    type: t.Literal["GIT_IMPORT"] = "GIT_IMPORT"
 
-    @pydantic.validator("repo_url", pre=True)
+    @pydantic.field_validator("repo_url", mode="before")
     def _backwards_compatible_repo_url(cls, v):
         """Allows older models with a string URL to be imported."""
         # Prevent circular imports
@@ -68,7 +70,7 @@ class GitImport(BaseModel):
         return parse_git_url(v)
 
 
-class LocalImport(BaseModel):
+class LocalImport(OrquestraBaseModel):
     """Used to specify that the source code is only available locally.
 
     (e.g. not committed to any git repo).
@@ -77,15 +79,15 @@ class LocalImport(BaseModel):
     id: ImportId
 
     # we need this in the JSON to know which class to use when deserializing
-    type: str = pydantic.Field(default="LOCAL_IMPORT", const=True)
+    type: t.Literal["LOCAL_IMPORT"] = "LOCAL_IMPORT"
 
 
-class InlineImport(BaseModel):
+class InlineImport(OrquestraBaseModel):
     id: ImportId
-    type: str = pydantic.Field(default="INLINE_IMPORT", const=True)
+    type: t.Literal["INLINE_IMPORT"] = "INLINE_IMPORT"
 
 
-class PackageSpec(BaseModel):
+class PackageSpec(OrquestraBaseModel):
     # noqa E501
     """Representation of single package import.
 
@@ -101,7 +103,7 @@ class PackageSpec(BaseModel):
     environment_markers: str
 
 
-class PythonImports(BaseModel):
+class PythonImports(OrquestraBaseModel):
     """List of imports for given task."""
 
     id: ImportId
@@ -111,7 +113,7 @@ class PythonImports(BaseModel):
     # List of pip options to put at start of the requirements
     pip_options: t.List[str]
 
-    type: str = pydantic.Field(default="PYTHON_IMPORT", const=True)
+    type: t.Literal["PYTHON_IMPORT"] = "PYTHON_IMPORT"
 
 
 # If we need more import types, add them here.
@@ -121,7 +123,7 @@ Import = t.Union[GitImport, LocalImport, PythonImports, InlineImport]
 TaskDefId = str
 
 
-class ModuleFunctionRef(BaseModel):
+class ModuleFunctionRef(OrquestraBaseModel):
     # Required to dereference function for execution.
     module: str
     function_name: str
@@ -131,10 +133,10 @@ class ModuleFunctionRef(BaseModel):
     line_number: t.Optional[int] = None
 
     # We need this in the JSON to know which class to use when deserializing
-    type: str = pydantic.Field(default="MODULE_FUNCTION_REF", const=True)
+    type: t.Literal["MODULE_FUNCTION_REF"] = "MODULE_FUNCTION_REF"
 
 
-class FileFunctionRef(BaseModel):
+class FileFunctionRef(OrquestraBaseModel):
     # Required to dereference function for execution.
     file_path: str
     function_name: str
@@ -144,34 +146,34 @@ class FileFunctionRef(BaseModel):
     line_number: t.Optional[int] = None
 
     # We need this in the JSON to know which class to use when deserializing
-    type: str = pydantic.Field(default="FILE_FUNCTION_REF", const=True)
+    type: t.Literal["FILE_FUNCTION_REF"] = "FILE_FUNCTION_REF"
 
 
-class InlineFunctionRef(BaseModel):
+class InlineFunctionRef(OrquestraBaseModel):
     function_name: str
     # Required to dereference function for execution. The function object is serialized
     # using `dill`, base64-encoded, and chunked to workaround JSON string length limits.
     encoded_function: t.List[str]
 
     # We need this in the JSON to know which class to use when deserializing
-    type: str = pydantic.Field(default="INLINE_FUNCTION_REF", const=True)
+    type: t.Literal["INLINE_FUNCTION_REF"] = "INLINE_FUNCTION_REF"
 
 
 FunctionRef = t.Union[ModuleFunctionRef, FileFunctionRef, InlineFunctionRef]
 
 
-class Resources(BaseModel):
+class Resources(OrquestraBaseModel):
     cpu: t.Optional[str] = None
     memory: t.Optional[str] = None
     disk: t.Optional[str] = None
-    gpu: t.Optional[str] = None
+    gpu: t.Optional[t.Annotated[str, BeforeValidator(lambda x: str(x))]] = None
     # nodes should be a positive integer representing the number of nodes assigned
     # to a workflow. If None, the runtime will choose.
     # This only applies to workflows and not tasks.
     nodes: t.Optional[int] = None
 
 
-class DataAggregation(BaseModel):
+class DataAggregation(OrquestraBaseModel):
     run: t.Optional[bool] = None
     resources: t.Optional[Resources] = None
 
@@ -188,14 +190,14 @@ class ParameterKind(str, enum.Enum):
     VAR_KEYWORD = "VAR_KEYWORD"
 
 
-class TaskParameter(BaseModel):
+class TaskParameter(OrquestraBaseModel):
     name: ParameterName
     kind: ParameterKind
     # If we need more metadata related to parameters, like type hints or default values,
     # it should be added here.
 
 
-class TaskOutputMetadata(BaseModel):
+class TaskOutputMetadata(OrquestraBaseModel):
     """Information about the data shape returned by a task function."""
 
     # If yes, it's possible to unpack the output in the workflow like:
@@ -209,7 +211,7 @@ class TaskOutputMetadata(BaseModel):
     n_outputs: int
 
 
-class TaskDef(BaseModel):
+class TaskDef(OrquestraBaseModel):
     # workflow-unique ID used to refer from task invocations
     id: TaskDefId
 
@@ -222,7 +224,7 @@ class TaskDef(BaseModel):
     # Kinda like function signature.
     # None means we do not know the parameters for this Task (e.g. an external task)
     # An empty list [] means a Task with no parameters
-    parameters: t.Optional[t.List[TaskParameter]]
+    parameters: t.Optional[t.List[TaskParameter]] = None
 
     # Statically inferred from the task function. See also `TaskOutputMetadata`'s
     # docstring.
@@ -267,7 +269,7 @@ ArtifactNodeId = str
 ConstantNodeId = str
 
 
-class ArtifactNode(BaseModel):
+class ArtifactNode(OrquestraBaseModel):
     # Workflow-scope unique ID used to refer from task invocations. If the task has
     # multiple outputs they will have distinct `id`s.
     id: ArtifactNodeId
@@ -292,7 +294,7 @@ class ArtifactNode(BaseModel):
     artifact_index: t.Optional[int] = None
 
 
-class ConstantNodeJSON(BaseModel):
+class ConstantNodeJSON(OrquestraBaseModel):
     """Piece of data that already exists at workflow submission time.
 
     The value is directly embedded in the workflow. To support arbitrary data shapes we
@@ -305,16 +307,13 @@ class ConstantNodeJSON(BaseModel):
 
     # Serialized value
     value: str
-    serialization_format: ArtifactFormat = pydantic.Field(
-        default=ArtifactFormat.JSON,
-        const=True,
-    )
+    serialization_format: t.Literal[ArtifactFormat.JSON] = ArtifactFormat.JSON
 
     # Human-readable string that can be rendered on the UI to represent the value.
     value_preview: pydantic.constr(max_length=12)  # type: ignore
 
 
-class ConstantNodePickle(BaseModel):
+class ConstantNodePickle(OrquestraBaseModel):
     """Piece of data that already exists at workflow submission time.
 
     The value is directly embedded in the workflow. To support arbitrary data shapes we
@@ -327,10 +326,9 @@ class ConstantNodePickle(BaseModel):
 
     # Serialized value
     chunks: t.List[str]
-    serialization_format: ArtifactFormat = pydantic.Field(
-        default=ArtifactFormat.ENCODED_PICKLE,
-        const=True,
-    )
+    serialization_format: t.Literal[
+        ArtifactFormat.ENCODED_PICKLE
+    ] = ArtifactFormat.ENCODED_PICKLE
 
     # Human-readable string that can be rendered on the UI to represent the value.
     value_preview: pydantic.constr(max_length=12)  # type: ignore
@@ -343,7 +341,7 @@ ConstantNode = t.Union[ConstantNodeJSON, ConstantNodePickle]
 ArgumentId = t.Union[ArtifactNodeId, ConstantNodeId, SecretNodeId]
 
 
-class TaskInvocation(BaseModel):
+class TaskInvocation(OrquestraBaseModel):
     id: TaskInvocationId
 
     # What task should be executed.
@@ -359,17 +357,17 @@ class TaskInvocation(BaseModel):
     output_ids: t.List[ArtifactNodeId]
 
     # TaskInvocation specific resources
-    resources: t.Optional[Resources]
+    resources: t.Optional[Resources] = None
 
     # Specification for custom image more scoped than TaskDef custom_image field
     # if not set, will fall back to TaskDef custom_image
-    custom_image: t.Optional[str]
+    custom_image: t.Optional[str] = None
 
 
 WorkflowDefName = str
 
 
-class Version(BaseModel):
+class Version(OrquestraBaseModel):
     original: str
     major: int
     minor: int
@@ -377,12 +375,12 @@ class Version(BaseModel):
     is_prerelease: bool
 
 
-class WorkflowMetadata(BaseModel):
+class WorkflowMetadata(OrquestraBaseModel):
     sdk_version: Version
     python_version: Version
 
 
-class WorkflowDef(BaseModel):
+class WorkflowDef(OrquestraBaseModel):
     """The main data structure for intermediate workflow representation.
 
     The structure is as flat as possible with relation based on "id"s, e.g. a single
@@ -412,16 +410,18 @@ class WorkflowDef(BaseModel):
     # can be constants or artifacts.
     output_ids: t.List[ArgumentId]
 
-    data_aggregation: t.Optional[DataAggregation]
+    data_aggregation: t.Optional[DataAggregation] = None
 
     # Metadata defaults to None to allow older JSON to be loaded
-    metadata: t.Optional[WorkflowMetadata] = None
+    metadata: t.Annotated[
+        t.Optional[WorkflowMetadata], pydantic.Field(validate_default=True)
+    ] = None
 
     # The resources that are available for the workflow to use.
     # If none, the runtime will decide.
     resources: t.Optional[Resources] = None
 
-    @pydantic.validator("metadata", always=True)
+    @pydantic.field_validator("metadata", mode="after")
     def sdk_version_up_to_date(cls, v: t.Optional[WorkflowMetadata]):
         # Workaround for circular imports
         from orquestra.sdk import exceptions

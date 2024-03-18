@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023 - 2024 Zapata Computing Inc.
 ################################################################################
 """Translates IR workflow def into a Ray workflow."""
 import os
@@ -287,11 +287,13 @@ def _make_ray_dag_node(
 
                 if output_metadata is not None and output_metadata.n_outputs > 1:
                     unpacked = tuple(
-                        serde.result_from_artifact(
-                            wrapped_return[i], ir.ArtifactFormat.AUTO
+                        (
+                            serde.result_from_artifact(
+                                wrapped_return[i], ir.ArtifactFormat.AUTO
+                            )
+                            if serialization
+                            else wrapped_return[i]
                         )
-                        if serialization
-                        else wrapped_return[i]
                         for i in range(output_metadata.n_outputs)
                     )
                 else:
@@ -650,7 +652,7 @@ def get_current_ids() -> (
     )
 
     try:
-        user_meta = InvUserMetadata.parse_obj(task_meta.get("user_metadata"))
+        user_meta = InvUserMetadata.model_validate(task_meta.get("user_metadata"))
     except pydantic.ValidationError:
         # This ray task wasn't annotated with InvUserMetadata. It happens when
         # `get_current_ids()` is used from a context that's not a regular Orquestra Task

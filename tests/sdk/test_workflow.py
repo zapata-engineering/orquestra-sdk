@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022 - 2024 Zapata Computing Inc.
 ################################################################################
 import typing as t
 from pathlib import Path
@@ -249,6 +249,9 @@ class TestGraph:
     """
 
     @staticmethod
+    # graphviz is changing the signiture of `save()`.
+    # The change shouldn't affect our code.
+    @pytest.mark.filterwarnings("ignore::PendingDeprecationWarning")
     def test_is_exportable_to_dot(tmp_path):
         """
         Checks if the graph we build can be exported to a dot language.
