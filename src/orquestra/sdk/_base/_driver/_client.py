@@ -12,7 +12,7 @@ import re
 import zlib
 from datetime import timedelta
 from tarfile import TarFile
-from typing import Generic, List, Mapping, Optional, Tuple, TypeVar, Union
+from typing import Generic, List, Mapping, Optional, Tuple, TypeVar, Union, cast
 from urllib.parse import urljoin
 
 import pydantic
@@ -903,7 +903,10 @@ class DriverClient:
         ):
             raise
 
-        return pydantic.TypeAdapter(WorkflowResult).validate_python(resp.json())
+        return cast(
+            WorkflowResult,
+            pydantic.TypeAdapter(WorkflowResult).validate_python(resp.json()),
+        )
 
     # --- Workflow Run Results ---
 
@@ -1009,7 +1012,10 @@ class DriverClient:
         json_response = resp.json()
         try:
             # Try an older response
-            return pydantic.TypeAdapter(WorkflowResult).validate_python(json_response)
+            return cast(
+                WorkflowResult,
+                pydantic.TypeAdapter(WorkflowResult).validate_python(json_response),
+            )
         except pydantic.ValidationError:
             # If we fail, try parsing each part of a list separately
             return ComputeEngineWorkflowResult.model_validate(json_response)

@@ -156,9 +156,10 @@ def result_from_artifact(
 
 
 def value_from_result_dict(result_dict: t.Mapping) -> t.Any:
-    result: responses.WorkflowResult = pydantic.TypeAdapter(
-        responses.WorkflowResult
-    ).validate_python(result_dict)
+    result = t.cast(
+        responses.WorkflowResult,
+        pydantic.TypeAdapter(responses.WorkflowResult).validate_python(result_dict),
+    )
     return deserialize(result)
 
 
