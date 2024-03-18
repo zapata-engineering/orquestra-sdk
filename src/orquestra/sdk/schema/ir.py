@@ -10,9 +10,10 @@ structure here is JSON-serializable.
 import enum
 import typing as t
 import warnings
+
 import pydantic
 
-from .._base._storage import OrquestraBaseModel
+from .._base._storage import PYDANTICV1, OrquestraBaseModel
 
 ImportId = str
 SecretNodeId = str
@@ -48,10 +49,11 @@ class GitURL(OrquestraBaseModel):
     query: t.Optional[str] = None
 
 
-try:
-    repo_url_validator = pydantic.field_validator("repo_url", mode="before")
-except AttributeError:
+if PYDANTICV1:
     repo_url_validator = pydantic.validator("repo_url", pre=True)
+else:
+    repo_url_validator = pydantic.field_validator("repo_url", mode="before")
+
 
 class GitImport(OrquestraBaseModel):
     id: ImportId
@@ -169,10 +171,13 @@ class Resources(OrquestraBaseModel):
     cpu: t.Optional[str] = None
     memory: t.Optional[str] = None
     disk: t.Optional[str] = None
-    try:
-        gpu: t.Optional[t.Annotated[str, pydantic.BeforeValidator(lambda x: str(x))]] = None
-    except AttributeError:
+    if PYDANTICV1:
         gpu: t.Optional[str] = None
+    else:
+        gpu: t.Optional[
+            t.Annotated[str, pydantic.BeforeValidator(lambda x: str(x))]
+        ] = None
+
     # nodes should be a positive integer representing the number of nodes assigned
     # to a workflow. If None, the runtime will choose.
     # This only applies to workflows and not tasks.
@@ -386,11 +391,12 @@ class WorkflowMetadata(OrquestraBaseModel):
     python_version: Version
 
 
-try:
-    metadata_validator = pydantic.field_validator("metadata", mode="after")
-except AttributeError:
+if PYDANTICV1:
     metadata_validator = pydantic.validator("metadata", always=True)
-    
+else:
+    metadata_validator = pydantic.field_validator("metadata", mode="after")
+
+
 class WorkflowDef(OrquestraBaseModel):
     """The main data structure for intermediate workflow representation.
 
