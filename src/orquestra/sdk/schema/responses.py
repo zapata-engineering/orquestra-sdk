@@ -13,7 +13,7 @@ import typing as t
 from pydantic import Field
 from typing_extensions import Annotated
 
-from .._base._storage import OrqdanticBaseModel
+from .._base._storage import BaseModel
 from .ir import ArtifactFormat
 
 
@@ -43,19 +43,19 @@ class ResponseStatusCode(enum.Enum):
     USER_CANCELLED = 15
 
 
-class ResponseMetadata(OrqdanticBaseModel):
+class ResponseMetadata(BaseModel):
     success: bool
     code: ResponseStatusCode
     message: str
 
 
-class JSONResult(OrqdanticBaseModel):
+class JSONResult(BaseModel):
     # Output value dumped to a flat JSON string.
     value: str
     serialization_format: t.Literal[ArtifactFormat.JSON] = ArtifactFormat.JSON
 
 
-class PickleResult(OrqdanticBaseModel):
+class PickleResult(BaseModel):
     # Output value dumped to a pickle byte string, encoded as base64, and split into
     # chunks. Chunking is required because some JSON parsers have limitation on max
     # string field length.
@@ -70,12 +70,12 @@ WorkflowResult = Annotated[
 ]
 
 
-class ComputeEngineWorkflowResult(OrqdanticBaseModel):
+class ComputeEngineWorkflowResult(BaseModel):
     results: t.Tuple[WorkflowResult, ...]
     type: t.Literal["ComputeEngineWorkflowResult"] = "ComputeEngineWorkflowResult"
 
 
-class ServiceResponse(OrqdanticBaseModel):
+class ServiceResponse(BaseModel):
     name: str
     is_running: bool
     info: t.Optional[str]

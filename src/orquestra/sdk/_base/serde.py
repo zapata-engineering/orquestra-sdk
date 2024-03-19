@@ -13,7 +13,7 @@ import cloudpickle  # type: ignore
 
 from orquestra.sdk.schema import ir, responses
 
-from .._base._storage import OrqdanticTypeAdapter
+from .._base._storage import TypeAdapter
 
 CHUNK_SIZE = 40_000
 ENCODING = "base64"
@@ -159,16 +159,14 @@ def result_from_artifact(
 def value_from_result_dict(result_dict: t.Mapping) -> t.Any:
     result = t.cast(
         responses.WorkflowResult,
-        OrqdanticTypeAdapter(responses.WorkflowResult).validate_python(result_dict),
+        TypeAdapter(responses.WorkflowResult).validate_python(result_dict),
     )
 
     return deserialize(result)
 
 
 def deserialize_constant(node: ir.ConstantNode):
-    constant = OrqdanticTypeAdapter(responses.WorkflowResult).validate_python(
-        node.model_dump()
-    )
+    constant = TypeAdapter(responses.WorkflowResult).validate_python(node.model_dump())
 
     return deserialize(constant)
 

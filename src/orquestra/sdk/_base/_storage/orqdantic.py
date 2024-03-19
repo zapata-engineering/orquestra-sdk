@@ -5,7 +5,7 @@
 """Compatibility layer for pydantic v1 / v2 compatibility."""
 
 from copy import deepcopy
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any, Optional, TypeAlias
 
 import pydantic
 
@@ -14,14 +14,14 @@ PYDANTICV1 = pydantic.__version__.startswith("1.")
 if PYDANTICV1:
     from pydantic.generics import GenericModel
 
-    class OrqdanticBaseModel(GenericModel):
+    class BaseModel(GenericModel):
         @classmethod
         def model_validate(cls, *args, **kwargs):
-            return super(OrqdanticBaseModel, cls).parse_obj(*args, **kwargs)
+            return super(BaseModel, cls).parse_obj(*args, **kwargs)
 
         @classmethod
         def model_validate_json(cls, *args, **kwargs):
-            return super(OrqdanticBaseModel, cls).parse_raw(*args, **kwargs)
+            return super(BaseModel, cls).parse_raw(*args, **kwargs)
 
         def model_dump(self, *args, **kwargs):
             return super().dict(*args, **kwargs)
@@ -31,7 +31,7 @@ if PYDANTICV1:
 
         @classmethod
         def model_json_schema(cls, *args, **kwargs):
-            return super(OrqdanticBaseModel, cls).schema_json(*args, **kwargs)
+            return super(BaseModel, cls).schema_json(*args, **kwargs)
 
         def model_copy(self, *args, **kwargs):
             return super().copy(*args, **kwargs)
@@ -39,7 +39,7 @@ if PYDANTICV1:
 else:
     # TODO (ORQSDK-1025): remove the model base class and replace it with an alies to
     # BaseModel
-    class OrqdanticBaseModel(pydantic.BaseModel):
+    class BaseModel(pydantic.BaseModel):
         """The pydantic BaseModel changed between V1 and V2.
 
         As a result, workflow outputs generated prior to the V2 upgrade may not be
@@ -59,7 +59,7 @@ else:
             super().__setstate__(state)
 
 
-class OrqdanticTypeAdapter:
+class TypeAdapter:
     """Accessor for Pydantic parsing.
 
     If Pydantic V2 is installed, this class is a simple wrapper for
@@ -88,7 +88,7 @@ class OrqdanticTypeAdapter:
             return self._typeadapter.validate_json(value, *args, **kwargs)
 
 
-def orqdantic_field_validator(*fields, **kwargs):
+def field_validator(*fields, **kwargs):
     """Wrapper for pydantic field validators.
 
     If Pydantic V2 is installed, this operates as a simple wrapper for
@@ -97,9 +97,6 @@ def orqdantic_field_validator(*fields, **kwargs):
     If Pydantic V1 is installed, this operates as a wrapper for `pydantic.validator` and
     _tries_ to translate V2-style kwargs. There are not perfect analogues, so this is
     likely to cause problems if we add more validators.
-
-    Returns:
-        _type_: _description_
     """
     if PYDANTICV1:
 
@@ -119,8 +116,8 @@ def orqdantic_field_validator(*fields, **kwargs):
 
 
 if PYDANTICV1:
-    OrqdanticGpuResourceType = Optional[str]
+    GpuResourceType: TypeAlias = Optional[str]
 else:
-    OrqdanticGpuResourceType = Optional[
+    GpuResourceType: TypeAlias = Optional[
         Annotated[str, pydantic.BeforeValidator(lambda x: str(x))]
     ]

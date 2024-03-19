@@ -31,7 +31,7 @@ from orquestra.sdk.schema.workflow_run import (
     WorkspaceId,
 )
 
-from ..._base._storage import OrqdanticBaseModel
+from ..._base._storage import BaseModel
 
 WorkflowDefID = str
 WorkflowRunID = str
@@ -47,7 +47,7 @@ DataT = TypeVar("DataT")
 MetaT = TypeVar("MetaT")
 
 
-class Pagination(OrqdanticBaseModel):
+class Pagination(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/259481b9240547bccf4fa40df4e92bf6c617a25f/openapi/src/schemas/MetaSuccessPaginated.yaml.
@@ -56,14 +56,14 @@ class Pagination(OrqdanticBaseModel):
     nextPageToken: str
 
 
-class Response(OrqdanticBaseModel, Generic[DataT, MetaT]):
+class Response(BaseModel, Generic[DataT, MetaT]):
     """A generic to help with the structure of driver responses."""
 
     data: DataT
     meta: Optional[MetaT] = None
 
 
-class MetaEmpty(OrqdanticBaseModel):
+class MetaEmpty(BaseModel):
     pass
 
 
@@ -81,7 +81,7 @@ class ErrorCode(IntEnum):
     WORKFLOW_DEF_NOT_FOUND = 6
 
 
-class Error(OrqdanticBaseModel):
+class Error(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/2b3534/openapi/src/schemas/Error.yaml.
@@ -95,7 +95,7 @@ class Error(OrqdanticBaseModel):
 # --- Workflow Definitions ---
 
 
-class CreateWorkflowDefResponse(OrqdanticBaseModel):
+class CreateWorkflowDefResponse(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/2b3534/openapi/src/responses/CreateWorkflowDefinitionResponse.yaml.
@@ -104,7 +104,7 @@ class CreateWorkflowDefResponse(OrqdanticBaseModel):
     id: WorkflowDefID
 
 
-class GetWorkflowDefResponse(OrqdanticBaseModel):
+class GetWorkflowDefResponse(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/cb61512e9f3da24addd933c7259aa4584ab04e4f/openapi/src/schemas/WorkflowDefinition.yaml.
@@ -119,7 +119,7 @@ class GetWorkflowDefResponse(OrqdanticBaseModel):
     sdkVersion: str
 
 
-class ListWorkflowDefsRequest(OrqdanticBaseModel):
+class ListWorkflowDefsRequest(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/cdb667ef6d1053876250daff27e19fb50374c0d4/openapi/src/resources/workflow-definitions.yaml#L8.
@@ -129,7 +129,7 @@ class ListWorkflowDefsRequest(OrqdanticBaseModel):
     pageToken: Optional[str] = None
 
 
-class CreateWorkflowDefsRequest(OrqdanticBaseModel):
+class CreateWorkflowDefsRequest(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/dc8a2a37d92324f099afefc048f6486a5061850f/openapi/src/resources/workflow-definitions.yaml#L39.
@@ -163,7 +163,7 @@ class StateResponse(str, Enum):
         return cls.UNKNOWN
 
 
-class RunStatusResponse(OrqdanticBaseModel):
+class RunStatusResponse(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/RunStatus.yaml#L1.
@@ -181,7 +181,7 @@ class RunStatusResponse(OrqdanticBaseModel):
         )
 
 
-class TaskRunResponse(OrqdanticBaseModel):
+class TaskRunResponse(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml#L17.
@@ -207,7 +207,7 @@ class TaskRunResponse(OrqdanticBaseModel):
         )
 
 
-class MinimalWorkflowRunResponse(OrqdanticBaseModel):
+class MinimalWorkflowRunResponse(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml#L1.
@@ -223,7 +223,7 @@ class MinimalWorkflowRunResponse(OrqdanticBaseModel):
         )
 
 
-class WorkflowRunSummaryResponse(OrqdanticBaseModel):
+class WorkflowRunSummaryResponse(BaseModel):
     """Contains all of the information needed to give a basic overview of the workflow.
 
     Implements:
@@ -269,7 +269,7 @@ class WorkflowRunResponse(MinimalWorkflowRunResponse):
         )
 
 
-class Resources(OrqdanticBaseModel):
+class Resources(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/580c8d8835b1cccd085ea716c514038e85eb28d7/openapi/src/schemas/Resources.yaml.
@@ -288,7 +288,7 @@ class Resources(OrqdanticBaseModel):
     gpu: Optional[str] = pydantic.Field(pattern="^[01]+$")
 
 
-class HeadNodeResources(OrqdanticBaseModel):
+class HeadNodeResources(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/ac1e97ea00fc3526c93187a1da02170bff45b74f/openapi/src/schemas/HeadNodeResources.yaml.
@@ -302,7 +302,7 @@ class HeadNodeResources(OrqdanticBaseModel):
     )
 
 
-class CreateWorkflowRunRequest(OrqdanticBaseModel):
+class CreateWorkflowRunRequest(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/ac1e97ea00fc3526c93187a1da02170bff45b74f/openapi/src/schemas/CreateWorkflowRunRequest.yaml.
@@ -314,7 +314,7 @@ class CreateWorkflowRunRequest(OrqdanticBaseModel):
     headNodeResources: Optional[HeadNodeResources] = None
 
 
-class CreateWorkflowRunResponse(OrqdanticBaseModel):
+class CreateWorkflowRunResponse(BaseModel):
     """Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/2e999a76019e8f8de8082409daddf7789dc2f430/pkg/server/server.go#L376.
     """  # noqa: D205, D212
@@ -322,7 +322,7 @@ class CreateWorkflowRunResponse(OrqdanticBaseModel):
     id: WorkflowRunID
 
 
-class ListWorkflowRunsRequest(OrqdanticBaseModel):
+class ListWorkflowRunsRequest(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/c52013c0f4df066159fc32ad38d489b3eaff5850/openapi/src/resources/workflow-runs.yaml#L14.
@@ -342,7 +342,7 @@ ListWorkflowRunsResponse = List[MinimalWorkflowRunResponse]
 ListWorkflowRunSummariesResponse = List[WorkflowRunSummaryResponse]
 
 
-class GetWorkflowRunResponse(OrqdanticBaseModel):
+class GetWorkflowRunResponse(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-run.yaml#L17.
@@ -351,7 +351,7 @@ class GetWorkflowRunResponse(OrqdanticBaseModel):
     data: WorkflowRunResponse
 
 
-class TerminateWorkflowRunRequest(OrqdanticBaseModel):
+class TerminateWorkflowRunRequest(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/873437f8157226c451220306a6ce90c80e8c8f9e/openapi/src/resources/workflow-run-terminate.yaml#L12.
@@ -363,7 +363,7 @@ class TerminateWorkflowRunRequest(OrqdanticBaseModel):
 # --- Workflow Artifacts ---
 
 
-class GetWorkflowRunArtifactsRequest(OrqdanticBaseModel):
+class GetWorkflowRunArtifactsRequest(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/artifacts.yaml#L10.
@@ -377,7 +377,7 @@ GetWorkflowRunArtifactsResponse = Mapping[TaskRunID, List[WorkflowRunArtifactID]
 # --- Workflow Results ---
 
 
-class GetWorkflowRunResultsRequest(OrqdanticBaseModel):
+class GetWorkflowRunResultsRequest(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/run-results.yaml#L10.
@@ -392,7 +392,7 @@ GetWorkflowRunResultsResponse = List[WorkflowRunResultID]
 # --- Logs ---
 
 
-class GetWorkflowRunLogsRequest(OrqdanticBaseModel):
+class GetWorkflowRunLogsRequest(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-run-logs.yaml.
@@ -401,7 +401,7 @@ class GetWorkflowRunLogsRequest(OrqdanticBaseModel):
     workflowRunId: WorkflowRunID
 
 
-class GetTaskRunLogsRequest(OrqdanticBaseModel):
+class GetTaskRunLogsRequest(BaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml.
@@ -411,7 +411,7 @@ class GetTaskRunLogsRequest(OrqdanticBaseModel):
     taskInvocationId: TaskInvocationID
 
 
-class CommonResourceMeta(OrqdanticBaseModel):
+class CommonResourceMeta(BaseModel):
     type: str
     displayName: str
     description: str
@@ -424,7 +424,7 @@ class CommonResourceMeta(OrqdanticBaseModel):
     status: str
 
 
-class ResourceIdentifier(OrqdanticBaseModel):
+class ResourceIdentifier(BaseModel):
     tenantId: str
     resourceGroupId: str
     id: str
@@ -468,7 +468,7 @@ LogFilename = NewType("LogFilename", str)
 RayFilename = NewType("RayFilename", str)
 
 
-class WorkflowLogMessage(OrqdanticBaseModel):
+class WorkflowLogMessage(BaseModel):
     """Represents a single line indexed by the server side log service.
 
     Based on:
@@ -516,7 +516,7 @@ class WorkflowLogEvent(NamedTuple):
 WorkflowLogSection = List[WorkflowLogEvent]
 
 
-class TaskLogMessage(OrqdanticBaseModel):
+class TaskLogMessage(BaseModel):
     """Represents a single line indexed by the server side log service.
 
     Based on:
@@ -579,7 +579,7 @@ class SystemLogSourceType(str, Enum):
         return cls.UNKNOWN
 
 
-class K8sEventLog(OrqdanticBaseModel):
+class K8sEventLog(BaseModel):
     """A system-level log line produced by a K8S event."""
 
     tag: str
@@ -592,7 +592,7 @@ class K8sEventLog(OrqdanticBaseModel):
     source_type: Literal[SystemLogSourceType.K8S_EVENT] = SystemLogSourceType.K8S_EVENT
 
 
-class RayHeadNodeEventLog(OrqdanticBaseModel):
+class RayHeadNodeEventLog(BaseModel):
     """A system-level log line produced by a Ray head node event."""
 
     tag: str
@@ -604,7 +604,7 @@ class RayHeadNodeEventLog(OrqdanticBaseModel):
     ] = SystemLogSourceType.RAY_HEAD_NODE
 
 
-class RayWorkerNodeEventLog(OrqdanticBaseModel):
+class RayWorkerNodeEventLog(BaseModel):
     """A system-level log line produced by a Ray head node event."""
 
     tag: str
@@ -616,7 +616,7 @@ class RayWorkerNodeEventLog(OrqdanticBaseModel):
     ] = SystemLogSourceType.RAY_WORKER_NODE
 
 
-class UnknownEventLog(OrqdanticBaseModel):
+class UnknownEventLog(BaseModel):
     """Fallback option - the event type is unknown, so display the message as a str."""
 
     tag: str

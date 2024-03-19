@@ -14,7 +14,7 @@ import warnings
 from orquestra.sdk._base._dates import Instant
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
 
-from .._base._storage import OrqdanticBaseModel
+from .._base._storage import BaseModel
 
 WorkflowRunId = str
 TaskRunId = str
@@ -55,20 +55,20 @@ class State(enum.Enum):
         )
 
 
-class RunStatus(OrqdanticBaseModel):
+class RunStatus(BaseModel):
     state: State
     start_time: t.Optional[Instant]
     end_time: t.Optional[Instant]
 
 
-class TaskRun(OrqdanticBaseModel):
+class TaskRun(BaseModel):
     id: TaskRunId
     invocation_id: TaskInvocationId
     status: RunStatus
     message: t.Optional[str] = None
 
 
-class WorkflowRunOnlyID(OrqdanticBaseModel):
+class WorkflowRunOnlyID(BaseModel):
     """A WorkflowRun that only contains the ID."""
 
     id: WorkflowRunId

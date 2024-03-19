@@ -31,7 +31,7 @@ from orquestra.sdk.schema.workflow_run import (
     WorkspaceId,
 )
 
-from ..._base._storage import OrqdanticTypeAdapter
+from ..._base._storage import TypeAdapter
 from .._regex import VERSION_REGEX
 from . import _exceptions, _models
 
@@ -906,7 +906,7 @@ class DriverClient:
 
         return cast(
             WorkflowResult,
-            OrqdanticTypeAdapter(WorkflowResult).validate_python(resp.json()),
+            TypeAdapter(WorkflowResult).validate_python(resp.json()),
         )
 
     # --- Workflow Run Results ---
@@ -1015,7 +1015,7 @@ class DriverClient:
             # Try an older response
             return cast(
                 WorkflowResult,
-                OrqdanticTypeAdapter(WorkflowResult).validate_python(json_response),
+                TypeAdapter(WorkflowResult).validate_python(json_response),
             )
 
         except pydantic.ValidationError:
@@ -1083,9 +1083,7 @@ class DriverClient:
             if len(section_str) < 1:
                 continue
 
-            events = OrqdanticTypeAdapter(_models.WorkflowLogSection).validate_json(
-                section_str
-            )
+            events = TypeAdapter(_models.WorkflowLogSection).validate_json(section_str)
 
             for event in events:
                 messages.append(event.message)
@@ -1155,9 +1153,7 @@ class DriverClient:
             if len(section_str) < 1:
                 continue
 
-            events = OrqdanticTypeAdapter(_models.TaskLogSection).validate_json(
-                section_str
-            )
+            events = TypeAdapter(_models.TaskLogSection).validate_json(section_str)
 
             for event in events:
                 messages.append(event.message)
@@ -1225,7 +1221,7 @@ class DriverClient:
             if len(section_str) < 1:
                 continue
 
-            events = OrqdanticTypeAdapter(_models.SysSection).validate_json(section_str)
+            events = TypeAdapter(_models.SysSection).validate_json(section_str)
 
             for event in events:
                 messages.append(event.message)
@@ -1257,9 +1253,9 @@ class DriverClient:
         ):
             raise
 
-        parsed_response = OrqdanticTypeAdapter(
-            _models.ListWorkspacesResponse
-        ).validate_python(resp.json())
+        parsed_response = TypeAdapter(_models.ListWorkspacesResponse).validate_python(
+            resp.json()
+        )
 
         return parsed_response
 
@@ -1296,9 +1292,9 @@ class DriverClient:
         ):
             raise
 
-        parsed_response = OrqdanticTypeAdapter(
-            _models.ListProjectResponse
-        ).validate_python(resp.json())
+        parsed_response = TypeAdapter(_models.ListProjectResponse).validate_python(
+            resp.json()
+        )
 
         return parsed_response
 

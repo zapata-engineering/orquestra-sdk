@@ -13,17 +13,13 @@ import warnings
 
 import pydantic
 
-from .._base._storage import (
-    OrqdanticBaseModel,
-    OrqdanticGpuResourceType,
-    orqdantic_field_validator,
-)
+from .._base._storage import BaseModel, GpuResourceType, field_validator
 
 ImportId = str
 SecretNodeId = str
 
 
-class SecretNode(OrqdanticBaseModel):
+class SecretNode(BaseModel):
     """A reference to a secret stored in an external secret/config service."""
 
     # Workflow-scope unique ID used to refer from task invocations
@@ -42,7 +38,7 @@ class SecretNode(OrqdanticBaseModel):
     workspace_id: t.Optional[str] = None
 
 
-class GitURL(OrqdanticBaseModel):
+class GitURL(BaseModel):
     original_url: str
     protocol: str
     user: t.Optional[str] = None
@@ -53,7 +49,7 @@ class GitURL(OrqdanticBaseModel):
     query: t.Optional[str] = None
 
 
-class GitImport(OrqdanticBaseModel):
+class GitImport(BaseModel):
     id: ImportId
     repo_url: GitURL
     git_ref: str
@@ -61,7 +57,7 @@ class GitImport(OrqdanticBaseModel):
     # we need this in the JSON to know which class to use when deserializing
     type: t.Literal["GIT_IMPORT"] = "GIT_IMPORT"
 
-    @orqdantic_field_validator("repo_url", mode="before")
+    @field_validator("repo_url", mode="before")
     def _backwards_compatible_repo_url(cls, v):
         """Allows older models with a string URL to be imported."""
         # Prevent circular imports
@@ -73,7 +69,7 @@ class GitImport(OrqdanticBaseModel):
         return parse_git_url(v)
 
 
-class LocalImport(OrqdanticBaseModel):
+class LocalImport(BaseModel):
     """Used to specify that the source code is only available locally.
 
     (e.g. not committed to any git repo).
@@ -85,12 +81,12 @@ class LocalImport(OrqdanticBaseModel):
     type: t.Literal["LOCAL_IMPORT"] = "LOCAL_IMPORT"
 
 
-class InlineImport(OrqdanticBaseModel):
+class InlineImport(BaseModel):
     id: ImportId
     type: t.Literal["INLINE_IMPORT"] = "INLINE_IMPORT"
 
 
-class PackageSpec(OrqdanticBaseModel):
+class PackageSpec(BaseModel):
     # noqa E501
     """Representation of single package import.
 
@@ -106,7 +102,7 @@ class PackageSpec(OrqdanticBaseModel):
     environment_markers: str
 
 
-class PythonImports(OrqdanticBaseModel):
+class PythonImports(BaseModel):
     """List of imports for given task."""
 
     id: ImportId
@@ -126,7 +122,7 @@ Import = t.Union[GitImport, LocalImport, PythonImports, InlineImport]
 TaskDefId = str
 
 
-class ModuleFunctionRef(OrqdanticBaseModel):
+class ModuleFunctionRef(BaseModel):
     # Required to dereference function for execution.
     module: str
     function_name: str
@@ -139,7 +135,7 @@ class ModuleFunctionRef(OrqdanticBaseModel):
     type: t.Literal["MODULE_FUNCTION_REF"] = "MODULE_FUNCTION_REF"
 
 
-class FileFunctionRef(OrqdanticBaseModel):
+class FileFunctionRef(BaseModel):
     # Required to dereference function for execution.
     file_path: str
     function_name: str
@@ -152,7 +148,7 @@ class FileFunctionRef(OrqdanticBaseModel):
     type: t.Literal["FILE_FUNCTION_REF"] = "FILE_FUNCTION_REF"
 
 
-class InlineFunctionRef(OrqdanticBaseModel):
+class InlineFunctionRef(BaseModel):
     function_name: str
     # Required to dereference function for execution. The function object is serialized
     # using `dill`, base64-encoded, and chunked to workaround JSON string length limits.
@@ -165,11 +161,11 @@ class InlineFunctionRef(OrqdanticBaseModel):
 FunctionRef = t.Union[ModuleFunctionRef, FileFunctionRef, InlineFunctionRef]
 
 
-class Resources(OrqdanticBaseModel):
+class Resources(BaseModel):
     cpu: t.Optional[str] = None
     memory: t.Optional[str] = None
     disk: t.Optional[str] = None
-    gpu: OrqdanticGpuResourceType = None
+    gpu: GpuResourceType = None
 
     # nodes should be a positive integer representing the number of nodes assigned
     # to a workflow. If None, the runtime will choose.
@@ -177,7 +173,7 @@ class Resources(OrqdanticBaseModel):
     nodes: t.Optional[int] = None
 
 
-class DataAggregation(OrqdanticBaseModel):
+class DataAggregation(BaseModel):
     run: t.Optional[bool] = None
     resources: t.Optional[Resources] = None
 
@@ -194,14 +190,14 @@ class ParameterKind(str, enum.Enum):
     VAR_KEYWORD = "VAR_KEYWORD"
 
 
-class TaskParameter(OrqdanticBaseModel):
+class TaskParameter(BaseModel):
     name: ParameterName
     kind: ParameterKind
     # If we need more metadata related to parameters, like type hints or default values,
     # it should be added here.
 
 
-class TaskOutputMetadata(OrqdanticBaseModel):
+class TaskOutputMetadata(BaseModel):
     """Information about the data shape returned by a task function."""
 
     # If yes, it's possible to unpack the output in the workflow like:
@@ -215,7 +211,7 @@ class TaskOutputMetadata(OrqdanticBaseModel):
     n_outputs: int
 
 
-class TaskDef(OrqdanticBaseModel):
+class TaskDef(BaseModel):
     # workflow-unique ID used to refer from task invocations
     id: TaskDefId
 
@@ -273,7 +269,7 @@ ArtifactNodeId = str
 ConstantNodeId = str
 
 
-class ArtifactNode(OrqdanticBaseModel):
+class ArtifactNode(BaseModel):
     # Workflow-scope unique ID used to refer from task invocations. If the task has
     # multiple outputs they will have distinct `id`s.
     id: ArtifactNodeId
@@ -298,7 +294,7 @@ class ArtifactNode(OrqdanticBaseModel):
     artifact_index: t.Optional[int] = None
 
 
-class ConstantNodeJSON(OrqdanticBaseModel):
+class ConstantNodeJSON(BaseModel):
     """Piece of data that already exists at workflow submission time.
 
     The value is directly embedded in the workflow. To support arbitrary data shapes we
@@ -317,7 +313,7 @@ class ConstantNodeJSON(OrqdanticBaseModel):
     value_preview: pydantic.constr(max_length=12)  # type: ignore
 
 
-class ConstantNodePickle(OrqdanticBaseModel):
+class ConstantNodePickle(BaseModel):
     """Piece of data that already exists at workflow submission time.
 
     The value is directly embedded in the workflow. To support arbitrary data shapes we
@@ -345,7 +341,7 @@ ConstantNode = t.Union[ConstantNodeJSON, ConstantNodePickle]
 ArgumentId = t.Union[ArtifactNodeId, ConstantNodeId, SecretNodeId]
 
 
-class TaskInvocation(OrqdanticBaseModel):
+class TaskInvocation(BaseModel):
     id: TaskInvocationId
 
     # What task should be executed.
@@ -371,7 +367,7 @@ class TaskInvocation(OrqdanticBaseModel):
 WorkflowDefName = str
 
 
-class Version(OrqdanticBaseModel):
+class Version(BaseModel):
     original: str
     major: int
     minor: int
@@ -379,12 +375,12 @@ class Version(OrqdanticBaseModel):
     is_prerelease: bool
 
 
-class WorkflowMetadata(OrqdanticBaseModel):
+class WorkflowMetadata(BaseModel):
     sdk_version: Version
     python_version: Version
 
 
-class WorkflowDef(OrqdanticBaseModel):
+class WorkflowDef(BaseModel):
     """The main data structure for intermediate workflow representation.
 
     The structure is as flat as possible with relation based on "id"s, e.g. a single
@@ -425,7 +421,7 @@ class WorkflowDef(OrqdanticBaseModel):
     # If none, the runtime will decide.
     resources: t.Optional[Resources] = None
 
-    @orqdantic_field_validator("metadata", mode="after")
+    @field_validator("metadata", mode="after")
     def sdk_version_up_to_date(cls, v: t.Optional[WorkflowMetadata]):
         # Workaround for circular imports
         from orquestra.sdk import exceptions

@@ -3,17 +3,11 @@
 ################################################################################
 
 
-from ._basemodel import (
-    OrqdanticBaseModel,
-    OrqdanticGpuResourceType,
-    OrqdanticTypeAdapter,
-    orqdantic_field_validator,
-)
+from .orqdantic import BaseModel, GpuResourceType, TypeAdapter, field_validator
 
 __all__ = [
-    "OrqdanticBaseModel",
-    "PYDANTICV1",
-    "OrqdanticTypeAdapter",
-    "orqdantic_field_validator",
-    "OrqdanticGpuResourceType",
+    "BaseModel",
+    "TypeAdapter",
+    "field_validator",
+    "GpuResourceType",
 ]

@@ -4,7 +4,7 @@
 from enum import Enum
 from typing import Any, Dict, Literal
 
-from .._base._storage import OrqdanticBaseModel
+from .._base._storage import BaseModel
 
 CONFIG_FILE_CURRENT_VERSION = "0.0.2"
 
@@ -24,7 +24,7 @@ class RuntimeName(str, Enum):
 RemoteRuntime = Literal[RuntimeName.CE_REMOTE]
 
 
-class RuntimeConfiguration(OrqdanticBaseModel):
+class RuntimeConfiguration(BaseModel):
     config_name: ConfigName
     runtime_name: RuntimeName
     runtime_options: Dict[str, Any] = {}
@@ -40,7 +40,7 @@ class RuntimeConfiguration(OrqdanticBaseModel):
         return outstr
 
 
-class RuntimeConfigurationFile(OrqdanticBaseModel):
+class RuntimeConfigurationFile(BaseModel):
     """This schema is for the storage of "Runtime configurations".
 
     The major version number should be bumped when:
