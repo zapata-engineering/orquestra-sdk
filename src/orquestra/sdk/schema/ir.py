@@ -13,7 +13,11 @@ import warnings
 
 import pydantic
 
-from .._base._storage import PYDANTICV1, OrqdanticBaseModel, orqdantic_field_validator
+from .._base._storage import (
+    OrqdanticBaseModel,
+    OrqdanticGpuResourceType,
+    orqdantic_field_validator,
+)
 
 ImportId = str
 SecretNodeId = str
@@ -165,12 +169,7 @@ class Resources(OrqdanticBaseModel):
     cpu: t.Optional[str] = None
     memory: t.Optional[str] = None
     disk: t.Optional[str] = None
-    if PYDANTICV1:
-        gpu: t.Optional[str] = None
-    else:
-        gpu: t.Optional[
-            t.Annotated[str, pydantic.BeforeValidator(lambda x: str(x))]
-        ] = None
+    gpu: OrqdanticGpuResourceType = None
 
     # nodes should be a positive integer representing the number of nodes assigned
     # to a workflow. If None, the runtime will choose.

@@ -4,8 +4,8 @@
 
 
 from ._basemodel import (
-    PYDANTICV1,
     OrqdanticBaseModel,
+    OrqdanticGpuResourceType,
     OrqdanticTypeAdapter,
     orqdantic_field_validator,
 )
@@ -15,4 +15,5 @@ __all__ = [
     "PYDANTICV1",
     "OrqdanticTypeAdapter",
     "orqdantic_field_validator",
+    "OrqdanticGpuResourceType",
 ]
