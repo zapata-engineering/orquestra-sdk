@@ -5,7 +5,7 @@
 """Compatibility layer for pydantic v1 / v2 compatibility."""
 
 from copy import deepcopy
-from typing import Annotated, Any, Optional, TypeAlias
+from typing import Annotated, Any, Optional
 
 import pydantic
 
@@ -116,8 +116,8 @@ def field_validator(*fields, **kwargs):
 
 
 if PYDANTICV1:
-    GpuResourceType: TypeAlias = Optional[str]
+    GpuResourceType: Any = Optional[str]
 else:
-    GpuResourceType: TypeAlias = Optional[
+    GpuResourceType: Any = Optional[
         Annotated[str, pydantic.BeforeValidator(lambda x: str(x))]
     ]
