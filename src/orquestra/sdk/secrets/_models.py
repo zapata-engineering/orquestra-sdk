@@ -7,7 +7,7 @@ API spec: https://github.com/zapatacomputing/config-service/tree/main/openapi/sr
 """
 from typing import Optional
 
-from .._base._storage import OrquestraBaseModel
+from .._base._storage import OrqdanticBaseModel
 
 SecretName = str
 SecretValue = str
@@ -15,7 +15,7 @@ ResourceGroup = str
 WorkspaceId = str
 
 
-class SecretNameObj(OrquestraBaseModel):
+class SecretNameObj(OrqdanticBaseModel):
     """
     Model for:
     https://github.com/zapatacomputing/config-service/blob/3f275a52149fb2b74c6a8c01726cce4f390a1533/openapi/src/schemas/SecretName.yaml.
@@ -27,7 +27,7 @@ class SecretNameObj(OrquestraBaseModel):
     name: SecretName
 
 
-class SecretValueObj(OrquestraBaseModel):
+class SecretValueObj(OrqdanticBaseModel):
     """
     Model for:
     https://github.com/zapatacomputing/config-service/blob/3f275a52149fb2b74c6a8c01726cce4f390a1533/openapi/src/schemas/SecretValue.yaml.
@@ -39,7 +39,7 @@ class SecretValueObj(OrquestraBaseModel):
     value: SecretValue
 
 
-class SecretDefinition(OrquestraBaseModel):
+class SecretDefinition(OrqdanticBaseModel):
     """
     Model for:
     https://github.com/zapatacomputing/config-service/blob/3f275a52149fb2b74c6a8c01726cce4f390a1533/openapi/src/schemas/SecretDefinition.yaml.
@@ -50,7 +50,7 @@ class SecretDefinition(OrquestraBaseModel):
     resourceGroup: Optional[ResourceGroup] = None
 
 
-class ListSecretsRequest(OrquestraBaseModel):
+class ListSecretsRequest(OrqdanticBaseModel):
     """
     Model for:
     https://github.com/zapatacomputing/config-service/blob/fbfc4627450bc9a460278b242738e55210e7bf03/openapi/src/parameters/query/workspace.yaml.

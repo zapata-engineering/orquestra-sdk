@@ -11,14 +11,14 @@ PYDANTICV1 = pydantic.__version__.startswith("1.")
 if PYDANTICV1:
     from pydantic.generics import GenericModel
 
-    class OrquestraBaseModel(GenericModel):
+    class OrqdanticBaseModel(GenericModel):
         @classmethod
         def model_validate(cls, *args, **kwargs):
-            return super(OrquestraBaseModel, cls).parse_obj(*args, **kwargs)
+            return super(OrqdanticBaseModel, cls).parse_obj(*args, **kwargs)
 
         @classmethod
         def model_validate_json(cls, *args, **kwargs):
-            return super(OrquestraBaseModel, cls).parse_raw(*args, **kwargs)
+            return super(OrqdanticBaseModel, cls).parse_raw(*args, **kwargs)
 
         def model_dump(self, *args, **kwargs):
             return super().dict(*args, **kwargs)
@@ -28,7 +28,7 @@ if PYDANTICV1:
 
         @classmethod
         def model_json_schema(cls, *args, **kwargs):
-            return super(OrquestraBaseModel, cls).schema_json(*args, **kwargs)
+            return super(OrqdanticBaseModel, cls).schema_json(*args, **kwargs)
 
         def model_copy(self, *args, **kwargs):
             return super().copy(*args, **kwargs)
@@ -36,7 +36,7 @@ if PYDANTICV1:
 else:
     # TODO (ORQSDK-1025): remove the model base class and replace it with an alies to
     # BaseModel
-    class OrquestraBaseModel(pydantic.BaseModel):
+    class OrqdanticBaseModel(pydantic.BaseModel):
         """The pydantic BaseModel changed between V1 and V2.
 
         As a result, workflow outputs generated prior to the V2 upgrade may not be

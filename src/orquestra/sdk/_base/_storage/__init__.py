@@ -3,6 +3,6 @@
 ################################################################################
 
 
-from ._basemodel import PYDANTICV1, OrquestraBaseModel
+from ._basemodel import PYDANTICV1, OrqdanticBaseModel
 
-__all__ = ["OrquestraBaseModel", "PYDANTICV1"]
+__all__ = ["OrqdanticBaseModel", "PYDANTICV1"]
