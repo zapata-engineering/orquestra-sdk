@@ -23,7 +23,7 @@ class DremioClient:
     #. Open "Connectors".
     #. Click "Connect" on the "Dremio" tab.
     #. Click "Copy Flight Endpoint". This is the value for your ``ORQ_DREMIO_URI``.
-    #. Click "Lanuch".
+    #. Click "Launch".
     #. Inside Dremio, go to settings and configure your user account.
        ``ORQ_DREMIO_USER`` is your Dremio account email.
        ``ORQ_DREMIO_PASS`` is your Dremio account password.
