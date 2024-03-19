@@ -13,7 +13,7 @@ import warnings
 
 import pydantic
 
-from .._base._storage import PYDANTICV1, OrqdanticBaseModel
+from .._base._storage import PYDANTICV1, OrqdanticBaseModel, orqdantic_field_validator
 
 ImportId = str
 SecretNodeId = str
@@ -49,12 +49,6 @@ class GitURL(OrqdanticBaseModel):
     query: t.Optional[str] = None
 
 
-if PYDANTICV1:
-    repo_url_validator = pydantic.validator("repo_url", pre=True)
-else:
-    repo_url_validator = pydantic.field_validator("repo_url", mode="before")
-
-
 class GitImport(OrqdanticBaseModel):
     id: ImportId
     repo_url: GitURL
@@ -63,7 +57,7 @@ class GitImport(OrqdanticBaseModel):
     # we need this in the JSON to know which class to use when deserializing
     type: t.Literal["GIT_IMPORT"] = "GIT_IMPORT"
 
-    @repo_url_validator
+    @orqdantic_field_validator("repo_url", mode="before")
     def _backwards_compatible_repo_url(cls, v):
         """Allows older models with a string URL to be imported."""
         # Prevent circular imports
@@ -391,12 +385,6 @@ class WorkflowMetadata(OrqdanticBaseModel):
     python_version: Version
 
 
-if PYDANTICV1:
-    metadata_validator = pydantic.validator("metadata", always=True)
-else:
-    metadata_validator = pydantic.field_validator("metadata", mode="after")
-
-
 class WorkflowDef(OrqdanticBaseModel):
     """The main data structure for intermediate workflow representation.
 
@@ -438,7 +426,7 @@ class WorkflowDef(OrqdanticBaseModel):
     # If none, the runtime will decide.
     resources: t.Optional[Resources] = None
 
-    @metadata_validator
+    @orqdantic_field_validator("metadata", mode="after")
     def sdk_version_up_to_date(cls, v: t.Optional[WorkflowMetadata]):
         # Workaround for circular imports
         from orquestra.sdk import exceptions

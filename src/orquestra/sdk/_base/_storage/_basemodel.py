@@ -4,6 +4,7 @@
 
 """Compatibility layer for pydantic v1 / v2 compatibility."""
 
+from copy import deepcopy
 from typing import Any
 
 import pydantic
@@ -61,9 +62,11 @@ else:
 class OrqdanticTypeAdapter:
     """Accessor for Pydantic parsing.
 
+    If Pydantic V2 is installed, this class is a simple wrapper for
+    `pydantic.TypeAdapter`.
+
     If Pydantic V1 is installed, this class acts as a translator between the V1-specific
-    `parse_X_as` methods and the V2 TypeAdapter style syntax we use in our code. If
-    Pydantic V2 is installed, this class is a simple wrapper for `pydantic.TypeAdapter`.
+    `parse_X_as` methods and the V2 TypeAdapter style syntax we use in our code.
     """
 
     def __init__(self, model, *args, **kwargs):
@@ -83,3 +86,33 @@ class OrqdanticTypeAdapter:
             return pydantic.parse_raw_as(self._model, value)
         else:
             return self._typeadapter.validate_json(value, *args, **kwargs)
+
+
+def orqdantic_field_validator(*fields, **kwargs):
+    """Wrapper for pydantic field validators.
+
+    If Pydantic V2 is installed, this operates as a simple wrapper for
+    `pydantic.field_validator`.
+
+    If Pydantic V1 is installed, this operates as a wrapper for `pydantic.validator` and
+    _tries_ to translate V2-style kwargs. There are not perfect analogues, so this is
+    likely to cause problems if we add more validators.
+
+    Returns:
+        _type_: _description_
+    """
+    if PYDANTICV1:
+
+        def translate_kwargs(kwargs: dict) -> dict:
+            _kwargs = deepcopy(kwargs)
+            if "mode" in _kwargs:
+                if _kwargs["mode"] == "before":
+                    _kwargs["pre"] = True
+                elif _kwargs["mode"] == "after":
+                    _kwargs["always"] = True
+                _kwargs.pop("mode")
+            return _kwargs
+
+        return pydantic.validator(*fields, **translate_kwargs(kwargs))
+    else:
+        return pydantic.field_validator(*fields, **kwargs)
