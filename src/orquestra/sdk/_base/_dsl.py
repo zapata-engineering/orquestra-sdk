@@ -9,6 +9,7 @@ import os
 import pathlib
 import re
 import traceback
+from typing_extensions import Generic
 import warnings
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -27,6 +28,7 @@ from typing import (
     NamedTuple,
     Optional,
     Tuple,
+    TypeVar,
     Union,
     overload,
 )
@@ -78,6 +80,8 @@ _secret_as_string_error = (
     " value, this must be done inside of a task."
 )
 
+
+_TaskReturn = TypeVar("_TaskReturn")
 
 class Secret(NamedTuple):
     name: str
@@ -480,7 +484,7 @@ def parse_custom_name(
     return custom_name.format(**format_dict)
 
 
-class TaskDef(wrapt.ObjectProxy):
+class TaskDef(wrapt.ObjectProxy, Generic[_TaskReturn]):
     """A function exposed to Orquestra.
 
     This is the result of applying the @task decorator.
@@ -495,7 +499,7 @@ class TaskDef(wrapt.ObjectProxy):
 
     def __init__(
         self,
-        fn: Callable,
+        fn: Callable[..., _TaskReturn],
         output_metadata: "orquestra.sdk._base._dsl.TaskOutputMetadata",  # pyright: ignore
         source_import: Optional[Import] = None,
         parameters: Optional[OrderedDict] = None,
@@ -592,7 +596,7 @@ class TaskDef(wrapt.ObjectProxy):
 
     def __call__(
         self, *args: Union[ArtifactFuture, Any], **kwargs: Union[ArtifactFuture, Any]
-    ) -> ArtifactFuture:
+    ) -> ArtifactFuture[_TaskReturn]:
         try:
             signature = inspect.signature(self.__sdk_task_body).bind(*args, **kwargs)
         except TypeError as exc:
@@ -665,7 +669,7 @@ class TaskDef(wrapt.ObjectProxy):
 # Using POPO instead of a NamedTuple means each instance of TaskInvocation
 # is unique, even if they share the exact same attributes. This is required
 # for the traversal of the graph.
-class TaskInvocation:
+class TaskInvocation(Generic[_TaskReturn]):
     task: TaskDef
 
     args: Tuple[Argument, ...]
@@ -682,7 +686,7 @@ class TaskInvocation:
 
     def __init__(
         self,
-        task: TaskDef,
+        task: TaskDef[_TaskReturn],
         args: Tuple[Argument, ...],
         kwargs: Tuple[Tuple[str, Argument], ...],
         type: str = "task_invocation",
@@ -727,13 +731,13 @@ class ArtifactFormat(Enum):
     AUTO = "AUTO"
 
 
-class ArtifactFuture:
+class ArtifactFuture(Generic[_TaskReturn]):
     DEFAULT_CUSTOM_NAME = None
     DEFAULT_SERIALIZATION_FORMAT = ArtifactFormat.AUTO
 
     def __init__(
         self,
-        invocation: orquestra.sdk._base._dsl.TaskInvocation,  # pyright: ignore
+        invocation: orquestra.sdk._base._dsl.TaskInvocation[_TaskReturn],  # pyright: ignore
         output_index: Optional[int] = None,
         custom_name: Optional[str] = DEFAULT_CUSTOM_NAME,
         serialization_format: orquestra.sdk._base._dsl.ArtifactFormat = DEFAULT_SERIALIZATION_FORMAT,  # noqa: E501   # pyright: ignore
@@ -1068,7 +1072,7 @@ def _get_number_of_outputs(fn: Callable) -> TaskOutputMetadata:
 
 
 @overload
-def task(fn: Callable) -> TaskDef:
+def task(fn: Callable[..., _TaskReturn]) -> TaskDef[_TaskReturn]:
     ...
 
 
@@ -1081,13 +1085,13 @@ def task(
     n_outputs: Optional[int] = None,
     custom_image: Optional[str] = None,
     custom_name: Optional[str] = None,
-) -> Callable[[Callable], TaskDef]:
+) -> Callable[[Callable[..., _TaskReturn]], TaskDef[_TaskReturn]]:
     ...
 
 
 @overload
 def task(
-    fn: Callable,
+    fn: Callable[..., _TaskReturn],
     *,
     source_import: Optional[Import] = None,
     dependency_imports: Union[Iterable[Import], Import, None] = None,
@@ -1095,12 +1099,12 @@ def task(
     n_outputs: Optional[int] = None,
     custom_image: Optional[str] = None,
     custom_name: Optional[str] = None,
-) -> TaskDef:
+) -> TaskDef[_TaskReturn]:
     ...
 
 
 def task(
-    fn: Optional[Callable] = None,
+    fn: Optional[Callable[..., _TaskReturn]] = None,
     *,
     source_import: Optional[Import] = None,
     dependency_imports: Union[Iterable[Import], Import, None] = None,
@@ -1108,7 +1112,7 @@ def task(
     n_outputs: Optional[int] = None,
     custom_image: Optional[str] = None,
     custom_name: Optional[str] = None,
-) -> Union[TaskDef, Callable[[Callable], TaskDef]]:
+) -> Union[TaskDef[_TaskReturn], Callable[[Callable[..., _TaskReturn]], TaskDef[_TaskReturn]]]:
     """Wraps a function into an Orquestra Task.
 
     The result is something you can use inside your `@sdk.workflow` function. If you
