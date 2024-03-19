@@ -31,7 +31,7 @@ from orquestra.sdk.schema.workflow_run import (
     WorkspaceId,
 )
 
-from ..._base._storage import PYDANTICV1
+from ..._base._storage import OrqdanticTypeAdapter
 from .._regex import VERSION_REGEX
 from . import _exceptions, _models
 
@@ -904,13 +904,10 @@ class DriverClient:
         ):
             raise
 
-        if PYDANTICV1:
-            return pydantic.parse_obj_as(WorkflowResult, resp.json())
-        else:
-            return cast(
-                WorkflowResult,
-                pydantic.TypeAdapter(WorkflowResult).validate_python(resp.json()),
-            )
+        return cast(
+            WorkflowResult,
+            OrqdanticTypeAdapter(WorkflowResult).validate_python(resp.json()),
+        )
 
     # --- Workflow Run Results ---
 
@@ -1016,13 +1013,10 @@ class DriverClient:
         json_response = resp.json()
         try:
             # Try an older response
-            if PYDANTICV1:
-                return pydantic.parse_obj_as(WorkflowResult, json_response)
-            else:
-                return cast(
-                    WorkflowResult,
-                    pydantic.TypeAdapter(WorkflowResult).validate_python(json_response),
-                )
+            return cast(
+                WorkflowResult,
+                OrqdanticTypeAdapter(WorkflowResult).validate_python(json_response),
+            )
 
         except pydantic.ValidationError:
             # If we fail, try parsing each part of a list separately
@@ -1089,12 +1083,9 @@ class DriverClient:
             if len(section_str) < 1:
                 continue
 
-            if PYDANTICV1:
-                events = pydantic.parse_raw_as(_models.WorkflowLogSection, section_str)
-            else:
-                events = pydantic.TypeAdapter(_models.WorkflowLogSection).validate_json(
-                    section_str
-                )
+            events = OrqdanticTypeAdapter(_models.WorkflowLogSection).validate_json(
+                section_str
+            )
 
             for event in events:
                 messages.append(event.message)
@@ -1164,12 +1155,9 @@ class DriverClient:
             if len(section_str) < 1:
                 continue
 
-            if PYDANTICV1:
-                events = pydantic.parse_raw_as(_models.TaskLogSection, section_str)
-            else:
-                events = pydantic.TypeAdapter(_models.TaskLogSection).validate_json(
-                    section_str
-                )
+            events = OrqdanticTypeAdapter(_models.TaskLogSection).validate_json(
+                section_str
+            )
 
             for event in events:
                 messages.append(event.message)
@@ -1237,12 +1225,7 @@ class DriverClient:
             if len(section_str) < 1:
                 continue
 
-            if PYDANTICV1:
-                events = pydantic.parse_raw_as(_models.SysSection, section_str)
-            else:
-                events = pydantic.TypeAdapter(_models.SysSection).validate_json(
-                    section_str
-                )
+            events = OrqdanticTypeAdapter(_models.SysSection).validate_json(section_str)
 
             for event in events:
                 messages.append(event.message)
@@ -1274,15 +1257,9 @@ class DriverClient:
         ):
             raise
 
-        if PYDANTICV1:
-            parsed_response = pydantic.parse_obj_as(
-                _models.ListWorkspacesResponse, resp.json()
-            )
-        else:
-            parsed_response = pydantic.TypeAdapter(
-                _models.ListWorkspacesResponse
-            ).validate_python(resp.json())
-
+        parsed_response = OrqdanticTypeAdapter(
+            _models.ListWorkspacesResponse
+        ).validate_python(resp.json())
 
         return parsed_response
 
@@ -1319,15 +1296,9 @@ class DriverClient:
         ):
             raise
 
-        if PYDANTICV1:
-            parsed_response = pydantic.parse_obj_as(
-                _models.ListProjectResponse, resp.json()
-            )
-        else:
-            parsed_response = pydantic.TypeAdapter(
-                _models.ListProjectResponse
-            ).validate_python(resp.json())
-
+        parsed_response = OrqdanticTypeAdapter(
+            _models.ListProjectResponse
+        ).validate_python(resp.json())
 
         return parsed_response
 

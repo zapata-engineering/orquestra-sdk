@@ -2,6 +2,8 @@
 # © Copyright 2024 Zapata Computing Inc.
 ################################################################################
 
+"""Compatibility layer for pydantic v1 / v2 compatibility."""
+
 from typing import Any
 
 import pydantic
@@ -54,3 +56,30 @@ else:
                 state["__pydantic_fields_set__"] = state.get("__fields_set__")
 
             super().__setstate__(state)
+
+
+class OrqdanticTypeAdapter:
+    """Accessor for Pydantic parsing.
+
+    If Pydantic V1 is installed, this class acts as a translator between the V1-specific
+    `parse_X_as` methods and the V2 TypeAdapter style syntax we use in our code. If
+    Pydantic V2 is installed, this class is a simple wrapper for `pydantic.TypeAdapter`.
+    """
+
+    def __init__(self, model, *args, **kwargs):
+        if PYDANTICV1:
+            self._model = model
+        else:
+            self._typeadapter = pydantic.TypeAdapter(model, *args, **kwargs)
+
+    def validate_python(self, value, *args, **kwargs):
+        if PYDANTICV1:
+            return pydantic.parse_obj_as(self._model, value)
+        else:
+            return self._typeadapter.validate_python(value, *args, **kwargs)
+
+    def validate_json(self, value, *args, **kwargs):
+        if PYDANTICV1:
+            return pydantic.parse_raw_as(self._model, value)
+        else:
+            return self._typeadapter.validate_json(value, *args, **kwargs)

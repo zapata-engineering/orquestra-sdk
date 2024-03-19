@@ -28,7 +28,7 @@ test:
 		--ignore=tests/sdk/typing \
 		--durations=10 \
 		docs/examples/tests \
-		tests
+		tests -x
 
 
 # Min code-test coverage measured for the whole project required for CI checks to pass.
