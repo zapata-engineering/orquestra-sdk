@@ -9,7 +9,6 @@ import os
 import pathlib
 import re
 import traceback
-from typing_extensions import Generic
 import warnings
 from collections import OrderedDict
 from dataclasses import dataclass
@@ -23,6 +22,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Generic,
     Iterable,
     List,
     NamedTuple,
