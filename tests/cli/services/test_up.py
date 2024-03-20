@@ -38,10 +38,8 @@ class TestAction:
         def action(service):
             service_resolver = create_autospec(_arg_resolvers.ServiceResolver)
             service_resolver.resolve.return_value = [service]
-            presenter = create_autospec(_presenters.ServicePresenter)
 
             action = _up.Action(
-                presenter=presenter,
                 service_resolver=service_resolver,
             )
 
@@ -49,6 +47,10 @@ class TestAction:
 
         @staticmethod
         def test_success(service: _services.Service, action):
+            # Given
+            presenter = create_autospec(_presenters.ServicePresenter)
+            action._presenter = presenter
+
             # When
             action.on_cmd_call(manage_ray=None, manage_all=None)
 
@@ -63,6 +65,8 @@ class TestAction:
         @staticmethod
         def test_failure(service, action: _up.Action):
             # Given
+            presenter = create_autospec(_presenters.ServicePresenter)
+            action._presenter = presenter
             service.up.side_effect = subprocess.CalledProcessError(
                 returncode=1,
                 cmd=[

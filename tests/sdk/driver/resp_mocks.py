@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 - 2023 Zapata Computing Inc.
+# © Copyright 2022 - 2024 Zapata Computing Inc.
 ################################################################################
 """
 Recorded HTTP response data. Extracted from the test file because this usually
@@ -18,7 +18,6 @@ from orquestra.sdk._base._driver._models import (
 )
 from orquestra.sdk._base.serde import result_from_artifact
 from orquestra.sdk.schema.ir import ArtifactFormat, WorkflowDef
-from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult
 from orquestra.sdk.schema.workflow_run import RunStatus, TaskRun
 
 # --- Helpers ---
@@ -32,7 +31,7 @@ def _wf_def_resp(id_: WorkflowDefID, wf_def: WorkflowDef):
         "id": id_,
         "created": "2022-11-23T18:58:13.86752161Z",
         "owner": "evil/emiliano.zapata@zapatacomputing.com",
-        "workflow": wf_def.dict(),
+        "workflow": wf_def.model_dump(),
         "workspaceId": "evil/emiliano.zapata@zapatacomputing.com",
         "project": "emiliano's project",
         "sdkVersion": "0x859",
@@ -246,7 +245,7 @@ def make_get_wf_run_artifact_response(result_obj: Any):
         https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/artifact.yaml#L13
     """
 
-    return result_from_artifact(result_obj, ArtifactFormat.AUTO).dict()
+    return result_from_artifact(result_obj, ArtifactFormat.AUTO).model_dump()
 
 
 def make_get_wf_run_results_response():
@@ -263,27 +262,13 @@ def make_get_wf_run_results_response():
     }
 
 
-def make_get_wf_run_result_response(result_list: List[Any]):
-    """
-    Based on:
-        https://github.com/zapatacomputing/workflow-driver/blob/main/openapi/src/resources/run-result.yaml#L13
-    """
-
-    return ComputeEngineWorkflowResult(
-        results=[
-            result_from_artifact(result_obj, ArtifactFormat.AUTO).dict()
-            for result_obj in result_list
-        ]
-    ).json()
-
-
 def make_get_wf_run_result_legacy_response(result_obj: Any):
     """
     Based on:
         https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/run-result.yaml#L13
     """
 
-    return result_from_artifact(result_obj, ArtifactFormat.AUTO).dict()
+    return result_from_artifact(result_obj, ArtifactFormat.AUTO).model_dump()
 
 
 DATA_DIR = Path(__file__).parent / "data"

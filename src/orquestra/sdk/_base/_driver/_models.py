@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 - 2023 Zapata Computing Inc.
+# © Copyright 2022 - 2024 Zapata Computing Inc.
 ################################################################################
 """Internal models for the workflow driver API."""
 from enum import Enum, IntEnum
@@ -16,7 +16,6 @@ from typing import (
 )
 
 import pydantic
-from pydantic.generics import GenericModel
 from typing_extensions import Annotated
 
 from orquestra.sdk._base._dates import Instant
@@ -32,6 +31,8 @@ from orquestra.sdk.schema.workflow_run import (
     WorkspaceId,
 )
 
+from ..._base._storage import OrquestraBaseModel
+
 WorkflowDefID = str
 WorkflowRunID = str
 TaskRunID = str
@@ -46,7 +47,7 @@ DataT = TypeVar("DataT")
 MetaT = TypeVar("MetaT")
 
 
-class Pagination(pydantic.BaseModel):
+class Pagination(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/259481b9240547bccf4fa40df4e92bf6c617a25f/openapi/src/schemas/MetaSuccessPaginated.yaml.
@@ -55,14 +56,14 @@ class Pagination(pydantic.BaseModel):
     nextPageToken: str
 
 
-class Response(GenericModel, Generic[DataT, MetaT]):
+class Response(OrquestraBaseModel, Generic[DataT, MetaT]):
     """A generic to help with the structure of driver responses."""
 
     data: DataT
-    meta: Optional[MetaT]
+    meta: Optional[MetaT] = None
 
 
-class MetaEmpty(pydantic.BaseModel):
+class MetaEmpty(OrquestraBaseModel):
     pass
 
 
@@ -80,13 +81,13 @@ class ErrorCode(IntEnum):
     WORKFLOW_DEF_NOT_FOUND = 6
 
 
-class Error(pydantic.BaseModel):
+class Error(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/2b3534/openapi/src/schemas/Error.yaml.
     """  # noqa: D205, D212
 
-    code: Optional[int]
+    code: Optional[int] = None
     message: str
     detail: str
 
@@ -94,7 +95,7 @@ class Error(pydantic.BaseModel):
 # --- Workflow Definitions ---
 
 
-class CreateWorkflowDefResponse(pydantic.BaseModel):
+class CreateWorkflowDefResponse(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/2b3534/openapi/src/responses/CreateWorkflowDefinitionResponse.yaml.
@@ -103,7 +104,7 @@ class CreateWorkflowDefResponse(pydantic.BaseModel):
     id: WorkflowDefID
 
 
-class GetWorkflowDefResponse(pydantic.BaseModel):
+class GetWorkflowDefResponse(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/cb61512e9f3da24addd933c7259aa4584ab04e4f/openapi/src/schemas/WorkflowDefinition.yaml.
@@ -118,24 +119,24 @@ class GetWorkflowDefResponse(pydantic.BaseModel):
     sdkVersion: str
 
 
-class ListWorkflowDefsRequest(pydantic.BaseModel):
+class ListWorkflowDefsRequest(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/cdb667ef6d1053876250daff27e19fb50374c0d4/openapi/src/resources/workflow-definitions.yaml#L8.
     """  # noqa: D205, D212
 
-    pageSize: Optional[int]
-    pageToken: Optional[str]
+    pageSize: Optional[int] = None
+    pageToken: Optional[str] = None
 
 
-class CreateWorkflowDefsRequest(pydantic.BaseModel):
+class CreateWorkflowDefsRequest(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/dc8a2a37d92324f099afefc048f6486a5061850f/openapi/src/resources/workflow-definitions.yaml#L39.
     """  # noqa: D205, D212
 
-    workspaceId: Optional[str]
-    projectId: Optional[str]
+    workspaceId: Optional[str] = None
+    projectId: Optional[str] = None
 
 
 ListWorkflowDefsResponse = List[GetWorkflowDefResponse]
@@ -158,19 +159,19 @@ class StateResponse(str, Enum):
     UNKNOWN = "UNKNOWN"
 
     @classmethod
-    def _missing_(cls, _):
+    def _missing_(cls, value):
         return cls.UNKNOWN
 
 
-class RunStatusResponse(pydantic.BaseModel):
+class RunStatusResponse(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/RunStatus.yaml#L1.
     """  # noqa: D205, D212
 
     state: StateResponse
-    startTime: Optional[Instant]
-    endTime: Optional[Instant]
+    startTime: Optional[Instant] = None
+    endTime: Optional[Instant] = None
 
     def to_ir(self) -> RunStatus:
         return RunStatus(
@@ -180,7 +181,7 @@ class RunStatusResponse(pydantic.BaseModel):
         )
 
 
-class TaskRunResponse(pydantic.BaseModel):
+class TaskRunResponse(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml#L17.
@@ -188,7 +189,7 @@ class TaskRunResponse(pydantic.BaseModel):
 
     id: TaskRunID
     invocationId: TaskInvocationID
-    status: Optional[RunStatusResponse]
+    status: Optional[RunStatusResponse] = None
 
     def to_ir(self) -> TaskRun:
         if self.status is None:
@@ -206,7 +207,7 @@ class TaskRunResponse(pydantic.BaseModel):
         )
 
 
-class MinimalWorkflowRunResponse(pydantic.BaseModel):
+class MinimalWorkflowRunResponse(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml#L1.
@@ -222,7 +223,7 @@ class MinimalWorkflowRunResponse(pydantic.BaseModel):
         )
 
 
-class WorkflowRunSummaryResponse(pydantic.BaseModel):
+class WorkflowRunSummaryResponse(OrquestraBaseModel):
     """Contains all of the information needed to give a basic overview of the workflow.
 
     Implements:
@@ -268,7 +269,7 @@ class WorkflowRunResponse(MinimalWorkflowRunResponse):
         )
 
 
-class Resources(pydantic.BaseModel):
+class Resources(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/580c8d8835b1cccd085ea716c514038e85eb28d7/openapi/src/schemas/Resources.yaml.
@@ -277,31 +278,31 @@ class Resources(pydantic.BaseModel):
     # If this schema is changed, the documentation in
     # docs/guides/ce-resource-management.rst should also be updated.
 
-    nodes: Optional[int]
+    nodes: Optional[int] = None
     cpu: Optional[str] = pydantic.Field(
-        regex=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+        pattern=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
     )
     memory: Optional[str] = pydantic.Field(
-        regex=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+        pattern=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
     )
-    gpu: Optional[str] = pydantic.Field(regex="^[01]+$")
+    gpu: Optional[str] = pydantic.Field(pattern="^[01]+$")
 
 
-class HeadNodeResources(pydantic.BaseModel):
+class HeadNodeResources(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/ac1e97ea00fc3526c93187a1da02170bff45b74f/openapi/src/schemas/HeadNodeResources.yaml.
     """  # noqa: D205, D212
 
     cpu: Optional[str] = pydantic.Field(
-        regex=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+        pattern=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
     )
     memory: Optional[str] = pydantic.Field(
-        regex=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
+        pattern=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
     )
 
 
-class CreateWorkflowRunRequest(pydantic.BaseModel):
+class CreateWorkflowRunRequest(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/ac1e97ea00fc3526c93187a1da02170bff45b74f/openapi/src/schemas/CreateWorkflowRunRequest.yaml.
@@ -310,10 +311,10 @@ class CreateWorkflowRunRequest(pydantic.BaseModel):
     workflowDefinitionID: WorkflowDefID
     resources: Resources
     dryRun: bool
-    headNodeResources: Optional[Resources]
+    headNodeResources: Optional[HeadNodeResources] = None
 
 
-class CreateWorkflowRunResponse(pydantic.BaseModel):
+class CreateWorkflowRunResponse(OrquestraBaseModel):
     """Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/2e999a76019e8f8de8082409daddf7789dc2f430/pkg/server/server.go#L376.
     """  # noqa: D205, D212
@@ -321,19 +322,19 @@ class CreateWorkflowRunResponse(pydantic.BaseModel):
     id: WorkflowRunID
 
 
-class ListWorkflowRunsRequest(pydantic.BaseModel):
+class ListWorkflowRunsRequest(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/c52013c0f4df066159fc32ad38d489b3eaff5850/openapi/src/resources/workflow-runs.yaml#L14.
     """  # noqa: D205, D212
 
-    workflowDefinitionID: Optional[WorkflowDefID]
-    pageSize: Optional[int]
-    pageToken: Optional[str]
-    workspaceId: Optional[WorkspaceId]
-    projectId: Optional[ProjectId]
-    maxAge: Optional[int]
-    state: Optional[str]
+    workflowDefinitionID: Optional[WorkflowDefID] = None
+    pageSize: Optional[int] = None
+    pageToken: Optional[str] = None
+    workspaceId: Optional[WorkspaceId] = None
+    projectId: Optional[ProjectId] = None
+    maxAge: Optional[int] = None
+    state: Optional[str] = None
 
 
 ListWorkflowRunsResponse = List[MinimalWorkflowRunResponse]
@@ -341,7 +342,7 @@ ListWorkflowRunsResponse = List[MinimalWorkflowRunResponse]
 ListWorkflowRunSummariesResponse = List[WorkflowRunSummaryResponse]
 
 
-class GetWorkflowRunResponse(pydantic.BaseModel):
+class GetWorkflowRunResponse(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-run.yaml#L17.
@@ -350,19 +351,19 @@ class GetWorkflowRunResponse(pydantic.BaseModel):
     data: WorkflowRunResponse
 
 
-class TerminateWorkflowRunRequest(pydantic.BaseModel):
+class TerminateWorkflowRunRequest(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/873437f8157226c451220306a6ce90c80e8c8f9e/openapi/src/resources/workflow-run-terminate.yaml#L12.
     """  # noqa: D205, D212
 
-    force: Optional[bool]
+    force: Optional[bool] = None
 
 
 # --- Workflow Artifacts ---
 
 
-class GetWorkflowRunArtifactsRequest(pydantic.BaseModel):
+class GetWorkflowRunArtifactsRequest(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/artifacts.yaml#L10.
@@ -376,7 +377,7 @@ GetWorkflowRunArtifactsResponse = Mapping[TaskRunID, List[WorkflowRunArtifactID]
 # --- Workflow Results ---
 
 
-class GetWorkflowRunResultsRequest(pydantic.BaseModel):
+class GetWorkflowRunResultsRequest(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/run-results.yaml#L10.
@@ -391,7 +392,7 @@ GetWorkflowRunResultsResponse = List[WorkflowRunResultID]
 # --- Logs ---
 
 
-class GetWorkflowRunLogsRequest(pydantic.BaseModel):
+class GetWorkflowRunLogsRequest(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-run-logs.yaml.
@@ -400,7 +401,7 @@ class GetWorkflowRunLogsRequest(pydantic.BaseModel):
     workflowRunId: WorkflowRunID
 
 
-class GetTaskRunLogsRequest(pydantic.BaseModel):
+class GetTaskRunLogsRequest(OrquestraBaseModel):
     """
     Implements:
     https://github.com/zapatacomputing/workflow-driver/blob/c7685a579eca1f9cb3eb27e2a8c2a9757a3cd021/openapi/src/resources/task-run-logs.yaml.
@@ -410,7 +411,7 @@ class GetTaskRunLogsRequest(pydantic.BaseModel):
     taskInvocationId: TaskInvocationID
 
 
-class CommonResourceMeta(pydantic.BaseModel):
+class CommonResourceMeta(OrquestraBaseModel):
     type: str
     displayName: str
     description: str
@@ -423,7 +424,7 @@ class CommonResourceMeta(pydantic.BaseModel):
     status: str
 
 
-class ResourceIdentifier(pydantic.BaseModel):
+class ResourceIdentifier(OrquestraBaseModel):
     tenantId: str
     resourceGroupId: str
     id: str
@@ -467,7 +468,7 @@ LogFilename = NewType("LogFilename", str)
 RayFilename = NewType("RayFilename", str)
 
 
-class WorkflowLogMessage(pydantic.BaseModel):
+class WorkflowLogMessage(OrquestraBaseModel):
     """Represents a single line indexed by the server side log service.
 
     Based on:
@@ -515,7 +516,7 @@ class WorkflowLogEvent(NamedTuple):
 WorkflowLogSection = List[WorkflowLogEvent]
 
 
-class TaskLogMessage(pydantic.BaseModel):
+class TaskLogMessage(OrquestraBaseModel):
     """Represents a single line indexed by the server side log service.
 
     Based on:
@@ -578,7 +579,7 @@ class SystemLogSourceType(str, Enum):
         return cls.UNKNOWN
 
 
-class K8sEventLog(pydantic.BaseModel):
+class K8sEventLog(OrquestraBaseModel):
     """A system-level log line produced by a K8S event."""
 
     tag: str
@@ -591,7 +592,7 @@ class K8sEventLog(pydantic.BaseModel):
     source_type: Literal[SystemLogSourceType.K8S_EVENT] = SystemLogSourceType.K8S_EVENT
 
 
-class RayHeadNodeEventLog(pydantic.BaseModel):
+class RayHeadNodeEventLog(OrquestraBaseModel):
     """A system-level log line produced by a Ray head node event."""
 
     tag: str
@@ -603,7 +604,7 @@ class RayHeadNodeEventLog(pydantic.BaseModel):
     ] = SystemLogSourceType.RAY_HEAD_NODE
 
 
-class RayWorkerNodeEventLog(pydantic.BaseModel):
+class RayWorkerNodeEventLog(OrquestraBaseModel):
     """A system-level log line produced by a Ray head node event."""
 
     tag: str
@@ -615,7 +616,7 @@ class RayWorkerNodeEventLog(pydantic.BaseModel):
     ] = SystemLogSourceType.RAY_WORKER_NODE
 
 
-class UnknownEventLog(pydantic.BaseModel):
+class UnknownEventLog(OrquestraBaseModel):
     """Fallback option - the event type is unknown, so display the message as a str."""
 
     tag: str

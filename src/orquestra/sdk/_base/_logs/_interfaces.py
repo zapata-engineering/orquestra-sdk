@@ -12,8 +12,8 @@ from orquestra.sdk.schema.workflow_run import WorkflowRunId
 
 @dataclass(frozen=True)
 class LogOutput:
-    out: t.Sequence[str]
-    err: t.Sequence[str]
+    out: t.List[str]
+    err: t.List[str]
 
     def __len__(self):
         return len(self.out) + len(self.err)

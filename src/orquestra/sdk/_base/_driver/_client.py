@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 - 2023 Zapata Computing Inc.
+# © Copyright 2022 - 2024 Zapata Computing Inc.
 ################################################################################
 """Code for accessing the Workflow Driver API.
 
@@ -12,7 +12,7 @@ import re
 import zlib
 from datetime import timedelta
 from tarfile import TarFile
-from typing import Generic, List, Mapping, Optional, Tuple, TypeVar, Union
+from typing import Generic, List, Mapping, Optional, Tuple, TypeVar, Union, cast
 from urllib.parse import urljoin
 
 import pydantic
@@ -272,18 +272,18 @@ class DriverClient:
             _models.CreateWorkflowDefsRequest(
                 workspaceId=project.workspace_id,
                 projectId=project.project_id,
-            ).dict()
+            ).model_dump()
             if project
             else None
         )
         resp = self._post(
             self._uri_provider.uri_for("create_workflow_def"),
-            body_params=workflow_def.dict(),
+            body_params=workflow_def.model_dump(),
             query_params=query_params,
         )
 
         if resp.status_code == codes.BAD_REQUEST:
-            error = _models.Error.parse_obj(resp.json())
+            error = _models.Error.model_validate(resp.json())
             raise _exceptions.InvalidWorkflowDef(
                 message=error.message, detail=error.detail
             )
@@ -299,7 +299,7 @@ class DriverClient:
 
         return (
             _models.Response[_models.CreateWorkflowDefResponse, _models.MetaEmpty]
-            .parse_obj(resp.json())
+            .model_validate(resp.json())
             .data.id
         )
 
@@ -326,7 +326,7 @@ class DriverClient:
             query_params=_models.ListWorkflowDefsRequest(
                 pageSize=page_size,
                 pageToken=page_token,
-            ).dict(),
+            ).model_dump(),
         )
 
         try:
@@ -340,7 +340,7 @@ class DriverClient:
 
         parsed_response = _models.Response[
             _models.ListWorkflowDefsResponse, _models.Pagination
-        ].parse_obj(resp.json())
+        ].model_validate(resp.json())
         contents = [d.workflow for d in parsed_response.data]
         if parsed_response.meta is not None:
             next_token = parsed_response.meta.nextPageToken
@@ -432,7 +432,7 @@ class DriverClient:
 
         parsed_resp = _models.Response[
             _models.GetWorkflowDefResponse, _models.MetaEmpty
-        ].parse_obj(resp.json())
+        ].model_validate(resp.json())
 
         return parsed_resp.data
 
@@ -510,11 +510,11 @@ class DriverClient:
                 resources=resources,
                 dryRun=dry_run,
                 headNodeResources=head_node_resources,
-            ).dict(),
+            ).model_dump(),
         )
 
         if resp.status_code == codes.BAD_REQUEST:
-            error = _models.Error.parse_obj(resp.json())
+            error = _models.Error.model_validate(resp.json())
             if error.code == _models.ErrorCode.SDK_VERSION_UNSUPPORTED:
                 requested, available = _match_unsupported_version(error.detail)
                 raise _exceptions.UnsupportedSDKVersion(requested, available)
@@ -533,7 +533,7 @@ class DriverClient:
 
         return (
             _models.Response[_models.CreateWorkflowRunResponse, _models.MetaEmpty]
-            .parse_obj(resp.json())
+            .model_validate(resp.json())
             .data.id
         )
 
@@ -585,7 +585,7 @@ class DriverClient:
 
         parsed_response = _models.Response[
             _models.ListWorkflowRunsResponse, _models.Pagination
-        ].parse_obj(resp.json())
+        ].model_validate(resp.json())
 
         if parsed_response.meta is not None:
             next_token = parsed_response.meta.nextPageToken
@@ -650,7 +650,7 @@ class DriverClient:
 
         parsed_response = _models.Response[
             _models.ListWorkflowRunSummariesResponse, _models.Pagination
-        ].parse_obj(resp.json())
+        ].model_validate(resp.json())
 
         if parsed_response.meta is not None:
             next_token = parsed_response.meta.nextPageToken
@@ -711,9 +711,10 @@ class DriverClient:
                 pageSize=page_size,
                 pageToken=page_token,
                 workspaceId=workspace,
+                projectId=None,
                 maxAge=(int(max_age.total_seconds()) if max_age else None),
                 state=_get_state_query(state),
-            ).dict(),
+            ).model_dump(),
         )
 
         try:
@@ -766,7 +767,7 @@ class DriverClient:
 
         parsed_response = _models.Response[
             _models.WorkflowRunResponse, _models.MetaEmpty
-        ].parse_obj(resp.json())
+        ].model_validate(resp.json())
 
         workflow_def = self.get_workflow_def(parsed_response.data.definitionId)
 
@@ -797,7 +798,7 @@ class DriverClient:
                 "terminate_workflow_run", parameters=(wf_run_id,)
             ),
             body_params=None,
-            query_params=_models.TerminateWorkflowRunRequest(force=force).dict(),
+            query_params=_models.TerminateWorkflowRunRequest(force=force).model_dump(),
         )
 
         if resp.status_code == codes.NOT_FOUND:
@@ -840,7 +841,7 @@ class DriverClient:
             ),
             query_params=_models.GetWorkflowRunArtifactsRequest(
                 workflowRunId=wf_run_id
-            ).dict(),
+            ).model_dump(),
         )
 
         if resp.status_code == codes.NOT_FOUND:
@@ -859,7 +860,7 @@ class DriverClient:
 
         parsed_response = _models.Response[
             _models.GetWorkflowRunArtifactsResponse, _models.MetaEmpty
-        ].parse_obj(resp.json())
+        ].model_validate(resp.json())
 
         return parsed_response.data
 
@@ -902,10 +903,9 @@ class DriverClient:
         ):
             raise
 
-        # Bug with mypy and Pydantic:
-        #   Unions cannot be passed to parse_obj_as: pydantic/pydantic#1847
-        return pydantic.parse_obj_as(
-            WorkflowResult, resp.json()  # type: ignore[arg-type]
+        return cast(
+            WorkflowResult,
+            pydantic.TypeAdapter(WorkflowResult).validate_python(resp.json()),
         )
 
     # --- Workflow Run Results ---
@@ -934,7 +934,7 @@ class DriverClient:
             self._uri_provider.uri_for("get_workflow_run_results"),
             query_params=_models.GetWorkflowRunResultsRequest(
                 workflowRunId=wf_run_id
-            ).dict(),
+            ).model_dump(),
         )
 
         if resp.status_code == codes.BAD_REQUEST:
@@ -953,7 +953,7 @@ class DriverClient:
 
         parsed_response = _models.Response[
             _models.GetWorkflowRunResultsResponse, _models.MetaEmpty
-        ].parse_obj(resp.json())
+        ].model_validate(resp.json())
 
         return parsed_response.data
 
@@ -1001,25 +1001,24 @@ class DriverClient:
         # To ensure the correct ordering of results, we serialize the results on CE as:
         # {
         #   "results": [
-        #       (JSONResult | PickleResult).json(),
-        #       (JSONResult | PickleResult).json(),
+        #       (JSONResult | PickleResult).model_dump_json(),
+        #       (JSONResult | PickleResult).model_dump_json(),
         #       ...
         #   ]
-        # } aka a ComputeEngineWorkflowResult.json()
+        # } aka a ComputeEngineWorkflowResult.model_dump_json()
         # For older workflows, we respond with:
-        # (JSONResult | PickleResult).json()
+        # (JSONResult | PickleResult).model_dump_json()
 
         json_response = resp.json()
         try:
             # Try an older response
-            # Bug with mypy and Pydantic:
-            #   Unions cannot be passed to parse_obj_as: pydantic/pydantic#1847
-            return pydantic.parse_obj_as(
-                WorkflowResult, json_response  # type: ignore[arg-type]
+            return cast(
+                WorkflowResult,
+                pydantic.TypeAdapter(WorkflowResult).validate_python(json_response),
             )
         except pydantic.ValidationError:
             # If we fail, try parsing each part of a list separately
-            return ComputeEngineWorkflowResult.parse_obj(json_response)
+            return ComputeEngineWorkflowResult.model_validate(json_response)
 
     # --- Workflow Logs ---
     def get_workflow_run_logs(
@@ -1048,7 +1047,7 @@ class DriverClient:
             self._uri_provider.uri_for("get_workflow_run_logs"),
             query_params=_models.GetWorkflowRunLogsRequest(
                 workflowRunId=wf_run_id
-            ).dict(),
+            ).model_dump(),
         )
 
         # Handle errors
@@ -1082,7 +1081,9 @@ class DriverClient:
             if len(section_str) < 1:
                 continue
 
-            events = pydantic.parse_raw_as(_models.WorkflowLogSection, section_str)
+            events = pydantic.TypeAdapter(_models.WorkflowLogSection).validate_json(
+                section_str
+            )
 
             for event in events:
                 messages.append(event.message)
@@ -1118,7 +1119,7 @@ class DriverClient:
             self._uri_provider.uri_for("get_task_run_logs"),
             query_params=_models.GetTaskRunLogsRequest(
                 workflowRunId=wf_run_id, taskInvocationId=task_inv_id
-            ).dict(),
+            ).model_dump(),
         )
 
         # Handle errors
@@ -1152,7 +1153,9 @@ class DriverClient:
             if len(section_str) < 1:
                 continue
 
-            events = pydantic.parse_raw_as(_models.TaskLogSection, section_str)
+            events = pydantic.TypeAdapter(_models.TaskLogSection).validate_json(
+                section_str
+            )
 
             for event in events:
                 messages.append(event.message)
@@ -1185,7 +1188,7 @@ class DriverClient:
             self._uri_provider.uri_for("get_workflow_run_system_logs"),
             query_params=_models.GetWorkflowRunLogsRequest(
                 workflowRunId=wf_run_id
-            ).dict(),
+            ).model_dump(),
         )
 
         # Handle errors
@@ -1219,7 +1222,7 @@ class DriverClient:
         for section_str in decoded.split("\n"):
             if len(section_str) < 1:
                 continue
-            events = pydantic.parse_raw_as(_models.SysSection, section_str)
+            events = pydantic.TypeAdapter(_models.SysSection).validate_json(section_str)
 
             for event in events:
                 messages.append(event.message)
@@ -1251,9 +1254,9 @@ class DriverClient:
         ):
             raise
 
-        parsed_response = pydantic.parse_obj_as(
-            _models.ListWorkspacesResponse, resp.json()
-        )
+        parsed_response = pydantic.TypeAdapter(
+            _models.ListWorkspacesResponse
+        ).validate_python(resp.json())
 
         return parsed_response
 
@@ -1290,9 +1293,9 @@ class DriverClient:
         ):
             raise
 
-        parsed_response = pydantic.parse_obj_as(
-            _models.ListProjectResponse, resp.json()
-        )
+        parsed_response = pydantic.TypeAdapter(
+            _models.ListProjectResponse
+        ).validate_python(resp.json())
 
         return parsed_response
 
@@ -1335,7 +1338,7 @@ class DriverClient:
 
         parsed_response = _models.Response[
             _models.WorkflowRunResponse, _models.MetaEmpty
-        ].parse_obj(resp.json())
+        ].model_validate(resp.json())
 
         workflow_def = self.get_workflow_def(parsed_response.data.definitionId)
 

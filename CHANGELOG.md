@@ -4,9 +4,9 @@
 
 🚨 *Breaking Changes*
 
-🔥 *Features*
+* Workflow status will be set to `FAILED` as soon as first task fails. Tasks that already started will finish their execution
 
-* New API `WorkflowRun.get_artifact()` and `WorkflowRun.get_artifact_serialized()` to get single task output
+🔥 *Features*
 
 🧟 *Deprecations*
 
@@ -14,13 +14,44 @@
 
 🐛 *Bug Fixes*
 
-* Properly handle QE deprecated and connection timeout errors when using `WorkflowRun.by_id()` without `config` parameter passed
-
 💅 *Improvements*
+
+* Tracebacks in `orq` are made more compact to help with copy and pasting when an issue happens.
+* Bumped Pydantic version to `>=2.5.0`
+* Removed bunch of upper-bound constrains from SDK requirements to prevent dependency-hell
 
 🥷 *Internal*
 
 📃 *Docs*
+
+## v0.61.0
+
+🔥 *Features*
+
+* Added `max_retries` in `sdk.task` decorator. This allows users to restart ray workers on system crashes (like OOMKills or sigterms). Restarts do not happen with Python exceptions.
+
+🐛 *Bug Fixes*
+
+* Requesting GPUs with the default image will now use a GPU image on CE.
+
+🥷 *Internal*
+
+* Switch out packaging to `hatchling` instead of `setuptools`. This should not impact people installing from wheels.
+
+## v0.60.0
+
+🔥 *Features*
+
+* New API `WorkflowRun.get_artifact()` and `WorkflowRun.get_artifact_serialized()` to get single task output
+* New API: `orquestra.sdk.dremio.DremioClient` for reading dataframes from Orquestra-hosted Dremio.
+
+🐛 *Bug Fixes*
+
+* Properly handle QE deprecated and connection timeout errors when using `WorkflowRun.by_id()` without `config` parameter passed
+
+💅 *Improvements*
+
+* Bumped Ray to 2.9.0.
 
 ## v0.59.0
 

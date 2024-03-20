@@ -267,7 +267,9 @@ class TestClient:
             )
 
             client.create_secret(
-                _models.SecretDefinition(name=secret_name, value=secret_value)
+                _models.SecretDefinition(
+                    name=secret_name, value=secret_value, resourceGroup=None
+                )
             )
 
             # The assertion is done by mocked_responses
@@ -284,7 +286,9 @@ class TestClient:
 
             with pytest.raises(_exceptions.SecretAlreadyExistsError):
                 client.create_secret(
-                    _models.SecretDefinition(name=secret_name, value=secret_value)
+                    _models.SecretDefinition(
+                        name=secret_name, value=secret_value, resourceGroup=None
+                    )
                 )
 
         @staticmethod
@@ -298,7 +302,9 @@ class TestClient:
 
             with pytest.raises(_exceptions.InvalidTokenError):
                 client.create_secret(
-                    _models.SecretDefinition(name=secret_name, value=secret_value)
+                    _models.SecretDefinition(
+                        name=secret_name, value=secret_value, resourceGroup=None
+                    )
                 )
 
     class TestUpdate:

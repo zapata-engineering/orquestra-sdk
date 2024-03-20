@@ -79,6 +79,14 @@ class ConfigNameNotFoundError(BaseRuntimeError):
     pass
 
 
+class EnvVarNotFoundError(NotFoundError):
+    """Raised when the required environment variable's value couldn't be read."""
+
+    def __init__(self, msg: str, var_name: str):
+        super().__init__(msg)
+        self.var_name = var_name
+
+
 class RuntimeConfigError(BaseRuntimeError):
     """Raised when one or more configuration options do not relate to the runtime."""
 

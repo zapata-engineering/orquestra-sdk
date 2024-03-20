@@ -35,7 +35,7 @@ import pytest_httpserver
 
 import orquestra.sdk as sdk
 from orquestra.sdk._base._testing import _connections
-from orquestra.sdk.schema.workflow_run import RunStatus, TaskRun
+from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun
 
 from .driver import resp_mocks
 
@@ -165,12 +165,14 @@ def mock_ce_run_single(post, get, httpserver: pytest_httpserver.HTTPServer) -> s
         resp_mocks.make_get_wf_run_response(
             id_=wf_id,
             workflow_def_id=wf_def_id,
-            status=RunStatus(state="SUCCEEDED"),
+            status=RunStatus(state=State.SUCCEEDED, start_time=None, end_time=None),
             task_runs=[
                 TaskRun(
                     id="foo",
                     invocation_id="invocation-0-task-get-list",
-                    status=RunStatus(state="SUCCEEDED"),
+                    status=RunStatus(
+                        state=State.SUCCEEDED, start_time=None, end_time=None
+                    ),
                 )
             ],
         ),
@@ -234,17 +236,21 @@ def mock_ce_run_multiple(post, get) -> str:
         resp_mocks.make_get_wf_run_response(
             id_=wf_id,
             workflow_def_id=wf_def_id,
-            status=RunStatus(state="SUCCEEDED"),
+            status=RunStatus(state=State.SUCCEEDED, start_time=None, end_time=None),
             task_runs=[
                 TaskRun(
                     id="foo",
                     invocation_id="invocation-0-task-get-list",
-                    status=RunStatus(state="SUCCEEDED"),
+                    status=RunStatus(
+                        state=State.SUCCEEDED, start_time=None, end_time=None
+                    ),
                 ),
                 TaskRun(
                     id="foo",
                     invocation_id="invocation-1-task-get-list",
-                    status=RunStatus(state="SUCCEEDED"),
+                    status=RunStatus(
+                        state=State.SUCCEEDED, start_time=None, end_time=None
+                    ),
                 ),
             ],
         ),

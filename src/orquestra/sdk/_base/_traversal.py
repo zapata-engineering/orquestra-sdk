@@ -15,7 +15,7 @@ import warnings
 from collections import OrderedDict
 from functools import singledispatch
 
-from pip_api import Requirement
+from pip_api._parse_requirements import Requirement
 
 from orquestra.sdk.schema import ir, responses
 
@@ -287,7 +287,7 @@ class GraphTraversal:
 
     def output_ids_for_invocation(
         self, invocation: _dsl.TaskInvocation
-    ) -> t.Sequence[ir.ArtifactNodeId]:
+    ) -> t.List[ir.ArtifactNodeId]:
         # Collect unpacked artifacts (a sequence)
         unpacked: t.Iterable[ir.ArtifactNode]
         if invocation.task._output_metadata.is_subscriptable:
@@ -393,9 +393,10 @@ def _make_import_model(imp: _dsl.Import):
             id=id_,
         )
     elif isinstance(imp, _dsl.GitImport):
+        repo_url = _git_url_utils.parse_git_url(imp.repo_url)
         return ir.GitImport(
             id=id_,
-            repo_url=imp.repo_url,
+            repo_url=repo_url,
             git_ref=imp.git_ref,
         )
     elif isinstance(imp, _dsl.GitImportWithAuth):
@@ -589,6 +590,7 @@ def _make_task_model(
         resources=resources,
         parameters=parameters,
         custom_image=task._custom_image,
+        max_retries=task._max_retries,
     )
 
 

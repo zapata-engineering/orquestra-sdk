@@ -16,7 +16,12 @@ try:
     import ray.runtime_env
     import ray.workflow
     from ray import exceptions  # noqa: F401
+    from ray.actor import ActorClass
+    from ray.remote_function import RemoteFunction
     from ray.workflow import exceptions as workflow_exceptions  # noqa: F401
+    from ray.workflow import workflow_context
+    from ray.workflow.common import WorkflowStatus as RayWorkflowStatus
+    from ray.workflow.storage import Storage as RayStorage
     from ray.workflow.workflow_storage import WorkflowStorage
 except ModuleNotFoundError:
     if not t.TYPE_CHECKING:
@@ -34,9 +39,9 @@ except ModuleNotFoundError:
 else:
     TaskError = ray.exceptions.RayTaskError
     ObjectRef = ray.ObjectRef
-    WorkflowStatus = ray.workflow.WorkflowStatus
+    WorkflowStatus = RayWorkflowStatus
     WorkflowStorage = WorkflowStorage
-    Storage = ray.workflow.storage.Storage
+    Storage = RayStorage
     RuntimeEnv = ray.runtime_env.RuntimeEnv
     FunctionNode = ray.dag.FunctionNode
     LogPrefixActorName = ray._private.ray_constants.LOG_PREFIX_ACTOR_NAME
@@ -91,7 +96,7 @@ else:
             except (UserTaskFailedError, exceptions.GetTimeoutError, ValueError):
                 raise NotFoundError
 
-        def remote(self, fn):
+        def remote(self, fn) -> t.Union[RemoteFunction, ActorClass]:
             return ray.remote(fn)
 
         def add_options(
@@ -139,7 +144,10 @@ else:
             ray.workflow.init()
 
         def run_dag_async(
-            self, dag_node: ray.dag.DAGNode, workflow_id: str, metadata: t.Mapping
+            self,
+            dag_node: ray.dag.DAGNode,
+            workflow_id: str,
+            metadata: t.Dict[str, t.Any],
         ):
             ray.workflow.run_async(dag_node, workflow_id=workflow_id, metadata=metadata)
 
@@ -219,7 +227,7 @@ else:
             ray.workflow.cancel(workflow_id)
 
         def get_current_workflow_id(self):
-            return ray.workflow.workflow_context.get_current_workflow_id()
+            return workflow_context.get_current_workflow_id()
 
         def get_current_task_id(self):
-            return ray.workflow.workflow_context.get_current_task_id()
+            return workflow_context.get_current_task_id()

@@ -106,35 +106,34 @@ ruff:
 pymarkdown:
 	$(PYTHON) -m pymarkdown scan CHANGELOG.md
 
+.PHONY: pyright
+pyright:
+	$(PYTHON) -m pyright src tests
+
 .PHONY: mypy
 mypy:
 	$(PYTHON) -m mypy src tests
 
-
-# Type check the project. Alternative to mypy. We'll eventually make it
-# required but we need to gradually improve ourcodebase.
-.PHONY:
-pyright:
-	$(PYTHON) -m pyright src tests
-
-.PHONY:
+.PHONY: style
 style:
 	@$(MAKE) pymarkdown
+	@$(MAKE) ruff
 	@$(MAKE) flake8
 	@$(MAKE) black
 	@$(MAKE) isort
-	@$(MAKE) ruff
+	@$(MAKE) pyright
 	@$(MAKE) mypy
 	@echo This project passes style!
 
 
-.PHONY:
+.PHONY: style-fix
 style-fix:
 	black src tests docs/examples
 	isort --profile=black src tests docs/examples
 	ruff --preview --fix src tests docs/examples
 
 # Run tests, but discard the ones that exceptionally slow to run locally.
+.PHONY: test-fast
 test-fast:
 	$(PYTHON) -m pytest \
 		-m "not slow" \

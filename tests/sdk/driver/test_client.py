@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 - 2023 Zapata Computing Inc.
+# © Copyright 2022 - 2024 Zapata Computing Inc.
 ################################################################################
 """
 Tests for orquestra.sdk._base._driver._client.
@@ -135,7 +135,7 @@ class TestClient:
 
     @pytest.fixture
     def status(self):
-        return RunStatus(state=State.SUCCEEDED)
+        return RunStatus(state=State.SUCCEEDED, start_time=None, end_time=None)
 
     @pytest.fixture
     def workflow_def(self):
@@ -468,7 +468,9 @@ class TestClient:
                 endpoint_mocker(
                     json=resp_mocks.make_create_wf_def_response(id_=workflow_def_id),
                     match=[
-                        responses.matchers.json_params_matcher(workflow_def.dict()),
+                        responses.matchers.json_params_matcher(
+                            workflow_def.model_dump()
+                        ),
                         responses.matchers.query_param_matcher(params),
                     ],
                     # Based on:
@@ -669,7 +671,7 @@ class TestClient:
 
         @pytest.fixture
         def resources(self):
-            return Resources(cpu=None, memory=None, gpu=None)
+            return Resources(nodes=None, cpu=None, memory=None, gpu=None)
 
         class TestGet:
             @staticmethod

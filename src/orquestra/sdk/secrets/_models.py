@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 - 2023 Zapata Computing Inc.
+# © Copyright 2022 - 2024 Zapata Computing Inc.
 ################################################################################
 """Models for accessing the Config Service API.
 
@@ -7,7 +7,7 @@ API spec: https://github.com/zapatacomputing/config-service/tree/main/openapi/sr
 """
 from typing import Optional
 
-import pydantic
+from .._base._storage import OrquestraBaseModel
 
 SecretName = str
 SecretValue = str
@@ -15,7 +15,7 @@ ResourceGroup = str
 WorkspaceId = str
 
 
-class SecretNameObj(pydantic.BaseModel):
+class SecretNameObj(OrquestraBaseModel):
     """
     Model for:
     https://github.com/zapatacomputing/config-service/blob/3f275a52149fb2b74c6a8c01726cce4f390a1533/openapi/src/schemas/SecretName.yaml.
@@ -27,7 +27,7 @@ class SecretNameObj(pydantic.BaseModel):
     name: SecretName
 
 
-class SecretValueObj(pydantic.BaseModel):
+class SecretValueObj(OrquestraBaseModel):
     """
     Model for:
     https://github.com/zapatacomputing/config-service/blob/3f275a52149fb2b74c6a8c01726cce4f390a1533/openapi/src/schemas/SecretValue.yaml.
@@ -39,7 +39,7 @@ class SecretValueObj(pydantic.BaseModel):
     value: SecretValue
 
 
-class SecretDefinition(pydantic.BaseModel):
+class SecretDefinition(OrquestraBaseModel):
     """
     Model for:
     https://github.com/zapatacomputing/config-service/blob/3f275a52149fb2b74c6a8c01726cce4f390a1533/openapi/src/schemas/SecretDefinition.yaml.
@@ -47,10 +47,10 @@ class SecretDefinition(pydantic.BaseModel):
 
     name: SecretName
     value: SecretValue
-    resourceGroup: Optional[ResourceGroup]
+    resourceGroup: Optional[ResourceGroup] = None
 
 
-class ListSecretsRequest(pydantic.BaseModel):
+class ListSecretsRequest(OrquestraBaseModel):
     """
     Model for:
     https://github.com/zapatacomputing/config-service/blob/fbfc4627450bc9a460278b242738e55210e7bf03/openapi/src/parameters/query/workspace.yaml.

@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2022 - 2024 Zapata Computing Inc.
 ################################################################################
 """Contains utilities for setting up the testing environment to replicate a
 user's project state.
@@ -19,4 +19,4 @@ def write_user_config_file(
         version=_config.CONFIG_FILE_CURRENT_VERSION,
         configs={runtime_config.config_name: runtime_config},
     )
-    config_file.write_text(config_file_contents.json())
+    config_file.write_text(config_file_contents.model_dump_json())

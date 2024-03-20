@@ -16,4 +16,5 @@ wf.model = WorkflowDef(
     constant_nodes={},
     task_invocations={},
     output_ids=[],
-)
+    data_aggregation=None,
+)  # type: ignore

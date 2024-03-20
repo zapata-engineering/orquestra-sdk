@@ -21,4 +21,7 @@ TINY_WORKFLOW_DEF = ir.WorkflowDef(
     constant_nodes={},
     task_invocations={},
     output_ids=[],
+    data_aggregation=None,
+    metadata=None,
+    resources=None,
 )

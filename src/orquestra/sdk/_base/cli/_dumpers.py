@@ -110,7 +110,7 @@ class LogsDumper:
 
     @singledispatchmethod
     @staticmethod
-    def _construct_output_log_lines(self, *args) -> t.List[str]:
+    def _construct_output_log_lines(_, *args) -> t.List[str]:
         """Construct a list of log lines to be printed.
 
         This method has overloads for dict and list arguments.

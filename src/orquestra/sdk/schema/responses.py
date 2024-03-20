@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022 - 2024 Zapata Computing Inc.
 ################################################################################
 """Models for responses from the CLI.
 
@@ -10,9 +10,10 @@ structure here is JSON-serializable.
 import enum
 import typing as t
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 from typing_extensions import Annotated
 
+from .._base._storage import OrquestraBaseModel
 from .ir import ArtifactFormat
 
 
@@ -42,19 +43,19 @@ class ResponseStatusCode(enum.Enum):
     USER_CANCELLED = 15
 
 
-class ResponseMetadata(BaseModel):
+class ResponseMetadata(OrquestraBaseModel):
     success: bool
     code: ResponseStatusCode
     message: str
 
 
-class JSONResult(BaseModel):
+class JSONResult(OrquestraBaseModel):
     # Output value dumped to a flat JSON string.
     value: str
     serialization_format: t.Literal[ArtifactFormat.JSON] = ArtifactFormat.JSON
 
 
-class PickleResult(BaseModel):
+class PickleResult(OrquestraBaseModel):
     # Output value dumped to a pickle byte string, encoded as base64, and split into
     # chunks. Chunking is required because some JSON parsers have limitation on max
     # string field length.
@@ -69,12 +70,12 @@ WorkflowResult = Annotated[
 ]
 
 
-class ComputeEngineWorkflowResult(BaseModel):
+class ComputeEngineWorkflowResult(OrquestraBaseModel):
     results: t.Tuple[WorkflowResult, ...]
     type: t.Literal["ComputeEngineWorkflowResult"] = "ComputeEngineWorkflowResult"
 
 
-class ServiceResponse(BaseModel):
+class ServiceResponse(OrquestraBaseModel):
     name: str
     is_running: bool
     info: t.Optional[str]

@@ -3,4 +3,4 @@
 ################################################################################
 from .workflow_base import wf
 
-wf.validate()
+wf.validate()  # pyright: ignore

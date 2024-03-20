@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2021-2022 Zapata Computing Inc.
+# © Copyright 2021 - 2024 Zapata Computing Inc.
 ################################################################################
 """Tests workflow graph traversal, i.e. extracting the serializable IR from
 functions decorated with @sdk.workflow and @sdk.task.
@@ -13,6 +13,7 @@ from unittest.mock import Mock
 
 import git
 import pytest
+from git.remote import Remote
 
 import orquestra.sdk.schema.ir as ir
 from orquestra.sdk import exceptions, secrets
@@ -283,21 +284,23 @@ def unhashable_constants():
 
 @_workflow.workflow
 def two_task_outputs():
-    a, b = two_outputs()
-    _, c = two_outputs()
+    # We intentionally set wrong output number vs what is returned by task to see
+    # if parsing is correct
+    a, b = two_outputs()  # pyright:ignore
+    _, c = two_outputs()  # pyright:ignore
     return [a, b, c]
 
 
 @_workflow.workflow
 def two_task_outputs_all_used():
-    a, b = two_outputs()
+    a, b = two_outputs()  # pyright:ignore
     return a, b
 
 
 @_workflow.workflow
 def two_task_outputs_packed_returned():
     packed = two_outputs()
-    a, b = packed
+    a, b = packed  # pyright:ignore
     return a, b, packed
 
 
@@ -585,7 +588,7 @@ class TestWorkflowsTasksProperties:
         expectation: ContextManager,
     ):
         """
-        Import IDs refered from task defs should be part of wf def IR.
+        Import IDs referred from task defs should be part of wf def IR.
         """
         with expectation:
             wf = workflow_template.model
@@ -728,7 +731,7 @@ class TestWorkflowsTasksProperties:
         with expectation:
             wf = workflow_template.model
             for constant in wf.constant_nodes.values():
-                constant_dict = json.loads(constant.json())
+                constant_dict = json.loads(constant.model_dump_json())
                 _ = serde.value_from_result_dict(constant_dict)
 
     @staticmethod
@@ -752,103 +755,114 @@ class TestWorkflowsTasksProperties:
             assert set(wf.output_ids).issubset(task_output_ids)
 
 
-CAPITALIZE_TASK_DEF = ir.TaskDef(
-    id=AnyMatchingStr(r"task-capitalize-\w{10}"),
-    fn_ref=ir.InlineFunctionRef(
-        function_name="capitalize",
-        encoded_function=[AnyMatchingStr(".*")],
-    ),
-    output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
-    parameters=[
-        ir.TaskParameter(name="text", kind=ir.ParameterKind.POSITIONAL_OR_KEYWORD)
-    ],
-    source_import_id=AnyMatchingStr(r"inline-import-\w{1}"),
-    custom_image=None,
-)
+CAPITALIZE_TASK_DEF_DUMP = {
+    "id": AnyMatchingStr(r"task-capitalize-\w{10}"),
+    "fn_ref": {
+        "function_name": "capitalize",
+        "encoded_function": [AnyMatchingStr(".*")],
+        "type": "INLINE_FUNCTION_REF",
+    },
+    "parameters": [{"name": "text", "kind": "POSITIONAL_OR_KEYWORD"}],
+    "output_metadata": {"is_subscriptable": False, "n_outputs": 1},
+    "source_import_id": AnyMatchingStr(r"inline-import-\w{1}"),
+    "dependency_import_ids": None,
+    "resources": None,
+    "max_retries": None,
+    "custom_image": None,
+}
 
-CAPITALIZE_INLINE_TASK_DEF = ir.TaskDef(
-    id=AnyMatchingStr(r"task-capitalize-inline-\w{10}"),
-    fn_ref=ir.InlineFunctionRef(
-        function_name="capitalize_inline",
-        encoded_function=[AnyMatchingStr(r".*")],  # dont test actual encoding here
-    ),
-    output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
-    parameters=[
-        ir.TaskParameter(name="text", kind=ir.ParameterKind.POSITIONAL_OR_KEYWORD)
-    ],
-    source_import_id=AnyMatchingStr(r"inline-import-\w{1}"),
-    custom_image=None,
-)
+CAPITALIZE_INLINE_TASK_DEF_DUMP = {
+    "id": AnyMatchingStr(r"task-capitalize-inline-\w{10}"),
+    "fn_ref": {
+        "function_name": "capitalize_inline",
+        "encoded_function": [AnyMatchingStr(r".*")],
+        "type": "INLINE_FUNCTION_REF",
+    },
+    "parameters": [{"name": "text", "kind": "POSITIONAL_OR_KEYWORD"}],
+    "output_metadata": {"is_subscriptable": False, "n_outputs": 1},
+    "source_import_id": AnyMatchingStr(r"inline-import-\w{1}"),
+    "dependency_import_ids": None,
+    "resources": None,
+    "max_retries": None,
+    "custom_image": None,
+}
 
-GIT_TASK_DEF = ir.TaskDef(
-    id=AnyMatchingStr(r"task-git-task-\w{10}"),
-    fn_ref=ir.ModuleFunctionRef(
-        module="tests.sdk.test_traversal",
-        function_name="git_task",
-        file_path="tests/sdk/test_traversal.py",
-        line_number=AnyPositiveInt(),
-    ),
-    output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
-    parameters=[],
-    source_import_id=AnyMatchingStr(r"git-\w{10}_hello"),
-    custom_image=None,
-)
+GIT_TASK_DEF_DUMP = {
+    "id": AnyMatchingStr(r"task-git-task-\w{10}"),
+    "fn_ref": {
+        "module": "tests.sdk.test_traversal",
+        "function_name": "git_task",
+        "file_path": "tests/sdk/test_traversal.py",
+        "line_number": AnyPositiveInt(),
+        "type": "MODULE_FUNCTION_REF",
+    },
+    "parameters": [],
+    "output_metadata": {"is_subscriptable": False, "n_outputs": 1},
+    "source_import_id": AnyMatchingStr(r"git-\w{10}_hello"),
+    "dependency_import_ids": None,
+    "resources": None,
+    "max_retries": None,
+    "custom_image": None,
+}
 
 
-GENERATE_GRAPH_TASK_DEF = ir.TaskDef(
-    id=AnyMatchingStr(r"task-generate-graph-\w{10}"),
-    fn_ref=ir.InlineFunctionRef(
-        function_name="generate_graph",
-        encoded_function=[AnyMatchingStr(r".*")],  # dont test actual encoding here
-    ),
-    output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
-    parameters=[],
-    source_import_id=AnyMatchingStr(r"inline-import-\w{1}"),
-    dependency_import_ids=[
+GENERATE_GRAPH_TASK_DEF_DUMP = {
+    "id": AnyMatchingStr(r"task-generate-graph-\w{10}"),
+    "fn_ref": {
+        "function_name": "generate_graph",
+        "encoded_function": [AnyMatchingStr(r".*")],
+        "type": "INLINE_FUNCTION_REF",
+    },
+    "parameters": [],
+    "output_metadata": {"is_subscriptable": False, "n_outputs": 1},
+    "source_import_id": AnyMatchingStr(r"inline-import-\w{1}"),
+    "dependency_import_ids": [
         AnyMatchingStr(r"git-\w{10}_github_com_zapatacomputing_orquestra_workflow_sdk")
     ],
-    custom_image=None,
-)
+    "resources": None,
+    "max_retries": None,
+    "custom_image": None,
+}
 
-PYTHON_IMPORTS_MANUAL_TASK_DEF = ir.TaskDef(
-    id=AnyMatchingStr(r"task-python-imports-manual-\w{10}"),
-    fn_ref=ir.InlineFunctionRef(
-        function_name="python_imports_manual",
-        encoded_function=[AnyMatchingStr(r".*")],
-        type="INLINE_FUNCTION_REF",
-    ),
-    output_metadata=ir.TaskOutputMetadata(is_subscriptable=False, n_outputs=1),
-    parameters=[
-        ir.TaskParameter(name="text", kind=ir.ParameterKind.POSITIONAL_OR_KEYWORD)
-    ],
-    source_import_id=AnyMatchingStr(r"inline-import-\w{1}"),
-    dependency_import_ids=[AnyMatchingStr(r"python-import-\w{10}")],
-    custom_image=None,
-)
+PYTHON_IMPORTS_MANUAL_TASK_DEF_DUMP = {
+    "id": AnyMatchingStr(r"task-python-imports-manual-\w{10}"),
+    "fn_ref": {
+        "function_name": "python_imports_manual",
+        "encoded_function": [AnyMatchingStr(r".*")],
+        "type": "INLINE_FUNCTION_REF",
+    },
+    "parameters": [{"name": "text", "kind": "POSITIONAL_OR_KEYWORD"}],
+    "output_metadata": {"is_subscriptable": False, "n_outputs": 1},
+    "source_import_id": AnyMatchingStr(r"inline-import-\w{1}"),
+    "dependency_import_ids": [AnyMatchingStr(r"python-import-\w{10}")],
+    "resources": None,
+    "max_retries": None,
+    "custom_image": None,
+}
 
 
 @pytest.mark.parametrize(
-    "task_def, has_arg, expected_model",
+    "task, has_arg, expected_model",
     [
-        (capitalize, True, CAPITALIZE_TASK_DEF),
-        (git_task, False, GIT_TASK_DEF),
-        (generate_graph, False, GENERATE_GRAPH_TASK_DEF),
-        (capitalize_inline, True, CAPITALIZE_INLINE_TASK_DEF),
-        (python_imports_manual, True, PYTHON_IMPORTS_MANUAL_TASK_DEF),
+        (capitalize, True, CAPITALIZE_TASK_DEF_DUMP),
+        (git_task, False, GIT_TASK_DEF_DUMP),
+        (generate_graph, False, GENERATE_GRAPH_TASK_DEF_DUMP),
+        (capitalize_inline, True, CAPITALIZE_INLINE_TASK_DEF_DUMP),
+        (python_imports_manual, True, PYTHON_IMPORTS_MANUAL_TASK_DEF_DUMP),
     ],
 )
-def test_individual_task_models(task_def, has_arg, expected_model):
+def test_individual_task_models(task, has_arg: bool, expected_model: dict):
     @_workflow.workflow
     def wf():
         if has_arg:
-            return task_def("w/e")
+            return task("w/e")
         else:
-            return task_def()
+            return task()
 
     wf_model = wf.model
     task_def = list(wf_model.tasks.values())[0]
 
-    assert task_def == expected_model.dict()
+    assert expected_model == task_def.model_dump()
 
 
 @pytest.mark.parametrize(
@@ -971,11 +985,31 @@ def test_custom_task_names(task_name, argument, expected):
     assert list(workflow.model.task_invocations.keys())[0] == expected
 
 
+@pytest.mark.parametrize(
+    "argument, expected",
+    [
+        (None, None),
+        (1, 1),
+        (999, 999),
+    ],
+)
+def test_max_calls(argument, expected):
+    @_dsl.task(max_retries=argument)
+    def task():
+        ...
+
+    @_workflow.workflow()
+    def workflow():
+        return task()
+
+    assert list(workflow.model.tasks.values())[0].max_retries == expected
+
+
 class TestNumberOfFetchesOnInferRepos:
     @pytest.fixture()
     def setup_fetch(self, monkeypatch):
         fake_fetch = Mock()
-        monkeypatch.setattr(git.remote.Remote, "fetch", fake_fetch)
+        monkeypatch.setattr(Remote, "fetch", fake_fetch)
 
         yield fake_fetch
 

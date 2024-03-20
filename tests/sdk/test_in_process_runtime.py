@@ -72,7 +72,9 @@ def wf_def_all_used() -> ir.WorkflowDef:
 def test_secret_inside_ir(
     tmp_default_config_json, monkeypatch: pytest.MonkeyPatch, runtime: InProcessRuntime
 ):
-    mocked_secret = _models.SecretDefinition(name="a-secret", value="mocked")
+    mocked_secret = _models.SecretDefinition(
+        name="a-secret", value="mocked", resourceGroup=None
+    )
     get_secret = create_autospec(_client.SecretsClient.get_secret)
     get_secret.return_value = mocked_secret
     monkeypatch.setattr(_client.SecretsClient, "get_secret", get_secret)
