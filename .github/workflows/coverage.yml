@@ -86,6 +86,6 @@ jobs:
         if: matrix.print_coverage
         uses: zapatacomputing/command-pr-comment@baca4fb9246eaaee3e47f35f296764acc394fae7
         with:
-          command: make github-actions-coverage-report PYTHON=./venv/bin/activate
+          command: make PYTHON=./venv/bin/python github-actions-coverage-report
           template: "🚀 Code Coverage\n```%command%```"
           update-text: "🚀 Code Coverage"
