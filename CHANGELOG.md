@@ -4,6 +4,8 @@
 
 🚨 *Breaking Changes*
 
+* Workflow status will be set to `FAILED` as soon as first task fails. Tasks that already started will finish their execution
+
 🔥 *Features*
 
 🧟 *Deprecations*
