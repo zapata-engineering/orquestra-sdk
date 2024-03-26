@@ -9,6 +9,7 @@ structure here is JSON-serializable.
 
 import enum
 import typing as t
+from typing_extensions import Annotated
 import warnings
 
 import pydantic
@@ -413,7 +414,7 @@ class WorkflowDef(BaseModel):
     data_aggregation: t.Optional[DataAggregation] = None
 
     # Metadata defaults to None to allow older JSON to be loaded
-    metadata: t.Annotated[
+    metadata: Annotated[
         t.Optional[WorkflowMetadata], pydantic.Field(validate_default=True)
     ] = None
 
