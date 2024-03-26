@@ -18,11 +18,11 @@ if PYDANTICV1 and not TYPE_CHECKING:
     class BaseModel(GenericModel):
         @classmethod
         def model_validate(cls, *args, **kwargs):
-            return super(BaseModel, cls).parse_obj(*args, **kwargs)
+            return super(GenericModel, cls).parse_obj(*args, **kwargs)
 
         @classmethod
         def model_validate_json(cls, *args, **kwargs):
-            return super(BaseModel, cls).parse_raw(*args, **kwargs)
+            return super(GenericModel, cls).parse_raw(*args, **kwargs)
 
         def model_dump(self, *args, **kwargs):
             return super().dict(*args, **kwargs)
@@ -32,7 +32,7 @@ if PYDANTICV1 and not TYPE_CHECKING:
 
         @classmethod
         def model_json_schema(cls, *args, **kwargs):
-            return super(BaseModel, cls).schema_json(*args, **kwargs)
+            return super(GenericModel, cls).schema_json(*args, **kwargs)
 
         def model_copy(self, *args, **kwargs):
             return super().copy(*args, **kwargs)
