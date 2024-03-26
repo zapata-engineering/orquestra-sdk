@@ -13,7 +13,8 @@ RUN <<EOF
 set -ex
 apt-get update --yes
 apt-get upgrade --yes
-apt-get install --yes --no-install-recommends git openssh-client
+# KubeRay requires wget to check for liveness/readiness in newer versions
+apt-get install --yes --no-install-recommends git openssh-client wget
 
 if [ "$TARGETARCH" = "arm64" ]; then
   apt-get install --yes --no-install-recommends gcc libc-dev
