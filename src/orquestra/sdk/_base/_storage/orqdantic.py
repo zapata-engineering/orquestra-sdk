@@ -40,7 +40,7 @@ if PYDANTICV1 and not TYPE_CHECKING:
 else:
     # TODO (ORQSDK-1025): remove the model base class and replace it with an alias to
     # BaseModel
-    class BaseModel(pydantic.BaseModel):
+    class BaseModel(pydantic.BaseModel):  # type: ignore
         """The pydantic BaseModel changed between V1 and V2.
 
         As a result, workflow outputs generated prior to the V2 upgrade may not be
@@ -84,7 +84,7 @@ class TypeAdapter:
 
     def validate_json(self, value, *args, **kwargs):
         if PYDANTICV1:
-            return pydantic.parse_raw_as(
+            return pydantic.parse_raw_as(  # type: ignore
                 self._model, value
             )  # pyright: ignore[reportCallIssue]
         else:
