@@ -9,10 +9,10 @@ structure here is JSON-serializable.
 
 import enum
 import typing as t
-from typing_extensions import Annotated
 import warnings
 
 import pydantic
+from typing_extensions import Annotated
 
 from .._base._storage import BaseModel, GpuResourceType, field_validator
 
