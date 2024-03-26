@@ -20,7 +20,6 @@
 * Added support for Pydantic V2 in addition to the previosuly supported `>=1.10.8`.
 * Removed bunch of upper-bound constrains from SDK requirements to prevent dependency-hell
 
-
 🥷 *Internal*
 
 📃 *Docs*
