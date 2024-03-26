@@ -5,11 +5,11 @@
 import json
 import typing as t
 
-from .._base._storage import OrquestraBaseModel
+from .._base._storage import BaseModel
 from ..schema import ir, workflow_run
 
 
-class WfUserMetadata(OrquestraBaseModel):
+class WfUserMetadata(BaseModel):
     """Information about a workflow run we store as a Ray metadata dict.
 
     Pydantic helps us check that the thing we read from Ray is indeed a dictionary we
@@ -20,7 +20,7 @@ class WfUserMetadata(OrquestraBaseModel):
     workflow_def: ir.WorkflowDef
 
 
-class InvUserMetadata(OrquestraBaseModel):
+class InvUserMetadata(BaseModel):
     """Information about a task invocation we store as a Ray metadata dict.
 
     Pydantic helps us check that the thing we read from Ray is indeed a dictionary we
