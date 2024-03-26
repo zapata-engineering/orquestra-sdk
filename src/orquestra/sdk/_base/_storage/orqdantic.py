@@ -5,15 +5,12 @@
 """Compatibility layer for pydantic v1 / v2 compatibility."""
 
 from copy import deepcopy
-from typing import Any, Optional
-from typing_extensions import Annotated
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 import pydantic
+from typing_extensions import Annotated
 
 PYDANTICV1 = pydantic.version.VERSION.startswith("1.")
-
-from typing import TYPE_CHECKING
-
 
 if PYDANTICV1 and not TYPE_CHECKING:
     from pydantic.generics import GenericModel
@@ -41,7 +38,7 @@ if PYDANTICV1 and not TYPE_CHECKING:
             return super().copy(*args, **kwargs)
 
 else:
-    # TODO (ORQSDK-1025): remove the model base class and replace it with an alies to
+    # TODO (ORQSDK-1025): remove the model base class and replace it with an alias to
     # BaseModel
     class BaseModel(pydantic.BaseModel):
         """The pydantic BaseModel changed between V1 and V2.
@@ -87,7 +84,9 @@ class TypeAdapter:
 
     def validate_json(self, value, *args, **kwargs):
         if PYDANTICV1:
-            return pydantic.parse_raw_as(self._model, value)  # pyright: ignore[reportCallIssue]
+            return pydantic.parse_raw_as(
+                self._model, value
+            )  # pyright: ignore[reportCallIssue]
         else:
             return self._typeadapter.validate_json(value, *args, **kwargs)
 
