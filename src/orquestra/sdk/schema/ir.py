@@ -165,7 +165,7 @@ class Resources(BaseModel):
     cpu: t.Optional[str] = None
     memory: t.Optional[str] = None
     disk: t.Optional[str] = None
-    gpu: GpuResourceType = None  # type: ignore
+    gpu: GpuResourceType = None
 
     # nodes should be a positive integer representing the number of nodes assigned
     # to a workflow. If None, the runtime will choose.

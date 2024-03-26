@@ -118,9 +118,12 @@ def field_validator(*fields, **kwargs):
         return pydantic.field_validator(*fields, **kwargs)
 
 
-if PYDANTICV1:
-    GpuResourceType: Any = Optional[str]
+if TYPE_CHECKING:
+    GpuResourceType = Optional[str]
 else:
-    GpuResourceType: Any = Optional[
-        Annotated[str, pydantic.BeforeValidator(lambda x: str(x))]
-    ]
+    if PYDANTICV1:
+        GpuResourceType = Optional[str]
+    else:
+        GpuResourceType = Optional[
+            Annotated[str, pydantic.BeforeValidator(lambda x: str(x))]
+        ]
