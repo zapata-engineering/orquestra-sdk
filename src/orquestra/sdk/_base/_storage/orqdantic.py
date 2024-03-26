@@ -5,7 +5,8 @@
 """Compatibility layer for pydantic v1 / v2 compatibility."""
 
 from copy import deepcopy
-from typing import Annotated, Any, Optional
+from typing import Any, Optional
+from typing_extensions import Annotated
 
 import pydantic
 
@@ -49,7 +50,7 @@ else:
         and adds the missing behaviour back in.
         """
 
-        def __setstate__(self, state: dict[Any, Any]) -> None:
+        def __setstate__(self, state: Dict[Any, Any]) -> None:
             state.setdefault("__pydantic_extra__", {})
             state.setdefault("__pydantic_private__", {})
 
