@@ -12,7 +12,10 @@ import pydantic
 
 PYDANTICV1 = pydantic.version.VERSION.startswith("1.")
 
-if PYDANTICV1:
+from typing import TYPE_CHECKING
+
+
+if PYDANTICV1 and not TYPE_CHECKING:
     from pydantic.generics import GenericModel
 
     class BaseModel(GenericModel):
@@ -84,7 +87,7 @@ class TypeAdapter:
 
     def validate_json(self, value, *args, **kwargs):
         if PYDANTICV1:
-            return pydantic.parse_raw_as(self._model, value)
+            return pydantic.parse_raw_as(self._model, value)  # pyright: ignore[reportCallIssue]
         else:
             return self._typeadapter.validate_json(value, *args, **kwargs)
 
