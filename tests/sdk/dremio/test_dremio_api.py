@@ -15,7 +15,7 @@ from orquestra.sdk.dremio._flight_facade import (
 
 class TestDremioClient:
     class TestFlightIntegration:
-        """Attemps to test as much integration with ``pyarrow.flight`` as possible
+        """Attempts to test as much integration with ``pyarrow.flight`` as possible
         without sending data over the wire.
 
         Test boundaries::

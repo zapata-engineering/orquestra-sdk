@@ -40,29 +40,29 @@ dependencies = [
     "packaging>=21",
     # For different import types in SDK
     "GitPython",
-    "pip-api==0.0.30",
+    "pip-api>=0.0.30",
     # Python Standard Library Backports
-    "importlib_metadata~=4.0",
+    "importlib_metadata>=4.0",
     "typing-extensions>=4.1.0",
     # Web requests for external services
-    "requests~=2.28",
+    "requests>=2.28",
     # Nice workflow visualizations
     "graphviz",
     # CLI utilities
     "argcomplete",
     # click 8.1.4 introduced type checking errors
     # see https://github.com/pallets/click/issues/2558
-    "click~=8.0, != 8.1.4",
-    "cloup~=2.0",
-    "inquirer~=3.0",
+    "click>=8.0, != 8.1.4",
+    "cloup>=2.0",
+    "inquirer>=3.0",
     "tabulate",
-    "rich~=13.5",
+    "rich>=13.5",
     # For automatic login
     "aiohttp>=3.9.0",
     # Decoding JWTs
-    "PyJWT~=2.6",
+    "PyJWT>=2.6",
     # Capture stdout/stderr
-    "wurlitzer~=3.0",
+    "wurlitzer>=3.0",
     # For dremio client
     "pyarrow>=10.0",
     "pandas>=1.4",
@@ -72,7 +72,6 @@ dependencies = [
 ray = [
     "ray[default]==2.9.0",
     "async-timeout", # Ray depends on this, but its missing from ray requirements. Can be removed when https://github.com/ray-project/ray/issues/41267 is fixed.
-    "pyarrow", # Ray workflows depend on this, but it's missing from ray requirements.
 ]
 all = ["orquestra-sdk[ray]"]
 # Docs-specific deps. This list should match the requirements we're using in
@@ -105,12 +104,12 @@ dev = [
     "pydoclint", # Linter for python docstrings. Provides a flake8 plugin.
     "pymarkdownlnt", # Linter for markdown files.
     "pyright!=1.1.340,!=1.1.341", # those 2 versions had bug that caused infinite loops
-    "pytest~=6.2",
+    "pytest>=6.2",
     "pytest-cov>=2.12",
     "pytest-dependency",
     "pytest_httpserver",
     "pytest-timeout>=2.0.0",
-    "responses~=0.20,!=0.24",
+    "responses>=0.20,!=0.24",
     "ruff",
     "scikit-learn",
     "types-psutil",
@@ -171,6 +170,7 @@ omit = [
 ]
 
 [tool.coverage.report]
+skip_covered = true
 exclude_lines = [
   "pragma: no cover",
   "def __repr__",

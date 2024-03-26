@@ -107,35 +107,7 @@ def _workflow_state_from_ray_meta(
     wf_status: _client.WorkflowStatus,
     start_time: t.Optional[float],
     end_time: t.Optional[float],
-    ray_task_metas: t.List[t.Dict[str, t.Any]],
 ) -> State:
-    if wf_status == _client.WorkflowStatus.FAILED:
-        # If Ray said the workflow has failed, we'll check to see if all the tasks are
-        # in a completed state.
-        # Note that unlike when reporting states for individual tasks, we regard
-        # 'WAITING' as completed as we only want tasks that have actually started to
-        # prevent the workflow from being reported as FAILED.
-        tasks_completed = (
-            (
-                state := _task_state_from_ray_meta(
-                    wf_status,
-                    task_meta["stats"].get("start_time"),
-                    task_meta["stats"].get("end_time"),
-                    task_meta["stats"].get("failed"),
-                )
-            ).is_completed()
-            or state == State.WAITING
-            for task_meta in ray_task_metas
-        )
-
-        if all(tasks_completed):
-            # If all the tasks are completed, we will say the workflow failed.
-            return State.FAILED
-        else:
-            # If there is at least one task that is not in a completed state, we'll
-            # say the workflow is still running.
-            return State.RUNNING
-
     if start_time and end_time and wf_status == _client.WorkflowStatus.RUNNING:
         # If we ask Ray right after a workflow has been completed, Ray reports
         # workflow status as "RUNNING". This happens even after we await Ray
@@ -254,7 +226,6 @@ def _workflow_status_from_ray_meta(
         wf_status=wf_status,
         start_time=start_time,
         end_time=end_time,
-        ray_task_metas=ray_task_metas,
     )
     if not state.is_completed() and end_time is not None:
         # If the workflow isn't completed and the metadata contained an end_time,
@@ -271,7 +242,10 @@ def _workflow_status_from_ray_meta(
         task_end_times = [
             task_meta["stats"].get("end_time")
             for task_meta in ray_task_metas
-            if task_meta["stats"].get("start_time")
+            if (
+                task_meta["stats"].get("start_time")
+                and task_meta["stats"].get("end_time")
+            )
         ]
         if len(task_end_times) == 0:
             # If there are no usable task end times, use the workflow end time.
