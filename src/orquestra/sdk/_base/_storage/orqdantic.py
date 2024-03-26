@@ -9,7 +9,7 @@ from typing import Annotated, Any, Optional
 
 import pydantic
 
-PYDANTICV1 = pydantic.__version__.startswith("1.")
+PYDANTICV1 = pydantic.version.VERSION.startswith("1.")
 
 if PYDANTICV1:
     from pydantic.generics import GenericModel
