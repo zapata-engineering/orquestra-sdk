@@ -907,9 +907,8 @@ def _get_config_context() -> str:
             return _config.RAY_CONFIG_NAME_ALIAS
         elif context == _exec_ctx.ExecContext.DIRECT:
             return _config.IN_PROCESS_CONFIG_NAME
-    else:
-        clusters_uri = os.getenv(_env.CURRENT_CLUSTER_ENV)
-        return _generate_cluster_uri_name(clusters_uri)
+    clusters_uri = os.getenv(_env.CURRENT_CLUSTER_ENV)
+    return _generate_cluster_uri_name(clusters_uri)
 
 
 class CurrentWorkflowIDs(t.NamedTuple):
