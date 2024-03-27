@@ -880,17 +880,10 @@ def _parse_max_age(age: t.Optional[str]) -> t.Optional[timedelta]:
     )
 
 
-def _is_executing_remotely() -> bool:
-    """Determine whether the code is being executed locally, or on a cluster/studio."""
-    if os.getenv(_env.CURRENT_CLUSTER_ENV):
-        return True
-    return False
-
-
 def _get_workspace_and_project_ids() -> (
     t.Tuple[t.Optional[WorkspaceId], t.Optional[ProjectId]]
 ):
-    if not _is_executing_remotely():
+    if not os.getenv(_env.CURRENT_CLUSTER_ENV):
         return None, None
 
     return os.getenv(_env.CURRENT_WORKSPACE_ENV), os.getenv(_env.CURRENT_PROJECT_ENV)
@@ -901,14 +894,14 @@ def _generate_cluster_uri_name(uri: str) -> str:
 
 
 def _get_config_context() -> str:
-    if not _is_executing_remotely():
+    cluster_uri = os.getenv(_env.CURRENT_CLUSTER_ENV)
+    if not cluster_uri:
         context = _exec_ctx.get_current_exec_context()
         if context == _exec_ctx.ExecContext.RAY:
             return _config.RAY_CONFIG_NAME_ALIAS
         elif context == _exec_ctx.ExecContext.DIRECT:
             return _config.IN_PROCESS_CONFIG_NAME
-    clusters_uri = os.getenv(_env.CURRENT_CLUSTER_ENV)
-    return _generate_cluster_uri_name(clusters_uri)
+    return _generate_cluster_uri_name(cluster_uri)
 
 
 class CurrentWorkflowIDs(t.NamedTuple):
