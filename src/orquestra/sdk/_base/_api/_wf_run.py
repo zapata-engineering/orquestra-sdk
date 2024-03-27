@@ -901,6 +901,11 @@ def _get_config_context() -> str:
             return _config.RAY_CONFIG_NAME_ALIAS
         elif context == _exec_ctx.ExecContext.DIRECT:
             return _config.IN_PROCESS_CONFIG_NAME
+        else:
+            raise NotImplementedError(
+                f"Got unexpected global context {context}. Please report this as a bug."
+            )
+
     return _generate_cluster_uri_name(cluster_uri)
 
 
