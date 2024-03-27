@@ -12,15 +12,15 @@ import typing as t
 import warnings
 
 import pydantic
-from pydantic import BeforeValidator
+from typing_extensions import Annotated
 
-from .._base._storage import OrquestraBaseModel
+from .._base._storage import BaseModel, GpuResourceType, field_validator
 
 ImportId = str
 SecretNodeId = str
 
 
-class SecretNode(OrquestraBaseModel):
+class SecretNode(BaseModel):
     """A reference to a secret stored in an external secret/config service."""
 
     # Workflow-scope unique ID used to refer from task invocations
@@ -39,7 +39,7 @@ class SecretNode(OrquestraBaseModel):
     workspace_id: t.Optional[str] = None
 
 
-class GitURL(OrquestraBaseModel):
+class GitURL(BaseModel):
     original_url: str
     protocol: str
     user: t.Optional[str] = None
@@ -50,7 +50,7 @@ class GitURL(OrquestraBaseModel):
     query: t.Optional[str] = None
 
 
-class GitImport(OrquestraBaseModel):
+class GitImport(BaseModel):
     id: ImportId
     repo_url: GitURL
     git_ref: str
@@ -58,7 +58,7 @@ class GitImport(OrquestraBaseModel):
     # we need this in the JSON to know which class to use when deserializing
     type: t.Literal["GIT_IMPORT"] = "GIT_IMPORT"
 
-    @pydantic.field_validator("repo_url", mode="before")
+    @field_validator("repo_url", mode="before")
     def _backwards_compatible_repo_url(cls, v):
         """Allows older models with a string URL to be imported."""
         # Prevent circular imports
@@ -70,7 +70,7 @@ class GitImport(OrquestraBaseModel):
         return parse_git_url(v)
 
 
-class LocalImport(OrquestraBaseModel):
+class LocalImport(BaseModel):
     """Used to specify that the source code is only available locally.
 
     (e.g. not committed to any git repo).
@@ -82,12 +82,12 @@ class LocalImport(OrquestraBaseModel):
     type: t.Literal["LOCAL_IMPORT"] = "LOCAL_IMPORT"
 
 
-class InlineImport(OrquestraBaseModel):
+class InlineImport(BaseModel):
     id: ImportId
     type: t.Literal["INLINE_IMPORT"] = "INLINE_IMPORT"
 
 
-class PackageSpec(OrquestraBaseModel):
+class PackageSpec(BaseModel):
     # noqa E501
     """Representation of single package import.
 
@@ -103,7 +103,7 @@ class PackageSpec(OrquestraBaseModel):
     environment_markers: str
 
 
-class PythonImports(OrquestraBaseModel):
+class PythonImports(BaseModel):
     """List of imports for given task."""
 
     id: ImportId
@@ -123,7 +123,7 @@ Import = t.Union[GitImport, LocalImport, PythonImports, InlineImport]
 TaskDefId = str
 
 
-class ModuleFunctionRef(OrquestraBaseModel):
+class ModuleFunctionRef(BaseModel):
     # Required to dereference function for execution.
     module: str
     function_name: str
@@ -136,7 +136,7 @@ class ModuleFunctionRef(OrquestraBaseModel):
     type: t.Literal["MODULE_FUNCTION_REF"] = "MODULE_FUNCTION_REF"
 
 
-class FileFunctionRef(OrquestraBaseModel):
+class FileFunctionRef(BaseModel):
     # Required to dereference function for execution.
     file_path: str
     function_name: str
@@ -149,7 +149,7 @@ class FileFunctionRef(OrquestraBaseModel):
     type: t.Literal["FILE_FUNCTION_REF"] = "FILE_FUNCTION_REF"
 
 
-class InlineFunctionRef(OrquestraBaseModel):
+class InlineFunctionRef(BaseModel):
     function_name: str
     # Required to dereference function for execution. The function object is serialized
     # using `dill`, base64-encoded, and chunked to workaround JSON string length limits.
@@ -162,18 +162,19 @@ class InlineFunctionRef(OrquestraBaseModel):
 FunctionRef = t.Union[ModuleFunctionRef, FileFunctionRef, InlineFunctionRef]
 
 
-class Resources(OrquestraBaseModel):
+class Resources(BaseModel):
     cpu: t.Optional[str] = None
     memory: t.Optional[str] = None
     disk: t.Optional[str] = None
-    gpu: t.Optional[t.Annotated[str, BeforeValidator(lambda x: str(x))]] = None
+    gpu: GpuResourceType = None
+
     # nodes should be a positive integer representing the number of nodes assigned
     # to a workflow. If None, the runtime will choose.
     # This only applies to workflows and not tasks.
     nodes: t.Optional[int] = None
 
 
-class DataAggregation(OrquestraBaseModel):
+class DataAggregation(BaseModel):
     run: t.Optional[bool] = None
     resources: t.Optional[Resources] = None
 
@@ -190,14 +191,14 @@ class ParameterKind(str, enum.Enum):
     VAR_KEYWORD = "VAR_KEYWORD"
 
 
-class TaskParameter(OrquestraBaseModel):
+class TaskParameter(BaseModel):
     name: ParameterName
     kind: ParameterKind
     # If we need more metadata related to parameters, like type hints or default values,
     # it should be added here.
 
 
-class TaskOutputMetadata(OrquestraBaseModel):
+class TaskOutputMetadata(BaseModel):
     """Information about the data shape returned by a task function."""
 
     # If yes, it's possible to unpack the output in the workflow like:
@@ -211,7 +212,7 @@ class TaskOutputMetadata(OrquestraBaseModel):
     n_outputs: int
 
 
-class TaskDef(OrquestraBaseModel):
+class TaskDef(BaseModel):
     # workflow-unique ID used to refer from task invocations
     id: TaskDefId
 
@@ -269,7 +270,7 @@ ArtifactNodeId = str
 ConstantNodeId = str
 
 
-class ArtifactNode(OrquestraBaseModel):
+class ArtifactNode(BaseModel):
     # Workflow-scope unique ID used to refer from task invocations. If the task has
     # multiple outputs they will have distinct `id`s.
     id: ArtifactNodeId
@@ -294,7 +295,7 @@ class ArtifactNode(OrquestraBaseModel):
     artifact_index: t.Optional[int] = None
 
 
-class ConstantNodeJSON(OrquestraBaseModel):
+class ConstantNodeJSON(BaseModel):
     """Piece of data that already exists at workflow submission time.
 
     The value is directly embedded in the workflow. To support arbitrary data shapes we
@@ -313,7 +314,7 @@ class ConstantNodeJSON(OrquestraBaseModel):
     value_preview: pydantic.constr(max_length=12)  # type: ignore
 
 
-class ConstantNodePickle(OrquestraBaseModel):
+class ConstantNodePickle(BaseModel):
     """Piece of data that already exists at workflow submission time.
 
     The value is directly embedded in the workflow. To support arbitrary data shapes we
@@ -341,7 +342,7 @@ ConstantNode = t.Union[ConstantNodeJSON, ConstantNodePickle]
 ArgumentId = t.Union[ArtifactNodeId, ConstantNodeId, SecretNodeId]
 
 
-class TaskInvocation(OrquestraBaseModel):
+class TaskInvocation(BaseModel):
     id: TaskInvocationId
 
     # What task should be executed.
@@ -367,7 +368,7 @@ class TaskInvocation(OrquestraBaseModel):
 WorkflowDefName = str
 
 
-class Version(OrquestraBaseModel):
+class Version(BaseModel):
     original: str
     major: int
     minor: int
@@ -375,12 +376,12 @@ class Version(OrquestraBaseModel):
     is_prerelease: bool
 
 
-class WorkflowMetadata(OrquestraBaseModel):
+class WorkflowMetadata(BaseModel):
     sdk_version: Version
     python_version: Version
 
 
-class WorkflowDef(OrquestraBaseModel):
+class WorkflowDef(BaseModel):
     """The main data structure for intermediate workflow representation.
 
     The structure is as flat as possible with relation based on "id"s, e.g. a single
@@ -413,7 +414,7 @@ class WorkflowDef(OrquestraBaseModel):
     data_aggregation: t.Optional[DataAggregation] = None
 
     # Metadata defaults to None to allow older JSON to be loaded
-    metadata: t.Annotated[
+    metadata: Annotated[
         t.Optional[WorkflowMetadata], pydantic.Field(validate_default=True)
     ] = None
 
@@ -421,7 +422,7 @@ class WorkflowDef(OrquestraBaseModel):
     # If none, the runtime will decide.
     resources: t.Optional[Resources] = None
 
-    @pydantic.field_validator("metadata", mode="after")
+    @field_validator("metadata", mode="after")
     def sdk_version_up_to_date(cls, v: t.Optional[WorkflowMetadata]):
         # Workaround for circular imports
         from orquestra.sdk import exceptions

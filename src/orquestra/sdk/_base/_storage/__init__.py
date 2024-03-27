@@ -2,8 +2,12 @@
 # © Copyright 2024 Zapata Computing Inc.
 ################################################################################
 
-from ._basemodel import OrquestraBaseModel
+
+from .orqdantic import BaseModel, GpuResourceType, TypeAdapter, field_validator
 
 __all__ = [
-    "OrquestraBaseModel",
+    "BaseModel",
+    "TypeAdapter",
+    "field_validator",
+    "GpuResourceType",
 ]

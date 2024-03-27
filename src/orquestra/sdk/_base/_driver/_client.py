@@ -31,6 +31,7 @@ from orquestra.sdk.schema.workflow_run import (
     WorkspaceId,
 )
 
+from ..._base._storage import TypeAdapter
 from .._regex import VERSION_REGEX
 from . import _exceptions, _models
 
@@ -905,7 +906,7 @@ class DriverClient:
 
         return cast(
             WorkflowResult,
-            pydantic.TypeAdapter(WorkflowResult).validate_python(resp.json()),
+            TypeAdapter(WorkflowResult).validate_python(resp.json()),
         )
 
     # --- Workflow Run Results ---
@@ -1014,8 +1015,9 @@ class DriverClient:
             # Try an older response
             return cast(
                 WorkflowResult,
-                pydantic.TypeAdapter(WorkflowResult).validate_python(json_response),
+                TypeAdapter(WorkflowResult).validate_python(json_response),
             )
+
         except pydantic.ValidationError:
             # If we fail, try parsing each part of a list separately
             return ComputeEngineWorkflowResult.model_validate(json_response)
@@ -1081,9 +1083,7 @@ class DriverClient:
             if len(section_str) < 1:
                 continue
 
-            events = pydantic.TypeAdapter(_models.WorkflowLogSection).validate_json(
-                section_str
-            )
+            events = TypeAdapter(_models.WorkflowLogSection).validate_json(section_str)
 
             for event in events:
                 messages.append(event.message)
@@ -1153,9 +1153,7 @@ class DriverClient:
             if len(section_str) < 1:
                 continue
 
-            events = pydantic.TypeAdapter(_models.TaskLogSection).validate_json(
-                section_str
-            )
+            events = TypeAdapter(_models.TaskLogSection).validate_json(section_str)
 
             for event in events:
                 messages.append(event.message)
@@ -1222,7 +1220,8 @@ class DriverClient:
         for section_str in decoded.split("\n"):
             if len(section_str) < 1:
                 continue
-            events = pydantic.TypeAdapter(_models.SysSection).validate_json(section_str)
+
+            events = TypeAdapter(_models.SysSection).validate_json(section_str)
 
             for event in events:
                 messages.append(event.message)
@@ -1254,9 +1253,9 @@ class DriverClient:
         ):
             raise
 
-        parsed_response = pydantic.TypeAdapter(
-            _models.ListWorkspacesResponse
-        ).validate_python(resp.json())
+        parsed_response = TypeAdapter(_models.ListWorkspacesResponse).validate_python(
+            resp.json()
+        )
 
         return parsed_response
 
@@ -1293,9 +1292,9 @@ class DriverClient:
         ):
             raise
 
-        parsed_response = pydantic.TypeAdapter(
-            _models.ListProjectResponse
-        ).validate_python(resp.json())
+        parsed_response = TypeAdapter(_models.ListProjectResponse).validate_python(
+            resp.json()
+        )
 
         return parsed_response
 

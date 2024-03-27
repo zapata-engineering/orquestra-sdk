@@ -19,7 +19,7 @@
 💅 *Improvements*
 
 * Tracebacks in `orq` are made more compact to help with copy and pasting when an issue happens.
-* Bumped Pydantic version to `>=2.5.0`
+* Added support for Pydantic V2 in addition to the previously supported `>=1.10.8`.
 * Removed bunch of upper-bound constrains from SDK requirements to prevent dependency-hell
 
 🥷 *Internal*
