@@ -890,7 +890,7 @@ def _get_workspace_and_project_ids() -> (
 
 
 def _generate_cluster_uri_name(uri: str) -> str:
-    return str(urlparse(uri).netloc).split(".")[0]
+    return str(urlparse(uri).path).split(".")[0]
 
 
 def _get_config_context() -> str:
