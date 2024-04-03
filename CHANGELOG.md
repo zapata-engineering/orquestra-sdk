@@ -22,13 +22,13 @@
 
 🚨 *Breaking Changes*
 
-* Workflow status will be set to `FAILED` as soon as first task fails. Tasks that already started will finish their execution
+* Workflow status will be set to `FAILED` as soon as first task fails. Tasks that already started will finish their execution.
 
 💅 *Improvements*
 
 * Tracebacks in `orq` are made more compact to help with copy and pasting when an issue happens.
 * Added support for Pydantic V2 in addition to the previously supported `>=1.10.8`.
-* Removed bunch of upper-bound constrains from SDK requirements to prevent dependency-hell
+* Removed bunch of upper constraints from SDK requirements to prevent Dependency Hell.
 
 ## v0.61.0
 
