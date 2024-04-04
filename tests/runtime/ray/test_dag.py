@@ -2,7 +2,7 @@
 # © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
-Unit tests for orquestra.sdk._ray._dag. If you need a test against a live
+Unit tests for orquestra.sdk.runtime._ray._dag. If you need a test against a live
 Ray connection, see tests/ray/test_integration.py instead.
 """
 from datetime import timedelta

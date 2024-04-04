@@ -511,7 +511,7 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
     def __init__(
         self,
         fn: Callable[_P, _R],
-        output_metadata: "orquestra.sdk._base._dsl.TaskOutputMetadata",
+        output_metadata: "orquestra.sdk._client._base._dsl.TaskOutputMetadata",
         source_import: Optional[Import] = None,
         parameters: Optional[OrderedDict] = None,
         dependency_imports: Optional[Tuple[Import, ...]] = None,
@@ -751,10 +751,10 @@ class ArtifactFuture:
 
     def __init__(
         self,
-        invocation: orquestra.sdk._base._dsl.TaskInvocation,
+        invocation: orquestra.sdk._client._base._dsl.TaskInvocation,
         output_index: Optional[int] = None,
         custom_name: Optional[str] = DEFAULT_CUSTOM_NAME,
-        serialization_format: orquestra.sdk._base._dsl.ArtifactFormat = DEFAULT_SERIALIZATION_FORMAT,  # noqa: E501
+        serialization_format: orquestra.sdk._client._base._dsl.ArtifactFormat = DEFAULT_SERIALIZATION_FORMAT,  # noqa: E501
     ):
         self.invocation = invocation
         # if the invocation returns multiple values, this the index in the output
@@ -824,19 +824,19 @@ class ArtifactFuture:
         self,
         *,
         cpu: Optional[
-            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
         ] = Sentinel.NO_UPDATE,
         memory: Optional[
-            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
         ] = Sentinel.NO_UPDATE,
         disk: Optional[
-            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
         ] = Sentinel.NO_UPDATE,
         gpu: Optional[
-            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
         ] = Sentinel.NO_UPDATE,
         custom_image: Optional[
-            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
         ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
         """
@@ -907,16 +907,16 @@ class ArtifactFuture:
         self,
         *,
         cpu: Optional[
-            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
         ] = Sentinel.NO_UPDATE,
         memory: Optional[
-            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
         ] = Sentinel.NO_UPDATE,
         disk: Optional[
-            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
         ] = Sentinel.NO_UPDATE,
         gpu: Optional[
-            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
         ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
         """
@@ -948,7 +948,7 @@ class ArtifactFuture:
     def with_custom_image(
         self,
         custom_image: Optional[
-            Union[str, "orquestra.sdk._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
         ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
         """
