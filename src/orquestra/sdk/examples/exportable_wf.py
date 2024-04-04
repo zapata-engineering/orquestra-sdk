@@ -12,7 +12,7 @@ import orquestra.sdk as sdk
 
 @sdk.task(
     source_import=sdk.GitImport(
-        repo_url="git@github.com:zapatacomputing/orquestra-workflow-sdk.git",
+        repo_url="git@github.com:zapata-engineering/orquestra-sdk.git",
         git_ref="main",
     ),
 )
@@ -22,7 +22,7 @@ def capitalize(text: str) -> str:
 
 @sdk.task(
     source_import=sdk.GitImport(
-        repo_url="git@github.com:zapatacomputing/orquestra-workflow-sdk.git",
+        repo_url="git@github.com:zapata-engineering/orquestra-sdk.git",
         git_ref="main",
     ),
 )
@@ -33,7 +33,7 @@ def make_greeting(first, last, additional_message: t.Optional[str] = None) -> st
 @sdk.task(
     n_outputs=2,
     source_import=sdk.GitImport(
-        repo_url="git@github.com:zapatacomputing/orquestra-workflow-sdk.git",
+        repo_url="git@github.com:zapata-engineering/orquestra-sdk.git",
         git_ref="main",
     ),
 )

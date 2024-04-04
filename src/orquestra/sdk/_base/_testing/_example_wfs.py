@@ -83,7 +83,7 @@ def make_company_name(last_name: str):
 
 @sdk.task(
     source_import=sdk.GitImport(
-        repo_url="git@github.com:zapatacomputing/orquestra-workflow-sdk.git",
+        repo_url="git@github.com:zapata-engineering/orquestra-sdk.git",
         git_ref="main",
     ),
     dependency_imports=[],
@@ -95,7 +95,7 @@ def make_greeting_message(first, last, additional_message: Optional[str] = None)
 @sdk.task(
     n_outputs=2,
     source_import=sdk.GitImport(
-        repo_url="git@github.com:zapatacomputing/orquestra-workflow-sdk.git",
+        repo_url="git@github.com:zapata-engineering/orquestra-sdk.git",
         git_ref="main",
     ),
     dependency_imports=[],
