@@ -12,6 +12,8 @@
 
 🐛 *Bug Fixes*
 
+* `sdk.workflow(fn, resources=...)` will no longer show type errors from linters.
+
 💅 *Improvements*
 
 🥷 *Internal*
