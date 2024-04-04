@@ -24,7 +24,7 @@ class Snippets:
             source_import=sdk.InlineImport(),
             dependency_imports=[
                 sdk.GitImport(
-                    repo_url="git@github.com:zapatacomputing/orquestra-workflow-sdk.git",  # noqa: E501
+                    repo_url="git@github.com:zapata-engineering/orquestra-sdk.git",  # noqa: E501
                     git_ref="main",
                 ),
             ],

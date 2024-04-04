@@ -120,10 +120,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/zapatacomputing/orquestra-workflow-sdk"
+Homepage = "https://github.com/zapata-engineering/orquestra-sdk"
 Documentation = "https://docs.orquestra.io"
-Repository = "https://github.com/zapatacomputing/orquestra-workflow-sdk.git"
-Issues = "https://github.com/zapatacomputing/orquestra-workflow-sdk/issues"
+Repository = "https://github.com/zapata-engineering/orquestra-sdk.git"
+Issues = "https://github.com/zapata-engineering/orquestra-sdk/issues"
 
 [project.scripts]
 orq = "orquestra.sdk._base.cli._entry:dorq"
