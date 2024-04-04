@@ -817,7 +817,7 @@ GENERATE_GRAPH_TASK_DEF_DUMP = {
     "output_metadata": {"is_subscriptable": False, "n_outputs": 1},
     "source_import_id": AnyMatchingStr(r"inline-import-\w{1}"),
     "dependency_import_ids": [
-        AnyMatchingStr(r"git-\w{10}_github_com_zapatacomputing_orquestra_workflow_sdk")
+        AnyMatchingStr(r"git-\w{10}_github_com_zapata_engineering_orquestra_sdk")
     ],
     "resources": None,
     "max_retries": None,
