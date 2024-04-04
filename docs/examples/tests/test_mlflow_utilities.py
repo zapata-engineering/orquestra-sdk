@@ -17,8 +17,8 @@ import responses.matchers
 from pytest import MonkeyPatch
 
 from orquestra import sdk
-from orquestra.sdk._base import _config
-from orquestra.sdk.schema import configs
+from orquestra.sdk._client._base import _config
+from orquestra.sdk.shared.schema import configs
 
 
 class Snippets:
@@ -253,7 +253,9 @@ class TestSnippets:
             monkeypatch.setattr(mlflow, "log_artifact", Mock())
             monkeypatch.delenv("ORQ_MLFLOW_ARTIFACTS_DIR", raising=False)
             monkeypatch.setattr(
-                sdk.mlflow._connection_utils, "DEFAULT_TEMP_ARTIFACTS_DIR", tmp_path
+                sdk.mlflow._connection_utils,
+                "DEFAULT_TEMP_ARTIFACTS_DIR",
+                tmp_path,
             )
 
             assert Snippets.artifacts_dir_snippet() == tmp_path

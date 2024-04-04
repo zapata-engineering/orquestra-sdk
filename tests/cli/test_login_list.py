@@ -4,8 +4,8 @@
 
 from unittest.mock import Mock, create_autospec
 
-from orquestra.sdk._base.cli._config._list import Action
-from orquestra.sdk.schema.configs import RuntimeConfiguration
+from orquestra.sdk._client._base.cli._config._list import Action
+from orquestra.sdk.shared.schema.configs import RuntimeConfiguration
 
 
 class TestAction:
@@ -17,7 +17,7 @@ class TestAction:
         config_repo = Mock()
         prompter = Mock()
         monkeypatch.setattr(
-            "orquestra.sdk._base._jwt.check_jwt_without_signature_verification",
+            "orquestra.sdk._client._base._jwt.check_jwt_without_signature_verification",
             Mock(return_value=True),
         )
 

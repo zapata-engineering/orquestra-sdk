@@ -3,7 +3,7 @@
 ################################################################################
 import typing as t
 
-from orquestra.sdk.schema.configs import CONFIG_FILE_CURRENT_VERSION
+from orquestra.sdk.shared.schema.configs import CONFIG_FILE_CURRENT_VERSION
 
 TEST_CONFIGS_DICT: t.Mapping[str, t.Mapping[str, t.Any]] = {
     "test_config_default": {

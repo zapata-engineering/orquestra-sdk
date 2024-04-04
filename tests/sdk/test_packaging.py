@@ -6,8 +6,8 @@ from unittest.mock import Mock
 import pytest
 
 from orquestra import sdk
-from orquestra.sdk import packaging
-from orquestra.sdk.packaging import _versions
+from orquestra.sdk.shared import packaging
+from orquestra.sdk.shared.packaging import _versions
 
 try:
     import importlib.metadata as metadata  # type: ignore

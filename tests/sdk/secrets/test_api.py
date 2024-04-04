@@ -11,7 +11,7 @@ import pytest
 
 from orquestra import sdk
 from orquestra.sdk import exceptions as sdk_exc
-from orquestra.sdk.secrets import _auth, _exceptions, _models
+from orquestra.sdk._client.secrets import _auth, _exceptions, _models
 
 
 class TestIntegrationWithClient:

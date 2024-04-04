@@ -7,8 +7,8 @@ from typing import Callable, List
 import pytest
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._base.cli._ui import _errors
-from orquestra.sdk.schema.workflow_run import State
+from orquestra.sdk._client._base.cli._ui import _errors
+from orquestra.sdk.shared.schema.workflow_run import State
 
 from . import exception_makers
 

@@ -7,8 +7,12 @@
 import typing as t
 from dataclasses import dataclass
 
-from orquestra.sdk.schema import configs, ir
-from orquestra.sdk.schema.workflow_run import State, TaskInvocationId, WorkflowRunId
+from orquestra.sdk.shared.schema import configs, ir
+from orquestra.sdk.shared.schema.workflow_run import (
+    State,
+    TaskInvocationId,
+    WorkflowRunId,
+)
 
 
 class WorkflowSyntaxError(Exception):

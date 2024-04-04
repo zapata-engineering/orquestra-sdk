@@ -11,7 +11,7 @@ here.
 
 import pytest
 
-from orquestra.sdk.schema.workflow_run import State
+from orquestra.sdk.shared.schema.workflow_run import State
 
 
 class TestState:

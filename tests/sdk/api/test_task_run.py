@@ -11,15 +11,21 @@ from unittest.mock import Mock, create_autospec
 import pytest
 
 import orquestra.sdk as sdk
-from orquestra.sdk._base import _api, _exec_ctx, _in_process_runtime, _workflow, serde
-from orquestra.sdk._base._logs._interfaces import LogReader
-from orquestra.sdk._base.abc import RuntimeInterface
-from orquestra.sdk._ray import _build_workflow
+from orquestra.sdk._client._base import (
+    _api,
+    _exec_ctx,
+    _in_process_runtime,
+    _workflow,
+    serde,
+)
+from orquestra.sdk._client._base._logs._interfaces import LogReader
+from orquestra.sdk._client._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import TaskRunNotFound
-from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.workflow_run import RunStatus, State
-from orquestra.sdk.schema.workflow_run import TaskRun as TaskRunModel
-from orquestra.sdk.schema.workflow_run import WorkflowRun as WorkflowRunModel
+from orquestra.sdk.runtime._ray import _build_workflow
+from orquestra.sdk.shared.schema import ir
+from orquestra.sdk.shared.schema.workflow_run import RunStatus, State
+from orquestra.sdk.shared.schema.workflow_run import TaskRun as TaskRunModel
+from orquestra.sdk.shared.schema.workflow_run import WorkflowRun as WorkflowRunModel
 
 from ..data.complex_serialization.workflow_defs import capitalize, join_strings
 
@@ -595,11 +601,11 @@ class TestGetBackendIDs:
         @staticmethod
         def test_gets_ray_ids_for_ray_runtimes(mock_ray_context, monkeypatch):
             monkeypatch.setattr(
-                "orquestra.sdk._base._api._task_run._get_ray_backend_ids",
+                "orquestra.sdk._client._base._api._task_run._get_ray_backend_ids",
                 mock_get_ray_ids := Mock(return_value="<ray ids sentinel>"),
             )
             monkeypatch.setattr(
-                "orquestra.sdk._base._api._task_run._get_in_process_backend_ids",
+                "orquestra.sdk._client._base._api._task_run._get_in_process_backend_ids",
                 mock_get_in_process_ids := Mock(
                     return_value="<in_process ids sentinel>"
                 ),
@@ -614,11 +620,11 @@ class TestGetBackendIDs:
             mock_in_process_context, monkeypatch
         ):
             monkeypatch.setattr(
-                "orquestra.sdk._base._api._task_run._get_ray_backend_ids",
+                "orquestra.sdk._client._base._api._task_run._get_ray_backend_ids",
                 mock_get_ray_ids := Mock(return_value="<ray ids sentinel>"),
             )
             monkeypatch.setattr(
-                "orquestra.sdk._base._api._task_run._get_in_process_backend_ids",
+                "orquestra.sdk._client._base._api._task_run._get_in_process_backend_ids",
                 mock_get_in_process_ids := Mock(
                     return_value="<in_process ids sentinel>"
                 ),

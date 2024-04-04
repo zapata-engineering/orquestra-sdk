@@ -10,15 +10,15 @@ from unittest.mock import Mock, create_autospec
 
 import pytest
 
-from orquestra.sdk._base.cli._arg_resolvers import (
+from orquestra.sdk._client._base.cli._arg_resolvers import (
     TaskInvIDResolver,
     WFConfigResolver,
     WFRunResolver,
 )
-from orquestra.sdk._base.cli._dumpers import LogsDumper
-from orquestra.sdk._base.cli._repos import WorkflowRunRepo
-from orquestra.sdk._base.cli._task import _logs
-from orquestra.sdk._base.cli._ui._presenters import (
+from orquestra.sdk._client._base.cli._dumpers import LogsDumper
+from orquestra.sdk._client._base.cli._repos import WorkflowRunRepo
+from orquestra.sdk._client._base.cli._task import _logs
+from orquestra.sdk._client._base.cli._ui._presenters import (
     LogsPresenter,
     WrappedCorqOutputPresenter,
 )

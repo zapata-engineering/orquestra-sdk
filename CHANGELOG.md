@@ -530,7 +530,7 @@ If a task defines its own imports (either source, dependencies, or both) - it wi
 
 ```python
 from orquestra import sdk
-from orquestra.sdk.schema.workflow_run import State
+from orquestra.sdk.shared.schema import State
 
 wf_run = sdk.WorkflowRun.by_id("foo")
 
@@ -543,8 +543,8 @@ logs_subset = {id: lines for id, lines in logs.items() if id in ["foo", "bar", "
 
 # Option 3
 for task in wf_run.get_tasks():
-    if task.get_status() == State.FAILED:
-        print(task.get_logs())
+  if task.get_status() == State.FAILED:
+    print(task.get_logs())
 ```
 
 * `sdk.WorkflowRun.get_artifacts()` doesn't accept any arguments any more. Now, it returns all the artifacts produced by the tasks in the workflow.

@@ -14,8 +14,8 @@ import pip_api.exceptions
 import pytest
 
 import orquestra.sdk as sdk
-from orquestra.sdk._base import _dsl, loader
-from orquestra.sdk._base.serde import deserialize_pickle, serialize_pickle
+from orquestra.sdk._client._base import _dsl, loader
+from orquestra.sdk._client._base.serde import deserialize_pickle, serialize_pickle
 from orquestra.sdk.exceptions import DirtyGitRepo, InvalidTaskDefinitionError
 
 DEFAULT_LOCAL_REPO_PATH = Path(__file__).parent.resolve()

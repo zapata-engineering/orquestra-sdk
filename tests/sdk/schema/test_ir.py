@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from orquestra.sdk import exceptions
-from orquestra.sdk.schema import ir
+from orquestra.sdk.shared.schema import ir
 
 from .data import unpacking
 

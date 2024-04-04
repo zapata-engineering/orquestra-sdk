@@ -5,7 +5,7 @@
 user's project state.
 """
 
-from orquestra.sdk.schema import ir
+from orquestra.sdk.shared.schema import ir
 
 TINY_WORKFLOW_DEF = ir.WorkflowDef(
     name="single_invocation",

@@ -13,7 +13,7 @@ the exception class.
 """
 
 from orquestra.sdk.exceptions import RuntimeQuerySummaryError
-from orquestra.sdk.schema.configs import RuntimeName
+from orquestra.sdk.shared.schema.configs import RuntimeName
 
 
 class TestRuntimeQuerySummaryError:

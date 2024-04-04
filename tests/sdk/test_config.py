@@ -22,8 +22,8 @@ import filelock
 import pytest
 
 import orquestra.sdk.exceptions as exceptions
-from orquestra.sdk._base import _config
-from orquestra.sdk.schema.configs import RuntimeName
+from orquestra.sdk._client._base import _config
+from orquestra.sdk.shared.schema.configs import RuntimeName
 
 from .data.configs import TEST_CONFIG_JSON
 

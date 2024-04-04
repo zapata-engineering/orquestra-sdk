@@ -9,15 +9,15 @@ from unittest.mock import ANY, Mock, call, create_autospec
 import pytest
 
 from orquestra import sdk
-from orquestra.sdk._base import _git_url_utils
-from orquestra.sdk._base._graphs import iter_invocations_topologically
-from orquestra.sdk._base._testing._example_wfs import (
+from orquestra.sdk._client._base import _git_url_utils
+from orquestra.sdk._client._base._graphs import iter_invocations_topologically
+from orquestra.sdk._client._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
 )
-from orquestra.sdk._ray import _build_workflow, _client
 from orquestra.sdk.exceptions import OrquestraSDKVersionMismatchWarning
-from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.responses import WorkflowResult
+from orquestra.sdk.runtime._ray import _build_workflow, _client
+from orquestra.sdk.shared.schema import ir
+from orquestra.sdk.shared.schema.responses import WorkflowResult
 
 
 def make_workflow_with_dependencies(deps, *, n_tasks=1):

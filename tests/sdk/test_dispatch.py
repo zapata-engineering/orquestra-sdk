@@ -8,8 +8,8 @@ import typing as t
 
 import pytest
 
-from orquestra.sdk._base import dispatch
-from orquestra.sdk.schema import ir
+from orquestra.sdk._client._base import dispatch
+from orquestra.sdk.shared.schema import ir
 
 
 # Those tests are loading the example workflows from weird directories.

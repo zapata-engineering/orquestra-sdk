@@ -50,7 +50,7 @@ print(list(tasks)[0])
 
 # >> Tutorial code snippet: simple filter tasks
 # Get only tasks that have succeeded
-from orquestra.sdk.schema.workflow_run import State  # noqa: E402
+from orquestra.sdk.shared.schema import State  # noqa: E402
 
 succeeded_tasks = wf_run.get_tasks(state=State.SUCCEEDED)
 

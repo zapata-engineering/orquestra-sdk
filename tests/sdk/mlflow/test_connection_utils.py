@@ -13,7 +13,7 @@ from requests import Response, Session
 
 import orquestra.sdk.exceptions as exceptions
 from orquestra import sdk
-from orquestra.sdk._base._env import (
+from orquestra.sdk._client._base._env import (
     CURRENT_CLUSTER_ENV,
     CURRENT_USER_ENV,
     MLFLOW_ARTIFACTS_DIR,
@@ -58,7 +58,9 @@ class TestGetTempArtifactsDir:
         def test_happy_path(tmp_path: pathlib.Path, monkeypatch):
             # Given
             monkeypatch.setattr(
-                sdk.mlflow._connection_utils, "DEFAULT_TEMP_ARTIFACTS_DIR", tmp_path
+                sdk.mlflow._connection_utils,
+                "DEFAULT_TEMP_ARTIFACTS_DIR",
+                tmp_path,
             )
 
             # When
@@ -73,7 +75,9 @@ class TestGetTempArtifactsDir:
             dir = tmp_path / "dir_that_does_not_exist"
             assert not dir.exists()
             monkeypatch.setattr(
-                sdk.mlflow._connection_utils, "DEFAULT_TEMP_ARTIFACTS_DIR", dir
+                sdk.mlflow._connection_utils,
+                "DEFAULT_TEMP_ARTIFACTS_DIR",
+                dir,
             )
 
             # When
