@@ -112,6 +112,8 @@ class Action:
                     log_type=log_type,
                 )
                 for dump_path in dump_paths:
-                    self._logs_presenter.show_dumped_wf_logs(dump_path, log_type=log_type)
+                    self._logs_presenter.show_dumped_wf_logs(
+                        dump_path, log_type=log_type
+                    )
             else:
                 self._logs_presenter.show_logs(log, log_type=log_type)
