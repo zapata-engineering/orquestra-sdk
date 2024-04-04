@@ -178,7 +178,7 @@ class TestAction:
 
             # Custom mocks
             dumped_path = "<dumped path sentinel>"
-            action._dumper.dump.return_value = dumped_path
+            action._dumper.dump.return_value = (dumped_path,)
 
             # When
             action.on_cmd_call(
