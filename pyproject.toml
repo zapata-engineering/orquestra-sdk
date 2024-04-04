@@ -126,7 +126,7 @@ Repository = "https://github.com/zapatacomputing/orquestra-workflow-sdk.git"
 Issues = "https://github.com/zapatacomputing/orquestra-workflow-sdk/issues"
 
 [project.scripts]
-orq = "orquestra.sdk._base.cli._entry:dorq"
+orq = "orquestra.sdk._client._base.cli._entry:dorq"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/orquestra"]
@@ -154,7 +154,7 @@ exclude = [
     # Exclude our test files where we invoke mypy from pytest.
     "tests/sdk/typing",
     # Workaround for misbehaving 3rd-party libraries.
-    "src/orquestra/sdk/dremio/_flight_facade.py",
+    "src/orquestra/sdk/_client/dremio/_flight_facade.py",
 ]
 # Without this, mypy would skip typechecking functions that don't have type
 # annotations in the signature.
@@ -166,7 +166,7 @@ omit = [
   "*/main.py",
   "*/__init__.py",
   # This is vendored source code from another project
-  "src/orquestra/sdk/kubernetes/quantity.py",
+  "src/orquestra/sdk/shared/kubernetes/quantity.py",
 ]
 
 [tool.coverage.report]
@@ -226,13 +226,13 @@ arg-type-hints-in-docstring = false
 
 [tool.pyright]
 exclude = [
-    "src/orquestra/sdk/_base/_dsl.py",
-    "src/orquestra/sdk/_base/_logs/_markers.py",
-    "src/orquestra/sdk/_base/_ast.py",
-    "src/orquestra/sdk/_base/cli/_entry.py",
-    "src/orquestra/sdk/_base/cli/_task/_logs.py",
-    "src/orquestra/sdk/_base/cli/_ui/_click_default_group.py",
-    "src/orquestra/sdk/_base/cli/_workflow/_logs.py",
+    "src/orquestra/sdk/_client/_base/_dsl.py",
+    "src/orquestra/sdk/_client/_base/_logs/_markers.py",
+    "src/orquestra/sdk/_client/_base/_ast.py",
+    "src/orquestra/sdk/_client/_base/cli/_entry.py",
+    "src/orquestra/sdk/_client/_base/cli/_task/_logs.py",
+    "src/orquestra/sdk/_client/_base/cli/_ui/_click_default_group.py",
+    "src/orquestra/sdk/_client/_base/cli/_workflow/_logs.py",
     "tests/sdk/test_artifact_future_methods.py",
     "tests/sdk/test_ast.py",
     "tests/sdk/test_dsl.py",

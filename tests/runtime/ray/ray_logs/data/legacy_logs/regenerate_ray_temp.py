@@ -20,7 +20,7 @@ import os
 import shutil
 from pathlib import Path
 
-from orquestra.sdk._client._base import _example_wfs
+from orquestra.sdk._client._base._testing import _example_wfs
 
 REAL_RAY_TEMP = Path.home() / ".orquestra" / "ray"
 TEST_RAY_TEMP = Path(__file__).parent / "ray_temp"
