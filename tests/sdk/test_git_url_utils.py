@@ -95,8 +95,7 @@ class TestBuildGitURL:
 
         url = _git_url_utils.build_git_url(git_url)
         assert url == (
-            "https://git:<mocked secret>@github.com"
-            "/zapata-engineering/orquestra-sdk"
+            "https://git:<mocked secret>@github.com" "/zapata-engineering/orquestra-sdk"
         )
         secrets_get.assert_called_once_with(
             secret_name, config_name=secret_config, workspace_id=secret_workspace
