@@ -546,6 +546,7 @@ def workflow(
 ) -> Callable[[Callable[_P, _R]], WorkflowTemplate[_P, _R]]:
     ...
 
+
 @overload
 def workflow(
     fn: Callable[_P, _R],
