@@ -10,7 +10,7 @@ on:
           Example of using a published version of the SDK:
           orquestra-sdk[ray]==0.47.0 
           Example of using an unpublished version:
-          orquestra-sdk[ray] @ git+https://github.com/zapatacomputing/orquestra-workflow-sdk.git@v0.47.0
+          orquestra-sdk[ray] @ git+https://github.com/zapata-engineering/orquestra-sdk.git@v0.47.0
       docker_tag:
         type: string
         description: |

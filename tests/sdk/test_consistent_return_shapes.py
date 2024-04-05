@@ -63,7 +63,7 @@ def wf_return_multiple_packed_values_vanilla():
     source_import=sdk.InlineImport(),
     dependency_imports=[
         sdk.GitImport(
-            repo_url="git@github.com:zapatacomputing/orquestra-workflow-sdk.git",
+            repo_url="git@github.com:zapata-engineering/orquestra-sdk.git",
             git_ref="main",
         ),
     ],

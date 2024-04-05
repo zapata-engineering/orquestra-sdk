@@ -84,7 +84,7 @@ def git_task2():
 @_dsl.task(
     dependency_imports=[
         _dsl.GitImport(
-            repo_url="git@github.com:zapatacomputing/orquestra-workflow-sdk.git",
+            repo_url="git@github.com:zapata-engineering/orquestra-sdk.git",
             git_ref="main",
         )
     ],
@@ -818,7 +818,7 @@ GENERATE_GRAPH_TASK_DEF_DUMP = {
     "output_metadata": {"is_subscriptable": False, "n_outputs": 1},
     "source_import_id": AnyMatchingStr(r"inline-import-\w{1}"),
     "dependency_import_ids": [
-        AnyMatchingStr(r"git-\w{10}_github_com_zapatacomputing_orquestra_workflow_sdk")
+        AnyMatchingStr(r"git-\w{10}_github_com_zapata_engineering_orquestra_sdk")
     ],
     "resources": None,
     "max_retries": None,
@@ -870,9 +870,9 @@ def test_individual_task_models(task, has_arg: bool, expected_model: dict):
     "repo_url,index,expected_id",
     [
         (
-            "https://github.com/zapatacomputing/orquestra-workflow-sdk.git",
+            "https://github.com/zapata-engineering/orquestra-sdk.git",
             0,
-            "git-0_github_com_zapatacomputing_orquestra_workflow_sdk",
+            "git-0_github_com_zapata_engineering_orquestra_sdk",
         ),
         ("git@remote:repo.git", 1, "git-1_remote_repo"),
         ("some&&weird:/URI", 100, "git-100_some_weird_URI"),

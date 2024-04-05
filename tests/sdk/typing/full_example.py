@@ -19,10 +19,10 @@ def not_a_task():
     dependency_imports=[
         sdk.LocalImport(module="test"),
         sdk.GitImport(
-            repo_url="git@github.com:zapatacomputing/orquestra-workflow-sdk",
+            repo_url="git@github.com:zapata-engineering/orquestra-sdk",
             git_ref="main",
         ),
-        sdk.GithubImport(repo="zapatacomputing/orquestra-workflow-sdk"),
+        sdk.GithubImport(repo="zapata-engineering/orquestra-sdk"),
         sdk.PythonImports("orquestra-sdk"),
     ],
 )

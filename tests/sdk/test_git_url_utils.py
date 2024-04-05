@@ -14,13 +14,13 @@ from orquestra.sdk.shared.schema.ir import GitURL, SecretNode
 @pytest.fixture
 def git_url() -> GitURL:
     return GitURL(
-        original_url="https://github.com/zapatacomputing/orquestra-workflow-sdk",
+        original_url="https://github.com/zapata-engineering/orquestra-sdk",
         protocol="https",
         user=None,
         password=None,
         host="github.com",
         port=None,
-        path="zapatacomputing/orquestra-workflow-sdk",
+        path="zapata-engineering/orquestra-sdk",
         query=None,
     )
 
@@ -31,23 +31,23 @@ class TestBuildGitURL:
         [
             (
                 "git+ssh",
-                "git+ssh://git@github.com/zapatacomputing/orquestra-workflow-sdk",
+                "git+ssh://git@github.com/zapata-engineering/orquestra-sdk",
             ),
             (
                 "ssh+git",
-                "ssh+git://git@github.com/zapatacomputing/orquestra-workflow-sdk",
+                "ssh+git://git@github.com/zapata-engineering/orquestra-sdk",
             ),
-            ("ftp", "ftp://git@github.com/zapatacomputing/orquestra-workflow-sdk"),
-            ("ftps", "ftps://git@github.com/zapatacomputing/orquestra-workflow-sdk"),
-            ("http", "http://github.com/zapatacomputing/orquestra-workflow-sdk"),
-            ("https", "https://github.com/zapatacomputing/orquestra-workflow-sdk"),
+            ("ftp", "ftp://git@github.com/zapata-engineering/orquestra-sdk"),
+            ("ftps", "ftps://git@github.com/zapata-engineering/orquestra-sdk"),
+            ("http", "http://github.com/zapata-engineering/orquestra-sdk"),
+            ("https", "https://github.com/zapata-engineering/orquestra-sdk"),
             (
                 "git+http",
-                "git+http://github.com/zapatacomputing/orquestra-workflow-sdk",
+                "git+http://github.com/zapata-engineering/orquestra-sdk",
             ),
             (
                 "git+https",
-                "git+https://github.com/zapatacomputing/orquestra-workflow-sdk",
+                "git+https://github.com/zapata-engineering/orquestra-sdk",
             ),
         ],
     )
@@ -60,7 +60,7 @@ class TestBuildGitURL:
     def test_ssh_with_port(self, git_url: GitURL):
         git_url.port = 22
         url = _git_url_utils.build_git_url(git_url, "ssh")
-        assert url == "ssh://git@github.com:22/zapatacomputing/orquestra-workflow-sdk"
+        assert url == "ssh://git@github.com:22/zapata-engineering/orquestra-sdk"
 
     @pytest.mark.parametrize(
         "protocol",
@@ -71,12 +71,12 @@ class TestBuildGitURL:
         url = _git_url_utils.build_git_url(git_url, protocol)
         assert url == (
             f"{protocol}://amelio_robles_avila@github.com"
-            "/zapatacomputing/orquestra-workflow-sdk"
+            "/zapata-engineering/orquestra-sdk"
         )
 
     def test_uses_default_protocol(self, git_url: GitURL):
         url = _git_url_utils.build_git_url(git_url)
-        assert url == "https://github.com/zapatacomputing/orquestra-workflow-sdk"
+        assert url == "https://github.com/zapata-engineering/orquestra-sdk"
 
     def test_with_password(self, monkeypatch: pytest.MonkeyPatch, git_url: GitURL):
         secrets_get = create_autospec(orquestra.sdk.secrets.get)
@@ -95,8 +95,7 @@ class TestBuildGitURL:
 
         url = _git_url_utils.build_git_url(git_url)
         assert url == (
-            "https://git:<mocked secret>@github.com"
-            "/zapatacomputing/orquestra-workflow-sdk"
+            "https://git:<mocked secret>@github.com/zapata-engineering/orquestra-sdk"
         )
         secrets_get.assert_called_once_with(
             secret_name, config_name=secret_config, workspace_id=secret_workspace

@@ -159,7 +159,7 @@ class TestMakeDag:
         monkeypatch.setattr(_build_workflow, "_pip_string", pip_string)
         imps = [
             sdk.GithubImport(
-                "zapatacomputing/orquestra-workflow-sdk",
+                "zapata-engineering/orquestra-sdk",
                 personal_access_token=sdk.Secret(
                     "mock-secret", config_name="mock-config", workspace_id="mock-ws"
                 ),
