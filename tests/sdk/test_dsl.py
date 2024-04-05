@@ -8,6 +8,7 @@ import subprocess
 import sys
 from contextlib import suppress as do_not_raise
 from pathlib import Path
+from unittest.mock import Mock
 
 import git
 import pip_api.exceptions
@@ -17,6 +18,7 @@ import orquestra.sdk as sdk
 from orquestra.sdk._client._base import _dsl, loader
 from orquestra.sdk._client._base.serde import deserialize_pickle, serialize_pickle
 from orquestra.sdk.exceptions import DirtyGitRepo, InvalidTaskDefinitionError
+from orquestra.sdk.shared.packaging import _versions
 
 DEFAULT_LOCAL_REPO_PATH = Path(__file__).parent.resolve()
 
@@ -825,3 +827,132 @@ class TestSecretAsString:
             wf().model
 
         assert "Invalid usage of a Secret object" in str(e)
+
+
+class TestExecuteTask:
+    @staticmethod
+    def test_pass_task_def():
+        @sdk.task
+        def hello():
+            return 100
+
+        result = _dsl.execute_task(hello, (), {})
+
+        assert result == 100
+
+    @staticmethod
+    def test_pass_task_def_args():
+        @sdk.task
+        def hello(a, b):
+            return a * b
+
+        result = _dsl.execute_task(
+            hello,
+            (1, 2),
+            {},
+        )
+
+        assert result == 2
+
+    @staticmethod
+    def test_pass_task_def_kwargs():
+        @sdk.task
+        def hello(a, b):
+            return a * b
+
+        result = _dsl.execute_task(
+            hello,
+            (),
+            {"a": 2, "b": 2},
+        )
+
+        assert result == 4
+
+
+class TestInstalledImport:
+    @staticmethod
+    def test_package_found(monkeypatch):
+        # Given
+        monkeypatch.setattr(
+            _versions, "get_installed_version", Mock(return_value="1.2.3")
+        )
+        # When
+        imp = _dsl.InstalledImport(package_name="some-package")
+        # Then
+        assert isinstance(imp, sdk.PythonImports)
+        assert len(imp._packages) == 1
+        assert imp._packages[0] == "some-package==1.2.3"
+
+    @staticmethod
+    def test_package_not_found(monkeypatch):
+        # Given
+        monkeypatch.setattr(
+            _versions,
+            "get_installed_version",
+            Mock(side_effect=_dsl.PackagingError("Package not found:")),
+        )
+        # When
+        with pytest.raises(_dsl.PackagingError) as exc_info:
+            _ = _dsl.InstalledImport(package_name="some-package")
+        # Then
+        assert exc_info.match("Package not found:")
+
+    @staticmethod
+    def test_package_not_found_fallback(monkeypatch):
+        # Given
+        monkeypatch.setattr(
+            _versions,
+            "get_installed_version",
+            Mock(side_effect=_dsl.PackagingError("Package not found:")),
+        )
+        fallback = sdk.GithubImport("zapata-engineering/orquestra-sdk")
+        # When
+        imp = _dsl.InstalledImport(package_name="some-package", fallback=fallback)
+        # Then
+        assert imp == fallback
+
+    @staticmethod
+    def test_package_version_matches(monkeypatch):
+        # Given
+        monkeypatch.setattr(
+            _versions, "get_installed_version", Mock(return_value="1.2.3")
+        )
+        # When
+        imp = _dsl.InstalledImport(
+            package_name="some-package", version_match="[0-9].[0-9].[0-9]"
+        )
+        # Then
+        assert isinstance(imp, sdk.PythonImports)
+        assert len(imp._packages) == 1
+        assert imp._packages[0] == "some-package==1.2.3"
+
+    @staticmethod
+    def test_package_version_does_not_match(monkeypatch):
+        # Given
+        monkeypatch.setattr(
+            _versions, "get_installed_version", Mock(return_value="1.2.3")
+        )
+        # When
+        with pytest.raises(_dsl.PackagingError) as exc_info:
+            _ = _dsl.InstalledImport(package_name="some-package", version_match="xxx")
+        # Then
+        assert exc_info.match(
+            "Package version mismatch: some-package==1.2.3\n"
+            'Expected version to match "xxx"'
+        )
+
+    @staticmethod
+    def test_package_version_does_not_match_fallback(monkeypatch):
+        # Given
+        monkeypatch.setattr(
+            _versions, "get_installed_version", Mock(return_value="1.2.3")
+        )
+        fallback = sdk.GithubImport("zapata-engineering/orquestra-sdk")
+        # When
+        imp = _dsl.InstalledImport(
+            package_name="some-package",
+            version_match="xxx",
+            fallback=fallback,
+        )
+        # Then
+        assert imp == fallback

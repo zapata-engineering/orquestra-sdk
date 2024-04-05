@@ -1254,3 +1254,19 @@ def InstalledImport(
         raise e
 
     return PythonImports(f"{package_name}=={version}")
+
+
+def execute_task(task: TaskDef, args: tuple, kwargs: dict):
+    """A helper method to testing tasks by executing them outside of the workflow graph.
+
+    Use only for unittesting code.
+
+    Args:
+        task: the task you want to execute.
+        args: the positional arguments to pass to the task.
+        kwargs: the keyword arguments to pass to the task.
+
+    Returns:
+        the result of executing a task.
+    """
+    return task._TaskDef__sdk_task_body(*args, **kwargs)
