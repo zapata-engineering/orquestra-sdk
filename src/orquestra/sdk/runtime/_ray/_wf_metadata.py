@@ -5,7 +5,7 @@
 import json
 import typing as t
 
-from orquestra.sdk._client._base._storage import BaseModel
+from orquestra.sdk.shared._storage import BaseModel
 from orquestra.sdk.shared.schema import ir, workflow_run
 
 

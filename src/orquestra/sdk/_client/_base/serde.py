@@ -11,9 +11,8 @@ from pathlib import Path
 
 import cloudpickle  # type: ignore
 
+from orquestra.sdk.shared._storage import TypeAdapter
 from orquestra.sdk.shared.schema import ir, responses
-
-from .._base._storage import TypeAdapter
 
 CHUNK_SIZE = 40_000
 ENCODING = "base64"

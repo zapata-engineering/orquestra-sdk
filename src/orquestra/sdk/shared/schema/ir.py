@@ -14,11 +14,7 @@ import warnings
 import pydantic
 from typing_extensions import Annotated
 
-from orquestra.sdk._client._base._storage import (
-    BaseModel,
-    GpuResourceType,
-    field_validator,
-)
+from orquestra.sdk.shared._storage import BaseModel, GpuResourceType, field_validator
 
 ImportId = str
 SecretNodeId = str

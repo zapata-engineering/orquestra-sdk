@@ -14,7 +14,7 @@ import warnings
 from datetime import timedelta
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._client._base import _dates, _services, serde
+from orquestra.sdk._client._base import _services, serde
 from orquestra.sdk._client._base._env import RAY_GLOBAL_WF_RUN_ID_ENV
 from orquestra.sdk._client._base._logs._interfaces import LogReader
 from orquestra.sdk._client._base._spaces._structs import ProjectRef
@@ -33,6 +33,7 @@ from orquestra.sdk.shared.schema.workflow_run import (
     WorkspaceId,
 )
 
+from ...shared import _dates
 from . import _client, _id_gen, _ray_logs
 from ._build_workflow import TaskResult, make_ray_dag
 from ._wf_metadata import WfUserMetadata, pydatic_to_json_dict

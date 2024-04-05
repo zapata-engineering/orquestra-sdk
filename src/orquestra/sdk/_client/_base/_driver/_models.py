@@ -18,7 +18,8 @@ from typing import (
 import pydantic
 from typing_extensions import Annotated
 
-from orquestra.sdk._client._base._dates import Instant
+from orquestra.sdk.shared._dates import Instant
+from orquestra.sdk.shared._storage import BaseModel
 from orquestra.sdk.shared.schema.ir import WorkflowDef
 from orquestra.sdk.shared.schema.workflow_run import (
     ProjectId,
@@ -30,8 +31,6 @@ from orquestra.sdk.shared.schema.workflow_run import (
     WorkflowRunSummary,
     WorkspaceId,
 )
-
-from ..._base._storage import BaseModel
 
 WorkflowDefID = str
 WorkflowRunID = str

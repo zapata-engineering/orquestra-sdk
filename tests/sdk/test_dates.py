@@ -10,7 +10,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from orquestra.sdk._client._base import _dates
+from orquestra.sdk.shared import _dates
 
 
 class TestNow:

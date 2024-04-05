@@ -8,7 +8,7 @@ from typing import Optional
 from urllib3.exceptions import LocationParseError
 from urllib3.util import parse_url
 
-from orquestra.sdk import secrets
+from orquestra.sdk._client import secrets
 from orquestra.sdk.shared.schema.ir import GitURL
 
 

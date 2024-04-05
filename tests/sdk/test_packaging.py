@@ -15,6 +15,22 @@ except ModuleNotFoundError:
     import importlib_metadata as metadata  # type: ignore
 
 
+def execute_task(task, args: tuple, kwargs: dict):
+    """A helper method to testing tasks by executing them outside of the workflow graph.
+
+    Use only for unittesting code.
+
+    Args:
+        task: the task you want to execute.
+        args: the positional arguments to pass to the task.
+        kwargs: the keyword arguments to pass to the task.
+
+    Returns:
+        the result of executing a task.
+    """
+    return task._TaskDef__sdk_task_body(*args, **kwargs)
+
+
 class TestGetInstalledVersion:
     @staticmethod
     def test_successful_call(monkeypatch):
@@ -136,7 +152,7 @@ class TestExecuteTask:
         def hello():
             return 100
 
-        result = packaging.execute_task(hello, (), {})
+        result = execute_task(hello, (), {})
 
         assert result == 100
 
@@ -146,7 +162,7 @@ class TestExecuteTask:
         def hello(a, b):
             return a * b
 
-        result = packaging.execute_task(
+        result = execute_task(
             hello,
             (1, 2),
             {},
@@ -160,7 +176,7 @@ class TestExecuteTask:
         def hello(a, b):
             return a * b
 
-        result = packaging.execute_task(
+        result = execute_task(
             hello,
             (),
             {"a": 2, "b": 2},

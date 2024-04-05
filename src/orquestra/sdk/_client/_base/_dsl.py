@@ -49,6 +49,7 @@ from orquestra.sdk.exceptions import (
     WorkflowSyntaxError,
 )
 from orquestra.sdk.shared.kubernetes.quantity import parse_quantity
+from orquestra.sdk.shared.packaging import PackagingError, get_installed_version
 
 from . import _ast
 
@@ -1212,3 +1213,44 @@ def task(
         return _inner
     else:
         return _inner(fn)
+
+
+def InstalledImport(
+    *,
+    package_name: str,
+    version_match: Optional[str] = None,
+    fallback: Optional[Import] = None,
+) -> Import:
+    """Returns PythonImports for a task for the installed version of a package.
+
+    On an error, if a fallback is provided, the fallback is returned instead.
+
+    Args:
+        package_name: the package to use as the import.
+        version_match: a regex string to match the installed version.
+        fallback: a fallback import to return if there are any issues
+            in finding the package version.
+
+    Raises:
+        PackagingError: If there are any issues finding an installed package and no
+            fallback is provided.
+
+    Returns:
+        Either a PythonImports for package_name at the installed version or `fallback`.
+
+    """
+    try:
+        version = get_installed_version(package_name)
+        if version_match is not None:
+            if re.match(version_match, version) is None:
+                raise PackagingError(
+                    f"Package version mismatch: "
+                    f"{package_name}=={version}\n"
+                    f'Expected version to match "{version_match}"'
+                )
+    except PackagingError as e:
+        if fallback is not None:
+            return fallback
+        raise e
+
+    return PythonImports(f"{package_name}=={version}")

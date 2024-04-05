@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from datetime import timedelta
 
 from orquestra.sdk import exceptions, secrets
-from orquestra.sdk._client._base import _dates, abc
+from orquestra.sdk._client._base import abc
 from orquestra.sdk._client._base._spaces._structs import ProjectRef
 from orquestra.sdk.shared.schema import ir
 from orquestra.sdk.shared.schema.responses import WorkflowResult
@@ -24,6 +24,7 @@ from orquestra.sdk.shared.schema.workflow_run import (
     WorkspaceId,
 )
 
+from ...shared import _dates
 from . import serde
 from ._graphs import iter_invocations_topologically
 from .dispatch import locate_fn_ref
