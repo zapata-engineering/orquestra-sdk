@@ -22,6 +22,7 @@ from orquestra.sdk._client._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
     workflow_with_different_resources,
 )
+from orquestra.sdk.shared import serde
 from orquestra.sdk.shared.schema.ir import WorkflowDef
 from orquestra.sdk.shared.schema.responses import (
     ComputeEngineWorkflowResult,
@@ -672,7 +673,7 @@ class TestGetWorkflowRunResultsNonBlocking:
             mocked_client.get_workflow_run.return_value = workflow_run_status(
                 State.SUCCEEDED
             )
-            monkeypatch.setattr(sdk.shared.serde, "deserialize", lambda x: x)
+            monkeypatch.setattr(serde, "deserialize", lambda x: x)
             monkeypatch.setattr(_ce_runtime._retry.time, "sleep", Mock())
             # When
             _ = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
