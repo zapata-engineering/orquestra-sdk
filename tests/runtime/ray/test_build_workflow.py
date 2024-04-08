@@ -16,6 +16,7 @@ from orquestra.sdk._client._base._testing._example_wfs import (
 )
 from orquestra.sdk.exceptions import OrquestraSDKVersionMismatchWarning
 from orquestra.sdk.runtime._ray import _build_workflow, _client
+from orquestra.sdk.shared import serde
 from orquestra.sdk.shared.schema import ir
 from orquestra.sdk.shared.schema.responses import WorkflowResult
 
@@ -39,7 +40,7 @@ class TestPipString:
     def mock_serde(self, monkeypatch: pytest.MonkeyPatch):
         """We're not testing the serde package, so we're mocking it."""
         monkeypatch.setattr(
-            sdk.shared.serde,
+            serde,
             "stringify_package_spec",
             Mock(return_value="mocked"),
         )
@@ -336,8 +337,8 @@ class TestArgumentUnwrapper:
 
     @pytest.fixture
     def mock_deserialize(self, monkeypatch: pytest.MonkeyPatch):
-        deserialize = create_autospec(sdk.shared.serde.deserialize)
-        monkeypatch.setattr(sdk.shared.serde, "deserialize", deserialize)
+        deserialize = create_autospec(serde.deserialize)
+        monkeypatch.setattr(serde, "deserialize", deserialize)
         return deserialize
 
     class TestConstantNode:
