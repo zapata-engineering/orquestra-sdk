@@ -8,7 +8,7 @@ import sys
 import typing as t
 from functools import singledispatch
 
-from orquestra.sdk._client._base import serde
+from orquestra.sdk.shared import serde
 from orquestra.sdk.shared.schema import ir
 
 

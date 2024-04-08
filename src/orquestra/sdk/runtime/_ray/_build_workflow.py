@@ -21,7 +21,6 @@ from orquestra.sdk._client._base import (
     _graphs,
     _services,
     dispatch,
-    serde,
 )
 from orquestra.sdk._client._base._logs import _markers
 from orquestra.sdk._client._base._regex import SEMVER_REGEX
@@ -33,6 +32,7 @@ from orquestra.sdk.shared.kubernetes.quantity import parse_quantity
 from orquestra.sdk.shared.packaging import get_installed_version
 from orquestra.sdk.shared.schema import ir, responses
 
+from ...shared import serde
 from ...shared.schema import workflow_run
 from . import _client, _id_gen
 from ._wf_metadata import InvUserMetadata, pydatic_to_json_dict

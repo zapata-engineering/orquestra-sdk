@@ -672,7 +672,7 @@ class TestGetWorkflowRunResultsNonBlocking:
             mocked_client.get_workflow_run.return_value = workflow_run_status(
                 State.SUCCEEDED
             )
-            monkeypatch.setattr(_ce_runtime.serde, "deserialize", lambda x: x)
+            monkeypatch.setattr(sdk.shared.serde, "deserialize", lambda x: x)
             monkeypatch.setattr(_ce_runtime._retry.time, "sleep", Mock())
             # When
             _ = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)

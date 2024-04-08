@@ -7,8 +7,8 @@ import typing as t
 from functools import singledispatchmethod
 from pathlib import Path
 
-from orquestra.sdk._client._base import serde
 from orquestra.sdk._client._base._logs._interfaces import WorkflowLogs
+from orquestra.sdk.shared import serde
 from orquestra.sdk.shared.schema.workflow_run import TaskInvocationId, WorkflowRunId
 
 

@@ -24,8 +24,7 @@ from orquestra.sdk.shared.schema.workflow_run import (
     WorkspaceId,
 )
 
-from ...shared import _dates
-from . import serde
+from ...shared import _dates, serde
 from ._graphs import iter_invocations_topologically
 from .dispatch import locate_fn_ref
 

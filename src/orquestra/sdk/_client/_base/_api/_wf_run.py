@@ -32,6 +32,7 @@ from orquestra.sdk.exceptions import (
     WorkflowRunNotSucceeded,
     WorkspacesNotSupportedError,
 )
+from orquestra.sdk.shared import serde
 from orquestra.sdk.shared.schema import ir
 from orquestra.sdk.shared.schema.configs import ConfigName
 from orquestra.sdk.shared.schema.responses import WorkflowResult
@@ -46,7 +47,6 @@ from orquestra.sdk.shared.schema.workflow_run import (
     WorkspaceId,
 )
 
-from .. import serde
 from .._graphs import iter_invocations_topologically
 from .._logs._interfaces import WorkflowLogs
 from .._spaces._resolver import resolve_studio_ref, resolve_studio_workspace_ref

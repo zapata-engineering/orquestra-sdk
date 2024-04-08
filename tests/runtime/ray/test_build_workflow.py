@@ -8,7 +8,7 @@ from unittest.mock import ANY, Mock, call, create_autospec
 
 import pytest
 
-from orquestra import sdk
+import orquestra.sdk as sdk
 from orquestra.sdk._client._base import _git_url_utils
 from orquestra.sdk._client._base._graphs import iter_invocations_topologically
 from orquestra.sdk._client._base._testing._example_wfs import (
@@ -39,7 +39,7 @@ class TestPipString:
     def mock_serde(self, monkeypatch: pytest.MonkeyPatch):
         """We're not testing the serde package, so we're mocking it."""
         monkeypatch.setattr(
-            _build_workflow.serde,
+            sdk.shared.serde,
             "stringify_package_spec",
             Mock(return_value="mocked"),
         )
@@ -336,8 +336,8 @@ class TestArgumentUnwrapper:
 
     @pytest.fixture
     def mock_deserialize(self, monkeypatch: pytest.MonkeyPatch):
-        deserialize = create_autospec(_build_workflow.serde.deserialize)
-        monkeypatch.setattr(_build_workflow.serde, "deserialize", deserialize)
+        deserialize = create_autospec(sdk.shared.serde.deserialize)
+        monkeypatch.setattr(sdk.shared.serde, "deserialize", deserialize)
         return deserialize
 
     class TestConstantNode:

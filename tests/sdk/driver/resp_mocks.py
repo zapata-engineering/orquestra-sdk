@@ -16,9 +16,9 @@ from orquestra.sdk._client._base._driver._models import (
     WorkflowDefID,
     WorkflowRunID,
 )
-from orquestra.sdk._client._base.serde import result_from_artifact
 from orquestra.sdk.shared.schema.ir import ArtifactFormat, WorkflowDef
 from orquestra.sdk.shared.schema.workflow_run import RunStatus, TaskRun
+from orquestra.sdk.shared.serde import result_from_artifact
 
 # --- Helpers ---
 # These helpers are used to reduce code duplication when creating test responses
