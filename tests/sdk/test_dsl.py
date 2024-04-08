@@ -873,9 +873,9 @@ class TestInstalledImport:
     @staticmethod
     def test_package_found(monkeypatch):
         # Given
-        monkeypatch.setattr(
-            _versions, "get_installed_version", Mock(return_value="1.2.3")
-        )
+        monkeypatch.setattr("importlib.metadata.version", Mock(return_value="1.2.3"))
+        monkeypatch.setattr("importlib_metadata.version", Mock(return_value="1.2.3"))
+
         # When
         imp = _dsl.InstalledImport(package_name="some-package")
         # Then
@@ -914,9 +914,9 @@ class TestInstalledImport:
     @staticmethod
     def test_package_version_matches(monkeypatch):
         # Given
-        monkeypatch.setattr(
-            _versions, "get_installed_version", Mock(return_value="1.2.3")
-        )
+        monkeypatch.setattr("importlib.metadata.version", Mock(return_value="1.2.3"))
+        monkeypatch.setattr("importlib_metadata.version", Mock(return_value="1.2.3"))
+
         # When
         imp = _dsl.InstalledImport(
             package_name="some-package", version_match="[0-9].[0-9].[0-9]"
@@ -929,9 +929,9 @@ class TestInstalledImport:
     @staticmethod
     def test_package_version_does_not_match(monkeypatch):
         # Given
-        monkeypatch.setattr(
-            _versions, "get_installed_version", Mock(return_value="1.2.3")
-        )
+        monkeypatch.setattr("importlib.metadata.version", Mock(return_value="1.2.3"))
+        monkeypatch.setattr("importlib_metadata.version", Mock(return_value="1.2.3"))
+
         # When
         with pytest.raises(_dsl.PackagingError) as exc_info:
             _ = _dsl.InstalledImport(package_name="some-package", version_match="xxx")
