@@ -23,12 +23,12 @@ from orquestra.sdk._client._base import (
     dispatch,
     serde,
 )
-from orquestra.sdk._client._base._env import (
+from orquestra.sdk._client._base._logs import _markers
+from orquestra.sdk._client._base._regex import SEMVER_REGEX
+from orquestra.sdk.runtime._ray._env import (
     RAY_DOWNLOAD_GIT_IMPORTS_ENV,
     RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV,
 )
-from orquestra.sdk._client._base._logs import _markers
-from orquestra.sdk._client._base._regex import SEMVER_REGEX
 from orquestra.sdk.shared.kubernetes.quantity import parse_quantity
 from orquestra.sdk.shared.packaging import get_installed_version
 from orquestra.sdk.shared.schema import ir, responses

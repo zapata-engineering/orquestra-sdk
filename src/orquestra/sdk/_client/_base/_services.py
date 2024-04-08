@@ -9,12 +9,13 @@ import subprocess
 from pathlib import Path
 from typing import Protocol
 
-from ._env import (
-    ORQ_TASK_RUN_LOGS_DIR,
+from orquestra.sdk.runtime._ray._env import (
     RAY_PLASMA_PATH_ENV,
     RAY_STORAGE_PATH_ENV,
     RAY_TEMP_PATH_ENV,
 )
+
+from ._env import ORQ_TASK_RUN_LOGS_DIR
 
 ORQUESTRA_BASE_PATH = Path.home() / ".orquestra"
 

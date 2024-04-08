@@ -21,11 +21,11 @@ from freezegun import freeze_time
 from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._client._base._config import LOCAL_RUNTIME_CONFIGURATION
-from orquestra.sdk._client._base._env import RAY_TEMP_PATH_ENV
 from orquestra.sdk._client._base._testing import _example_wfs, _ipc
 from orquestra.sdk._client._base.abc import RuntimeInterface
 from orquestra.sdk._client._base.serde import deserialize
 from orquestra.sdk.runtime._ray import _build_workflow, _client, _dag, _ray_logs
+from orquestra.sdk.runtime._ray._env import RAY_TEMP_PATH_ENV
 from orquestra.sdk.shared.schema import ir
 from orquestra.sdk.shared.schema.responses import JSONResult
 from orquestra.sdk.shared.schema.workflow_run import State, WorkflowRunId

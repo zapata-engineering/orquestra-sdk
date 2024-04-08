@@ -15,10 +15,10 @@ from datetime import timedelta
 
 from orquestra.sdk import exceptions
 from orquestra.sdk._client._base import _services, serde
-from orquestra.sdk._client._base._env import RAY_GLOBAL_WF_RUN_ID_ENV
 from orquestra.sdk._client._base._logs._interfaces import LogReader
 from orquestra.sdk._client._base._spaces._structs import ProjectRef
 from orquestra.sdk._client._base.abc import RuntimeInterface
+from orquestra.sdk.runtime._ray._env import RAY_GLOBAL_WF_RUN_ID_ENV
 from orquestra.sdk.shared.schema import ir
 from orquestra.sdk.shared.schema.configs import RuntimeConfiguration
 from orquestra.sdk.shared.schema.responses import WorkflowResult
