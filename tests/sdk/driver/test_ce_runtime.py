@@ -8,14 +8,13 @@ from unittest.mock import DEFAULT, MagicMock, Mock, call, create_autospec
 import pytest
 
 import orquestra.sdk as sdk
-from orquestra.sdk import LogOutput, Project, Workspace, exceptions
+from orquestra.sdk import LogOutput, exceptions
 from orquestra.sdk._client._base._driver import (
     _ce_runtime,
     _client,
     _exceptions,
     _models,
 )
-from orquestra.sdk._client._base._spaces._structs import ProjectRef
 from orquestra.sdk._client._base._testing._example_wfs import (
     add,
     my_workflow,
@@ -23,6 +22,7 @@ from orquestra.sdk._client._base._testing._example_wfs import (
     workflow_with_different_resources,
 )
 from orquestra.sdk.shared import serde
+from orquestra.sdk.shared._spaces._structs import Project, ProjectRef, Workspace
 from orquestra.sdk.shared.schema.ir import WorkflowDef
 from orquestra.sdk.shared.schema.responses import (
     ComputeEngineWorkflowResult,

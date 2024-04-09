@@ -16,13 +16,13 @@ import pytest
 from orquestra import sdk
 from orquestra.sdk import exceptions
 from orquestra.sdk._client._base._in_process_runtime import InProcessRuntime
-from orquestra.sdk._client._base._spaces._structs import ProjectRef
 from orquestra.sdk._client._base._testing._example_wfs import (
     wf_with_explicit_n_outputs,
     wf_with_secrets,
 )
 from orquestra.sdk._client.secrets import _client, _models
 from orquestra.sdk.shared import _dates, serde
+from orquestra.sdk.shared._spaces._structs import ProjectRef
 from orquestra.sdk.shared.schema import ir
 from orquestra.sdk.shared.schema.workflow_run import State, WorkflowRunId
 

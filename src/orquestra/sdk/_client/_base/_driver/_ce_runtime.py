@@ -7,7 +7,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Protocol, Sequence, Union
 
-from orquestra.sdk import Project, ProjectRef, Workspace, exceptions
+from orquestra.sdk import exceptions
 from orquestra.sdk._client._base import _retry
 from orquestra.sdk._client._base.abc import RuntimeInterface
 from orquestra.sdk.exceptions import IgnoredFieldWarning
@@ -15,6 +15,7 @@ from orquestra.sdk.shared import serde
 from orquestra.sdk.shared._logs import _regrouping
 from orquestra.sdk.shared._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk.shared._logs._models import LogAccumulator, LogStreamType
+from orquestra.sdk.shared._spaces._structs import Project, ProjectRef, Workspace
 from orquestra.sdk.shared.kubernetes.quantity import parse_quantity
 from orquestra.sdk.shared.schema.configs import RuntimeConfiguration
 from orquestra.sdk.shared.schema.ir import ArtifactFormat, TaskInvocationId, WorkflowDef

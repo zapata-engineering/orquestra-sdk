@@ -15,6 +15,7 @@ from datetime import timedelta
 
 from orquestra.sdk.exceptions import WorkspacesNotSupportedError
 from orquestra.sdk.shared._logs._interfaces import LogOutput, LogReader, WorkflowLogs
+from orquestra.sdk.shared._spaces._structs import Project, ProjectRef, Workspace
 from orquestra.sdk.shared.schema.ir import TaskInvocationId, WorkflowDef
 from orquestra.sdk.shared.schema.responses import WorkflowResult
 from orquestra.sdk.shared.schema.workflow_run import (
@@ -25,8 +26,6 @@ from orquestra.sdk.shared.schema.workflow_run import (
     WorkflowRunSummary,
     WorkspaceId,
 )
-
-from ._spaces._structs import Project, ProjectRef, Workspace
 
 # A typealias that hints where we expect raw artifact values.
 ArtifactValue = t.Any

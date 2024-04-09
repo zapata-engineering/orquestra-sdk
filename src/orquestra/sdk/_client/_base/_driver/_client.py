@@ -19,9 +19,10 @@ import pydantic
 import requests
 from requests import codes
 
-from orquestra.sdk import ProjectRef, exceptions
+from orquestra.sdk import exceptions
 from orquestra.sdk._client._base._spaces._api import make_workspace_zri
 from orquestra.sdk.shared._regex import VERSION_REGEX
+from orquestra.sdk.shared._spaces._structs import ProjectRef
 from orquestra.sdk.shared._storage import TypeAdapter
 from orquestra.sdk.shared.schema.ir import WorkflowDef
 from orquestra.sdk.shared.schema.responses import (

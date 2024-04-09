@@ -32,7 +32,6 @@ from ._client._base._dsl import (
     task,
 )
 from ._client._base._spaces._api import list_projects, list_workspaces
-from ._client._base._spaces._structs import Project, ProjectRef, Workspace
 from ._client._base._workflow import (
     NotATaskWarning,
     WorkflowDef,

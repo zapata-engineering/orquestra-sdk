@@ -5,10 +5,10 @@ import os
 from typing import Optional
 
 from orquestra.sdk.exceptions import ProjectInvalidError
+from orquestra.sdk.shared._spaces._structs import ProjectRef
 from orquestra.sdk.shared.schema.workflow_run import ProjectId, WorkspaceId
 
 from .._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
-from ._structs import ProjectRef
 
 
 def resolve_studio_ref(
