@@ -7,8 +7,8 @@ from unittest.mock import create_autospec
 
 import pytest
 
-from orquestra.sdk._client._base._logs._interfaces import WorkflowLogs
 from orquestra.sdk._client._base.cli import _dumpers
+from orquestra.sdk.shared._logs._interfaces import WorkflowLogs
 from orquestra.sdk.shared.schema.ir import ArtifactFormat
 
 

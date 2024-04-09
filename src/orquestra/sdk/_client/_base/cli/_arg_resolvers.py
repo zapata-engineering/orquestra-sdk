@@ -14,7 +14,7 @@ import warnings
 from orquestra.sdk import exceptions
 from orquestra.sdk._client._base import _services
 from orquestra.sdk._client._base._config import IN_PROCESS_CONFIG_NAME
-from orquestra.sdk._client._base._logs._interfaces import WorkflowLogs
+from orquestra.sdk.shared._logs._interfaces import WorkflowLogs
 from orquestra.sdk.shared.schema.configs import ConfigName
 from orquestra.sdk.shared.schema.ir import TaskInvocationId
 from orquestra.sdk.shared.schema.workflow_run import (

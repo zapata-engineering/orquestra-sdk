@@ -25,9 +25,9 @@ from orquestra.sdk._client._base._driver._client import (
     ExternalUriProvider,
 )
 from orquestra.sdk._client._base._jwt import check_jwt_without_signature_verification
-from orquestra.sdk._client._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk._client._base.abc import ArtifactValue
 from orquestra.sdk.shared import _dates
+from orquestra.sdk.shared._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk.shared.schema import _compat
 from orquestra.sdk.shared.schema.configs import (
     ConfigName,

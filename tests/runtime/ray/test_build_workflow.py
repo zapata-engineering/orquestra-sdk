@@ -11,13 +11,13 @@ import pytest
 import orquestra.sdk as sdk
 import orquestra.sdk._client.secrets
 from orquestra.sdk._client._base import _git_url_utils
-from orquestra.sdk._client._base._graphs import iter_invocations_topologically
 from orquestra.sdk._client._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
 )
 from orquestra.sdk.exceptions import OrquestraSDKVersionMismatchWarning
 from orquestra.sdk.runtime._ray import _build_workflow, _client
 from orquestra.sdk.shared import serde
+from orquestra.sdk.shared._graphs import iter_invocations_topologically
 from orquestra.sdk.shared.schema import ir
 from orquestra.sdk.shared.schema.ir import GitURL, SecretNode
 from orquestra.sdk.shared.schema.responses import WorkflowResult

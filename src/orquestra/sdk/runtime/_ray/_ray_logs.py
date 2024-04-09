@@ -6,9 +6,9 @@ import typing as t
 from pathlib import Path
 from typing import Iterator
 
-from orquestra.sdk._client._base._logs import _regrouping
-from orquestra.sdk._client._base._logs._interfaces import LogOutput, WorkflowLogs
-from orquestra.sdk._client._base._logs._models import LogAccumulator, LogStreamType
+from orquestra.sdk.shared._logs import _regrouping
+from orquestra.sdk.shared._logs._interfaces import LogOutput, WorkflowLogs
+from orquestra.sdk.shared._logs._models import LogAccumulator, LogStreamType
 from orquestra.sdk.shared.schema.ir import TaskInvocationId
 from orquestra.sdk.shared.schema.workflow_run import WorkflowRunId
 

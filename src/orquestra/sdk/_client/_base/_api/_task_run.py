@@ -6,9 +6,9 @@ import typing as t
 from collections import namedtuple
 from itertools import chain
 
-from orquestra.sdk._client._base._logs._interfaces import LogOutput
 from orquestra.sdk.exceptions import TaskRunNotFound, WorkflowRunIDNotFoundError
 from orquestra.sdk.shared import _exec_ctx, serde
+from orquestra.sdk.shared._logs._interfaces import LogOutput
 from orquestra.sdk.shared.schema import ir
 from orquestra.sdk.shared.schema.responses import WorkflowResult
 from orquestra.sdk.shared.schema.workflow_run import State, TaskInvocationId

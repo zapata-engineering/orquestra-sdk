@@ -25,9 +25,9 @@ from rich.table import Column, Table
 from tabulate import tabulate
 
 from orquestra.sdk._client._base import _env
-from orquestra.sdk._client._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk.shared import _dates, serde
 from orquestra.sdk.shared._dates import Instant
+from orquestra.sdk.shared._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk.shared.schema import responses
 from orquestra.sdk.shared.schema.configs import (
     ConfigName,

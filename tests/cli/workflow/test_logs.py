@@ -10,7 +10,6 @@ from unittest.mock import Mock, create_autospec
 
 import pytest
 
-from orquestra.sdk._client._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk._client._base.cli._arg_resolvers import (
     WFConfigResolver,
     WFRunResolver,
@@ -22,6 +21,7 @@ from orquestra.sdk._client._base.cli._ui._presenters import (
     WrappedCorqOutputPresenter,
 )
 from orquestra.sdk._client._base.cli._workflow import _logs
+from orquestra.sdk.shared._logs._interfaces import LogOutput, WorkflowLogs
 
 
 class TestAction:

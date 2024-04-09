@@ -27,11 +27,6 @@ from orquestra.sdk._client._base import _api, _dsl, _traversal, _workflow
 from orquestra.sdk._client._base._api._task_run import TaskRun
 from orquestra.sdk._client._base._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
 from orquestra.sdk._client._base._in_process_runtime import InProcessRuntime
-from orquestra.sdk._client._base._logs._interfaces import (
-    LogOutput,
-    LogReader,
-    WorkflowLogs,
-)
 from orquestra.sdk._client._base._spaces._api import list_projects, list_workspaces
 from orquestra.sdk._client._base._spaces._structs import ProjectRef, Workspace
 from orquestra.sdk._client._base.abc import RuntimeInterface
@@ -47,6 +42,7 @@ from orquestra.sdk.exceptions import (
     WorkflowRunNotFoundError,
 )
 from orquestra.sdk.shared import serde
+from orquestra.sdk.shared._logs._interfaces import LogOutput, LogReader, WorkflowLogs
 from orquestra.sdk.shared.schema import ir
 from orquestra.sdk.shared.schema.configs import RuntimeName
 from orquestra.sdk.shared.schema.responses import JSONResult

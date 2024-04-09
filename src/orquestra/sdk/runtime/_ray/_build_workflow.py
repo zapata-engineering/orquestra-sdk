@@ -15,12 +15,7 @@ from packaging import version
 from typing_extensions import assert_never
 
 from orquestra.sdk import exceptions, secrets
-from orquestra.sdk._client._base import _graphs
-from orquestra.sdk.runtime._ray._env import (
-    RAY_DOWNLOAD_GIT_IMPORTS_ENV,
-    RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV,
-)
-from orquestra.sdk.shared import _exec_ctx, dispatch, serde
+from orquestra.sdk.shared import _exec_ctx, _graphs, dispatch, serde
 from orquestra.sdk.shared._regex import SEMVER_REGEX
 from orquestra.sdk.shared.kubernetes.quantity import parse_quantity
 from orquestra.sdk.shared.packaging import get_installed_version
@@ -29,6 +24,7 @@ from orquestra.sdk.shared.schema.ir import GitURL
 
 from . import _client, _id_gen
 from ._dirs import redirected_logs_dir
+from ._env import RAY_DOWNLOAD_GIT_IMPORTS_ENV, RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV
 from ._logs import _markers
 from ._wf_metadata import InvUserMetadata, pydatic_to_json_dict
 
