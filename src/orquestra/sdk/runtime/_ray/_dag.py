@@ -14,10 +14,10 @@ import warnings
 from datetime import timedelta
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._client._base import _services
 from orquestra.sdk._client._base._logs._interfaces import LogReader
 from orquestra.sdk._client._base._spaces._structs import ProjectRef
 from orquestra.sdk._client._base.abc import RuntimeInterface
+from orquestra.sdk.runtime._ray._dirs import ray_temp_path
 from orquestra.sdk.runtime._ray._env import RAY_GLOBAL_WF_RUN_ID_ENV
 from orquestra.sdk.shared.schema import ir
 from orquestra.sdk.shared.schema.configs import RuntimeConfiguration
@@ -306,9 +306,7 @@ class RayRuntime(RuntimeInterface):
 
         self._config = config
 
-        self._log_reader: LogReader = _ray_logs.DirectLogReader(
-            _services.ray_temp_path()
-        )
+        self._log_reader: LogReader = _ray_logs.DirectLogReader(ray_temp_path())
 
     @classmethod
     def startup(cls, ray_params: RayParams):

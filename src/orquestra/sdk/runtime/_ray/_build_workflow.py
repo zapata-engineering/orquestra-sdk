@@ -15,18 +15,18 @@ from packaging import version
 from typing_extensions import assert_never
 
 from orquestra.sdk import exceptions, secrets
-from orquestra.sdk._client._base import _git_url_utils, _graphs, dispatch
+from orquestra.sdk._client._base import _graphs
 from orquestra.sdk.runtime._ray._env import (
     RAY_DOWNLOAD_GIT_IMPORTS_ENV,
     RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV,
 )
+from orquestra.sdk.shared import _exec_ctx, dispatch, serde
 from orquestra.sdk.shared._regex import SEMVER_REGEX
 from orquestra.sdk.shared.kubernetes.quantity import parse_quantity
 from orquestra.sdk.shared.packaging import get_installed_version
-from orquestra.sdk.shared.schema import ir, responses
+from orquestra.sdk.shared.schema import ir, responses, workflow_run
+from orquestra.sdk.shared.schema.ir import GitURL
 
-from ...shared import _exec_ctx, serde
-from ...shared.schema import workflow_run
 from . import _client, _id_gen
 from ._dirs import redirected_logs_dir
 from ._logs import _markers
@@ -198,6 +198,53 @@ def _get_user_function(
         return _generate_nop_function(output_metadata)
 
 
+def _build_git_url(url: GitURL, protocol_override: t.Optional[str] = None) -> str:
+    """Returns a usable string from a GitURL.
+
+    This will get the password from the secrets API, if required.
+
+    Args:
+        url: the GitURL to build the URL string from
+        protocol_override: Ignore the protocol defined in the URL and build the URL
+            using a different protocol.
+
+    Raises:
+        ValueError: when the protocol is not recognised.
+    """
+    protocol = protocol_override or url.protocol
+    user = url.user or "git"
+    port = f":{url.port}" if url.port is not None else ""
+
+    # Dereference secret used as password
+    if url.password is not None:
+        secret = secrets.get(
+            url.password.secret_name,
+            config_name=url.password.secret_config,
+            workspace_id=url.password.workspace_id,
+        )
+        password = f":{secret}"
+    else:
+        password = ""
+
+    if protocol == "ssh":
+        if url.port is None:
+            return f"{user}@{url.host}:{url.path}"
+        else:
+            return f"ssh://{user}{password}@{url.host}{port}/{url.path}"
+    elif protocol in ("git+ssh", "ssh+git", "ftp", "ftps"):
+        return f"{protocol}://{user}{password}@{url.host}{port}/{url.path}"
+    elif protocol in ("http", "https", "git+https", "git+http"):
+        if url.user is None and url.password is None:
+            return f"{protocol}://{url.host}{port}/{url.path}"
+        else:
+            return f"{protocol}://{user}{password}@{url.host}{port}/{url.path}"
+    else:
+        if protocol == url.protocol:
+            return url.original_url
+        else:
+            raise ValueError(f"Unknown protocol: `{protocol}`")
+
+
 def _make_ray_dag_node(
     client: _client.RayClient,
     ray_options: t.Mapping,
@@ -346,7 +393,7 @@ def _(imp: ir.GitImport):
     protocol = imp.repo_url.protocol
     if not protocol.startswith("git+"):
         protocol = f"git+{protocol}"
-    url = _git_url_utils.build_git_url(imp.repo_url, protocol)
+    url = _build_git_url(imp.repo_url, protocol)
     return [f"{url}@{imp.git_ref}"]
 
 

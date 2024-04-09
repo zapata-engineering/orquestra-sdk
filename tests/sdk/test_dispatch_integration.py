@@ -5,7 +5,8 @@ import sys
 
 import pytest
 
-from orquestra.sdk._client._base import _dsl, dispatch, loader
+from orquestra.sdk._client._base import _dsl, loader
+from orquestra.sdk.shared import dispatch
 from orquestra.sdk.shared.schema import ir
 
 

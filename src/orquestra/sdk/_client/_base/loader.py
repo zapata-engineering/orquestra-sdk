@@ -17,7 +17,7 @@ import types
 import typing as t
 from importlib import abc
 
-from . import dispatch
+from ...shared import dispatch
 
 
 class FakeImportedAttribute:
