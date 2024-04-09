@@ -24,8 +24,8 @@ from orquestra.sdk.shared.packaging._versions import (
 )
 from orquestra.sdk.shared.schema import ir, responses
 
-from ...shared import serde
-from . import _dsl, _exec_ctx, _git_url_utils, _workflow
+from ...shared import _exec_ctx, serde
+from . import _dsl, _git_url_utils, _workflow
 
 N_BYTES_IN_HASH = 8
 

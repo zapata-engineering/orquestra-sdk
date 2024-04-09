@@ -323,9 +323,9 @@ def wf_with_log(msg: str):
 
 @sdk.task
 def get_exec_ctx() -> str:
-    import orquestra.sdk._client._base._exec_ctx
+    import orquestra.sdk.shared._exec_ctx
 
-    ctx = orquestra.sdk._client._base._exec_ctx.global_context
+    ctx = orquestra.sdk.shared._exec_ctx.global_context
     return ctx.name
 
 

@@ -39,3 +39,8 @@ Used to configure if Ray uses custom images
 Example:
     ORQ_RAY_SET_CUSTOM_IMAGE_RESOURCES=1
 """
+
+ORQ_TASK_RUN_LOGS_DIR = "ORQ_TASK_RUN_LOGS_DIR"
+"""
+Used to set the storage location for task logs
+"""

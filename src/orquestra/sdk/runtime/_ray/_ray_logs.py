@@ -6,12 +6,14 @@ import typing as t
 from pathlib import Path
 from typing import Iterator
 
-from orquestra.sdk._client._base._logs import _markers, _regrouping
+from orquestra.sdk._client._base._logs import _regrouping
 from orquestra.sdk._client._base._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk._client._base._logs._models import LogAccumulator, LogStreamType
-from orquestra.sdk._client._base._services import redirected_logs_dir
 from orquestra.sdk.shared.schema.ir import TaskInvocationId
 from orquestra.sdk.shared.schema.workflow_run import WorkflowRunId
+
+from ._dirs import redirected_logs_dir
+from ._logs import _markers
 
 
 class CapturedLogLines(t.NamedTuple):

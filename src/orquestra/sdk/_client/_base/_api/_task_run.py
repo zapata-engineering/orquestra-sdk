@@ -8,7 +8,7 @@ from itertools import chain
 
 from orquestra.sdk._client._base._logs._interfaces import LogOutput
 from orquestra.sdk.exceptions import TaskRunNotFound, WorkflowRunIDNotFoundError
-from orquestra.sdk.shared import serde
+from orquestra.sdk.shared import _exec_ctx, serde
 from orquestra.sdk.shared.schema import ir
 from orquestra.sdk.shared.schema.responses import WorkflowResult
 from orquestra.sdk.shared.schema.workflow_run import State, TaskInvocationId
@@ -16,7 +16,6 @@ from orquestra.sdk.shared.schema.workflow_run import TaskRun as TaskRunModel
 from orquestra.sdk.shared.schema.workflow_run import TaskRunId, WorkflowRunId
 from orquestra.sdk.shared.serde import deserialize_constant
 
-from ..._base import _exec_ctx
 from ..abc import ArtifactValue, RuntimeInterface
 
 

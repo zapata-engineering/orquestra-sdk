@@ -15,26 +15,21 @@ from packaging import version
 from typing_extensions import assert_never
 
 from orquestra.sdk import exceptions, secrets
-from orquestra.sdk._client._base import (
-    _exec_ctx,
-    _git_url_utils,
-    _graphs,
-    _services,
-    dispatch,
-)
-from orquestra.sdk._client._base._logs import _markers
-from orquestra.sdk._client._base._regex import SEMVER_REGEX
+from orquestra.sdk._client._base import _git_url_utils, _graphs, dispatch
 from orquestra.sdk.runtime._ray._env import (
     RAY_DOWNLOAD_GIT_IMPORTS_ENV,
     RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV,
 )
+from orquestra.sdk.shared._regex import SEMVER_REGEX
 from orquestra.sdk.shared.kubernetes.quantity import parse_quantity
 from orquestra.sdk.shared.packaging import get_installed_version
 from orquestra.sdk.shared.schema import ir, responses
 
-from ...shared import serde
+from ...shared import _exec_ctx, serde
 from ...shared.schema import workflow_run
 from . import _client, _id_gen
+from ._dirs import redirected_logs_dir
+from ._logs import _markers
 from ._wf_metadata import InvUserMetadata, pydatic_to_json_dict
 
 DEFAULT_IMAGE_TEMPLATE = "hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:{}"
@@ -246,7 +241,7 @@ def _make_ray_dag_node(
             # https://zapatacomputing.atlassian.net/browse/ORQSDK-530
             wf_run_id, task_inv_id, _ = get_current_ids()
             with _markers.capture_logs(
-                logs_dir=_services.redirected_logs_dir(),
+                logs_dir=redirected_logs_dir(),
                 wf_run_id=wf_run_id,
                 task_inv_id=task_inv_id,
             ):

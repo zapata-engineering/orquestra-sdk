@@ -227,7 +227,7 @@ arg-type-hints-in-docstring = false
 [tool.pyright]
 exclude = [
     "src/orquestra/sdk/_client/_base/_dsl.py",
-    "src/orquestra/sdk/_client/_base/_logs/_markers.py",
+    "src/orquestra/sdk/runtime/_ray/_logs/_markers.py",
     "src/orquestra/sdk/_client/_base/_ast.py",
     "src/orquestra/sdk/_client/_base/cli/_entry.py",
     "src/orquestra/sdk/_client/_base/cli/_task/_logs.py",

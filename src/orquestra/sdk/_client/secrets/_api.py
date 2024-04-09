@@ -5,10 +5,11 @@
 import typing as t
 
 from orquestra.sdk import exceptions as sdk_exc
-from orquestra.sdk._client._base import _dsl, _exec_ctx
+from orquestra.sdk._client._base import _dsl
 from orquestra.sdk.shared.schema.configs import ConfigName
 from orquestra.sdk.shared.schema.workflow_run import WorkspaceId
 
+from ...shared import _exec_ctx
 from . import _auth, _exceptions, _models
 
 
