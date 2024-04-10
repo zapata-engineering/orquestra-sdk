@@ -281,7 +281,7 @@ class PythonImports:
         self._packages = packages
 
     def resolved(self) -> List[Requirement]:
-        from pip_api._parse_requirements import parse_requirements
+        from pip_api._parse_requirements import Requirement, parse_requirements
 
         # on Windows file cannot be reopened when it's opened with delete=True
         # So the temp file is closed first and then deleted manually.
@@ -501,7 +501,7 @@ class TaskDef(wrapt.ObjectProxy, Generic[_TaskReturn]):
     def __init__(
         self,
         fn: Callable[..., _TaskReturn],
-        output_metadata: "orquestra.sdk._base._dsl.TaskOutputMetadata",  # pyright: ignore
+        output_metadata: "orquestra.sdk._base._dsl.TaskOutputMetadata",  # noqa: E501 # pyright: ignore
         source_import: Optional[Import] = None,
         parameters: Optional[OrderedDict] = None,
         dependency_imports: Optional[Tuple[Import, ...]] = None,
@@ -740,12 +740,10 @@ class ArtifactFuture(Generic[_TaskReturn]):
 
     def __init__(
         self,
-        invocation: orquestra.sdk._base._dsl.TaskInvocation[
-            _TaskReturn
-        ],  # pyright: ignore
+        invocation: TaskInvocation[_TaskReturn],  # pyright: ignore
         output_index: Optional[int] = None,
         custom_name: Optional[str] = DEFAULT_CUSTOM_NAME,
-        serialization_format: orquestra.sdk._base._dsl.ArtifactFormat = DEFAULT_SERIALIZATION_FORMAT,  # noqa: E501   # pyright: ignore
+        serialization_format: ArtifactFormat = DEFAULT_SERIALIZATION_FORMAT,
     ):
         self.invocation = invocation
         # if the invocation returns multiple values, this the index in the output

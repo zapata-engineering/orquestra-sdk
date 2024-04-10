@@ -333,7 +333,7 @@ def simple_task(a):
 
 @_workflow.workflow
 def large_workflow():
-    val = 0
+    val: t.Union[int, _dsl.ArtifactFuture[int]] = 0
     for _ in range(1000):
         val = simple_task(val)
     return [val]
@@ -931,7 +931,7 @@ def workflow():
     n_trials = 100
     n_concurrent_searches = 10
     assigned_trials = 0
-    current_trials = [None] * n_concurrent_searches
+    current_trials: list[t.Any] = [None] * n_concurrent_searches
     controller_data = controller_step(*current_trials)
     while assigned_trials < n_trials:
         current_trials = [
