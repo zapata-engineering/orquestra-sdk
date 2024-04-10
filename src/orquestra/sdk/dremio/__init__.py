@@ -4,12 +4,9 @@
 # THIS FILE IS SHIM TO REEXPORT MLFLOW CLIENT AS PUBLIC API.
 # DO NOT PUT ANY LOGIC INTO THAT FILE
 
-from orquestra.sdk._client.secrets import *  # NOQA
-from orquestra.sdk._client.secrets import delete, get, list, set
+from .._client.dremio import *  # NOQA
+from .._client.dremio import DremioClient
 
 __all__ = [
-    "delete",
-    "get",
-    "list",
-    "set",
+    "DremioClient",
 ]

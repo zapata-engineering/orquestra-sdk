@@ -3,7 +3,7 @@
 ################################################################################
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._client._base.abc import RuntimeInterface
+from orquestra.sdk.shared.abc import RuntimeInterface
 from orquestra.sdk.shared.schema.configs import RuntimeConfiguration, RuntimeName
 
 

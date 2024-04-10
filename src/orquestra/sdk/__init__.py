@@ -38,6 +38,7 @@ from ._client._base._workflow import (
     WorkflowTemplate,
     workflow,
 )
+from .shared._spaces._structs import Project, ProjectRef, Workspace
 
 # It's already in a public module, but we'll re-export it under `orquestra.sdk.*` anyway
 # because it's commonly used to filter task runs.

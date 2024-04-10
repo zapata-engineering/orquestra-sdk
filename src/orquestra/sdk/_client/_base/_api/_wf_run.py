@@ -36,6 +36,7 @@ from orquestra.sdk.shared import serde
 from orquestra.sdk.shared._graphs import iter_invocations_topologically
 from orquestra.sdk.shared._logs._interfaces import WorkflowLogs
 from orquestra.sdk.shared._spaces._structs import ProjectRef
+from orquestra.sdk.shared.abc import RuntimeInterface
 from orquestra.sdk.shared.schema import ir
 from orquestra.sdk.shared.schema.configs import ConfigName
 from orquestra.sdk.shared.schema.responses import WorkflowResult
@@ -51,7 +52,6 @@ from orquestra.sdk.shared.schema.workflow_run import (
 )
 
 from .._spaces._resolver import resolve_studio_ref, resolve_studio_workspace_ref
-from ..abc import RuntimeInterface
 from ._config import RuntimeConfig, resolve_config
 from ._task_run import TaskRun
 
