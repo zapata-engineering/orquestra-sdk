@@ -4,7 +4,7 @@
 
 🚨 *Breaking Changes*
 
-* Changed typehints for `TaskDef`. Now Return value from task call is always `ArtifactFeature[T]` object (where `T` is original return type). Task call accepts `typing.any`. 
+* Changed typehints for `TaskDef`. Now Return value from task call is always `ArtifactFeature[T]` object (where `T` is original return type). Task call accepts `typing.any`.
 
 🔥 *Features*
 
