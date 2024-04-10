@@ -3,7 +3,7 @@
 ################################################################################
 
 import re
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 from unittest.mock import ANY, Mock, call, create_autospec
 
 import pytest
@@ -159,7 +159,7 @@ class TestMakeDag:
         monkeypatch.setattr(_build_workflow, "_pip_string", pip_string)
         imps = [
             sdk.GithubImport(
-                "zapatacomputing/orquestra-workflow-sdk",
+                "zapata-engineering/orquestra-sdk",
                 personal_access_token=sdk.Secret(
                     "mock-secret", config_name="mock-config", workspace_id="mock-ws"
                 ),
@@ -221,13 +221,30 @@ class TestMakeDag:
                 assert isinstance(calls[0].kwargs[kwarg_name], type_)
 
         @pytest.mark.parametrize(
-            "custom_image, expected_resources",
+            "custom_image, gpu, expected_resources, expected_kwargs",
             (
-                ("a_custom_image:latest", {"image:a_custom_image:latest": 1}),
                 (
+                    "a_custom_image:latest",
+                    None,
+                    {"image:a_custom_image:latest": 1},
+                    {},
+                ),
+                (
+                    None,
                     None,
                     {
                         "image:hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:mocked": 1  # noqa: E501
+                    },
+                    {},
+                ),
+                (
+                    None,
+                    1,
+                    {
+                        "image:hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:mocked-cuda": 1  # noqa: E501
+                    },
+                    {
+                        "num_gpus": 1,
                     },
                 ),
             ),
@@ -239,12 +256,14 @@ class TestMakeDag:
                 wf_run_id: str,
                 monkeypatch: pytest.MonkeyPatch,
                 custom_image: Optional[str],
+                gpu: Optional[int],
                 expected_resources: Dict[str, int],
+                expected_kwargs: Dict[str, Any],
             ):
                 # Given
                 monkeypatch.setenv("ORQ_RAY_SET_CUSTOM_IMAGE_RESOURCES", "1")
                 workflow = workflow_parametrised_with_resources(
-                    custom_image=custom_image
+                    gpu=gpu, custom_image=custom_image
                 ).model
 
                 # To prevent hardcoding a version number, let's override the version for
@@ -263,7 +282,6 @@ class TestMakeDag:
                 # We should only have two calls: our invocation and the aggregation step
                 assert len(calls) == 2
                 # Checking our call did not have any resources included
-
                 assert calls[0] == call(
                     ANY,
                     name=ANY,
@@ -272,6 +290,7 @@ class TestMakeDag:
                     catch_exceptions=ANY,
                     max_retries=ANY,
                     resources=expected_resources,
+                    **expected_kwargs,
                 )
 
             def test_with_env_not_set(
@@ -279,11 +298,13 @@ class TestMakeDag:
                 client: Mock,
                 wf_run_id: str,
                 custom_image: Optional[str],
+                gpu: Optional[int],
                 expected_resources: Dict[str, int],
+                expected_kwargs: Dict[str, Any],
             ):
                 # Given
                 workflow = workflow_parametrised_with_resources(
-                    custom_image=custom_image
+                    gpu=gpu, custom_image=custom_image
                 ).model
 
                 # When
@@ -302,6 +323,7 @@ class TestMakeDag:
                     runtime_env=ANY,
                     catch_exceptions=ANY,
                     max_retries=ANY,
+                    **expected_kwargs,
                 )
 
 

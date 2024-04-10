@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023 - 2024 Zapata Computing Inc.
 ################################################################################
 """
 Tests for the little bits of code we have in ``orquestra.sdk.schema.ir``.
@@ -28,8 +28,8 @@ class TestWorkflowDef:
             wf_def = unpacking.unpacking_wf().model
 
             # When
-            json_str = wf_def.json()
-            wf_def2 = ir.WorkflowDef.parse_raw(json_str)
+            json_str = wf_def.model_dump_json()
+            wf_def2 = ir.WorkflowDef.model_validate_json(json_str)
 
             # Then
             assert wf_def2 == wf_def
@@ -56,7 +56,8 @@ class TestWorkflowDef:
         @pytest.mark.parametrize("snapshot_version", ["0.44.0", "0.45.1"])
         def test_old_ir(snapshot_version: str):
             path = DATA_PATH / f"unpacking_wf_{snapshot_version}.json"
+            data = path.read_text()
             # Then
             with pytest.warns(exceptions.VersionMismatch):
                 # When
-                _ = ir.WorkflowDef.parse_file(path)
+                _ = ir.WorkflowDef.model_validate_json(data)

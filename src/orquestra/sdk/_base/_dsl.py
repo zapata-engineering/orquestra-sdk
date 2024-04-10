@@ -83,6 +83,7 @@ _secret_as_string_error = (
 
 _TaskReturn = TypeVar("_TaskReturn")
 
+
 class Secret(NamedTuple):
     name: str
     # Config name is only used for the local runtimes where we can't infer the location
@@ -508,6 +509,7 @@ class TaskDef(wrapt.ObjectProxy, Generic[_TaskReturn]):
         custom_image: Optional[str] = None,
         custom_name: Optional[str] = None,
         fn_ref: Optional[FunctionRef] = None,
+        max_retries: Optional[int] = None,
     ):
         if isinstance(fn, BuiltinFunctionType):
             raise NotImplementedError("Built-in functions are not supported as Tasks")
@@ -524,6 +526,7 @@ class TaskDef(wrapt.ObjectProxy, Generic[_TaskReturn]):
         self._use_default_dependency_imports = dependency_imports is None
         self._source_import = source_import
         self._use_default_source_import = source_import is None
+        self._max_retries = max_retries
 
         # task itself is not part of any workflow yet. Don't pass wf defaults
         self._resolve_task_source_data()
@@ -737,7 +740,9 @@ class ArtifactFuture(Generic[_TaskReturn]):
 
     def __init__(
         self,
-        invocation: orquestra.sdk._base._dsl.TaskInvocation[_TaskReturn],  # pyright: ignore
+        invocation: orquestra.sdk._base._dsl.TaskInvocation[
+            _TaskReturn
+        ],  # pyright: ignore
         output_index: Optional[int] = None,
         custom_name: Optional[str] = DEFAULT_CUSTOM_NAME,
         serialization_format: orquestra.sdk._base._dsl.ArtifactFormat = DEFAULT_SERIALIZATION_FORMAT,  # noqa: E501   # pyright: ignore
@@ -1085,6 +1090,7 @@ def task(
     n_outputs: Optional[int] = None,
     custom_image: Optional[str] = None,
     custom_name: Optional[str] = None,
+    max_retries: Optional[int] = None,
 ) -> Callable[[Callable[..., _TaskReturn]], TaskDef[_TaskReturn]]:
     ...
 
@@ -1099,6 +1105,7 @@ def task(
     n_outputs: Optional[int] = None,
     custom_image: Optional[str] = None,
     custom_name: Optional[str] = None,
+    max_retries: Optional[int] = None,
 ) -> TaskDef[_TaskReturn]:
     ...
 
@@ -1112,7 +1119,10 @@ def task(
     n_outputs: Optional[int] = None,
     custom_image: Optional[str] = None,
     custom_name: Optional[str] = None,
-) -> Union[TaskDef[_TaskReturn], Callable[[Callable[..., _TaskReturn]], TaskDef[_TaskReturn]]]:
+    max_retries: Optional[int] = None,
+) -> Union[
+    TaskDef[_TaskReturn], Callable[[Callable[..., _TaskReturn]], TaskDef[_TaskReturn]]
+]:
     """Wraps a function into an Orquestra Task.
 
     The result is something you can use inside your `@sdk.workflow` function. If you
@@ -1143,6 +1153,12 @@ def task(
             result of other task) - it will be placeholded. Every character that is
             non-alphanumeric will be changed to dash ("-").
             Also only first 128 characters of the name will be used
+        max_retries: Maximum number of times a worker will try to retry after failure.
+            Useful if worker is killed by random events, or memory leaks from previously
+            executed tasks.
+            WARNING: retried workers might cause issues in MLflow logging, as retried
+            workers share the same invocation ID, MLflow identifier will be shared
+            between them.
 
     Raises:
         ValueError: when a task has fewer than 1 outputs.
@@ -1180,6 +1196,7 @@ def task(
             output_metadata=output_metadata,
             custom_image=custom_image,
             custom_name=custom_name,
+            max_retries=max_retries,
         )
 
         return task_def

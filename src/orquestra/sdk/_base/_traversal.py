@@ -352,7 +352,7 @@ def _(imp: t.Union[_dsl.GitImport, _dsl.GitImportWithAuth], import_hash: str):
     proj_name = re.sub("https://|.git|git@", "", imp.repo_url)
     # Replace all non-alphanumeric characters with an underscore.
     # multiple special characters are grouped together with a single underscore
-    # For example: github_com_zapatacomputing_orquestra_sdk
+    # For example: github_com_zapata_engineering_orquestra_sdk
     proj_name = re.sub("[^A-Za-z0-9]+", "_", proj_name)
     return f"git-{import_hash}_{proj_name}"
 
@@ -590,6 +590,7 @@ def _make_task_model(
         resources=resources,
         parameters=parameters,
         custom_image=task._custom_image,
+        max_retries=task._max_retries,
     )
 
 

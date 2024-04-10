@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022 - 2024 Zapata Computing Inc.
 ################################################################################
 """Models for responses from the CLI.
 
@@ -10,9 +10,10 @@ structure here is JSON-serializable.
 import enum
 import typing as t
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 from typing_extensions import Annotated
 
+from .._base._storage import BaseModel
 from .ir import ArtifactFormat
 
 

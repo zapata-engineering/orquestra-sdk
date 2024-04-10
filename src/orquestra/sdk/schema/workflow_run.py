@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 - 2023 Zapata Computing Inc.
+# © Copyright 2022 - 2024 Zapata Computing Inc.
 ################################################################################
 """Workflow Run model.
 
@@ -11,10 +11,10 @@ import enum
 import typing as t
 import warnings
 
-from pydantic import BaseModel
-
 from orquestra.sdk._base._dates import Instant
 from orquestra.sdk.schema.ir import TaskInvocationId, WorkflowDef
+
+from .._base._storage import BaseModel
 
 WorkflowRunId = str
 TaskRunId = str

@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022 - 2024 Zapata Computing Inc.
 ################################################################################
 import typing as t
 from pathlib import Path
@@ -259,7 +259,7 @@ class TestGraph:
 
         # When
         graph = _simple_workflow().graph
-        graph.save(dot_path)
+        graph.save(filename=dot_path)
 
         # Then
         assert dot_path.exists()

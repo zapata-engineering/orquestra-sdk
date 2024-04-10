@@ -424,13 +424,13 @@ def test_deferred_git_import_resolved(my_fake_repo_setup):
 )
 def test_github_import_is_git_import_with_auth(username, personal_access_token):
     imp = _dsl.GithubImport(
-        "zapatacomputing/orquestra-workflow-sdk",
+        "zapata-engineering/orquestra-sdk",
         "main",
         username=username,
         personal_access_token=personal_access_token,
     )
     assert imp == _dsl.GitImportWithAuth(
-        repo_url="https://github.com/zapatacomputing/orquestra-workflow-sdk.git",
+        repo_url="https://github.com/zapata-engineering/orquestra-sdk.git",
         git_ref="main",
         username=username,
         auth_secret=personal_access_token,
@@ -440,7 +440,7 @@ def test_github_import_is_git_import_with_auth(username, personal_access_token):
 def test_warns_when_no_workspace_provided():
     with pytest.warns(FutureWarning):
         _dsl.GithubImport(
-            "zapatacomputing/orquestra-workflow-sdk",
+            "zapata-engineering/orquestra-sdk",
             "main",
             username="UN",
             personal_access_token=sdk.Secret("MY PAT"),
@@ -454,7 +454,7 @@ class TestGithubImportRaisesTypeErrorForNonSecretPAT:
         # case where we pass an argument with the wrong type is handled.
         with pytest.raises(TypeError) as e:
             _ = _dsl.GithubImport(
-                "zapatacomputing/orquestra-workflow-sdk",
+                "zapata-engineering/orquestra-sdk",
                 "main",
                 username="foo",
                 personal_access_token="bar",  # type: ignore
@@ -471,7 +471,7 @@ Suggested fix:
     def test_non_secret_pat(pat, pat_type):
         with pytest.raises(TypeError) as e:
             _ = _dsl.GithubImport(
-                "zapatacomputing/orquestra-workflow-sdk",
+                "zapata-engineering/orquestra-sdk",
                 "main",
                 username="foo",
                 personal_access_token=pat,
@@ -543,6 +543,14 @@ def test_artifact_node_custom_names():
         # dependent task name and that it invokes warning for the user
         assert _local_task.__name__ in x.invocation.custom_name
         assert len(warns.list) == 1
+
+
+def test_max_retries():
+    @_dsl.task(max_retries=5)
+    def task():
+        ...
+
+    assert task._max_retries == 5
 
 
 def test_default_import_type(monkeypatch):
@@ -679,10 +687,10 @@ def test_python_310_importlib_abc_bug():
     "obj",
     [
         sdk.GitImport(
-            git_ref="https://github.com/zapatacomputing/orquestra-workflow-sdk.git",
+            git_ref="https://github.com/zapata-engineering/orquestra-sdk.git",
             repo_url="main",
         ),
-        sdk.GithubImport("zapatacomputing/orquestra-workflow-sdk"),
+        sdk.GithubImport("zapata-engineering/orquestra-sdk"),
         sdk.PythonImports("numpy"),
         sdk.LocalImport("module"),
         sdk.InlineImport(),

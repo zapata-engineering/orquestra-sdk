@@ -25,7 +25,7 @@ export ORQ_RAY_STORAGE_PATH=$PWD/0.99.0
 In order to not clutter your local environment, it's a good idea to set these variables too:
 
 ```
-export ORQ_DB_PATH=/tmp/workflows.db 
+export ORQ_DB_PATH=/tmp/workflows.db
 export ORQ_RAY_TEMP_PATH=/tmp/ray/temp
 export ORQ_RAY_PLASMA_PATH=/tmp/ray/plasma
 ```

@@ -547,6 +547,20 @@ def workflow(
     ...
 
 
+@overload
+def workflow(
+    fn: Callable[_P, _R],
+    *,
+    resources: Optional[_dsl.Resources] = None,
+    head_node_resources: Optional[_dsl.Resources] = None,
+    data_aggregation: Optional[Union[DataAggregation, bool]] = None,
+    custom_name: Optional[str] = None,
+    default_source_import: Optional[Import] = None,
+    default_dependency_imports: Optional[Iterable[Import]] = None,
+) -> WorkflowTemplate[_P, _R]:
+    ...
+
+
 def workflow(
     fn: Optional[Callable[_P, _R]] = None,
     *,

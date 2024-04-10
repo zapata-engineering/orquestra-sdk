@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023 - 2024 Zapata Computing Inc.
 ################################################################################
 
 import polars as pl  # type: ignore
@@ -22,4 +22,4 @@ def wf():
 
 
 if __name__ == "__main__":
-    print(wf.model.json(exclude_none=True))
+    print(wf.model.model_dump_json(exclude_none=True))

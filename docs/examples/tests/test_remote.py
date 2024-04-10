@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022-2024 Zapata Computing Inc.
 ################################################################################
 """Snippets and tests used in the "Remote Workflows" tutorial."""
 
@@ -24,7 +24,7 @@ class Snippets:
             source_import=sdk.InlineImport(),
             dependency_imports=[
                 sdk.GitImport(
-                    repo_url="git@github.com:zapatacomputing/orquestra-workflow-sdk.git",  # noqa: E501
+                    repo_url="git@github.com:zapata-engineering/orquestra-sdk.git",  # noqa: E501
                     git_ref="main",
                 ),
             ],
@@ -154,7 +154,7 @@ class TestSnippets:
                     "id": "def_id",
                     "created": "1989-12-13T09:03:49Z",
                     "owner": "taylor.swift@zapatacomputing.com",
-                    "workflow": my_workflow().model.dict(),
+                    "workflow": my_workflow().model.model_dump(),
                     "workspaceId": "eras_tour",
                     "project": "red",
                     "sdkVersion": "0.22.0",

@@ -1,10 +1,10 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023 - 2024 Zapata Computing Inc.
 ################################################################################
 from enum import Enum
 from typing import Any, Dict, Literal
 
-from pydantic.main import BaseModel
+from .._base._storage import BaseModel
 
 CONFIG_FILE_CURRENT_VERSION = "0.0.2"
 

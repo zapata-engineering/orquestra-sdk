@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023 - 2024 Zapata Computing Inc.
 ################################################################################
 """Translates IR workflow def into a Ray workflow."""
 import os
@@ -30,6 +30,13 @@ from . import _client, _id_gen
 from ._wf_metadata import InvUserMetadata, pydatic_to_json_dict
 
 DEFAULT_IMAGE_TEMPLATE = "hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:{}"
+
+
+def _get_default_image(template: str, sdk_version: str, num_gpus: t.Optional[int]):
+    image = template.format(sdk_version)
+    if num_gpus is not None and num_gpus > 0:
+        image = f"{image}-cuda"
+    return image
 
 
 def _arg_from_graph(argument_id: ir.ArgumentId, workflow_def: ir.WorkflowDef):
@@ -280,11 +287,13 @@ def _make_ray_dag_node(
 
                 if output_metadata is not None and output_metadata.n_outputs > 1:
                     unpacked = tuple(
-                        serde.result_from_artifact(
-                            wrapped_return[i], ir.ArtifactFormat.AUTO
+                        (
+                            serde.result_from_artifact(
+                                wrapped_return[i], ir.ArtifactFormat.AUTO
+                            )
+                            if serialization
+                            else wrapped_return[i]
                         )
-                        if serialization
-                        else wrapped_return[i]
                         for i in range(output_metadata.n_outputs)
                     )
                 else:
@@ -499,29 +508,17 @@ def make_ray_dag(
             # If there are any python packages to install for step - set runtime env
             "runtime_env": (_client.RuntimeEnv(pip=pip) if len(pip) > 0 else None),
             "catch_exceptions": False,
-            # We only want to execute workflow tasks once. This is so there is only one
-            # task run ID per task, for scenarios where this is used (like in MLFlow).
+            # We only want to execute workflow tasks once by default.
+            # This is so there is only one task run ID per task, for scenarios where
+            # this is used (like in MLflow). We allow setting this variable on
+            # task-level for some particular edge-cases like memory leaks inside
+            # 3rd party libraries - so in case of the OOMKilled worker it can be
+            # restarted.
             # By default, Ray will only retry tasks that fail due to a "system error".
             # For example, if the worker process crashes or exits early.
             # Normal Python exceptions are NOT retried.
-            # So, we turn max_retries down to 0.
-            "max_retries": 0,
+            "max_retries": user_task.max_retries if user_task.max_retries else 0,
         }
-
-        # Set custom image
-        if os.getenv(RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV) is not None:
-            # This makes an assumption that only "new" IRs will get to this point
-            assert workflow_def.metadata is not None, "Expected a >=0.45.0 IR"
-            sdk_version = workflow_def.metadata.sdk_version.original
-
-            # Custom "Ray resources" request. The entries need to correspond to the ones
-            # used when starting the Ray cluster. See also:
-            # https://docs.ray.io/en/latest/ray-core/scheduling/resources.html#custom-resources
-            ray_options["resources"] = _ray_resources_for_custom_image(
-                invocation.custom_image
-                or user_task.custom_image
-                or DEFAULT_IMAGE_TEMPLATE.format(sdk_version)
-            )
 
         # Non-custom task resources
         if invocation.resources is not None:
@@ -539,6 +536,23 @@ def make_ray_dag(
                 # Fractional GPUs not supported currently
                 gpu = int(float(invocation.resources.gpu))
                 ray_options["num_gpus"] = gpu
+
+        # Set custom image
+        if os.getenv(RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV) is not None:
+            # This makes an assumption that only "new" IRs will get to this point
+            assert workflow_def.metadata is not None, "Expected a >=0.45.0 IR"
+            sdk_version = workflow_def.metadata.sdk_version.original
+
+            # Custom "Ray resources" request. The entries need to correspond to the ones
+            # used when starting the Ray cluster. See also:
+            # https://docs.ray.io/en/latest/ray-core/scheduling/resources.html#custom-resources
+            ray_options["resources"] = _ray_resources_for_custom_image(
+                invocation.custom_image
+                or user_task.custom_image
+                or _get_default_image(
+                    DEFAULT_IMAGE_TEMPLATE, sdk_version, ray_options.get("num_gpus")
+                )
+            )
 
         ray_result = _make_ray_dag_node(
             client=client,
@@ -638,7 +652,7 @@ def get_current_ids() -> (
     )
 
     try:
-        user_meta = InvUserMetadata.parse_obj(task_meta.get("user_metadata"))
+        user_meta = InvUserMetadata.model_validate(task_meta.get("user_metadata"))
     except pydantic.ValidationError:
         # This ray task wasn't annotated with InvUserMetadata. It happens when
         # `get_current_ids()` is used from a context that's not a regular Orquestra Task

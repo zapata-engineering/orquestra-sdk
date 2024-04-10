@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 - 2023 Zapata Computing Inc.
+# © Copyright 2022 - 2024 Zapata Computing Inc.
 ################################################################################
 """Example of a workflow file that can be exported to v1 (yaml) format and run on
 Orquestra cluster.
@@ -12,7 +12,7 @@ import orquestra.sdk as sdk
 
 @sdk.task(
     source_import=sdk.GitImport(
-        repo_url="git@github.com:zapatacomputing/orquestra-workflow-sdk.git",
+        repo_url="git@github.com:zapata-engineering/orquestra-sdk.git",
         git_ref="main",
     ),
 )
@@ -22,7 +22,7 @@ def capitalize(text: str) -> str:
 
 @sdk.task(
     source_import=sdk.GitImport(
-        repo_url="git@github.com:zapatacomputing/orquestra-workflow-sdk.git",
+        repo_url="git@github.com:zapata-engineering/orquestra-sdk.git",
         git_ref="main",
     ),
 )
@@ -33,7 +33,7 @@ def make_greeting(first, last, additional_message: t.Optional[str] = None) -> st
 @sdk.task(
     n_outputs=2,
     source_import=sdk.GitImport(
-        repo_url="git@github.com:zapatacomputing/orquestra-workflow-sdk.git",
+        repo_url="git@github.com:zapata-engineering/orquestra-sdk.git",
         git_ref="main",
     ),
 )
@@ -55,7 +55,7 @@ def capitalize_no_decorator(text: str) -> str:
 
 def main():
     # output the intermediate workflow representation as a JSON
-    print(my_workflow.model.json())
+    print(my_workflow.model.model_dump_json())
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2021-2023 Zapata Computing Inc.
+# © Copyright 2021 - 2024 Zapata Computing Inc.
 ################################################################################
 """Workflow Intermediate Representation.
 
@@ -12,7 +12,9 @@ import typing as t
 import warnings
 
 import pydantic
-from pydantic import BaseModel
+from typing_extensions import Annotated
+
+from .._base._storage import BaseModel, GpuResourceType, field_validator
 
 ImportId = str
 SecretNodeId = str
@@ -40,12 +42,12 @@ class SecretNode(BaseModel):
 class GitURL(BaseModel):
     original_url: str
     protocol: str
-    user: t.Optional[str]
-    password: t.Optional[SecretNode]
+    user: t.Optional[str] = None
+    password: t.Optional[SecretNode] = None
     host: str
-    port: t.Optional[int]
+    port: t.Optional[int] = None
     path: str
-    query: t.Optional[str]
+    query: t.Optional[str] = None
 
 
 class GitImport(BaseModel):
@@ -54,9 +56,9 @@ class GitImport(BaseModel):
     git_ref: str
 
     # we need this in the JSON to know which class to use when deserializing
-    type: str = pydantic.Field(default="GIT_IMPORT", const=True)
+    type: t.Literal["GIT_IMPORT"] = "GIT_IMPORT"
 
-    @pydantic.validator("repo_url", pre=True)
+    @field_validator("repo_url", mode="before")
     def _backwards_compatible_repo_url(cls, v):
         """Allows older models with a string URL to be imported."""
         # Prevent circular imports
@@ -77,12 +79,12 @@ class LocalImport(BaseModel):
     id: ImportId
 
     # we need this in the JSON to know which class to use when deserializing
-    type: str = pydantic.Field(default="LOCAL_IMPORT", const=True)
+    type: t.Literal["LOCAL_IMPORT"] = "LOCAL_IMPORT"
 
 
 class InlineImport(BaseModel):
     id: ImportId
-    type: str = pydantic.Field(default="INLINE_IMPORT", const=True)
+    type: t.Literal["INLINE_IMPORT"] = "INLINE_IMPORT"
 
 
 class PackageSpec(BaseModel):
@@ -111,7 +113,7 @@ class PythonImports(BaseModel):
     # List of pip options to put at start of the requirements
     pip_options: t.List[str]
 
-    type: str = pydantic.Field(default="PYTHON_IMPORT", const=True)
+    type: t.Literal["PYTHON_IMPORT"] = "PYTHON_IMPORT"
 
 
 # If we need more import types, add them here.
@@ -131,7 +133,7 @@ class ModuleFunctionRef(BaseModel):
     line_number: t.Optional[int] = None
 
     # We need this in the JSON to know which class to use when deserializing
-    type: str = pydantic.Field(default="MODULE_FUNCTION_REF", const=True)
+    type: t.Literal["MODULE_FUNCTION_REF"] = "MODULE_FUNCTION_REF"
 
 
 class FileFunctionRef(BaseModel):
@@ -144,7 +146,7 @@ class FileFunctionRef(BaseModel):
     line_number: t.Optional[int] = None
 
     # We need this in the JSON to know which class to use when deserializing
-    type: str = pydantic.Field(default="FILE_FUNCTION_REF", const=True)
+    type: t.Literal["FILE_FUNCTION_REF"] = "FILE_FUNCTION_REF"
 
 
 class InlineFunctionRef(BaseModel):
@@ -154,7 +156,7 @@ class InlineFunctionRef(BaseModel):
     encoded_function: t.List[str]
 
     # We need this in the JSON to know which class to use when deserializing
-    type: str = pydantic.Field(default="INLINE_FUNCTION_REF", const=True)
+    type: t.Literal["INLINE_FUNCTION_REF"] = "INLINE_FUNCTION_REF"
 
 
 FunctionRef = t.Union[ModuleFunctionRef, FileFunctionRef, InlineFunctionRef]
@@ -164,7 +166,8 @@ class Resources(BaseModel):
     cpu: t.Optional[str] = None
     memory: t.Optional[str] = None
     disk: t.Optional[str] = None
-    gpu: t.Optional[str] = None
+    gpu: GpuResourceType = None
+
     # nodes should be a positive integer representing the number of nodes assigned
     # to a workflow. If None, the runtime will choose.
     # This only applies to workflows and not tasks.
@@ -222,7 +225,7 @@ class TaskDef(BaseModel):
     # Kinda like function signature.
     # None means we do not know the parameters for this Task (e.g. an external task)
     # An empty list [] means a Task with no parameters
-    parameters: t.Optional[t.List[TaskParameter]]
+    parameters: t.Optional[t.List[TaskParameter]] = None
 
     # Statically inferred from the task function. See also `TaskOutputMetadata`'s
     # docstring.
@@ -238,6 +241,7 @@ class TaskDef(BaseModel):
 
     resources: t.Optional[Resources] = None
 
+    max_retries: t.Optional[int] = None
     # Hints the runtime to run this task in a docker container with this image. Has no
     # effect if the runtime doesn't support it.
     custom_image: t.Optional[str] = None
@@ -304,10 +308,7 @@ class ConstantNodeJSON(BaseModel):
 
     # Serialized value
     value: str
-    serialization_format: ArtifactFormat = pydantic.Field(
-        default=ArtifactFormat.JSON,
-        const=True,
-    )
+    serialization_format: t.Literal[ArtifactFormat.JSON] = ArtifactFormat.JSON
 
     # Human-readable string that can be rendered on the UI to represent the value.
     value_preview: pydantic.constr(max_length=12)  # type: ignore
@@ -326,10 +327,9 @@ class ConstantNodePickle(BaseModel):
 
     # Serialized value
     chunks: t.List[str]
-    serialization_format: ArtifactFormat = pydantic.Field(
-        default=ArtifactFormat.ENCODED_PICKLE,
-        const=True,
-    )
+    serialization_format: t.Literal[
+        ArtifactFormat.ENCODED_PICKLE
+    ] = ArtifactFormat.ENCODED_PICKLE
 
     # Human-readable string that can be rendered on the UI to represent the value.
     value_preview: pydantic.constr(max_length=12)  # type: ignore
@@ -358,11 +358,11 @@ class TaskInvocation(BaseModel):
     output_ids: t.List[ArtifactNodeId]
 
     # TaskInvocation specific resources
-    resources: t.Optional[Resources]
+    resources: t.Optional[Resources] = None
 
     # Specification for custom image more scoped than TaskDef custom_image field
     # if not set, will fall back to TaskDef custom_image
-    custom_image: t.Optional[str]
+    custom_image: t.Optional[str] = None
 
 
 WorkflowDefName = str
@@ -411,16 +411,18 @@ class WorkflowDef(BaseModel):
     # can be constants or artifacts.
     output_ids: t.List[ArgumentId]
 
-    data_aggregation: t.Optional[DataAggregation]
+    data_aggregation: t.Optional[DataAggregation] = None
 
     # Metadata defaults to None to allow older JSON to be loaded
-    metadata: t.Optional[WorkflowMetadata] = None
+    metadata: Annotated[
+        t.Optional[WorkflowMetadata], pydantic.Field(validate_default=True)
+    ] = None
 
     # The resources that are available for the workflow to use.
     # If none, the runtime will decide.
     resources: t.Optional[Resources] = None
 
-    @pydantic.validator("metadata", always=True)
+    @field_validator("metadata", mode="after")
     def sdk_version_up_to_date(cls, v: t.Optional[WorkflowMetadata]):
         # Workaround for circular imports
         from orquestra.sdk import exceptions

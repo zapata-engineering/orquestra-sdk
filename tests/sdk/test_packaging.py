@@ -74,7 +74,7 @@ class TestInstalledImport:
             "get_installed_version",
             Mock(side_effect=packaging.PackagingError("Package not found:")),
         )
-        fallback = sdk.GithubImport("zapatacomputing/orquestra-workflow-sdk")
+        fallback = sdk.GithubImport("zapata-engineering/orquestra-sdk")
         # When
         imp = packaging.InstalledImport(package_name="some-package", fallback=fallback)
         # Then
@@ -118,7 +118,7 @@ class TestInstalledImport:
         monkeypatch.setattr(
             _versions, "get_installed_version", Mock(return_value="1.2.3")
         )
-        fallback = sdk.GithubImport("zapatacomputing/orquestra-workflow-sdk")
+        fallback = sdk.GithubImport("zapata-engineering/orquestra-sdk")
         # When
         imp = packaging.InstalledImport(
             package_name="some-package",
