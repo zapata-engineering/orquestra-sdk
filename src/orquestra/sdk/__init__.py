@@ -6,12 +6,12 @@
 from . import mlflow, secrets
 from ._base._api import (
     CurrentRunIDs,
-    CurrentWorkflowIDs,
+    CurrentExecutionIDs,
     RuntimeConfig,
     TaskRun,
     WorkflowRun,
     current_run_ids,
-    current_wf_ids,
+    current_exec_ids,
     list_workflow_run_summaries,
     list_workflow_runs,
     migrate_config_file,
@@ -76,6 +76,6 @@ __all__ = [
     "Workspace",
     "CurrentRunIDs",
     "LogOutput",
-    "CurrentWorkflowIDs",
-    "current_wf_ids",
+    "CurrentExecutionIDs",
+    "current_exec_ids",
 ]

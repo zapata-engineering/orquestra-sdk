@@ -909,13 +909,13 @@ def _get_config_context() -> str:
     return _generate_cluster_uri_name(cluster_uri)
 
 
-class CurrentWorkflowIDs(t.NamedTuple):
+class CurrentExecutionIDs(t.NamedTuple):
     config_name: ConfigName
     workspace_id: t.Optional[WorkspaceId]
     project_id: t.Optional[ProjectId]
 
 
-def current_wf_ids() -> CurrentWorkflowIDs:
+def current_exec_ids() -> CurrentExecutionIDs:
     """Get the backend IDs related to current workflow execution context.
 
     config_name is the name of the config used to execute current workflow.
@@ -936,6 +936,6 @@ def current_wf_ids() -> CurrentWorkflowIDs:
     """
     config = _get_config_context()
     workspace_id, project_id = _get_workspace_and_project_ids()
-    return CurrentWorkflowIDs(
+    return CurrentExecutionIDs(
         config_name=config, workspace_id=workspace_id, project_id=project_id
     )

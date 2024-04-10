@@ -8,7 +8,7 @@
 
 🔥 *Features*
 
-* Add new API `current_wf_ids` which returns current `workspace_id` `project_id` and `config_name`. Can be used inside tasks
+* Add new API `current_exec_ids` which returns current `workspace_id` `project_id` and `config_name`. To be used inside a task.
 
 🧟 *Deprecations*
 
