@@ -28,7 +28,7 @@ from orquestra.sdk._client._base._api._task_run import TaskRun
 from orquestra.sdk._client._base._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
 from orquestra.sdk._client._base._in_process_runtime import InProcessRuntime
 from orquestra.sdk._client._base._spaces._api import list_projects, list_workspaces
-from orquestra.sdk.exceptions import (
+from orquestra.sdk.shared.exceptions import (
     ProjectInvalidError,
     RayNotRunningError,
     RemoteConnectionError,
@@ -1754,7 +1754,7 @@ class TestListWorkflows:
 
         # THEN
         assert e.exconly() == (
-            "orquestra.sdk.exceptions.ProjectInvalidError: The project "
+            "orquestra.sdk.shared.exceptions.ProjectInvalidError: The project "
             "`<project ID sentinel>` cannot be uniquely identified without a workspace "
             "parameter."
         )
@@ -1931,7 +1931,7 @@ class TestListWorkflowSummaries:
 
         # THEN
         assert e.exconly() == (
-            "orquestra.sdk.exceptions.ProjectInvalidError: The project "
+            "orquestra.sdk.shared.exceptions.ProjectInvalidError: The project "
             "`<project ID sentinel>` cannot be uniquely identified without a workspace "
             "parameter."
         )

@@ -4,8 +4,7 @@
 """Code for user-facing utilities related to secrets."""
 import typing as t
 
-from orquestra.sdk import exceptions as sdk_exc
-from orquestra.sdk.shared import _exec_ctx
+from orquestra.sdk.shared import _exec_ctx, exceptions as sdk_exc
 from orquestra.sdk.shared.schema.configs import ConfigName
 from orquestra.sdk.shared.schema.workflow_run import WorkspaceId
 

@@ -16,10 +16,9 @@ import pytest
 from git.remote import Remote
 
 import orquestra.sdk.shared.schema.ir as ir
-from orquestra.sdk import exceptions
 from orquestra.sdk._client import secrets
 from orquestra.sdk._client._base import _dsl, _traversal, _workflow
-from orquestra.sdk.shared import dispatch, serde
+from orquestra.sdk.shared import dispatch, serde, exceptions
 from orquestra.sdk.shared.packaging import _versions
 
 from .data.complex_serialization.workflow_defs import (

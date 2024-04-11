@@ -11,7 +11,7 @@ across similar CLI commands.
 import typing as t
 import warnings
 
-from orquestra.sdk import exceptions
+from orquestra.sdk.shared import exceptions
 from orquestra.sdk.shared._logs._interfaces import WorkflowLogs
 from orquestra.sdk.shared.schema.configs import ConfigName
 from orquestra.sdk.shared.schema.ir import TaskInvocationId

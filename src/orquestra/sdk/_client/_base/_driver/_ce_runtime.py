@@ -7,9 +7,8 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Protocol, Sequence, Union
 
-from orquestra.sdk import exceptions
-from orquestra.sdk.exceptions import IgnoredFieldWarning
-from orquestra.sdk.shared import serde
+from orquestra.sdk.shared.exceptions import IgnoredFieldWarning
+from orquestra.sdk.shared import serde, exceptions
 from orquestra.sdk.shared._logs import _regrouping
 from orquestra.sdk.shared._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk.shared._logs._models import LogAccumulator, LogStreamType

@@ -25,8 +25,9 @@ from typing import (
 from typing_extensions import ParamSpec
 
 import orquestra.sdk.shared.schema.ir as ir
-from orquestra.sdk import exceptions, secrets
-from orquestra.sdk.exceptions import WorkflowSyntaxError
+from orquestra.sdk import secrets
+from ...shared import exceptions
+from orquestra.sdk.shared.exceptions import WorkflowSyntaxError
 from orquestra.sdk.shared.schema.workflow_run import ProjectId, WorkspaceId
 
 from . import _api, _dsl, loader

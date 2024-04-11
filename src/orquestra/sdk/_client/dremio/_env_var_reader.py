@@ -3,7 +3,7 @@
 ################################################################################
 import os
 
-from orquestra.sdk.exceptions import EnvVarNotFoundError
+from orquestra.sdk.shared.exceptions import EnvVarNotFoundError
 
 
 class EnvVarReader:

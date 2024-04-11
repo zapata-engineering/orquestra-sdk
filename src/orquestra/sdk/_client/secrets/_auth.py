@@ -5,7 +5,7 @@ import os
 import typing as t
 from pathlib import Path
 
-from orquestra.sdk import exceptions
+from ...shared import exceptions
 from orquestra.sdk.shared.schema.configs import ConfigName
 
 from .._base import _config

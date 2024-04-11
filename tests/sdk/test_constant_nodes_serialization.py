@@ -3,7 +3,7 @@
 ################################################################################
 import pytest
 
-from orquestra.sdk import exceptions
+from orquestra.sdk.shared import exceptions
 from orquestra.sdk._client._base._workflow import WorkflowDef
 from orquestra.sdk._client._base.loader import (
     get_attributes_of_type,

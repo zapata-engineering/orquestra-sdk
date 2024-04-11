@@ -6,7 +6,7 @@ from typing import Callable, List
 
 import pytest
 
-from orquestra.sdk import exceptions
+from orquestra.sdk.shared import exceptions
 from orquestra.sdk._client._base.cli._ui import _errors
 from orquestra.sdk.shared.schema.workflow_run import State
 
@@ -111,42 +111,42 @@ class TestPrettyPrintException:
         "exc,stdout_marker",
         [
             (
-                exceptions.WorkflowDefinitionModuleNotFound(
+                    exceptions.WorkflowDefinitionModuleNotFound(
                     "my_module", ["foo", "bar/baz"]
                 ),
                 "couldn't find workflow definitions module",
             ),
             (
-                exceptions.NoWorkflowDefinitionsFound("my_module"),
+                    exceptions.NoWorkflowDefinitionsFound("my_module"),
                 "couldn't find any workflow definitions",
             ),
             (exceptions.UnauthorizedError(), "log in again"),
             (
-                exceptions.WorkflowSyntaxError(
+                    exceptions.WorkflowSyntaxError(
                     "Workflow arguments must be known at submission time."
                 ),
-                (
+                    (
                     "Invalid workflow syntax. Workflow arguments must be known at"
                     " submission time."
                 ),
             ),
             (
-                exceptions.WorkflowRunNotSucceeded(message="Foo", state=State.FAILED),
-                (
+                    exceptions.WorkflowRunNotSucceeded(message="Foo", state=State.FAILED),
+                    (
                     "This action only works with succeeded workflows. However, the "
                     "selected run is FAILED."
                 ),
             ),
             (
-                exceptions.WorkflowRunNotFinished(message="Foo", state=State.RUNNING),
-                (
+                    exceptions.WorkflowRunNotFinished(message="Foo", state=State.RUNNING),
+                    (
                     "This action only works with finished workflows. However, the "
                     "selected run is RUNNING."
                 ),
             ),
             (ConnectionError("Unable to connect to Ray"), "Unable to connect to Ray"),
             (
-                exceptions.LoginURLUnavailableError("localhost"),
+                    exceptions.LoginURLUnavailableError("localhost"),
                 "The login URL for 'localhost' is unavailable. "
                 "Try checking your network connection and the cluster URL.",
             ),
@@ -185,23 +185,23 @@ class TestPrettyPrintException:
         "exc,stdout_marker",
         [
             (
-                exceptions.InProcessFromCLIError,
+                    exceptions.InProcessFromCLIError,
                 'The "in_process" runtime is designed for debugging and testing via the'
                 " Python API only",
             ),
             (exceptions.InvalidTokenError, "The auth token is not valid"),
             (exceptions.ExpiredTokenError, "The auth token has expired"),
             (
-                exceptions.RayNotRunningError(),
+                    exceptions.RayNotRunningError(),
                 "Could not find any running Ray instance. You can use 'orq status' to check the status of the ray service. If it is not running, it can be started with the `orq up` command.",  # noqa: E501
             ),
             (
-                exceptions.WorkflowRunNotStarted("An issue submitting the workflow"),
+                    exceptions.WorkflowRunNotStarted("An issue submitting the workflow"),
                 "An issue submitting the workflow",
             ),
             (exceptions.QERemoved("<qe removal text>"), "<qe removal text>"),
             (
-                exceptions.RuntimeQuerySummaryError(
+                    exceptions.RuntimeQuerySummaryError(
                     wf_run_id="wf.abc123.123",
                     not_found_runtimes=[],
                     unauthorized_runtimes=[],

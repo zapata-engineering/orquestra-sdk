@@ -17,8 +17,7 @@ from functools import singledispatch
 
 from pip_api._parse_requirements import Requirement
 
-from orquestra.sdk import exceptions
-from orquestra.sdk.shared import _exec_ctx, serde
+from orquestra.sdk.shared import _exec_ctx, serde, exceptions
 from orquestra.sdk.shared.packaging._versions import (
     get_current_python_version,
     get_current_sdk_version,

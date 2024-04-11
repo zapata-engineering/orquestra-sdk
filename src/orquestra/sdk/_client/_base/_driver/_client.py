@@ -19,7 +19,7 @@ import pydantic
 import requests
 from requests import codes
 
-from orquestra.sdk import exceptions
+from orquestra.sdk.shared import exceptions
 from orquestra.sdk.shared._regex import VERSION_REGEX
 from orquestra.sdk.shared._spaces._structs import ProjectRef
 from orquestra.sdk.shared._storage import TypeAdapter

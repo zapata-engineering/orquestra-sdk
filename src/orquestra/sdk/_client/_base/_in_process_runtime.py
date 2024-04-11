@@ -8,8 +8,8 @@ import warnings
 from contextlib import contextmanager
 from datetime import timedelta
 
-from orquestra.sdk import exceptions, secrets
-from orquestra.sdk.shared import _dates, abc, serde
+from orquestra.sdk import secrets
+from orquestra.sdk.shared import _dates, abc, serde, exceptions
 from orquestra.sdk.shared._graphs import iter_invocations_topologically
 from orquestra.sdk.shared._spaces._structs import ProjectRef
 from orquestra.sdk.shared.dispatch import locate_fn_ref

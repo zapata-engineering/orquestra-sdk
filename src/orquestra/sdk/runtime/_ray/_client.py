@@ -4,7 +4,7 @@
 """Facade module for Ray API."""
 import typing as t
 
-from orquestra.sdk.exceptions import (
+from orquestra.sdk.shared.exceptions import (
     NotFoundError,
     UserTaskFailedError,
     WorkflowRunNotFoundError,

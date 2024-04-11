@@ -12,7 +12,7 @@ import pytest
 
 import orquestra.sdk as sdk
 from orquestra.sdk._client._base import _api, _in_process_runtime, _workflow
-from orquestra.sdk.exceptions import TaskRunNotFound
+from orquestra.sdk.shared.exceptions import TaskRunNotFound
 from orquestra.sdk.runtime._ray import _build_workflow
 from orquestra.sdk.shared import _exec_ctx, serde
 from orquestra.sdk.shared._logs._interfaces import LogReader

@@ -18,8 +18,7 @@ import requests
 from typing_extensions import assert_never
 
 from orquestra import sdk
-from orquestra.sdk import exceptions
-from orquestra.sdk.shared import _dates
+from orquestra.sdk.shared import _dates, exceptions
 from orquestra.sdk.shared._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk.shared.abc import ArtifactValue
 from orquestra.sdk.shared.schema import _compat
@@ -73,11 +72,11 @@ class WorkflowRunRepo:
         try:
             run = sdk.WorkflowRun.by_id(wf_run_id)
         except (
-            exceptions.ConfigNameNotFoundError,
-            exceptions.ConfigFileNotFoundError,
-            exceptions.WorkflowRunNotFoundError,
-            exceptions.UnauthorizedError,
-            exceptions.RuntimeQuerySummaryError,
+                exceptions.ConfigNameNotFoundError,
+                exceptions.ConfigFileNotFoundError,
+                exceptions.WorkflowRunNotFoundError,
+                exceptions.UnauthorizedError,
+                exceptions.RuntimeQuerySummaryError,
         ):
             raise
         assert run.config is not None, (
@@ -175,8 +174,8 @@ class WorkflowRunRepo:
         try:
             wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
         except (
-            exceptions.WorkflowRunNotFoundError,
-            exceptions.ConfigNameNotFoundError,
+                exceptions.WorkflowRunNotFoundError,
+                exceptions.ConfigNameNotFoundError,
         ):
             raise
 
@@ -210,8 +209,8 @@ class WorkflowRunRepo:
                 wf_run_id=wf_run_id, config_name=config_name
             )
         except (
-            exceptions.WorkflowRunNotFoundError,
-            exceptions.ConfigNameNotFoundError,
+                exceptions.WorkflowRunNotFoundError,
+                exceptions.ConfigNameNotFoundError,
         ):
             raise
 
@@ -537,10 +536,10 @@ class WorkflowRunRepo:
         try:
             wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
         except (
-            exceptions.WorkflowRunNotFoundError,
-            exceptions.UnauthorizedError,
-            exceptions.ConfigFileNotFoundError,
-            exceptions.ConfigNameNotFoundError,
+                exceptions.WorkflowRunNotFoundError,
+                exceptions.UnauthorizedError,
+                exceptions.ConfigFileNotFoundError,
+                exceptions.ConfigNameNotFoundError,
         ):
             raise
 

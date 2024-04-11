@@ -14,8 +14,8 @@ import pydantic
 from packaging import version
 from typing_extensions import assert_never
 
-from orquestra.sdk import exceptions, secrets
-from orquestra.sdk.shared import _exec_ctx, _graphs, dispatch, serde
+from orquestra.sdk import secrets
+from orquestra.sdk.shared import _exec_ctx, _graphs, dispatch, serde, exceptions
 from orquestra.sdk.shared._regex import SEMVER_REGEX
 from orquestra.sdk.shared.kubernetes.quantity import parse_quantity
 from orquestra.sdk.shared.packaging import get_installed_version

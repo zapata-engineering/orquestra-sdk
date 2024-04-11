@@ -11,7 +11,7 @@ import pytest
 from pytest import MonkeyPatch
 from requests import Response, Session
 
-import orquestra.sdk.exceptions as exceptions
+import orquestra.sdk.shared.exceptions as exceptions
 from orquestra import sdk
 from orquestra.sdk._client._base._env import (
     CURRENT_CLUSTER_ENV,

@@ -3,7 +3,7 @@
 ################################################################################
 import typing as t
 
-from orquestra.sdk.exceptions import ConfigNameNotFoundError
+from orquestra.sdk.shared.exceptions import ConfigNameNotFoundError
 from orquestra.sdk.shared._spaces._structs import Project, Workspace
 from orquestra.sdk.shared.schema.configs import ConfigName
 from orquestra.sdk.shared.schema.workflow_run import WorkspaceId

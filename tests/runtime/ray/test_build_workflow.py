@@ -14,7 +14,7 @@ from orquestra.sdk._client._base import _git_url_utils
 from orquestra.sdk._client._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
 )
-from orquestra.sdk.exceptions import OrquestraSDKVersionMismatchWarning
+from orquestra.sdk.shared.exceptions import OrquestraSDKVersionMismatchWarning
 from orquestra.sdk.runtime._ray import _build_workflow, _client
 from orquestra.sdk.shared import serde
 from orquestra.sdk.shared._graphs import iter_invocations_topologically
@@ -759,6 +759,6 @@ class TestHandlingSDKVersions:
             # Then
             warning: str = e.exconly().strip()
             assert re.match(
-                r"^orquestra\.sdk\.exceptions\.OrquestraSDKVersionMismatchWarning: The definition for task `task-hello-orquestra-.*` declares `orquestra-sdk(?P<dependency>.*)` as a dependency. The current SDK version (\((?P<installed>.*)\) )?is automatically installed in task environments. The specified dependency will be ignored.$",  # noqa: E501
+                r"^orquestra\.sdk\.shared\.exceptions\.OrquestraSDKVersionMismatchWarning: The definition for task `task-hello-orquestra-.*` declares `orquestra-sdk(?P<dependency>.*)` as a dependency. The current SDK version (\((?P<installed>.*)\) )?is automatically installed in task environments. The specified dependency will be ignored.$",  # noqa: E501
                 warning,
             ), warning

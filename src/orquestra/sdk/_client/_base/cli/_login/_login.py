@@ -7,7 +7,7 @@ import typing as t
 
 from aiohttp import web
 
-from orquestra.sdk.exceptions import LocalConfigLoginError, UserCancelledPrompt
+from orquestra.sdk.shared.exceptions import LocalConfigLoginError, UserCancelledPrompt
 from orquestra.sdk.shared.schema.configs import RemoteRuntime
 
 from .. import _arg_resolvers, _repos

@@ -3,7 +3,7 @@
 ################################################################################
 
 """Code for 'orq login --list'."""
-from orquestra.sdk.exceptions import ExpiredTokenError, InvalidTokenError
+from orquestra.sdk.shared.exceptions import ExpiredTokenError, InvalidTokenError
 
 from ..._jwt import check_jwt_without_signature_verification
 from .. import _repos

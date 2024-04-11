@@ -2,7 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 
-from orquestra.sdk import exceptions
+from orquestra.sdk.shared import exceptions
 from orquestra.sdk.shared.abc import RuntimeInterface
 from orquestra.sdk.shared.schema.configs import RuntimeConfiguration, RuntimeName
 

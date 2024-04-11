@@ -13,7 +13,7 @@ from typing import Optional, Tuple
 from requests import Response, Session
 
 from orquestra import sdk
-from orquestra.sdk.exceptions import ConfigNameNotFoundError, RuntimeConfigError
+from orquestra.sdk.shared.exceptions import ConfigNameNotFoundError, RuntimeConfigError
 
 from .._base import _env
 from .._base._config import read_config

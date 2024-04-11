@@ -16,7 +16,7 @@ from orquestra.sdk._client._base.cli._ui._presenters import (
     WrappedCorqOutputPresenter,
 )
 from orquestra.sdk._client._base.cli._ui._prompts import Prompter
-from orquestra.sdk.exceptions import ExpiredTokenError, InvalidTokenError
+from orquestra.sdk.shared.exceptions import ExpiredTokenError, InvalidTokenError
 from orquestra.sdk.shared.schema.configs import RuntimeConfiguration, RuntimeName
 
 

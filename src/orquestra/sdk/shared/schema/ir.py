@@ -425,7 +425,7 @@ class WorkflowDef(BaseModel):
     @field_validator("metadata", mode="after")
     def sdk_version_up_to_date(cls, v: t.Optional[WorkflowMetadata]):
         # Workaround for circular imports
-        from orquestra.sdk import exceptions
+        from .. import exceptions
         from orquestra.sdk.shared.packaging import _versions
         from orquestra.sdk.shared.schema import _compat
 

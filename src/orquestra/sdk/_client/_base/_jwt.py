@@ -3,7 +3,7 @@
 ################################################################################
 import jwt
 
-from orquestra.sdk.exceptions import ExpiredTokenError, InvalidTokenError
+from orquestra.sdk.shared.exceptions import ExpiredTokenError, InvalidTokenError
 
 
 def check_jwt_without_signature_verification(token: str):

@@ -532,7 +532,7 @@ If a task defines its own imports (either source, dependencies, or both) - it wi
 
 ```python
 from orquestra import sdk
-from orquestra.sdk.shared.schema import State
+from orquestra.sdk.schema.workflow_run import State
 
 wf_run = sdk.WorkflowRun.by_id("foo")
 

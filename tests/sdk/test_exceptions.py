@@ -12,7 +12,7 @@ Before extending this file with tests, please consider extracting your logic awa
 the exception class.
 """
 
-from orquestra.sdk.exceptions import RuntimeQuerySummaryError
+from orquestra.sdk.shared.exceptions import RuntimeQuerySummaryError
 from orquestra.sdk.shared.schema.configs import RuntimeName
 
 

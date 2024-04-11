@@ -19,7 +19,7 @@ import pytest
 from freezegun import freeze_time
 
 from orquestra import sdk
-from orquestra.sdk import exceptions
+from orquestra.sdk.shared import exceptions
 from orquestra.sdk._client._base._config import LOCAL_RUNTIME_CONFIGURATION
 from orquestra.sdk._client._base._testing import _example_wfs, _ipc
 from orquestra.sdk.runtime._ray import _build_workflow, _client, _dag, _ray_logs

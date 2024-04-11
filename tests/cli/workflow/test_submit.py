@@ -9,7 +9,7 @@ from unittest.mock import Mock, create_autospec
 
 import pytest
 
-from orquestra.sdk import exceptions
+from orquestra.sdk.shared import exceptions
 from orquestra.sdk._client._base.cli import _repos
 from orquestra.sdk._client._base.cli._arg_resolvers import SpacesResolver
 from orquestra.sdk._client._base.cli._ui import _presenters, _prompts

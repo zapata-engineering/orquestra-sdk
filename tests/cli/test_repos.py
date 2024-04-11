@@ -17,7 +17,6 @@ import pytest
 import requests
 
 from orquestra import sdk
-from orquestra.sdk import exceptions
 from orquestra.sdk._client._base import _config
 from orquestra.sdk._client._base._config import SPECIAL_CONFIG_NAME_DICT
 from orquestra.sdk._client._base._driver._client import DriverClient
@@ -25,7 +24,7 @@ from orquestra.sdk._client._base._testing import _example_wfs, _reloaders
 from orquestra.sdk._client._base.cli import _repos
 from orquestra.sdk._client._base.cli._ui import _models as ui_models
 from orquestra.sdk.runtime._ray import _dag
-from orquestra.sdk.shared import _dates
+from orquestra.sdk.shared import _dates, exceptions
 from orquestra.sdk.shared._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk.shared.schema import ir
 from orquestra.sdk.shared.schema.configs import RuntimeName

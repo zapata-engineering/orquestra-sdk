@@ -13,7 +13,7 @@ import typing as t
 from abc import ABC, abstractmethod
 from datetime import timedelta
 
-from orquestra.sdk.exceptions import WorkspacesNotSupportedError
+from orquestra.sdk.shared.exceptions import WorkspacesNotSupportedError
 
 from ._logs._interfaces import LogOutput, LogReader, WorkflowLogs
 from ._spaces._structs import Project, ProjectRef, Workspace

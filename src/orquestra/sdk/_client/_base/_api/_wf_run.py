@@ -16,7 +16,7 @@ from datetime import timedelta
 from functools import cached_property
 from pathlib import Path
 
-from orquestra.sdk.exceptions import (
+from orquestra.sdk.shared.exceptions import (
     ConfigFileNotFoundError,
     ConfigNameNotFoundError,
     ProjectInvalidError,

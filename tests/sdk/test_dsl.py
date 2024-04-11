@@ -16,7 +16,7 @@ import pytest
 
 import orquestra.sdk as sdk
 from orquestra.sdk._client._base import _dsl, loader
-from orquestra.sdk.exceptions import DirtyGitRepo, InvalidTaskDefinitionError
+from orquestra.sdk.shared.exceptions import DirtyGitRepo, InvalidTaskDefinitionError
 from orquestra.sdk.shared.packaging import _versions
 from orquestra.sdk.shared.serde import deserialize_pickle, serialize_pickle
 
@@ -625,7 +625,8 @@ class TestRefToMain:
         [
             (
                 "workflow_defs.py",
-                pytest.raises(sdk.exceptions.InvalidTaskDefinitionError),
+                pytest.raises(
+                    sdk.shared.exceptions.InvalidTaskDefinitionError),
             ),
             ("workflow_defs_no_raise.py", do_not_raise()),
         ],

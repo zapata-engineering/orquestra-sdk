@@ -14,7 +14,7 @@ from urllib.parse import ParseResult, urlparse
 import filelock
 from pydantic import ValidationError
 
-import orquestra.sdk.exceptions as exceptions
+import orquestra.sdk.shared.exceptions as exceptions
 from orquestra.sdk.shared.schema.configs import (
     CONFIG_FILE_CURRENT_VERSION,
     ConfigName,
@@ -494,7 +494,7 @@ def read_config_names() -> List[str]:
             config_file = _open_config_file()
             return [name for name in config_file.configs]
     except (
-        exceptions.ConfigFileNotFoundError,
-        ValidationError,
+            exceptions.ConfigFileNotFoundError,
+            ValidationError,
     ):
         return []

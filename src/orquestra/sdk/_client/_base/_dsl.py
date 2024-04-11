@@ -43,7 +43,7 @@ import wrapt  # type: ignore
 
 # Needed for fully-qualified type annotations.
 import orquestra.sdk
-from orquestra.sdk.exceptions import (
+from orquestra.sdk.shared.exceptions import (
     DirtyGitRepo,
     InvalidTaskDefinitionError,
     WorkflowSyntaxError,
