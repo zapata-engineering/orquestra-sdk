@@ -19,16 +19,16 @@ import pydantic
 import requests
 from requests import codes
 
-from orquestra.sdk.shared import exceptions
-from orquestra.sdk.shared._regex import VERSION_REGEX
-from orquestra.sdk.shared._spaces._structs import ProjectRef
-from orquestra.sdk.shared._storage import TypeAdapter
-from orquestra.sdk.shared.schema.ir import WorkflowDef
-from orquestra.sdk.shared.schema.responses import (
+from orquestra.sdk._shared import exceptions
+from orquestra.sdk._shared._regex import VERSION_REGEX
+from orquestra.sdk._shared._spaces._structs import ProjectRef
+from orquestra.sdk._shared._storage import TypeAdapter
+from orquestra.sdk._shared.schema.ir import WorkflowDef
+from orquestra.sdk._shared.schema.responses import (
     ComputeEngineWorkflowResult,
     WorkflowResult,
 )
-from orquestra.sdk.shared.schema.workflow_run import (
+from orquestra.sdk._shared.schema.workflow_run import (
     State,
     WorkflowRun,
     WorkflowRunMinimal,

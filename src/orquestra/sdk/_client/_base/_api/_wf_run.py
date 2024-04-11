@@ -16,12 +16,12 @@ from datetime import timedelta
 from functools import cached_property
 from pathlib import Path
 
-from orquestra.sdk.shared import serde
-from orquestra.sdk.shared._graphs import iter_invocations_topologically
-from orquestra.sdk.shared._logs._interfaces import WorkflowLogs
-from orquestra.sdk.shared._spaces._structs import ProjectRef
-from orquestra.sdk.shared.abc import RuntimeInterface
-from orquestra.sdk.shared.exceptions import (
+from orquestra.sdk._shared import serde
+from orquestra.sdk._shared._graphs import iter_invocations_topologically
+from orquestra.sdk._shared._logs._interfaces import WorkflowLogs
+from orquestra.sdk._shared._spaces._structs import ProjectRef
+from orquestra.sdk._shared.abc import RuntimeInterface
+from orquestra.sdk._shared.exceptions import (
     ConfigFileNotFoundError,
     ConfigNameNotFoundError,
     ProjectInvalidError,
@@ -37,14 +37,14 @@ from orquestra.sdk.shared.exceptions import (
     WorkflowRunNotSucceeded,
     WorkspacesNotSupportedError,
 )
-from orquestra.sdk.shared.schema import ir
-from orquestra.sdk.shared.schema.configs import ConfigName
-from orquestra.sdk.shared.schema.responses import WorkflowResult
-from orquestra.sdk.shared.schema.workflow_run import ProjectId, State
-from orquestra.sdk.shared.schema.workflow_run import TaskRun as TaskRunModel
-from orquestra.sdk.shared.schema.workflow_run import TaskRunId
-from orquestra.sdk.shared.schema.workflow_run import WorkflowRun as WorkflowRunModel
-from orquestra.sdk.shared.schema.workflow_run import (
+from orquestra.sdk._shared.schema import ir
+from orquestra.sdk._shared.schema.configs import ConfigName
+from orquestra.sdk._shared.schema.responses import WorkflowResult
+from orquestra.sdk._shared.schema.workflow_run import ProjectId, State
+from orquestra.sdk._shared.schema.workflow_run import TaskRun as TaskRunModel
+from orquestra.sdk._shared.schema.workflow_run import TaskRunId
+from orquestra.sdk._shared.schema.workflow_run import WorkflowRun as WorkflowRunModel
+from orquestra.sdk._shared.schema.workflow_run import (
     WorkflowRunId,
     WorkflowRunMinimal,
     WorkflowRunSummary,

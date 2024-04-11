@@ -11,11 +11,11 @@ across similar CLI commands.
 import typing as t
 import warnings
 
-from orquestra.sdk.shared import exceptions
-from orquestra.sdk.shared._logs._interfaces import WorkflowLogs
-from orquestra.sdk.shared.schema.configs import ConfigName
-from orquestra.sdk.shared.schema.ir import TaskInvocationId
-from orquestra.sdk.shared.schema.workflow_run import (
+from orquestra.sdk._shared import exceptions
+from orquestra.sdk._shared._logs._interfaces import WorkflowLogs
+from orquestra.sdk._shared.schema.configs import ConfigName
+from orquestra.sdk._shared.schema.ir import TaskInvocationId
+from orquestra.sdk._shared.schema.workflow_run import (
     ProjectId,
     State,
     TaskRunId,

@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from orquestra.sdk.shared.packaging import _versions
-from orquestra.sdk.shared.schema import _compat, ir
+from orquestra.sdk._shared.packaging import _versions
+from orquestra.sdk._shared.schema import _compat, ir
 
 from .data import unpacking
 

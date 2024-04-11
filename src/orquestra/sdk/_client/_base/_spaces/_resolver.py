@@ -4,9 +4,9 @@
 import os
 from typing import Optional
 
-from orquestra.sdk.shared._spaces._structs import ProjectRef
-from orquestra.sdk.shared.exceptions import ProjectInvalidError
-from orquestra.sdk.shared.schema.workflow_run import ProjectId, WorkspaceId
+from orquestra.sdk._shared._spaces._structs import ProjectRef
+from orquestra.sdk._shared.exceptions import ProjectInvalidError
+from orquestra.sdk._shared.schema.workflow_run import ProjectId, WorkspaceId
 
 from .._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
 

@@ -18,18 +18,18 @@ import requests
 from typing_extensions import assert_never
 
 from orquestra import sdk
-from orquestra.sdk.shared import _dates, exceptions
-from orquestra.sdk.shared._logs._interfaces import LogOutput, WorkflowLogs
-from orquestra.sdk.shared.abc import ArtifactValue
-from orquestra.sdk.shared.schema import _compat
-from orquestra.sdk.shared.schema.configs import (
+from orquestra.sdk._shared import _dates, exceptions
+from orquestra.sdk._shared._logs._interfaces import LogOutput, WorkflowLogs
+from orquestra.sdk._shared.abc import ArtifactValue
+from orquestra.sdk._shared.schema import _compat
+from orquestra.sdk._shared.schema.configs import (
     ConfigName,
     RemoteRuntime,
     RuntimeConfiguration,
     RuntimeName,
 )
-from orquestra.sdk.shared.schema.ir import TaskInvocationId, WorkflowDef
-from orquestra.sdk.shared.schema.workflow_run import (
+from orquestra.sdk._shared.schema.ir import TaskInvocationId, WorkflowDef
+from orquestra.sdk._shared.schema.workflow_run import (
     ProjectId,
     State,
     TaskRun,

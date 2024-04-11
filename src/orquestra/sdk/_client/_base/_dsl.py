@@ -43,13 +43,13 @@ import wrapt  # type: ignore
 
 # Needed for fully-qualified type annotations.
 import orquestra.sdk
-from orquestra.sdk.shared.exceptions import (
+from orquestra.sdk._shared.exceptions import (
     DirtyGitRepo,
     InvalidTaskDefinitionError,
     WorkflowSyntaxError,
 )
-from orquestra.sdk.shared.kubernetes.quantity import parse_quantity
-from orquestra.sdk.shared.packaging import PackagingError, get_installed_version
+from orquestra.sdk._shared.kubernetes.quantity import parse_quantity
+from orquestra.sdk._shared.packaging import PackagingError, get_installed_version
 
 from . import _ast
 

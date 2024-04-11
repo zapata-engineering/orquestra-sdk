@@ -4,7 +4,7 @@
 import subprocess
 from typing import Optional
 
-from orquestra.sdk.shared.schema.responses import ServiceResponse
+from orquestra.sdk._shared.schema.responses import ServiceResponse
 
 from .. import _arg_resolvers
 from .._ui import _presenters

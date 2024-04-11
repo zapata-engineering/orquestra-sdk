@@ -11,9 +11,9 @@ objects instead of date strings).
 import typing as t
 from dataclasses import dataclass
 
-from orquestra.sdk.shared._dates import Instant
-from orquestra.sdk.shared.schema import ir
-from orquestra.sdk.shared.schema.workflow_run import RunStatus, WorkflowRunId
+from orquestra.sdk._shared._dates import Instant
+from orquestra.sdk._shared.schema import ir
+from orquestra.sdk._shared.schema.workflow_run import RunStatus, WorkflowRunId
 
 
 @dataclass(frozen=True)

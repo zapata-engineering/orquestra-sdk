@@ -4,8 +4,8 @@
 """Code for 'orq workflow view'."""
 import typing as t
 
-from orquestra.sdk.shared.schema.configs import ConfigName
-from orquestra.sdk.shared.schema.workflow_run import WorkflowRunId
+from orquestra.sdk._shared.schema.configs import ConfigName
+from orquestra.sdk._shared.schema.workflow_run import WorkflowRunId
 
 from .. import _arg_resolvers, _repos
 from .._ui import _presenters

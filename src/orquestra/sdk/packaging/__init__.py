@@ -4,6 +4,6 @@
 # THIS FILE IS A SHIM TO REEXPORT SYMBOLS AS PUBLIC API
 # DO NOT PUT ANY LOGIC INTO THIS FILE.
 
-from orquestra.sdk.shared.packaging import PackagingError, get_installed_version
+from orquestra.sdk._shared.packaging import PackagingError, get_installed_version
 
 __all__ = ["get_installed_version", "PackagingError"]

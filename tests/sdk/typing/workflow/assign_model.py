@@ -1,7 +1,7 @@
 ################################################################################
 # © Copyright 2022 Zapata Computing Inc.
 ################################################################################
-from orquestra.sdk.shared.schema.ir import ModuleFunctionRef, WorkflowDef
+from orquestra.sdk._shared.schema.ir import ModuleFunctionRef, WorkflowDef
 
 from .workflow_base import wf
 

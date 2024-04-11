@@ -16,8 +16,8 @@ from orquestra.sdk._client._base.cli._ui._presenters import (
     WrappedCorqOutputPresenter,
 )
 from orquestra.sdk._client._base.cli._ui._prompts import Prompter
-from orquestra.sdk.shared.exceptions import ExpiredTokenError, InvalidTokenError
-from orquestra.sdk.shared.schema.configs import RuntimeConfiguration, RuntimeName
+from orquestra.sdk._shared.exceptions import ExpiredTokenError, InvalidTokenError
+from orquestra.sdk._shared.schema.configs import RuntimeConfiguration, RuntimeName
 
 
 @pytest.mark.parametrize("runtime_name", [RuntimeName.CE_REMOTE])

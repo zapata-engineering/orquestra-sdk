@@ -7,7 +7,7 @@ import typing as t
 import pytest
 
 from orquestra import sdk
-from orquestra.sdk.shared.schema import ir
+from orquestra.sdk._shared.schema import ir
 
 
 class Snippets:

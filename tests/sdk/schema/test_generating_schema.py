@@ -3,7 +3,7 @@
 ################################################################################
 import pytest
 
-from orquestra.sdk.shared.schema import configs, ir, workflow_run
+from orquestra.sdk._shared.schema import configs, ir, workflow_run
 
 
 @pytest.mark.parametrize(

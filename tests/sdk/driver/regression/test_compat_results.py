@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from orquestra.sdk.shared.serde import deserialize
+from orquestra.sdk._shared.serde import deserialize
 
 DATA_PATH = Path(__file__).parent / "data"
 

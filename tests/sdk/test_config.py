@@ -21,9 +21,9 @@ from pathlib import Path
 import filelock
 import pytest
 
-import orquestra.sdk.shared.exceptions as exceptions
+import orquestra.sdk._shared.exceptions as exceptions
 from orquestra.sdk._client._base import _config
-from orquestra.sdk.shared.schema.configs import RuntimeName
+from orquestra.sdk._shared.schema.configs import RuntimeName
 
 from .data.configs import TEST_CONFIG_JSON
 

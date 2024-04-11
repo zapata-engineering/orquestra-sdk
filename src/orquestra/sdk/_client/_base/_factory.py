@@ -2,9 +2,9 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 
-from orquestra.sdk.shared import exceptions
-from orquestra.sdk.shared.abc import RuntimeInterface
-from orquestra.sdk.shared.schema.configs import RuntimeConfiguration, RuntimeName
+from orquestra.sdk._shared import exceptions
+from orquestra.sdk._shared.abc import RuntimeInterface
+from orquestra.sdk._shared.schema.configs import RuntimeConfiguration, RuntimeName
 
 
 def build_runtime_from_config(

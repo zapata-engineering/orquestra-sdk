@@ -4,7 +4,7 @@
 # THIS FILE IS A SHIM TO REEXPORT SYMBOLS AS PUBLIC API
 # DO NOT PUT ANY LOGIC INTO THIS FILE.
 
-from orquestra.sdk.shared.schema.configs import (
+from orquestra.sdk._shared.schema.configs import (
     CONFIG_FILE_CURRENT_VERSION,
     ConfigName,
     RemoteRuntime,

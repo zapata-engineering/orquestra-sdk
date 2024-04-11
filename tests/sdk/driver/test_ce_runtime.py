@@ -21,14 +21,14 @@ from orquestra.sdk._client._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
     workflow_with_different_resources,
 )
-from orquestra.sdk.shared import exceptions, serde
-from orquestra.sdk.shared._spaces._structs import Project, ProjectRef, Workspace
-from orquestra.sdk.shared.schema.ir import WorkflowDef
-from orquestra.sdk.shared.schema.responses import (
+from orquestra.sdk._shared import exceptions, serde
+from orquestra.sdk._shared._spaces._structs import Project, ProjectRef, Workspace
+from orquestra.sdk._shared.schema.ir import WorkflowDef
+from orquestra.sdk._shared.schema.responses import (
     ComputeEngineWorkflowResult,
     JSONResult,
 )
-from orquestra.sdk.shared.schema.workflow_run import (
+from orquestra.sdk._shared.schema.workflow_run import (
     RunStatus,
     State,
     WorkflowRun,

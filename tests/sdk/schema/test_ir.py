@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from orquestra.sdk.shared import exceptions
-from orquestra.sdk.shared.schema import ir
+from orquestra.sdk._shared import exceptions
+from orquestra.sdk._shared.schema import ir
 
 from .data import unpacking
 

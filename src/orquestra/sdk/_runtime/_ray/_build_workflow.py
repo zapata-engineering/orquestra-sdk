@@ -15,12 +15,12 @@ from packaging import version
 from typing_extensions import assert_never
 
 from orquestra.sdk import secrets
-from orquestra.sdk.shared import _exec_ctx, _graphs, dispatch, exceptions, serde
-from orquestra.sdk.shared._regex import SEMVER_REGEX
-from orquestra.sdk.shared.kubernetes.quantity import parse_quantity
-from orquestra.sdk.shared.packaging import get_installed_version
-from orquestra.sdk.shared.schema import ir, responses, workflow_run
-from orquestra.sdk.shared.schema.ir import GitURL
+from orquestra.sdk._shared import _exec_ctx, _graphs, dispatch, exceptions, serde
+from orquestra.sdk._shared._regex import SEMVER_REGEX
+from orquestra.sdk._shared.kubernetes.quantity import parse_quantity
+from orquestra.sdk._shared.packaging import get_installed_version
+from orquestra.sdk._shared.schema import ir, responses, workflow_run
+from orquestra.sdk._shared.schema.ir import GitURL
 
 from . import _client, _id_gen
 from ._dirs import redirected_logs_dir

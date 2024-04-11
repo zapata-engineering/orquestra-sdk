@@ -17,12 +17,12 @@ from functools import singledispatch
 
 from pip_api._parse_requirements import Requirement
 
-from orquestra.sdk.shared import _exec_ctx, exceptions, serde
-from orquestra.sdk.shared.packaging._versions import (
+from orquestra.sdk._shared import _exec_ctx, exceptions, serde
+from orquestra.sdk._shared.packaging._versions import (
     get_current_python_version,
     get_current_sdk_version,
 )
-from orquestra.sdk.shared.schema import ir, responses
+from orquestra.sdk._shared.schema import ir, responses
 
 from . import _dsl, _git_url_utils, _workflow
 

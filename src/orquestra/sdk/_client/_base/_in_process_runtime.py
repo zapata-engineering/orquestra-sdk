@@ -9,13 +9,13 @@ from contextlib import contextmanager
 from datetime import timedelta
 
 from orquestra.sdk import secrets
-from orquestra.sdk.shared import _dates, abc, exceptions, serde
-from orquestra.sdk.shared._graphs import iter_invocations_topologically
-from orquestra.sdk.shared._spaces._structs import ProjectRef
-from orquestra.sdk.shared.dispatch import locate_fn_ref
-from orquestra.sdk.shared.schema import ir
-from orquestra.sdk.shared.schema.responses import WorkflowResult
-from orquestra.sdk.shared.schema.workflow_run import (
+from orquestra.sdk._shared import _dates, abc, exceptions, serde
+from orquestra.sdk._shared._graphs import iter_invocations_topologically
+from orquestra.sdk._shared._spaces._structs import ProjectRef
+from orquestra.sdk._shared.dispatch import locate_fn_ref
+from orquestra.sdk._shared.schema import ir
+from orquestra.sdk._shared.schema.responses import WorkflowResult
+from orquestra.sdk._shared.schema.workflow_run import (
     RunStatus,
     State,
     TaskRun,

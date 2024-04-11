@@ -28,11 +28,11 @@ from orquestra.sdk._client._base._api._task_run import TaskRun
 from orquestra.sdk._client._base._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
 from orquestra.sdk._client._base._in_process_runtime import InProcessRuntime
 from orquestra.sdk._client._base._spaces._api import list_projects, list_workspaces
-from orquestra.sdk.shared import serde
-from orquestra.sdk.shared._logs._interfaces import LogOutput, LogReader, WorkflowLogs
-from orquestra.sdk.shared._spaces._structs import ProjectRef, Workspace
-from orquestra.sdk.shared.abc import RuntimeInterface
-from orquestra.sdk.shared.exceptions import (
+from orquestra.sdk._shared import serde
+from orquestra.sdk._shared._logs._interfaces import LogOutput, LogReader, WorkflowLogs
+from orquestra.sdk._shared._spaces._structs import ProjectRef, Workspace
+from orquestra.sdk._shared.abc import RuntimeInterface
+from orquestra.sdk._shared.exceptions import (
     ProjectInvalidError,
     RayNotRunningError,
     RemoteConnectionError,
@@ -43,11 +43,11 @@ from orquestra.sdk.shared.exceptions import (
     WorkflowRunNotFinished,
     WorkflowRunNotFoundError,
 )
-from orquestra.sdk.shared.schema import ir
-from orquestra.sdk.shared.schema.configs import RuntimeName
-from orquestra.sdk.shared.schema.responses import JSONResult
-from orquestra.sdk.shared.schema.workflow_run import RunStatus, State
-from orquestra.sdk.shared.schema.workflow_run import TaskRun as TaskRunModel
+from orquestra.sdk._shared.schema import ir
+from orquestra.sdk._shared.schema.configs import RuntimeName
+from orquestra.sdk._shared.schema.responses import JSONResult
+from orquestra.sdk._shared.schema.workflow_run import RunStatus, State
+from orquestra.sdk._shared.schema.workflow_run import TaskRun as TaskRunModel
 
 from ..data.complex_serialization.workflow_defs import (
     capitalize,

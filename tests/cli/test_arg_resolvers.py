@@ -9,11 +9,11 @@ import pytest
 
 from orquestra.sdk._client._base.cli import _arg_resolvers, _repos
 from orquestra.sdk._client._base.cli._ui import _presenters, _prompts
-from orquestra.sdk.shared import _dates, exceptions
-from orquestra.sdk.shared._logs._interfaces import LogOutput, WorkflowLogs
-from orquestra.sdk.shared._spaces._structs import Project, Workspace
-from orquestra.sdk.shared.schema.configs import RuntimeConfiguration, RuntimeName
-from orquestra.sdk.shared.schema.workflow_run import RunStatus, State
+from orquestra.sdk._shared import _dates, exceptions
+from orquestra.sdk._shared._logs._interfaces import LogOutput, WorkflowLogs
+from orquestra.sdk._shared._spaces._structs import Project, Workspace
+from orquestra.sdk._shared.schema.configs import RuntimeConfiguration, RuntimeName
+from orquestra.sdk._shared.schema.workflow_run import RunStatus, State
 
 
 class TestConfigResolver:

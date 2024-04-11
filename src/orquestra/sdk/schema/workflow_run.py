@@ -4,7 +4,7 @@
 # THIS FILE IS A SHIM TO REEXPORT SYMBOLS AS PUBLIC API
 # DO NOT PUT ANY LOGIC INTO THIS FILE.
 
-from orquestra.sdk.shared.schema.workflow_run import (
+from orquestra.sdk._shared.schema.workflow_run import (
     ProjectId,
     RunStatus,
     State,

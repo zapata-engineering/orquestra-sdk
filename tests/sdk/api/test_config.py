@@ -15,9 +15,9 @@ import pytest
 
 from orquestra.sdk._client._base import _config
 from orquestra.sdk._client._base._api import _config as api_cfg
-from orquestra.sdk.shared import exceptions
-from orquestra.sdk.shared.exceptions import ConfigNameNotFoundError
-from orquestra.sdk.shared.schema.configs import CONFIG_FILE_CURRENT_VERSION, RuntimeName
+from orquestra.sdk._shared import exceptions
+from orquestra.sdk._shared.exceptions import ConfigNameNotFoundError
+from orquestra.sdk._shared.schema.configs import CONFIG_FILE_CURRENT_VERSION, RuntimeName
 
 from ..data.configs import TEST_CONFIG_JSON, TEST_CONFIGS_DICT
 

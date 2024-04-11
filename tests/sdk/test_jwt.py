@@ -7,7 +7,7 @@ import jwt
 import pytest
 
 from orquestra.sdk._client._base import _jwt
-from orquestra.sdk.shared import exceptions
+from orquestra.sdk._shared import exceptions
 
 
 class TestCheckJWTWithoutSignatureValidation:

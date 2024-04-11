@@ -13,14 +13,14 @@ import pytest
 import orquestra.sdk as sdk
 from orquestra.sdk._client._base import _api, _in_process_runtime, _workflow
 from orquestra.sdk._runtime._ray import _build_workflow
-from orquestra.sdk.shared import _exec_ctx, serde
-from orquestra.sdk.shared._logs._interfaces import LogReader
-from orquestra.sdk.shared.abc import RuntimeInterface
-from orquestra.sdk.shared.exceptions import TaskRunNotFound
-from orquestra.sdk.shared.schema import ir
-from orquestra.sdk.shared.schema.workflow_run import RunStatus, State
-from orquestra.sdk.shared.schema.workflow_run import TaskRun as TaskRunModel
-from orquestra.sdk.shared.schema.workflow_run import WorkflowRun as WorkflowRunModel
+from orquestra.sdk._shared import _exec_ctx, serde
+from orquestra.sdk._shared._logs._interfaces import LogReader
+from orquestra.sdk._shared.abc import RuntimeInterface
+from orquestra.sdk._shared.exceptions import TaskRunNotFound
+from orquestra.sdk._shared.schema import ir
+from orquestra.sdk._shared.schema.workflow_run import RunStatus, State
+from orquestra.sdk._shared.schema.workflow_run import TaskRun as TaskRunModel
+from orquestra.sdk._shared.schema.workflow_run import WorkflowRun as WorkflowRunModel
 
 from ..data.complex_serialization.workflow_defs import capitalize, join_strings
 

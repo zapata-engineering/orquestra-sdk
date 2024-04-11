@@ -8,7 +8,7 @@ from orquestra.sdk._client._base.loader import (
     get_attributes_of_type,
     get_workflow_defs_module,
 )
-from orquestra.sdk.shared import exceptions
+from orquestra.sdk._shared import exceptions
 
 
 def test_constant_serialization_when_loading_from_file():

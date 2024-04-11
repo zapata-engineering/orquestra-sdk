@@ -12,7 +12,7 @@ from orquestra.sdk._client._base._spaces._api import (
     make_workspace_zri,
 )
 from orquestra.sdk._client._base._spaces._resolver import resolve_studio_ref
-from orquestra.sdk.shared._spaces._structs import ProjectRef
+from orquestra.sdk._shared._spaces._structs import ProjectRef
 
 
 @pytest.mark.parametrize(

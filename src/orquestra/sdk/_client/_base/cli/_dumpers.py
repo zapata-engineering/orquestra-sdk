@@ -7,9 +7,9 @@ import typing as t
 from functools import singledispatchmethod
 from pathlib import Path
 
-from orquestra.sdk.shared import serde
-from orquestra.sdk.shared._logs._interfaces import WorkflowLogs
-from orquestra.sdk.shared.schema.workflow_run import TaskInvocationId, WorkflowRunId
+from orquestra.sdk._shared import serde
+from orquestra.sdk._shared._logs._interfaces import WorkflowLogs
+from orquestra.sdk._shared.schema.workflow_run import TaskInvocationId, WorkflowRunId
 
 
 class WFOutputDumper:

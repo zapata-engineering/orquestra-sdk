@@ -3,7 +3,7 @@
 ################################################################################
 import pytest
 
-from orquestra.sdk.shared import _graphs
+from orquestra.sdk._shared import _graphs
 
 
 class TestTopologicalSort:

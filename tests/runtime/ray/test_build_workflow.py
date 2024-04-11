@@ -15,12 +15,12 @@ from orquestra.sdk._client._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
 )
 from orquestra.sdk._runtime._ray import _build_workflow, _client
-from orquestra.sdk.shared import serde
-from orquestra.sdk.shared._graphs import iter_invocations_topologically
-from orquestra.sdk.shared.exceptions import OrquestraSDKVersionMismatchWarning
-from orquestra.sdk.shared.schema import ir
-from orquestra.sdk.shared.schema.ir import GitURL, SecretNode
-from orquestra.sdk.shared.schema.responses import WorkflowResult
+from orquestra.sdk._shared import serde
+from orquestra.sdk._shared._graphs import iter_invocations_topologically
+from orquestra.sdk._shared.exceptions import OrquestraSDKVersionMismatchWarning
+from orquestra.sdk._shared.schema import ir
+from orquestra.sdk._shared.schema.ir import GitURL, SecretNode
+from orquestra.sdk._shared.schema.responses import WorkflowResult
 
 
 @pytest.fixture

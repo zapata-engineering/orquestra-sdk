@@ -9,12 +9,12 @@ import warnings
 
 from packaging.version import parse as parse_version
 
-from orquestra.sdk.shared.abc import RuntimeInterface
-from orquestra.sdk.shared.exceptions import (
+from orquestra.sdk._shared.abc import RuntimeInterface
+from orquestra.sdk._shared.exceptions import (
     ConfigFileNotFoundError,
     ConfigNameNotFoundError,
 )
-from orquestra.sdk.shared.schema.configs import (
+from orquestra.sdk._shared.schema.configs import (
     CONFIG_FILE_CURRENT_VERSION,
     ConfigName,
     RuntimeConfiguration,

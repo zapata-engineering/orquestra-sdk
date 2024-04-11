@@ -13,7 +13,7 @@ except ModuleNotFoundError:  # pragma: no cover
 
 import packaging.version
 
-from orquestra.sdk.shared.exceptions import BaseRuntimeError
+from orquestra.sdk._shared.exceptions import BaseRuntimeError
 
 from ..schema import ir
 
