@@ -273,7 +273,7 @@ def _get_ray_backend_ids() -> CurrentRunIDs:
         wf_run_id,
         task_inv_id,
         task_run_id,
-    ) = orquestra.sdk.runtime._ray._build_workflow.get_current_ids()
+    ) = orquestra.sdk._runtime._ray._build_workflow.get_current_ids()
 
     if wf_run_id is None:
         raise WorkflowRunIDNotFoundError("Could not recover Workflow Run ID")

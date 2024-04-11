@@ -22,7 +22,7 @@ def build_runtime_from_config(
     if config.runtime_name == RuntimeName.RAY_LOCAL:
         import orquestra.sdk._runtime._ray._dag
 
-        return orquestra.sdk.runtime._ray._dag.RayRuntime(
+        return orquestra.sdk._runtime._ray._dag.RayRuntime(
             config=config,
         )
     elif config.runtime_name == RuntimeName.IN_PROCESS:

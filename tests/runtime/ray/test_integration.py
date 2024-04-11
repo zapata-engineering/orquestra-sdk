@@ -1235,7 +1235,7 @@ class TestGetCurrentIDs:
                 wf_run_id,
                 task_inv_id,
                 task_run_id,
-            ) = orquestra.sdk.runtime._ray._build_workflow.get_current_ids()
+            ) = orquestra.sdk._runtime._ray._build_workflow.get_current_ids()
 
             ids_dict = {
                 "wf_run_id": wf_run_id,
