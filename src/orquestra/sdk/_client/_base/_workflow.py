@@ -26,10 +26,10 @@ from typing_extensions import ParamSpec
 
 import orquestra.sdk.shared.schema.ir as ir
 from orquestra.sdk import secrets
-from ...shared import exceptions
 from orquestra.sdk.shared.exceptions import WorkflowSyntaxError
 from orquestra.sdk.shared.schema.workflow_run import ProjectId, WorkspaceId
 
+from ...shared import exceptions
 from . import _api, _dsl, loader
 from ._ast import CallVisitor, NodeReference, NodeReferenceType, normalize_indents
 from ._dsl import (

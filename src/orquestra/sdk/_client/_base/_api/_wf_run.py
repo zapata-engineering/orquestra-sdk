@@ -16,6 +16,11 @@ from datetime import timedelta
 from functools import cached_property
 from pathlib import Path
 
+from orquestra.sdk.shared import serde
+from orquestra.sdk.shared._graphs import iter_invocations_topologically
+from orquestra.sdk.shared._logs._interfaces import WorkflowLogs
+from orquestra.sdk.shared._spaces._structs import ProjectRef
+from orquestra.sdk.shared.abc import RuntimeInterface
 from orquestra.sdk.shared.exceptions import (
     ConfigFileNotFoundError,
     ConfigNameNotFoundError,
@@ -32,11 +37,6 @@ from orquestra.sdk.shared.exceptions import (
     WorkflowRunNotSucceeded,
     WorkspacesNotSupportedError,
 )
-from orquestra.sdk.shared import serde
-from orquestra.sdk.shared._graphs import iter_invocations_topologically
-from orquestra.sdk.shared._logs._interfaces import WorkflowLogs
-from orquestra.sdk.shared._spaces._structs import ProjectRef
-from orquestra.sdk.shared.abc import RuntimeInterface
 from orquestra.sdk.shared.schema import ir
 from orquestra.sdk.shared.schema.configs import ConfigName
 from orquestra.sdk.shared.schema.responses import WorkflowResult

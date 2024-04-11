@@ -21,7 +21,7 @@ from orquestra.sdk._client._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
     workflow_with_different_resources,
 )
-from orquestra.sdk.shared import serde, exceptions
+from orquestra.sdk.shared import exceptions, serde
 from orquestra.sdk.shared._spaces._structs import Project, ProjectRef, Workspace
 from orquestra.sdk.shared.schema.ir import WorkflowDef
 from orquestra.sdk.shared.schema.responses import (
@@ -1751,22 +1751,22 @@ class TestGetWorkflowLogs:
         "exception, expected_exception, exception_args",
         [
             (
-                    _exceptions.InvalidWorkflowRunID,
-                    exceptions.WorkflowRunNotFoundError,
-                    (Mock(),),
+                _exceptions.InvalidWorkflowRunID,
+                exceptions.WorkflowRunNotFoundError,
+                (Mock(),),
             ),
             (
-                    _exceptions.WorkflowRunNotFound,
-                    exceptions.WorkflowRunNotFoundError,
-                    (Mock(),),
+                _exceptions.WorkflowRunNotFound,
+                exceptions.WorkflowRunNotFoundError,
+                (Mock(),),
             ),
             (_exceptions.InvalidTokenError, exceptions.UnauthorizedError, tuple()),
             (_exceptions.ForbiddenError, exceptions.UnauthorizedError, tuple()),
             (_exceptions.UnknownHTTPError, _exceptions.UnknownHTTPError, (Mock(),)),
             (
-                    _exceptions.WorkflowRunLogsNotReadable,
-                    exceptions.InvalidWorkflowRunLogsError,
-                    (Mock(), Mock()),
+                _exceptions.WorkflowRunLogsNotReadable,
+                exceptions.InvalidWorkflowRunLogsError,
+                (Mock(), Mock()),
             ),
         ],
     )
@@ -1831,22 +1831,22 @@ class TestGetTaskLogs:
         "exception, expected_exception, exception_args",
         [
             (
-                    _exceptions.InvalidWorkflowRunID,
-                    exceptions.TaskRunLogsNotFound,
-                    (Mock(),),
+                _exceptions.InvalidWorkflowRunID,
+                exceptions.TaskRunLogsNotFound,
+                (Mock(),),
             ),
             (
-                    _exceptions.TaskRunLogsNotFound,
-                    exceptions.TaskRunLogsNotFound,
-                    (Mock(), Mock()),
+                _exceptions.TaskRunLogsNotFound,
+                exceptions.TaskRunLogsNotFound,
+                (Mock(), Mock()),
             ),
             (_exceptions.InvalidTokenError, exceptions.UnauthorizedError, tuple()),
             (_exceptions.ForbiddenError, exceptions.UnauthorizedError, tuple()),
             (_exceptions.UnknownHTTPError, _exceptions.UnknownHTTPError, (Mock(),)),
             (
-                    _exceptions.WorkflowRunLogsNotReadable,
-                    exceptions.InvalidWorkflowRunLogsError,
-                    (Mock(), Mock()),
+                _exceptions.WorkflowRunLogsNotReadable,
+                exceptions.InvalidWorkflowRunLogsError,
+                (Mock(), Mock()),
             ),
         ],
     )

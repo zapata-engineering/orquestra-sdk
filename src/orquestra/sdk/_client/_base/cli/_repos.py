@@ -72,11 +72,11 @@ class WorkflowRunRepo:
         try:
             run = sdk.WorkflowRun.by_id(wf_run_id)
         except (
-                exceptions.ConfigNameNotFoundError,
-                exceptions.ConfigFileNotFoundError,
-                exceptions.WorkflowRunNotFoundError,
-                exceptions.UnauthorizedError,
-                exceptions.RuntimeQuerySummaryError,
+            exceptions.ConfigNameNotFoundError,
+            exceptions.ConfigFileNotFoundError,
+            exceptions.WorkflowRunNotFoundError,
+            exceptions.UnauthorizedError,
+            exceptions.RuntimeQuerySummaryError,
         ):
             raise
         assert run.config is not None, (
@@ -174,8 +174,8 @@ class WorkflowRunRepo:
         try:
             wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
         except (
-                exceptions.WorkflowRunNotFoundError,
-                exceptions.ConfigNameNotFoundError,
+            exceptions.WorkflowRunNotFoundError,
+            exceptions.ConfigNameNotFoundError,
         ):
             raise
 
@@ -209,8 +209,8 @@ class WorkflowRunRepo:
                 wf_run_id=wf_run_id, config_name=config_name
             )
         except (
-                exceptions.WorkflowRunNotFoundError,
-                exceptions.ConfigNameNotFoundError,
+            exceptions.WorkflowRunNotFoundError,
+            exceptions.ConfigNameNotFoundError,
         ):
             raise
 
@@ -536,10 +536,10 @@ class WorkflowRunRepo:
         try:
             wf_run = sdk.WorkflowRun.by_id(wf_run_id, config_name)
         except (
-                exceptions.WorkflowRunNotFoundError,
-                exceptions.UnauthorizedError,
-                exceptions.ConfigFileNotFoundError,
-                exceptions.ConfigNameNotFoundError,
+            exceptions.WorkflowRunNotFoundError,
+            exceptions.UnauthorizedError,
+            exceptions.ConfigFileNotFoundError,
+            exceptions.ConfigNameNotFoundError,
         ):
             raise
 

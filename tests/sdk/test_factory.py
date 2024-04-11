@@ -7,8 +7,8 @@ import pytest
 
 from orquestra.sdk._client._base._driver._ce_runtime import CERuntime
 from orquestra.sdk._client._base._factory import build_runtime_from_config
-from orquestra.sdk.shared.exceptions import QERemoved, RuntimeConfigError
 from orquestra.sdk.runtime._ray._dag import RayRuntime
+from orquestra.sdk.shared.exceptions import QERemoved, RuntimeConfigError
 from orquestra.sdk.shared.schema.configs import RuntimeConfiguration, RuntimeName
 
 

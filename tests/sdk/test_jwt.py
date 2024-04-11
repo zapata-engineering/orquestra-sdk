@@ -6,8 +6,8 @@ from unittest.mock import create_autospec
 import jwt
 import pytest
 
-from orquestra.sdk.shared import exceptions
 from orquestra.sdk._client._base import _jwt
+from orquestra.sdk.shared import exceptions
 
 
 class TestCheckJWTWithoutSignatureValidation:

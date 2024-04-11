@@ -494,7 +494,7 @@ def read_config_names() -> List[str]:
             config_file = _open_config_file()
             return [name for name in config_file.configs]
     except (
-            exceptions.ConfigFileNotFoundError,
-            ValidationError,
+        exceptions.ConfigFileNotFoundError,
+        ValidationError,
     ):
         return []

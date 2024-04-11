@@ -10,7 +10,8 @@ from unittest.mock import Mock
 import pytest
 
 from orquestra.sdk._client._base.cli._workflow import _list
-from orquestra.sdk.shared import _dates, exceptions as exceptions
+from orquestra.sdk.shared import _dates
+from orquestra.sdk.shared import exceptions as exceptions
 from orquestra.sdk.shared.schema.workflow_run import RunStatus, State
 
 

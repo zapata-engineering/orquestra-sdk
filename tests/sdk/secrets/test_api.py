@@ -10,8 +10,8 @@ from unittest.mock import Mock
 import pytest
 
 from orquestra import sdk
-from orquestra.sdk.shared import exceptions as sdk_exc
 from orquestra.sdk._client.secrets import _auth, _exceptions, _models
+from orquestra.sdk.shared import exceptions as sdk_exc
 
 
 class TestIntegrationWithClient:

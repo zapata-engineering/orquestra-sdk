@@ -5,9 +5,9 @@ import os
 import typing as t
 from pathlib import Path
 
-from ...shared import exceptions
 from orquestra.sdk.shared.schema.configs import ConfigName
 
+from ...shared import exceptions
 from .._base import _config
 from .._base._env import PASSPORT_FILE_ENV
 from ._client import SecretsClient

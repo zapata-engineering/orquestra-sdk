@@ -20,7 +20,7 @@ from orquestra.sdk._client._base._testing._example_wfs import (
     wf_with_secrets,
 )
 from orquestra.sdk._client.secrets import _client, _models
-from orquestra.sdk.shared import _dates, serde, exceptions
+from orquestra.sdk.shared import _dates, exceptions, serde
 from orquestra.sdk.shared._spaces._structs import ProjectRef
 from orquestra.sdk.shared.schema import ir
 from orquestra.sdk.shared.schema.workflow_run import State, WorkflowRunId

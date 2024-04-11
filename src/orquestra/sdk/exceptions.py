@@ -1,1 +1,1 @@
-from .shared.exceptions import *
+from .shared.exceptions import *  # noqa
