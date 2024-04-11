@@ -11,10 +11,10 @@ from pathlib import Path
 import click
 import cloup
 
-from orquestra.sdk._client._base.cli._ui._click_default_group import DefaultGroup
 from orquestra.sdk.shared.schema.configs import RuntimeName
 
 from . import _cli_logs
+from ._ui._click_default_group import DefaultGroup
 
 # Adds '-h' alias for '--help'
 CLICK_CTX_SETTINGS = {"help_option_names": ["-h", "--help"]}

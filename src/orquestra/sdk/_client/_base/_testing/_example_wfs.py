@@ -5,7 +5,8 @@ import time
 from typing import Optional, Sequence, Tuple
 
 import orquestra.sdk as sdk
-import orquestra.sdk._client._base._testing._ipc as ipc
+
+from . import _ipc as ipc
 
 
 @sdk.task

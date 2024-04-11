@@ -9,7 +9,7 @@ Logging should be only configured by apps.
 
 import logging
 
-from orquestra.sdk._client._base import _env
+from ..._base import _env
 
 
 def configure_verboseness_if_needed():  # pragma: no cover

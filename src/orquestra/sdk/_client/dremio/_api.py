@@ -1,8 +1,7 @@
 ################################################################################
 # © Copyright 2023-2024 Zapata Computing Inc.
 ################################################################################
-from orquestra.sdk._client._base import _env
-
+from .._base import _env
 from ._env_var_reader import EnvVarReader
 from ._flight_facade import FlightCallOptions, FlightClient, FlightDescriptor
 

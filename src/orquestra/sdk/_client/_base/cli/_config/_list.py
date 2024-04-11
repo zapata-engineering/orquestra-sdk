@@ -3,9 +3,9 @@
 ################################################################################
 
 """Code for 'orq login --list'."""
-from orquestra.sdk._client._base._jwt import check_jwt_without_signature_verification
 from orquestra.sdk.exceptions import ExpiredTokenError, InvalidTokenError
 
+from ..._jwt import check_jwt_without_signature_verification
 from .. import _repos
 from .._ui import _presenters, _prompts
 
