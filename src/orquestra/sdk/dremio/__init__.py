@@ -1,10 +1,9 @@
 ################################################################################
 # © Copyright 2024 Zapata Computing Inc.
 ################################################################################
-# THIS FILE IS SHIM TO REEXPORT MLFLOW CLIENT AS PUBLIC API.
-# DO NOT PUT ANY LOGIC INTO THAT FILE
+# THIS FILE IS A SHIM TO REEXPORT MLFLOW CLIENT AS A PUBLIC API.
+# DO NOT PUT ANY LOGIC INTO THIS FILE.
 
-from .._client.dremio import *  # NOQA
 from .._client.dremio import DremioClient
 
 __all__ = [
