@@ -16,7 +16,11 @@ from orquestra.sdk._shared.abc import RuntimeInterface
 from orquestra.sdk._shared.exceptions import IgnoredFieldWarning
 from orquestra.sdk._shared.kubernetes.quantity import parse_quantity
 from orquestra.sdk._shared.schema.configs import RuntimeConfiguration
-from orquestra.sdk._shared.schema.ir import ArtifactFormat, TaskInvocationId, WorkflowDef
+from orquestra.sdk._shared.schema.ir import (
+    ArtifactFormat,
+    TaskInvocationId,
+    WorkflowDef,
+)
 from orquestra.sdk._shared.schema.responses import (
     ComputeEngineWorkflowResult,
     WorkflowResult,
