@@ -1,10 +1,9 @@
 ################################################################################
 # © Copyright 2024 Zapata Computing Inc.
 ################################################################################
-# THIS FILE IS SHIM TO REEXPORT MLFLOW CLIENT AS PUBLIC API.
-# DO NOT PUT ANY LOGIC INTO THAT FILE
+# THIS FILE IS A SHIM TO REEXPORT SYMBOLS AS PUBLIC API
+# DO NOT PUT ANY LOGIC INTO THIS FILE.
 
-from orquestra.sdk._client.secrets import *  # NOQA
 from orquestra.sdk._client.secrets import delete, get, list, set
 
 __all__ = [
