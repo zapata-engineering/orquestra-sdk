@@ -17,7 +17,7 @@ import types
 import typing as t
 from importlib import abc
 
-from ...shared import dispatch
+from orquestra.sdk.shared import dispatch
 
 
 class FakeImportedAttribute:

@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from datetime import timedelta
 
 from orquestra.sdk import exceptions, secrets
+from orquestra.sdk.shared import _dates, abc, serde
 from orquestra.sdk.shared._graphs import iter_invocations_topologically
 from orquestra.sdk.shared._spaces._structs import ProjectRef
 from orquestra.sdk.shared.dispatch import locate_fn_ref
@@ -24,8 +25,6 @@ from orquestra.sdk.shared.schema.workflow_run import (
     WorkflowRunSummary,
     WorkspaceId,
 )
-
-from ...shared import _dates, abc, serde
 
 WfRunId = str
 ArtifactValue = t.Any
