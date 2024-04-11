@@ -24,7 +24,6 @@ from rich.spinner import Spinner
 from rich.table import Column, Table
 from tabulate import tabulate
 
-from orquestra.sdk._client._base import _env
 from orquestra.sdk.shared import _dates, serde
 from orquestra.sdk.shared._dates import Instant
 from orquestra.sdk.shared._logs._interfaces import LogOutput, WorkflowLogs
@@ -37,6 +36,7 @@ from orquestra.sdk.shared.schema.configs import (
 from orquestra.sdk.shared.schema.ir import ArtifactFormat
 from orquestra.sdk.shared.schema.workflow_run import TaskInvocationId, WorkflowRunId
 
+from ...._base import _env
 from . import _errors
 from . import _models as ui_models
 

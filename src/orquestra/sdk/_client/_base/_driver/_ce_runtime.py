@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Dict, List, Optional, Protocol, Sequence, Union
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._client._base import _retry
 from orquestra.sdk.exceptions import IgnoredFieldWarning
 from orquestra.sdk.shared import serde
 from orquestra.sdk.shared._logs import _regrouping
@@ -33,6 +32,7 @@ from orquestra.sdk.shared.schema.workflow_run import (
     WorkspaceId,
 )
 
+from ..._base import _retry
 from . import _client, _exceptions, _models
 
 

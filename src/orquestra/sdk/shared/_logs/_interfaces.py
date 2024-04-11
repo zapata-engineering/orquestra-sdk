@@ -6,8 +6,8 @@ import typing as t
 from dataclasses import dataclass
 from enum import Enum
 
-from orquestra.sdk.shared.schema.ir import TaskInvocationId
-from orquestra.sdk.shared.schema.workflow_run import WorkflowRunId
+from ..schema.ir import TaskInvocationId
+from ..schema.workflow_run import WorkflowRunId
 
 
 @dataclass(frozen=True)

@@ -19,12 +19,6 @@ from typing_extensions import assert_never
 
 from orquestra import sdk
 from orquestra.sdk import exceptions
-from orquestra.sdk._client._base import _config, loader
-from orquestra.sdk._client._base._driver._client import (
-    DriverClient,
-    ExternalUriProvider,
-)
-from orquestra.sdk._client._base._jwt import check_jwt_without_signature_verification
 from orquestra.sdk.shared import _dates
 from orquestra.sdk.shared._logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk.shared.abc import ArtifactValue
@@ -47,6 +41,9 @@ from orquestra.sdk.shared.schema.workflow_run import (
     WorkspaceId,
 )
 
+from ..._base import _config, loader
+from ..._base._driver._client import DriverClient, ExternalUriProvider
+from ..._base._jwt import check_jwt_without_signature_verification
 from ._ui import _models as ui_models
 
 

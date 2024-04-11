@@ -9,7 +9,6 @@ import warnings
 
 from packaging.version import parse as parse_version
 
-from orquestra.sdk._client._base._factory import build_runtime_from_config
 from orquestra.sdk.exceptions import ConfigFileNotFoundError, ConfigNameNotFoundError
 from orquestra.sdk.shared.abc import RuntimeInterface
 from orquestra.sdk.shared.schema.configs import (
@@ -20,6 +19,7 @@ from orquestra.sdk.shared.schema.configs import (
 )
 
 from .. import _config
+from .._factory import build_runtime_from_config
 
 
 class RuntimeConfig:

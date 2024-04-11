@@ -4,7 +4,7 @@
 import typing as t
 from copy import copy
 
-from orquestra.sdk.shared.schema import ir
+from .schema import ir
 
 Node = str
 

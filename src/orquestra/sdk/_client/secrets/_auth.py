@@ -6,10 +6,10 @@ import typing as t
 from pathlib import Path
 
 from orquestra.sdk import exceptions
-from orquestra.sdk._client._base import _config
-from orquestra.sdk._client._base._env import PASSPORT_FILE_ENV
 from orquestra.sdk.shared.schema.configs import ConfigName
 
+from .._base import _config
+from .._base._env import PASSPORT_FILE_ENV
 from ._client import SecretsClient
 
 # We assume that we can access the Config Service under a well-known URI if the passport

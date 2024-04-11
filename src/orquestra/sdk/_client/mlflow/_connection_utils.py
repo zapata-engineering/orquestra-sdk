@@ -13,16 +13,14 @@ from typing import Optional, Tuple
 from requests import Response, Session
 
 from orquestra import sdk
-from orquestra.sdk._client._base import _env
-from orquestra.sdk._client._base._config import read_config
-from orquestra.sdk._client._base._env import CURRENT_USER_ENV
-from orquestra.sdk._client._base._jwt import get_email_from_jwt_token
-from orquestra.sdk._client._base._services import ORQUESTRA_BASE_PATH
-from orquestra.sdk._client._base._spaces._api import (
-    make_workspace_url,
-    make_workspace_zri,
-)
 from orquestra.sdk.exceptions import ConfigNameNotFoundError, RuntimeConfigError
+
+from .._base import _env
+from .._base._config import read_config
+from .._base._env import CURRENT_USER_ENV
+from .._base._jwt import get_email_from_jwt_token
+from .._base._services import ORQUESTRA_BASE_PATH
+from .._base._spaces._api import make_workspace_url, make_workspace_zri
 
 DEFAULT_TEMP_ARTIFACTS_DIR: Path = ORQUESTRA_BASE_PATH / "mlflow" / "artifacts"
 RESOURCE_CATALOG_URI: str = "http://orquestra-resource-catalog.resource-catalog"

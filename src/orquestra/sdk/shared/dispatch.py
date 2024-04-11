@@ -8,8 +8,8 @@ import sys
 import typing as t
 from functools import singledispatch
 
-from orquestra.sdk.shared import serde
-from orquestra.sdk.shared.schema import ir
+from ..schema import ir
+from . import serde
 
 
 def _locate_callable(fn_ref_dict) -> t.Callable:

@@ -14,11 +14,12 @@ from abc import ABC, abstractmethod
 from datetime import timedelta
 
 from orquestra.sdk.exceptions import WorkspacesNotSupportedError
-from orquestra.sdk.shared._logs._interfaces import LogOutput, LogReader, WorkflowLogs
-from orquestra.sdk.shared._spaces._structs import Project, ProjectRef, Workspace
-from orquestra.sdk.shared.schema.ir import TaskInvocationId, WorkflowDef
-from orquestra.sdk.shared.schema.responses import WorkflowResult
-from orquestra.sdk.shared.schema.workflow_run import (
+
+from ._logs._interfaces import LogOutput, LogReader, WorkflowLogs
+from ._spaces._structs import Project, ProjectRef, Workspace
+from .schema.ir import TaskInvocationId, WorkflowDef
+from .schema.responses import WorkflowResult
+from .schema.workflow_run import (
     State,
     WorkflowRun,
     WorkflowRunId,

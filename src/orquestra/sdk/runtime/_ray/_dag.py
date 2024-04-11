@@ -14,6 +14,7 @@ import warnings
 from datetime import timedelta
 
 from orquestra.sdk import exceptions
+from orquestra.sdk.shared import _dates, serde
 from orquestra.sdk.shared._logs._interfaces import LogReader
 from orquestra.sdk.shared._spaces._structs import ProjectRef
 from orquestra.sdk.shared.abc import RuntimeInterface
@@ -31,7 +32,6 @@ from orquestra.sdk.shared.schema.workflow_run import (
     WorkspaceId,
 )
 
-from ...shared import _dates, serde
 from . import _client, _id_gen, _ray_logs
 from ._build_workflow import TaskResult, make_ray_dag
 from ._dirs import ray_temp_path
