@@ -14,7 +14,7 @@ from orquestra.sdk._client._base import _git_url_utils
 from orquestra.sdk._client._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
 )
-from orquestra.sdk.runtime._ray import _build_workflow, _client
+from orquestra.sdk._runtime._ray import _build_workflow, _client
 from orquestra.sdk.shared import serde
 from orquestra.sdk.shared._graphs import iter_invocations_topologically
 from orquestra.sdk.shared.exceptions import OrquestraSDKVersionMismatchWarning

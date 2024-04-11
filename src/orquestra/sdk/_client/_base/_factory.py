@@ -20,7 +20,7 @@ def build_runtime_from_config(
     # subgraphs for Ray and for CE are distinct, and both take a lot of time to
     # import.
     if config.runtime_name == RuntimeName.RAY_LOCAL:
-        import orquestra.sdk.runtime._ray._dag
+        import orquestra.sdk._runtime._ray._dag
 
         return orquestra.sdk.runtime._ray._dag.RayRuntime(
             config=config,

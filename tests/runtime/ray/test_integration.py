@@ -21,8 +21,8 @@ from freezegun import freeze_time
 from orquestra import sdk
 from orquestra.sdk._client._base._config import LOCAL_RUNTIME_CONFIGURATION
 from orquestra.sdk._client._base._testing import _example_wfs, _ipc
-from orquestra.sdk.runtime._ray import _build_workflow, _client, _dag, _ray_logs
-from orquestra.sdk.runtime._ray._env import RAY_TEMP_PATH_ENV
+from orquestra.sdk._runtime._ray import _build_workflow, _client, _dag, _ray_logs
+from orquestra.sdk._runtime._ray._env import RAY_TEMP_PATH_ENV
 from orquestra.sdk.shared import exceptions
 from orquestra.sdk.shared.abc import RuntimeInterface
 from orquestra.sdk.shared.schema import ir
@@ -1229,7 +1229,7 @@ class TestGetCurrentIDs:
         @sdk.task(source_import=sdk.InlineImport())
         def dump_ids():
             # Separate import just to avoid weird global state passing via closure.
-            import orquestra.sdk.runtime._ray._build_workflow
+            import orquestra.sdk._runtime._ray._build_workflow
 
             (
                 wf_run_id,

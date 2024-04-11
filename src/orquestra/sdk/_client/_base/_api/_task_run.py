@@ -267,7 +267,7 @@ def _get_ray_backend_ids() -> CurrentRunIDs:
         The IDs associated with the current run, in a named tuple. See: CurrentRunIDs
     """
     # Deferred import in case Ray isn't installed
-    import orquestra.sdk.runtime._ray._build_workflow
+    import orquestra.sdk._runtime._ray._build_workflow
 
     (
         wf_run_id,

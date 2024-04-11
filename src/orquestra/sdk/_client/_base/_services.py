@@ -8,7 +8,7 @@ import subprocess
 from pathlib import Path
 from typing import Protocol
 
-from orquestra.sdk.runtime._ray._dirs import (
+from orquestra.sdk._runtime._ray._dirs import (
     ray_plasma_path,
     ray_storage_path,
     ray_temp_path,

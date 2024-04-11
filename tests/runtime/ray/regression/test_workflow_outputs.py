@@ -8,7 +8,7 @@ import pytest
 
 from orquestra.sdk._client._base._config import LOCAL_RUNTIME_CONFIGURATION
 from orquestra.sdk._client._base._testing import _connections
-from orquestra.sdk.runtime._ray import _client, _dag
+from orquestra.sdk._runtime._ray import _client, _dag
 from orquestra.sdk.shared.serde import deserialize
 
 PRODUCING_SDK_VERSIONS_TO_TEST = ["0.46.0", "0.47.0"]

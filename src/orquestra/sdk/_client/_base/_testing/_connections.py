@@ -14,7 +14,7 @@ import typing as t
 from contextlib import contextmanager
 from pathlib import Path
 
-from orquestra.sdk.runtime._ray import _dag
+from orquestra.sdk._runtime._ray import _dag
 
 
 @contextmanager
