@@ -3,7 +3,7 @@
 ################################################################################
 from dataclasses import dataclass
 
-from orquestra.sdk.shared.schema.workflow_run import ProjectId, WorkspaceId
+from ..schema.workflow_run import ProjectId, WorkspaceId
 
 
 @dataclass(frozen=True)

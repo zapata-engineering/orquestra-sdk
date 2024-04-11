@@ -4,7 +4,7 @@
 from enum import Enum
 from typing import Any, Dict, Literal
 
-from orquestra.sdk.shared._storage import BaseModel
+from .._storage import BaseModel
 
 CONFIG_FILE_CURRENT_VERSION = "0.0.2"
 

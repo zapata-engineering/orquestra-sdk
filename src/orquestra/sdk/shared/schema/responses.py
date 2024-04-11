@@ -13,8 +13,7 @@ import typing as t
 from pydantic import Field
 from typing_extensions import Annotated
 
-from orquestra.sdk.shared._storage import BaseModel
-
+from .._storage import BaseModel
 from .ir import ArtifactFormat
 
 
