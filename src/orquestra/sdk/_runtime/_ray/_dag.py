@@ -15,6 +15,8 @@ from datetime import timedelta
 
 from orquestra.sdk._shared import LogReader, ProjectRef, exceptions, serde
 from orquestra.sdk._shared.abc import RuntimeInterface
+from orquestra.sdk._shared.dates import Instant, from_unix_time
+from orquestra.sdk._shared.dates import now as dates_now
 from orquestra.sdk._shared.schema import ir
 from orquestra.sdk._shared.schema.configs import RuntimeConfiguration
 from orquestra.sdk._shared.schema.responses import WorkflowResult
@@ -29,7 +31,6 @@ from orquestra.sdk._shared.schema.workflow_run import (
     WorkspaceId,
 )
 
-from ..._shared.dates import _dates
 from . import _client, _id_gen, _ray_logs
 from ._build_workflow import TaskResult, make_ray_dag
 from ._dirs import ray_temp_path
@@ -39,10 +40,10 @@ from ._wf_metadata import WfUserMetadata, pydatic_to_json_dict
 
 def _instant_from_timestamp(
     unix_timestamp: t.Optional[float],
-) -> t.Optional[_dates.Instant]:
+) -> t.Optional[Instant]:
     if unix_timestamp is None:
         return None
-    return _dates.from_unix_time(unix_timestamp)
+    return from_unix_time(unix_timestamp)
 
 
 def _generate_wf_run_id(wf_def: ir.WorkflowDef):
@@ -503,7 +504,7 @@ class RayRuntime(RuntimeInterface):
         This brought some issues on Workflow Driver, we so fill up the missing status
         fields with the current datetime for all terminated tasks and workflow.
         """
-        now: _dates.Instant = _dates.now()
+        now: Instant = dates_now()
         new_model = model.model_copy(deep=True)
 
         if model.status.start_time is not None and model.status.end_time is None:
@@ -720,7 +721,7 @@ class RayRuntime(RuntimeInterface):
         Returns:
                 A list of the workflow runs
         """
-        now = _dates.now()
+        now = dates_now()
 
         if state is not None:
             if not isinstance(state, list):

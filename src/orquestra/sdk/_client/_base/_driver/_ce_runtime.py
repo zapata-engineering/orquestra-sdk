@@ -7,11 +7,19 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Protocol, Sequence, Union
 
-from orquestra.sdk._shared import exceptions, serde
-from orquestra.sdk._shared._logs import _regrouping
-from orquestra.sdk._shared._logs._interfaces import LogOutput, WorkflowLogs
-from orquestra.sdk._shared._logs._models import LogAccumulator, LogStreamType
-from orquestra.sdk._shared._spaces._structs import Project, ProjectRef, Workspace
+from orquestra.sdk._shared import (
+    LogAccumulator,
+    LogOutput,
+    LogStreamType,
+    Project,
+    ProjectRef,
+    WorkflowLogs,
+    Workspace,
+    exceptions,
+    is_env_setup,
+    is_worker,
+    serde,
+)
 from orquestra.sdk._shared.abc import RuntimeInterface
 from orquestra.sdk._shared.exceptions import IgnoredFieldWarning
 from orquestra.sdk._shared.kubernetes.quantity import parse_quantity
@@ -620,13 +628,13 @@ class CERuntime(RuntimeInterface):
             # Default to "log.out" if no log filenames
             path = Path(m.ray_filename)
             stream = LogStreamType.by_file(path)
-            if _regrouping.is_worker(path=path):
+            if is_worker(path=path):
                 # We previously added Ray worker logs under task logs with
                 # "UNKNOWN TASK INV".
                 # Now, we get task logs from the CE API directly and add the
                 # worker logs to "other".
                 other_logs.add_line_by_stream(stream, m.log)
-            elif _regrouping.is_env_setup(path=path):
+            elif is_env_setup(path=path):
                 env_logs.add_line_by_stream(stream, m.log)
             else:
                 # Reasons for the "other" logs: future proofness and empathy. The server

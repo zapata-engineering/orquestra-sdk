@@ -18,13 +18,13 @@ from functools import singledispatch
 from pip_api._parse_requirements import Requirement
 
 from orquestra.sdk._shared import exceptions, serde
-from orquestra.sdk._shared.packaging._versions import (
+from orquestra.sdk._shared.exec_ctx import workflow_build
+from orquestra.sdk._shared.packaging import (
     get_current_python_version,
     get_current_sdk_version,
 )
 from orquestra.sdk._shared.schema import ir, responses
 
-from ..._shared.exec_ctx import _exec_ctx
 from . import _dsl, _git_url_utils, _workflow
 
 N_BYTES_IN_HASH = 8
@@ -759,7 +759,7 @@ def _make_invocation_model(
 
 def extract_root_futures(wf_def: _workflow.WorkflowDef) -> t.Sequence[_dsl.Argument]:
     """Executes the ``wf_def`` function to get the workflow output futures."""
-    with _exec_ctx.workflow_build():
+    with workflow_build():
         futures = wf_def._fn(*wf_def._workflow_args, **wf_def._workflow_kwargs)
 
     if not isinstance(futures, collections.abc.Sequence) or isinstance(futures, str):

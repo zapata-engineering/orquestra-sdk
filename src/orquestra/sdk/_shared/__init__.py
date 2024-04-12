@@ -8,11 +8,13 @@ from ._logs import (
     is_env_setup,
     is_worker,
 )
-from ._regex import SEMVER_REGEX
+from ._regex import SEMVER_REGEX, VERSION_REGEX
 from ._spaces import Project, ProjectRef, Workspace
-from ._storage import BaseModel
+from ._storage import BaseModel, TypeAdapter
 
 __all__ = [
+    "TypeAdapter",
+    "VERSION_REGEX",
     "Project",
     "ProjectRef",
     "Workspace",

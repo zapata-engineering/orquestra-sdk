@@ -18,8 +18,8 @@ from typing import (
 import pydantic
 from typing_extensions import Annotated
 
-from orquestra.sdk._shared._storage import BaseModel
-from orquestra.sdk._shared.dates._dates import Instant
+from orquestra.sdk._shared import BaseModel
+from orquestra.sdk._shared.dates import Instant
 from orquestra.sdk._shared.schema.ir import WorkflowDef
 from orquestra.sdk._shared.schema.workflow_run import (
     ProjectId,

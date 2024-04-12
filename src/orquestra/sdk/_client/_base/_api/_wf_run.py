@@ -16,10 +16,12 @@ from datetime import timedelta
 from functools import cached_property
 from pathlib import Path
 
-from orquestra.sdk._shared import serde
-from orquestra.sdk._shared._graphs import iter_invocations_topologically
-from orquestra.sdk._shared._logs._interfaces import WorkflowLogs
-from orquestra.sdk._shared._spaces._structs import ProjectRef
+from orquestra.sdk._shared import (
+    ProjectRef,
+    WorkflowLogs,
+    iter_invocations_topologically,
+    serde,
+)
 from orquestra.sdk._shared.abc import RuntimeInterface
 from orquestra.sdk._shared.exceptions import (
     ConfigFileNotFoundError,

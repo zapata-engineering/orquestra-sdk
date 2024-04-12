@@ -18,8 +18,7 @@ import requests
 from typing_extensions import assert_never
 
 from orquestra import sdk
-from orquestra.sdk._shared import exceptions
-from orquestra.sdk._shared._logs._interfaces import LogOutput, WorkflowLogs
+from orquestra.sdk._shared import LogOutput, WorkflowLogs, exceptions
 from orquestra.sdk._shared.abc import ArtifactValue
 from orquestra.sdk._shared.dates import _dates
 from orquestra.sdk._shared.schema import _compat
