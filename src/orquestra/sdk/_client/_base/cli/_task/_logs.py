@@ -78,11 +78,12 @@ class Action:
         )
 
         if download_dir is not None:
-            dump_path = self._dumper.dump(
+            dump_paths = self._dumper.dump(
                 logs=logs,
                 wf_run_id=resolved_wf_run_id,
                 dir_path=download_dir,
             )
-            self._logs_presenter.show_dumped_wf_logs(dump_path)
+            for dump_path in dump_paths:
+                self._logs_presenter.show_dumped_wf_logs(dump_path)
         else:
             self._logs_presenter.show_logs(logs)

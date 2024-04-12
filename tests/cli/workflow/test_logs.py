@@ -6,7 +6,7 @@ Unit tests for 'orq wf results' glue code.
 """
 
 from pathlib import Path
-from unittest.mock import Mock, create_autospec
+from unittest.mock import Mock, call, create_autospec
 
 import pytest
 
@@ -177,8 +177,9 @@ class TestAction:
             }
 
             # Custom mocks
-            dumped_path = "<dumped path sentinel>"
-            action._dumper.dump.return_value = dumped_path
+            out_dumped_path = "<dumped stdout path sentinel>"
+            err_dumped_path = "<dumped stderr path sentinel>"
+            action._dumper.dump.return_value = (out_dumped_path, err_dumped_path)
 
             # When
             action.on_cmd_call(
@@ -227,9 +228,17 @@ class TestAction:
                     download_dir,
                     log_type=_logs.WorkflowLogs.WorkflowLogTypeName.PER_TASK,
                 )
-                action._logs_presenter.show_dumped_wf_logs.assert_any_call(
-                    dumped_path,
-                    log_type=_logs.WorkflowLogs.WorkflowLogTypeName.PER_TASK,
+                action._logs_presenter.show_dumped_wf_logs.assert_has_calls(
+                    [
+                        call(
+                            out_dumped_path,
+                            log_type=_logs.WorkflowLogs.WorkflowLogTypeName.PER_TASK,
+                        ),
+                        call(
+                            err_dumped_path,
+                            log_type=_logs.WorkflowLogs.WorkflowLogTypeName.PER_TASK,
+                        ),
+                    ]
                 )
             if system_switch:
                 sys_logs = action._wf_run_repo.get_wf_logs.return_value.system
@@ -239,8 +248,17 @@ class TestAction:
                     download_dir,
                     log_type=_logs.WorkflowLogs.WorkflowLogTypeName.SYSTEM,
                 )
-                action._logs_presenter.show_dumped_wf_logs.assert_any_call(
-                    dumped_path, log_type=_logs.WorkflowLogs.WorkflowLogTypeName.SYSTEM
+                action._logs_presenter.show_dumped_wf_logs.assert_has_calls(
+                    [
+                        call(
+                            out_dumped_path,
+                            log_type=_logs.WorkflowLogs.WorkflowLogTypeName.SYSTEM,
+                        ),
+                        call(
+                            err_dumped_path,
+                            log_type=_logs.WorkflowLogs.WorkflowLogTypeName.SYSTEM,
+                        ),
+                    ]
                 )
             if env_setup_switch:
                 env_setup_logs = action._wf_run_repo.get_wf_logs.return_value.env_setup
@@ -250,15 +268,25 @@ class TestAction:
                     download_dir,
                     log_type=_logs.WorkflowLogs.WorkflowLogTypeName.ENV_SETUP,
                 )
-                action._logs_presenter.show_dumped_wf_logs.assert_any_call(
-                    dumped_path,
-                    log_type=_logs.WorkflowLogs.WorkflowLogTypeName.ENV_SETUP,
+                action._logs_presenter.show_dumped_wf_logs.assert_has_calls(
+                    [
+                        call(
+                            out_dumped_path,
+                            log_type=_logs.WorkflowLogs.WorkflowLogTypeName.ENV_SETUP,
+                        ),
+                        call(
+                            err_dumped_path,
+                            log_type=_logs.WorkflowLogs.WorkflowLogTypeName.ENV_SETUP,
+                        ),
+                    ]
                 )
             assert action._dumper.dump.call_count == sum(
                 [task_switch, system_switch, env_setup_switch]
             )
-            assert action._logs_presenter.show_dumped_wf_logs.call_count == sum(
-                [task_switch, system_switch, env_setup_switch]
+            # We have stdout and stderr, so multiply expected number by 2
+            assert (
+                action._logs_presenter.show_dumped_wf_logs.call_count
+                == sum([task_switch, system_switch, env_setup_switch]) * 2
             )
 
             # Do not print logs to stdout
