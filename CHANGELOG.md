@@ -18,6 +18,8 @@
 
 🥷 *Internal*
 
+* Refactored internal dir structure of the whole SDK repo
+
 📃 *Docs*
 
 ## v0.62.0
