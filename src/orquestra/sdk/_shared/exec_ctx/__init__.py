@@ -1,7 +1,6 @@
 from ._exec_ctx import (
     ExecContext,
     get_current_exec_context,
-    global_context,
     ray,
     workflow_build,
 )
@@ -11,5 +10,4 @@ __all__ = [
     "get_current_exec_context",
     "workflow_build",
     "ExecContext",
-    "global_context",
 ]
