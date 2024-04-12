@@ -17,7 +17,8 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-from orquestra.sdk._shared import _dates
+from orquestra.sdk._shared import Instant, from_isoformat, local_isoformat
+from orquestra.sdk._shared import now as dates_now
 from orquestra.sdk._shared.schema.ir import TaskInvocationId
 from orquestra.sdk._shared.schema.workflow_run import WorkflowRunId
 
@@ -36,7 +37,7 @@ def print_start(wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
 
     See: ORQSDK-951 and ORQSDK-952 for deprecation strategy
     """
-    now = _dates.now()
+    now = dates_now()
     marker = TaskStartMarker(
         wf_run_id=wf_run_id, task_inv_id=task_inv_id, timestamp=now
     )
@@ -51,7 +52,7 @@ def print_end(wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
 
     See: ORQSDK-951 and ORQSDK-952 for deprecation strategy
     """
-    now = _dates.now()
+    now = dates_now()
     marker = TaskEndMarker(wf_run_id=wf_run_id, task_inv_id=task_inv_id, timestamp=now)
     print(marker.line)
     print(marker.line, file=sys.stderr)
@@ -141,13 +142,13 @@ class TaskStartMarker:
     event = "task_start"
     wf_run_id: WorkflowRunId
     task_inv_id: TaskInvocationId
-    timestamp: _dates.Instant
+    timestamp: Instant
 
     @property
     def line(self) -> str:
         event = {
             "event": self.event,
-            "timestamp": _dates.local_isoformat(self.timestamp),
+            "timestamp": local_isoformat(self.timestamp),
             "wf_run_id": self.wf_run_id,
             "task_inv_id": self.task_inv_id,
         }
@@ -164,13 +165,13 @@ class TaskEndMarker:
     event = "task_end"
     wf_run_id: t.Optional[WorkflowRunId]
     task_inv_id: t.Optional[TaskInvocationId]
-    timestamp: _dates.Instant
+    timestamp: Instant
 
     @property
     def line(self) -> str:
         event = {
             "event": self.event,
-            "timestamp": _dates.local_isoformat(self.timestamp),
+            "timestamp": local_isoformat(self.timestamp),
             **({"wf_run_id": self.wf_run_id} if self.wf_run_id else {}),
             **({"task_inv_id": self.task_inv_id} if self.task_inv_id else {}),
         }
@@ -206,13 +207,13 @@ def parse_line(line: str) -> t.Optional[Marker]:
             return TaskStartMarker(
                 wf_run_id=event_dict["wf_run_id"],
                 task_inv_id=event_dict["task_inv_id"],
-                timestamp=_dates.from_isoformat(event_dict["timestamp"]),
+                timestamp=from_isoformat(event_dict["timestamp"]),
             )
         elif event_dict["event"] == TaskEndMarker.event:
             return TaskEndMarker(
                 wf_run_id=event_dict.get("wf_run_id"),
                 task_inv_id=event_dict.get("task_inv_id"),
-                timestamp=_dates.from_isoformat(event_dict["timestamp"]),
+                timestamp=from_isoformat(event_dict["timestamp"]),
             )
         else:
             return None

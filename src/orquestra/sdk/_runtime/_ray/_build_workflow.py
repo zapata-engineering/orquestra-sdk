@@ -15,8 +15,14 @@ from packaging import version
 from typing_extensions import assert_never
 
 from orquestra.sdk import secrets
-from orquestra.sdk._shared import _exec_ctx, _graphs, dispatch, exceptions, serde
-from orquestra.sdk._shared._regex import SEMVER_REGEX
+from orquestra.sdk._shared import (
+    SEMVER_REGEX,
+    dispatch,
+    exceptions,
+    iter_invocations_topologically,
+)
+from orquestra.sdk._shared import ray as exec_ctx_ray
+from orquestra.sdk._shared import serde
 from orquestra.sdk._shared.kubernetes.quantity import parse_quantity
 from orquestra.sdk._shared.packaging import get_installed_version
 from orquestra.sdk._shared.schema import ir, responses, workflow_run
@@ -276,7 +282,7 @@ def _make_ray_dag_node(
 
     @client.remote
     def _ray_remote(*inner_args, **inner_kwargs):
-        with _exec_ctx.ray():
+        with exec_ctx_ray():
             # We need to emit task start marker log as soon as possible. Otherwise, we
             # risk an exception won't be visible to the user.
             #
@@ -525,7 +531,7 @@ def make_ray_dag(
         id_: _pip_string(imp) for id_, imp in workflow_def.imports.items()
     }
 
-    for invocation in _graphs.iter_invocations_topologically(workflow_def):
+    for invocation in iter_invocations_topologically(workflow_def):
         user_task = workflow_def.tasks[invocation.task_id]
         pos_args, pos_args_artifact_nodes = _gather_args(
             invocation.args_ids, workflow_def, ray_futures

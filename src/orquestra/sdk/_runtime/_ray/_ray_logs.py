@@ -6,9 +6,14 @@ import typing as t
 from pathlib import Path
 from typing import Iterator
 
-from orquestra.sdk._shared._logs import _regrouping
-from orquestra.sdk._shared._logs._interfaces import LogOutput, WorkflowLogs
-from orquestra.sdk._shared._logs._models import LogAccumulator, LogStreamType
+from orquestra.sdk._shared import (
+    LogAccumulator,
+    LogOutput,
+    LogStreamType,
+    WorkflowLogs,
+    is_env_setup,
+    is_worker,
+)
 from orquestra.sdk._shared.schema.ir import TaskInvocationId
 from orquestra.sdk._shared.schema.workflow_run import WorkflowRunId
 
@@ -35,11 +40,11 @@ def _iter_logs_paths(ray_temp: Path) -> t.Iterator[Path]:
 
 
 def iter_user_log_paths(ray_temp: Path) -> t.Iterator[Path]:
-    return filter(_regrouping.is_worker, _iter_logs_paths(ray_temp))
+    return filter(is_worker, _iter_logs_paths(ray_temp))
 
 
 def iter_env_log_paths(ray_temp: Path) -> t.Iterator[Path]:
-    return filter(_regrouping.is_env_setup, _iter_logs_paths(ray_temp))
+    return filter(is_env_setup, _iter_logs_paths(ray_temp))
 
 
 def _iter_log_lines(paths: t.Iterable[Path]) -> t.Iterator[bytes]:
