@@ -1,3 +1,5 @@
+from schema import result_is_packed
+
 from ._graphs import iter_invocations_topologically
 from ._logs import (
     LogAccumulator,
@@ -14,6 +16,7 @@ from ._storage import BaseModel, TypeAdapter
 
 __all__ = [
     "TypeAdapter",
+    "result_is_packed",
     "VERSION_REGEX",
     "Project",
     "ProjectRef",
@@ -27,9 +30,5 @@ __all__ = [
     "LogReader",
     "BaseModel",
     "SEMVER_REGEX",
-    "Instant",
-    "now",
-    "local_isoformat",
-    "from_isoformat",
     "iter_invocations_topologically",
 ]
