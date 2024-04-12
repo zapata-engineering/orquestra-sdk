@@ -99,7 +99,7 @@ isort:
 
 .PHONY: ruff
 ruff:
-	$(PYTHON) -m ruff --preview src tests docs/examples
+	$(PYTHON) -m ruff check --preview src tests docs/examples
 
 .PHONY: pymarkdown
 pymarkdown:
@@ -129,7 +129,7 @@ style:
 style-fix:
 	black src tests docs/examples
 	isort --profile=black src tests docs/examples
-	ruff --preview --fix src tests docs/examples
+	ruff check --preview --fix src tests docs/examples
 
 # Run tests, but discard the ones that exceptionally slow to run locally.
 .PHONY: test-fast
