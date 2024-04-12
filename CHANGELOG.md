@@ -13,6 +13,7 @@
 🐛 *Bug Fixes*
 
 * `sdk.workflow(fn, resources=...)` will no longer show type errors from linters.
+* CLI log dumping now correctly saves stdout and stderr logs
 
 💅 *Improvements*
 
