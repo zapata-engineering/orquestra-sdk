@@ -5,7 +5,7 @@ import os
 
 import pytest
 
-from orquestra.sdk._base._testing import _connections
+from orquestra.sdk._client._base._testing import _connections
 
 
 @pytest.fixture(scope="module")

@@ -1,10 +1,10 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2024 Zapata Computing Inc.
 ################################################################################
+# THIS FILE IS A SHIM TO REEXPORT SYMBOLS AS PUBLIC API
+# DO NOT PUT ANY LOGIC INTO THIS FILE.
 
-"""A set of Orquestra utilities relating to interacting with MLFlow."""
-
-from ._connection_utils import (
+from .._client.mlflow import (
     get_current_user,
     get_temp_artifacts_dir,
     get_tracking_token,

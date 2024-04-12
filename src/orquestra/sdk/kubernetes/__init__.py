@@ -1,6 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2024 Zapata Computing Inc.
 ################################################################################
-
-# This module is vendored from https://github.com/kubernetes-client/python
-# See each source file for copyright.
+# THIS FILE IS A SHIM TO REEXPORT SYMBOLS AS PUBLIC API
+# DO NOT PUT ANY LOGIC INTO THIS FILE.

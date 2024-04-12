@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from orquestra.sdk._ray._client import RayClient
+from orquestra.sdk._runtime._ray._client import RayClient
 
 
 class TestClient:

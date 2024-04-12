@@ -2,7 +2,7 @@
 # © Copyright 2022 - 2023 Zapata Computing Inc.
 ################################################################################
 """
-Unit tests for orquestra.sdk._ray._dag. If you need a test against a live
+Unit tests for orquestra.sdk.runtime._ray._dag. If you need a test against a live
 Ray connection, see tests/ray/test_integration.py instead.
 """
 from datetime import timedelta
@@ -11,15 +11,14 @@ from unittest.mock import Mock, PropertyMock, create_autospec
 
 import pytest
 
-from orquestra.sdk import exceptions
-from orquestra.sdk._base import _dates
-from orquestra.sdk._base._config import (
+from orquestra.sdk._client._base._config import (
     LOCAL_RUNTIME_CONFIGURATION,
     RuntimeConfiguration,
 )
-from orquestra.sdk._base._spaces._structs import ProjectRef
-from orquestra.sdk._ray import _client, _dag, _ray_logs
-from orquestra.sdk.schema.workflow_run import State
+from orquestra.sdk._runtime._ray import _client, _dag, _ray_logs
+from orquestra.sdk._shared import _dates, exceptions
+from orquestra.sdk._shared._spaces._structs import ProjectRef
+from orquestra.sdk._shared.schema.workflow_run import State
 
 TEST_TIME = _dates.now()
 
