@@ -1754,7 +1754,7 @@ class TestListWorkflows:
 
         # THEN
         assert e.exconly() == (
-            "orquestra.sdk.shared.exceptions.ProjectInvalidError: The project "
+            "orquestra.sdk._shared.exceptions.ProjectInvalidError: The project "
             "`<project ID sentinel>` cannot be uniquely identified without a workspace "
             "parameter."
         )
@@ -1931,7 +1931,7 @@ class TestListWorkflowSummaries:
 
         # THEN
         assert e.exconly() == (
-            "orquestra.sdk.shared.exceptions.ProjectInvalidError: The project "
+            "orquestra.sdk._shared.exceptions.ProjectInvalidError: The project "
             "`<project ID sentinel>` cannot be uniquely identified without a workspace "
             "parameter."
         )

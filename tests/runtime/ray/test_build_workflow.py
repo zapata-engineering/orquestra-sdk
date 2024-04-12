@@ -759,6 +759,6 @@ class TestHandlingSDKVersions:
             # Then
             warning: str = e.exconly().strip()
             assert re.match(
-                r"^orquestra\.sdk\.shared\.exceptions\.OrquestraSDKVersionMismatchWarning: The definition for task `task-hello-orquestra-.*` declares `orquestra-sdk(?P<dependency>.*)` as a dependency. The current SDK version (\((?P<installed>.*)\) )?is automatically installed in task environments. The specified dependency will be ignored.$",  # noqa: E501
+                r"^orquestra\.sdk\._shared\.exceptions\.OrquestraSDKVersionMismatchWarning: The definition for task `task-hello-orquestra-.*` declares `orquestra-sdk(?P<dependency>.*)` as a dependency. The current SDK version (\((?P<installed>.*)\) )?is automatically installed in task environments. The specified dependency will be ignored.$",  # noqa: E501
                 warning,
             ), warning
