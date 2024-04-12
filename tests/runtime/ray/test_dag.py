@@ -16,8 +16,9 @@ from orquestra.sdk._client._base._config import (
     RuntimeConfiguration,
 )
 from orquestra.sdk._runtime._ray import _client, _dag, _ray_logs
-from orquestra.sdk._shared import _dates, exceptions
+from orquestra.sdk._shared import exceptions
 from orquestra.sdk._shared._spaces._structs import ProjectRef
+from orquestra.sdk._shared.dates import _dates
 from orquestra.sdk._shared.schema.workflow_run import State
 
 TEST_TIME = _dates.now()

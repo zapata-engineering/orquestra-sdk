@@ -20,9 +20,9 @@ from orquestra.sdk._shared import (
     dispatch,
     exceptions,
     iter_invocations_topologically,
+    serde,
 )
-from orquestra.sdk._shared import ray as exec_ctx_ray
-from orquestra.sdk._shared import serde
+from orquestra.sdk._shared.exec_ctx import ray as exec_ctx_ray
 from orquestra.sdk._shared.kubernetes.quantity import parse_quantity
 from orquestra.sdk._shared.packaging import get_installed_version
 from orquestra.sdk._shared.schema import ir, responses, workflow_run

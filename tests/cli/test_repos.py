@@ -24,8 +24,9 @@ from orquestra.sdk._client._base._testing import _example_wfs, _reloaders
 from orquestra.sdk._client._base.cli import _repos
 from orquestra.sdk._client._base.cli._ui import _models as ui_models
 from orquestra.sdk._runtime._ray import _dag
-from orquestra.sdk._shared import _dates, exceptions
+from orquestra.sdk._shared import exceptions
 from orquestra.sdk._shared._logs._interfaces import LogOutput, WorkflowLogs
+from orquestra.sdk._shared.dates import _dates
 from orquestra.sdk._shared.schema import ir
 from orquestra.sdk._shared.schema.configs import RuntimeName
 from orquestra.sdk._shared.schema.workflow_run import RunStatus, State

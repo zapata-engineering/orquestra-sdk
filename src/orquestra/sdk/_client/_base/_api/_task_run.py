@@ -6,10 +6,11 @@ import typing as t
 from collections import namedtuple
 from itertools import chain
 
-from orquestra.sdk._shared import _exec_ctx, serde
+from orquestra.sdk._shared import serde
 from orquestra.sdk._shared._logs._interfaces import LogOutput
 from orquestra.sdk._shared.abc import ArtifactValue, RuntimeInterface
 from orquestra.sdk._shared.exceptions import TaskRunNotFound, WorkflowRunIDNotFoundError
+from orquestra.sdk._shared.exec_ctx import ExecContext, get_current_exec_context
 from orquestra.sdk._shared.schema import ir
 from orquestra.sdk._shared.schema.responses import WorkflowResult
 from orquestra.sdk._shared.schema.workflow_run import State, TaskInvocationId
@@ -334,11 +335,11 @@ def current_run_ids() -> CurrentRunIDs:
         WorkflowRunIDNotFoundError: When the workflow run ID cannot be recovered.
         NotImplementedError: When the execution context is not one of the covered cases.
     """
-    context = _exec_ctx.get_current_exec_context()
+    context = get_current_exec_context()
 
-    if context == _exec_ctx.ExecContext.RAY:
+    if context == ExecContext.RAY:
         return _get_ray_backend_ids()
-    elif context == _exec_ctx.ExecContext.DIRECT:
+    elif context == ExecContext.DIRECT:
         return _get_in_process_backend_ids()
 
     raise NotImplementedError(

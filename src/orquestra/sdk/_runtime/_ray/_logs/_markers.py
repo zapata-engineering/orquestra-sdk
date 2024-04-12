@@ -17,8 +17,8 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-from orquestra.sdk._shared import Instant, from_isoformat, local_isoformat
-from orquestra.sdk._shared import now as dates_now
+from orquestra.sdk._shared.dates import Instant, from_isoformat, local_isoformat
+from orquestra.sdk._shared.dates import now as dates_now
 from orquestra.sdk._shared.schema.ir import TaskInvocationId
 from orquestra.sdk._shared.schema.workflow_run import WorkflowRunId
 

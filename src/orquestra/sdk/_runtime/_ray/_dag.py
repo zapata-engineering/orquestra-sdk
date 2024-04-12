@@ -13,7 +13,7 @@ import typing as t
 import warnings
 from datetime import timedelta
 
-from orquestra.sdk._shared import LogReader, ProjectRef, _dates, exceptions, serde
+from orquestra.sdk._shared import LogReader, ProjectRef, exceptions, serde
 from orquestra.sdk._shared.abc import RuntimeInterface
 from orquestra.sdk._shared.schema import ir
 from orquestra.sdk._shared.schema.configs import RuntimeConfiguration
@@ -29,6 +29,7 @@ from orquestra.sdk._shared.schema.workflow_run import (
     WorkspaceId,
 )
 
+from ..._shared.dates import _dates
 from . import _client, _id_gen, _ray_logs
 from ._build_workflow import TaskResult, make_ray_dag
 from ._dirs import ray_temp_path
