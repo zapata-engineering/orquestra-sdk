@@ -11,7 +11,7 @@ from pathlib import Path
 
 import cloudpickle  # type: ignore
 
-from ._storage import TypeAdapter
+from .orqdantic import TypeAdapter
 from .schema import ir, responses
 
 CHUNK_SIZE = 40_000

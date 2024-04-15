@@ -16,13 +16,12 @@ from orquestra.sdk._shared import (
     WorkflowLogs,
     Workspace,
     exceptions,
-    is_env_setup,
-    is_worker,
     serde,
 )
 from orquestra.sdk._shared.abc import RuntimeInterface
 from orquestra.sdk._shared.exceptions import IgnoredFieldWarning
 from orquestra.sdk._shared.kubernetes.quantity import parse_quantity
+from orquestra.sdk._shared.logs import is_env_setup, is_worker
 from orquestra.sdk._shared.schema.configs import RuntimeConfiguration
 from orquestra.sdk._shared.schema.ir import (
     ArtifactFormat,

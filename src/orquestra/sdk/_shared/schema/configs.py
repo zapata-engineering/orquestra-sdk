@@ -4,7 +4,7 @@
 from enum import Enum
 from typing import Any, Dict, Literal
 
-from .._storage import BaseModel
+from ..orqdantic import BaseModel
 
 CONFIG_FILE_CURRENT_VERSION = "0.0.2"
 

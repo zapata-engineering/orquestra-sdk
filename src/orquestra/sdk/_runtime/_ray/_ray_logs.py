@@ -6,14 +6,8 @@ import typing as t
 from pathlib import Path
 from typing import Iterator
 
-from orquestra.sdk._shared import (
-    LogAccumulator,
-    LogOutput,
-    LogStreamType,
-    WorkflowLogs,
-    is_env_setup,
-    is_worker,
-)
+from orquestra.sdk._shared import LogAccumulator, LogOutput, LogStreamType, WorkflowLogs
+from orquestra.sdk._shared.logs import is_env_setup, is_worker
 from orquestra.sdk._shared.schema.ir import TaskInvocationId
 from orquestra.sdk._shared.schema.workflow_run import WorkflowRunId
 

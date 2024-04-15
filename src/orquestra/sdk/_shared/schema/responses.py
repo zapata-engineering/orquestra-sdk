@@ -13,7 +13,7 @@ import typing as t
 from pydantic import Field
 from typing_extensions import Annotated
 
-from .._storage import BaseModel
+from ..orqdantic import BaseModel
 from .ir import ArtifactFormat
 
 

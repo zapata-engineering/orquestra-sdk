@@ -11,8 +11,8 @@ import enum
 import typing as t
 import warnings
 
-from .._storage import BaseModel
 from ..dates import Instant
+from ..orqdantic import BaseModel
 from .ir import TaskInvocationId, WorkflowDef
 
 WorkflowRunId = str
