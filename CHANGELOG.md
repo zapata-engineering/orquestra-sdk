@@ -4,7 +4,11 @@
 
 🚨 *Breaking Changes*
 
+* Changed typehints for `TaskDef`. Now Return value from task call is always `ArtifactFeature[T]` object (where `T` is original return type). Task call accepts `typing.any`.
+
 🔥 *Features*
+
+* Add new API `current_exec_ctx` which returns current `workspace_id` `project_id` and `config_name`. To be used inside a task.
 
 🧟 *Deprecations*
 

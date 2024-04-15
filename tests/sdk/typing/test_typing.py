@@ -51,24 +51,13 @@ def shared_cache(tmp_path_factory: pytest.TempPathFactory):
             [],
         ),
         (
-            "tests/sdk/typing/task/passed_keyword_as_positional.py",
-            'Too many positional arguments for "__call__" of "TaskDef"',
+            "tests/sdk/typing/task/using_artifact_functions.py",
+            "Success: no issues found in 1 source file",
             [],
         ),
         (
-            "tests/sdk/typing/task/passed_too_few_args.py",
-            'error: Missing positional argument "a" in call to "__call__" of "TaskDef"',
-            [],
-        ),
-        (
-            "tests/sdk/typing/task/passed_too_many_args.py",
-            'error: Too many arguments for "__call__" of "TaskDef"',
-            [],
-        ),
-        (
-            "tests/sdk/typing/task/passed_wrong_arg_type.py",
-            'Argument 1 to "__call__" of "TaskDef" has incompatible type "str"; '
-            'expected "int"',
+            "tests/sdk/typing/task/using_artifact_feature_as_object.py",
+            'error: Unsupported operand types for - ("ArtifactFuture[int]" and "int")',
             [],
         ),
         # workflow decorator

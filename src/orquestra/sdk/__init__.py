@@ -5,10 +5,12 @@
 
 from ._client import mlflow, secrets
 from ._client._base._api import (
+    CurrentExecutionCtx,
     CurrentRunIDs,
     RuntimeConfig,
     TaskRun,
     WorkflowRun,
+    current_exec_ctx,
     current_run_ids,
     list_workflow_run_summaries,
     list_workflow_runs,
@@ -78,4 +80,6 @@ __all__ = [
     "Workspace",
     "CurrentRunIDs",
     "LogOutput",
+    "CurrentExecutionCtx",
+    "current_exec_ctx",
 ]

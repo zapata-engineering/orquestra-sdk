@@ -3,4 +3,5 @@
 ################################################################################
 from .task_base import task
 
-task("1")  # pyright: ignore
+a = task()
+b = a - 10  # pyright: ignore

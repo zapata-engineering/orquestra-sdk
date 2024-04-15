@@ -543,6 +543,7 @@ def test_artifact_node_custom_names():
         x = _local_task_1(ret)
         # don't check for specific custom name, but make sure it consists
         # dependent task name and that it invokes warning for the user
+        assert x.invocation.custom_name
         assert _local_task.__name__ in x.invocation.custom_name
         assert len(warns.list) == 1
 

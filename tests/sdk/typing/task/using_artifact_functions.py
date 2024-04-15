@@ -3,4 +3,4 @@
 ################################################################################
 from .task_base import kw_task
 
-kw_task(1)  # pyright: ignore
+kw_task(1).with_custom_image("")

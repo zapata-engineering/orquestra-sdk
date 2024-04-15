@@ -30,14 +30,11 @@ from typing import (
     Tuple,
     TypeVar,
     Union,
-    cast,
     overload,
 )
 
-from typing_extensions import ParamSpec
-
 if TYPE_CHECKING:
-    import pip_api
+    from pip_api._parse_requirements import Requirement
 
 import wrapt  # type: ignore
 
@@ -87,6 +84,9 @@ _secret_as_string_error = (
     " be used as strings. If you need to use a Secret's"
     " value, this must be done inside of a task."
 )
+
+
+_TaskReturn = TypeVar("_TaskReturn")
 
 
 class Secret(NamedTuple):
@@ -285,8 +285,8 @@ class PythonImports:
             self._file = None
         self._packages = packages
 
-    def resolved(self) -> List[pip_api.Requirement]:
-        import pip_api
+    def resolved(self) -> List[Requirement]:
+        from pip_api._parse_requirements import Requirement, parse_requirements
 
         # on Windows file cannot be reopened when it's opened with delete=True
         # So the temp file is closed first and then deleted manually.
@@ -303,7 +303,7 @@ class PythonImports:
         tmp_file.flush()
         tmp_file.close()
         # reading all requirements as one parse to avoid conflicts
-        requirements = pip_api.parse_requirements(
+        requirements = parse_requirements(
             pathlib.Path(tmp_file.name), include_invalid=False
         )
         os.unlink(tmp_file.name)
@@ -311,9 +311,7 @@ class PythonImports:
         # with include_invalid - parsing will never return invalid_requirement type,
         # but mypy doesn't detect that, so this list comp. is to satisfy mypy
         # (and make it type-safe just-in-case
-        return [
-            req for req in requirements.values() if isinstance(req, pip_api.Requirement)
-        ]
+        return [req for req in requirements.values() if isinstance(req, Requirement)]
 
     def __eq__(self, other):
         if not isinstance(other, PythonImports):
@@ -492,11 +490,7 @@ def parse_custom_name(
     return custom_name.format(**format_dict)
 
 
-_P = ParamSpec("_P")
-_R = TypeVar("_R")
-
-
-class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
+class TaskDef(wrapt.ObjectProxy, Generic[_TaskReturn]):
     """A function exposed to Orquestra.
 
     This is the result of applying the @task decorator.
@@ -511,8 +505,8 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
 
     def __init__(
         self,
-        fn: Callable[_P, _R],
-        output_metadata: "orquestra.sdk._client._base._dsl.TaskOutputMetadata",
+        fn: Callable[..., _TaskReturn],
+        output_metadata: "orquestra.sdk._client._base._dsl.TaskOutputMetadata",  # pyright: ignore # NOQA
         source_import: Optional[Import] = None,
         parameters: Optional[OrderedDict] = None,
         dependency_imports: Optional[Tuple[Import, ...]] = None,
@@ -524,7 +518,7 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
     ):
         if isinstance(fn, BuiltinFunctionType):
             raise NotImplementedError("Built-in functions are not supported as Tasks")
-        super(TaskDef, self).__init__(fn)
+        super().__init__(fn)
         self.__sdk_task_body = fn
         self._fn_ref = fn_ref
         self._fn_name = fn.__name__
@@ -608,7 +602,9 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
         except InvalidTaskDefinitionError:
             raise
 
-    def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+    def __call__(
+        self, *args: Union[ArtifactFuture, Any], **kwargs: Union[ArtifactFuture, Any]
+    ) -> ArtifactFuture[_TaskReturn]:
         try:
             signature = inspect.signature(self.__sdk_task_body).bind(*args, **kwargs)
         except TypeError as exc:
@@ -632,18 +628,15 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
                 ) + error_message
             raise WorkflowSyntaxError(error_message) from exc
 
-        return cast(
-            _R,
-            ArtifactFuture(
-                TaskInvocation(
-                    self,
-                    args=args,
-                    kwargs=tuple(kwargs.items()),
-                    resources=self._resources,
-                    custom_name=parse_custom_name(self._custom_name, signature),
-                    custom_image=self._custom_image,
-                )
-            ),
+        return ArtifactFuture(
+            TaskInvocation(
+                self,
+                args=args,
+                kwargs=tuple(kwargs.items()),
+                resources=self._resources,
+                custom_name=parse_custom_name(self._custom_name, signature),
+                custom_image=self._custom_image,
+            )
         )
 
     def _resolve_task_source_data(
@@ -684,7 +677,7 @@ class TaskDef(Generic[_P, _R], wrapt.ObjectProxy):
 # Using POPO instead of a NamedTuple means each instance of TaskInvocation
 # is unique, even if they share the exact same attributes. This is required
 # for the traversal of the graph.
-class TaskInvocation:
+class TaskInvocation(Generic[_TaskReturn]):
     task: TaskDef
 
     args: Tuple[Argument, ...]
@@ -701,7 +694,7 @@ class TaskInvocation:
 
     def __init__(
         self,
-        task: TaskDef,
+        task: TaskDef[_TaskReturn],
         args: Tuple[Argument, ...],
         kwargs: Tuple[Tuple[str, Argument], ...],
         type: str = "task_invocation",
@@ -746,16 +739,16 @@ class ArtifactFormat(Enum):
     AUTO = "AUTO"
 
 
-class ArtifactFuture:
+class ArtifactFuture(Generic[_TaskReturn]):
     DEFAULT_CUSTOM_NAME = None
     DEFAULT_SERIALIZATION_FORMAT = ArtifactFormat.AUTO
 
     def __init__(
         self,
-        invocation: orquestra.sdk._client._base._dsl.TaskInvocation,
+        invocation: TaskInvocation[_TaskReturn],  # pyright: ignore
         output_index: Optional[int] = None,
         custom_name: Optional[str] = DEFAULT_CUSTOM_NAME,
-        serialization_format: orquestra.sdk._client._base._dsl.ArtifactFormat = DEFAULT_SERIALIZATION_FORMAT,  # noqa: E501
+        serialization_format: ArtifactFormat = DEFAULT_SERIALIZATION_FORMAT,
     ):
         self.invocation = invocation
         # if the invocation returns multiple values, this the index in the output
@@ -825,19 +818,19 @@ class ArtifactFuture:
         self,
         *,
         cpu: Optional[
-            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]  # pyright: ignore
         ] = Sentinel.NO_UPDATE,
         memory: Optional[
-            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]  # pyright: ignore
         ] = Sentinel.NO_UPDATE,
         disk: Optional[
-            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]  # pyright: ignore
         ] = Sentinel.NO_UPDATE,
         gpu: Optional[
-            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]  # pyright: ignore
         ] = Sentinel.NO_UPDATE,
         custom_image: Optional[
-            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]  # pyright: ignore
         ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
         """
@@ -908,16 +901,16 @@ class ArtifactFuture:
         self,
         *,
         cpu: Optional[
-            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]  # pyright: ignore
         ] = Sentinel.NO_UPDATE,
         memory: Optional[
-            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]  # pyright: ignore
         ] = Sentinel.NO_UPDATE,
         disk: Optional[
-            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]  # pyright: ignore
         ] = Sentinel.NO_UPDATE,
         gpu: Optional[
-            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]  # pyright: ignore
         ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
         """
@@ -949,7 +942,7 @@ class ArtifactFuture:
     def with_custom_image(
         self,
         custom_image: Optional[
-            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]
+            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]  # pyright: ignore
         ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
         """
@@ -1087,7 +1080,7 @@ def _get_number_of_outputs(fn: Callable) -> TaskOutputMetadata:
 
 
 @overload
-def task(fn: Callable[_P, _R]) -> TaskDef[_P, _R]:
+def task(fn: Callable[..., _TaskReturn]) -> TaskDef[_TaskReturn]:
     ...
 
 
@@ -1101,13 +1094,13 @@ def task(
     custom_image: Optional[str] = None,
     custom_name: Optional[str] = None,
     max_retries: Optional[int] = None,
-) -> Callable[[Callable[_P, _R]], TaskDef[_P, _R]]:
+) -> Callable[[Callable[..., _TaskReturn]], TaskDef[_TaskReturn]]:
     ...
 
 
 @overload
 def task(
-    fn: Callable[_P, _R],
+    fn: Callable[..., _TaskReturn],
     *,
     source_import: Optional[Import] = None,
     dependency_imports: Union[Iterable[Import], Import, None] = None,
@@ -1116,12 +1109,12 @@ def task(
     custom_image: Optional[str] = None,
     custom_name: Optional[str] = None,
     max_retries: Optional[int] = None,
-) -> TaskDef[_P, _R]:
+) -> TaskDef[_TaskReturn]:
     ...
 
 
 def task(
-    fn: Optional[Callable[_P, _R]] = None,
+    fn: Optional[Callable[..., _TaskReturn]] = None,
     *,
     source_import: Optional[Import] = None,
     dependency_imports: Union[Iterable[Import], Import, None] = None,
@@ -1130,7 +1123,9 @@ def task(
     custom_image: Optional[str] = None,
     custom_name: Optional[str] = None,
     max_retries: Optional[int] = None,
-) -> Union[TaskDef[_P, _R], Callable[[Callable[_P, _R]], TaskDef[_P, _R]]]:
+) -> Union[
+    TaskDef[_TaskReturn], Callable[[Callable[..., _TaskReturn]], TaskDef[_TaskReturn]]
+]:
     """Wraps a function into an Orquestra Task.
 
     The result is something you can use inside your `@sdk.workflow` function. If you
@@ -1184,7 +1179,7 @@ def task(
         if n_outputs <= 0:
             raise ValueError("A task should have at least one output")
 
-    def _inner(fn: Callable[_P, _R]):
+    def _inner(fn: Callable):
         # Assume if a user has specified the number of outputs, then this output is
         # subscriptable
         output_metadata: TaskOutputMetadata
