@@ -15,10 +15,11 @@ import git
 import pytest
 from git.remote import Remote
 
-import orquestra.sdk.schema.ir as ir
-from orquestra.sdk import exceptions, secrets
-from orquestra.sdk._base import _dsl, _traversal, _workflow, dispatch, serde
-from orquestra.sdk.packaging import _versions
+import orquestra.sdk._shared.schema.ir as ir
+from orquestra.sdk._client import secrets
+from orquestra.sdk._client._base import _dsl, _traversal, _workflow
+from orquestra.sdk._shared import dispatch, exceptions, serde
+from orquestra.sdk._shared.packaging import _versions
 
 from .data.complex_serialization.workflow_defs import (
     generate_object_with_num,
@@ -83,7 +84,7 @@ def git_task2():
 @_dsl.task(
     dependency_imports=[
         _dsl.GitImport(
-            repo_url="git@github.com:zapatacomputing/orquestra-workflow-sdk.git",
+            repo_url="git@github.com:zapata-engineering/orquestra-sdk.git",
             git_ref="main",
         )
     ],
@@ -333,7 +334,7 @@ def simple_task(a):
 
 @_workflow.workflow
 def large_workflow():
-    val = 0
+    val: t.Union[int, _dsl.ArtifactFuture[int]] = 0
     for _ in range(1000):
         val = simple_task(val)
     return [val]
@@ -672,13 +673,16 @@ class TestWorkflowsTasksProperties:
                 task_def_obj = dispatch.locate_fn_ref(task_def_model.fn_ref)
                 # We assume that `fn_ref` points to a @task() decorated function.
                 assert hasattr(task_def_obj, "_output_metadata")
-                if task_def_obj._output_metadata.is_subscriptable:
+                output_metadata = getattr(task_def_obj, "_output_metadata")
+                assert hasattr(output_metadata, "is_subscriptable")
+                assert hasattr(output_metadata, "n_outputs")
+
+                if getattr(output_metadata, "is_subscriptable"):
                     # n + 1 artifacts for n-output task def:
                     # - one artifact for each output to handle unpacking
                     # - one artifact overall to handle using non-unpacked future
                     assert (
-                        len(inv.output_ids)
-                        == task_def_obj._output_metadata.n_outputs + 1
+                        len(inv.output_ids) == getattr(output_metadata, "n_outputs") + 1
                     )
                 else:
                     assert len(inv.output_ids) == 1
@@ -817,7 +821,7 @@ GENERATE_GRAPH_TASK_DEF_DUMP = {
     "output_metadata": {"is_subscriptable": False, "n_outputs": 1},
     "source_import_id": AnyMatchingStr(r"inline-import-\w{1}"),
     "dependency_import_ids": [
-        AnyMatchingStr(r"git-\w{10}_github_com_zapatacomputing_orquestra_workflow_sdk")
+        AnyMatchingStr(r"git-\w{10}_github_com_zapata_engineering_orquestra_sdk")
     ],
     "resources": None,
     "max_retries": None,
@@ -869,9 +873,9 @@ def test_individual_task_models(task, has_arg: bool, expected_model: dict):
     "repo_url,index,expected_id",
     [
         (
-            "https://github.com/zapatacomputing/orquestra-workflow-sdk.git",
+            "https://github.com/zapata-engineering/orquestra-sdk.git",
             0,
-            "git-0_github_com_zapatacomputing_orquestra_workflow_sdk",
+            "git-0_github_com_zapata_engineering_orquestra_sdk",
         ),
         ("git@remote:repo.git", 1, "git-1_remote_repo"),
         ("some&&weird:/URI", 100, "git-100_some_weird_URI"),
@@ -928,7 +932,7 @@ def workflow():
     n_trials = 100
     n_concurrent_searches = 10
     assigned_trials = 0
-    current_trials = [None] * n_concurrent_searches
+    current_trials: list[t.Any] = [None] * n_concurrent_searches
     controller_data = controller_step(*current_trials)
     while assigned_trials < n_trials:
         current_trials = [

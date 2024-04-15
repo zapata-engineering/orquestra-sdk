@@ -14,7 +14,7 @@ class TestRayLogger:
     def test_ray_logs_silenced(self, tmp_path: Path):
         # Given
         test_case = """
-from orquestra.sdk._ray import _dag
+from orquestra.sdk._runtime._ray import _dag
 params = _dag.RayParams(configure_logging=False)
 _ = _dag.RayRuntime.startup(params)
         """
@@ -33,7 +33,7 @@ _ = _dag.RayRuntime.startup(params)
     def test_ray_logs_not_silenced(self, tmp_path: Path):
         # Given
         test_case = """
-from orquestra.sdk._ray import _dag
+from orquestra.sdk._runtime._ray import _dag
 params = _dag.RayParams(configure_logging=True)
 _ = _dag.RayRuntime.startup(params)
         """

@@ -7,10 +7,10 @@ from pathlib import Path
 import pytest
 
 import orquestra.sdk as sdk
-from orquestra.sdk._base import _traversal, _workflow, loader
-from orquestra.sdk._base._dsl import InvalidPlaceholderInCustomTaskNameError
-from orquestra.sdk.exceptions import WorkflowSyntaxError
-from orquestra.sdk.schema import ir
+from orquestra.sdk._client._base import _traversal, _workflow, loader
+from orquestra.sdk._client._base._dsl import InvalidPlaceholderInCustomTaskNameError
+from orquestra.sdk._shared.exceptions import WorkflowSyntaxError
+from orquestra.sdk._shared.schema import ir
 
 DEFAULT_LOCAL_REPO_PATH = Path(__file__).parent.resolve()
 

@@ -1,9 +1,10 @@
 ################################################################################
-# © Copyright 2023-2024 Zapata Computing Inc.
+# © Copyright 2024 Zapata Computing Inc.
 ################################################################################
-"""Utility for reading data from Dremio managed by Orquestra."""
+# THIS FILE IS A SHIM TO REEXPORT SYMBOLS AS PUBLIC API
+# DO NOT PUT ANY LOGIC INTO THIS FILE.
 
-from ._api import DremioClient
+from .._client.dremio import DremioClient
 
 __all__ = [
     "DremioClient",

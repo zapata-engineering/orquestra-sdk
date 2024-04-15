@@ -8,15 +8,17 @@ import subprocess
 import sys
 from contextlib import suppress as do_not_raise
 from pathlib import Path
+from unittest.mock import Mock
 
 import git
 import pip_api.exceptions
 import pytest
 
 import orquestra.sdk as sdk
-from orquestra.sdk._base import _dsl, loader
-from orquestra.sdk._base.serde import deserialize_pickle, serialize_pickle
-from orquestra.sdk.exceptions import DirtyGitRepo, InvalidTaskDefinitionError
+from orquestra.sdk._client._base import _dsl, loader
+from orquestra.sdk._shared.exceptions import DirtyGitRepo, InvalidTaskDefinitionError
+from orquestra.sdk._shared.packaging import _versions
+from orquestra.sdk._shared.serde import deserialize_pickle, serialize_pickle
 
 DEFAULT_LOCAL_REPO_PATH = Path(__file__).parent.resolve()
 
@@ -424,13 +426,13 @@ def test_deferred_git_import_resolved(my_fake_repo_setup):
 )
 def test_github_import_is_git_import_with_auth(username, personal_access_token):
     imp = _dsl.GithubImport(
-        "zapatacomputing/orquestra-workflow-sdk",
+        "zapata-engineering/orquestra-sdk",
         "main",
         username=username,
         personal_access_token=personal_access_token,
     )
     assert imp == _dsl.GitImportWithAuth(
-        repo_url="https://github.com/zapatacomputing/orquestra-workflow-sdk.git",
+        repo_url="https://github.com/zapata-engineering/orquestra-sdk.git",
         git_ref="main",
         username=username,
         auth_secret=personal_access_token,
@@ -440,7 +442,7 @@ def test_github_import_is_git_import_with_auth(username, personal_access_token):
 def test_warns_when_no_workspace_provided():
     with pytest.warns(FutureWarning):
         _dsl.GithubImport(
-            "zapatacomputing/orquestra-workflow-sdk",
+            "zapata-engineering/orquestra-sdk",
             "main",
             username="UN",
             personal_access_token=sdk.Secret("MY PAT"),
@@ -454,7 +456,7 @@ class TestGithubImportRaisesTypeErrorForNonSecretPAT:
         # case where we pass an argument with the wrong type is handled.
         with pytest.raises(TypeError) as e:
             _ = _dsl.GithubImport(
-                "zapatacomputing/orquestra-workflow-sdk",
+                "zapata-engineering/orquestra-sdk",
                 "main",
                 username="foo",
                 personal_access_token="bar",  # type: ignore
@@ -471,7 +473,7 @@ Suggested fix:
     def test_non_secret_pat(pat, pat_type):
         with pytest.raises(TypeError) as e:
             _ = _dsl.GithubImport(
-                "zapatacomputing/orquestra-workflow-sdk",
+                "zapata-engineering/orquestra-sdk",
                 "main",
                 username="foo",
                 personal_access_token=pat,
@@ -541,6 +543,7 @@ def test_artifact_node_custom_names():
         x = _local_task_1(ret)
         # don't check for specific custom name, but make sure it consists
         # dependent task name and that it invokes warning for the user
+        assert x.invocation.custom_name
         assert _local_task.__name__ in x.invocation.custom_name
         assert len(warns.list) == 1
 
@@ -623,7 +626,7 @@ class TestRefToMain:
         [
             (
                 "workflow_defs.py",
-                pytest.raises(sdk.exceptions.InvalidTaskDefinitionError),
+                pytest.raises(InvalidTaskDefinitionError),
             ),
             ("workflow_defs_no_raise.py", do_not_raise()),
         ],
@@ -687,10 +690,10 @@ def test_python_310_importlib_abc_bug():
     "obj",
     [
         sdk.GitImport(
-            git_ref="https://github.com/zapatacomputing/orquestra-workflow-sdk.git",
+            git_ref="https://github.com/zapata-engineering/orquestra-sdk.git",
             repo_url="main",
         ),
-        sdk.GithubImport("zapatacomputing/orquestra-workflow-sdk"),
+        sdk.GithubImport("zapata-engineering/orquestra-sdk"),
         sdk.PythonImports("numpy"),
         sdk.LocalImport("module"),
         sdk.InlineImport(),
@@ -825,3 +828,132 @@ class TestSecretAsString:
             wf().model
 
         assert "Invalid usage of a Secret object" in str(e)
+
+
+class TestExecuteTask:
+    @staticmethod
+    def test_pass_task_def():
+        @sdk.task
+        def hello():
+            return 100
+
+        result = _dsl.execute_task(hello, (), {})
+
+        assert result == 100
+
+    @staticmethod
+    def test_pass_task_def_args():
+        @sdk.task
+        def hello(a, b):
+            return a * b
+
+        result = _dsl.execute_task(
+            hello,
+            (1, 2),
+            {},
+        )
+
+        assert result == 2
+
+    @staticmethod
+    def test_pass_task_def_kwargs():
+        @sdk.task
+        def hello(a, b):
+            return a * b
+
+        result = _dsl.execute_task(
+            hello,
+            (),
+            {"a": 2, "b": 2},
+        )
+
+        assert result == 4
+
+
+class TestInstalledImport:
+    @staticmethod
+    def test_package_found(monkeypatch):
+        # Given
+        monkeypatch.setattr("importlib.metadata.version", Mock(return_value="1.2.3"))
+        monkeypatch.setattr("importlib_metadata.version", Mock(return_value="1.2.3"))
+
+        # When
+        imp = _dsl.InstalledImport(package_name="some-package")
+        # Then
+        assert isinstance(imp, sdk.PythonImports)
+        assert len(imp._packages) == 1
+        assert imp._packages[0] == "some-package==1.2.3"
+
+    @staticmethod
+    def test_package_not_found(monkeypatch):
+        # Given
+        monkeypatch.setattr(
+            _versions,
+            "get_installed_version",
+            Mock(side_effect=_dsl.PackagingError("Package not found:")),
+        )
+        # When
+        with pytest.raises(_dsl.PackagingError) as exc_info:
+            _ = _dsl.InstalledImport(package_name="some-package")
+        # Then
+        assert exc_info.match("Package not found:")
+
+    @staticmethod
+    def test_package_not_found_fallback(monkeypatch):
+        # Given
+        monkeypatch.setattr(
+            _versions,
+            "get_installed_version",
+            Mock(side_effect=_dsl.PackagingError("Package not found:")),
+        )
+        fallback = sdk.GithubImport("zapata-engineering/orquestra-sdk")
+        # When
+        imp = _dsl.InstalledImport(package_name="some-package", fallback=fallback)
+        # Then
+        assert imp == fallback
+
+    @staticmethod
+    def test_package_version_matches(monkeypatch):
+        # Given
+        monkeypatch.setattr("importlib.metadata.version", Mock(return_value="1.2.3"))
+        monkeypatch.setattr("importlib_metadata.version", Mock(return_value="1.2.3"))
+
+        # When
+        imp = _dsl.InstalledImport(
+            package_name="some-package", version_match="[0-9].[0-9].[0-9]"
+        )
+        # Then
+        assert isinstance(imp, sdk.PythonImports)
+        assert len(imp._packages) == 1
+        assert imp._packages[0] == "some-package==1.2.3"
+
+    @staticmethod
+    def test_package_version_does_not_match(monkeypatch):
+        # Given
+        monkeypatch.setattr("importlib.metadata.version", Mock(return_value="1.2.3"))
+        monkeypatch.setattr("importlib_metadata.version", Mock(return_value="1.2.3"))
+
+        # When
+        with pytest.raises(_dsl.PackagingError) as exc_info:
+            _ = _dsl.InstalledImport(package_name="some-package", version_match="xxx")
+        # Then
+        assert exc_info.match(
+            "Package version mismatch: some-package==1.2.3\n"
+            'Expected version to match "xxx"'
+        )
+
+    @staticmethod
+    def test_package_version_does_not_match_fallback(monkeypatch):
+        # Given
+        monkeypatch.setattr(
+            _versions, "get_installed_version", Mock(return_value="1.2.3")
+        )
+        fallback = sdk.GithubImport("zapata-engineering/orquestra-sdk")
+        # When
+        imp = _dsl.InstalledImport(
+            package_name="some-package",
+            version_match="xxx",
+            fallback=fallback,
+        )
+        # Then
+        assert imp == fallback

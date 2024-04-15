@@ -14,8 +14,8 @@ from unittest.mock import create_autospec
 
 import pytest
 
-from orquestra.sdk._base import _dates
-from orquestra.sdk._base._logs import _markers
+from orquestra.sdk._runtime._ray._logs import _markers
+from orquestra.sdk._shared import _dates
 
 INSTANT = _dates.from_isoformat("2005-04-25T20:37:00+00:00")
 

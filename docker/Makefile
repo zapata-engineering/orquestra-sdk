@@ -1,7 +1,7 @@
 IMAGE_NAME ?= hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base
 IMAGE_TAG ?= dev
 
-SDK_REQUIREMENT ?= "git+https://github.com/zapatacomputing/orquestra-workflow-sdk.git@main"
+SDK_REQUIREMENT ?= "git+https://github.com/zapata-engineering/orquestra-sdk.git@main"
 
 #####################
 # Build the sdk base image

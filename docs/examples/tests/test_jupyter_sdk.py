@@ -5,7 +5,7 @@
 """Snippets and tests used in the "Using the Workflow SDK with Jupyter" tutorial."""
 import sys
 
-from orquestra.sdk._base._testing import _reloaders
+from orquestra.sdk._client._base._testing import _reloaders
 
 from .parsers import get_snippet_as_str
 

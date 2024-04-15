@@ -9,7 +9,7 @@ from types import FunctionType
 import numpy as np
 import pytest
 
-from orquestra.sdk._base import _ast, _workflow
+from orquestra.sdk._client._base import _ast, _workflow
 
 from .test_artifact_future_methods import (
     ObjWithTask,

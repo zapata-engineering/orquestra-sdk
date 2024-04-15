@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 import orquestra.sdk as sdk
+from orquestra.sdk.exceptions import WorkflowSyntaxError
 
 from .parsers import get_snippet_as_str
 
@@ -487,7 +488,7 @@ class TestSnippets:
         wf = Snippets.mixing_constants_with_outputs()
 
         # When
-        with pytest.raises(sdk.exceptions.WorkflowSyntaxError):
+        with pytest.raises(WorkflowSyntaxError):
             _ = wf.model
 
     @staticmethod

@@ -7,7 +7,7 @@ from importlib.machinery import PathFinder
 import pytest
 
 import orquestra.sdk as dsl
-import orquestra.sdk._base.loader as loader
+import orquestra.sdk._client._base.loader as loader
 
 WORKFLOW_DEFS = """import orquestra.sdk as sdk
 @sdk.task

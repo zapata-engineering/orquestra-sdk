@@ -8,16 +8,121 @@ from unittest.mock import ANY, Mock, call, create_autospec
 
 import pytest
 
-from orquestra import sdk
-from orquestra.sdk._base import _git_url_utils
-from orquestra.sdk._base._graphs import iter_invocations_topologically
-from orquestra.sdk._base._testing._example_wfs import (
+import orquestra.sdk as sdk
+import orquestra.sdk._client.secrets
+from orquestra.sdk._client._base import _git_url_utils
+from orquestra.sdk._client._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
 )
-from orquestra.sdk._ray import _build_workflow, _client
-from orquestra.sdk.exceptions import OrquestraSDKVersionMismatchWarning
-from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.responses import WorkflowResult
+from orquestra.sdk._runtime._ray import _build_workflow, _client
+from orquestra.sdk._shared import serde
+from orquestra.sdk._shared._graphs import iter_invocations_topologically
+from orquestra.sdk._shared.exceptions import OrquestraSDKVersionMismatchWarning
+from orquestra.sdk._shared.schema import ir
+from orquestra.sdk._shared.schema.ir import GitURL, SecretNode
+from orquestra.sdk._shared.schema.responses import WorkflowResult
+
+
+@pytest.fixture
+def git_url() -> GitURL:
+    return GitURL(
+        original_url="https://github.com/zapata-engineering/orquestra-sdk",
+        protocol="https",
+        user=None,
+        password=None,
+        host="github.com",
+        port=None,
+        path="zapata-engineering/orquestra-sdk",
+        query=None,
+    )
+
+
+class TestBuildGitURL:
+    @pytest.mark.parametrize(
+        "protocol,expected_url",
+        [
+            (
+                "git+ssh",
+                "git+ssh://git@github.com/zapata-engineering/orquestra-sdk",
+            ),
+            (
+                "ssh+git",
+                "ssh+git://git@github.com/zapata-engineering/orquestra-sdk",
+            ),
+            ("ftp", "ftp://git@github.com/zapata-engineering/orquestra-sdk"),
+            ("ftps", "ftps://git@github.com/zapata-engineering/orquestra-sdk"),
+            ("http", "http://github.com/zapata-engineering/orquestra-sdk"),
+            ("https", "https://github.com/zapata-engineering/orquestra-sdk"),
+            (
+                "git+http",
+                "git+http://github.com/zapata-engineering/orquestra-sdk",
+            ),
+            (
+                "git+https",
+                "git+https://github.com/zapata-engineering/orquestra-sdk",
+            ),
+        ],
+    )
+    def test_different_protocols(
+        self, git_url: GitURL, protocol: str, expected_url: str
+    ):
+        url = _build_workflow._build_git_url(git_url, protocol)
+        assert url == expected_url
+
+    def test_ssh_with_port(self, git_url: GitURL):
+        git_url.port = 22
+        url = _build_workflow._build_git_url(git_url, "ssh")
+        assert url == "ssh://git@github.com:22/zapata-engineering/orquestra-sdk"
+
+    @pytest.mark.parametrize(
+        "protocol",
+        ["http", "https", "git+http", "git+https"],
+    )
+    def test_http_with_user(self, git_url: GitURL, protocol: str):
+        git_url.user = "amelio_robles_avila"
+        url = _build_workflow._build_git_url(git_url, protocol)
+        assert url == (
+            f"{protocol}://amelio_robles_avila@github.com"
+            "/zapata-engineering/orquestra-sdk"
+        )
+
+    def test_uses_default_protocol(self, git_url: GitURL):
+        url = _build_workflow._build_git_url(git_url)
+        assert url == "https://github.com/zapata-engineering/orquestra-sdk"
+
+    def test_with_password(self, monkeypatch: pytest.MonkeyPatch, git_url: GitURL):
+        secrets_get = create_autospec(orquestra.sdk.secrets.get)
+        secrets_get.return_value = "<mocked secret>"
+        monkeypatch.setattr(orquestra.sdk.secrets, "get", secrets_get)
+
+        secret_name = "my_secret"
+        secret_config = "secret config"
+        secret_workspace = "secret workspace"
+        git_url.password = SecretNode(
+            id="mocked secret",
+            secret_name=secret_name,
+            secret_config=secret_config,
+            workspace_id=secret_workspace,
+        )
+
+        url = _build_workflow._build_git_url(git_url)
+        assert url == (
+            "https://git:<mocked secret>@github.com/zapata-engineering/orquestra-sdk"
+        )
+        secrets_get.assert_called_once_with(
+            secret_name, config_name=secret_config, workspace_id=secret_workspace
+        )
+
+    def test_unknown_protocol_in_original(self, git_url: GitURL):
+        git_url.original_url = "custom_protocol://<blah>"
+        git_url.protocol = "custom_protocol"
+        url = _build_workflow._build_git_url(git_url)
+        assert url == git_url.original_url
+
+    def test_unknown_protocol_override(self, git_url: GitURL):
+        with pytest.raises(ValueError) as exc_info:
+            _ = _build_workflow._build_git_url(git_url, "custom_protocol")
+        exc_info.match("Unknown protocol: `custom_protocol`")
 
 
 def make_workflow_with_dependencies(deps, *, n_tasks=1):
@@ -39,7 +144,7 @@ class TestPipString:
     def mock_serde(self, monkeypatch: pytest.MonkeyPatch):
         """We're not testing the serde package, so we're mocking it."""
         monkeypatch.setattr(
-            _build_workflow.serde,
+            serde,
             "stringify_package_spec",
             Mock(return_value="mocked"),
         )
@@ -159,7 +264,7 @@ class TestMakeDag:
         monkeypatch.setattr(_build_workflow, "_pip_string", pip_string)
         imps = [
             sdk.GithubImport(
-                "zapatacomputing/orquestra-workflow-sdk",
+                "zapata-engineering/orquestra-sdk",
                 personal_access_token=sdk.Secret(
                     "mock-secret", config_name="mock-config", workspace_id="mock-ws"
                 ),
@@ -336,8 +441,8 @@ class TestArgumentUnwrapper:
 
     @pytest.fixture
     def mock_deserialize(self, monkeypatch: pytest.MonkeyPatch):
-        deserialize = create_autospec(_build_workflow.serde.deserialize)
-        monkeypatch.setattr(_build_workflow.serde, "deserialize", deserialize)
+        deserialize = create_autospec(serde.deserialize)
+        monkeypatch.setattr(serde, "deserialize", deserialize)
         return deserialize
 
     class TestConstantNode:
@@ -654,6 +759,6 @@ class TestHandlingSDKVersions:
             # Then
             warning: str = e.exconly().strip()
             assert re.match(
-                r"^orquestra\.sdk\.exceptions\.OrquestraSDKVersionMismatchWarning: The definition for task `task-hello-orquestra-.*` declares `orquestra-sdk(?P<dependency>.*)` as a dependency. The current SDK version (\((?P<installed>.*)\) )?is automatically installed in task environments. The specified dependency will be ignored.$",  # noqa: E501
+                r"^orquestra\.sdk\._shared\.exceptions\.OrquestraSDKVersionMismatchWarning: The definition for task `task-hello-orquestra-.*` declares `orquestra-sdk(?P<dependency>.*)` as a dependency. The current SDK version (\((?P<installed>.*)\) )?is automatically installed in task environments. The specified dependency will be ignored.$",  # noqa: E501
                 warning,
             ), warning

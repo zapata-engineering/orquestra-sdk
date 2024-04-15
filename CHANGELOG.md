@@ -4,7 +4,7 @@
 
 🚨 *Breaking Changes*
 
-* Workflow status will be set to `FAILED` as soon as first task fails. Tasks that already started will finish their execution
+* Changed typehints for `TaskDef`. Now Return value from task call is always `ArtifactFeature[T]` object (where `T` is original return type). Task call accepts `typing.any`.
 
 🔥 *Features*
 
@@ -16,15 +16,28 @@
 
 🐛 *Bug Fixes*
 
+* `sdk.workflow(fn, resources=...)` will no longer show type errors from linters.
+* CLI log dumping now correctly saves stdout and stderr logs
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+* Refactored internal dir structure of the whole SDK repo
+
+📃 *Docs*
+
+## v0.62.0
+
+🚨 *Breaking Changes*
+
+* Workflow status will be set to `FAILED` as soon as first task fails. Tasks that already started will finish their execution.
+
 💅 *Improvements*
 
 * Tracebacks in `orq` are made more compact to help with copy and pasting when an issue happens.
 * Added support for Pydantic V2 in addition to the previously supported `>=1.10.8`.
-* Removed bunch of upper-bound constrains from SDK requirements to prevent dependency-hell
-
-🥷 *Internal*
-
-📃 *Docs*
+* Removed bunch of upper constraints from SDK requirements to prevent Dependency Hell.
 
 ## v0.61.0
 
@@ -539,8 +552,8 @@ logs_subset = {id: lines for id, lines in logs.items() if id in ["foo", "bar", "
 
 # Option 3
 for task in wf_run.get_tasks():
-    if task.get_status() == State.FAILED:
-        print(task.get_logs())
+  if task.get_status() == State.FAILED:
+    print(task.get_logs())
 ```
 
 * `sdk.WorkflowRun.get_artifacts()` doesn't accept any arguments any more. Now, it returns all the artifacts produced by the tasks in the workflow.

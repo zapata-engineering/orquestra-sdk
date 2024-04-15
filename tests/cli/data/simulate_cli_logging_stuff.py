@@ -3,7 +3,7 @@
 ################################################################################
 import logging
 
-from orquestra.sdk._base.cli import _cli_logs
+from orquestra.sdk._client._base.cli import _cli_logs
 
 _cli_logs.configure_verboseness_if_needed()
 

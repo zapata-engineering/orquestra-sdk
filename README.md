@@ -25,7 +25,7 @@ Please refer to the [Orquestra Workflow SDK docs](https://docs.orquestra.io/docs
 
 ## Bug Reporting
 
-If you'd like to report a bug/issue please create a [new issue using one of the templates](https://github.com/zapatacomputing/orquestra-workflow-sdk/issues).
+If you'd like to report a bug/issue please create a [new issue using one of the templates](https://github.com/zapata-engineering/orquestra-sdk/issues).
 
 ## Contributing
 

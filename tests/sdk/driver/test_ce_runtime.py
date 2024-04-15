@@ -8,18 +8,27 @@ from unittest.mock import DEFAULT, MagicMock, Mock, call, create_autospec
 import pytest
 
 import orquestra.sdk as sdk
-from orquestra.sdk import LogOutput, Project, Workspace, exceptions
-from orquestra.sdk._base._driver import _ce_runtime, _client, _exceptions, _models
-from orquestra.sdk._base._spaces._structs import ProjectRef
-from orquestra.sdk._base._testing._example_wfs import (
+from orquestra.sdk import LogOutput
+from orquestra.sdk._client._base._driver import (
+    _ce_runtime,
+    _client,
+    _exceptions,
+    _models,
+)
+from orquestra.sdk._client._base._testing._example_wfs import (
     add,
     my_workflow,
     workflow_parametrised_with_resources,
     workflow_with_different_resources,
 )
-from orquestra.sdk.schema.ir import WorkflowDef
-from orquestra.sdk.schema.responses import ComputeEngineWorkflowResult, JSONResult
-from orquestra.sdk.schema.workflow_run import (
+from orquestra.sdk._shared import exceptions, serde
+from orquestra.sdk._shared._spaces._structs import Project, ProjectRef, Workspace
+from orquestra.sdk._shared.schema.ir import WorkflowDef
+from orquestra.sdk._shared.schema.responses import (
+    ComputeEngineWorkflowResult,
+    JSONResult,
+)
+from orquestra.sdk._shared.schema.workflow_run import (
     RunStatus,
     State,
     WorkflowRun,
@@ -32,7 +41,7 @@ def mocked_client(monkeypatch: pytest.MonkeyPatch):
     mocked_client = MagicMock(spec=_client.DriverClient)
     mocked_client.from_token.return_value = mocked_client
     monkeypatch.setattr(
-        "orquestra.sdk._base._driver._client.DriverClient", mocked_client
+        "orquestra.sdk._client._base._driver._client.DriverClient", mocked_client
     )
     return mocked_client
 
@@ -664,7 +673,7 @@ class TestGetWorkflowRunResultsNonBlocking:
             mocked_client.get_workflow_run.return_value = workflow_run_status(
                 State.SUCCEEDED
             )
-            monkeypatch.setattr(_ce_runtime.serde, "deserialize", lambda x: x)
+            monkeypatch.setattr(serde, "deserialize", lambda x: x)
             monkeypatch.setattr(_ce_runtime._retry.time, "sleep", Mock())
             # When
             _ = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)

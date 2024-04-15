@@ -6,7 +6,7 @@ Tests for ``orquestra.sdk._base._env``.
 """
 import pytest
 
-from orquestra.sdk._base import _env
+from orquestra.sdk._client._base import _env
 
 
 class TestFlagSet:

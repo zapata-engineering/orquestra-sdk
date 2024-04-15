@@ -8,9 +8,9 @@ import typing as t
 import pytest
 
 import orquestra.sdk as sdk
-from orquestra.sdk import exceptions
-from orquestra.sdk._base import _workflow
-from orquestra.sdk._base._dsl import ArtifactFuture
+from orquestra.sdk._client._base import _workflow
+from orquestra.sdk._client._base._dsl import ArtifactFuture
+from orquestra.sdk._shared import exceptions
 
 _TaskResourcesArgs = t.TypedDict(
     "_TaskResourcesArgs",

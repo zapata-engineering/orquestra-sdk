@@ -7,9 +7,9 @@ from unittest.mock import create_autospec
 
 import pytest
 
-from orquestra.sdk._base._logs._interfaces import WorkflowLogs
-from orquestra.sdk._base.cli import _dumpers
-from orquestra.sdk.schema.ir import ArtifactFormat
+from orquestra.sdk._client._base.cli import _dumpers
+from orquestra.sdk._shared._logs._interfaces import WorkflowLogs
+from orquestra.sdk._shared.schema.ir import ArtifactFormat
 
 
 class TestWFOutputDumper:
@@ -192,11 +192,12 @@ class TestLogsDumper:
             logs = {task_invocation: log_values}
             wf_run_id = "wf.1234"
             wf_log_file = wf_run_id + ".log"
+            wf_err_log_file = wf_run_id + ".err"
             dir_path = tmp_path / "new_dir"
             dumper = _dumpers.LogsDumper()
 
             # When
-            path = dumper.dump(
+            paths = dumper.dump(
                 logs=logs,
                 wf_run_id=wf_run_id,
                 dir_path=dir_path,
@@ -205,17 +206,21 @@ class TestLogsDumper:
             # Then
             # Creates file
             children = list(dir_path.iterdir())
-            assert len(children) == 1
+            assert len(children) == 2
+            # Returns both paths
+            assert len(paths) == 2
 
             # Sensible dump details
-            assert path == (dir_path / wf_log_file)
+            assert paths[0] == (dir_path / wf_log_file)
+            assert paths[1] == (dir_path / wf_err_log_file)
 
-            with path.open("r") as f:
-                full_logs = "".join(f.readlines())
-                for log_value in log_values:
-                    # all logs should be in the file
-                    assert log_value in full_logs
-                assert task_invocation in full_logs
+            full_logs = paths[0].read_text()
+            err_logs = paths[1].read_text()
+            for log_value in log_values:
+                # all logs should be in the file
+                assert log_value in full_logs
+            assert task_invocation in full_logs
+            assert task_invocation in err_logs
 
         @staticmethod
         def test_with_logs_dict(tmp_path: Path):
@@ -225,11 +230,12 @@ class TestLogsDumper:
             logs = {task_invocation: log_values}
             wf_run_id = "wf.1234"
             wf_log_file = wf_run_id + ".log"
+            wf_err_log_file = wf_run_id + ".err"
             dir_path = tmp_path / "new_dir"
             dumper = _dumpers.LogsDumper()
 
             # When
-            path = dumper.dump(
+            paths = dumper.dump(
                 logs=logs,
                 wf_run_id=wf_run_id,
                 dir_path=dir_path,
@@ -238,29 +244,35 @@ class TestLogsDumper:
             # Then
             # Creates file
             children = list(dir_path.iterdir())
-            assert len(children) == 1
+            assert len(children) == 2
+            # Returns both paths
+            assert len(paths) == 2
 
             # Sensible dump details
-            assert path == (dir_path / wf_log_file)
+            assert paths[0] == (dir_path / wf_log_file)
+            assert paths[1] == (dir_path / wf_err_log_file)
 
-            with path.open("r") as f:
-                full_logs = "".join(f.readlines())
-                for log_value in log_values:
-                    # all logs should be in the file
-                    assert log_value in full_logs
-                assert task_invocation in full_logs
+            full_logs = paths[0].read_text()
+            err_logs = paths[1].read_text()
+            for log_value in log_values:
+                # all logs should be in the file
+                assert log_value in full_logs
+            assert task_invocation in full_logs
+            assert task_invocation in err_logs
 
         @staticmethod
         def test_with_logs_sequence(tmp_path: Path):
             # Given
             logs = ["my_logs", "next_log"]
+            log_values = ["my_logs", "next_log"]
             wf_run_id = "wf.1234"
             wf_log_file = wf_run_id + ".log"
+            wf_err_log_file = wf_run_id + ".err"
             dir_path = tmp_path / "new_dir"
             dumper = _dumpers.LogsDumper()
 
             # When
-            path = dumper.dump(
+            paths = dumper.dump(
                 logs=logs,
                 wf_run_id=wf_run_id,
                 dir_path=dir_path,
@@ -269,13 +281,15 @@ class TestLogsDumper:
             # Then
             # Creates file
             children = list(dir_path.iterdir())
-            assert len(children) == 1
+            assert len(children) == 2
+            # Returns both paths
+            assert len(paths) == 2
 
             # Sensible dump details
-            assert path == (dir_path / wf_log_file)
+            assert paths[0] == (dir_path / wf_log_file)
+            assert paths[1] == (dir_path / wf_err_log_file)
 
-            with path.open("r") as f:
-                full_logs = "".join(f.readlines())
-                for log_value in logs:
-                    # all logs should be in the file
-                    assert log_value in full_logs
+            full_logs = paths[0].read_text()
+            for log_value in log_values:
+                # all logs should be in the file
+                assert log_value in full_logs
