@@ -7,6 +7,7 @@
 WorkflowRun represents, and allows interaction with, an individual workflow run.
 """
 
+import os
 import re
 import sys
 import time
@@ -15,8 +16,10 @@ import warnings
 from datetime import timedelta
 from functools import cached_property
 from pathlib import Path
+from urllib.parse import urlparse
 
-from orquestra.sdk._shared import serde
+from orquestra.sdk._client._base import _env
+from orquestra.sdk._shared import _exec_ctx, serde
 from orquestra.sdk._shared._graphs import iter_invocations_topologically
 from orquestra.sdk._shared._logs._interfaces import WorkflowLogs
 from orquestra.sdk._shared._spaces._structs import ProjectRef
@@ -51,6 +54,7 @@ from orquestra.sdk._shared.schema.workflow_run import (
     WorkspaceId,
 )
 
+from .._config import IN_PROCESS_CONFIG_NAME, RAY_CONFIG_NAME_ALIAS
 from .._spaces._resolver import resolve_studio_ref, resolve_studio_workspace_ref
 from ._config import RuntimeConfig, resolve_config
 from ._task_run import TaskRun
@@ -875,4 +879,65 @@ def _parse_max_age(age: t.Optional[str]) -> t.Optional[timedelta]:
         '- "8H6S" = 8 hours and 6 seconds,\n'
         '- "10m" = 10 minutes,\n'
         '- "3D6h8M13s" = 3 days, 6 hours, 8 minutes and 13 seconds.'
+    )
+
+
+def _get_workspace_and_project_ids() -> (
+    t.Tuple[t.Optional[WorkspaceId], t.Optional[ProjectId]]
+):
+    if not os.getenv(_env.CURRENT_CLUSTER_ENV):
+        return None, None
+
+    return os.getenv(_env.CURRENT_WORKSPACE_ENV), os.getenv(_env.CURRENT_PROJECT_ENV)
+
+
+def _generate_cluster_uri_name(uri: str) -> str:
+    return str(urlparse(uri).path).split(".")[0]
+
+
+def _get_config_context() -> str:
+    cluster_uri = os.getenv(_env.CURRENT_CLUSTER_ENV)
+    if not cluster_uri:
+        context = _exec_ctx.get_current_exec_context()
+        if context == _exec_ctx.ExecContext.RAY:
+            return RAY_CONFIG_NAME_ALIAS
+        elif context == _exec_ctx.ExecContext.DIRECT:
+            return IN_PROCESS_CONFIG_NAME
+        else:
+            raise NotImplementedError(
+                f"Got unexpected global context {context}. Please report this as a bug."
+            )
+
+    return _generate_cluster_uri_name(cluster_uri)
+
+
+class CurrentExecutionCtx(t.NamedTuple):
+    config_name: ConfigName
+    workspace_id: t.Optional[WorkspaceId]
+    project_id: t.Optional[ProjectId]
+
+
+def current_exec_ctx() -> CurrentExecutionCtx:
+    """Get the backend IDs related to current workflow execution context.
+
+    config_name is the name of the config used to execute current workflow.
+
+    workspace_id  and project_id are the workspace and project
+    in which the workflow is executed. If run locally, they are set to None.
+
+    This function is intended to be used within the task code in the following way::
+
+        @sdk.task
+        def t():
+            config_name, workspace_id, project_id =  sdk.current_exec_ctx()
+            ...
+
+    Returns:
+        The config, workspace and project IDs associated with the current
+            run, in a named tuple. See: CurrentWorkflowIDs
+    """
+    config = _get_config_context()
+    workspace_id, project_id = _get_workspace_and_project_ids()
+    return CurrentExecutionCtx(
+        config_name=config, workspace_id=workspace_id, project_id=project_id
     )
