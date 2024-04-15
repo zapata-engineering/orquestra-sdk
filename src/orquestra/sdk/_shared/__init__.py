@@ -1,7 +1,8 @@
-from schema import result_is_packed
-
 from ._graphs import iter_invocations_topologically
-from ._logs import (
+from ._regex import SEMVER_REGEX, VERSION_REGEX
+from ._spaces import Project, ProjectRef, Workspace
+from ._storage import BaseModel, TypeAdapter
+from .logs import (
     LogAccumulator,
     LogOutput,
     LogReader,
@@ -10,9 +11,7 @@ from ._logs import (
     is_env_setup,
     is_worker,
 )
-from ._regex import SEMVER_REGEX, VERSION_REGEX
-from ._spaces import Project, ProjectRef, Workspace
-from ._storage import BaseModel, TypeAdapter
+from .schema import result_is_packed
 
 __all__ = [
     "TypeAdapter",

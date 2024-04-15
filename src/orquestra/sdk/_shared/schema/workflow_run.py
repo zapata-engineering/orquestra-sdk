@@ -11,9 +11,8 @@ import enum
 import typing as t
 import warnings
 
-from orquestra.sdk._shared.dates._dates import Instant
-
 from .._storage import BaseModel
+from ..dates import Instant
 from .ir import TaskInvocationId, WorkflowDef
 
 WorkflowRunId = str

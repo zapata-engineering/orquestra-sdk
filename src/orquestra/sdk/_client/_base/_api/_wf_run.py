@@ -17,14 +17,13 @@ from datetime import timedelta
 from functools import cached_property
 from pathlib import Path
 from urllib.parse import urlparse
+
 from orquestra.sdk._shared import (
     ProjectRef,
     WorkflowLogs,
     iter_invocations_topologically,
     serde,
 )
-
-from orquestra.sdk._shared.exec_ctx import ExecContext, get_current_exec_context
 from orquestra.sdk._shared.abc import RuntimeInterface
 from orquestra.sdk._shared.exceptions import (
     ConfigFileNotFoundError,
@@ -42,6 +41,7 @@ from orquestra.sdk._shared.exceptions import (
     WorkflowRunNotSucceeded,
     WorkspacesNotSupportedError,
 )
+from orquestra.sdk._shared.exec_ctx import ExecContext, get_current_exec_context
 from orquestra.sdk._shared.schema import ir
 from orquestra.sdk._shared.schema.configs import ConfigName
 from orquestra.sdk._shared.schema.responses import WorkflowResult
@@ -57,10 +57,10 @@ from orquestra.sdk._shared.schema.workflow_run import (
 )
 
 from .._config import IN_PROCESS_CONFIG_NAME, RAY_CONFIG_NAME_ALIAS
+from .._env import CURRENT_CLUSTER_ENV, CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
 from .._spaces._resolver import resolve_studio_ref, resolve_studio_workspace_ref
 from ._config import RuntimeConfig, resolve_config
 from ._task_run import TaskRun
-from .._env import CURRENT_CLUSTER_ENV, CURRENT_WORKSPACE_ENV, CURRENT_PROJECT_ENV
 
 
 class WorkflowRun:

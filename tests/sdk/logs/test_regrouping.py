@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from orquestra.sdk._shared._logs import _regrouping
+from orquestra.sdk._shared.logs import _regrouping
 
 
 class TestIsWorker:

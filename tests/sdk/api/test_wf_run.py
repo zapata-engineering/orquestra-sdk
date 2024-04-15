@@ -33,8 +33,7 @@ from orquestra.sdk._client._base._env import (
 )
 from orquestra.sdk._client._base._in_process_runtime import InProcessRuntime
 from orquestra.sdk._client._base._spaces._api import list_projects, list_workspaces
-from orquestra.sdk._shared import _exec_ctx, serde
-from orquestra.sdk._shared._logs._interfaces import LogOutput, LogReader, WorkflowLogs
+from orquestra.sdk._shared import serde
 from orquestra.sdk._shared._spaces._structs import ProjectRef, Workspace
 from orquestra.sdk._shared.abc import RuntimeInterface
 from orquestra.sdk._shared.exceptions import (
@@ -48,6 +47,8 @@ from orquestra.sdk._shared.exceptions import (
     WorkflowRunNotFinished,
     WorkflowRunNotFoundError,
 )
+from orquestra.sdk._shared.exec_ctx import ExecContext, _exec_ctx
+from orquestra.sdk._shared.logs._interfaces import LogOutput, LogReader, WorkflowLogs
 from orquestra.sdk._shared.schema import ir
 from orquestra.sdk._shared.schema.configs import RuntimeName
 from orquestra.sdk._shared.schema.responses import JSONResult
@@ -2152,11 +2153,11 @@ class TestCurrentWfIds:
     @pytest.mark.parametrize(
         "ctx, cluster_env, ws_env, project_env, expected_cfg",
         [
-            (_exec_ctx.ExecContext.DIRECT, None, None, None, "in_process"),
-            (_exec_ctx.ExecContext.RAY, None, None, None, "ray"),
-            (_exec_ctx.ExecContext.RAY, "prod-d.orquestra.io", None, None, "prod-d"),
+            (ExecContext.DIRECT, None, None, None, "in_process"),
+            (ExecContext.RAY, None, None, None, "ray"),
+            (ExecContext.RAY, "prod-d.orquestra.io", None, None, "prod-d"),
             (
-                _exec_ctx.ExecContext.RAY,
+                ExecContext.RAY,
                 "prod-d.orquestra.io",
                 "ws",
                 "proj",
