@@ -334,7 +334,7 @@ def simple_task(a):
 
 @_workflow.workflow
 def large_workflow():
-    val = 0
+    val: t.Union[int, _dsl.ArtifactFuture[int]] = 0
     for _ in range(1000):
         val = simple_task(val)
     return [val]
@@ -673,13 +673,16 @@ class TestWorkflowsTasksProperties:
                 task_def_obj = dispatch.locate_fn_ref(task_def_model.fn_ref)
                 # We assume that `fn_ref` points to a @task() decorated function.
                 assert hasattr(task_def_obj, "_output_metadata")
-                if task_def_obj._output_metadata.is_subscriptable:
+                output_metadata = getattr(task_def_obj, "_output_metadata")
+                assert hasattr(output_metadata, "is_subscriptable")
+                assert hasattr(output_metadata, "n_outputs")
+
+                if getattr(output_metadata, "is_subscriptable"):
                     # n + 1 artifacts for n-output task def:
                     # - one artifact for each output to handle unpacking
                     # - one artifact overall to handle using non-unpacked future
                     assert (
-                        len(inv.output_ids)
-                        == task_def_obj._output_metadata.n_outputs + 1
+                        len(inv.output_ids) == getattr(output_metadata, "n_outputs") + 1
                     )
                 else:
                     assert len(inv.output_ids) == 1
@@ -929,7 +932,7 @@ def workflow():
     n_trials = 100
     n_concurrent_searches = 10
     assigned_trials = 0
-    current_trials = [None] * n_concurrent_searches
+    current_trials: list[t.Any] = [None] * n_concurrent_searches
     controller_data = controller_step(*current_trials)
     while assigned_trials < n_trials:
         current_trials = [
