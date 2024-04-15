@@ -7,12 +7,12 @@ from orquestra.sdk._shared._logs._interfaces import LogOutput, WorkflowLogs
 
 from ._client import mlflow, secrets
 from ._client._base._api import (
-    CurrentExecutionIDs,
+    CurrentExecutionCtx,
     CurrentRunIDs,
     RuntimeConfig,
     TaskRun,
     WorkflowRun,
-    current_exec_ids,
+    current_exec_ctx,
     current_run_ids,
     list_workflow_run_summaries,
     list_workflow_runs,
@@ -82,6 +82,6 @@ __all__ = [
     "Workspace",
     "CurrentRunIDs",
     "LogOutput",
-    "CurrentExecutionIDs",
-    "current_exec_ids",
+    "CurrentExecutionCtx",
+    "current_exec_ctx",
 ]

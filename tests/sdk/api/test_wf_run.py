@@ -23,7 +23,7 @@ from unittest.mock import (
 
 import pytest
 
-from orquestra.sdk import current_exec_ids
+from orquestra.sdk import current_exec_ctx
 from orquestra.sdk._client._base import _api, _dsl, _traversal, _workflow
 from orquestra.sdk._client._base._api._task_run import TaskRun
 from orquestra.sdk._client._base._env import (
@@ -2181,7 +2181,7 @@ class TestCurrentWfIds:
         if project_env:
             monkeypatch.setenv(CURRENT_PROJECT_ENV, project_env)
         # when
-        ids = current_exec_ids()
+        ids = current_exec_ctx()
 
         # then
         assert ids.config_name == expected_cfg
@@ -2195,4 +2195,4 @@ class TestCurrentWfIds:
 
         # when
         with pytest.raises(NotImplementedError):
-            current_exec_ids()
+            current_exec_ctx()
