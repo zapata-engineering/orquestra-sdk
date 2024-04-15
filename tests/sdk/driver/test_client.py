@@ -13,22 +13,22 @@ import pytest
 import responses
 
 import orquestra.sdk as sdk
-from orquestra.sdk._base._driver import _exceptions
-from orquestra.sdk._base._driver._client import (
+from orquestra.sdk._client._base._driver import _exceptions
+from orquestra.sdk._client._base._driver._client import (
     DriverClient,
     ExternalUriProvider,
     Paginated,
     _match_unsupported_version,
 )
-from orquestra.sdk._base._driver._models import (
+from orquestra.sdk._client._base._driver._models import (
     GetWorkflowDefResponse,
     Resources,
     SystemLogSourceType,
 )
-from orquestra.sdk._base._spaces._structs import ProjectRef
-from orquestra.sdk.schema.ir import WorkflowDef
-from orquestra.sdk.schema.responses import JSONResult, PickleResult
-from orquestra.sdk.schema.workflow_run import RunStatus, State, TaskRun
+from orquestra.sdk._shared._spaces._structs import ProjectRef
+from orquestra.sdk._shared.schema.ir import WorkflowDef
+from orquestra.sdk._shared.schema.responses import JSONResult, PickleResult
+from orquestra.sdk._shared.schema.workflow_run import RunStatus, State, TaskRun
 
 from . import resp_mocks
 

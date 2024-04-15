@@ -2,115 +2,11 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 
-from unittest.mock import create_autospec
 
 import pytest
 
-import orquestra.sdk.secrets
-from orquestra.sdk._base import _git_url_utils
-from orquestra.sdk.schema.ir import GitURL, SecretNode
-
-
-@pytest.fixture
-def git_url() -> GitURL:
-    return GitURL(
-        original_url="https://github.com/zapata-engineering/orquestra-sdk",
-        protocol="https",
-        user=None,
-        password=None,
-        host="github.com",
-        port=None,
-        path="zapata-engineering/orquestra-sdk",
-        query=None,
-    )
-
-
-class TestBuildGitURL:
-    @pytest.mark.parametrize(
-        "protocol,expected_url",
-        [
-            (
-                "git+ssh",
-                "git+ssh://git@github.com/zapata-engineering/orquestra-sdk",
-            ),
-            (
-                "ssh+git",
-                "ssh+git://git@github.com/zapata-engineering/orquestra-sdk",
-            ),
-            ("ftp", "ftp://git@github.com/zapata-engineering/orquestra-sdk"),
-            ("ftps", "ftps://git@github.com/zapata-engineering/orquestra-sdk"),
-            ("http", "http://github.com/zapata-engineering/orquestra-sdk"),
-            ("https", "https://github.com/zapata-engineering/orquestra-sdk"),
-            (
-                "git+http",
-                "git+http://github.com/zapata-engineering/orquestra-sdk",
-            ),
-            (
-                "git+https",
-                "git+https://github.com/zapata-engineering/orquestra-sdk",
-            ),
-        ],
-    )
-    def test_different_protocols(
-        self, git_url: GitURL, protocol: str, expected_url: str
-    ):
-        url = _git_url_utils.build_git_url(git_url, protocol)
-        assert url == expected_url
-
-    def test_ssh_with_port(self, git_url: GitURL):
-        git_url.port = 22
-        url = _git_url_utils.build_git_url(git_url, "ssh")
-        assert url == "ssh://git@github.com:22/zapata-engineering/orquestra-sdk"
-
-    @pytest.mark.parametrize(
-        "protocol",
-        ["http", "https", "git+http", "git+https"],
-    )
-    def test_http_with_user(self, git_url: GitURL, protocol: str):
-        git_url.user = "amelio_robles_avila"
-        url = _git_url_utils.build_git_url(git_url, protocol)
-        assert url == (
-            f"{protocol}://amelio_robles_avila@github.com"
-            "/zapata-engineering/orquestra-sdk"
-        )
-
-    def test_uses_default_protocol(self, git_url: GitURL):
-        url = _git_url_utils.build_git_url(git_url)
-        assert url == "https://github.com/zapata-engineering/orquestra-sdk"
-
-    def test_with_password(self, monkeypatch: pytest.MonkeyPatch, git_url: GitURL):
-        secrets_get = create_autospec(orquestra.sdk.secrets.get)
-        secrets_get.return_value = "<mocked secret>"
-        monkeypatch.setattr(orquestra.sdk.secrets, "get", secrets_get)
-
-        secret_name = "my_secret"
-        secret_config = "secret config"
-        secret_workspace = "secret workspace"
-        git_url.password = SecretNode(
-            id="mocked secret",
-            secret_name=secret_name,
-            secret_config=secret_config,
-            workspace_id=secret_workspace,
-        )
-
-        url = _git_url_utils.build_git_url(git_url)
-        assert url == (
-            "https://git:<mocked secret>@github.com/zapata-engineering/orquestra-sdk"
-        )
-        secrets_get.assert_called_once_with(
-            secret_name, config_name=secret_config, workspace_id=secret_workspace
-        )
-
-    def test_unknown_protocol_in_original(self, git_url: GitURL):
-        git_url.original_url = "custom_protocol://<blah>"
-        git_url.protocol = "custom_protocol"
-        url = _git_url_utils.build_git_url(git_url)
-        assert url == git_url.original_url
-
-    def test_unknown_protocol_override(self, git_url: GitURL):
-        with pytest.raises(ValueError) as exc_info:
-            _ = _git_url_utils.build_git_url(git_url, "custom_protocol")
-        exc_info.match("Unknown protocol: `custom_protocol`")
+from orquestra.sdk._client._base import _git_url_utils
+from orquestra.sdk._shared.schema.ir import GitURL
 
 
 class TestParseGitURL:

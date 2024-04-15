@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from orquestra.sdk._base.serde import deserialize
+from orquestra.sdk._shared.serde import deserialize
 
 DATA_PATH = Path(__file__).parent / "data"
 
@@ -39,7 +39,8 @@ class TestWorkflowResults:
                 MockedResponse(json.loads(result_json)),
             ]
             monkeypatch.setattr(
-                "orquestra.sdk._base._driver._client.DriverClient._get", client_get
+                "orquestra.sdk._client._base._driver._client.DriverClient._get",
+                client_get,
             )
 
         return _inner

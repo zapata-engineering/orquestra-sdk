@@ -7,7 +7,7 @@ from unittest.mock import Mock
 
 import pytest
 
-import orquestra.sdk._base._config
+import orquestra.sdk._client._base._config
 
 
 @pytest.fixture
@@ -18,7 +18,7 @@ def patch_config_location(tmp_path, monkeypatch):
     """
     config_location = Mock(return_value=tmp_path / "config.json")
     monkeypatch.setattr(
-        orquestra.sdk._base._config, "get_config_file_path", config_location
+        orquestra.sdk._client._base._config, "get_config_file_path", config_location
     )
     return tmp_path
 
@@ -27,7 +27,7 @@ def patch_config_location(tmp_path, monkeypatch):
 def patch_config_name_generation(monkeypatch):
     patched_name = "patched_config_name"
     monkeypatch.setattr(
-        orquestra.sdk._base._config,
+        orquestra.sdk._client._base._config,
         "generate_config_name",
         Mock(return_value=patched_name),
     )
@@ -43,5 +43,5 @@ def patch_runtime_option_validation(monkeypatch):
             return input
 
     monkeypatch.setattr(
-        orquestra.sdk._base._config, "_validate_runtime_options", assume_valid
+        orquestra.sdk._client._base._config, "_validate_runtime_options", assume_valid
     )

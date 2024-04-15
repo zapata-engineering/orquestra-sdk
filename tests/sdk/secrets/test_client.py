@@ -9,8 +9,8 @@ refactored to be unit tests before going on with the target implementation.
 import pytest
 import responses
 
-from orquestra.sdk.secrets import _exceptions, _models
-from orquestra.sdk.secrets._client import SecretsClient
+from orquestra.sdk._client.secrets import _exceptions, _models
+from orquestra.sdk._client.secrets._client import SecretsClient
 
 from . import resp_mocks
 

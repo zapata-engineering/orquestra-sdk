@@ -19,16 +19,16 @@ import pytest
 from freezegun import freeze_time
 
 from orquestra import sdk
-from orquestra.sdk import exceptions
-from orquestra.sdk._base._config import LOCAL_RUNTIME_CONFIGURATION
-from orquestra.sdk._base._env import RAY_TEMP_PATH_ENV
-from orquestra.sdk._base._testing import _example_wfs, _ipc
-from orquestra.sdk._base.abc import RuntimeInterface
-from orquestra.sdk._base.serde import deserialize
-from orquestra.sdk._ray import _build_workflow, _client, _dag, _ray_logs
-from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.responses import JSONResult
-from orquestra.sdk.schema.workflow_run import State, WorkflowRunId
+from orquestra.sdk._client._base._config import LOCAL_RUNTIME_CONFIGURATION
+from orquestra.sdk._client._base._testing import _example_wfs, _ipc
+from orquestra.sdk._runtime._ray import _build_workflow, _client, _dag, _ray_logs
+from orquestra.sdk._runtime._ray._env import RAY_TEMP_PATH_ENV
+from orquestra.sdk._shared import exceptions
+from orquestra.sdk._shared.abc import RuntimeInterface
+from orquestra.sdk._shared.schema import ir
+from orquestra.sdk._shared.schema.responses import JSONResult
+from orquestra.sdk._shared.schema.workflow_run import State, WorkflowRunId
+from orquestra.sdk._shared.serde import deserialize
 
 # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
 # unraisable exceptions. Last tested with Ray 2.4.0.
@@ -1229,13 +1229,13 @@ class TestGetCurrentIDs:
         @sdk.task(source_import=sdk.InlineImport())
         def dump_ids():
             # Separate import just to avoid weird global state passing via closure.
-            import orquestra.sdk._ray._build_workflow
+            import orquestra.sdk._runtime._ray._build_workflow
 
             (
                 wf_run_id,
                 task_inv_id,
                 task_run_id,
-            ) = orquestra.sdk._ray._build_workflow.get_current_ids()
+            ) = orquestra.sdk._runtime._ray._build_workflow.get_current_ids()
 
             ids_dict = {
                 "wf_run_id": wf_run_id,

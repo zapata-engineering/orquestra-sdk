@@ -15,10 +15,13 @@
 🐛 *Bug Fixes*
 
 * `sdk.workflow(fn, resources=...)` will no longer show type errors from linters.
+* CLI log dumping now correctly saves stdout and stderr logs
 
 💅 *Improvements*
 
 🥷 *Internal*
+
+* Refactored internal dir structure of the whole SDK repo
 
 📃 *Docs*
 
@@ -547,8 +550,8 @@ logs_subset = {id: lines for id, lines in logs.items() if id in ["foo", "bar", "
 
 # Option 3
 for task in wf_run.get_tasks():
-    if task.get_status() == State.FAILED:
-        print(task.get_logs())
+  if task.get_status() == State.FAILED:
+    print(task.get_logs())
 ```
 
 * `sdk.WorkflowRun.get_artifacts()` doesn't accept any arguments any more. Now, it returns all the artifacts produced by the tasks in the workflow.

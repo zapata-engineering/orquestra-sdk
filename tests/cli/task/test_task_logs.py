@@ -6,19 +6,19 @@ Unit tests for 'orq task logs' glue code.
 """
 
 from pathlib import Path
-from unittest.mock import Mock, create_autospec
+from unittest.mock import Mock, call, create_autospec
 
 import pytest
 
-from orquestra.sdk._base.cli._arg_resolvers import (
+from orquestra.sdk._client._base.cli._arg_resolvers import (
     TaskInvIDResolver,
     WFConfigResolver,
     WFRunResolver,
 )
-from orquestra.sdk._base.cli._dumpers import LogsDumper
-from orquestra.sdk._base.cli._repos import WorkflowRunRepo
-from orquestra.sdk._base.cli._task import _logs
-from orquestra.sdk._base.cli._ui._presenters import (
+from orquestra.sdk._client._base.cli._dumpers import LogsDumper
+from orquestra.sdk._client._base.cli._repos import WorkflowRunRepo
+from orquestra.sdk._client._base.cli._task import _logs
+from orquestra.sdk._client._base.cli._ui._presenters import (
     LogsPresenter,
     WrappedCorqOutputPresenter,
 )
@@ -139,6 +139,11 @@ class TestAction:
             task_inv_id = "<my inv ID>"
             fn_name = "<my task fn name>"
 
+            # Custom mocks
+            out_dumped_path = "<dumped stdout path sentinel>"
+            err_dumped_path = "<dumped stderr path sentinel>"
+            action._dumper.dump.return_value = (out_dumped_path, err_dumped_path)
+
             # When
             action.on_cmd_call(
                 wf_run_id=wf_run_id,
@@ -181,8 +186,16 @@ class TestAction:
                 logs, resolved_wf_run_id, download_dir
             )
 
-            dumped_path = action._dumper.dump.return_value
-            action._logs_presenter.show_dumped_wf_logs.assert_called_with(dumped_path)
+            action._logs_presenter.show_dumped_wf_logs.assert_has_calls(
+                [
+                    call(
+                        out_dumped_path,
+                    ),
+                    call(
+                        err_dumped_path,
+                    ),
+                ]
+            )
 
         @staticmethod
         def test_failure(action, monkeypatch):

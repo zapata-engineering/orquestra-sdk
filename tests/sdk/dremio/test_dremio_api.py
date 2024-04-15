@@ -5,8 +5,8 @@ from unittest.mock import Mock, create_autospec, sentinel
 
 import pytest
 
-from orquestra.sdk.dremio import DremioClient, _api
-from orquestra.sdk.dremio._flight_facade import (
+from orquestra.sdk._client.dremio import DremioClient, _api
+from orquestra.sdk._client.dremio._flight_facade import (
     FlightClient,
     FlightEndpoint,
     FlightStreamReader,

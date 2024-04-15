@@ -1,7 +1,7 @@
 ################################################################################
 # © Copyright 2022 Zapata Computing Inc.
 ################################################################################
-from orquestra.sdk._base import _viz
+from orquestra.sdk._client._base import _viz
 
 from . import sample_wfs
 

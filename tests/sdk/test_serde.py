@@ -9,9 +9,9 @@ import pytest
 from pydantic import ValidationError
 
 import orquestra.sdk as sdk
-from orquestra.sdk._base import serde
-from orquestra.sdk.schema import ir
-from orquestra.sdk.schema.responses import JSONResult
+from orquestra.sdk._shared import serde
+from orquestra.sdk._shared.schema import ir
+from orquestra.sdk._shared.schema.responses import JSONResult
 
 ROUNDTRIP_EXAMPLES = [
     None,

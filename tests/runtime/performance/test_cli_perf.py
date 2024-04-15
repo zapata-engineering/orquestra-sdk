@@ -22,10 +22,10 @@ from pathlib import Path
 import pytest
 
 import orquestra.sdk as sdk
-from orquestra.sdk._base._testing._connections import ray_suitable_temp_dir
+from orquestra.sdk._client._base._testing._connections import ray_suitable_temp_dir
 
 WORKFLOW_DEF = """
-import orquestra.sdk._base._testing._long_import
+import orquestra.sdk._client._base._testing._long_import
 import orquestra.sdk as sdk
 @sdk.task
 def task():
