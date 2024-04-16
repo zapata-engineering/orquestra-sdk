@@ -426,8 +426,11 @@ dorq.section(
 )
 
 
+# Ignoring pyright errors as this class inherits typing issues form 3rd party code
 # region: login
-class GroupWithDefaultCommand(cloup.Group, DefaultGroup):
+class GroupWithDefaultCommand(  # pyright: ignore[reportIncompatibleMethodOverride, reportIncompatibleVariableOverride] # noqa: E501
+    cloup.Group, DefaultGroup
+):
     ...
 
     def get_help(self, ctx) -> str:
