@@ -239,8 +239,6 @@ arg-type-hints-in-docstring = false
 
 [tool.pyright]
 exclude = [
-    "src/orquestra/sdk/_runtime/_ray/_logs/_markers.py",
-    "src/orquestra/sdk/_client/_base/_ast.py",
-    "src/orquestra/sdk/_client/_base/cli/_entry.py",
-    "src/orquestra/sdk/_client/_base/cli/_ui/_click_default_group.py",
+    # This is 3rd party file which is not compatible for pyright. Ignore it as a whole
+   "src/orquestra/sdk/_client/_base/cli/_ui/_click_default_group.py",
 ]
