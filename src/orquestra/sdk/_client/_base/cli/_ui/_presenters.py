@@ -24,9 +24,9 @@ from rich.spinner import Spinner
 from rich.table import Column, Table
 from tabulate import tabulate
 
-from orquestra.sdk._shared import _dates, serde
-from orquestra.sdk._shared._dates import Instant
-from orquestra.sdk._shared._logs._interfaces import LogOutput, WorkflowLogs
+from orquestra.sdk._shared import serde
+from orquestra.sdk._shared.dates import Instant, from_unix_time
+from orquestra.sdk._shared.logs import LogOutput, WorkflowLogs
 from orquestra.sdk._shared.schema import responses
 from orquestra.sdk._shared.schema.configs import (
     ConfigName,
@@ -426,7 +426,7 @@ class PromptPresenter:
             wfs,
             key=lambda wf: wf.status.start_time
             if wf.status.start_time
-            else _dates.from_unix_time(0),
+            else from_unix_time(0),
             reverse=True,
         )
 

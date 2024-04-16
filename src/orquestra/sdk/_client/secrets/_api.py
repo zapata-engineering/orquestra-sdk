@@ -4,8 +4,8 @@
 """Code for user-facing utilities related to secrets."""
 import typing as t
 
-from orquestra.sdk._shared import _exec_ctx
 from orquestra.sdk._shared import exceptions as sdk_exc
+from orquestra.sdk._shared.exec_ctx import ExecContext, get_current_exec_context
 from orquestra.sdk._shared.schema.configs import ConfigName
 from orquestra.sdk._shared.schema.workflow_run import WorkspaceId
 
@@ -53,7 +53,7 @@ def get(
             this function will return a "future" which will be used to retrieve the
             secret at execution time.
     """
-    if _exec_ctx.global_context == _exec_ctx.ExecContext.WORKFLOW_BUILD:
+    if get_current_exec_context() == ExecContext.WORKFLOW_BUILD:
         return t.cast(
             str,
             _dsl.Secret(name=name, config_name=config_name, workspace_id=workspace_id),

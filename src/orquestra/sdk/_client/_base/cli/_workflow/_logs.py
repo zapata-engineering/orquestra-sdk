@@ -6,7 +6,7 @@ import typing as t
 import warnings
 from pathlib import Path
 
-from orquestra.sdk._shared._logs._interfaces import WorkflowLogs
+from orquestra.sdk._shared.logs import WorkflowLogs
 from orquestra.sdk._shared.schema.configs import ConfigName
 from orquestra.sdk._shared.schema.workflow_run import WorkflowRunId
 

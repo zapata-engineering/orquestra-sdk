@@ -18,10 +18,11 @@ import requests
 from typing_extensions import assert_never
 
 from orquestra import sdk
-from orquestra.sdk._shared import _dates, exceptions
-from orquestra.sdk._shared._logs._interfaces import LogOutput, WorkflowLogs
+from orquestra.sdk._shared import exceptions
 from orquestra.sdk._shared.abc import ArtifactValue
-from orquestra.sdk._shared.schema import _compat
+from orquestra.sdk._shared.dates import from_unix_time
+from orquestra.sdk._shared.logs import LogOutput, WorkflowLogs
+from orquestra.sdk._shared.schema import result_is_packed
 from orquestra.sdk._shared.schema.configs import (
     ConfigName,
     RemoteRuntime,
@@ -375,7 +376,7 @@ class WorkflowRunRepo:
         invocation = wf_def.task_invocations[task_inv_id]
         task_def = wf_def.tasks[invocation.task_id]
 
-        if _compat.result_is_packed(task_def=task_def):
+        if result_is_packed(task_def=task_def):
             # We expect ``task_outputs`` to be an iterable already.
             outputs_tuple = tuple(task_outputs)
         else:
@@ -654,7 +655,7 @@ class SummaryRepo:
         wf_runs.sort(
             key=lambda wf_run: wf_run.status.start_time
             if wf_run.status.start_time
-            else _dates.from_unix_time(0)
+            else from_unix_time(0)
         )
 
         return ui_models.WFList(wf_rows=[_ui_model_from_wf(wf) for wf in wf_runs])

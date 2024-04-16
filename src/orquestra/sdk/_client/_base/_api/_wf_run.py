@@ -18,11 +18,7 @@ from functools import cached_property
 from pathlib import Path
 from urllib.parse import urlparse
 
-from orquestra.sdk._client._base import _env
-from orquestra.sdk._shared import _exec_ctx, serde
-from orquestra.sdk._shared._graphs import iter_invocations_topologically
-from orquestra.sdk._shared._logs._interfaces import WorkflowLogs
-from orquestra.sdk._shared._spaces._structs import ProjectRef
+from orquestra.sdk._shared import ProjectRef, iter_invocations_topologically, serde
 from orquestra.sdk._shared.abc import RuntimeInterface
 from orquestra.sdk._shared.exceptions import (
     ConfigFileNotFoundError,
@@ -40,6 +36,8 @@ from orquestra.sdk._shared.exceptions import (
     WorkflowRunNotSucceeded,
     WorkspacesNotSupportedError,
 )
+from orquestra.sdk._shared.exec_ctx import ExecContext, get_current_exec_context
+from orquestra.sdk._shared.logs import WorkflowLogs
 from orquestra.sdk._shared.schema import ir
 from orquestra.sdk._shared.schema.configs import ConfigName
 from orquestra.sdk._shared.schema.responses import WorkflowResult
@@ -55,6 +53,7 @@ from orquestra.sdk._shared.schema.workflow_run import (
 )
 
 from .._config import IN_PROCESS_CONFIG_NAME, RAY_CONFIG_NAME_ALIAS
+from .._env import CURRENT_CLUSTER_ENV, CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
 from .._spaces._resolver import resolve_studio_ref, resolve_studio_workspace_ref
 from ._config import RuntimeConfig, resolve_config
 from ._task_run import TaskRun
@@ -885,10 +884,10 @@ def _parse_max_age(age: t.Optional[str]) -> t.Optional[timedelta]:
 def _get_workspace_and_project_ids() -> (
     t.Tuple[t.Optional[WorkspaceId], t.Optional[ProjectId]]
 ):
-    if not os.getenv(_env.CURRENT_CLUSTER_ENV):
+    if not os.getenv(CURRENT_CLUSTER_ENV):
         return None, None
 
-    return os.getenv(_env.CURRENT_WORKSPACE_ENV), os.getenv(_env.CURRENT_PROJECT_ENV)
+    return os.getenv(CURRENT_WORKSPACE_ENV), os.getenv(CURRENT_PROJECT_ENV)
 
 
 def _generate_cluster_uri_name(uri: str) -> str:
@@ -896,12 +895,12 @@ def _generate_cluster_uri_name(uri: str) -> str:
 
 
 def _get_config_context() -> str:
-    cluster_uri = os.getenv(_env.CURRENT_CLUSTER_ENV)
+    cluster_uri = os.getenv(CURRENT_CLUSTER_ENV)
     if not cluster_uri:
-        context = _exec_ctx.get_current_exec_context()
-        if context == _exec_ctx.ExecContext.RAY:
+        context = get_current_exec_context()
+        if context == ExecContext.RAY:
             return RAY_CONFIG_NAME_ALIAS
-        elif context == _exec_ctx.ExecContext.DIRECT:
+        elif context == ExecContext.DIRECT:
             return IN_PROCESS_CONFIG_NAME
         else:
             raise NotImplementedError(

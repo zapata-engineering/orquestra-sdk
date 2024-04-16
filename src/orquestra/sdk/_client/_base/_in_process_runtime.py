@@ -9,9 +9,15 @@ from contextlib import contextmanager
 from datetime import timedelta
 
 from orquestra.sdk import secrets
-from orquestra.sdk._shared import _dates, abc, exceptions, serde
-from orquestra.sdk._shared._graphs import iter_invocations_topologically
-from orquestra.sdk._shared._spaces._structs import ProjectRef
+from orquestra.sdk._shared import (
+    ProjectRef,
+    abc,
+    exceptions,
+    iter_invocations_topologically,
+    serde,
+)
+from orquestra.sdk._shared.dates import Instant
+from orquestra.sdk._shared.dates import now as dates_now
 from orquestra.sdk._shared.dispatch import locate_fn_ref
 from orquestra.sdk._shared.schema import ir
 from orquestra.sdk._shared.schema.responses import WorkflowResult
@@ -115,8 +121,8 @@ class InProcessRuntime(abc.RuntimeInterface):
             WfRunId, t.Dict[ir.ArtifactNodeId, ArtifactValue]
         ] = {}
         self._workflow_def_store: t.Dict[WfRunId, ir.WorkflowDef] = {}
-        self._start_time_store: t.Dict[WfRunId, _dates.Instant] = {}
-        self._end_time_store: t.Dict[WfRunId, _dates.Instant] = {}
+        self._start_time_store: t.Dict[WfRunId, Instant] = {}
+        self._end_time_store: t.Dict[WfRunId, Instant] = {}
 
     def _gen_next_run_id(self, wf_def: ir.WorkflowDef):
         return f"{wf_def.name}-{len(self._output_store) + 1}"
@@ -142,7 +148,7 @@ class InProcessRuntime(abc.RuntimeInterface):
             )
         run_id = self._gen_next_run_id(workflow_def)
 
-        self._start_time_store[run_id] = _dates.now()
+        self._start_time_store[run_id] = dates_now()
 
         # We deserialize the constants in one go, instead of as needed
         consts: t.Dict[ir.ConstantNodeId, t.Any] = {
@@ -193,7 +199,7 @@ class InProcessRuntime(abc.RuntimeInterface):
         )
         self._output_store[run_id] = outputs
 
-        self._end_time_store[run_id] = _dates.now()
+        self._end_time_store[run_id] = dates_now()
         self._workflow_def_store[run_id] = workflow_def
         return run_id
 
@@ -302,7 +308,7 @@ class InProcessRuntime(abc.RuntimeInterface):
         Returns:
                 A list of the workflow runs
         """
-        now = _dates.now()
+        now = dates_now()
 
         if state is not None:
             if not isinstance(state, list):

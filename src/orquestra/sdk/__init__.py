@@ -1,9 +1,7 @@
 ################################################################################
-# © Copyright 2021-2023 Zapata Computing Inc.
+# © Copyright 2021-2024 Zapata Computing Inc.
 ################################################################################
 """Orquestra SDK allows to define computational workflows using Python DSL."""
-
-from orquestra.sdk._shared._logs._interfaces import LogOutput, WorkflowLogs
 
 from ._client import mlflow, secrets
 from ._client._base._api import (
@@ -40,7 +38,8 @@ from ._client._base._workflow import (
     WorkflowTemplate,
     workflow,
 )
-from ._shared._spaces._structs import Project, ProjectRef, Workspace
+from ._shared import Project, ProjectRef, Workspace
+from ._shared.logs import LogOutput, WorkflowLogs
 
 # It's already in a public module, but we'll re-export it under `orquestra.sdk.*` anyway
 # because it's commonly used to filter task runs.

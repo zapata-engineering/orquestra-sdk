@@ -8,7 +8,7 @@ from functools import singledispatchmethod
 from pathlib import Path
 
 from orquestra.sdk._shared import serde
-from orquestra.sdk._shared._logs._interfaces import LogOutput, WorkflowLogs
+from orquestra.sdk._shared.logs import LogOutput, WorkflowLogs
 from orquestra.sdk._shared.schema.workflow_run import TaskInvocationId, WorkflowRunId
 
 
