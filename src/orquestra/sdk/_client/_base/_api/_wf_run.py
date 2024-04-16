@@ -18,12 +18,7 @@ from functools import cached_property
 from pathlib import Path
 from urllib.parse import urlparse
 
-from orquestra.sdk._shared import (
-    ProjectRef,
-    WorkflowLogs,
-    iter_invocations_topologically,
-    serde,
-)
+from orquestra.sdk._shared import ProjectRef, iter_invocations_topologically, serde
 from orquestra.sdk._shared.abc import RuntimeInterface
 from orquestra.sdk._shared.exceptions import (
     ConfigFileNotFoundError,
@@ -42,6 +37,7 @@ from orquestra.sdk._shared.exceptions import (
     WorkspacesNotSupportedError,
 )
 from orquestra.sdk._shared.exec_ctx import ExecContext, get_current_exec_context
+from orquestra.sdk._shared.logs import WorkflowLogs
 from orquestra.sdk._shared.schema import ir
 from orquestra.sdk._shared.schema.configs import ConfigName
 from orquestra.sdk._shared.schema.responses import WorkflowResult

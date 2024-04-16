@@ -24,8 +24,9 @@ from rich.spinner import Spinner
 from rich.table import Column, Table
 from tabulate import tabulate
 
-from orquestra.sdk._shared import LogOutput, WorkflowLogs, serde
+from orquestra.sdk._shared import serde
 from orquestra.sdk._shared.dates import Instant, from_unix_time
+from orquestra.sdk._shared.logs import LogOutput, WorkflowLogs
 from orquestra.sdk._shared.schema import responses
 from orquestra.sdk._shared.schema.configs import (
     ConfigName,

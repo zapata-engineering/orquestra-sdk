@@ -13,10 +13,11 @@ import typing as t
 import warnings
 from datetime import timedelta
 
-from orquestra.sdk._shared import LogReader, ProjectRef, exceptions, serde
+from orquestra.sdk._shared import ProjectRef, exceptions, serde
 from orquestra.sdk._shared.abc import RuntimeInterface
 from orquestra.sdk._shared.dates import Instant, from_unix_time
 from orquestra.sdk._shared.dates import now as dates_now
+from orquestra.sdk._shared.logs import LogReader
 from orquestra.sdk._shared.schema import ir
 from orquestra.sdk._shared.schema.configs import RuntimeConfiguration
 from orquestra.sdk._shared.schema.responses import WorkflowResult

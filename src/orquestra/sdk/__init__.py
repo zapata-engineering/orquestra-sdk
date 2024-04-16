@@ -38,7 +38,8 @@ from ._client._base._workflow import (
     WorkflowTemplate,
     workflow,
 )
-from ._shared import LogOutput, Project, ProjectRef, WorkflowLogs, Workspace
+from ._shared import Project, ProjectRef, Workspace
+from ._shared.logs import LogOutput, WorkflowLogs
 
 # It's already in a public module, but we'll re-export it under `orquestra.sdk.*` anyway
 # because it's commonly used to filter task runs.
