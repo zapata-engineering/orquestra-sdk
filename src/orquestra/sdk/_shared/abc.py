@@ -15,8 +15,8 @@ from datetime import timedelta
 
 from orquestra.sdk._shared.exceptions import WorkspacesNotSupportedError
 
-from ._spaces._structs import Project, ProjectRef, Workspace
-from .logs._interfaces import LogOutput, LogReader, WorkflowLogs
+from ._spaces import Project, ProjectRef, Workspace
+from .logs import LogOutput, LogReader, WorkflowLogs
 from .schema.ir import TaskInvocationId, WorkflowDef
 from .schema.responses import WorkflowResult
 from .schema.workflow_run import (
