@@ -124,7 +124,9 @@ def redirected_io(
     log_path.mkdir(parents=True, exist_ok=True)
 
     with open(out_path, "a") as out_f, open(err_path, "a") as err_f:
-        with wurlitzer.pipes(stdout=out_f, stderr=err_f):
+        # wurlizner lacks type annotations, thus we do pyright ignore
+        # https://github.com/minrk/wurlitzer/issues/80
+        with wurlitzer.pipes(stdout=out_f, stderr=err_f):  # pyright: ignore
             try:
                 yield
             except Exception as e:

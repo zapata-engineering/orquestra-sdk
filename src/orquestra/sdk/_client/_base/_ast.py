@@ -75,18 +75,18 @@ class _ReturnExprVisitor(ast.NodeVisitor):
         self.outputs.add(_AstReturnMetadata(is_subscriptable=False, n_outputs=1))
 
     def visit_Attribute(self, node):
-        self.visit_Name(node)
+        self.visit_Name(t.cast(ast.Name, node))
 
     def visit_JoinedStr(self, node):
         # f-strings
-        self.visit_Constant(node)
+        self.visit_Constant(t.cast(ast.Constant, node))
 
     def visit_Set(self, node):
         # Sets are python objects and are not subscriptable
         self.outputs.add(_AstReturnMetadata(is_subscriptable=False, n_outputs=1))
 
     def visit_Tuple(self, node):
-        self.visit_List(node)
+        self.visit_List(t.cast(ast.List, node))
 
     def visit_List(self, node):
         # If there is a starred node in the list, then unpacking is used
