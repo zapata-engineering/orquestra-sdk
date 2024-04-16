@@ -66,44 +66,49 @@ class _ReturnExprVisitor(ast.NodeVisitor):
         message: str,
     ):
         LOG.debug(message)
+        self._add_single()
+
+    def _add_single(self):
         self.outputs.add(_AstReturnMetadata(is_subscriptable=False, n_outputs=1))
 
-    def visit_Constant(self, node):
-        self.outputs.add(_AstReturnMetadata(is_subscriptable=False, n_outputs=1))
-
-    def visit_Name(self, node):
-        self.outputs.add(_AstReturnMetadata(is_subscriptable=False, n_outputs=1))
-
-    def visit_Attribute(self, node):
-        self.visit_Name(t.cast(ast.Name, node))
-
-    def visit_JoinedStr(self, node):
-        # f-strings
-        self.visit_Constant(t.cast(ast.Constant, node))
-
-    def visit_Set(self, node):
-        # Sets are python objects and are not subscriptable
-        self.outputs.add(_AstReturnMetadata(is_subscriptable=False, n_outputs=1))
-
-    def visit_Tuple(self, node):
-        self.visit_List(t.cast(ast.List, node))
-
-    def visit_List(self, node):
+    def _add_sequence(self, node, elements: t.List[ast.expr]):
         # If there is a starred node in the list, then unpacking is used
-        is_starred = [isinstance(e, ast.Starred) for e in node.elts]
-        if any(is_starred):
+        if any(isinstance(e, ast.Starred) for e in elements):
             self._fail_single(node, "Cannot infer number of outputs with unpacking")
             return
 
-        n_elements = len(node.elts)
+        n_elements = len(elements)
         if n_elements == 0:
             # Empty list counts as a single output, similarly to void functions
             # having a single `None` output.
-            self.outputs.add(_AstReturnMetadata(is_subscriptable=False, n_outputs=1))
+            self._add_single()
         else:
             self.outputs.add(
                 _AstReturnMetadata(is_subscriptable=True, n_outputs=n_elements)
             )
+
+    def visit_Constant(self, node):
+        self._add_single()
+
+    def visit_Name(self, node):
+        self._add_single()
+
+    def visit_Attribute(self, node):
+        self._add_single()
+
+    def visit_JoinedStr(self, node):
+        # f-strings
+        self._add_single()
+
+    def visit_Set(self, node):
+        # Sets are python objects and are not subscriptable
+        self._add_single()
+
+    def visit_Tuple(self, node):
+        self._add_sequence(node, node.elts)
+
+    def visit_List(self, node):
+        self._add_sequence(node, node.elts)
 
     def visit_Dict(self, node):
         # "None" inside the keys means there is dictionary unpacking being used
@@ -112,7 +117,7 @@ class _ReturnExprVisitor(ast.NodeVisitor):
             self._fail_single(node, "Cannot infer number of outputs with unpacking")
             return
 
-        self.outputs.add(_AstReturnMetadata(is_subscriptable=False, n_outputs=1))
+        self._add_single()
 
     def generic_visit(self, node):
         self._fail_single(node, f"Assuming a single output for node {repr(type(node))}")
