@@ -754,6 +754,7 @@ def _make_invocation_model(
         output_ids=graph.output_ids_for_invocation(invocation),
         resources=_make_resources_model(invocation.resources),
         custom_image=invocation.custom_image,
+        env_vars=invocation.env_vars,
     )
 
 

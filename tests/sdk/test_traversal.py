@@ -1325,3 +1325,37 @@ class TestGraphTraversal:
                 artifact_index=None,
             ),
         ]
+
+
+class TestEnvVars:
+    def test_simple_scenario(self):
+        @_dsl.task(env_vars={"X": "Y"})
+        def task():
+            ...
+
+        @_workflow.workflow
+        def wf():
+            return task()
+
+        model = wf().model
+        inv = list(model.task_invocations.values())[0]
+        assert inv.env_vars == {"X": "Y"}
+
+    def test_with_invocation_meta(self):
+        @_dsl.task(env_vars={"X": "Y"})
+        def task():
+            ...
+
+        @_workflow.workflow
+        def wf():
+            inv1 = task().with_env_variables({"W": "Z"})
+            inv2 = task()
+            return inv1, inv2
+
+        model = wf().model
+
+        invs = list(model.task_invocations.values())
+        env_vars = [inv.env_vars for inv in invs]
+        assert len(env_vars) == 2
+        assert {"X": "Y"} in env_vars
+        assert {"W": "Z"} in env_vars

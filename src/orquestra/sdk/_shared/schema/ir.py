@@ -364,6 +364,9 @@ class TaskInvocation(BaseModel):
     # if not set, will fall back to TaskDef custom_image
     custom_image: t.Optional[str] = None
 
+    # Specific env_variables set for this given invocation
+    env_vars: t.Optional[t.Dict[str, str]] = None
+
 
 WorkflowDefName = str
 
