@@ -1413,3 +1413,41 @@ class TestRetries:
             assert ray_status == WorkflowStatus.FAILED
         else:
             assert ray_status == WorkflowStatus.SUCCESSFUL
+
+
+@pytest.mark.slow
+class TestEnvVars:
+    def test_setting_env_vars_works(self, runtime: _dag.RayRuntime):
+        @sdk.task(env_vars={"MY_UNIQUE_ENV": "SECRET"})
+        def task():
+            import os
+
+            return os.getenv("MY_UNIQUE_ENV")
+
+        @sdk.workflow
+        def wf():
+            inv1 = task()
+            inv2 = task()
+            inv3 = task().with_env_variables({"MY_UNIQUE_ENV": "NEW_SECRET"})
+            return inv1, inv2, inv3
+
+        wf = wf().model
+        wf_run_id = runtime.create_workflow_run(wf, None, False)
+        _wait_to_finish_wf(wf_run_id, runtime)
+        results = runtime.get_workflow_run_outputs_non_blocking(wf_run_id)
+        artifacts = [res.value for res in results]
+        assert len(artifacts) == 3
+        assert artifacts.count('"SECRET"') == 2
+        assert '"NEW_SECRET"' in artifacts
+
+    @pytest.mark.filterwarnings(
+        "ignore::orquestra.sdk._client._base._workflow.NotATaskWarning"
+    )
+    def test_env_vars_are_set_before_task_executes(self, runtime: _dag.RayRuntime):
+        wf = _example_wfs.get_env_before_task_executes_task().model
+        wf_run_id = runtime.create_workflow_run(wf, None, False)
+        _wait_to_finish_wf(wf_run_id, runtime)
+        results = runtime.get_workflow_run_outputs_non_blocking(wf_run_id)
+        artifacts = [res.value for res in results]
+        assert len(artifacts) == 1
+        assert artifacts == ['"MY_UNIQUE_VALUE"']

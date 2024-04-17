@@ -550,6 +550,14 @@ def make_ray_dag(
         )
 
         pip = _import_pip_env(invocation, workflow_def, imports_pip_strings)
+        env_vars = invocation.env_vars
+        # if we have pip env setting, or env_vars then we create runtime object
+        # otherwise we just leave it as None
+        runtime_env = (
+            _client.RuntimeEnv(pip=pip if len(pip) > 0 else None, env_vars=env_vars)
+            if len(pip) > 0 or env_vars
+            else None
+        )
 
         ray_options = {
             # We're using task invocation ID as the Ray "task ID" instead of task run ID
@@ -558,7 +566,7 @@ def make_ray_dag(
             "name": invocation.id,
             "metadata": pydatic_to_json_dict(inv_metadata),
             # If there are any python packages to install for step - set runtime env
-            "runtime_env": (_client.RuntimeEnv(pip=pip) if len(pip) > 0 else None),
+            "runtime_env": runtime_env,
             "catch_exceptions": False,
             # We only want to execute workflow tasks once by default.
             # This is so there is only one task run ID per task, for scenarios where

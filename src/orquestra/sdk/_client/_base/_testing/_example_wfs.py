@@ -403,3 +403,24 @@ def cause_env_setup_error():
     cause_env_setup_error_task task will cause pip to throw an error.
     """
     return [cause_env_setup_error_task()]
+
+
+class GetEnvWhileReduce:
+    def __init__(self):
+        import os
+
+        self.val = os.getenv("MY_UNIQUE_ENV")
+
+    def __reduce__(self):
+        return (GetEnvWhileReduce, tuple())
+
+
+@sdk.task(env_vars={"MY_UNIQUE_ENV": "MY_UNIQUE_VALUE"})
+def get_env_task(obj):
+    return obj.val
+
+
+@sdk.workflow
+def get_env_before_task_executes_task():
+    obj = GetEnvWhileReduce()
+    return [get_env_task(obj)]
