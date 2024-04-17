@@ -171,7 +171,7 @@ def test_task_invocation_as_dict():
         "kwargs": future.invocation.kwargs,
         "resources": future.invocation.resources,
         "custom_name": future.invocation.custom_name,
-        "env_var": future.invocation.env_vars,
+        "env_vars": future.invocation.env_vars,
         "custom_image": future.invocation.custom_image,
         "type": future.invocation.type,
     }
