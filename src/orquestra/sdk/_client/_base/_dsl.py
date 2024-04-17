@@ -841,7 +841,10 @@ class ArtifactFuture(Generic[_TaskReturn]):
             Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]  # pyright: ignore
         ] = Sentinel.NO_UPDATE,
         env_vars: Optional[
-            Union[Dict[str, str], "orquestra.sdk._client._base._dsl.Sentinel"]
+            Union[
+                Dict[str, str],
+                "orquestra.sdk._client._base._dsl.Sentinel",  # pyright: ignore
+            ]
         ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
         """
@@ -989,7 +992,8 @@ class ArtifactFuture(Generic[_TaskReturn]):
         self,
         env_vars: Optional[
             Union[
-                Dict[str, str], "orquestra.sdk._client._base._dsl.Sentinel"
+                Dict[str, str],
+                "orquestra.sdk._client._base._dsl.Sentinel",  # pyright: ignore
             ]  # pyright: ignore
         ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":

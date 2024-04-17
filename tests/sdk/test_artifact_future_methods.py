@@ -49,6 +49,7 @@ CUSTOM_METADATA = {
     "disk": "99Gi",
     "gpu": "1",
     "custom_image": "zapatacomputing/orquestra-not-default",
+    "env_vars": {"A": "B"},
 }
 
 
@@ -161,7 +162,14 @@ def wf_with_custom_image_call():
 def wf_with_invocation_meta_call():
     future = _task_without_resources()
     assert isinstance(future, ArtifactFuture)
-    new_future = future.with_invocation_meta(**CUSTOM_METADATA)
+    new_future = future.with_invocation_meta(
+        cpu="2000m",
+        memory="100Gi",
+        disk="99Gi",
+        gpu="1",
+        custom_image="zapatacomputing/orquestra-not-default",
+        env_vars={"A": "B"},
+    )
     return [future, new_future]
 
 

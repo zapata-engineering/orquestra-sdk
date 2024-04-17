@@ -1431,8 +1431,8 @@ class TestEnvVars:
             inv3 = task().with_env_variables({"MY_UNIQUE_ENV": "NEW_SECRET"})
             return inv1, inv2, inv3
 
-        wf = wf().model
-        wf_run_id = runtime.create_workflow_run(wf, None, False)
+        wf_model = wf().model
+        wf_run_id = runtime.create_workflow_run(wf_model, None, False)
         _wait_to_finish_wf(wf_run_id, runtime)
         results = runtime.get_workflow_run_outputs_non_blocking(wf_run_id)
         artifacts = [res.value for res in results]
