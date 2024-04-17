@@ -9,6 +9,7 @@
 🔥 *Features*
 
 * Add new API `current_exec_ctx` which returns current `workspace_id` `project_id` and `config_name`. To be used inside a task.
+* Add 'env_vars' parameter to task and 'with_env_variables' function to pass environmental variables for task execution
 
 🧟 *Deprecations*
 
