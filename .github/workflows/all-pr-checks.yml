@@ -33,7 +33,7 @@ jobs:
       # Choice of Python versions to run against:
       # * 3.9: the oldest supported version
       # * 3.11: the latest officially supported version. Used in CE images.
-      python_version: '["3.9", "3.11"]'
+      python_versions: '["3.9", "3.11"]'
   style:
     # call the reusable workflow for the packages that changed
     needs: changes
@@ -46,7 +46,7 @@ jobs:
       # Choice of Python versions to run against:
       # * 3.9: the oldest supported version
       # * 3.11: the latest officially supported version. Used in CE images.
-      python_version: '["3.9", "3.11"]'
+      python_versions: '["3.9", "3.11"]'
   pass:
     # This is a final "check" job that depends on the other jobs, it always runs
     # and will fail if a dependent job fails.
