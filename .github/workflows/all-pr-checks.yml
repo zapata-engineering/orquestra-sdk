@@ -27,7 +27,7 @@ jobs:
     strategy:
       matrix:
         package: ${{ fromJSON(needs.changes.outputs.packages) }}
-    uses: ./.github/workflows/package-style.yml
+    uses: ./.github/workflows/package-coverage.yml
     with:
       target_path: ${{ matrix.package }}
       # Choice of Python versions to run against:
