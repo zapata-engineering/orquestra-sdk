@@ -135,6 +135,21 @@ packages = ["src/orquestra"]
 
 [tool.hatch.version]
 source = "vcs"
+tag-pattern = "^(?P<prefix>orquestra-sdk-)(?P<version>[vV]?\\d+\\.\\d+\\.\\d+)(?P<suffix>.*)?$"
+
+[tool.hatch.version.raw-options]
+root = "../.."
+# tag-pattern isn't enough when the current commit is not tagged. For development
+# builds, customizing the git describe command is necessary.
+git_describe_command = [
+    "git",
+    "describe",
+    "--tags",
+    "--long",
+    "--dirty",
+    "--match",
+    "orquestra-sdk-*[0-9]*",
+]
 
 [tool.isort]
 profile = "black"
