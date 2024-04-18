@@ -1451,3 +1451,41 @@ class TestEnvVars:
         artifacts = [res.value for res in results]
         assert len(artifacts) == 1
         assert artifacts == ['"MY_UNIQUE_VALUE"']
+
+    def test_env_vars_iteration_with_already_exiting(
+        self, runtime: _dag.RayRuntime, monkeypatch
+    ):
+        @sdk.task(env_vars={"DIFFERENT_ENV": "NOT_OVERWRITTEN"})
+        def task_other_env():
+            import os
+
+            return os.getenv("MY_NEW_SECRET_ENV")
+
+        @sdk.task(env_vars={"MY_NEW_SECRET_ENV": "OVERWRITTEN"})
+        def task_same_env():
+            import os
+
+            return os.getenv("MY_NEW_SECRET_ENV")
+
+        @sdk.workflow
+        def wf():
+            inv1 = task_same_env()  # this one overwrites intentionally the same env_var
+            inv2 = task_other_env()  # this one uses different env var
+            inv3 = task_other_env().with_env_variables(
+                {"MY_NEW_SECRET_ENV": "OVERWRITTEN_IN_WF"}  # overwrites env var
+            )
+            inv4 = task_same_env().with_env_variables(
+                {"DIFFERENT_ENV_VAR": "DIFFERENT_VALUE"}  # does not overwrite env var
+            )
+            return inv1, inv2, inv3, inv4
+
+        os.environ["MY_NEW_SECRET_ENV"] = "ABC"
+        wf_model = wf().model
+        wf_run_id = runtime.create_workflow_run(wf_model, None, False)
+        _wait_to_finish_wf(wf_run_id, runtime)
+        results = runtime.get_workflow_run_outputs_non_blocking(wf_run_id)
+        artifacts = [res.value for res in results]
+        assert len(artifacts) == 4
+        assert '"OVERWRITTEN_IN_WF"' in artifacts  # expected in inv3
+        assert '"OVERWRITTEN"' in artifacts  # expected in inv1
+        assert artifacts.count('"SET_BEFORE_RAY_STARTS"') == 2  # expected in inv2 and 4

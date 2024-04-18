@@ -1003,6 +1003,10 @@ class ArtifactFuture(Generic[_TaskReturn]):
 
         Doesn't modify existing invocations, returns a new one.
 
+        Env vars passed to that function are directly passed to Ray runtime_env object.
+        This function overwrites env_vars set by the `env_vars` parameter in the task,
+        it does not append them.
+
         Example usage::
 
             text = capitalize("hello").with_env_variables(
