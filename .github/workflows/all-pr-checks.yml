@@ -1,0 +1,64 @@
+---
+name: Test All
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  # This job checks for the changed paths
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      packages: ${{ steps.filter.outputs.changes }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          # We can codify the path dependencies between the packages here
+          filters: |
+            projects/orquestra-sdk:
+              - .github/workflows/**
+              - projects/orquestra-sdk/**
+  tests:
+    # call the reusable workflow for the packages that changed
+    needs: changes
+    strategy:
+      matrix:
+        package: ${{ fromJSON(needs.changes.outputs.packages) }}
+    uses: ./.github/workflows/package-style.yml
+    with:
+      target_path: ${{ matrix.package }}
+      # Choice of Python versions to run against:
+      # * 3.9: the oldest supported version
+      # * 3.11: the latest officially supported version. Used in CE images.
+      python_version: '["3.9", "3.11"]'
+  style:
+    # call the reusable workflow for the packages that changed
+    needs: changes
+    strategy:
+      matrix:
+        package: ${{ fromJSON(needs.changes.outputs.packages) }}
+    uses: ./.github/workflows/package-style.yml
+    with:
+      target_path: ${{ matrix.package }}
+      # Choice of Python versions to run against:
+      # * 3.9: the oldest supported version
+      # * 3.11: the latest officially supported version. Used in CE images.
+      python_version: '["3.9", "3.11"]'
+  pass:
+    # This is a final "check" job that depends on the other jobs, it always runs
+    # and will fail if a dependent job fails.
+    # This is what we require in our PR checks
+    if: always()
+    needs:
+      - changes
+      - tests
+      - style
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}
