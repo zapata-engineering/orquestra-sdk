@@ -340,7 +340,7 @@ def _iter_nodes(
 
 
 @singledispatch
-def _make_import_id(imp: _dsl.Import, import_hash: str):
+def _make_import_id(imp: _dsl.Import, import_hash: str) -> str:
     raise TypeError(f"Unknown import: {type(imp)}")
 
 
