@@ -36,7 +36,7 @@ on:
         type: boolean
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-coverage-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
