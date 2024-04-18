@@ -515,6 +515,7 @@ class TaskDef(wrapt.ObjectProxy, Generic[_TaskReturn]):
         custom_name: Optional[str] = None,
         fn_ref: Optional[FunctionRef] = None,
         max_retries: Optional[int] = None,
+        env_vars: Optional[Dict[str, str]] = None,
     ):
         if isinstance(fn, BuiltinFunctionType):
             raise NotImplementedError("Built-in functions are not supported as Tasks")
@@ -532,6 +533,7 @@ class TaskDef(wrapt.ObjectProxy, Generic[_TaskReturn]):
         self._source_import = source_import
         self._use_default_source_import = source_import is None
         self._max_retries = max_retries
+        self._env_vars = env_vars
 
         # task itself is not part of any workflow yet. Don't pass wf defaults
         self._resolve_task_source_data()
@@ -636,6 +638,7 @@ class TaskDef(wrapt.ObjectProxy, Generic[_TaskReturn]):
                 resources=self._resources,
                 custom_name=parse_custom_name(self._custom_name, signature),
                 custom_image=self._custom_image,
+                env_vars=self._env_vars,
             )
         )
 
@@ -701,6 +704,7 @@ class TaskInvocation(Generic[_TaskReturn]):
         resources: Resources = Resources(),
         custom_name: Optional[str] = None,
         custom_image: Optional[str] = None,
+        env_vars: Optional[Dict[str, str]] = None,
     ):
         self.task = task
         self.args = args
@@ -709,6 +713,7 @@ class TaskInvocation(Generic[_TaskReturn]):
         self.type = type
         self.custom_name = custom_name
         self.custom_image = custom_image
+        self.env_vars = env_vars
 
     def _asdict(self) -> Dict[str, Any]:
         return {
@@ -719,6 +724,7 @@ class TaskInvocation(Generic[_TaskReturn]):
             "resources": self.resources,
             "custom_name": self.custom_name,
             "custom_image": self.custom_image,
+            "env_vars": self.env_vars,
         }
 
 
@@ -745,10 +751,11 @@ class ArtifactFuture(Generic[_TaskReturn]):
 
     def __init__(
         self,
-        invocation: TaskInvocation[_TaskReturn],  # pyright: ignore
+        invocation: TaskInvocation[_TaskReturn],
         output_index: Optional[int] = None,
         custom_name: Optional[str] = DEFAULT_CUSTOM_NAME,
         serialization_format: ArtifactFormat = DEFAULT_SERIALIZATION_FORMAT,
+        env_vars: Optional[Dict[str, str]] = None,
     ):
         self.invocation = invocation
         # if the invocation returns multiple values, this the index in the output
@@ -757,6 +764,7 @@ class ArtifactFuture(Generic[_TaskReturn]):
         # metadata below
         self.custom_name = custom_name
         self.serialization_format = serialization_format
+        self.env_vars = env_vars
 
     def __repr__(self):
         return (
@@ -832,6 +840,12 @@ class ArtifactFuture(Generic[_TaskReturn]):
         custom_image: Optional[
             Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]  # pyright: ignore
         ] = Sentinel.NO_UPDATE,
+        env_vars: Optional[
+            Union[
+                Dict[str, str],
+                "orquestra.sdk._client._base._dsl.Sentinel",  # pyright: ignore
+            ]
+        ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
         """
         Assigns optional metadata related to task invocation used to generate this
@@ -851,6 +865,7 @@ class ArtifactFuture(Generic[_TaskReturn]):
             disk: amount of disk assigned to the task invocation
             gpu: amount of gpu assigned to the task invocation
             custom_image: docker image used to run the task invocation
+            env_vars: dict of environmental variables to be used in task
         """  # noqa: D205, D212
         self._check_if_destructured(
             fn_name=self.invocation.task._fn_name,
@@ -878,6 +893,11 @@ class ArtifactFuture(Generic[_TaskReturn]):
         else:
             new_custom_image = invocation.custom_image
 
+        if env_vars is not Sentinel.NO_UPDATE:
+            new_env_vars = env_vars
+        else:
+            new_env_vars = invocation.env_vars
+
         new_invocation = TaskInvocation(
             task=invocation.task,
             args=invocation.args,
@@ -885,6 +905,7 @@ class ArtifactFuture(Generic[_TaskReturn]):
             resources=new_resources,
             custom_name=invocation.custom_name,
             custom_image=new_custom_image,
+            env_vars=new_env_vars,
         )
 
         return ArtifactFuture(
@@ -966,6 +987,41 @@ class ArtifactFuture(Generic[_TaskReturn]):
         )
 
         return self.with_invocation_meta(custom_image=custom_image)
+
+    def with_env_variables(
+        self,
+        env_vars: Optional[
+            Union[
+                Dict[str, str],
+                "orquestra.sdk._client._base._dsl.Sentinel",  # pyright: ignore
+            ]  # pyright: ignore
+        ] = Sentinel.NO_UPDATE,
+    ) -> "ArtifactFuture":
+        """
+        Assigns optional metadata related to task invocation used to generate this
+        artifact.
+
+        Doesn't modify existing invocations, returns a new one.
+
+        Env vars passed to that function are directly passed to Ray runtime_env object.
+        This function overwrites env_vars set by the `env_vars` parameter in the task,
+        it does not append them.
+
+        Example usage::
+
+            text = capitalize("hello").with_env_variables(
+                {"MY_VAR_NAME": "MY_VAR_VALUE"}
+            )
+
+        Args:
+            env_vars: dict of all env variables to be set before task starts executing
+        """  # noqa: D205, D212
+        self._check_if_destructured(
+            fn_name=self.invocation.task._fn_name,
+            assign_type="env_vars",
+        )
+
+        return self.with_invocation_meta(env_vars=env_vars)
 
     def _check_if_destructured(self, fn_name: str, assign_type: str):
         """Check if an ArtifactFuture has been destructured.
@@ -1094,6 +1150,7 @@ def task(
     custom_image: Optional[str] = None,
     custom_name: Optional[str] = None,
     max_retries: Optional[int] = None,
+    env_vars: Optional[Dict[str, str]] = None,
 ) -> Callable[[Callable[..., _TaskReturn]], TaskDef[_TaskReturn]]:
     ...
 
@@ -1109,6 +1166,7 @@ def task(
     custom_image: Optional[str] = None,
     custom_name: Optional[str] = None,
     max_retries: Optional[int] = None,
+    env_vars: Optional[Dict[str, str]] = None,
 ) -> TaskDef[_TaskReturn]:
     ...
 
@@ -1123,6 +1181,7 @@ def task(
     custom_image: Optional[str] = None,
     custom_name: Optional[str] = None,
     max_retries: Optional[int] = None,
+    env_vars: Optional[Dict[str, str]] = None,
 ) -> Union[
     TaskDef[_TaskReturn], Callable[[Callable[..., _TaskReturn]], TaskDef[_TaskReturn]]
 ]:
@@ -1162,7 +1221,8 @@ def task(
             WARNING: retried workers might cause issues in MLflow logging, as retried
             workers share the same invocation ID, MLflow identifier will be shared
             between them.
-
+        env_vars: environmental variables that will be set on a worker before
+            the task is scheduled
     Raises:
         ValueError: when a task has fewer than 1 outputs.
     """
@@ -1200,6 +1260,7 @@ def task(
             custom_image=custom_image,
             custom_name=custom_name,
             max_retries=max_retries,
+            env_vars=env_vars,
         )
 
         return task_def

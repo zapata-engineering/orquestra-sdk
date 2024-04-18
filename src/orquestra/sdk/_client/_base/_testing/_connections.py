@@ -70,6 +70,10 @@ def make_ray_conn(storage_path: t.Optional[str] = None) -> t.Iterator[_dag.RayPa
     """
     cluster_url_env = os.getenv("RAY_CLUSTER_URL")
 
+    # variable used for testing of overwriting env variables in worker nodes.
+    # it needs to be set before ray cluster is started
+    os.environ["MY_NEW_SECRET_ENV"] = "SET_BEFORE_RAY_STARTS"
+
     with ray_suitable_temp_dir() as tmp_path:
         if cluster_url_env is not None:
             # Connecting to a background cluster?

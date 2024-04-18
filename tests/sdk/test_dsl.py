@@ -171,6 +171,7 @@ def test_task_invocation_as_dict():
         "kwargs": future.invocation.kwargs,
         "resources": future.invocation.resources,
         "custom_name": future.invocation.custom_name,
+        "env_vars": future.invocation.env_vars,
         "custom_image": future.invocation.custom_image,
         "type": future.invocation.type,
     }
@@ -554,6 +555,37 @@ def test_max_retries():
         ...
 
     assert task._max_retries == 5
+
+
+class TestEnvVars:
+    def test_simple_scenario(self):
+        @_dsl.task(env_vars={"X": "Y"})
+        def task():
+            ...
+
+        assert task._env_vars == {"X": "Y"}
+        artifact_future = task()
+        assert artifact_future.invocation.env_vars == {"X": "Y"}
+
+    def test_with_env_vars(self):
+        @_dsl.task(env_vars={"X": "Y"})
+        def task():
+            ...
+
+        new_artifact_future = task().with_env_variables({"W": "Z"})
+        original_artifact_future = task()
+        assert original_artifact_future.invocation.env_vars == {"X": "Y"}
+        assert new_artifact_future.invocation.env_vars == {"W": "Z"}
+
+    def test_chained_invocation_meta(self):
+        @_dsl.task
+        def task():
+            ...
+
+        new_artifact_future = (
+            task().with_custom_image("x").with_env_variables({"W": "Z"})
+        )
+        assert new_artifact_future.invocation.env_vars == {"W": "Z"}
 
 
 def test_default_import_type(monkeypatch):

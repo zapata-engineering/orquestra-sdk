@@ -1525,6 +1525,7 @@ class TestWorkflowDefRepoIntegration:
                 "workflow_with_different_resources",
                 "wf_with_explicit_n_outputs",
                 "cause_env_setup_error",
+                "get_env_before_task_executes_task",
             ]
 
         @staticmethod

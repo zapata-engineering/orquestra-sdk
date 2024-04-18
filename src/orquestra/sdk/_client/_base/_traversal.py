@@ -340,7 +340,7 @@ def _iter_nodes(
 
 
 @singledispatch
-def _make_import_id(imp: _dsl.Import, import_hash: str):
+def _make_import_id(imp: _dsl.Import, import_hash: str) -> str:
     raise TypeError(f"Unknown import: {type(imp)}")
 
 
@@ -754,6 +754,7 @@ def _make_invocation_model(
         output_ids=graph.output_ids_for_invocation(invocation),
         resources=_make_resources_model(invocation.resources),
         custom_image=invocation.custom_image,
+        env_vars=invocation.env_vars,
     )
 
 
