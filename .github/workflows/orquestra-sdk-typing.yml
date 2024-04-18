@@ -22,6 +22,9 @@ jobs:
   # The job ID has to match repo settings for PR required checks
   TypeChecking:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}/projects/orquestra-sdk
     timeout-minutes: 25
     steps:
       - name: Git Checkout
@@ -31,7 +34,7 @@ jobs:
         with:
           python-version: 3.11
           architecture: x64
-          cache: 'pip'
+          cache: "pip"
 
       # Installation method (venv/system/etc) affects Ray behavior. We're
       # installing deps to a venv to align with the most common use case.

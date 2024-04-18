@@ -24,6 +24,9 @@ jobs:
   # The job ID has to match repo settings for PR required checks
   style:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}/projects/orquestra-sdk
 
     name: Build Isolated Docs
     timeout-minutes: 25
@@ -37,7 +40,7 @@ jobs:
         with:
           python-version: 3.11
           architecture: x64
-          cache: 'pip'
+          cache: "pip"
 
       - name: Install deps
         shell: bash
