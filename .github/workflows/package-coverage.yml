@@ -106,8 +106,9 @@ jobs:
         # Conditionally run this step to prevent multiple comments
         # Occasionally, multiple jobs could post at the same time.
         if: matrix.print_coverage
-        uses: zapatacomputing/command-pr-comment@baca4fb9246eaaee3e47f35f296764acc394fae7
+        uses: zapatacomputing/command-pr-comment@47141d48f14d33b89f8d689ebda1604fbc0bf4e0
         with:
           command: make PYTHON=./venv/bin/python github-actions-coverage-report
           template: "🚀 Code Coverage\n```%command%```"
           update-text: "🚀 Code Coverage"
+          working-dir: ${{ inputs.target_path }}
