@@ -17,11 +17,9 @@ concurrency:
 
 jobs:
   tests:
-    # call the reusable workflow for the packages that changed
-    needs: changes
     strategy:
       matrix:
-        package: ${{ fromJSON(needs.changes.outputs.packages) }}
+        package: ["projects/orquestra-sdk"]
     uses: ./.github/workflows/package-style.yml
     with:
       target_path: ${{ matrix.package }}
@@ -30,11 +28,9 @@ jobs:
       python_versions: '["3.11"]'
       nightly: true
   style:
-    # call the reusable workflow for the packages that changed
-    needs: changes
     strategy:
       matrix:
-        package: ${{ fromJSON(needs.changes.outputs.packages) }}
+        package: ["projects/orquestra-sdk"]
     uses: ./.github/workflows/package-style.yml
     with:
       target_path: ${{ matrix.package }}
@@ -46,7 +42,6 @@ jobs:
     # This is what we require in our PR checks
     if: always()
     needs:
-      - changes
       - tests
       - style
     runs-on: ubuntu-latest
