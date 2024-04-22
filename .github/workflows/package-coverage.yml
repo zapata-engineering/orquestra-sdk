@@ -12,7 +12,7 @@ on:
         required: true
         type: string
       python_versions:
-        description: 'Python versions to run, ["3.11", "3.9"]'
+        description: "Python versions to run. Must be a JSON array. In PRs, the first version will be used to post a coverage comment"
         default: '["3.11", "3.9"]'
         type: string
       nightly:

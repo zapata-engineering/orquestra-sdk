@@ -45,9 +45,9 @@ jobs:
     with:
       target_path: ${{ matrix.package }}
       # Choice of Python versions to run against:
-      # * 3.9: the oldest supported version
       # * 3.11: the latest officially supported version. Used in CE images.
-      python_versions: '["3.9", "3.11"]'
+      # * 3.9: the oldest supported version
+      python_versions: '["3.11", "3.9"]'
   pass:
     # This is a final "check" job that depends on the other jobs, it always runs
     # and will fail if a dependent job fails.
