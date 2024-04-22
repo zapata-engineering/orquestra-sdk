@@ -64,7 +64,7 @@ dependencies = [
     # Capture stdout/stderr
     "wurlitzer>=3.0",
     # For dremio client
-    "pyarrow>=10.0",
+    "pyarrow>=10.0,<16.0",
     "pandas>=1.4",
 ]
 
