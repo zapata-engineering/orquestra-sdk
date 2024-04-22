@@ -403,7 +403,7 @@ def test_default_dependency_imports(dependency_imports, expected_imports):
 
 def test_with_resources_copy_imports():
     @sdk.workflow(
-        default_dependency_imports=sdk.PythonImports("abc"),
+        default_dependency_imports=[sdk.PythonImports("abc")],
         default_source_import=sdk.GitImport(repo_url="abc", git_ref="xyz"),
     )
     def my_workflow():
