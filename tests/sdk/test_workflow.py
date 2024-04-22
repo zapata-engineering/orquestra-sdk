@@ -401,7 +401,7 @@ def test_default_dependency_imports(dependency_imports, expected_imports):
     assert my_workflow._default_dependency_imports == expected_imports
 
 
-def test_with_resources_copy_imports():
+def test_with_resources_copies_imports():
     @sdk.workflow(
         default_dependency_imports=[sdk.PythonImports("abc")],
         default_source_import=sdk.GitImport(repo_url="abc", git_ref="xyz"),
