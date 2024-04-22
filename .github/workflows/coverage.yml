@@ -44,7 +44,7 @@ jobs:
     name: Coverage - Python ${{ matrix.python }} - ${{ matrix.os }}
 
     container:
-      image: python:${{ matrix.python }}-slim
+      image: python:${{ matrix.python }}
 
     steps:
       - uses: actions/checkout@v3
