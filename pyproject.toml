@@ -70,7 +70,7 @@ dependencies = [
 
 [project.optional-dependencies]
 ray = [
-    "ray[default]==2.9.0",
+    "ray[default]==2.11.0",
     "async-timeout",       # Ray depends on this, but its missing from ray requirements. Can be removed when https://github.com/ray-project/ray/issues/41267 is fixed.
 ]
 all = ["orquestra-sdk[ray]"]
