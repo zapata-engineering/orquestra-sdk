@@ -43,6 +43,9 @@ jobs:
 
     name: Coverage - Python ${{ matrix.python }} - ${{ matrix.os }}
 
+    container:
+      image: ubuntu:24.04
+
     steps:
       - uses: actions/checkout@v3
         with:
