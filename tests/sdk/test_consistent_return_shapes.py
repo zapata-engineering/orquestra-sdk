@@ -461,9 +461,10 @@ class TestCLI:
         m = re.match(
             r"Workflow Submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
         )
+
         assert (
             m is not None
-        ), f"STDOUT: {run_ce.stdout.decode()},\n\nSTDERR: {run_ce.stderr.decode()}"
+        ), f"STDOUT: {run_ray.stdout.decode()},\n\nSTDERR: {run_ray.stderr.decode()}"
         run_id_ray = m.group("run_id").strip()
         assert "Workflow Submitted!" in run_ce.stdout.decode()
 
@@ -524,7 +525,7 @@ class TestCLI:
         )
         assert (
             m is not None
-        ), f"STDOUT: {run_ce.stdout.decode()},\n\nSTDERR: {run_ce.stderr.decode()}"
+        ), f"STDOUT: {run_ray.stdout.decode()},\n\nSTDERR: {run_ray.stderr.decode()}"
         run_id_ray = m.group("run_id").strip()
         assert "Workflow Submitted!" in run_ce.stdout.decode()
 
@@ -597,7 +598,7 @@ class TestCLIDownloadDir:
         )
         assert (
             m is not None
-        ), f"STDOUT: {run_ce.stdout.decode()},\n\nSTDERR: {run_ce.stderr.decode()}"
+        ), f"STDOUT: {run_ray.stdout.decode()},\n\nSTDERR: {run_ray.stderr.decode()}"
         run_id_ray = m.group("run_id").strip()
         assert mock_ce_run_single in run_ce.stdout.decode()
 
@@ -677,7 +678,7 @@ class TestCLIDownloadDir:
         )
         assert (
             m is not None
-        ), f"STDOUT: {run_ce.stdout.decode()},\n\nSTDERR: {run_ce.stderr.decode()}"
+        ), f"STDOUT: {run_ray.stdout.decode()},\n\nSTDERR: {run_ray.stderr.decode()}"
         run_id_ray = m.group("run_id").strip()
         assert mock_ce_run_multiple in run_ce.stdout.decode()
 
