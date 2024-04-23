@@ -6,6 +6,12 @@ on:
   workflow_dispatch:
 jobs:
   # This job checks for the changed paths
+  # We take the `changes` output of the `filter-paths` step, and use it
+  # as the `packages` output of the `find-changes` job.
+  # This output is a list of the packages that should be tested. See the
+  # description of the `key` in the `filter-paths` step for more information.
+  # Example output:
+  #   packages: ["projects/orquestra-sdk"]
   find-changes:
     name: Get changed packages
     runs-on: ubuntu-latest
@@ -14,6 +20,11 @@ jobs:
     outputs:
       packages: ${{ steps.filter-paths.outputs.changes }}
     steps:
+      # This step takes `(key, value)` pairs as the `filters` input.
+      # The `key`, by convention in this repository, is the path to the project
+      # that we're checking to see is modified.
+      # The `value` is a list of paths that will cause this project's tests to
+      # be executed.
       - uses: dorny/paths-filter@v3
         id: filter-paths
         with:
