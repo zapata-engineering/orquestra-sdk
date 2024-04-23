@@ -6,16 +6,16 @@ on:
   workflow_dispatch:
 jobs:
   # This job checks for the changed paths
-  changes:
+  find-changes:
     name: Get changed packages
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
     outputs:
-      packages: ${{ steps.filter.outputs.changes }}
+      packages: ${{ steps.filter-paths.outputs.changes }}
     steps:
       - uses: dorny/paths-filter@v3
-        id: filter
+        id: filter-paths
         with:
           # We can codify the path dependencies between the packages here
           filters: |
@@ -24,10 +24,10 @@ jobs:
               - projects/orquestra-sdk/**
   tests:
     # call the reusable workflow for the packages that changed
-    needs: changes
+    needs: find-changes
     strategy:
       matrix:
-        package: ${{ fromJSON(needs.changes.outputs.packages) }}
+        package: ${{ fromJSON(needs.find-changes.outputs.packages) }}
     uses: ./.github/workflows/package-coverage.yml
     with:
       target_path: ${{ matrix.package }}
@@ -37,10 +37,10 @@ jobs:
       python_versions: '["3.11", "3.9"]'
   style:
     # call the reusable workflow for the packages that changed
-    needs: changes
+    needs: find-changes
     strategy:
       matrix:
-        package: ${{ fromJSON(needs.changes.outputs.packages) }}
+        package: ${{ fromJSON(needs.find-changes.outputs.packages) }}
     uses: ./.github/workflows/package-style.yml
     with:
       target_path: ${{ matrix.package }}
@@ -55,7 +55,7 @@ jobs:
     if: always()
     name: Check all tests passed
     needs:
-      - changes
+      - find-changes
       - tests
       - style
     runs-on: ubuntu-latest
