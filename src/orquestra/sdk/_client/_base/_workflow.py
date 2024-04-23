@@ -243,6 +243,8 @@ class WorkflowDef(Generic[_R]):
             data_aggregation=self._data_aggregation,
             workflow_args=self._workflow_args,
             workflow_kwargs=self._workflow_kwargs,
+            default_source_import=self.default_source_import,
+            default_dependency_imports=self.default_dependency_imports,
         )
 
 

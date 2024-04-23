@@ -399,3 +399,24 @@ def test_default_dependency_imports(dependency_imports, expected_imports):
         pass
 
     assert my_workflow._default_dependency_imports == expected_imports
+
+
+def test_with_resources_copies_imports():
+    @sdk.workflow(
+        default_dependency_imports=[sdk.PythonImports("abc")],
+        default_source_import=sdk.GitImport(repo_url="abc", git_ref="xyz"),
+    )
+    def my_workflow():
+        pass
+
+    initial_workflow = my_workflow()
+    modified_workflow = initial_workflow.with_resources(cpu="xyz")
+
+    assert (
+        initial_workflow.default_dependency_imports
+        == modified_workflow.default_dependency_imports
+    )
+    assert (
+        initial_workflow.default_source_import
+        == modified_workflow.default_source_import
+    )

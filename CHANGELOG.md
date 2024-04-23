@@ -19,6 +19,7 @@
 
 * `sdk.workflow(fn, resources=...)` will no longer show type errors from linters.
 * CLI log dumping now correctly saves stdout and stderr logs
+* `workflow().with_resources(...)` properly copies default source and dependency imports
 
 💅 *Improvements*
 
