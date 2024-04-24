@@ -27,7 +27,7 @@ jobs:
         working-directory: ${{ github.workspace }}/projects/orquestra-sdk
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:

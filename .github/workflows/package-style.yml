@@ -58,7 +58,7 @@ jobs:
     timeout-minutes: 25
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Load a specific version of Python
       - name: Setup python
@@ -93,5 +93,5 @@ jobs:
     name: Style - Ruff
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: chartboost/ruff-action@v1
