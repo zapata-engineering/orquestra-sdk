@@ -1,6 +1,24 @@
 # Changelog
 
-## Unreleased
+## v0.63.0
+
+🚨 *Breaking Changes*
+
+🔥 *Features*
+
+🧟 *Deprecations*
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+## v0.63.0
 
 🚨 *Breaking Changes*
 
@@ -11,23 +29,15 @@
 * Add new API `current_exec_ctx` which returns current `workspace_id` `project_id` and `config_name`. To be used inside a task.
 * Add `env_vars` parameter to task and `with_env_variables()` function to pass environmental variables for task execution
 
-🧟 *Deprecations*
-
-👩‍🔬 *Experimental*
-
 🐛 *Bug Fixes*
 
 * `sdk.workflow(fn, resources=...)` will no longer show type errors from linters.
 * CLI log dumping now correctly saves stdout and stderr logs
 * `workflow().with_resources(...)` properly copies default source and dependency imports
 
-💅 *Improvements*
-
 🥷 *Internal*
 
 * Refactored internal dir structure of the whole SDK repo
-
-📃 *Docs*
 
 ## v0.62.0
 
