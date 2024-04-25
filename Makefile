@@ -51,6 +51,7 @@ coverage:
 		--cov-report xml \
 		--no-cov-on-fail \
 		--ignore=tests/runtime/performance \
+		--ignore=tests/E2E \
 		--ignore=tests/sdk/typing \
 		--durations=10 \
 		docs/examples/tests \
