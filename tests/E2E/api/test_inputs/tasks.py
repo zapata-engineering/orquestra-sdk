@@ -45,9 +45,10 @@ def make_sum_git_task(
         pat = None
     else:
         pat = get_pat_secret(config=secret_config, workspace_id=secret_workspace)
-        assert (
-            github_username is not None
-        ), "Looks like you're testing a remote runtime. This test will make use of GithubImports. Please specify GH username!"
+        assert github_username is not None, (
+            "Looks like you're testing a remote runtime. "
+            "This test will make use of GithubImports. Please specify GH username!"
+        )
 
     @sdk.task(
         source_import=sdk.InlineImport(),

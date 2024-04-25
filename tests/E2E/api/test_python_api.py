@@ -1,8 +1,10 @@
-import orquestra.sdk as sdk
-from .test_inputs import wfs
 import time
 import warnings
+
+import orquestra.sdk as sdk
+
 from .cli_command_runner import run_orq_command
+from .test_inputs import wfs
 
 
 def _find_task_run(fn_name: str, wf_run: sdk.WorkflowRun) -> sdk.TaskRun:
@@ -23,9 +25,11 @@ def _find_task_run(fn_name: str, wf_run: sdk.WorkflowRun) -> sdk.TaskRun:
 
 
 def _run_scenario(config):
-    wf: sdk.WorkflowDef = wfs.add_some_ints(            secret_config=None,
-            secret_workspace=None,
-            github_username=None,)
+    wf: sdk.WorkflowDef = wfs.add_some_ints(
+        secret_config=None,
+        secret_workspace=None,
+        github_username=None,
+    )
     wf_run = wf.run(
         config,
     )
@@ -43,10 +47,14 @@ def _run_scenario(config):
         time.sleep(logs_wait_time)
 
         wf_logs = wf_run.get_logs()
-        assert "Adding two numbers:" in \
-               wf_logs.per_task["invocation-0-task-sum-with-logs"].out[0]
-        assert "Adding two numbers:" in \
-               wf_logs.per_task["invocation-1-task-sum-with-logs"].out[0]
+        assert (
+            "Adding two numbers:"
+            in wf_logs.per_task["invocation-0-task-sum-with-logs"].out[0]
+        )
+        assert (
+            "Adding two numbers:"
+            in wf_logs.per_task["invocation-1-task-sum-with-logs"].out[0]
+        )
 
         task_run = _find_task_run(fn_name="sum_with_logs", wf_run=wf_run)
         task_logs = task_run.get_logs()
@@ -59,8 +67,9 @@ def test_basic_scenario():
     ray_status_output = run_orq_command(["status"]).stdout
 
     # Ensure Ray is not running
-    assert "Not Running" in str(ray_status_output),\
-        "Ray is running before the test starts. Please stop ray manually."
+    assert "Not Running" in str(
+        ray_status_output
+    ), "Ray is running before the test starts. Please stop ray manually."
 
     # Start Ray
     ray_up_output = run_orq_command(["up"]).stdout
@@ -68,8 +77,9 @@ def test_basic_scenario():
 
     # double check that ray is actually running
     ray_status_output = run_orq_command(["status"]).stdout
-    assert "Not Running" not in str(ray_status_output), \
-        "Ray should be running at this point"
+    assert "Not Running" not in str(
+        ray_status_output
+    ), "Ray should be running at this point"
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", sdk.NotATaskWarning)
@@ -82,5 +92,6 @@ def test_basic_scenario():
 
     # Ensure Ray is not running
     ray_status_output = run_orq_command(["status"]).stdout
-    assert "Not Running" in str(ray_status_output),\
-        "Ray is running After test is concluded. Something went wrong"
+    assert "Not Running" in str(
+        ray_status_output
+    ), "Ray is running After test is concluded. Something went wrong"

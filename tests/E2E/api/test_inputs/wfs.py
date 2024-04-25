@@ -16,7 +16,11 @@ def add_some_ints(
 ):
     sum1 = tasks.sum_inline(10, 20)
     sum2 = tasks.sum_inline(sum1, 30)
-    sum3 = tasks.make_sum_git_task(secret_config=secret_config, secret_workspace=secret_workspace, github_username=github_username)(sum1, sum2)
+    sum3 = tasks.make_sum_git_task(
+        secret_config=secret_config,
+        secret_workspace=secret_workspace,
+        github_username=github_username,
+    )(sum1, sum2)
     # Two separate invocations that produce logs helps with smoke-testing.
     sum4 = tasks.sum_with_logs(sum1, sum2)
     sum5 = tasks.sum_with_logs(200, 300)
