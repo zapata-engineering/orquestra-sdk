@@ -2,6 +2,7 @@ import time
 import warnings
 
 import orquestra.sdk as sdk
+from orquestra.sdk.exceptions import UnsupportedRuntimeFeature
 
 from .cli_command_runner import run_orq_command
 from .test_inputs import wfs
@@ -82,6 +83,7 @@ def test_basic_scenario():
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", sdk.NotATaskWarning)
+        warnings.simplefilter("ignore", UnsupportedRuntimeFeature)
         for config in configs_to_test:
             _run_scenario(config=config)
 
