@@ -25,13 +25,12 @@ def _find_task_run(fn_name: str, wf_run: sdk.WorkflowRun) -> sdk.TaskRun:
 
 
 def _run_scenario(config):
-    wf: sdk.WorkflowDef = wfs.add_some_ints(
-        secret_config=None,
-        secret_workspace=None,
-        github_username=None,
-    )
+    wf: sdk.WorkflowDef = wfs.add_some_ints()
+
     wf_run = wf.run(
         config,
+        workspace_id="orquestra-sdk-e2e-tests-950291",
+        project_id="migration",
     )
 
     _ = wf_run.wait_until_finished()
@@ -40,7 +39,7 @@ def _run_scenario(config):
     computed_values = wf_run.get_results()
 
     assert status == sdk.State.SUCCEEDED
-    assert computed_values == (30, 90, 90, 500)
+    assert computed_values == (30, 60, 90, 500)
 
     if config != "in_process":
         logs_wait_time = 12
@@ -62,7 +61,7 @@ def _run_scenario(config):
 
 
 def test_basic_scenario():
-    configs_to_test = ["ray", "in_process"]
+    configs_to_test = ["ray", "in_process", "brown"]
 
     ray_status_output = run_orq_command(["status"]).stdout
 
