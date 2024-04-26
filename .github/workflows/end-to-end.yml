@@ -1,0 +1,73 @@
+# This workflow runs tests and reports code coverage.
+
+# We need a workflow name to be able to schedule it from Github UI
+name: end-to-end tests
+
+on:
+  # runs at midnight every work day
+  push:
+    branches:
+      - Morawiec/e2e
+
+  schedule:
+    - cron: '0 0 * * 1-5'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The job ID has to match repo settings for PR required checks
+  end-to-end-tests:
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 25
+
+    name: E2E - Python 3.11 - ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Fetch depth 0 required to compare against `main`
+          fetch-depth: 0
+
+      # Note no pip cache. We want to check the installation against the
+      # latest possible package versions.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+          architecture: x64
+
+
+      # Installation method (venv/system/etc) affects Ray behavior. We're
+      # installing deps to a venv to align with the most common use case.
+      # Hence, we'll need to ensure the venv is always activated. More info:
+      # https://stackoverflow.com/questions/74668349/how-to-activate-a-virtualenv-in-a-github-action
+      - name: Install deps
+        shell: bash
+        run: |
+          python3 -m venv ./venv
+          source ./venv/bin/activate
+          make github_actions
+
+      - name: Acquire e2e token
+        shell: bash
+        env:
+          URL:
+        run: |
+          source ./venv/bin/activate
+          CLIENT_ID="${{ secrets.E2E_CLIENT_ID }}"
+          CLIENT_SECRET="${{ secrets.E2E_CLIENT_SECRET }}"
+          URL="${{ secrets.E2E_CLUSTER_URL }}"
+          RESP=$(curl -k -XPOST "${URL}/auth/realms/platform/protocol/openid-connect/token" -d "grant_type=client_credentials&client_id=$CLIENT_ID&client_secret=$CLIENT_SECRET")
+          TOKEN=$(echo $RESP | jq -r '.access_token')
+          orq login -t $TOKEN -s "$URL"
+
+      - name: Run tests
+        shell: bash
+        run: |
+          source ./venv/bin/activate
+          make e2e

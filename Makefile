@@ -30,6 +30,9 @@ test:
 		docs/examples/tests \
 		tests
 
+e2e:
+	$(PYTHON) -m pytest \
+		tests/E2E
 
 # Min code-test coverage measured for the whole project required for CI checks to pass.
 MIN_COVERAGE=75
@@ -48,6 +51,7 @@ coverage:
 		--cov-report xml \
 		--no-cov-on-fail \
 		--ignore=tests/runtime/performance \
+		--ignore=tests/E2E \
 		--ignore=tests/sdk/typing \
 		--durations=10 \
 		docs/examples/tests \
