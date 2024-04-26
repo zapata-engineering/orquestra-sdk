@@ -55,14 +55,17 @@ jobs:
 
       - name: Acquire e2e token
         shell: bash
+        env:
+          URL:
         run: |
           source ./venv/bin/activate
           CLIENT_ID="${{ secrets.E2E_CLIENT_ID }}"
           CLIENT_SECRET="${{ secrets.E2E_CLIENT_SECRET }}"
-          RESP=$(curl -k -XPOST "${{ secrets.E2E_CLUSTER_URL }}/auth/realms/platform/protocol/openid-connect/token" -d "grant_type=client_credentials&client_id=$CLIENT_ID&client_secret=$CLIENT_SECRET")
+          URL="${{ secrets.E2E_CLUSTER_URL }}"
+          RESP=$(curl -k -XPOST "${URL}/auth/realms/platform/protocol/openid-connect/token" -d "grant_type=client_credentials&client_id=$CLIENT_ID&client_secret=$CLIENT_SECRET")
           TOKEN=$(echo $RESP | jq -r '.access_token')
           echo "ORQ_TOKEN=$TOKEN" >> $GITHUB_ENV
-          orq login -t $ORQ_TOKEN -s "${{ secrets.E2E_CLUSTER_URL }}"
+          orq login -t $ORQ_TOKEN -s "$URL"
 
       - name: Run tests
         shell: bash
