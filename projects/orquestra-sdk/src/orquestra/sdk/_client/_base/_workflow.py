@@ -273,12 +273,18 @@ class WorkflowDef(Generic[_R]):
         # None is a valid option, so we are using the Sentinel object pattern:
         # https://python-patterns.guide/python/sentinel-object/
 
-        resources = self._data_aggregation.resources
+        resources = (
+            self._data_aggregation.resources
+            if self._data_aggregation
+            else _dsl.Resources()
+        )
+
         new_resources = _dsl.Resources(
             cpu=resources.cpu if cpu is _dsl.Sentinel.NO_UPDATE else cpu,
             memory=resources.memory if memory is _dsl.Sentinel.NO_UPDATE else memory,
             disk=resources.disk if disk is _dsl.Sentinel.NO_UPDATE else disk,
         )
+
         new_data_aggregation = _dsl.DataAggregation(resources=new_resources)
         return WorkflowDef(
             name=self._name,
