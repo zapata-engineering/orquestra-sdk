@@ -165,6 +165,7 @@ class TestHeadNodeResources:
 
         modified_model = wf().with_head_node_resources(**override_resouces).model
 
+        assert modified_model.data_aggregation is not None
         assert modified_model.data_aggregation.resources == expected_resources
 
 
