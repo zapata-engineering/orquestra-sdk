@@ -98,22 +98,74 @@ def test_workflow_with_data_aggregation(data_agg):
     assert len(warns.list) == 1
 
 
-@pytest.mark.parametrize(
-    "head_node_resources, expected_data_agg",
-    (
-        (sdk.Resources(), sdk.DataAggregation(resources=sdk.Resources())),
-        (None, None),
-        (sdk.Resources(cpu="1"), sdk.DataAggregation(resources=sdk.Resources(cpu="1"))),
-    ),
-)
-def test_workflow_with_head_node_resources(head_node_resources, expected_data_agg):
-    @sdk.workflow(
-        head_node_resources=head_node_resources,
+class TestHeadNodeResources:
+    @pytest.mark.parametrize(
+        "head_node_resources, expected_data_agg",
+        (
+            (sdk.Resources(), sdk.DataAggregation(resources=sdk.Resources())),
+            (None, None),
+            (
+                sdk.Resources(cpu="1"),
+                sdk.DataAggregation(resources=sdk.Resources(cpu="1")),
+            ),
+        ),
     )
-    def wf():
-        return [_an_empty_task()]
+    def test_workflow_with_head_node_resources(
+        self, head_node_resources, expected_data_agg
+    ):
+        @sdk.workflow(
+            head_node_resources=head_node_resources,
+        )
+        def wf():
+            return [_an_empty_task()]
 
-    assert wf._data_aggregation == expected_data_agg
+        assert wf._data_aggregation == expected_data_agg
+
+    FULL_RESOURCES = {"cpu": "2", "memory": "32Gi", "disk": "1Ti"}
+
+    @pytest.mark.parametrize(
+        "decorator_resources,override_resouces,expected_resources",
+        [
+            # Override
+            (
+                FULL_RESOURCES,
+                {"cpu": "10"},
+                ir.Resources(cpu="10", memory="32Gi", disk="1Ti"),
+            ),
+            (
+                FULL_RESOURCES,
+                {"memory": "100Gi"},
+                ir.Resources(cpu="2", memory="100Gi", disk="1Ti"),
+            ),
+            (
+                FULL_RESOURCES,
+                {"disk": "1Gi"},
+                ir.Resources(cpu="2", memory="32Gi", disk="1Gi"),
+            ),
+            # No kwargs means no-op
+            ({}, {}, None),
+            (
+                FULL_RESOURCES,
+                {},
+                ir.Resources(cpu="2", memory="32Gi", disk="1Ti"),
+            ),
+            # Explicitly remove resources
+            (FULL_RESOURCES, {"cpu": None, "memory": None, "disk": None}, None),
+        ],
+    )
+    def test_with_head_resources_overrides(
+        self,
+        decorator_resources,
+        override_resouces,
+        expected_resources,
+    ):
+        @sdk.workflow(head_node_resources=sdk.Resources(**decorator_resources))
+        def wf():
+            return _an_empty_task()
+
+        modified_model = wf().with_head_node_resources(**override_resouces).model
+
+        assert modified_model.data_aggregation.resources == expected_resources
 
 
 class TestModelsSerializeProperly:
