@@ -1,7 +1,7 @@
-# This workflow runs typing tests
+# This workflow runs performance tests
 
 # We need a workflow name to be able to schedule it from Github UI
-name: Type Checking
+name: performance
 
 on:
   # Triggers the workflow on push to main
@@ -20,18 +20,20 @@ concurrency:
 
 jobs:
   # The job ID has to match repo settings for PR required checks
-  TypeChecking:
+  TestPerformance:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}/projects/orquestra-sdk
     timeout-minutes: 25
     steps:
-      - name: Git Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
           python-version: 3.11
           architecture: x64
-          cache: 'pip'
+          cache: "pip"
 
       # Installation method (venv/system/etc) affects Ray behavior. We're
       # installing deps to a venv to align with the most common use case.
@@ -44,8 +46,8 @@ jobs:
           source ./venv/bin/activate
           make github_actions
 
-      - name: Run type checking test
+      - name: Run performance test
         shell: bash
         run: |
           source ./venv/bin/activate
-          make user-typing
+          make performance

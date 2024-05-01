@@ -1,7 +1,9 @@
-# This workflow runs performance tests
+# This workflow builds Orquestra Workflow SDK docs just to validate we didn't
+# screw up the `.rst` syntax. The full public docs (docs.orquestra.io) are
+# built and deployed from a different repo.
 
 # We need a workflow name to be able to schedule it from Github UI
-name: performance
+name: docs
 
 on:
   # Triggers the workflow on push to main
@@ -20,22 +22,26 @@ concurrency:
 
 jobs:
   # The job ID has to match repo settings for PR required checks
-  TestPerformance:
+  style:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-    steps:
-      - uses: actions/checkout@v3
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}/projects/orquestra-sdk
 
-      - uses: actions/setup-python@v5
+    name: Build Isolated Docs
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Load a specific version of Python
+      - name: Setup python
+        uses: actions/setup-python@v5
         with:
           python-version: 3.11
           architecture: x64
-          cache: 'pip'
+          cache: "pip"
 
-      # Installation method (venv/system/etc) affects Ray behavior. We're
-      # installing deps to a venv to align with the most common use case.
-      # Hence, we'll need to ensure the venv is always activated. More info:
-      # https://stackoverflow.com/questions/74668349/how-to-activate-a-virtualenv-in-a-github-action
       - name: Install deps
         shell: bash
         run: |
@@ -43,8 +49,15 @@ jobs:
           source ./venv/bin/activate
           make github_actions
 
-      - name: Run performance test
+      - name: Run docs build
         shell: bash
         run: |
           source ./venv/bin/activate
-          make performance
+          make docs
+
+      - name: Store as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: docs-build
+          path: docs/_build
+          retention-days: 1

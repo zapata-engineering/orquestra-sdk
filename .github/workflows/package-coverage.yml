@@ -2,20 +2,41 @@
 
 # We need a workflow name to be able to schedule it from Github UI
 name: TestCoverage
-
 on:
-  # Triggers the workflow on push to main
-  push:
-    branches:
-      - main
-  # Triggers the workflow on any PR
-  pull_request:
-
-  # Allows you to run this workflow manually from the Actions tab
+  # workflow_call is what makes it reusable!
+  # we take the package path as the input
+  workflow_call:
+    inputs:
+      target_path:
+        description: "The path of the package"
+        required: true
+        type: string
+      python_versions:
+        description: "Python versions to run. Must be a JSON array. In PRs, the first version will be used to post a coverage comment"
+        default: '["3.11", "3.9"]'
+        type: string
+      nightly:
+        description: "If this is being executed nightly"
+        default: false
+        type: boolean
+  # sadly, we have to duplicate the inputs for workflow_dispatch
   workflow_dispatch:
+    inputs:
+      target_path:
+        description: "The path of the package"
+        required: true
+        type: string
+      python_versions:
+        description: 'Python versions to run, ["3.11", "3.9"]'
+        default: '["3.11", "3.9"]'
+        type: string
+      nightly:
+        description: "If this is being executed nightly"
+        default: false
+        type: boolean
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-coverage-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -23,20 +44,21 @@ jobs:
   TestCoverage:
     runs-on: ${{ matrix.os }}
 
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}/${{ inputs.target_path }}
+
     # Run jobs for a couple of Python versions and OSes.
     strategy:
       matrix:
         os: ["ubuntu-latest"]
-        # Choice of Python versions to run against:
-        # * 3.9: the oldest supported version
-        # * 3.11: the latest officially supported version. Used in CE images.
-        python: ["3.9", "3.11"]
+        python: ${{ fromJSON(inputs.python_versions) }}
         # Extend the matrix with a job that prints coverage.
         # Because { os: "ubuntu-latest", python: "3.11" } is already in the matrix,
         # print_coverage: true is added to that job.
         include:
           - os: "ubuntu-latest"
-            python: "3.11"
+            python: ${{ fromJSON(inputs.python_versions)[0] }}
             print_coverage: true
 
     timeout-minutes: 25
@@ -44,7 +66,7 @@ jobs:
     name: Coverage - Python ${{ matrix.python }} - ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # Fetch depth 0 required to compare against `main`
           fetch-depth: 0
@@ -53,7 +75,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
           architecture: x64
-          cache: 'pip'
+          cache: ${{ inputs.nightly == false && 'pip' || '' }}
 
       # Installation method (venv/system/etc) affects Ray behavior. We're
       # installing deps to a venv to align with the most common use case.
@@ -84,8 +106,9 @@ jobs:
         # Conditionally run this step to prevent multiple comments
         # Occasionally, multiple jobs could post at the same time.
         if: matrix.print_coverage
-        uses: zapatacomputing/command-pr-comment@baca4fb9246eaaee3e47f35f296764acc394fae7
+        uses: zapata-engineering/command-pr-comment@47141d48f14d33b89f8d689ebda1604fbc0bf4e0
         with:
           command: make PYTHON=./venv/bin/python github-actions-coverage-report
           template: "🚀 Code Coverage\n```%command%```"
           update-text: "🚀 Code Coverage"
+          working-dir: ${{ inputs.target_path }}

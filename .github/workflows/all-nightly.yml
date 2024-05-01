@@ -1,0 +1,52 @@
+# This workflow runs tests and reports code coverage.
+
+# We need a workflow name to be able to schedule it from Github UI
+name: NightlyDependencyCheck
+
+on:
+  # runs at midnight every work day
+  schedule:
+    - cron: "0 0 * * 1-5"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    strategy:
+      matrix:
+        package: ["projects/orquestra-sdk"]
+    uses: ./.github/workflows/package-style.yml
+    with:
+      target_path: ${{ matrix.package }}
+      # Choice of Python versions to run against:
+      # * 3.11: the latest officially supported version. Used in CE images.
+      python_versions: '["3.11"]'
+      nightly: true
+  style:
+    strategy:
+      matrix:
+        package: ["projects/orquestra-sdk"]
+    uses: ./.github/workflows/package-style.yml
+    with:
+      target_path: ${{ matrix.package }}
+      python_versions: '["3.11"]'
+      nightly: true
+  pass:
+    # This is a final "check" job that depends on the other jobs, it always runs
+    # and will fail if a dependent job fails.
+    # This is what we require in our PR checks
+    if: always()
+    needs:
+      - tests
+      - style
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}

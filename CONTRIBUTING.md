@@ -74,7 +74,10 @@ this repository from server-side releases."
 
 ### Where Should I Place My Code?
 
-There are three main directories within the codebase:
+This monorepo has the following packages:
+ - `projects/orquestra-sdk`
+ 
+Inside `orquestra-sdk`, there are three main directories within the codebase:
 
 - _shared
 - _runtime
