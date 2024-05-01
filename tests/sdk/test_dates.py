@@ -9,6 +9,7 @@ import re
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from freezegun import freeze_time
 
 import orquestra.sdk._shared.dates as dates
 
@@ -21,6 +22,15 @@ class TestNow:
 
         # Then
         assert instant.tzinfo is not None
+
+    @staticmethod
+    @freeze_time("2013-04-09")
+    def test_gets_current_time():
+        # When
+        instant = dates.now()
+
+        # Then
+        assert instant.date() == datetime(2013, 4, 9).date()
 
 
 class TestFromISOFormat:
