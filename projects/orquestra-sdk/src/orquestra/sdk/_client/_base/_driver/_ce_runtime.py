@@ -7,7 +7,14 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Protocol, Sequence, Union
 
-from orquestra.sdk._shared import Project, ProjectRef, Workspace, exceptions, serde
+from orquestra.sdk._shared import (
+    Project,
+    ProjectRef,
+    Workspace,
+    exceptions,
+    retry,
+    serde,
+)
 from orquestra.sdk._shared.abc import RuntimeInterface
 from orquestra.sdk._shared.exceptions import IgnoredFieldWarning
 from orquestra.sdk._shared.kubernetes.quantity import parse_quantity
@@ -39,7 +46,6 @@ from orquestra.sdk._shared.schema.workflow_run import (
     WorkspaceId,
 )
 
-from ..._base import _retry
 from . import _client, _exceptions, _models
 
 
@@ -264,7 +270,7 @@ class CERuntime(RuntimeInterface):
                 "- the authorization token was rejected by the remote cluster."
             ) from e
 
-    @_retry.retry(
+    @retry(
         attempts=5,
         delay=0.2,
         allowed_exceptions=(exceptions.WorkflowResultsNotReadyError,),

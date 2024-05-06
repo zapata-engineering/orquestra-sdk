@@ -2,10 +2,9 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 """Facade module for Ray API."""
-import time
 import typing as t
-import warnings
 
+from orquestra.sdk._shared import retry
 from orquestra.sdk._shared.exceptions import (
     NotFoundError,
     UserTaskFailedError,
@@ -88,31 +87,19 @@ else:
         def shutdown(self):
             ray.shutdown()
 
+        # Ray seems to have a race condition in its code while getting
+        # the task artifact.
+        # https://github.com/ray-project/ray/issues/45027
+        @retry(attempts=20, allowed_exceptions=(exceptions.RaySystemError,), delay=0.5)
         def get(
             self,
             obj_refs: t.Union[ray.ObjectRef, t.List[ray.ObjectRef]],
             timeout: t.Optional[float] = None,
         ):
-            loop_counter = 0
-            warning_printed = False
-            while True:
-                try:
-                    return ray.get(obj_refs, timeout=timeout)
-                except (UserTaskFailedError, exceptions.GetTimeoutError, ValueError):
-                    raise NotFoundError
-                except exceptions.RaySystemError as e:
-                    if loop_counter >= 20:
-                        raise
-                    else:
-                        # Ray seems to have a race condition in its code while getting
-                        # the task artifact.
-                        # https://github.com/ray-project/ray/issues/45027
-                        if not warning_printed:
-                            warning_printed = True
-                            warnings.warn(f"Ray get threw {e}. Retrying for 10s")
-                        time.sleep(0.5)
-                        loop_counter += 1
-                        continue
+            try:
+                return ray.get(obj_refs, timeout=timeout)
+            except (UserTaskFailedError, exceptions.GetTimeoutError, ValueError):
+                raise NotFoundError
 
         def remote(self, fn) -> t.Union[RemoteFunction, ActorClass]:
             return ray.remote(fn)
