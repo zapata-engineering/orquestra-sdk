@@ -8,6 +8,7 @@ from unittest.mock import DEFAULT, MagicMock, Mock, call, create_autospec
 import pytest
 
 import orquestra.sdk as sdk
+import orquestra.sdk._shared._retry
 from orquestra.sdk._client._base._driver import (
     _ce_runtime,
     _client,
@@ -652,7 +653,7 @@ class TestGetWorkflowRunResultsNonBlocking:
             mocked_client.get_workflow_run.return_value = workflow_run_status(
                 State.SUCCEEDED
             )
-            monkeypatch.setattr(_ce_runtime._retry.time, "sleep", Mock())
+            monkeypatch.setattr(orquestra.sdk._shared._retry.time, "sleep", Mock())
             # When
             with pytest.raises(exceptions.WorkflowResultsNotReadyError):
                 _ = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
@@ -674,7 +675,8 @@ class TestGetWorkflowRunResultsNonBlocking:
                 State.SUCCEEDED
             )
             monkeypatch.setattr(serde, "deserialize", lambda x: x)
-            monkeypatch.setattr(_ce_runtime._retry.time, "sleep", Mock())
+
+            monkeypatch.setattr(orquestra.sdk._shared._retry.time, "sleep", Mock())
             # When
             _ = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
 
