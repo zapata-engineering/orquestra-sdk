@@ -14,6 +14,8 @@
 
 🐛 *Bug Fixes*
 
+* Add retry on ray artifact read to fix `json.decode()` exceptions caused by ray race condition
+
 💅 *Improvements*
 
 🥷 *Internal*
