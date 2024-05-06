@@ -247,6 +247,57 @@ class WorkflowDef(Generic[_R]):
             default_dependency_imports=self.default_dependency_imports,
         )
 
+    def with_head_node_resources(
+        self,
+        *,
+        cpu: Optional[Union[str, _dsl.Sentinel]] = _dsl.Sentinel.NO_UPDATE,
+        memory: Optional[Union[str, _dsl.Sentinel]] = _dsl.Sentinel.NO_UPDATE,
+        disk: Optional[Union[str, _dsl.Sentinel]] = _dsl.Sentinel.NO_UPDATE,
+    ) -> "WorkflowDef":
+        """Assigns optional metadata related to this workflow definition object.
+
+        Doesn't modify the existing workflow definition, returns a new one.
+
+        Example usage::
+
+            wf_run = my_workflow().with_head_node_resources(
+                cpu="10", memory="10Gi"
+            ).run("my_cluster")
+
+        Args:
+            cpu: amount of cpu requested for the head node
+            memory: amount of memory requested for the head node
+            disk: amount of disk requested for the head node
+        """
+        # Only use the new properties if they have not been changed.
+        # None is a valid option, so we are using the Sentinel object pattern:
+        # https://python-patterns.guide/python/sentinel-object/
+
+        resources = (
+            self._data_aggregation.resources
+            if self._data_aggregation
+            else _dsl.Resources()
+        )
+
+        new_resources = _dsl.Resources(
+            cpu=resources.cpu if cpu is _dsl.Sentinel.NO_UPDATE else cpu,
+            memory=resources.memory if memory is _dsl.Sentinel.NO_UPDATE else memory,
+            disk=resources.disk if disk is _dsl.Sentinel.NO_UPDATE else disk,
+        )
+
+        new_data_aggregation = _dsl.DataAggregation(resources=new_resources)
+        return WorkflowDef(
+            name=self._name,
+            workflow_fn=self._fn,
+            fn_ref=self._fn_ref,
+            resources=self._resources,
+            data_aggregation=new_data_aggregation,
+            workflow_args=self._workflow_args,
+            workflow_kwargs=self._workflow_kwargs,
+            default_source_import=self.default_source_import,
+            default_dependency_imports=self.default_dependency_imports,
+        )
+
 
 class WorkflowTemplate(Generic[_P, _R]):
     """Result of applying the `@workflow` decorator to a function."""
