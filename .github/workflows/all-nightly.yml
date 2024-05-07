@@ -11,16 +11,12 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   tests:
     strategy:
       matrix:
         package: ["projects/orquestra-sdk"]
-    uses: ./.github/workflows/package-style.yml
+    uses: ./.github/workflows/package-coverage.yml
     with:
       target_path: ${{ matrix.package }}
       # Choice of Python versions to run against:

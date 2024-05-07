@@ -6,6 +6,7 @@
 import typing as t
 
 import pytest
+from typing_extensions import Required
 
 import orquestra.sdk as sdk
 from orquestra.sdk._client._base import _workflow
@@ -15,10 +16,10 @@ from orquestra.sdk._shared import exceptions
 _TaskResourcesArgs = t.TypedDict(
     "_TaskResourcesArgs",
     {
-        "cpu": t.Optional[str],
-        "memory": t.Optional[str],
-        "disk": t.Optional[str],
-        "gpu": t.Optional[str],
+        "cpu": Required[t.Optional[str]],
+        "memory": Required[t.Optional[str]],
+        "disk": Required[t.Optional[str]],
+        "gpu": Required[t.Optional[str]],
     },
     total=False,
 )
