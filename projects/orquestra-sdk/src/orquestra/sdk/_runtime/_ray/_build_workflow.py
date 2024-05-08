@@ -388,6 +388,7 @@ def _(imp: ir.PythonImports):
 
 @_pip_string.register
 def _(imp: ir.GitImport):
+    breakpoint()
     # Only download Git imports if a specific environment variable is set
     # Short circuit the Git import otherwise
     if os.getenv(RAY_DOWNLOAD_GIT_IMPORTS_ENV) != "1":
@@ -396,7 +397,7 @@ def _(imp: ir.GitImport):
     if not protocol.startswith("git+"):
         protocol = f"git+{protocol}"
     url = _build_git_url(imp.repo_url, protocol)
-    return [f"{url}@{imp.git_ref}"]
+    return [f"{url}@{imp.git_ref}[polars]"]
 
 
 def _import_pip_env(
@@ -530,7 +531,7 @@ def make_ray_dag(
     imports_pip_strings = {
         id_: _pip_string(imp) for id_, imp in workflow_def.imports.items()
     }
-
+    breakpoint()
     for invocation in iter_invocations_topologically(workflow_def):
         user_task = workflow_def.tasks[invocation.task_id]
         pos_args, pos_args_artifact_nodes = _gather_args(
