@@ -399,7 +399,9 @@ def _(imp: ir.GitImport):
 
     url_string = f"{url}@{imp.git_ref}"
     extras_string = "" if imp.extras is None else f"[{','.join(imp.extras)}]"
-    package_name_string = "" if imp.package_name is None else f"{imp.package_name}{extras_string} @ "
+    package_name_string = (
+        "" if imp.package_name is None else f"{imp.package_name}{extras_string} @ "
+    )
 
     return [f"{package_name_string}{url_string}"]
 

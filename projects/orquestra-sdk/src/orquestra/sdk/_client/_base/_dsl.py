@@ -133,8 +133,8 @@ class GitImportWithAuth:
     git_ref: str
     username: Optional[str]
     auth_secret: Optional[Secret]
-    package_name: Optional[str]
-    extras: Optional[List[str]]
+    package_name: Optional[str] = None
+    extras: Optional[List[str]] = None
 
 
 @dataclass(frozen=True, eq=True)
