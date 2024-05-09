@@ -55,7 +55,7 @@ class GitImport(BaseModel):
     repo_url: GitURL
     git_ref: str
     package_name: t.Optional[str] = None
-    extras: t.Optional[t.Tuple[str]] = None
+    extras: t.Optional[t.Tuple[str, ...]] = None
 
     # we need this in the JSON to know which class to use when deserializing
     type: t.Literal["GIT_IMPORT"] = "GIT_IMPORT"

@@ -253,7 +253,7 @@ class TestPipString:
                         repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
                         git_ref="mock",
                         package_name="pack_mock",
-                        extras=["extra_mock"],
+                        extras=("extra_mock",),
                     ),
                     ["pack_mock[extra_mock] @ git+ssh://git@mock/mock/mock@mock"],
                 ),
@@ -263,7 +263,7 @@ class TestPipString:
                         repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
                         git_ref="mock",
                         package_name="pack_mock",
-                        extras=["extra_mock", "e_mock"],
+                        extras=("extra_mock", "e_mock"),
                     ),
                     [
                         "pack_mock[extra_mock,e_mock] @ "
@@ -276,7 +276,7 @@ class TestPipString:
                         repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
                         git_ref="mock",
                         package_name=None,
-                        extras=["extra_mock", "e_mock"],
+                        extras=("extra_mock", "e_mock"),
                     ),
                     ["git+ssh://git@mock/mock/mock@mock"],
                 ),
