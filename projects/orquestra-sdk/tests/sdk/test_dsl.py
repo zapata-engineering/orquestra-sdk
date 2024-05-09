@@ -461,7 +461,7 @@ class TestGithubImport:
             repo_url="https://github.com/zapata-engineering/orquestra-sdk.git",
             git_ref="main",
             package_name="pkg",
-            extras=["my_extra"],
+            extras=("my_extra",),
             username=None,
             auth_secret=None,
         )
@@ -479,7 +479,7 @@ class TestGithubImport:
             repo_url="https://github.com/zapata-engineering/orquestra-sdk.git",
             git_ref="main",
             package_name="pkg",
-            extras=["my_extra", "my_another_extra"],
+            extras=("my_extra", "my_another_extra"),
             username=None,
             auth_secret=None,
         )

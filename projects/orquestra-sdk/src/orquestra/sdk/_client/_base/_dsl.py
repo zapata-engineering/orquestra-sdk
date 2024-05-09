@@ -134,7 +134,7 @@ class GitImportWithAuth:
     username: Optional[str]
     auth_secret: Optional[Secret]
     package_name: Optional[str] = None
-    extras: Optional[Tuple[str]] = None
+    extras: Optional[Tuple[str, ...]] = None
 
 
 @dataclass(frozen=True, eq=True)
