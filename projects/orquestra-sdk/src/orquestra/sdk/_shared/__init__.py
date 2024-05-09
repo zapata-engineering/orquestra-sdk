@@ -1,5 +1,6 @@
 from ._graphs import iter_invocations_topologically
 from ._regex import SEMVER_REGEX, VERSION_REGEX
+from ._retry import retry
 from ._spaces import Project, ProjectRef, Workspace
 
 __all__ = [
@@ -9,4 +10,5 @@ __all__ = [
     "Workspace",
     "SEMVER_REGEX",
     "iter_invocations_topologically",
+    "retry",
 ]

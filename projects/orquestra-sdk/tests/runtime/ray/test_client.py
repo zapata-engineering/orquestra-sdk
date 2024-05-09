@@ -10,12 +10,12 @@ from orquestra.sdk._runtime._ray._client import RayClient
 
 
 class TestClient:
-    class TestAddOptions:
-        @staticmethod
-        @pytest.fixture
-        def client():
-            return RayClient()
+    @staticmethod
+    @pytest.fixture
+    def client():
+        return RayClient()
 
+    class TestAddOptions:
         @staticmethod
         @pytest.fixture
         def remote_fn():
@@ -94,3 +94,41 @@ class TestClient:
                 max_retries=required_kwargs["max_retries"],
                 **expected_overrides,
             )
+
+    class TestOutput:
+        def test_retry_on_error(self, client: RayClient, monkeypatch):
+            import ray
+
+            import orquestra.sdk._shared._retry
+
+            get_mock = Mock()
+            get_mock.side_effect = [
+                ray.exceptions.RaySystemError(Mock()),
+                ray.exceptions.RaySystemError(Mock()),
+                ray.exceptions.RaySystemError(Mock()),
+                5,
+            ]
+
+            monkeypatch.setattr(ray, "get", get_mock)
+            monkeypatch.setattr(orquestra.sdk._shared._retry.time, "sleep", Mock())
+
+            ret_val = client.get(Mock())
+
+            assert ret_val == 5
+            assert get_mock.call_count == 4
+
+        def test_retry_on_error_always_fails(self, client: RayClient, monkeypatch):
+            import ray
+
+            import orquestra.sdk._shared._retry
+
+            get_mock = Mock()
+            get_mock.side_effect = [ray.exceptions.RaySystemError(Mock())] * 20
+
+            monkeypatch.setattr(ray, "get", get_mock)
+            monkeypatch.setattr(orquestra.sdk._shared._retry.time, "sleep", Mock())
+
+            with pytest.raises(ray.exceptions.RaySystemError):
+                client.get(Mock())
+
+            assert get_mock.call_count == 20
