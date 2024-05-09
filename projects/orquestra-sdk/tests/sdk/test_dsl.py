@@ -418,26 +418,71 @@ def test_deferred_git_import_resolved(my_fake_repo_setup):
     assert resolved.git_ref == my_fake_repo.active_branch.name
 
 
-@pytest.mark.parametrize(
-    "username,personal_access_token",
-    [
-        (None, None),
-        ("emiliano_zapata", _dsl.Secret("my_secret", workspace_id="ws")),
-    ],
-)
-def test_github_import_is_git_import_with_auth(username, personal_access_token):
-    imp = _dsl.GithubImport(
-        "zapata-engineering/orquestra-sdk",
-        "main",
-        username=username,
-        personal_access_token=personal_access_token,
+class TestGithubImport:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "username,personal_access_token",
+        [
+            (None, None),
+            ("emiliano_zapata", _dsl.Secret("my_secret", workspace_id="ws")),
+        ],
     )
-    assert imp == _dsl.GitImportWithAuth(
-        repo_url="https://github.com/zapata-engineering/orquestra-sdk.git",
-        git_ref="main",
-        username=username,
-        auth_secret=personal_access_token,
-    )
+    def test_github_import_is_git_import_with_auth(username, personal_access_token):
+        imp = _dsl.GithubImport(
+            "zapata-engineering/orquestra-sdk",
+            "main",
+            username=username,
+            personal_access_token=personal_access_token,
+        )
+        assert imp == _dsl.GitImportWithAuth(
+            repo_url="https://github.com/zapata-engineering/orquestra-sdk.git",
+            git_ref="main",
+            username=username,
+            auth_secret=personal_access_token,
+        )
+
+    @staticmethod
+    def test_extras_without_package_name_exception():
+        with pytest.raises(TypeError):
+            _dsl.GithubImport(
+                "zapata-engineering/orquestra-sdk", "main", extras=["my_extra"]
+            )
+
+    @staticmethod
+    def test_single_extra():
+        imp = _dsl.GithubImport(
+            "zapata-engineering/orquestra-sdk",
+            "main",
+            package_name="pkg",
+            extras="my_extra",
+        )
+
+        assert imp == _dsl.GitImportWithAuth(
+            repo_url="https://github.com/zapata-engineering/orquestra-sdk.git",
+            git_ref="main",
+            package_name="pkg",
+            extras=["my_extra"],
+            username=None,
+            auth_secret=None,
+        )
+
+    @staticmethod
+    def test_more_extras():
+        imp = _dsl.GithubImport(
+            "zapata-engineering/orquestra-sdk",
+            "main",
+            package_name="pkg",
+            extras=["my_extra", "my_another_extra"],
+        )
+
+        assert imp == _dsl.GitImportWithAuth(
+            repo_url="https://github.com/zapata-engineering/orquestra-sdk.git",
+            git_ref="main",
+            package_name="pkg",
+            extras=["my_extra", "my_another_extra"],
+            username=None,
+            auth_secret=None,
+        )
 
 
 def test_warns_when_no_workspace_provided():
