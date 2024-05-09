@@ -134,7 +134,7 @@ class GitImportWithAuth:
     username: Optional[str]
     auth_secret: Optional[Secret]
     package_name: Optional[str] = None
-    extras: Optional[List[str]] = None
+    extras: Optional[Tuple[str]] = None
 
 
 @dataclass(frozen=True, eq=True)
@@ -221,11 +221,13 @@ def GithubImport(
             "Due to PIP syntax restrictions, passing extras require" " package name."
         )
 
-    _extras: Optional[List[str]]
-    if isinstance(extras, str):
-        _extras = [extras]
+    _extras: Optional[Tuple[str]]
+    if extras is None:
+        _extras = None
+    elif isinstance(extras, str):
+        _extras = (extras,)
     else:
-        _extras = extras
+        _extras = tuple(extras)
 
     return GitImportWithAuth(
         repo_url=f"https://github.com/{repo}.git",

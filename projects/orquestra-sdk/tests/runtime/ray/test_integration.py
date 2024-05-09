@@ -22,7 +22,10 @@ from orquestra import sdk
 from orquestra.sdk._client._base._config import LOCAL_RUNTIME_CONFIGURATION
 from orquestra.sdk._client._base._testing import _example_wfs, _ipc
 from orquestra.sdk._runtime._ray import _build_workflow, _client, _dag, _ray_logs
-from orquestra.sdk._runtime._ray._env import RAY_TEMP_PATH_ENV
+from orquestra.sdk._runtime._ray._env import (
+    RAY_DOWNLOAD_GIT_IMPORTS_ENV,
+    RAY_TEMP_PATH_ENV,
+)
 from orquestra.sdk._shared import exceptions
 from orquestra.sdk._shared.abc import RuntimeInterface
 from orquestra.sdk._shared.schema import ir
@@ -1489,3 +1492,60 @@ class TestEnvVars:
         assert '"OVERWRITTEN_IN_WF"' in artifacts  # expected in inv3
         assert '"OVERWRITTEN"' in artifacts  # expected in inv1
         assert artifacts.count('"SET_BEFORE_RAY_STARTS"') == 2  # expected in inv2 and 4
+
+
+@pytest.mark.slow
+class TestGithubImportExtras:
+    def test_passing_extras(self, runtime: _dag.RayRuntime, monkeypatch):
+        @sdk.task(
+            dependency_imports=[
+                sdk.GithubImport(
+                    repo="SebastianMorawiec/test_repo", package_name="test_repo"
+                )
+            ]
+        )
+        def task_no_extra():
+            exception_happened = False
+
+            try:
+                import polars  # noqa
+            except ModuleNotFoundError:
+                exception_happened = True
+
+            assert exception_happened
+
+            return 21
+
+        @sdk.task(
+            dependency_imports=[
+                sdk.GithubImport(
+                    repo="SebastianMorawiec/test_repo",
+                    package_name="test_repo",
+                    extras="polars",
+                )
+            ]
+        )
+        def task_with_extra():
+            import polars  # noqa
+
+            return 36
+
+        @sdk.workflow
+        def wf():
+            return task_no_extra(), task_with_extra()
+
+        # Given
+        # This package should not be installed before running test
+        with pytest.raises(ModuleNotFoundError):
+            import polars  # type: ignore # noqa
+        monkeypatch.setenv(RAY_DOWNLOAD_GIT_IMPORTS_ENV, "1")
+
+        wf_model = wf().model
+        wf_run_id = runtime.create_workflow_run(wf_model, None, False)
+        _wait_to_finish_wf(wf_run_id, runtime, timeout=120)
+
+        results = runtime.get_workflow_run_outputs_non_blocking(wf_run_id)
+
+        artifacts = [res.value for res in results]
+
+        assert artifacts == ["21", "36"]

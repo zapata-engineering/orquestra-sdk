@@ -417,6 +417,8 @@ def _make_import_model(imp: _dsl.Import):
             id=id_,
             repo_url=url,
             git_ref=imp.git_ref,
+            package_name=imp.package_name,
+            extras=imp.extras,
         )
     elif isinstance(imp, _dsl.InlineImport):
         return ir.InlineImport(id=id_)

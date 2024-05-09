@@ -266,7 +266,8 @@ class TestPipString:
                         extras=["extra_mock", "e_mock"],
                     ),
                     [
-                        "pack_mock[extra_mock,e_mock] @ git+ssh://git@mock/mock/mock@mock"
+                        "pack_mock[extra_mock,e_mock] @ "
+                        "git+ssh://git@mock/mock/mock@mock"
                     ],
                 ),
                 (
