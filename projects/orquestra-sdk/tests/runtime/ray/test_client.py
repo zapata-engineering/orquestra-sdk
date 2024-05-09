@@ -116,3 +116,19 @@ class TestClient:
 
             assert ret_val == 5
             assert get_mock.call_count == 4
+
+        def test_retry_on_error_always_fails(self, client: RayClient, monkeypatch):
+            import ray
+
+            import orquestra.sdk._shared._retry
+
+            get_mock = Mock()
+            get_mock.side_effect = [ray.exceptions.RaySystemError(Mock())] * 20
+
+            monkeypatch.setattr(ray, "get", get_mock)
+            monkeypatch.setattr(orquestra.sdk._shared._retry.time, "sleep", Mock())
+
+            with pytest.raises(ray.exceptions.RaySystemError):
+                client.get(Mock())
+
+            assert get_mock.call_count == 20
