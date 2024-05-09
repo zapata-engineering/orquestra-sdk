@@ -4,6 +4,7 @@
 """Facade module for Ray API."""
 import typing as t
 
+from orquestra.sdk._shared import retry
 from orquestra.sdk._shared.exceptions import (
     NotFoundError,
     UserTaskFailedError,
@@ -86,6 +87,10 @@ else:
         def shutdown(self):
             ray.shutdown()
 
+        # Ray seems to have a race condition in its code while getting
+        # the task artifact.
+        # https://github.com/ray-project/ray/issues/45027
+        @retry(attempts=20, allowed_exceptions=(exceptions.RaySystemError,), delay=0.5)
         def get(
             self,
             obj_refs: t.Union[ray.ObjectRef, t.List[ray.ObjectRef]],
