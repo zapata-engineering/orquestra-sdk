@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022-2024 Zapata Computing Inc.
 ################################################################################
 
 """
@@ -54,6 +54,7 @@ class TestCommandTreeAssembly:
             ["workflow", "stop"],
             ["workflow", "logs"],
             ["workflow", "results"],
+            ["workflow", "graph"],
             ["task"],
             ["task", "results"],
             ["task", "logs"],
