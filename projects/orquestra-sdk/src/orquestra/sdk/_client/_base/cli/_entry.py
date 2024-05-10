@@ -463,7 +463,7 @@ server_config_group = cloup.OptionGroup(
 
 @login.command(hidden=True)
 @server_config_group.option(
-    "-c", "--config", required=False, help="The name of an existing configureation."
+    "-c", "--config", required=False, help="The name of an existing configuration."
 )
 @server_config_group.option(
     "-s", "--server", required=False, help="The server URI that you want to log into."
