@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023 - 2024 Zapata Computing Inc.
 ################################################################################
 """
 Unit tests for ``orquestra.sdk._base._dates``.
@@ -9,18 +9,28 @@ import re
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from freezegun import freeze_time
 
-from orquestra.sdk._shared.dates import _dates
+import orquestra.sdk._shared.dates as dates
 
 
 class TestNow:
     @staticmethod
     def test_is_tz_aware():
         # When
-        instant = _dates.now()
+        instant = dates.now()
 
         # Then
         assert instant.tzinfo is not None
+
+    @staticmethod
+    @freeze_time("2013-04-09")
+    def test_gets_current_time():
+        # When
+        instant = dates.now()
+
+        # Then
+        assert instant.date() == datetime(2013, 4, 9).date()
 
 
 class TestFromISOFormat:
@@ -30,7 +40,7 @@ class TestFromISOFormat:
         # Then
         with pytest.raises(ValueError):
             # When
-            _ = _dates.from_isoformat(formatted)
+            _ = dates.from_isoformat(formatted)
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -42,7 +52,7 @@ class TestFromISOFormat:
     )
     def test_has_timezone(formatted: str):
         # When
-        instant = _dates.from_isoformat(formatted)
+        instant = dates.from_isoformat(formatted)
 
         # Then
         assert instant.tzinfo is not None
@@ -56,20 +66,20 @@ class TestISOFormat:
         # Instant is supposed to represent only timezone-aware datetimes. This test case
         # deliberately uses timezone-naive object. Casting it to Instant anyway prevents
         # typechecker errors.
-        instant = _dates.Instant(dt)
+        instant = dates.Instant(dt)
 
         # Then
         with pytest.raises(ValueError):
             # When
-            _ = _dates.isoformat(instant)
+            _ = dates.isoformat(instant)
 
     @staticmethod
     def test_utc_input():
         # Given
-        instant = _dates.Instant(datetime.fromtimestamp(1687528083, timezone.utc))
+        instant = dates.Instant(datetime.fromtimestamp(1687528083, timezone.utc))
 
         # When
-        formatted = _dates.isoformat(instant)
+        formatted = dates.isoformat(instant)
 
         # Then
         assert formatted == "2023-06-23T13:48:03+00:00"
@@ -77,12 +87,12 @@ class TestISOFormat:
     @staticmethod
     def test_non_utc_input():
         # Given
-        instant = _dates.Instant(
+        instant = dates.Instant(
             datetime.fromtimestamp(1687528083, timezone(timedelta(hours=-4)))
         )
 
         # When
-        formatted = _dates.isoformat(instant)
+        formatted = dates.isoformat(instant)
 
         # Then
         assert formatted == "2023-06-23T09:48:03-04:00"
@@ -96,20 +106,20 @@ class TestLocalISOFormat:
         # Instant is supposed to represent only timezone-aware datetimes. This test case
         # deliberately uses timezone-naive object. Casting it to Instant anyway prevents
         # typechecker errors.
-        instant = _dates.Instant(dt)
+        instant = dates.Instant(dt)
 
         # Then
         with pytest.raises(ValueError):
             # When
-            _ = _dates.local_isoformat(instant)
+            _ = dates.local_isoformat(instant)
 
     @staticmethod
     def test_utc_input():
         # Given
-        instant = _dates.Instant(datetime.fromtimestamp(1687528083, timezone.utc))
+        instant = dates.Instant(datetime.fromtimestamp(1687528083, timezone.utc))
 
         # When
-        formatted = _dates.local_isoformat(instant)
+        formatted = dates.local_isoformat(instant)
 
         # Then
         # The output depends on the local time zone where the tests are run. We can work
@@ -119,12 +129,12 @@ class TestLocalISOFormat:
     @staticmethod
     def test_non_utc_input():
         # Given
-        instant = _dates.Instant(
+        instant = dates.Instant(
             datetime.fromtimestamp(1687528083, timezone(timedelta(hours=-4)))
         )
 
         # When
-        formatted = _dates.local_isoformat(instant)
+        formatted = dates.local_isoformat(instant)
 
         # Then
         # The output depends on the local time zone where the tests are run. We can work
@@ -140,19 +150,19 @@ class TestUnixTime:
         # Instant is supposed to represent only timezone-aware datetimes. This test case
         # deliberately uses timezone-naive object. Casting it to Instant anyway prevents
         # typechecker errors.
-        instant = _dates.Instant(dt)
+        instant = dates.Instant(dt)
 
         # Then
         with pytest.raises(ValueError):
             # When
-            _ = _dates.unix_time(instant)
+            _ = dates.unix_time(instant)
 
 
 class TestFromUnixTime:
     @staticmethod
     def test_has_timezone():
         # When
-        instant = _dates.from_unix_time(1687528083)
+        instant = dates.from_unix_time(1687528083)
 
         # Then
         assert instant.tzinfo is not None
@@ -161,10 +171,10 @@ class TestFromUnixTime:
     def test_roundtrip():
         # Given
         ts1 = 1687528083
-        instant = _dates.from_unix_time(ts1)
+        instant = dates.from_unix_time(ts1)
 
         # When
-        ts2 = _dates.unix_time(instant)
+        ts2 = dates.unix_time(instant)
 
         # Then
         assert ts2 == ts1
@@ -197,8 +207,8 @@ class TestFromComps:
     )
     def test_against_isoformat(kwargs, expected):
         # When
-        instant = _dates.from_comps(**kwargs)
-        formatted = _dates.isoformat(instant)
+        instant = dates.from_comps(**kwargs)
+        formatted = dates.isoformat(instant)
 
         # Then
         assert formatted == expected
@@ -230,8 +240,8 @@ class TestUTCFromComps:
     )
     def test_against_isoformat(kwargs, expected):
         # When
-        instant = _dates.utc_from_comps(**kwargs)
-        formatted = _dates.isoformat(instant)
+        instant = dates.utc_from_comps(**kwargs)
+        formatted = dates.isoformat(instant)
 
         # Then
         assert formatted == expected
