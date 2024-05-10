@@ -1,0 +1,77 @@
+---
+name: Test All
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  # This job checks for the changed paths
+  # We take the `changes` output of the `filter-paths` step, and use it
+  # as the `packages` output of the `find-changes` job.
+  # This output is a list of the packages that should be tested. See the
+  # description of the `key` in the `filter-paths` step for more information.
+  # Example output:
+  #   packages: ["projects/orquestra-sdk"]
+  find-changes:
+    name: Get changed packages
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      packages: ${{ steps.filter-paths.outputs.changes }}
+    steps:
+      # This step takes `(key, value)` pairs as the `filters` input.
+      # The `key`, by convention in this repository, is the path to the project
+      # that we're checking to see is modified.
+      # The `value` is a list of paths that will cause this project's tests to
+      # be executed.
+      - uses: dorny/paths-filter@v3
+        id: filter-paths
+        with:
+          # We can codify the path dependencies between the packages here
+          filters: |
+            projects/orquestra-sdk:
+              - .github/workflows/**
+              - projects/orquestra-sdk/**
+  tests:
+    # call the reusable workflow for the packages that changed
+    needs: find-changes
+    strategy:
+      matrix:
+        package: ${{ fromJSON(needs.find-changes.outputs.packages) }}
+    uses: ./.github/workflows/package-coverage.yml
+    with:
+      target_path: ${{ matrix.package }}
+      # Choice of Python versions to run against:
+      # * 3.11: the latest officially supported version. Used in CE images.
+      # * 3.9: the oldest supported version
+      python_versions: '["3.11", "3.9"]'
+  style:
+    # call the reusable workflow for the packages that changed
+    needs: find-changes
+    strategy:
+      matrix:
+        package: ${{ fromJSON(needs.find-changes.outputs.packages) }}
+    uses: ./.github/workflows/package-style.yml
+    with:
+      target_path: ${{ matrix.package }}
+      # Choice of Python versions to run against:
+      # * 3.11: the latest officially supported version. Used in CE images.
+      # * 3.9: the oldest supported version
+      python_versions: '["3.11", "3.9"]'
+  pass:
+    # This is a final "check" job that depends on the other jobs, it always runs
+    # and will fail if a dependent job fails.
+    # This is what we require in our PR checks
+    if: always()
+    name: Check all tests passed
+    needs:
+      - find-changes
+      - tests
+      - style
+    runs-on: ubuntu-latest
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}

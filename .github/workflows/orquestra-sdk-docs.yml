@@ -1,0 +1,63 @@
+# This workflow builds Orquestra Workflow SDK docs just to validate we didn't
+# screw up the `.rst` syntax. The full public docs (docs.orquestra.io) are
+# built and deployed from a different repo.
+
+# We need a workflow name to be able to schedule it from Github UI
+name: docs
+
+on:
+  # Triggers the workflow on push to main
+  push:
+    branches:
+      - main
+  # Triggers the workflow on any PR
+  pull_request:
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The job ID has to match repo settings for PR required checks
+  style:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}/projects/orquestra-sdk
+
+    name: Build Isolated Docs
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Load a specific version of Python
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+          architecture: x64
+          cache: "pip"
+
+      - name: Install deps
+        shell: bash
+        run: |
+          python3 -m venv ./venv
+          source ./venv/bin/activate
+          make github_actions
+
+      - name: Run docs build
+        shell: bash
+        run: |
+          source ./venv/bin/activate
+          make docs
+
+      - name: Store as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: docs-build
+          path: docs/_build
+          retention-days: 1

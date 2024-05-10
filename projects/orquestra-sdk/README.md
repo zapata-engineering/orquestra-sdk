@@ -1,26 +1,25 @@
-# Orquestra Workflow SDK Monorepo
+# Orquestra Workflow SDK
 
-## Monorepo
-
-This monorepo contains the different packages required to write and run workflows. Each package is located in `projects/`
-
-The following packages are included:
-
-- `orquestra-sdk`: the main client library for Orquestra Workflow SDK.
-
-## What is Orquestra Workflow SDK?
+## What is it?
 
 `orquestra-sdk` is a Python library for expressing and executing computational workflows locally and on the [Orquestra](https://www.zapatacomputing.com/orquestra) platform.
 
-Please see `projects/orquestra-sdk` for more information.
+`orquestra-sdk` provides:
 
-## Get started
+- A Python DSL to express your workflows
+- An API for managing and using secrets inside workflows
+- An API for executing and managing your workflows
+- A CLI tool for executing and managing workflows
 
-Orquestra Workflow SDK is published to PyPI and should be installed from there via `pip`. This will pull in any additional packages required to write and run workflows locally and remotely.
+## Installation
+
+Orquestra Workflow SDK is published to PyPI and should be installed from there via `pip`:
 
 ```bash
 pip install "orquestra-sdk[all]"
 ```
+
+## Usage
 
 Please refer to the [Orquestra Workflow SDK docs](https://docs.orquestra.io/docs/core/sdk/).
 
