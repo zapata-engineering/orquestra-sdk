@@ -221,7 +221,7 @@ def GithubImport(
             "Due to PIP syntax restrictions, passing extras require" " package name."
         )
 
-    _extras: Optional[Tuple[str]]
+    _extras: Optional[Tuple[str, ...]]
     if extras is None:
         _extras = None
     elif isinstance(extras, str):

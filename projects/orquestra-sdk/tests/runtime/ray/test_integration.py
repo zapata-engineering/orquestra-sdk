@@ -1508,7 +1508,7 @@ class TestGithubImportExtras:
             exception_happened = False
 
             try:
-                import polars  # noqa
+                import polars  # type: ignore # noqa
             except ModuleNotFoundError:
                 exception_happened = True
 
@@ -1526,7 +1526,7 @@ class TestGithubImportExtras:
             ]
         )
         def task_with_extra():
-            import polars  # noqa
+            import polars  # type: ignore # noqa
 
             return 36
 
