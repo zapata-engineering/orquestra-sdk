@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022-2024 Zapata Computing Inc.
 ################################################################################
 """"dorq" CLI entrypoint.
 
@@ -145,6 +145,17 @@ def submit(
 def view(wf_run_id: t.Optional[str], config: t.Optional[str]):
     """Prints details of a single workflow run that was already submitted."""
     from ._workflow._view import Action
+
+    action = Action()
+    action.on_cmd_call(wf_run_id, config)
+
+
+@workflow.command()
+@cloup.argument("wf_run_id", required=False)
+@CONFIG_OPTION
+def graph(wf_run_id: t.Optional[str], config: t.Optional[str]):
+    """Generate a graph of a single workflow."""
+    from ._workflow._graph import Action
 
     action = Action()
     action.on_cmd_call(wf_run_id, config)
