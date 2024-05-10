@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2024 Zapata Computing Inc.
 ################################################################################
 
 import re
@@ -199,32 +199,91 @@ class TestPipString:
         def patch_env(self, monkeypatch: pytest.MonkeyPatch):
             monkeypatch.setenv("ORQ_RAY_DOWNLOAD_GIT_IMPORTS", "1")
 
-        def test_http(self, patch_env):
-            imp = ir.GitImport(
-                id="mock-import",
-                repo_url=_git_url_utils.parse_git_url("https://mock/mock/mock"),
-                git_ref="mock",
-            )
-            pip = _build_workflow._pip_string(imp)
-            assert pip == ["git+https://mock/mock/mock@mock"]
-
-        def test_pip_ssh_format(self, patch_env):
-            imp = ir.GitImport(
-                id="mock-import",
-                repo_url=_git_url_utils.parse_git_url("ssh://git@mock/mock/mock"),
-                git_ref="mock",
-            )
-            pip = _build_workflow._pip_string(imp)
-            assert pip == ["git+ssh://git@mock/mock/mock@mock"]
-
-        def test_usual_ssh_format(self, patch_env):
-            imp = ir.GitImport(
-                id="mock-import",
-                repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
-                git_ref="mock",
-            )
-            pip = _build_workflow._pip_string(imp)
-            assert pip == ["git+ssh://git@mock/mock/mock@mock"]
+        @pytest.mark.parametrize(
+            "imp, expected",
+            [
+                (
+                    ir.GitImport(
+                        id="mock-import",
+                        repo_url=_git_url_utils.parse_git_url("https://mock/mock/mock"),
+                        git_ref="mock",
+                    ),
+                    ["git+https://mock/mock/mock@mock"],
+                ),
+                (
+                    ir.GitImport(
+                        id="mock-import",
+                        repo_url=_git_url_utils.parse_git_url(
+                            "ssh://git@mock/mock/mock"
+                        ),
+                        git_ref="mock",
+                    ),
+                    ["git+ssh://git@mock/mock/mock@mock"],
+                ),
+                (
+                    ir.GitImport(
+                        id="mock-import",
+                        repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
+                        git_ref="mock",
+                    ),
+                    ["git+ssh://git@mock/mock/mock@mock"],
+                ),
+                (
+                    ir.GitImport(
+                        id="mock-import",
+                        repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
+                        git_ref="mock",
+                        package_name="pack_mock",
+                    ),
+                    ["pack_mock @ git+ssh://git@mock/mock/mock@mock"],
+                ),
+                (
+                    ir.GitImport(
+                        id="mock-import",
+                        repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
+                        git_ref="mock",
+                        package_name="pack_mock",
+                        extras=None,
+                    ),
+                    ["pack_mock @ git+ssh://git@mock/mock/mock@mock"],
+                ),
+                (
+                    ir.GitImport(
+                        id="mock-import",
+                        repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
+                        git_ref="mock",
+                        package_name="pack_mock",
+                        extras=("extra_mock",),
+                    ),
+                    ["pack_mock[extra_mock] @ git+ssh://git@mock/mock/mock@mock"],
+                ),
+                (
+                    ir.GitImport(
+                        id="mock-import",
+                        repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
+                        git_ref="mock",
+                        package_name="pack_mock",
+                        extras=("extra_mock", "e_mock"),
+                    ),
+                    [
+                        "pack_mock[extra_mock,e_mock] @ "
+                        "git+ssh://git@mock/mock/mock@mock"
+                    ],
+                ),
+                (
+                    ir.GitImport(
+                        id="mock-import",
+                        repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
+                        git_ref="mock",
+                        package_name=None,
+                        extras=("extra_mock", "e_mock"),
+                    ),
+                    ["git+ssh://git@mock/mock/mock@mock"],
+                ),
+            ],
+        )
+        def test_build_pip_string(self, patch_env, imp, expected):
+            assert _build_workflow._pip_string(imp) == expected
 
         def test_no_env_set(self):
             imp = ir.GitImport(
