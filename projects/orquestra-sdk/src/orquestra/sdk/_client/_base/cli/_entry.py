@@ -10,6 +10,7 @@ from pathlib import Path
 
 import click
 import cloup
+from cloup.constraints import constraint, mutually_exclusive
 
 from orquestra.sdk._shared.schema.configs import RuntimeName
 
@@ -151,14 +152,57 @@ def view(wf_run_id: t.Optional[str], config: t.Optional[str]):
 
 
 @workflow.command()
-@cloup.argument("wf_run_id", required=False)
 @CONFIG_OPTION
-def graph(wf_run_id: t.Optional[str], config: t.Optional[str]):
+@WORKSPACE_OPTION
+@cloup.argument(
+    "workflow",
+    required=False,
+    help="""
+May be one of the following:\n
+1) Location of the module where the workflow is defined. Can be a dotted
+name like 'package.module' or a filepath like 'my_proj/workflows.py'. If
+it's a filepath, the project layout is assumed to be "flat-layout" or
+"src-layout" as defined by Setuptools:
+https://setuptools.pypa.io/en/latest/userguide/package_discovery.html#automatic-discovery.\n
+2) The workflow run ID of a previously submitted workflow.
+    """,
+)
+@cloup.option(
+    "--id",
+    type=str,
+    help="The ID of a previously submitted workflow. Replaces the WORKFLOW argument.",
+)
+@cloup.option(
+    "-m",
+    "--module",
+    type=str,
+    help="""
+Location of the module where the workflow is defined. Replaces the WORKFLOW argument.
+    """,
+)
+@constraint(mutually_exclusive, ["workflow", "id"])
+@constraint(mutually_exclusive, ["workflow", "module"])
+@constraint(mutually_exclusive, ["config", "module"])
+@constraint(mutually_exclusive, ["workspace_id", "module"])
+@constraint(mutually_exclusive, ["id", "module"])
+def graph(
+    workflow: t.Optional[str],
+    config: t.Optional[str],
+    workspace_id: t.Optional[str],
+    id: t.Optional[str],
+    module: t.Optional[str],
+):
     """Generate a graph of a single workflow."""
     from ._workflow._graph import Action
 
     action = Action()
-    action.on_cmd_call(wf_run_id, config)
+    action.on_cmd_call(
+        workflow=workflow,
+        config=config,
+        workspace_id=workspace_id,
+        wf_run_id=id,
+        module=module,
+    )
 
 
 @workflow.command(name="results", aliases=["outputs"])
@@ -355,6 +399,7 @@ def task_logs(*args, **kwargs):
     from ._task._logs import Action
 
     action = Action()
+
     action.on_cmd_call(*args, **kwargs)
 
 

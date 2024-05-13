@@ -14,7 +14,7 @@ import pytest
 from orquestra.sdk._client._base.cli import _entry
 from orquestra.sdk._client._base.cli._login import _login
 from orquestra.sdk._client._base.cli._services import _down, _up
-from orquestra.sdk._client._base.cli._workflow import _list
+from orquestra.sdk._client._base.cli._workflow import _graph, _list
 from orquestra.sdk._shared.schema.configs import RuntimeName
 
 
@@ -342,3 +342,221 @@ class TestRestart:
         mock_up_action.assert_called_once_with(
             manage_ray=ray_value, manage_all=all_value
         )
+
+
+class TestGraph:
+    class TestGraphOptions:
+
+        @staticmethod
+        @pytest.mark.parametrize(
+            "config, expected_config",
+            [
+                (["-c", "foo"], "foo"),
+                (["--config", "foo"], "foo"),
+                ([], None),
+            ],
+        )
+        @pytest.mark.parametrize(
+            "workspace, expected_workspace",
+            [
+                (["-w", "bar"], "bar"),
+                (["--workspace-id", "bar"], "bar"),
+                ([], None),
+            ],
+        )
+        @pytest.mark.parametrize(
+            "wf_run_id, expected_wf_run_id",
+            [
+                (["--id", "baz"], "baz"),
+                ([], None),
+            ],
+        )
+        def test_submitted_workflow(
+            entrypoint,
+            monkeypatch,
+            config: list[str],
+            expected_config: str,
+            workspace: list[str],
+            expected_workspace: str,
+            wf_run_id: list[str],
+            expected_wf_run_id: str,
+        ):
+            # GIVEN
+            entrypoint(["workflow", "graph"] + config + workspace + wf_run_id)
+
+            monkeypatch.setattr(sys, "exit", mock_exit := Mock())
+            monkeypatch.setattr(
+                _graph.Action,
+                "on_cmd_call",
+                mock_action := Mock(),
+            )
+
+            # When
+            _entry.main()
+
+            # Then
+            mock_action.assert_called_once_with(
+                workflow=None,
+                config=expected_config,
+                workspace_id=expected_workspace,
+                wf_run_id=expected_wf_run_id,
+                module=None,
+            )
+            mock_exit.assert_called_with(0)
+
+        @staticmethod
+        @pytest.mark.parametrize(
+            "module, expected_module",
+            [
+                (["-m", "foo"], "foo"),
+                (["--module", "foo"], "foo"),
+                ([], None),
+            ],
+        )
+        def test_local_definition(
+            entrypoint,
+            monkeypatch,
+            module: list[str],
+            expected_module: str,
+        ):
+            # GIVEN
+            entrypoint(["workflow", "graph"] + module)
+
+            monkeypatch.setattr(sys, "exit", mock_exit := Mock())
+            monkeypatch.setattr(
+                _graph.Action,
+                "on_cmd_call",
+                mock_action := Mock(),
+            )
+
+            # When
+            _entry.main()
+
+            # Then
+            mock_action.assert_called_once_with(
+                workflow=None,
+                config=None,
+                workspace_id=None,
+                wf_run_id=None,
+                module=expected_module,
+            )
+            mock_exit.assert_called_with(0)
+
+        @staticmethod
+        @pytest.mark.parametrize(
+            "additional_options, expected_options",
+            [
+                (
+                    [],
+                    {
+                        "config": None,
+                        "workspace_id": None,
+                        "wf_run_id": None,
+                        "module": None,
+                    },
+                ),
+                (
+                    ["-c", "foo"],
+                    {
+                        "config": "foo",
+                        "workspace_id": None,
+                        "wf_run_id": None,
+                        "module": None,
+                    },
+                ),
+                (
+                    ["-w", "foo"],
+                    {
+                        "config": None,
+                        "workspace_id": "foo",
+                        "wf_run_id": None,
+                        "module": None,
+                    },
+                ),
+                (
+                    ["-c", "foo", "-w", "bar"],
+                    {
+                        "config": "foo",
+                        "workspace_id": "bar",
+                        "wf_run_id": None,
+                        "module": None,
+                    },
+                ),
+            ],
+        )
+        def test_indeterminate(
+            entrypoint,
+            monkeypatch,
+            additional_options: list[str],
+            expected_options: dict,
+        ):
+            # GIVEN
+            entrypoint(
+                ["workflow", "graph", "<WORKFLOW SENTINEL>"] + additional_options
+            )
+
+            monkeypatch.setattr(sys, "exit", mock_exit := Mock())
+            monkeypatch.setattr(
+                _graph.Action,
+                "on_cmd_call",
+                mock_action := Mock(),
+            )
+
+            # When
+            _entry.main()
+
+            # Then
+            mock_action.assert_called_once_with(
+                workflow="<WORKFLOW SENTINEL>",
+                **expected_options,
+            )
+            mock_exit.assert_called_with(0)
+
+        @staticmethod
+        @pytest.mark.parametrize(
+            "arguments",
+            [
+                ["foo", "-m", "bar"],
+                ["foo", "--id", "bar"],
+                ["-m", "foo", "-c", "bar"],
+                ["-m", "foo", "-w", "bar"],
+                ["-m", "foo", "--id", "bar"],
+                ["--id", "foo", "-m", "bar"],
+            ],
+            ids=(
+                "Indeterminate workflow arg plus module option",
+                "Indeterminate workflow arg plut id option",
+                "module (local definition) and config (previously submitted)",
+                "module (local definition) and workspace (previously submitted)",
+                "module (local definition) and workflow id (previously submitted)",
+                "workflow run id (previously submitted) and module (local definition)",
+            ),
+        )
+        def test_clashing_options(
+            entrypoint, monkeypatch, arguments: list[str], capsys: pytest.CaptureFixture
+        ):
+            """
+            There are two use cases for `orq wf graph` - a local definition and a
+            previously submitted workflow. Here we test that combinations of arguments
+            that mix between these cases are rejected.
+            """
+            # GIVEN
+            entrypoint(["workflow", "graph"] + arguments)
+
+            monkeypatch.setattr(sys, "exit", mock_exit := Mock())
+            monkeypatch.setattr(
+                _graph.Action,
+                "on_cmd_call",
+                mock_action := Mock(),
+            )
+
+            # When
+            _entry.main()
+
+            # Then
+            mock_action.assert_not_called()
+            mock_exit.assert_called_with(2)
+            assert (
+                "the following parameters are mutually exclusive"
+                in capsys.readouterr().err
+            )
