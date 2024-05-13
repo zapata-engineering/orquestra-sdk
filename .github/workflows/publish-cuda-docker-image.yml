@@ -55,7 +55,7 @@ jobs:
           USER_TOKEN: ${{ secrets.PAGES_TOKEN }}
           repository: ${{github.repository}}
           ref: ${{ github.ref }}
-          path_to_dockerfile: 'projects/orquestra-sdk/docker/Dockerfile'
+          path_to_dockerfile: 'projects/orquestra-sdk/docker/cuda.Dockerfile'
           docker_context_path: 'projects/orquestra-sdk/docker'
           target_docker_repository: 'hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base'
           github_sha: ${{ github.sha }}
