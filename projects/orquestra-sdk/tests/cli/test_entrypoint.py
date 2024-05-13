@@ -401,6 +401,7 @@ class TestGraph:
                 workspace_id=expected_workspace,
                 wf_run_id=expected_wf_run_id,
                 module=None,
+                name=None,
             )
             mock_exit.assert_called_with(0)
 
@@ -413,14 +414,24 @@ class TestGraph:
                 ([], None),
             ],
         )
+        @pytest.mark.parametrize(
+            "name, expected_name",
+            [
+                (["-n", "bar"], "bar"),
+                (["--name", "bar"], "bar"),
+                ([], None),
+            ],
+        )
         def test_local_definition(
             entrypoint,
             monkeypatch,
             module: list[str],
             expected_module: str,
+            name: list[str],
+            expected_name: str,
         ):
             # GIVEN
-            entrypoint(["workflow", "graph"] + module)
+            entrypoint(["workflow", "graph"] + module + name)
 
             monkeypatch.setattr(sys, "exit", mock_exit := Mock())
             monkeypatch.setattr(
@@ -439,6 +450,7 @@ class TestGraph:
                 workspace_id=None,
                 wf_run_id=None,
                 module=expected_module,
+                name=expected_name,
             )
             mock_exit.assert_called_with(0)
 
@@ -453,6 +465,7 @@ class TestGraph:
                         "workspace_id": None,
                         "wf_run_id": None,
                         "module": None,
+                        "name": None,
                     },
                 ),
                 (
@@ -462,6 +475,7 @@ class TestGraph:
                         "workspace_id": None,
                         "wf_run_id": None,
                         "module": None,
+                        "name": None,
                     },
                 ),
                 (
@@ -471,6 +485,7 @@ class TestGraph:
                         "workspace_id": "foo",
                         "wf_run_id": None,
                         "module": None,
+                        "name": None,
                     },
                 ),
                 (
@@ -480,6 +495,17 @@ class TestGraph:
                         "workspace_id": "bar",
                         "wf_run_id": None,
                         "module": None,
+                        "name": None,
+                    },
+                ),
+                (
+                    ["-n", "foo"],
+                    {
+                        "config": None,
+                        "workspace_id": None,
+                        "wf_run_id": None,
+                        "module": None,
+                        "name": "foo",
                     },
                 ),
             ],
@@ -521,7 +547,9 @@ class TestGraph:
                 ["-m", "foo", "-c", "bar"],
                 ["-m", "foo", "-w", "bar"],
                 ["-m", "foo", "--id", "bar"],
-                ["--id", "foo", "-m", "bar"],
+                ["-n", "foo", "-c", "bar"],
+                ["-n", "foo", "-w", "bar"],
+                ["-n", "foo", "--id", "bar"],
             ],
             ids=(
                 "Indeterminate workflow arg plus module option",
@@ -529,7 +557,9 @@ class TestGraph:
                 "module (local definition) and config (previously submitted)",
                 "module (local definition) and workspace (previously submitted)",
                 "module (local definition) and workflow id (previously submitted)",
-                "workflow run id (previously submitted) and module (local definition)",
+                "name (local definition) and config (previously submitted)",
+                "name (local definition) and workspace (previously submitted)",
+                "name (local definition) and workflow id (previously submitted)",
             ),
         )
         def test_clashing_options(

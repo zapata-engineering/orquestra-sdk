@@ -180,17 +180,30 @@ https://setuptools.pypa.io/en/latest/userguide/package_discovery.html#automatic-
 Location of the module where the workflow is defined. Replaces the WORKFLOW argument.
     """,
 )
+@cloup.option(
+    "-n",
+    "--name",
+    required=False,
+    help="""
+Name of the workflow function to load from 'module'. If omitted, 'orq' will ask for
+selecting a function from the ones available in 'module'.
+""",
+)
 @constraint(mutually_exclusive, ["workflow", "id"])
 @constraint(mutually_exclusive, ["workflow", "module"])
 @constraint(mutually_exclusive, ["config", "module"])
+@constraint(mutually_exclusive, ["config", "name"])
 @constraint(mutually_exclusive, ["workspace_id", "module"])
+@constraint(mutually_exclusive, ["workspace_id", "name"])
 @constraint(mutually_exclusive, ["id", "module"])
+@constraint(mutually_exclusive, ["id", "name"])
 def graph(
     workflow: t.Optional[str],
     config: t.Optional[str],
     workspace_id: t.Optional[str],
     id: t.Optional[str],
     module: t.Optional[str],
+    name: t.Optional[str],
 ):
     """Generate a graph of a single workflow."""
     from ._workflow._graph import Action
@@ -202,6 +215,7 @@ def graph(
         workspace_id=workspace_id,
         wf_run_id=id,
         module=module,
+        name=name,
     )
 
 
