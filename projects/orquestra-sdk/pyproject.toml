@@ -135,7 +135,7 @@ packages = ["src/orquestra"]
 
 [tool.hatch.version]
 source = "vcs"
-tag-pattern = "^(?P<prefix>orquestra-sdk-)(?P<version>[vV]?\\d+\\.\\d+\\.\\d+)(?P<suffix>.*)?$"
+tag-pattern = "^(?P<prefix>orquestra-sdk-)(?P<version>[vV]?\\d+(?:\\.\\d+){0,2}[^\\+]*)(?:\\+.*)?$"
 
 [tool.hatch.version.raw-options]
 root = "../.."
