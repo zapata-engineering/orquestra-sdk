@@ -8,9 +8,9 @@ on:
         description: |
           Orquestra SDK requirement to build the image with. 
           Example of using a published version of the SDK:
-          orquestra-sdk[ray]==0.47.0 
+          orquestra-sdk[ray]==0.63.0
           Example of using an unpublished version:
-          orquestra-sdk[ray] @ git+https://github.com/zapata-engineering/orquestra-sdk.git@v0.47.0
+          orquestra-sdk[ray] @ git+https://github.com/zapata-engineering/orquestra-sdk.git@v0.63.0#subdirectory=projects/orquestra-sdk
       docker_tag:
         type: string
         description: |
@@ -55,8 +55,8 @@ jobs:
           USER_TOKEN: ${{ secrets.PAGES_TOKEN }}
           repository: ${{github.repository}}
           ref: ${{ github.ref }}
-          path_to_dockerfile: './docker/cuda.Dockerfile'
-          docker_context_path: 'docker'
+          path_to_dockerfile: 'projects/orquestra-sdk/docker/Dockerfile'
+          docker_context_path: 'projects/orquestra-sdk/docker'
           target_docker_repository: 'hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base'
           github_sha: ${{ github.sha }}
           build_number: ${{ github.run_number }}
