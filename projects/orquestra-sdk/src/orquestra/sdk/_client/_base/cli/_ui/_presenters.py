@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022-2024 Zapata Computing Inc.
 ################################################################################
 """Utilities for presenting human-readable text output from dorq commands.
 
@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import List, Optional, Sequence
 
 import click
+from graphviz.exceptions import ExecutableNotFound
 from rich.box import SIMPLE_HEAVY
 from rich.console import Console, Group, RenderableType
 from rich.live import Live
@@ -24,6 +25,7 @@ from rich.spinner import Spinner
 from rich.table import Column, Table
 from tabulate import tabulate
 
+from orquestra.sdk._client._base._viz import wf_def_to_graphviz
 from orquestra.sdk._shared import serde
 from orquestra.sdk._shared.dates import Instant, from_unix_time
 from orquestra.sdk._shared.logs import LogOutput, WorkflowLogs
@@ -33,7 +35,7 @@ from orquestra.sdk._shared.schema.configs import (
     RuntimeConfiguration,
     RuntimeName,
 )
-from orquestra.sdk._shared.schema.ir import ArtifactFormat
+from orquestra.sdk._shared.schema.ir import ArtifactFormat, WorkflowDef
 from orquestra.sdk._shared.schema.workflow_run import TaskInvocationId, WorkflowRunId
 
 from ...._base import _env
@@ -210,9 +212,11 @@ class ServicePresenter(RichPresenter):
         for svc in services:
             status_table.add_row(
                 svc.name,
-                "[green]Running[/green]"
-                if svc.is_running
-                else "[red]Not Running[/red]",
+                (
+                    "[green]Running[/green]"
+                    if svc.is_running
+                    else "[red]Not Running[/red]"
+                ),
                 svc.info or "",
             )
         self._console.print(status_table)
@@ -283,18 +287,22 @@ class ConfigPresenter:
                         click.style(config.config_name, bold=True),
                         #
                         # show runtime name, colour coded blue for CE and red for QE
-                        click.style(config.runtime_name, fg="blue")
-                        if config.runtime_name == RuntimeName.CE_REMOTE
-                        else click.style(config.runtime_name, fg="red"),
+                        (
+                            click.style(config.runtime_name, fg="blue")
+                            if config.runtime_name == RuntimeName.CE_REMOTE
+                            else click.style(config.runtime_name, fg="red")
+                        ),
                         #
                         # show cluster URI
                         config.runtime_options["uri"],
                         #
                         # show a green tick if the token is current, and a red cross if
                         # it is not.
-                        click.style("\u2713", fg="green")
-                        if status[config.config_name]
-                        else click.style("\u2A09", fg="red"),
+                        (
+                            click.style("\u2713", fg="green")
+                            if status[config.config_name]
+                            else click.style("\u2A09", fg="red")
+                        ),
                     ]
                     for config in configs
                 ],
@@ -424,9 +432,9 @@ class PromptPresenter:
         # There is also expectations that labels correspond to matching wfs list indices
         wfs = sorted(
             wfs,
-            key=lambda wf: wf.status.start_time
-            if wf.status.start_time
-            else from_unix_time(0),
+            key=lambda wf: (
+                wf.status.start_time if wf.status.start_time else from_unix_time(0)
+            ),
             reverse=True,
         )
 
@@ -482,3 +490,23 @@ class PromptPresenter:
         tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
 
         return tabulated_labels, projects
+
+
+class GraphPresenter:
+    """User-facing presentation for the graph representation of a workflow def."""
+
+    def view(self, workflow_def: WorkflowDef):
+        """Display the graph in a popup window.
+
+        Args:
+            workflow_def: The workflow definition on which the graph should be based.
+
+        Raises:
+            ExecutableNotFound: when there is not a global GraphViz install.
+        """
+        graph = wf_def_to_graphviz(workflow_def)
+
+        try:
+            graph.view(cleanup=True)
+        except ExecutableNotFound:
+            raise

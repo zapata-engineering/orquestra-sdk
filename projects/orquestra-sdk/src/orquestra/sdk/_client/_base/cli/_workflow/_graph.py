@@ -9,7 +9,7 @@ import typing as t
 from orquestra.sdk._shared.schema.configs import ConfigName
 from orquestra.sdk._shared.schema.workflow_run import WorkflowRunId
 
-from .. import _arg_resolvers, _repos
+from .. import _arg_resolvers
 from .._ui import _presenters
 
 
@@ -25,9 +25,8 @@ class Action:
 
     def __init__(
         self,
-        wf_run_presenter=_presenters.WFRunPresenter(),
         error_presenter=_presenters.WrappedCorqOutputPresenter(),
-        summary_repo=_repos.SummaryRepo(),
+        graph_presenter=_presenters.GraphPresenter(),
         config_resolver=_arg_resolvers.WFConfigResolver(),
         wf_run_resolver=_arg_resolvers.WFRunResolver(),
     ):
@@ -35,11 +34,11 @@ class Action:
         self._config_resolver = config_resolver
         self._wf_run_resolver = wf_run_resolver
 
-        self._summary_repo = summary_repo
-
         # text IO
-        self._wf_run_presenter = wf_run_presenter
         self._error_presenter = error_presenter
+
+        # graphical IO
+        self._graph_presenter = graph_presenter
 
     def on_cmd_call(self, *args, **kwargs):
         try:
@@ -50,7 +49,7 @@ class Action:
     def _on_cmd_call_with_exceptions(
         self, wf_run_id: t.Optional[WorkflowRunId], config: t.Optional[ConfigName]
     ):
-        # TODO (ORQSDK-1008)
         resolved_config = self._config_resolver.resolve(wf_run_id, config)
         wf_run = self._wf_run_resolver.resolve_run(wf_run_id, resolved_config)
-        pass
+
+        self._graph_presenter.view(wf_run.workflow_def)

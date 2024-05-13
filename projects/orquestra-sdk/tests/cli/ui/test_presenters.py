@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022-2024 Zapata Computing Inc.
 ################################################################################
 import sys
 import typing as t
@@ -20,7 +20,7 @@ from orquestra.sdk._shared._spaces._structs import Project, Workspace
 from orquestra.sdk._shared.dates._dates import Instant
 from orquestra.sdk._shared.logs._interfaces import LogOutput
 from orquestra.sdk._shared.schema.configs import RuntimeConfiguration
-from orquestra.sdk._shared.schema.ir import ArtifactFormat
+from orquestra.sdk._shared.schema.ir import ArtifactFormat, WorkflowDef
 from orquestra.sdk._shared.schema.responses import ResponseStatusCode, ServiceResponse
 from orquestra.sdk._shared.schema.workflow_run import RunStatus, State
 
@@ -923,3 +923,40 @@ class TestPromptPresenter:
 
             assert "id2" in labels[2]
             assert "name2" in labels[2]
+
+
+class TestGraphPresenter:
+    class TestView:
+        def test_default_file(self, monkeypatch):
+            # Given
+            mock_workflow_def = create_autospec(WorkflowDef)
+
+            monkeypatch.setattr(
+                _presenters,
+                "wf_def_to_graphviz",
+                mock_to_graphviz := Mock(return_value=(mock_graphviz := Mock())),
+            )
+
+            # When
+            _presenters.GraphPresenter().view(mock_workflow_def)
+
+            # Then
+            mock_to_graphviz.assert_called_once_with(mock_graphviz)
+            mock_graphviz.view.assert_called_once_with(cleanup=True)
+
+        def test_explicit_reraise(self, monkeypatch):
+            # Given
+            mock_workflow_def = create_autospec(WorkflowDef)
+            mock_workflow_def.view.side_effect = _presenters.ExecutableNotFound
+            monkeypatch.setattr(
+                _presenters,
+                "wf_def_to_graphviz",
+                mock_to_graphviz := Mock(return_value=(mock_workflow_def := Mock())),
+            )
+
+            # When
+            _presenters.GraphPresenter().view(mock_workflow_def)
+
+            # Then
+            mock_to_graphviz.assert_called_once_with(mock_workflow_def)
+            mock_workflow_def.view.assert_called_once_with(cleanup=True)
