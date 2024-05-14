@@ -133,6 +133,8 @@ class GitImportWithAuth:
     git_ref: str
     username: Optional[str]
     auth_secret: Optional[Secret]
+    package_name: Optional[str] = None
+    extras: Optional[Tuple[str, ...]] = None
 
 
 @dataclass(frozen=True, eq=True)
@@ -166,6 +168,8 @@ def GithubImport(
     git_ref: str = "main",
     username: Optional[str] = None,
     personal_access_token: Optional[Secret] = None,
+    package_name: Optional[str] = None,
+    extras: Optional[Union[List[str], str]] = None,
 ):
     """Helper to create GitImports from Github repos.
 
@@ -176,6 +180,11 @@ def GithubImport(
         username: the username used to access GitHub
         personal_access_token: must be configured in GitHub for access to the specified
             repo.
+        package_name: package name that will be used during pip install. Example:
+            my_package @ git+https://github.com/my_repo@main
+        extras: name of extra (or list of name of extras) to be installed from repo. Ex:
+            my_package[extra] @ git+https://github.com/my_repo@main
+            Due to pip restrictions, passing extras require package name to be passed
 
     Raises:
         TypeError: when a value that is not a `sdk.Secret` is passed as
@@ -207,12 +216,26 @@ def GithubImport(
                 " Support for default workspaces will be sunset in the future.",
                 FutureWarning,
             )
+    if extras is not None and package_name is None:
+        raise TypeError(
+            "Due to PIP syntax restrictions, passing extras require" " package name."
+        )
+
+    _extras: Optional[Tuple[str, ...]]
+    if extras is None:
+        _extras = None
+    elif isinstance(extras, str):
+        _extras = (extras,)
+    else:
+        _extras = tuple(extras)
 
     return GitImportWithAuth(
         repo_url=f"https://github.com/{repo}.git",
         git_ref=git_ref,
         username=username,
         auth_secret=personal_access_token,
+        extras=_extras,
+        package_name=package_name,
     )
 
 
