@@ -47,7 +47,13 @@ class Action:
             self._error_presenter.show_error(e)
 
     def _on_cmd_call_with_exceptions(
-        self, wf_run_id: t.Optional[WorkflowRunId], config: t.Optional[ConfigName]
+        self,
+        workflow: t.Optional[t.Union[WorkflowRunId, str]],
+        config: t.Optional[ConfigName],
+        workspace_id: t.Optional[str],
+        wf_run_id: t.Optional[WorkflowRunId],
+        module: t.Optional[str],
+        name: t.Optional[str],
     ):
         resolved_config = self._config_resolver.resolve(wf_run_id, config)
         wf_run = self._wf_run_resolver.resolve_run(wf_run_id, resolved_config)

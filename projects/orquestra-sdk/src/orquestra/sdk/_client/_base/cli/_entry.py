@@ -152,8 +152,6 @@ def view(wf_run_id: t.Optional[str], config: t.Optional[str]):
 
 
 @workflow.command()
-@CONFIG_OPTION
-@WORKSPACE_OPTION
 @cloup.argument(
     "workflow",
     required=False,
@@ -167,6 +165,7 @@ https://setuptools.pypa.io/en/latest/userguide/package_discovery.html#automatic-
 2) The workflow run ID of a previously submitted workflow.
     """,
 )
+@CONFIG_OPTION
 @cloup.option(
     "--id",
     type=str,
@@ -193,14 +192,11 @@ selecting a function from the ones available in 'module'.
 @constraint(mutually_exclusive, ["workflow", "module"])
 @constraint(mutually_exclusive, ["config", "module"])
 @constraint(mutually_exclusive, ["config", "name"])
-@constraint(mutually_exclusive, ["workspace_id", "module"])
-@constraint(mutually_exclusive, ["workspace_id", "name"])
 @constraint(mutually_exclusive, ["id", "module"])
 @constraint(mutually_exclusive, ["id", "name"])
 def graph(
     workflow: t.Optional[str],
     config: t.Optional[str],
-    workspace_id: t.Optional[str],
     id: t.Optional[str],
     module: t.Optional[str],
     name: t.Optional[str],
@@ -212,7 +208,6 @@ def graph(
     action.on_cmd_call(
         workflow=workflow,
         config=config,
-        workspace_id=workspace_id,
         wf_run_id=id,
         module=module,
         name=name,

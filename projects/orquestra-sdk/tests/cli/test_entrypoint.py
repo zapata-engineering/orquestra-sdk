@@ -357,14 +357,6 @@ class TestGraph:
             ],
         )
         @pytest.mark.parametrize(
-            "workspace, expected_workspace",
-            [
-                (["-w", "bar"], "bar"),
-                (["--workspace-id", "bar"], "bar"),
-                ([], None),
-            ],
-        )
-        @pytest.mark.parametrize(
             "wf_run_id, expected_wf_run_id",
             [
                 (["--id", "baz"], "baz"),
@@ -376,13 +368,11 @@ class TestGraph:
             monkeypatch,
             config: list[str],
             expected_config: str,
-            workspace: list[str],
-            expected_workspace: str,
             wf_run_id: list[str],
             expected_wf_run_id: str,
         ):
             # GIVEN
-            entrypoint(["workflow", "graph"] + config + workspace + wf_run_id)
+            entrypoint(["workflow", "graph"] + config + wf_run_id)
 
             monkeypatch.setattr(sys, "exit", mock_exit := Mock())
             monkeypatch.setattr(
@@ -398,7 +388,6 @@ class TestGraph:
             mock_action.assert_called_once_with(
                 workflow=None,
                 config=expected_config,
-                workspace_id=expected_workspace,
                 wf_run_id=expected_wf_run_id,
                 module=None,
                 name=None,
@@ -447,7 +436,6 @@ class TestGraph:
             mock_action.assert_called_once_with(
                 workflow=None,
                 config=None,
-                workspace_id=None,
                 wf_run_id=None,
                 module=expected_module,
                 name=expected_name,
@@ -462,7 +450,6 @@ class TestGraph:
                     [],
                     {
                         "config": None,
-                        "workspace_id": None,
                         "wf_run_id": None,
                         "module": None,
                         "name": None,
@@ -472,27 +459,6 @@ class TestGraph:
                     ["-c", "foo"],
                     {
                         "config": "foo",
-                        "workspace_id": None,
-                        "wf_run_id": None,
-                        "module": None,
-                        "name": None,
-                    },
-                ),
-                (
-                    ["-w", "foo"],
-                    {
-                        "config": None,
-                        "workspace_id": "foo",
-                        "wf_run_id": None,
-                        "module": None,
-                        "name": None,
-                    },
-                ),
-                (
-                    ["-c", "foo", "-w", "bar"],
-                    {
-                        "config": "foo",
-                        "workspace_id": "bar",
                         "wf_run_id": None,
                         "module": None,
                         "name": None,
@@ -502,7 +468,6 @@ class TestGraph:
                     ["-n", "foo"],
                     {
                         "config": None,
-                        "workspace_id": None,
                         "wf_run_id": None,
                         "module": None,
                         "name": "foo",
@@ -545,20 +510,16 @@ class TestGraph:
                 ["foo", "-m", "bar"],
                 ["foo", "--id", "bar"],
                 ["-m", "foo", "-c", "bar"],
-                ["-m", "foo", "-w", "bar"],
                 ["-m", "foo", "--id", "bar"],
                 ["-n", "foo", "-c", "bar"],
-                ["-n", "foo", "-w", "bar"],
                 ["-n", "foo", "--id", "bar"],
             ],
             ids=(
                 "Indeterminate workflow arg plus module option",
                 "Indeterminate workflow arg plut id option",
                 "module (local definition) and config (previously submitted)",
-                "module (local definition) and workspace (previously submitted)",
                 "module (local definition) and workflow id (previously submitted)",
                 "name (local definition) and config (previously submitted)",
-                "name (local definition) and workspace (previously submitted)",
                 "name (local definition) and workflow id (previously submitted)",
             ),
         )
