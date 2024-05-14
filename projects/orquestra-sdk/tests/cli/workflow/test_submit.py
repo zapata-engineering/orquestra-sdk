@@ -276,6 +276,7 @@ class TestAction:
                 error_presenter=error_presenter,
                 wf_run_repo=wf_run_repo,
                 wf_def_repo=wf_def_repo,
+                spaces_resolver=spaces_resolver,
                 wf_def_resolver=wf_def_resolver,
             )
 

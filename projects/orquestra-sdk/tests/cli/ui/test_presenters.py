@@ -936,7 +936,7 @@ class TestGraphPresenter:
             _presenters.GraphPresenter().view(mock_graph, file=None)
 
             # Then
-            mock_graph.view.assert_called_once_with(cleanup=True)
+            mock_graph.view.assert_called_once_with(filename=None, cleanup=True)
 
         @staticmethod
         def test_explicit_reraise():
@@ -949,7 +949,7 @@ class TestGraphPresenter:
                 _presenters.GraphPresenter().view(mock_graph, file=None)
 
             # Then
-            mock_graph.view.assert_called_once_with(cleanup=True)
+            mock_graph.view.assert_called_once_with(filename=None, cleanup=True)
 
         @staticmethod
         def test_custom_file():
