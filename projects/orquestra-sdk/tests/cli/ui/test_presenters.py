@@ -20,7 +20,7 @@ from orquestra.sdk._shared._spaces._structs import Project, Workspace
 from orquestra.sdk._shared.dates._dates import Instant
 from orquestra.sdk._shared.logs._interfaces import LogOutput
 from orquestra.sdk._shared.schema.configs import RuntimeConfiguration
-from orquestra.sdk._shared.schema.ir import ArtifactFormat, WorkflowDef
+from orquestra.sdk._shared.schema.ir import ArtifactFormat
 from orquestra.sdk._shared.schema.responses import ResponseStatusCode, ServiceResponse
 from orquestra.sdk._shared.schema.workflow_run import RunStatus, State
 

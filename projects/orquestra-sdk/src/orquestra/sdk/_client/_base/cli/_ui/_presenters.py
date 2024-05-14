@@ -35,7 +35,7 @@ from orquestra.sdk._shared.schema.configs import (
     RuntimeConfiguration,
     RuntimeName,
 )
-from orquestra.sdk._shared.schema.ir import ArtifactFormat, WorkflowDef
+from orquestra.sdk._shared.schema.ir import ArtifactFormat
 from orquestra.sdk._shared.schema.workflow_run import TaskInvocationId, WorkflowRunId
 
 from ...._base import _env

@@ -346,7 +346,6 @@ class TestRestart:
 
 class TestGraph:
     class TestGraphOptions:
-
         @staticmethod
         @pytest.mark.parametrize(
             "config, expected_config",
