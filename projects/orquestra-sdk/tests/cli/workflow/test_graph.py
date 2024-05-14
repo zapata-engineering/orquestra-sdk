@@ -24,6 +24,10 @@ class TestAction:
     """
 
     class TestDataPassing:
+        """
+        Verifies how we pass variables between subcomponents.
+        """
+
         @staticmethod
         def test_previously_submitted_workflow_explicit_path():
             """
@@ -135,3 +139,110 @@ class TestAction:
         error_presenter.assert_not_called()
         prompter.assert_not_called()
         wf_def_resolver.assert_not_called()
+
+    @staticmethod
+    def test_local_workflowdef_explicit_path():
+        """
+        Verifies how we pass variables between subcomponents.
+        """
+        # Given
+        # CLI inputs
+        module = "<module sentinel>"
+        name = "<name sentinel>"
+
+        # Mocks
+        error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
+        graph_presenter = create_autospec(_presenters.GraphPresenter)
+        config_resolver = create_autospec(_arg_resolvers.WFConfigResolver)
+        wf_run_resolver = create_autospec(_arg_resolvers.WFRunResolver)
+        wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
+        wf_def_resolver = create_autospec(_arg_resolvers.WFDefResolver)
+        prompter = create_autospec(_prompts.Prompter)
+
+        wf_def_repo.get_module_from_spec.return_value = (
+            resolved_module := "<resolved module sentinel>"
+        )
+        wf_def_resolver.resolve_fn_name.return_value = (
+            resolved_name := "<resolved fn name sentinel>"
+        )
+        wf_def_repo.get_workflow_def.return_value = create_autospec(
+            WorkflowRun, graph=(resolved_graph := "<graph sentinel>")
+        )
+
+        action = _graph.Action(
+            prompter=prompter,
+            error_presenter=error_presenter,
+            graph_presenter=graph_presenter,
+            config_resolver=config_resolver,
+            wf_run_resolver=wf_run_resolver,
+            wf_def_resolver=wf_def_resolver,
+            wf_def_repo=wf_def_repo,
+        )
+
+        # When
+        action.on_cmd_call(module=module, name=name)
+
+        # Then
+        wf_def_repo.get_module_from_spec.assert_called_once_with(module)
+        wf_def_resolver.resolve_fn_name.assert_called_once_with(resolved_module, name)
+        wf_def_repo.get_workflow_def.assert_called_once_with(
+            resolved_module, resolved_name
+        )
+        graph_presenter.view.assert_called_once_with(resolved_graph)
+
+        error_presenter.assert_not_called()
+        prompter.assert_not_called()
+        wf_def_resolver.assert_not_called()
+        config_resolver.assert_not_called()
+
+    @staticmethod
+    def test_local_workflowdef_implicit_path():
+        # Given
+        # CLI inputs
+        workflow = "<module sentinel>"
+        name = "<name sentinel>"
+
+        # Mocks
+        error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
+        graph_presenter = create_autospec(_presenters.GraphPresenter)
+        config_resolver = create_autospec(_arg_resolvers.WFConfigResolver)
+        wf_run_resolver = create_autospec(_arg_resolvers.WFRunResolver)
+        wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
+        wf_def_resolver = create_autospec(_arg_resolvers.WFDefResolver)
+        prompter = create_autospec(_prompts.Prompter)
+
+        wf_def_repo.get_module_from_spec.return_value = (
+            resolved_module := "<resolved module sentinel>"
+        )
+        wf_def_resolver.resolve_fn_name.return_value = (
+            resolved_name := "<resolved fn name sentinel>"
+        )
+        wf_def_repo.get_workflow_def.return_value = create_autospec(
+            WorkflowRun, graph=(resolved_graph := "<graph sentinel>")
+        )
+
+        action = _graph.Action(
+            prompter=prompter,
+            error_presenter=error_presenter,
+            graph_presenter=graph_presenter,
+            config_resolver=config_resolver,
+            wf_run_resolver=wf_run_resolver,
+            wf_def_resolver=wf_def_resolver,
+            wf_def_repo=wf_def_repo,
+        )
+
+        # When
+        action.on_cmd_call(workflow=workflow, name=name)
+
+        # Then
+        wf_def_repo.get_module_from_spec.assert_called_once_with(workflow)
+        wf_def_resolver.resolve_fn_name.assert_called_once_with(resolved_module, name)
+        wf_def_repo.get_workflow_def.assert_called_once_with(
+            resolved_module, resolved_name
+        )
+        graph_presenter.view.assert_called_once_with(resolved_graph)
+
+        error_presenter.assert_not_called()
+        prompter.assert_not_called()
+        wf_def_resolver.assert_not_called()
+        config_resolver.assert_not_called()
