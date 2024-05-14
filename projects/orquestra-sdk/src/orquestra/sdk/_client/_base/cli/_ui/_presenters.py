@@ -15,8 +15,8 @@ from pathlib import Path
 from typing import List, Optional, Sequence
 
 import click
-from graphviz import Digraph
-from graphviz.exceptions import ExecutableNotFound
+from graphviz import Digraph  # type: ignore
+from graphviz.exceptions import ExecutableNotFound  # type: ignore
 from rich.box import SIMPLE_HEAVY
 from rich.console import Console, Group, RenderableType
 from rich.live import Live

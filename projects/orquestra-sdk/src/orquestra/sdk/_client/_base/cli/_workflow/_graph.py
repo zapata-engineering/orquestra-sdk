@@ -7,7 +7,7 @@
 import typing as t
 from pathlib import Path
 
-from graphviz import Digraph
+from graphviz import Digraph  # type: ignore
 
 from orquestra.sdk._shared import exceptions
 from orquestra.sdk._shared.schema.configs import ConfigName
