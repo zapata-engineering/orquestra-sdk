@@ -927,24 +927,38 @@ class TestPromptPresenter:
 
 class TestGraphPresenter:
     class TestView:
-        def test_default_file(self, monkeypatch):
+        @staticmethod
+        def test_default_file():
             # Given
             mock_graph = create_autospec(_presenters.Digraph)
 
             # When
-            _presenters.GraphPresenter().view(mock_graph)
+            _presenters.GraphPresenter().view(mock_graph, file=None)
 
             # Then
             mock_graph.view.assert_called_once_with(cleanup=True)
 
-        def test_explicit_reraise(self, monkeypatch):
+        @staticmethod
+        def test_explicit_reraise():
             # Given
             mock_graph = create_autospec(_presenters.Digraph)
             mock_graph.view.side_effect = _presenters.ExecutableNotFound("foo")
 
             # When
             with pytest.raises(_presenters.ExecutableNotFound):
-                _presenters.GraphPresenter().view(mock_graph)
+                _presenters.GraphPresenter().view(mock_graph, file=None)
 
             # Then
             mock_graph.view.assert_called_once_with(cleanup=True)
+
+        @staticmethod
+        def test_custom_file():
+            # Given
+            mock_graph = create_autospec(_presenters.Digraph)
+            mock_file = create_autospec(Path)
+
+            # When
+            _presenters.GraphPresenter().view(mock_graph, file=mock_file)
+
+            # Then
+            mock_graph.view.assert_called_once_with(cleanup=True, filename=mock_file)

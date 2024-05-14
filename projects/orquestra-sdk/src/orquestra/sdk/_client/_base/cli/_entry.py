@@ -188,6 +188,15 @@ Name of the workflow function to load from 'module'. If omitted, 'orq' will ask 
 selecting a function from the ones available in 'module'.
 """,
 )
+@cloup.option(
+    "-f",
+    "--file",
+    help=(
+        "Path to store the generated graph. If passed, the command will create a pdf "
+        "file with this name and location."
+    ),
+    type=click.Path(file_okay=True, dir_okay=False, writable=True, path_type=Path),
+)
 @constraint(mutually_exclusive, ["workflow", "id"])
 @constraint(mutually_exclusive, ["workflow", "module"])
 @constraint(mutually_exclusive, ["config", "module"])
@@ -200,6 +209,7 @@ def graph(
     id: t.Optional[str],
     module: t.Optional[str],
     name: t.Optional[str],
+    file: t.Optional[Path],
 ):
     """Generate a graph of a single workflow."""
     from ._workflow._graph import Action
@@ -211,6 +221,7 @@ def graph(
         wf_run_id=id,
         module=module,
         name=name,
+        file=file,
     )
 
 

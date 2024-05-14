@@ -7,6 +7,7 @@ Tests that validate parsing CLI groups and commands.
 """
 
 import sys
+from pathlib import Path
 from unittest.mock import ANY, Mock
 
 import pytest
@@ -345,6 +346,13 @@ class TestRestart:
 
 
 class TestGraph:
+    @pytest.mark.parametrize(
+        "file, expected_file",
+        [
+            (["-f", "file"], Path("file")),
+            ([], None),
+        ],
+    )
     class TestGraphOptions:
         @staticmethod
         @pytest.mark.parametrize(
@@ -369,9 +377,11 @@ class TestGraph:
             expected_config: str,
             wf_run_id: list[str],
             expected_wf_run_id: str,
+            file: list[str],
+            expected_file: str,
         ):
             # GIVEN
-            entrypoint(["workflow", "graph"] + config + wf_run_id)
+            entrypoint(["workflow", "graph"] + config + wf_run_id + file)
 
             monkeypatch.setattr(sys, "exit", mock_exit := Mock())
             monkeypatch.setattr(
@@ -390,6 +400,7 @@ class TestGraph:
                 wf_run_id=expected_wf_run_id,
                 module=None,
                 name=None,
+                file=expected_file,
             )
             mock_exit.assert_called_with(0)
 
@@ -417,9 +428,11 @@ class TestGraph:
             expected_module: str,
             name: list[str],
             expected_name: str,
+            file: list[str],
+            expected_file: str,
         ):
             # GIVEN
-            entrypoint(["workflow", "graph"] + module + name)
+            entrypoint(["workflow", "graph"] + module + name + file)
 
             monkeypatch.setattr(sys, "exit", mock_exit := Mock())
             monkeypatch.setattr(
@@ -438,6 +451,7 @@ class TestGraph:
                 wf_run_id=None,
                 module=expected_module,
                 name=expected_name,
+                file=expected_file,
             )
             mock_exit.assert_called_with(0)
 
@@ -479,10 +493,12 @@ class TestGraph:
             monkeypatch,
             additional_options: list[str],
             expected_options: dict,
+            file: list[str],
+            expected_file: str,
         ):
             # GIVEN
             entrypoint(
-                ["workflow", "graph", "<WORKFLOW SENTINEL>"] + additional_options
+                ["workflow", "graph", "<WORKFLOW SENTINEL>"] + additional_options + file
             )
 
             monkeypatch.setattr(sys, "exit", mock_exit := Mock())
@@ -499,6 +515,7 @@ class TestGraph:
             mock_action.assert_called_once_with(
                 workflow="<WORKFLOW SENTINEL>",
                 **expected_options,
+                file=expected_file,
             )
             mock_exit.assert_called_with(0)
 
@@ -523,7 +540,12 @@ class TestGraph:
             ),
         )
         def test_clashing_options(
-            entrypoint, monkeypatch, arguments: list[str], capsys: pytest.CaptureFixture
+            entrypoint,
+            monkeypatch,
+            arguments: list[str],
+            capsys: pytest.CaptureFixture,
+            file: list[str],
+            expected_file: str,
         ):
             """
             There are two use cases for `orq wf graph` - a local definition and a
@@ -531,7 +553,7 @@ class TestGraph:
             that mix between these cases are rejected.
             """
             # GIVEN
-            entrypoint(["workflow", "graph"] + arguments)
+            entrypoint(["workflow", "graph"] + arguments + file)
 
             monkeypatch.setattr(sys, "exit", mock_exit := Mock())
             monkeypatch.setattr(

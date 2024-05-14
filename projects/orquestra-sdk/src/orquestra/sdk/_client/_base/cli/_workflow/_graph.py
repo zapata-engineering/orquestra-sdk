@@ -5,6 +5,7 @@
 """Code for 'orq workflow graph'."""
 
 import typing as t
+from pathlib import Path
 
 from graphviz import Digraph
 
@@ -67,6 +68,8 @@ class Action:
         # Local workflow def options
         module: t.Optional[str] = None,
         name: t.Optional[str] = None,
+        # Applies in all cases
+        file: t.Optional[Path] = None,
     ):
         # There are three ways to uniquely identify a workflow def: explicitly via the
         # wf_run_id argument; explicitly via the module argument; or implicitly via the
@@ -106,7 +109,7 @@ class Action:
                 )
 
         # Display the graph
-        self._graph_presenter.view(graph)
+        self._graph_presenter.view(graph, file)
 
     def _resolve_local_workflow_def_graph(
         self, module: str, name: t.Optional[str]

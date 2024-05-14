@@ -495,16 +495,17 @@ class PromptPresenter:
 class GraphPresenter:
     """User-facing presentation for the graph representation of a workflow def."""
 
-    def view(self, graph: Digraph):
+    def view(self, graph: Digraph, file: Optional[Path]):
         """Display the graph in a popup window.
 
         Args:
             graph: The graph to be shown.
+            file: If specified, the graph will be saved to the specified location.
 
         Raises:
             ExecutableNotFound: when there is not a global GraphViz install.
         """
         try:
-            graph.view(cleanup=True)
+            graph.view(filename=file, cleanup=True)
         except ExecutableNotFound:
             raise

@@ -6,7 +6,11 @@
 Unit tests for 'orq wf graph' glue code.
 """
 
+from pathlib import Path
+from typing import Optional
 from unittest.mock import create_autospec
+
+import pytest
 
 from orquestra.sdk._client._base.cli import _arg_resolvers, _repos
 from orquestra.sdk._client._base.cli._ui import _presenters, _prompts
@@ -15,6 +19,7 @@ from orquestra.sdk._shared.schema.ir import WorkflowDef
 from orquestra.sdk._shared.schema.workflow_run import WorkflowRun
 
 
+@pytest.mark.parametrize("file", [None, create_autospec(Path)])
 class TestAction:
     """
     Test boundaries::
@@ -29,7 +34,7 @@ class TestAction:
         """
 
         @staticmethod
-        def test_previously_submitted_workflow_explicit_path():
+        def test_previously_submitted_workflow_explicit_path(file: Optional[Path]):
             """
             Verifies how we pass variables between subcomponents.
             """
@@ -70,7 +75,7 @@ class TestAction:
             )
 
             # When
-            action.on_cmd_call(wf_run_id=wf_run_id, config=config)
+            action.on_cmd_call(wf_run_id=wf_run_id, config=config, file=file)
 
             # Then
             # We should pass input CLI args to config resolver.
@@ -80,13 +85,13 @@ class TestAction:
             wf_run_resolver.resolve_run.assert_called_with(wf_run_id, resolved_config)
 
             # We expect printing the workflow run returned from the repo.
-            graph_presenter.view.assert_called_with(resolved_graph)
+            graph_presenter.view.assert_called_with(resolved_graph, file)
             error_presenter.assert_not_called()
             prompter.assert_not_called()
             wf_def_resolver.assert_not_called()
 
     @staticmethod
-    def test_previously_submitted_workflow_implicit_path():
+    def test_previously_submitted_workflow_implicit_path(file: Optional[Path]):
         """
         Verifies how we pass variables between subcomponents.
         """
@@ -125,7 +130,7 @@ class TestAction:
         )
 
         # When
-        action.on_cmd_call(workflow=workflow, config=config)
+        action.on_cmd_call(workflow=workflow, config=config, file=file)
 
         # Then
         # We should pass input CLI args to config resolver.
@@ -135,13 +140,13 @@ class TestAction:
         wf_run_resolver.resolve_run.assert_called_with(workflow, resolved_config)
 
         # We expect printing the workflow run returned from the repo.
-        graph_presenter.view.assert_called_with(resolved_graph)
+        graph_presenter.view.assert_called_with(resolved_graph, file)
         error_presenter.assert_not_called()
         prompter.assert_not_called()
         wf_def_resolver.assert_not_called()
 
     @staticmethod
-    def test_local_workflowdef_explicit_path():
+    def test_local_workflowdef_explicit_path(file: Optional[Path]):
         """
         Verifies how we pass variables between subcomponents.
         """
@@ -180,7 +185,7 @@ class TestAction:
         )
 
         # When
-        action.on_cmd_call(module=module, name=name)
+        action.on_cmd_call(module=module, name=name, file=file)
 
         # Then
         wf_def_repo.get_module_from_spec.assert_called_once_with(module)
@@ -188,7 +193,7 @@ class TestAction:
         wf_def_repo.get_workflow_def.assert_called_once_with(
             resolved_module, resolved_name
         )
-        graph_presenter.view.assert_called_once_with(resolved_graph)
+        graph_presenter.view.assert_called_once_with(resolved_graph, file)
 
         error_presenter.assert_not_called()
         prompter.assert_not_called()
@@ -196,7 +201,7 @@ class TestAction:
         config_resolver.assert_not_called()
 
     @staticmethod
-    def test_local_workflowdef_implicit_path():
+    def test_local_workflowdef_implicit_path(file: Optional[Path]):
         # Given
         # CLI inputs
         workflow = "<module sentinel>"
@@ -232,7 +237,7 @@ class TestAction:
         )
 
         # When
-        action.on_cmd_call(workflow=workflow, name=name)
+        action.on_cmd_call(workflow=workflow, name=name, file=file)
 
         # Then
         wf_def_repo.get_module_from_spec.assert_called_once_with(workflow)
@@ -240,7 +245,7 @@ class TestAction:
         wf_def_repo.get_workflow_def.assert_called_once_with(
             resolved_module, resolved_name
         )
-        graph_presenter.view.assert_called_once_with(resolved_graph)
+        graph_presenter.view.assert_called_once_with(resolved_graph, file)
 
         error_presenter.assert_not_called()
         prompter.assert_not_called()
