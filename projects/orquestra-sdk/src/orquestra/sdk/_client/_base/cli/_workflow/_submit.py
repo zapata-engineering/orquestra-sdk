@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023 - 2024 Zapata Computing Inc.
 ################################################################################
 """Code for 'orq workflow submit'."""
 import typing as t
@@ -97,7 +97,7 @@ class Action:
         else:
             # Get all workflow def names in the module
             try:
-                wf_names = self._wf_def_repo.get_worklow_names(resolved_module)
+                wf_names = self._wf_def_repo.get_workflow_names(resolved_module)
             except exceptions.NoWorkflowDefinitionsFound:
                 # Explicit re-raise
                 raise

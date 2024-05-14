@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023 - 2024 Zapata Computing Inc.
 ################################################################################
 """
 Tests for repos. Isolated unit tests unless explicitly named as integration.
@@ -1497,7 +1497,7 @@ class TestWorkflowDefRepoIntegration:
             repo = _repos.WorkflowDefRepo()
 
             # When
-            names = repo.get_worklow_names(_example_wfs)
+            names = repo.get_workflow_names(_example_wfs)
 
             # Then
             assert names == [
@@ -1539,7 +1539,7 @@ class TestWorkflowDefRepoIntegration:
             # Then
             with pytest.raises(exceptions.NoWorkflowDefinitionsFound):
                 # When
-                _ = repo.get_worklow_names(module)
+                _ = repo.get_workflow_names(module)
 
     class TestGetWorkflowDef:
         @staticmethod
