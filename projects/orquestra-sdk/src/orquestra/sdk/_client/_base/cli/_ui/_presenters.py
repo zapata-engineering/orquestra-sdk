@@ -495,7 +495,6 @@ class PromptPresenter:
 class GraphPresenter:
     """User-facing presentation for the graph representation of a workflow def."""
 
-    @singledispatchmethod
     def view(self, graph: Digraph):
         """Display the graph in a popup window.
 
