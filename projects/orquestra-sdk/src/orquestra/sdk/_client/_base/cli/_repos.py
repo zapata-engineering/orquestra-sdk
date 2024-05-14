@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022-2024 Zapata Computing Inc.
 ################################################################################
 """Repositories that encapsulate data access used by dorq commands.
 
@@ -94,7 +94,7 @@ class WorkflowRunRepo:
         max_age: t.Optional[str] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
     ) -> t.List[WorkflowRunSummary]:
-        """Asks the runtime for sumaries of all workflow runs that match the filters.
+        """Asks the runtime for summaries of all workflow runs that match the filters.
 
         Args:
             config: the configuration specifying the runtime to be interrogated.
@@ -653,9 +653,11 @@ class SummaryRepo:
             A WFList containing summary lines for the specified workflows.
         """
         wf_runs.sort(
-            key=lambda wf_run: wf_run.status.start_time
-            if wf_run.status.start_time
-            else from_unix_time(0)
+            key=lambda wf_run: (
+                wf_run.status.start_time
+                if wf_run.status.start_time
+                else from_unix_time(0)
+            )
         )
 
         return ui_models.WFList(wf_rows=[_ui_model_from_wf(wf) for wf in wf_runs])
@@ -812,7 +814,7 @@ class WorkflowDefRepo:
                     module_name=dotted_name, sys_path=sys.path
                 )
 
-    def get_worklow_names(self, module: ModuleType) -> t.Sequence[str]:
+    def get_workflow_names(self, module: ModuleType) -> t.Sequence[str]:
         """Get the names of all workflows defined in a module.
 
         Args:

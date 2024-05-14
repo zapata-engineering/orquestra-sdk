@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023 - 2024 Zapata Computing Inc.
 ################################################################################
 """
 Unit tests for 'orq wf submit' glue code.
@@ -121,7 +121,7 @@ class TestAction:
 
             wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
             wf_def_repo.get_module_from_spec.return_value = module
-            wf_def_repo.get_worklow_names.return_value = wf_names
+            wf_def_repo.get_workflow_names.return_value = wf_names
 
             wf_def_sentinel = "<wf def sentinel>"
             wf_def_repo.get_workflow_def.return_value = wf_def_sentinel
@@ -181,7 +181,7 @@ class TestAction:
 
             wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
             wf_def_repo.get_module_from_spec.return_value = module
-            wf_def_repo.get_worklow_names.return_value = wf_names
+            wf_def_repo.get_workflow_names.return_value = wf_names
 
             wf_def_sentinel = "<wf def sentinel>"
             wf_def_repo.get_workflow_def.return_value = wf_def_sentinel
@@ -232,7 +232,7 @@ class TestAction:
             error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
             wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
             wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
-            wf_def_repo.get_worklow_names.side_effect = (
+            wf_def_repo.get_workflow_names.side_effect = (
                 exceptions.NoWorkflowDefinitionsFound(module_name=module)
             )
 
