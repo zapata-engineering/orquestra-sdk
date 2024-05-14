@@ -929,34 +929,22 @@ class TestGraphPresenter:
     class TestView:
         def test_default_file(self, monkeypatch):
             # Given
-            mock_workflow_def = create_autospec(WorkflowDef)
-
-            monkeypatch.setattr(
-                _presenters,
-                "wf_def_to_graphviz",
-                mock_to_graphviz := Mock(return_value=(mock_graphviz := Mock())),
-            )
+            mock_graph = create_autospec(_presenters.Digraph)
 
             # When
-            _presenters.GraphPresenter().view(mock_workflow_def)
+            _presenters.GraphPresenter().view(mock_graph)
 
             # Then
-            mock_to_graphviz.assert_called_once_with(mock_graphviz)
-            mock_graphviz.view.assert_called_once_with(cleanup=True)
+            mock_graph.view.assert_called_once_with(cleanup=True)
 
         def test_explicit_reraise(self, monkeypatch):
             # Given
-            mock_workflow_def = create_autospec(WorkflowDef)
-            mock_workflow_def.view.side_effect = _presenters.ExecutableNotFound
-            monkeypatch.setattr(
-                _presenters,
-                "wf_def_to_graphviz",
-                mock_to_graphviz := Mock(return_value=(mock_workflow_def := Mock())),
-            )
+            mock_graph = create_autospec(_presenters.Digraph)
+            mock_graph.view.side_effect = _presenters.ExecutableNotFound("foo")
 
             # When
-            _presenters.GraphPresenter().view(mock_workflow_def)
+            with pytest.raises(_presenters.ExecutableNotFound):
+                _presenters.GraphPresenter().view(mock_graph)
 
             # Then
-            mock_to_graphviz.assert_called_once_with(mock_workflow_def)
-            mock_workflow_def.view.assert_called_once_with(cleanup=True)
+            mock_graph.view.assert_called_once_with(cleanup=True)

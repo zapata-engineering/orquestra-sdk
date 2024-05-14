@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import List, Optional, Sequence
 
 import click
+from graphviz import Digraph
 from graphviz.exceptions import ExecutableNotFound
 from rich.box import SIMPLE_HEAVY
 from rich.console import Console, Group, RenderableType
@@ -25,7 +26,6 @@ from rich.spinner import Spinner
 from rich.table import Column, Table
 from tabulate import tabulate
 
-from orquestra.sdk._client._base._viz import wf_def_to_graphviz
 from orquestra.sdk._shared import serde
 from orquestra.sdk._shared.dates import Instant, from_unix_time
 from orquestra.sdk._shared.logs import LogOutput, WorkflowLogs
@@ -495,17 +495,16 @@ class PromptPresenter:
 class GraphPresenter:
     """User-facing presentation for the graph representation of a workflow def."""
 
-    def view(self, workflow_def: WorkflowDef):
+    @singledispatchmethod
+    def view(self, graph: Digraph):
         """Display the graph in a popup window.
 
         Args:
-            workflow_def: The workflow definition on which the graph should be based.
+            graph: The graph to be shown.
 
         Raises:
             ExecutableNotFound: when there is not a global GraphViz install.
         """
-        graph = wf_def_to_graphviz(workflow_def)
-
         try:
             graph.view(cleanup=True)
         except ExecutableNotFound:
