@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022-2024 Zapata Computing Inc.
 ################################################################################
 """Repositories that encapsulate data access used by dorq commands.
 
@@ -18,6 +18,7 @@ import requests
 from typing_extensions import assert_never
 
 from orquestra import sdk
+from orquestra.sdk._client._base._viz import wf_def_to_graphviz
 from orquestra.sdk._shared import exceptions
 from orquestra.sdk._shared.abc import ArtifactValue
 from orquestra.sdk._shared.dates import from_unix_time
@@ -94,7 +95,7 @@ class WorkflowRunRepo:
         max_age: t.Optional[str] = None,
         state: t.Optional[t.Union[State, t.List[State]]] = None,
     ) -> t.List[WorkflowRunSummary]:
-        """Asks the runtime for sumaries of all workflow runs that match the filters.
+        """Asks the runtime for summaries of all workflow runs that match the filters.
 
         Args:
             config: the configuration specifying the runtime to be interrogated.
@@ -853,3 +854,7 @@ class WorkflowDefRepo:
         except exceptions.WorkflowSyntaxError:
             # Explicit re-raise
             raise
+
+    def wf_def_to_graphviz(self, wf_def: WorkflowDef):
+        """Wrapper for the wf_def_to_graphviz helper."""
+        return wf_def_to_graphviz(wf_def)
