@@ -8,6 +8,7 @@
 
 * Add `WorkflowDef.with_head_node_resources()` function to programmatically set head node resources for a workflow definition
 * Add Python extras support in `GithubImport` object
+* Add `orq wf graph` CLI command to generate a graph of a workflow definition.
 
 🧟 *Deprecations*
 
