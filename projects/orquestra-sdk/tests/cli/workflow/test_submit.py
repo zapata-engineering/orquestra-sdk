@@ -66,6 +66,7 @@ class TestAction:
 
             wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
             wf_def_repo.get_module_from_spec.return_value = module
+
             wf_def_sentinel = "<wf def sentinel>"
             wf_def_repo.get_workflow_def.return_value = wf_def_sentinel
 

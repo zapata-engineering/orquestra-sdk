@@ -94,7 +94,6 @@ class Action:
             raise
 
         # 3. Resolve the definition of the workflow to run
-
         resolved_fn_name = self._wf_def_resolver.resolve_fn_name(resolved_module, name)
 
         resolved_wf_def = self._wf_def_repo.get_workflow_def(
