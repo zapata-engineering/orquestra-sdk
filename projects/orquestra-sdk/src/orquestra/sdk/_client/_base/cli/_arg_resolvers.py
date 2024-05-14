@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023 - 2024 Zapata Computing Inc.
 ################################################################################
 """Tools to resolve information not passed as CLI arguments.
 
@@ -10,6 +10,7 @@ across similar CLI commands.
 """
 import typing as t
 import warnings
+from types import ModuleType
 
 from orquestra.sdk._shared import exceptions
 from orquestra.sdk._shared.logs import WorkflowLogs
@@ -518,3 +519,47 @@ class WFRunFilterResolver:
             return [State(state) for state in resolved_states]
 
         return None
+
+
+class WFDefResolver:
+    """Resolves arguments relating to the workflow definition."""
+
+    def __init__(
+        self, prompter=_prompts.Prompter(), wf_def_repo=_repos.WorkflowDefRepo()
+    ):
+        self._prompter = prompter
+        self._wf_def_repo = wf_def_repo
+
+    def resolve_fn_name(self, module: ModuleType, name: t.Optional[str]) -> str:
+        """Resolve a string matching the name of the chosen function within the module.
+
+        If the name is provided it is returned unchanged.
+        If the name is not provided and there are multiple functions defined within the
+        module, the user is prompted to choose from the list.
+        If the name is not provided and there is only on function defined in the module,
+        its name is returned (no user interaction required).
+        """
+        resolved_fn_name: str
+
+        if name is not None:
+            # If passed in explicitly by the user: we take it as-is.
+            resolved_fn_name = name
+        else:
+            # Get all workflow def names in the module
+            try:
+                wf_names = self._wf_def_repo.get_worklow_names(module)
+            except exceptions.NoWorkflowDefinitionsFound:
+                # Explicit re-raise
+                raise
+
+            if len(wf_names) == 1:
+                # If there's only one workflow def we assume that's the correct one.
+                resolved_fn_name = wf_names[0]
+            else:
+                # If there's more workflow defs in this module: we need to ask the user
+                # which one to submit.
+                resolved_fn_name = self._prompter.choice(
+                    wf_names, message="Workflow definition"
+                )
+
+        return resolved_fn_name
