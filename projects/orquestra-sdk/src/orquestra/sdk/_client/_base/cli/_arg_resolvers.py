@@ -547,7 +547,7 @@ class WFDefResolver:
         else:
             # Get all workflow def names in the module
             try:
-                wf_names = self._wf_def_repo.get_worklow_names(module)
+                wf_names = self._wf_def_repo.get_workflow_names(module)
             except exceptions.NoWorkflowDefinitionsFound:
                 # Explicit re-raise
                 raise

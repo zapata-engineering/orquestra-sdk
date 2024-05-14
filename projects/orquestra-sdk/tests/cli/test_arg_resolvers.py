@@ -1749,7 +1749,7 @@ class TestWFDefResolver:
             prompter = create_autospec(_prompts.Prompter)
             wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
 
-            wf_def_repo.get_worklow_names.return_value = ["wf_names_list_0"]
+            wf_def_repo.get_workflow_names.return_value = ["wf_names_list_0"]
 
             resolver = _arg_resolvers.WFDefResolver(
                 prompter=prompter, wf_def_repo=wf_def_repo
@@ -1770,7 +1770,7 @@ class TestWFDefResolver:
             prompter = create_autospec(_prompts.Prompter)
             wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
 
-            wf_def_repo.get_worklow_names.return_value = (
+            wf_def_repo.get_workflow_names.return_value = (
                 wf_names_list := ["wf_names_list_0", "wf_names_list_1"]
             )
             prompter.choice.return_value = (name_sentinel := "<name sentinel>")
@@ -1783,7 +1783,7 @@ class TestWFDefResolver:
             resolved_name = resolver.resolve_fn_name(module=module, name=name)
 
             # Then
-            wf_def_repo.get_worklow_names.assert_called_once_with(module)
+            wf_def_repo.get_workflow_names.assert_called_once_with(module)
             prompter.choice.assert_called_once_with(
                 wf_names_list, message="Workflow definition"
             )
@@ -1797,7 +1797,7 @@ class TestWFDefResolver:
             prompter = create_autospec(_prompts.Prompter)
             wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
 
-            wf_def_repo.get_worklow_names.side_effect = (
+            wf_def_repo.get_workflow_names.side_effect = (
                 exceptions.NoWorkflowDefinitionsFound(
                     module_name_sentinel := "<module name sentinel>"
                 )
@@ -1813,5 +1813,5 @@ class TestWFDefResolver:
 
             # Then
             assert module_name_sentinel in e.exconly()
-            wf_def_repo.get_worklow_names.assert_called_once_with(module)
+            wf_def_repo.get_workflow_names.assert_called_once_with(module)
             prompter.assert_not_called()
