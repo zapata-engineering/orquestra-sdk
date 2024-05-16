@@ -12,6 +12,7 @@ import typing as t
 import warnings
 from contextlib import suppress as do_not_raise
 from datetime import timedelta
+from pathlib import Path
 from unittest.mock import (
     DEFAULT,
     MagicMock,
@@ -52,8 +53,9 @@ from orquestra.sdk._shared.logs._interfaces import LogOutput, LogReader, Workflo
 from orquestra.sdk._shared.schema import ir
 from orquestra.sdk._shared.schema.configs import RuntimeName
 from orquestra.sdk._shared.schema.responses import JSONResult
-from orquestra.sdk._shared.schema.workflow_run import RunStatus, State
+from orquestra.sdk._shared.schema.workflow_run import ProjectId, RunStatus, State
 from orquestra.sdk._shared.schema.workflow_run import TaskRun as TaskRunModel
+from orquestra.sdk._shared.schema.workflow_run import WorkspaceId
 
 from ..data.complex_serialization.workflow_defs import (
     capitalize,
@@ -78,7 +80,7 @@ def _fake_completed_workflow(end_state: State = State.SUCCEEDED):
 
 
 @pytest.fixture
-def tmp_default_config_json(patch_config_location):
+def tmp_default_config_json(patch_config_location: Path):
     json_file = patch_config_location / "config.json"
 
     with json_file.open("w") as f:
@@ -88,7 +90,7 @@ def tmp_default_config_json(patch_config_location):
 
 
 @pytest.fixture(autouse=True)
-def set_config_location(patch_config_location):
+def set_config_location(patch_config_location: Path):
     pass
 
 
@@ -111,7 +113,7 @@ class TestRunningInProcess:
             assert results == 3
 
         @staticmethod
-        def test_pass_builtin_config_name_with_file(tmp_default_config_json):
+        def test_pass_builtin_config_name_with_file(tmp_default_config_json: Path):
             run = wf_pass_tuple().run("in_process")
             results = run.get_results()
 
@@ -155,14 +157,16 @@ class TestWorkflowRun:
 
     @staticmethod
     @pytest.fixture
-    def sample_task_inv_ids(sample_wf_def) -> t.List[ir.TaskInvocationId]:
+    def sample_task_inv_ids(
+        sample_wf_def: _workflow.WorkflowDef,
+    ) -> t.List[ir.TaskInvocationId]:
         wf_def_model = sample_wf_def.model
         task_invs = wf_def_model.task_invocations.values()
         return [inv.id for inv in task_invs]
 
     @staticmethod
     @pytest.fixture
-    def mock_runtime(sample_task_inv_ids):
+    def mock_runtime(sample_task_inv_ids: t.List[ir.TaskInvocationId]):
         runtime = create_autospec(RuntimeInterface, name="runtime")
         # For getting workflow ID
         runtime.create_workflow_run.return_value = "wf_pass_tuple-1"
@@ -223,7 +227,9 @@ class TestWorkflowRun:
 
     @staticmethod
     @pytest.fixture
-    def run(sample_wf_def, mock_runtime) -> _api.WorkflowRun:
+    def run(
+        sample_wf_def: _workflow.WorkflowDef, mock_runtime: Mock
+    ) -> _api.WorkflowRun:
         return _api.WorkflowRun._start(
             wf_def=sample_wf_def.model,
             runtime=mock_runtime,
@@ -272,7 +278,7 @@ class TestWorkflowRun:
                 assert run._runtime == runtime
 
             @staticmethod
-            def test_passing_config_name(monkeypatch):
+            def test_passing_config_name(monkeypatch: pytest.MonkeyPatch):
                 # Given
                 run_id = "wf.mine.1234"
 
@@ -328,7 +334,7 @@ class TestWorkflowRun:
                     intermediate errors."""
 
                     @staticmethod
-                    def test_found_in_ray(monkeypatch):
+                    def test_found_in_ray(monkeypatch: pytest.MonkeyPatch):
                         # Given
                         run_id = sentinel.wf_run_id
 
@@ -362,7 +368,9 @@ class TestWorkflowRun:
                         assert run._runtime == runtime
 
                     @staticmethod
-                    def test_not_found_in_ray_found_in_ce(monkeypatch):
+                    def test_not_found_in_ray_found_in_ce(
+                        monkeypatch: pytest.MonkeyPatch,
+                    ):
                         # Given
                         run_id = sentinel.wf_run_id
 
@@ -410,7 +418,9 @@ class TestWorkflowRun:
                         assert run._runtime == runtime2
 
                     @staticmethod
-                    def test_ray_not_running_found_in_ce(monkeypatch):
+                    def test_ray_not_running_found_in_ce(
+                        monkeypatch: pytest.MonkeyPatch,
+                    ):
                         # Given
                         run_id = sentinel.wf_run_id
 
@@ -460,7 +470,7 @@ class TestWorkflowRun:
                         assert run._runtime == runtime2
 
                     @staticmethod
-                    def test_found_in_another_ce(monkeypatch):
+                    def test_found_in_another_ce(monkeypatch: pytest.MonkeyPatch):
                         # Given
                         run_id = sentinel.wf_run_id
 
@@ -520,7 +530,7 @@ class TestWorkflowRun:
                         assert run._runtime == runtime3
 
                     @staticmethod
-                    def test_old_qe_config_stored(monkeypatch):
+                    def test_old_qe_config_stored(monkeypatch: pytest.MonkeyPatch):
                         # Given
                         run_id = sentinel.wf_run_id
 
@@ -581,7 +591,7 @@ class TestWorkflowRun:
                     """It wasn't possible to resolve the config"""
 
                     @staticmethod
-                    def test_ray_not_running_no_ce(monkeypatch):
+                    def test_ray_not_running_no_ce(monkeypatch: pytest.MonkeyPatch):
                         """There are no known remote runtimes, and Ray wasn't
                         started."""
                         # Given
@@ -622,7 +632,7 @@ class TestWorkflowRun:
                         assert info.server_uri is None
 
                     @staticmethod
-                    def test_not_found_in_ray_no_ce(monkeypatch):
+                    def test_not_found_in_ray_no_ce(monkeypatch: pytest.MonkeyPatch):
                         """There are no known remote runtimes, and the run is unknown
                         to the local runtime."""
                         # Given
@@ -663,7 +673,9 @@ class TestWorkflowRun:
                         assert exc_info.value.not_running_runtimes == []
 
                     @staticmethod
-                    def test_not_found_in_ray_ce_unauthorized(monkeypatch):
+                    def test_not_found_in_ray_ce_unauthorized(
+                        monkeypatch: pytest.MonkeyPatch,
+                    ):
                         run_id = sentinel.wf_run_id
 
                         # Set up configs
@@ -717,7 +729,9 @@ class TestWorkflowRun:
                         assert exc_info.value.not_running_runtimes == []
 
                     @staticmethod
-                    def test_not_found_in_ray_ce_no_connection(monkeypatch):
+                    def test_not_found_in_ray_ce_no_connection(
+                        monkeypatch: pytest.MonkeyPatch,
+                    ):
                         run_id = sentinel.wf_run_id
 
                         # Set up configs
@@ -774,22 +788,24 @@ class TestWorkflowRun:
 
     class TestStartFromIR:
         @pytest.fixture
-        def wf_ir_def(self, sample_wf_def):
+        def wf_ir_def(self, sample_wf_def: _workflow.WorkflowDef) -> ir.WorkflowDef:
             return sample_wf_def.model
 
         @pytest.mark.parametrize(
             "config", ["in_process", _api.RuntimeConfig.in_process()]
         )
-        def test_happy_path(self, wf_ir_def, config):
+        def test_happy_path(
+            self, wf_ir_def: ir.WorkflowDef, config: _api.RuntimeConfig
+        ):
             wf_run = _api.WorkflowRun.start_from_ir(wf_ir_def, config)
 
             assert wf_run.get_results() == ("Hellothere", "Generalkenobi")
 
-        def test_wrong_config_type(self, wf_ir_def):
+        def test_wrong_config_type(self, wf_ir_def: ir.WorkflowDef):
             with pytest.raises(TypeError):
                 _api.WorkflowRun.start_from_ir(wf_ir_def, 123)  # type: ignore
 
-        def test_different_runtime(self, wf_ir_def, mock_runtime):
+        def test_different_runtime(self, wf_ir_def: ir.WorkflowDef, mock_runtime: Mock):
             mock_config = MagicMock(_api.RuntimeConfig)
             mock_config._runtime_name = "runtime_name"
             mock_config._get_runtime.return_value = mock_runtime
@@ -800,7 +816,7 @@ class TestWorkflowRun:
 
     class TestGetStatus:
         @staticmethod
-        def test_returns_status_from_runtime(run, mock_runtime):
+        def test_returns_status_from_runtime(run: _api.WorkflowRun, mock_runtime: Mock):
             # Given
             # When
             state = run.get_status()
@@ -810,7 +826,7 @@ class TestWorkflowRun:
 
     class TestGetStatusModel:
         @staticmethod
-        def test_matches_get_status(run):
+        def test_matches_get_status(run: _api.WorkflowRun):
             model = run.get_status_model()
 
             assert model.status.state == run.get_status()
@@ -864,7 +880,12 @@ class TestWorkflowRun:
     class TestWaitUntilFinished:
         class TestHappyPath:
             @staticmethod
-            def test_verbose(monkeypatch, run, mock_runtime, capsys):
+            def test_verbose(
+                monkeypatch: pytest.MonkeyPatch,
+                run: _api.WorkflowRun,
+                mock_runtime: Mock,
+                capsys: pytest.CaptureFixture,
+            ):
                 # Given
                 monkeypatch.setattr(time, "sleep", MagicMock())
 
@@ -888,7 +909,12 @@ class TestWorkflowRun:
                 )
 
             @staticmethod
-            def test_verbose_with_message(monkeypatch, run, mock_runtime, capsys):
+            def test_verbose_with_message(
+                monkeypatch: pytest.MonkeyPatch,
+                run: _api.WorkflowRun,
+                mock_runtime: Mock,
+                capsys: pytest.CaptureFixture,
+            ):
                 # Given
                 monkeypatch.setattr(time, "sleep", MagicMock())
                 mock_runtime.get_workflow_run_status.return_value.message = (
@@ -908,7 +934,12 @@ class TestWorkflowRun:
                 )
 
             @staticmethod
-            def test_quiet(monkeypatch, run, mock_runtime, capsys):
+            def test_quiet(
+                monkeypatch: pytest.MonkeyPatch,
+                run: _api.WorkflowRun,
+                mock_runtime: Mock,
+                capsys: pytest.CaptureFixture,
+            ):
                 # Given
                 monkeypatch.setattr(time, "sleep", MagicMock())
 
@@ -932,7 +963,12 @@ class TestWorkflowRun:
                 "completed_state",
                 (State.SUCCEEDED, State.FAILED, State.TERMINATED, State.KILLED),
             )
-            def test_completed_states(monkeypatch, run, mock_runtime, completed_state):
+            def test_completed_states(
+                monkeypatch: pytest.MonkeyPatch,
+                run: _api.WorkflowRun,
+                mock_runtime: Mock,
+                completed_state: State,
+            ):
                 # Given
                 monkeypatch.setattr(time, "sleep", MagicMock())
                 mock_runtime.get_workflow_run_status.return_value = (
@@ -948,7 +984,7 @@ class TestWorkflowRun:
 
     class TestGetResults:
         @staticmethod
-        def test_raises_exception_if_workflow_not_finished(run):
+        def test_raises_exception_if_workflow_not_finished(run: _api.WorkflowRun):
             # Given
             # When
             with pytest.raises(WorkflowRunNotFinished) as exc_info:
@@ -961,7 +997,9 @@ class TestWorkflowRun:
 
         @staticmethod
         @pytest.mark.slow
-        def test_waits_when_wait_is_true(monkeypatch, run, mock_runtime):
+        def test_waits_when_wait_is_true(
+            monkeypatch: pytest.MonkeyPatch, run: _api.WorkflowRun, mock_runtime: Mock
+        ):
             # Given
             monkeypatch.setattr(time, "sleep", MagicMock())
             # When
@@ -972,7 +1010,9 @@ class TestWorkflowRun:
             assert results == "woohoo!"
 
         @staticmethod
-        def test_waits_when_wait_is_explicitly_false(run, mock_runtime):
+        def test_waits_when_wait_is_explicitly_false(
+            run: _api.WorkflowRun, mock_runtime: Mock
+        ):
             # Remove RUNNING in mock
             mock_runtime.get_workflow_run_status.side_effect = None
             # Given
@@ -985,7 +1025,7 @@ class TestWorkflowRun:
 
     class TestGetResultsSerialized:
         @staticmethod
-        def test_raises_exception_if_workflow_not_finished(run):
+        def test_raises_exception_if_workflow_not_finished(run: _api.WorkflowRun):
             # Given
             # When
             with pytest.raises(WorkflowRunNotFinished) as exc_info:
@@ -998,7 +1038,9 @@ class TestWorkflowRun:
 
         @staticmethod
         @pytest.mark.slow
-        def test_waits_when_wait_is_true(monkeypatch, run, mock_runtime):
+        def test_waits_when_wait_is_true(
+            monkeypatch: pytest.MonkeyPatch, run: _api.WorkflowRun, mock_runtime: Mock
+        ):
             # Given
             monkeypatch.setattr(time, "sleep", MagicMock())
             # When
@@ -1010,7 +1052,9 @@ class TestWorkflowRun:
             assert results[0].value == '"woohoo!"'
 
         @staticmethod
-        def test_waits_when_wait_is_explicitly_false(run, mock_runtime):
+        def test_waits_when_wait_is_explicitly_false(
+            run: _api.WorkflowRun, mock_runtime: Mock
+        ):
             # Remove RUNNING in mock
             mock_runtime.get_workflow_run_status.side_effect = None
             # Given
@@ -1165,7 +1209,7 @@ class TestWorkflowRun:
             art1_mock = serde.result_from_artifact(42, ir.ArtifactFormat.AUTO)
             art2_mock = serde.result_from_artifact((21, 38), ir.ArtifactFormat.AUTO)
 
-            def return_mock(wf_run_id, task_inv_id):
+            def return_mock(wf_run_id: str, task_inv_id: str):
                 if task_inv_id == inv1:
                     return art1_mock
                 elif task_inv_id == inv2:
@@ -1213,11 +1257,11 @@ class TestWorkflowRun:
                 return task
 
             @staticmethod
-            def test_no_filters(schema_task_run):
+            def test_no_filters(schema_task_run: Mock):
                 assert _api.WorkflowRun._task_matches_schema_filters(schema_task_run)
 
             @staticmethod
-            def test_matching_state(schema_task_run):
+            def test_matching_state(schema_task_run: Mock):
                 assert _api.WorkflowRun._task_matches_schema_filters(
                     schema_task_run, state=State.SUCCEEDED
                 )
@@ -1226,35 +1270,35 @@ class TestWorkflowRun:
             @pytest.mark.parametrize(
                 "state", [state for state in State if state != State.SUCCEEDED]
             )
-            def test_conflicting_state(schema_task_run, state):
+            def test_conflicting_state(schema_task_run: Mock, state: State):
                 assert not _api.WorkflowRun._task_matches_schema_filters(
                     schema_task_run, state=state
                 )
 
             @staticmethod
             @pytest.mark.parametrize("task_run_id", ["<id sentinel>", ".*"])
-            def test_matching_task_run_id(schema_task_run, task_run_id):
+            def test_matching_task_run_id(schema_task_run: Mock, task_run_id: str):
                 assert _api.WorkflowRun._task_matches_schema_filters(
                     schema_task_run, task_run_id=task_run_id
                 )
 
             @staticmethod
             @pytest.mark.parametrize("task_run_id", ["foo", "<id sentinel"])
-            def test_conflicting_task_run_id(schema_task_run, task_run_id):
+            def test_conflicting_task_run_id(schema_task_run: Mock, task_run_id: str):
                 assert not _api.WorkflowRun._task_matches_schema_filters(
                     schema_task_run, task_run_id=task_run_id
                 )
 
             @staticmethod
             @pytest.mark.parametrize("task_inv_id", ["<inv id sentinel>", ".*"])
-            def test_matching_task_inv_id(schema_task_run, task_inv_id):
+            def test_matching_task_inv_id(schema_task_run: Mock, task_inv_id: str):
                 assert _api.WorkflowRun._task_matches_schema_filters(
                     schema_task_run, task_invocation_id=task_inv_id
                 )
 
             @staticmethod
             @pytest.mark.parametrize("task_inv_id", ["foo", "<inv id sentinel"])
-            def test_conflicting_task_inv_id(schema_task_run, task_inv_id):
+            def test_conflicting_task_inv_id(schema_task_run: Mock, task_inv_id: str):
                 assert not _api.WorkflowRun._task_matches_schema_filters(
                     schema_task_run, task_invocation_id=task_inv_id
                 )
@@ -1266,7 +1310,10 @@ class TestWorkflowRun:
                 "task_invocation_id", [None, "<inv id sentinel>", ".*"]
             )
             def test_multiple_matching_filters(
-                schema_task_run, state, task_run_id, task_invocation_id
+                schema_task_run: Mock,
+                state: t.Optional[State],
+                task_run_id: t.Optional[str],
+                task_invocation_id: t.Optional[str],
             ):
                 assert _api.WorkflowRun._task_matches_schema_filters(
                     schema_task_run,
@@ -1284,7 +1331,10 @@ class TestWorkflowRun:
                 "task_invocation_id", [None, "foo", "<inv id sentinel"]
             )
             def test_multiple_conflicting_filters(
-                schema_task_run, state, task_run_id, task_invocation_id
+                schema_task_run: Mock,
+                state: State,
+                task_run_id: t.Optional[str],
+                task_invocation_id: t.Optional[str],
             ):
                 assert not _api.WorkflowRun._task_matches_schema_filters(
                     schema_task_run,
@@ -1303,7 +1353,10 @@ class TestWorkflowRun:
                 ],
             )
             def test_mix_of_matching_and_conflicting_filters(
-                schema_task_run, state, task_run_id, task_invocation_id
+                schema_task_run: Mock,
+                state: State,
+                task_run_id: str,
+                task_invocation_id: str,
             ):
                 assert not _api.WorkflowRun._task_matches_schema_filters(
                     schema_task_run,
@@ -1320,14 +1373,14 @@ class TestWorkflowRun:
                 return task
 
             @staticmethod
-            def test_no_filters(api_task_run):
+            def test_no_filters(api_task_run: Mock):
                 assert _api.WorkflowRun._task_matches_api_filters(api_task_run)
 
             @staticmethod
             @pytest.mark.parametrize(
                 "function_name", ["<function name sentinel>", ".*"]
             )
-            def test_matching_function_name(api_task_run, function_name):
+            def test_matching_function_name(api_task_run: Mock, function_name: str):
                 assert _api.WorkflowRun._task_matches_api_filters(
                     api_task_run, task_fn_name=function_name
                 )
@@ -1336,14 +1389,14 @@ class TestWorkflowRun:
             @pytest.mark.parametrize(
                 "function_name", ["<function name sentinel", "foo"]
             )
-            def test_conflicting_function_name(api_task_run, function_name):
+            def test_conflicting_function_name(api_task_run: Mock, function_name: str):
                 assert not _api.WorkflowRun._task_matches_api_filters(
                     api_task_run, task_fn_name=function_name
                 )
 
     class TestGetTasks:
         @staticmethod
-        def test_get_tasks_from_started_workflow(run):
+        def test_get_tasks_from_started_workflow(run: _api.WorkflowRun):
             # Given
             # When
             tasks = run.get_tasks()
@@ -1369,7 +1422,11 @@ class TestWorkflowRun:
                 "task_function_name", [None, "<task fn name sentinel>"]
             )
             def test_argument_passing(
-                run, state, task_run_id, task_invocation_id, task_function_name
+                run: _api.WorkflowRun,
+                state: t.Optional[State],
+                task_run_id: t.Optional[str],
+                task_invocation_id: t.Optional[str],
+                task_function_name: t.Optional[str],
             ):
                 # Given
                 run._task_matches_schema_filters = Mock(return_value=True)
@@ -1398,7 +1455,12 @@ class TestWorkflowRun:
                 "schema_filter, api_filter, n_expected_tasks",
                 [([True, False, True, True], [False, True, True], 2)],
             )
-            def test_filters_tasks(run, schema_filter, api_filter, n_expected_tasks):
+            def test_filters_tasks(
+                run: _api.WorkflowRun,
+                schema_filter: t.List[bool],
+                api_filter: t.List[bool],
+                n_expected_tasks: int,
+            ):
                 # Given
                 run._task_matches_schema_filters = Mock(side_effect=schema_filter)
                 run._task_matches_api_filters = Mock(side_effect=api_filter)
@@ -1410,7 +1472,7 @@ class TestWorkflowRun:
                 assert len(tasks) == n_expected_tasks
 
             @staticmethod
-            def test_returns_empty_set_for_no_matching_tasks(run):
+            def test_returns_empty_set_for_no_matching_tasks(run: _api.WorkflowRun):
                 run._task_matches_schema_filters = Mock(return_value=False)
                 run._task_matches_api_filters = Mock(return_value=False)
 
@@ -1522,7 +1584,9 @@ class TestWorkflowRun:
 
     class TestGetLogs:
         @staticmethod
-        def test_happy_path(run: _api.WorkflowRun, sample_task_inv_ids):
+        def test_happy_path(
+            run: _api.WorkflowRun, sample_task_inv_ids: t.List[ir.TaskInvocationId]
+        ):
             # Given
             invs = sample_task_inv_ids
             log_reader = create_autospec(LogReader)
@@ -1624,7 +1688,7 @@ class TestWorkflowRun:
                 WorkflowRunNotFoundError(),
             ],
         )
-        def test_error_from_runtime(exc):
+        def test_error_from_runtime(exc: Exception):
             # Given
             run_id = "wf.1"
             wf_def = Mock()
@@ -1643,22 +1707,22 @@ class TestWorkflowRun:
                 run.stop()
 
     class TestProject:
-        def test_get_project(self, run):
+        def test_get_project(self, run: _api.WorkflowRun):
             project = run.project
             assert project.workspace_id == "ws"
             assert project.project_id == "proj"
 
-        def test_value_get_cached(self, run):
+        def test_value_get_cached(self, run: _api.WorkflowRun, mock_runtime: Mock):
             _ = run.project
             _ = run.project
 
-            run._runtime.get_workflow_project.assert_called_once()
+            mock_runtime.get_workflow_project.assert_called_once()
 
 
 class TestListWorkflows:
     @staticmethod
     @pytest.fixture
-    def mock_config_runtime(monkeypatch):
+    def mock_config_runtime(monkeypatch: pytest.MonkeyPatch):
         run = MagicMock()
         type(run).id = PropertyMock(side_effect=["wf0", "wf1", "wf2"])
         runtime = Mock(RuntimeInterface)
@@ -1672,7 +1736,7 @@ class TestListWorkflows:
 
         return runtime
 
-    def test_get_all_wfs(self, mock_config_runtime):
+    def test_get_all_wfs(self, mock_config_runtime: Mock):
         # Given
         # When
         runs = _api.list_workflow_runs("mocked_config")
@@ -1682,7 +1746,7 @@ class TestListWorkflows:
         assert runs[1].run_id == "wf1"
         assert runs[2].run_id == "wf2"
 
-    def test_invalid_max_age(self, mock_config_runtime):
+    def test_invalid_max_age(self, mock_config_runtime: Mock):
         # Given
         # When
         with pytest.raises(ValueError) as exc_info:
@@ -1699,7 +1763,9 @@ class TestListWorkflows:
             ("1d2h3m4s", timedelta(days=1, seconds=7384)),
         ],
     )
-    def test_with_max_age(self, mock_config_runtime, max_age, delta):
+    def test_with_max_age(
+        self, mock_config_runtime: Mock, max_age: str, delta: timedelta
+    ):
         # Given
         # When
         _ = _api.list_workflow_runs("mocked_config", max_age=max_age)
@@ -1711,7 +1777,7 @@ class TestListWorkflows:
             workspace=None,
         )
 
-    def test_with_limit(self, mock_config_runtime):
+    def test_with_limit(self, mock_config_runtime: Mock):
         # Given
         # When
         _ = _api.list_workflow_runs("mocked_config", limit=10)
@@ -1723,7 +1789,7 @@ class TestListWorkflows:
             workspace=None,
         )
 
-    def test_with_state(self, mock_config_runtime):
+    def test_with_state(self, mock_config_runtime: Mock):
         # Given
         # When
         _ = _api.list_workflow_runs("mocked_config", state=State.SUCCEEDED)
@@ -1735,7 +1801,7 @@ class TestListWorkflows:
             workspace=None,
         )
 
-    def test_with_workspace(self, mock_config_runtime):
+    def test_with_workspace(self, mock_config_runtime: Mock):
         # GIVEN
         # WHEN
         _ = _api.list_workflow_runs(
@@ -1750,7 +1816,9 @@ class TestListWorkflows:
             workspace="<workspace ID sentinel>",
         )
 
-    def test_raises_exception_with_project_and_no_workspace(self, mock_config_runtime):
+    def test_raises_exception_with_project_and_no_workspace(
+        self, mock_config_runtime: Mock
+    ):
         # GIVEN
         # WHEN
         with pytest.raises(ProjectInvalidError) as e:
@@ -1765,7 +1833,9 @@ class TestListWorkflows:
             "parameter."
         )
 
-    def test_in_studio_passed_arguments(self, monkeypatch, mock_config_runtime):
+    def test_in_studio_passed_arguments(
+        self, monkeypatch: pytest.MonkeyPatch, mock_config_runtime: Mock
+    ):
         # GIVEN
         monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", "env_workspace")
         monkeypatch.setenv("ORQ_CURRENT_PROJECT", "env_project")
@@ -1784,7 +1854,9 @@ class TestListWorkflows:
             workspace="<workspace ID sentinel>",
         )
 
-    def test_in_studio_no_arguments(self, monkeypatch, mock_config_runtime):
+    def test_in_studio_no_arguments(
+        self, monkeypatch: pytest.MonkeyPatch, mock_config_runtime: Mock
+    ):
         # GIVEN
         monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", "env_workspace")
         monkeypatch.setenv("ORQ_CURRENT_PROJECT", "env_project")
@@ -1811,7 +1883,7 @@ class TestListWorkflows:
         )
 
     @staticmethod
-    def test_suppresses_versionmismatch_warnings(mock_config_runtime):
+    def test_suppresses_versionmismatch_warnings(mock_config_runtime: Mock):
         # Given
         def raise_warnings(*args, **kwargs):
             warnings.warn("a warning that should not be suppressed")
@@ -1835,7 +1907,7 @@ class TestListWorkflows:
 class TestListWorkflowSummaries:
     @staticmethod
     @pytest.fixture
-    def mock_config_runtime(monkeypatch):
+    def mock_config_runtime(monkeypatch: pytest.MonkeyPatch):
         run = MagicMock()
         type(run).id = PropertyMock(side_effect=["wf0", "wf1", "wf2"])
         runtime = Mock(RuntimeInterface)
@@ -1849,7 +1921,7 @@ class TestListWorkflowSummaries:
 
         return runtime
 
-    def test_get_all_wfs(self, mock_config_runtime):
+    def test_get_all_wfs(self, mock_config_runtime: Mock):
         # Given
         # When
         runs = _api.list_workflow_run_summaries("mocked_config")
@@ -1859,7 +1931,7 @@ class TestListWorkflowSummaries:
         assert runs[1].id == "wf1"
         assert runs[2].id == "wf2"
 
-    def test_invalid_max_age(self, mock_config_runtime):
+    def test_invalid_max_age(self, mock_config_runtime: Mock):
         # Given
         # When
         with pytest.raises(ValueError) as exc_info:
@@ -1876,7 +1948,9 @@ class TestListWorkflowSummaries:
             ("1d2h3m4s", timedelta(days=1, seconds=7384)),
         ],
     )
-    def test_with_max_age(self, mock_config_runtime, max_age, delta):
+    def test_with_max_age(
+        self, mock_config_runtime: Mock, max_age: str, delta: timedelta
+    ):
         # Given
         # When
         _ = _api.list_workflow_run_summaries("mocked_config", max_age=max_age)
@@ -1888,7 +1962,7 @@ class TestListWorkflowSummaries:
             workspace=None,
         )
 
-    def test_with_limit(self, mock_config_runtime):
+    def test_with_limit(self, mock_config_runtime: Mock):
         # Given
         # When
         _ = _api.list_workflow_run_summaries("mocked_config", limit=10)
@@ -1900,7 +1974,7 @@ class TestListWorkflowSummaries:
             workspace=None,
         )
 
-    def test_with_state(self, mock_config_runtime):
+    def test_with_state(self, mock_config_runtime: Mock):
         # Given
         # When
         _ = _api.list_workflow_run_summaries("mocked_config", state=State.SUCCEEDED)
@@ -1912,7 +1986,7 @@ class TestListWorkflowSummaries:
             workspace=None,
         )
 
-    def test_with_workspace(self, mock_config_runtime):
+    def test_with_workspace(self, mock_config_runtime: Mock):
         # GIVEN
         # WHEN
         _ = _api.list_workflow_run_summaries(
@@ -1927,7 +2001,9 @@ class TestListWorkflowSummaries:
             workspace="<workspace ID sentinel>",
         )
 
-    def test_raises_exception_with_project_and_no_workspace(self, mock_config_runtime):
+    def test_raises_exception_with_project_and_no_workspace(
+        self, mock_config_runtime: Mock
+    ):
         # GIVEN
         # WHEN
         with pytest.raises(ProjectInvalidError) as e:
@@ -1942,7 +2018,9 @@ class TestListWorkflowSummaries:
             "parameter."
         )
 
-    def test_in_studio_passed_arguments(self, monkeypatch, mock_config_runtime):
+    def test_in_studio_passed_arguments(
+        self, monkeypatch: pytest.MonkeyPatch, mock_config_runtime: Mock
+    ):
         # GIVEN
         monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", "env_workspace")
         monkeypatch.setenv("ORQ_CURRENT_PROJECT", "env_project")
@@ -1961,7 +2039,9 @@ class TestListWorkflowSummaries:
             workspace="<workspace ID sentinel>",
         )
 
-    def test_in_studio_no_arguments(self, monkeypatch, mock_config_runtime):
+    def test_in_studio_no_arguments(
+        self, monkeypatch: pytest.MonkeyPatch, mock_config_runtime: Mock
+    ):
         # GIVEN
         monkeypatch.setenv("ORQ_CURRENT_WORKSPACE", "env_workspace")
         monkeypatch.setenv("ORQ_CURRENT_PROJECT", "env_project")
@@ -1988,7 +2068,7 @@ class TestListWorkflowSummaries:
         )
 
     @staticmethod
-    def test_suppresses_versionmismatch_warnings(mock_config_runtime):
+    def test_suppresses_versionmismatch_warnings(mock_config_runtime: Mock):
         # Given
         def raise_warnings(*args, **kwargs):
             warnings.warn("a warning that should not be suppressed")
@@ -2046,13 +2126,13 @@ class TestListWorkflowSummaries:
 class TestProjectId:
     def test_run(
         self,
-        workspace_id,
-        project_id,
-        workspace_env,
-        project_env,
-        raises,
-        expected,
-        monkeypatch,
+        workspace_id: t.Optional[WorkspaceId],
+        project_id: t.Optional[ProjectId],
+        workspace_env: t.Optional[str],
+        project_env: t.Optional[str],
+        raises: t.ContextManager,  # Pytest's RaisesContext is private
+        expected: t.Optional[ProjectRef],
+        monkeypatch: pytest.MonkeyPatch,
     ):
         monkeypatch.setattr(_traversal, "_global_inline_import_identifier", lambda: 0)
         workflow_create_mock = Mock()
@@ -2078,7 +2158,7 @@ class TestProjectId:
 class TestListWorkspaces:
     @staticmethod
     @pytest.fixture
-    def mock_config_runtime(monkeypatch):
+    def mock_config_runtime(monkeypatch: pytest.MonkeyPatch):
         ws = MagicMock()
         type(ws).workspace_id = PropertyMock(
             side_effect=[
@@ -2097,7 +2177,7 @@ class TestListWorkspaces:
 
         return runtime
 
-    def test_list_workspaces(self, mock_config_runtime):
+    def test_list_workspaces(self, mock_config_runtime: Mock):
         # Given
         # When
         runs = list_workspaces("mocked_config")
@@ -2111,7 +2191,7 @@ class TestListWorkspaces:
 class TestListProjects:
     @staticmethod
     @pytest.fixture
-    def mock_config_runtime(monkeypatch):
+    def mock_config_runtime(monkeypatch: pytest.MonkeyPatch):
         ws = MagicMock()
         type(ws).project_id = PropertyMock(
             side_effect=[
@@ -2137,7 +2217,12 @@ class TestListProjects:
             (Workspace(workspace_id="id", name="name"), "id"),
         ],
     )
-    def test_list_projects(self, mock_config_runtime, workspace, expected_argument):
+    def test_list_projects(
+        self,
+        mock_config_runtime: Mock,
+        workspace: t.Union[Workspace, str],
+        expected_argument: str,
+    ):
         # Given
         # When
         runs = list_projects("mocked_config", workspace)
@@ -2166,12 +2251,12 @@ class TestCurrentWfIds:
         ],
     )
     def test_current_wf_ids(
-        monkeypatch,
-        ctx,
-        cluster_env,
-        ws_env,
-        project_env,
-        expected_cfg,
+        monkeypatch: pytest.MonkeyPatch,
+        ctx: ExecContext,
+        cluster_env: t.Optional[str],
+        ws_env: t.Optional[str],
+        project_env: t.Optional[str],
+        expected_cfg: t.Optional[str],
     ):
         # given
         monkeypatch.setattr(_exec_ctx, "global_context", ctx)
@@ -2189,7 +2274,7 @@ class TestCurrentWfIds:
         assert ids.workspace_id == ws_env
         assert ids.project_id == project_env
 
-    def test_invalid_context(self, monkeypatch):
+    def test_invalid_context(self, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setattr(
             _exec_ctx, "global_context", _exec_ctx.ExecContext.WORKFLOW_BUILD
         )
