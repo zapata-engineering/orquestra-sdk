@@ -1422,6 +1422,7 @@ class TestWorkflowRun:
                 "task_function_name", [None, "<task fn name sentinel>"]
             )
             def test_argument_passing(
+                monkeypatch: pytest.MonkeyPatch,
                 run: _api.WorkflowRun,
                 state: t.Optional[State],
                 task_run_id: t.Optional[str],
@@ -1429,8 +1430,10 @@ class TestWorkflowRun:
                 task_function_name: t.Optional[str],
             ):
                 # Given
-                run._task_matches_schema_filters = Mock(return_value=True)
-                run._task_matches_api_filters = Mock(return_value=True)
+                task_matches_schema_filters = Mock(return_value=True)
+                task_matches_api_filters = Mock(return_value=True)
+                monkeypatch.setattr(run, "_task_matches_schema_filters",  task_matches_schema_filters)
+                monkeypatch.setattr(run, "_task_matches_api_filters",  task_matches_api_filters)
 
                 # When
                 _ = run.get_tasks(
@@ -1441,13 +1444,13 @@ class TestWorkflowRun:
                 )
 
                 # Then
-                assert run._task_matches_schema_filters.call_count == 4
-                for mock_call in run._task_matches_schema_filters.call_args_list:
+                assert task_matches_schema_filters.call_count == 4
+                for mock_call in task_matches_schema_filters.call_args_list:
                     assert mock_call[1]["state"] == state
                     assert mock_call[1]["task_run_id"] == task_run_id
                     assert mock_call[1]["task_invocation_id"] == task_invocation_id
-                assert run._task_matches_api_filters.call_count == 4
-                for mock_call in run._task_matches_api_filters.call_args_list:
+                assert task_matches_api_filters.call_count == 4
+                for mock_call in task_matches_api_filters.call_args_list:
                     assert mock_call[1]["task_fn_name"] == task_function_name
 
             @staticmethod
@@ -1456,14 +1459,17 @@ class TestWorkflowRun:
                 [([True, False, True, True], [False, True, True], 2)],
             )
             def test_filters_tasks(
+                monkeypatch: pytest.MonkeyPatch,
                 run: _api.WorkflowRun,
                 schema_filter: t.List[bool],
                 api_filter: t.List[bool],
                 n_expected_tasks: int,
             ):
                 # Given
-                run._task_matches_schema_filters = Mock(side_effect=schema_filter)
-                run._task_matches_api_filters = Mock(side_effect=api_filter)
+                task_matches_schema_filters = Mock(side_effect=schema_filter)
+                task_matches_api_filters = Mock(side_effect=api_filter)
+                monkeypatch.setattr(run, "_task_matches_schema_filters",  task_matches_schema_filters)
+                monkeypatch.setattr(run, "_task_matches_api_filters",  task_matches_api_filters)
 
                 # When
                 tasks = run.get_tasks()
@@ -1472,9 +1478,11 @@ class TestWorkflowRun:
                 assert len(tasks) == n_expected_tasks
 
             @staticmethod
-            def test_returns_empty_set_for_no_matching_tasks(run: _api.WorkflowRun):
-                run._task_matches_schema_filters = Mock(return_value=False)
-                run._task_matches_api_filters = Mock(return_value=False)
+            def test_returns_empty_set_for_no_matching_tasks(monkeypatch: pytest.MonkeyPatch, run: _api.WorkflowRun):
+                task_matches_schema_filters = Mock(return_value=False)
+                task_matches_api_filters = Mock(return_value=False)
+                monkeypatch.setattr(run, "_task_matches_schema_filters",  task_matches_schema_filters)
+                monkeypatch.setattr(run, "_task_matches_api_filters",  task_matches_api_filters)
 
                 tasks = run.get_tasks()
 
