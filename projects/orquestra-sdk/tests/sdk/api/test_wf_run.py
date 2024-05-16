@@ -1432,8 +1432,12 @@ class TestWorkflowRun:
                 # Given
                 task_matches_schema_filters = Mock(return_value=True)
                 task_matches_api_filters = Mock(return_value=True)
-                monkeypatch.setattr(run, "_task_matches_schema_filters",  task_matches_schema_filters)
-                monkeypatch.setattr(run, "_task_matches_api_filters",  task_matches_api_filters)
+                monkeypatch.setattr(
+                    run, "_task_matches_schema_filters", task_matches_schema_filters
+                )
+                monkeypatch.setattr(
+                    run, "_task_matches_api_filters", task_matches_api_filters
+                )
 
                 # When
                 _ = run.get_tasks(
@@ -1468,8 +1472,12 @@ class TestWorkflowRun:
                 # Given
                 task_matches_schema_filters = Mock(side_effect=schema_filter)
                 task_matches_api_filters = Mock(side_effect=api_filter)
-                monkeypatch.setattr(run, "_task_matches_schema_filters",  task_matches_schema_filters)
-                monkeypatch.setattr(run, "_task_matches_api_filters",  task_matches_api_filters)
+                monkeypatch.setattr(
+                    run, "_task_matches_schema_filters", task_matches_schema_filters
+                )
+                monkeypatch.setattr(
+                    run, "_task_matches_api_filters", task_matches_api_filters
+                )
 
                 # When
                 tasks = run.get_tasks()
@@ -1478,11 +1486,17 @@ class TestWorkflowRun:
                 assert len(tasks) == n_expected_tasks
 
             @staticmethod
-            def test_returns_empty_set_for_no_matching_tasks(monkeypatch: pytest.MonkeyPatch, run: _api.WorkflowRun):
+            def test_returns_empty_set_for_no_matching_tasks(
+                monkeypatch: pytest.MonkeyPatch, run: _api.WorkflowRun
+            ):
                 task_matches_schema_filters = Mock(return_value=False)
                 task_matches_api_filters = Mock(return_value=False)
-                monkeypatch.setattr(run, "_task_matches_schema_filters",  task_matches_schema_filters)
-                monkeypatch.setattr(run, "_task_matches_api_filters",  task_matches_api_filters)
+                monkeypatch.setattr(
+                    run, "_task_matches_schema_filters", task_matches_schema_filters
+                )
+                monkeypatch.setattr(
+                    run, "_task_matches_api_filters", task_matches_api_filters
+                )
 
                 tasks = run.get_tasks()
 
