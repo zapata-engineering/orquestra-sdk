@@ -28,7 +28,7 @@ from orquestra.sdk._shared import exceptions
 from orquestra.sdk._shared.dates import _dates
 from orquestra.sdk._shared.logs._interfaces import LogOutput, WorkflowLogs
 from orquestra.sdk._shared.schema import ir
-from orquestra.sdk._shared.schema.configs import RuntimeName
+from orquestra.sdk._shared.schema.configs import RemoteRuntime, RuntimeName
 from orquestra.sdk._shared.schema.workflow_run import RunStatus, State
 from orquestra.sdk._shared.schema.workflow_run import TaskRun as TaskRunModel
 from orquestra.sdk._shared.schema.workflow_run import WorkflowRun as WorkflowRunModel
@@ -51,7 +51,7 @@ class TestWorkflowRunRepo:
 
     @staticmethod
     @pytest.fixture
-    def mock_by_id(monkeypatch, mock_wf_run):
+    def mock_by_id(monkeypatch: pytest.MonkeyPatch, mock_wf_run: Mock):
         """
         Returns a mock of sdk.WorkflowRun.by_id.
         """
@@ -73,7 +73,7 @@ class TestWorkflowRunRepo:
         class TestGetConfigNameByRunID:
             @staticmethod
             @pytest.mark.usefixtures("mock_by_id")
-            def test_happy_path(mock_wf_run):
+            def test_happy_path(mock_wf_run: Mock):
                 # Given
                 config = sdk.RuntimeConfig.ray()
                 mock_wf_run.config = config
@@ -92,7 +92,7 @@ class TestWorkflowRunRepo:
                 "exc",
                 [exceptions.ConfigFileNotFoundError()],
             )
-            def test_passes_errors(mock_by_id, exc):
+            def test_passes_errors(mock_by_id: Mock, exc: Exception):
                 # Given
                 mock_by_id.side_effect = exc
 
@@ -105,7 +105,7 @@ class TestWorkflowRunRepo:
                     _ = repo.get_config_name_by_run_id(wf_run_id)
 
         @staticmethod
-        def test_get_wf_by_run_id(mock_by_id, mock_wf_run):
+        def test_get_wf_by_run_id(mock_by_id: Mock, mock_wf_run: Mock):
             # Given
             run_id = "wf.1"
             config_name = "<config sentinel>"
@@ -123,7 +123,7 @@ class TestWorkflowRunRepo:
 
         class TestGetTaskRunID:
             @staticmethod
-            def test_happy_path(mock_by_id, mock_wf_run):
+            def test_happy_path(mock_by_id: Mock, mock_wf_run: Mock):
                 # Given
                 wf_run_id = "wf.1"
                 task_inv_id = "inv2"
@@ -163,7 +163,7 @@ class TestWorkflowRunRepo:
                 assert task_run_id == "2"
 
             @staticmethod
-            def test_invalid_inv_id(mock_by_id, mock_wf_run):
+            def test_invalid_inv_id(mock_by_id: Mock, mock_wf_run: Mock):
                 # Given
                 wf_run_id = "wf.1"
                 task_inv_id = "inv2_doesnt_exist"
@@ -200,7 +200,7 @@ class TestWorkflowRunRepo:
                     exceptions.ConfigNameNotFoundError(),
                 ],
             )
-            def test_passing_errors(mock_by_id, exc):
+            def test_passing_errors(mock_by_id: Mock, exc: Exception):
                 # Given
                 wf_run_id = "wf.1"
                 task_inv_id = "inv2_doesnt_exist"
@@ -269,7 +269,7 @@ class TestWorkflowRunRepo:
                     return wf_def
 
                 @staticmethod
-                def test_raises_exception(wf_def):
+                def test_raises_exception(wf_def: Mock):
                     # Given
                     repo = _repos.WorkflowRunRepo()
                     config = "test_cfg"
@@ -285,7 +285,7 @@ class TestWorkflowRunRepo:
                         )
 
                 @staticmethod
-                def test_warns(wf_def):
+                def test_warns(wf_def: Mock):
                     # Given
                     repo = _repos.WorkflowRunRepo()
                     config = "test_cfg"
@@ -309,7 +309,7 @@ class TestWorkflowRunRepo:
                     exceptions.WorkflowRunCanNotBeTerminated(),
                 ],
             )
-            def test_passing_data(monkeypatch, exc):
+            def test_passing_data(monkeypatch: pytest.MonkeyPatch, exc: Exception):
                 # Given
                 run_id = "wf.1"
                 config_name = "<config sentinel>"
@@ -335,7 +335,7 @@ class TestWorkflowRunRepo:
 
         class TestGetWFOutputs:
             @staticmethod
-            def test_passing_data(monkeypatch):
+            def test_passing_data(monkeypatch: pytest.MonkeyPatch):
                 run_id = "wf.1"
                 config_name = "<config sentinel>"
 
@@ -365,7 +365,7 @@ class TestWorkflowRunRepo:
                     exceptions.ConfigNameNotFoundError(),
                 ],
             )
-            def test_passing_errors(monkeypatch, exc):
+            def test_passing_errors(monkeypatch: pytest.MonkeyPatch, exc: Exception):
                 run_id = "wf.1"
                 config_name = "<config sentinel>"
 
@@ -390,7 +390,7 @@ class TestWorkflowRunRepo:
 
                 return wf_run
 
-            def test_mixed_imports(self, monkeypatch):
+            def test_mixed_imports(self, monkeypatch: pytest.MonkeyPatch):
                 # Given
                 wf_run_id = "wf.1"
                 config = "<config sentinel>"
@@ -450,7 +450,7 @@ class TestWorkflowRunRepo:
                     "task_in_another_module",
                 ]
 
-            def test_shadowing_names(self, monkeypatch):
+            def test_shadowing_names(self, monkeypatch: pytest.MonkeyPatch):
                 # Given
                 wf_run_id = "wf.1"
                 config = "<config sentinel>"
@@ -502,7 +502,7 @@ class TestWorkflowRunRepo:
                     exceptions.ConfigNameNotFoundError(),
                 ],
             )
-            def test_passing_errors(monkeypatch, exc):
+            def test_passing_errors(monkeypatch: pytest.MonkeyPatch, exc: Exception):
                 wf_run_id = "wf.1"
                 config_name = "<config sentinel>"
 
@@ -525,7 +525,7 @@ class TestWorkflowRunRepo:
                     exceptions.ConfigNameNotFoundError(),
                 ],
             )
-            def test_passing_errors(monkeypatch, exc):
+            def test_passing_errors(monkeypatch: pytest.MonkeyPatch, exc: Exception):
                 wf_run_id = "wf.1"
                 config_name = "<config sentinel>"
                 task_fn_name = "my_fn"
@@ -543,9 +543,9 @@ class TestWorkflowRunRepo:
             class TestHappyPath:
                 @staticmethod
                 def _make_wf_run(
-                    monkeypatch,
+                    monkeypatch: pytest.MonkeyPatch,
                     inv_id: str,
-                    fake_task_run_outputs,
+                    fake_task_run_outputs: t.Any,
                     task_meta: ir.TaskOutputMetadata,
                 ) -> sdk.WorkflowRun:
                     task_run = create_autospec(sdk.TaskRun)
@@ -572,7 +572,7 @@ class TestWorkflowRunRepo:
 
                     return wf_run
 
-                def test_single_output(self, monkeypatch):
+                def test_single_output(self, monkeypatch: pytest.MonkeyPatch):
                     # Given
                     run_id = "wf.1"
                     inv_id = "inv1"
@@ -599,7 +599,7 @@ class TestWorkflowRunRepo:
                     # Then
                     assert outputs == (fake_output,)
 
-                def test_multiple_outputs(self, monkeypatch):
+                def test_multiple_outputs(self, monkeypatch: pytest.MonkeyPatch):
                     # Given
                     run_id = "wf.1"
                     inv_id = "inv1"
@@ -627,7 +627,7 @@ class TestWorkflowRunRepo:
                     assert outputs == fake_outputs
 
             @staticmethod
-            def test_invalid_inv_id(monkeypatch):
+            def test_invalid_inv_id(monkeypatch: pytest.MonkeyPatch):
                 run_id = "wf.1"
                 inv_id = "inv1"
                 config_name = "<config sentinel>"
@@ -658,7 +658,7 @@ class TestWorkflowRunRepo:
                     exceptions.ConfigNameNotFoundError(),
                 ],
             )
-            def test_passing_errors(monkeypatch, exc):
+            def test_passing_errors(monkeypatch: pytest.MonkeyPatch, exc: Exception):
                 run_id = "wf.1"
                 inv_id = "inv1"
                 config_name = "<config sentinel>"
@@ -677,7 +677,7 @@ class TestWorkflowRunRepo:
 
         class TestGetWFLogs:
             @staticmethod
-            def test_passing_values(mock_by_id, mock_wf_run):
+            def test_passing_values(mock_by_id: Mock, mock_wf_run: Mock):
                 # Given
                 config = "<config sentinel>"
                 wf_run_id = "<id sentinel>"
@@ -724,7 +724,9 @@ class TestWorkflowRunRepo:
             @pytest.mark.parametrize(
                 "exc", [ConnectionError(), exceptions.UnauthorizedError()]
             )
-            def test_passing_errors(mock_by_id, mock_wf_run, exc):
+            def test_passing_errors(
+                mock_by_id: Mock, mock_wf_run: Mock, exc: Exception
+            ):
                 # Given
                 config = "<config sentinel>"
                 wf_run_id = "<id sentinel>"
@@ -740,7 +742,7 @@ class TestWorkflowRunRepo:
 
         class TestGetTaskLogs:
             @staticmethod
-            def test_passing_values(mock_by_id, mock_wf_run):
+            def test_passing_values(mock_by_id: Mock, mock_wf_run: Mock):
                 # Given
                 config = "<config sentinel>"
                 wf_run_id = "<id sentinel>"
@@ -764,7 +766,7 @@ class TestWorkflowRunRepo:
                 assert retrieved == {task_inv_id: log_lines}
 
             @staticmethod
-            def test_invalid_inv_id(mock_by_id, mock_wf_run):
+            def test_invalid_inv_id(mock_by_id: Mock, mock_wf_run: Mock):
                 # Given
                 config = "<config sentinel>"
                 wf_run_id = "<id sentinel>"
@@ -791,7 +793,9 @@ class TestWorkflowRunRepo:
                     exceptions.ConfigNameNotFoundError,
                 ],
             )
-            def test_passing_errors(mock_by_id, mock_wf_run, exc):
+            def test_passing_errors(
+                mock_by_id: Mock, mock_wf_run: Mock, exc: t.Type[Exception]
+            ):
                 # Given
                 config = "<config sentinel>"
                 wf_run_id = "<id sentinel>"
@@ -808,7 +812,7 @@ class TestWorkflowRunRepo:
 
     class TestIntegration:
         @staticmethod
-        def test_list_wf_runs(monkeypatch):
+        def test_list_wf_runs(monkeypatch: pytest.MonkeyPatch):
             # Given
             config = "ray"
             ws = "ws"
@@ -842,7 +846,7 @@ class TestWorkflowRunRepo:
             assert [run.id for run in runs] == stub_run_ids
 
         @staticmethod
-        def test_list_wf_run_summaries(monkeypatch):
+        def test_list_wf_run_summaries(monkeypatch: pytest.MonkeyPatch):
             # Given
             config = "ray"
             stub_run_ids = ["wf.1", "wf.2"]
@@ -910,7 +914,9 @@ class TestWorkflowRunRepo:
                 return run
 
             @staticmethod
-            def test_get_task_fn_names(monkeypatch, example_wf_run: sdk.WorkflowRun):
+            def test_get_task_fn_names(
+                monkeypatch: pytest.MonkeyPatch, example_wf_run: sdk.WorkflowRun
+            ):
                 # Given
                 config = "<config sentinel>"
                 repo = _repos.WorkflowRunRepo()
@@ -927,7 +933,9 @@ class TestWorkflowRunRepo:
                 assert names == ["fn1", "fn2"]
 
             @staticmethod
-            def test_get_task_inv_ids(monkeypatch, example_wf_run: sdk.WorkflowRun):
+            def test_get_task_inv_ids(
+                monkeypatch: pytest.MonkeyPatch, example_wf_run: sdk.WorkflowRun
+            ):
                 # Given
                 config = "<config sentinel>"
                 repo = _repos.WorkflowRunRepo()
@@ -1161,7 +1169,7 @@ class TestConfigRepo:
 
         """
 
-        def test_list_config(self, monkeypatch):
+        def test_list_config(self, monkeypatch: pytest.MonkeyPatch):
             """
             Simple test that verifies that repo return all the configs returned by
             _configs internals
@@ -1177,7 +1185,7 @@ class TestConfigRepo:
             # Then
             assert names == configs
 
-        def test_list_remote_config_names(self, monkeypatch):
+        def test_list_remote_config_names(self, monkeypatch: pytest.MonkeyPatch):
             configs = ["config1", "config2"]
             monkeypatch.setattr(
                 sdk.RuntimeConfig,
@@ -1194,7 +1202,9 @@ class TestConfigRepo:
             assert names == configs
 
         @pytest.mark.parametrize("runtime_name", [RuntimeName.CE_REMOTE])
-        def test_store_token(self, monkeypatch, runtime_name):
+        def test_store_token(
+            self, monkeypatch: pytest.MonkeyPatch, runtime_name: RemoteRuntime
+        ):
             repo = _repos.ConfigRepo()
             uri = "funny_uri"
             token = "even_funnier_token"
@@ -1243,7 +1253,11 @@ class TestConfigRepo:
             return TEST_CONFIG_JSON
 
         @staticmethod
-        def test_returns_usable_configs(tmp_path: Path, monkeypatch, config_content):
+        def test_returns_usable_configs(
+            tmp_path: Path,
+            monkeypatch: pytest.MonkeyPatch,
+            config_content: t.Mapping[str, t.Any],
+        ):
             """
             Verifies that the output is a list that makes sense for the user to select
             the config value from.
@@ -1288,12 +1302,12 @@ class TestConfigRepo:
         )
         def test_update_config(
             tmp_path: Path,
-            monkeypatch,
-            config_content,
-            uri,
-            token,
-            config_name,
-            runtime_name,
+            monkeypatch: pytest.MonkeyPatch,
+            config_content: t.Mapping[str, t.Any],
+            uri: str,
+            token: str,
+            config_name: str,
+            runtime_name: RemoteRuntime,
         ):
             """
             Verifies that the output is a list that makes sense for the user to select
@@ -1331,7 +1345,9 @@ class TestConfigRepo:
 
 class TestRuntimeRepo:
     @pytest.mark.parametrize("runtime_name", [RuntimeName.CE_REMOTE])
-    def test_return_valid_token(self, monkeypatch, runtime_name):
+    def test_return_valid_token(
+        self, monkeypatch: pytest.MonkeyPatch, runtime_name: RemoteRuntime
+    ):
         # Given
         fake_login_url = "http://my_login.url"
 
@@ -1353,7 +1369,12 @@ class TestRuntimeRepo:
     @pytest.mark.parametrize(
         "exception", [requests.ConnectionError, requests.exceptions.MissingSchema]
     )
-    def test_exceptions(self, monkeypatch, exception, runtime_name):
+    def test_exceptions(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        exception: Exception,
+        runtime_name: RemoteRuntime,
+    ):
         # Given
         def _exception(_, __):
             raise exception
@@ -1402,7 +1423,7 @@ class TestWorkflowDefRepoIntegration:
 
     @staticmethod
     @pytest.fixture
-    def tmp_packages_site(tmp_path):
+    def tmp_packages_site(tmp_path: Path):
         """
         Prepares a directory for importing Python modules and cleans up the
         module cache afterwards.
@@ -1449,7 +1470,7 @@ class TestWorkflowDefRepoIntegration:
                 assert mod.foo == "abc"
 
             @staticmethod
-            def test_loads_from_cwd(tmp_path: Path, monkeypatch):
+            def test_loads_from_cwd(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
                 """
                 - We have some free-form project files outside of a setuptools-like
                   distribution
@@ -1529,7 +1550,7 @@ class TestWorkflowDefRepoIntegration:
             ]
 
         @staticmethod
-        def test_empty_module(tmp_packages_site):
+        def test_empty_module(tmp_packages_site: Path):
             # Given
             module_path = tmp_packages_site / "my_module.py"
             module_path.write_text("foo = 'abc'")
@@ -1575,7 +1596,7 @@ class TestSpacesRepo:
 
         """
 
-        def test_list_workspaces(self, monkeypatch):
+        def test_list_workspaces(self, monkeypatch: pytest.MonkeyPatch):
             """
             Simple test that verifies that repo return all the workspaces returned by
             sdk
@@ -1592,7 +1613,7 @@ class TestSpacesRepo:
             # Then
             assert names == spaces
 
-        def test_list_projects(self, monkeypatch):
+        def test_list_projects(self, monkeypatch: pytest.MonkeyPatch):
             """
             Simple test that verifies that repo return all the projects
             returned by

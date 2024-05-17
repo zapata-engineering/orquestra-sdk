@@ -932,7 +932,7 @@ def workflow():
     n_trials = 100
     n_concurrent_searches = 10
     assigned_trials = 0
-    current_trials: list[t.Any] = [None] * n_concurrent_searches
+    current_trials: t.List[t.Any] = [None] * n_concurrent_searches
     controller_data = controller_step(*current_trials)
     while assigned_trials < n_trials:
         current_trials = [
