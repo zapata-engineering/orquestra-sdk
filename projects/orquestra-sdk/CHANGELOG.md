@@ -6,22 +6,28 @@
 
 🔥 *Features*
 
-* Add `WorkflowDef.with_head_node_resources()` function to programmatically set head node resources for a workflow definition
-* Add Python extras support in `GithubImport` object
-
 🧟 *Deprecations*
 
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
 
-* Add retries when reading Ray artifacts to fix `json.decode()` exceptions that are caused by a race condition inside Ray.
-
 💅 *Improvements*
 
 🥷 *Internal*
 
 📃 *Docs*
+
+## v0.64.0
+
+🔥 *Features*
+
+* Add `WorkflowDef.with_head_node_resources()` function to programmatically set head node resources for a workflow definition
+* Add Python extras support in `GithubImport` object
+
+🐛 *Bug Fixes*
+
+* Add retries when reading Ray artifacts to fix `json.decode()` exceptions that are caused by a race condition inside Ray.
 
 ## v0.63.0
 
