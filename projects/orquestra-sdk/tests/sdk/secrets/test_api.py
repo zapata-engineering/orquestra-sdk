@@ -5,6 +5,7 @@
 Tests for the user-facing secrets API.
 """
 
+from typing import Callable
 from unittest.mock import Mock
 
 import pytest
@@ -24,7 +25,7 @@ class TestIntegrationWithClient:
 
     @staticmethod
     @pytest.fixture
-    def secrets_client_mock(monkeypatch):
+    def secrets_client_mock(monkeypatch: pytest.MonkeyPatch):
         client = Mock()
         client.list_secrets.return_value = []
 
@@ -54,7 +55,9 @@ class TestIntegrationWithClient:
                     ),
                 ],
             )
-            def test_common_errors(secrets_client_mock, secrets_action, exc):
+            def test_common_errors(
+                secrets_client_mock: Mock, secrets_action: Callable, exc: Exception
+            ):
                 secrets_client_mock.get_secret.side_effect = exc
                 secrets_client_mock.delete_secret.side_effect = exc
                 secrets_client_mock.list_secrets.side_effect = exc
@@ -84,7 +87,11 @@ class TestIntegrationWithClient:
                     ),
                 ],
             )
-            def test_common_errors(monkeypatch, secrets_action, exc):
+            def test_common_errors(
+                monkeypatch: pytest.MonkeyPatch,
+                secrets_action: Callable,
+                exc: Exception,
+            ):
                 monkeypatch.setattr(_auth, "authorized_client", Mock(side_effect=exc))
 
                 with pytest.raises(type(exc)):
@@ -93,7 +100,7 @@ class TestIntegrationWithClient:
     @pytest.mark.parametrize("workspace_id", ["coolest_workspace_ever"])
     class TestPassingData:
         @staticmethod
-        def test_creating(secrets_client_mock, workspace_id):
+        def test_creating(secrets_client_mock: Mock, workspace_id: str):
             secret_name = "my secret?"
             secret_value = "I don't like being mean to folks"
 
@@ -106,7 +113,7 @@ class TestIntegrationWithClient:
             )
 
         @staticmethod
-        def test_overwriting_secret(secrets_client_mock, workspace_id):
+        def test_overwriting_secret(secrets_client_mock: Mock, workspace_id: str):
             secret_name = "my secret?"
             secret_value = "I don't like being mean to folks"
 
@@ -126,13 +133,13 @@ class TestIntegrationWithClient:
             )
 
         @staticmethod
-        def test_listing(secrets_client_mock, workspace_id):
+        def test_listing(secrets_client_mock: Mock, workspace_id: str):
             sdk.secrets.list(workspace_id=workspace_id)
 
             secrets_client_mock.list_secrets.assert_called_with(workspace_id)
 
         @staticmethod
-        def test_deleting(secrets_client_mock, workspace_id):
+        def test_deleting(secrets_client_mock: Mock, workspace_id: str):
             secret_name = "my secret"
 
             sdk.secrets.delete(secret_name, workspace_id=workspace_id)
