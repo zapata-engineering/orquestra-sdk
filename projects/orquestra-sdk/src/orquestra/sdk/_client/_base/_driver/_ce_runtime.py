@@ -7,6 +7,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Protocol, Sequence, Union
 
+from orquestra.sdk._client._base._jwt import check_jwt_without_signature_verification
 from orquestra.sdk._shared import (
     Project,
     ProjectRef,
@@ -16,7 +17,12 @@ from orquestra.sdk._shared import (
     serde,
 )
 from orquestra.sdk._shared.abc import RuntimeInterface
-from orquestra.sdk._shared.exceptions import IgnoredFieldWarning
+from orquestra.sdk._shared.exceptions import (
+    ExpiredTokenError,
+    IgnoredFieldWarning,
+    InvalidTokenError,
+    UnauthorizedError,
+)
 from orquestra.sdk._shared.kubernetes.quantity import parse_quantity
 from orquestra.sdk._shared.logs import (
     LogAccumulator,
@@ -62,6 +68,14 @@ class PaginatedListFunc(Protocol):
         state: Optional[Union[State, List[State]]] = None,
     ) -> _client.Paginated:
         ...
+
+
+def _check_token_validity(token: str):
+    try:
+        check_jwt_without_signature_verification(token)
+        raise UnauthorizedError()
+    except (ExpiredTokenError, InvalidTokenError):
+        return False
 
 
 def _get_max_resources(workflow_def: WorkflowDef) -> _models.Resources:
@@ -121,6 +135,7 @@ class CERuntime(RuntimeInterface):
         self,
         config: RuntimeConfiguration,
         client: _client.DriverClient,
+        token: str,
         verbose: bool = False,
     ):
         """Initialiser for the CERuntime interface.
@@ -132,6 +147,7 @@ class CERuntime(RuntimeInterface):
             client: The DriverClient through which the runtime should communicate.
             verbose: if `True`, CERuntime may print debug information about
                 its inner working to stderr.
+            token: bearers token used to authenticate with the cluster
 
         Raises:
             RuntimeConfigError: when the config is invalid.
@@ -140,6 +156,7 @@ class CERuntime(RuntimeInterface):
         self._verbose = verbose
 
         self._client = client
+        self._token = token
 
     def create_workflow_run(
         self, workflow_def: WorkflowDef, project: Optional[ProjectRef], dry_run: bool
@@ -162,6 +179,7 @@ class CERuntime(RuntimeInterface):
         Returns:
             the workflow run ID.
         """
+        _check_token_validity(self._token)
         max_invocation_resources = _get_max_resources(workflow_def)
 
         if workflow_def.resources is not None:
@@ -257,6 +275,8 @@ class CERuntime(RuntimeInterface):
         Returns:
             The status of the workflow run
         """
+        _check_token_validity(self._token)
+
         try:
             return self._client.get_workflow_run(workflow_run_id)
         except (_exceptions.InvalidWorkflowRunID, _exceptions.WorkflowRunNotFound) as e:
@@ -293,6 +313,8 @@ class CERuntime(RuntimeInterface):
         Returns:
             the outputs associated with the workflow run
         """
+        _check_token_validity(self._token)
+
         try:
             result_ids = self._client.get_workflow_run_results(workflow_run_id)
         except (
@@ -377,6 +399,8 @@ class CERuntime(RuntimeInterface):
             a mapping between task invocation ID and the available artifacts from the
                 matching task run.
         """
+        _check_token_validity(self._token)
+
         try:
             artifact_map = self._client.get_workflow_run_artifacts(workflow_run_id)
         except (_exceptions.InvalidWorkflowRunID, _exceptions.WorkflowRunNotFound) as e:
@@ -433,6 +457,8 @@ class CERuntime(RuntimeInterface):
         Raises:
             WorkflowRunCanNotBeTerminated: if workflow run is cannot be terminated.
         """
+        _check_token_validity(self._token)
+
         try:
             self._client.terminate_workflow_run(workflow_run_id, force)
         except _exceptions.WorkflowRunNotFound:
@@ -539,6 +565,8 @@ class CERuntime(RuntimeInterface):
         Raises:
             UnauthorizedError: if the remote cluster rejects the token
         """
+        _check_token_validity(self._token)
+
         func = self._client.list_workflow_run_summaries
         try:
             return self._list_wf_runs(
@@ -573,6 +601,8 @@ class CERuntime(RuntimeInterface):
         Returns:
                 A list of the workflow runs
         """
+        _check_token_validity(self._token)
+
         func = self._client.list_workflow_runs
         try:
             return self._list_wf_runs(
@@ -595,6 +625,8 @@ class CERuntime(RuntimeInterface):
             WorkflowRunNotFound: if the workflow run cannot be found
             UnauthorizedError: if the remote cluster rejects the token
         """
+        _check_token_validity(self._token)
+
         try:
             messages = self._client.get_workflow_run_logs(wf_run_id)
             sys_messages = self._client.get_system_logs(wf_run_id)
@@ -673,6 +705,8 @@ class CERuntime(RuntimeInterface):
             InvalidWorkflowRunLogsError: if the logs could not be decoded.
             UnauthorizedError: if the remote cluster rejects the token.
         """
+        _check_token_validity(self._token)
+
         try:
             messages = self._client.get_task_run_logs(wf_run_id, task_inv_id)
         except (_exceptions.InvalidWorkflowRunID, _exceptions.TaskRunLogsNotFound) as e:
@@ -697,6 +731,8 @@ class CERuntime(RuntimeInterface):
         return LogOutput(out=task_logs.out, err=task_logs.err)
 
     def list_workspaces(self):
+        _check_token_validity(self._token)
+
         try:
             workspaces = self._client.list_workspaces()
             return [
@@ -709,6 +745,8 @@ class CERuntime(RuntimeInterface):
             ) from e
 
     def list_projects(self, workspace_id: str):
+        _check_token_validity(self._token)
+
         try:
             projects = self._client.list_projects(workspace_id)
             return [
@@ -730,4 +768,6 @@ class CERuntime(RuntimeInterface):
             ) from e
 
     def get_workflow_project(self, wf_run_id: WorkflowRunId) -> ProjectRef:
+        _check_token_validity(self._token)
+
         return self._client.get_workflow_project(wf_run_id)

@@ -66,5 +66,6 @@ def _build_ce_runtime(config: RuntimeConfiguration, verbose: bool):
     return orquestra.sdk._client._base._driver._ce_runtime.CERuntime(
         config=config,
         client=client,
+        token=token,
         verbose=verbose,
     )
