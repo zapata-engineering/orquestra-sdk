@@ -84,17 +84,17 @@ class Action:
 
         # Set up combinations of args that correspond to the local definition path and
         # the previously submitted workflow path.
-        remote_args = [config, wf_run_id]
+        submitted_args = [config, wf_run_id]
         local_args = [module, name]
 
         if any([arg is not None for arg in local_args]):
             # At least one argument unique to the local workflowdef path has been passed
             assert (_module := module or workflow) is not None
             graph = self._resolve_local_workflow_def_graph(_module, name)
-        elif any([arg is not None for arg in remote_args]):
+        elif any([arg is not None for arg in submitted_args]):
             # At least one argument uniwue to the previously submitted workflowdef path
             # has been passed.
-            graph = self._resolve_remote_workflow_def_graph(
+            graph = self._resolve_submitted_workflow_def_graph(
                 config, wf_run_id or workflow
             )
         else:
@@ -104,7 +104,7 @@ class Action:
                 assert (_module := module or workflow) is not None
                 graph = self._resolve_local_workflow_def_graph(_module, name)
             except (exceptions.WorkflowDefinitionModuleNotFound, AssertionError):
-                graph = self._resolve_remote_workflow_def_graph(
+                graph = self._resolve_submitted_workflow_def_graph(
                     config, wf_run_id or workflow
                 )
 
@@ -124,7 +124,7 @@ class Action:
         )
         return resolved_wf_def.graph
 
-    def _resolve_remote_workflow_def_graph(self, config, wf_run_id) -> Digraph:
+    def _resolve_submitted_workflow_def_graph(self, config, wf_run_id) -> Digraph:
         """Resolve a graph from the definition of a submitted workflow."""
         resolved_config = self._config_resolver.resolve(wf_run_id, config)
         wf_run = self._wf_run_resolver.resolve_run(wf_run_id, resolved_config)
