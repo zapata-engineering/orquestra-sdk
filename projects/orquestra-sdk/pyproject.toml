@@ -72,10 +72,18 @@ dependencies = [
 
 [project.optional-dependencies]
 ray = [
-    "ray[default]==2.9.0",
+    "ray==2.9.0",
+    "virtualenv>=20.0.24, !=20.21.1",  # Ray depends on this, but it's missing from the base requirements.
     "async-timeout",       # Ray depends on this, but its missing from ray requirements. Can be removed when https://github.com/ray-project/ray/issues/41267 is fixed.
 ]
-all = ["orquestra-sdk[ray]"]
+
+dashboard = [
+    "orquestra-sdk[ray]",
+    "ray[default]",    
+]
+
+all = ["orquestra-sdk[dashboard]"]
+
 # Docs-specific deps. This list should match the requirements we're using in
 # the multi-repo docs builds.
 docs = [
