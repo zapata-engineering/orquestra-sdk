@@ -4,6 +4,8 @@
 
 🚨 *Breaking Changes*
 
+* Installing `orquestra-sdk[ray]` no longer installs Ray dashboard. Use `orquestra-sdk[all]` or `orquestra-sdk[dashboard]` instead.
+
 🔥 *Features*
 
 🧟 *Deprecations*
@@ -13,6 +15,8 @@
 🐛 *Bug Fixes*
 
 💅 *Improvements*
+
+* Short-circuit token validation. Do client-side verification of CE tokens before sending requests to the server.
 
 🥷 *Internal*
 
