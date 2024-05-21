@@ -73,9 +73,8 @@ class PaginatedListFunc(Protocol):
 def _check_token_validity(token: str):
     try:
         check_jwt_without_signature_verification(token)
-        raise UnauthorizedError()
     except (ExpiredTokenError, InvalidTokenError):
-        return False
+        raise UnauthorizedError
 
 
 def _get_max_resources(workflow_def: WorkflowDef) -> _models.Resources:
