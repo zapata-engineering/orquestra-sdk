@@ -2,6 +2,9 @@
 requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
+[tool.hatch.metadata]
+allow-direct-references = true  # TO BE REMOVED WHEN NO LONGER INSTALLING PACKAGES FROM LOCAL DIRS
+
 [project]
 authors = [
     { name = "Zapata Computing Inc.", email = "info@zapatacomputing.com" },
@@ -19,9 +22,6 @@ classifiers = [
 dynamic = ["version"]
 requires-python = ">= 3.8"
 
-[tool.hatch.metadata]
-allow-direct-references = true  # TO BE REMOVED WHEN NO LONGER INSTALLING PACKAGES FROM LOCAL DIRS
-
 # As a rule of thumb, the dependencies should be specified with lower bound
 # only.
 #
@@ -29,10 +29,12 @@ allow-direct-references = true  # TO BE REMOVED WHEN NO LONGER INSTALLING PACKAG
 # version we can easily install and test, even if there are older versions with
 # the same API.
 dependencies = [
-    "workflow-runtime @ {root:uri}/../orquestra-workflow-runtime",
-    "workflow-shared @ {root:uri}/../orquestra-workflow-shared",
+    "orquestra-workflow-runtime @ {root:uri}/../orquestra-workflow-runtime", # TO BE REMOVED
+    "orquestra-workflow-shared @ {root:uri}/../orquestra-workflow-shared", # TO BE REMOVED
+
     # Schema definition
     "pydantic>1.10.7",
+
     # Pickling library
     "cloudpickle==2.2.1",
     # We should keep `dill` to make sure old workflows can be unpickled.
