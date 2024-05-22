@@ -7,7 +7,6 @@ import warnings
 from typing import overload
 
 from inquirer import errors  # type: ignore # noqa
-
 from orquestra.workflow_shared import exceptions
 
 # One of our transitive dependencies shows DeprecationWarnings related to invalid usage

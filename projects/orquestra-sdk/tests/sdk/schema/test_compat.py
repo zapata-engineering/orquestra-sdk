@@ -8,7 +8,6 @@ import typing as t
 from pathlib import Path
 
 import pytest
-
 from orquestra.workflow_shared.packaging import _versions
 from orquestra.workflow_shared.schema import _compat, ir
 

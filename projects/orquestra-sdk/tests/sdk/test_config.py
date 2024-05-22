@@ -19,11 +19,11 @@ the user. It's a lot easier to figure out appropriate behavior this way.
 from pathlib import Path
 
 import filelock
-import pytest
-
 import orquestra.workflow_shared.exceptions as exceptions
-from orquestra.sdk._client._base import _config
+import pytest
 from orquestra.workflow_shared.schema.configs import RuntimeName
+
+from orquestra.sdk._client._base import _config
 
 from .data.configs import TEST_CONFIG_JSON
 

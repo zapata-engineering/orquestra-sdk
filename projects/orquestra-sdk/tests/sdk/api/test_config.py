@@ -12,15 +12,15 @@ from pathlib import Path
 from unittest.mock import mock_open, patch
 
 import pytest
-
-from orquestra.sdk._client._base import _config
-from orquestra.sdk._client._base._api import _config as api_cfg
 from orquestra.workflow_shared import exceptions
 from orquestra.workflow_shared.exceptions import ConfigNameNotFoundError
 from orquestra.workflow_shared.schema.configs import (
     CONFIG_FILE_CURRENT_VERSION,
     RuntimeName,
 )
+
+from orquestra.sdk._client._base import _config
+from orquestra.sdk._client._base._api import _config as api_cfg
 
 from ..data.configs import TEST_CONFIG_JSON, TEST_CONFIGS_DICT
 

@@ -7,6 +7,8 @@ from unittest.mock import Mock, PropertyMock, create_autospec
 
 import pytest
 from aiohttp import web
+from orquestra.workflow_shared.exceptions import ExpiredTokenError, InvalidTokenError
+from orquestra.workflow_shared.schema.configs import RuntimeConfiguration, RuntimeName
 
 from orquestra.sdk._client._base.cli._arg_resolvers import ConfigResolver
 from orquestra.sdk._client._base.cli._login import _login, _login_server
@@ -16,8 +18,6 @@ from orquestra.sdk._client._base.cli._ui._presenters import (
     WrappedCorqOutputPresenter,
 )
 from orquestra.sdk._client._base.cli._ui._prompts import Prompter
-from orquestra.workflow_shared.exceptions import ExpiredTokenError, InvalidTokenError
-from orquestra.workflow_shared.schema.configs import RuntimeConfiguration, RuntimeName
 
 
 @pytest.mark.parametrize("runtime_name", [RuntimeName.CE_REMOTE])

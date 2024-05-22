@@ -8,7 +8,6 @@ Unit tests for ``orquestra.sdk._base._logs._regrouping``.
 from pathlib import Path
 
 import pytest
-
 from orquestra.workflow_shared.logs import _regrouping
 
 

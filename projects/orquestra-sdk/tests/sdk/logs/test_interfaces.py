@@ -3,7 +3,6 @@
 ################################################################################
 
 import pytest
-
 from orquestra.workflow_shared.logs._interfaces import LogOutput, WorkflowLogs
 
 

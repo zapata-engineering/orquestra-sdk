@@ -15,15 +15,6 @@ from pathlib import Path
 from typing import List, Optional, Sequence
 
 import click
-from rich.box import SIMPLE_HEAVY
-from rich.console import Console, Group, RenderableType
-from rich.live import Live
-from rich.pretty import Pretty
-from rich.rule import Rule
-from rich.spinner import Spinner
-from rich.table import Column, Table
-from tabulate import tabulate
-
 from orquestra.workflow_shared import serde
 from orquestra.workflow_shared.dates import Instant, from_unix_time
 from orquestra.workflow_shared.logs import LogOutput, WorkflowLogs
@@ -34,7 +25,18 @@ from orquestra.workflow_shared.schema.configs import (
     RuntimeName,
 )
 from orquestra.workflow_shared.schema.ir import ArtifactFormat
-from orquestra.workflow_shared.schema.workflow_run import TaskInvocationId, WorkflowRunId
+from orquestra.workflow_shared.schema.workflow_run import (
+    TaskInvocationId,
+    WorkflowRunId,
+)
+from rich.box import SIMPLE_HEAVY
+from rich.console import Console, Group, RenderableType
+from rich.live import Live
+from rich.pretty import Pretty
+from rich.rule import Rule
+from rich.spinner import Spinner
+from rich.table import Column, Table
+from tabulate import tabulate
 
 from ...._base import _env
 from . import _errors

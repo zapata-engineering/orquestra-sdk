@@ -15,14 +15,6 @@ from unittest.mock import Mock, create_autospec
 
 import pytest
 import requests
-
-from orquestra import sdk
-from orquestra.sdk._client._base import _config
-from orquestra.sdk._client._base._config import SPECIAL_CONFIG_NAME_DICT
-from orquestra.sdk._client._base._driver._client import DriverClient
-from orquestra.sdk._client._base._testing import _example_wfs, _reloaders
-from orquestra.sdk._client._base.cli import _repos
-from orquestra.sdk._client._base.cli._ui import _models as ui_models
 from orquestra.workflow_runtime._ray import _dag
 from orquestra.workflow_shared import exceptions
 from orquestra.workflow_shared.dates import _dates
@@ -31,8 +23,18 @@ from orquestra.workflow_shared.schema import ir
 from orquestra.workflow_shared.schema.configs import RemoteRuntime, RuntimeName
 from orquestra.workflow_shared.schema.workflow_run import RunStatus, State
 from orquestra.workflow_shared.schema.workflow_run import TaskRun as TaskRunModel
-from orquestra.workflow_shared.schema.workflow_run import WorkflowRun as WorkflowRunModel
+from orquestra.workflow_shared.schema.workflow_run import (
+    WorkflowRun as WorkflowRunModel,
+)
 from orquestra.workflow_shared.schema.workflow_run import WorkflowRunSummary
+
+from orquestra import sdk
+from orquestra.sdk._client._base import _config
+from orquestra.sdk._client._base._config import SPECIAL_CONFIG_NAME_DICT
+from orquestra.sdk._client._base._driver._client import DriverClient
+from orquestra.sdk._client._base._testing import _example_wfs, _reloaders
+from orquestra.sdk._client._base.cli import _repos
+from orquestra.sdk._client._base.cli._ui import _models as ui_models
 
 from ..sdk.data.configs import TEST_CONFIG_JSON
 

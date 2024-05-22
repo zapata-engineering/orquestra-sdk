@@ -6,8 +6,10 @@ import asyncio
 import typing as t
 
 from aiohttp import web
-
-from orquestra.workflow_shared.exceptions import LocalConfigLoginError, UserCancelledPrompt
+from orquestra.workflow_shared.exceptions import (
+    LocalConfigLoginError,
+    UserCancelledPrompt,
+)
 from orquestra.workflow_shared.schema.configs import RemoteRuntime
 
 from .. import _arg_resolvers, _repos

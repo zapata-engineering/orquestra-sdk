@@ -4,9 +4,9 @@
 from unittest.mock import Mock
 
 import pytest
+from orquestra.workflow_shared import exceptions
 
 from orquestra.sdk._client._base.cli._workflow import _stop
-from orquestra.workflow_shared import exceptions
 
 
 class TestAction:

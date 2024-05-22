@@ -12,14 +12,14 @@ from contextlib import nullcontext as does_not_raise
 from unittest.mock import Mock
 
 import git
+import orquestra.workflow_shared.schema.ir as ir
 import pytest
 from git.remote import Remote
-
-import orquestra.workflow_shared.schema.ir as ir
-from orquestra.sdk._client import secrets
-from orquestra.sdk._client._base import _dsl, _traversal, _workflow
 from orquestra.workflow_shared import dispatch, exceptions, serde
 from orquestra.workflow_shared.packaging import _versions
+
+from orquestra.sdk._client import secrets
+from orquestra.sdk._client._base import _dsl, _traversal, _workflow
 
 from .data.complex_serialization.workflow_defs import (
     generate_object_with_num,

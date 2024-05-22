@@ -4,8 +4,9 @@
 
 from unittest.mock import Mock, create_autospec
 
-from orquestra.sdk._client._base.cli._config._list import Action
 from orquestra.workflow_shared.schema.configs import RuntimeConfiguration
+
+from orquestra.sdk._client._base.cli._config._list import Action
 
 
 class TestAction:

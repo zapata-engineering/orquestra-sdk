@@ -44,7 +44,9 @@ from orquestra.workflow_shared.schema.responses import WorkflowResult
 from orquestra.workflow_shared.schema.workflow_run import ProjectId, State
 from orquestra.workflow_shared.schema.workflow_run import TaskRun as TaskRunModel
 from orquestra.workflow_shared.schema.workflow_run import TaskRunId
-from orquestra.workflow_shared.schema.workflow_run import WorkflowRun as WorkflowRunModel
+from orquestra.workflow_shared.schema.workflow_run import (
+    WorkflowRun as WorkflowRunModel,
+)
 from orquestra.workflow_shared.schema.workflow_run import (
     WorkflowRunId,
     WorkflowRunMinimal,

@@ -8,7 +8,6 @@ import warnings
 from contextlib import contextmanager
 from datetime import timedelta
 
-from orquestra.sdk import secrets
 from orquestra.workflow_shared import (
     ProjectRef,
     abc,
@@ -31,6 +30,8 @@ from orquestra.workflow_shared.schema.workflow_run import (
     WorkflowRunSummary,
     WorkspaceId,
 )
+
+from orquestra.sdk import secrets
 
 WfRunId = str
 ArtifactValue = t.Any

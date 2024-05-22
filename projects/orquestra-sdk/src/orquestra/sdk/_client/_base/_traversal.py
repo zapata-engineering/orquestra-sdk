@@ -15,16 +15,14 @@ import warnings
 from collections import OrderedDict
 from functools import singledispatch
 
-from pip_api._parse_requirements import Requirement
-
-from orquestra.workflow_shared import exceptions, serde
+from orquestra.workflow_shared import exceptions, parse_git_url, serde
 from orquestra.workflow_shared.exec_ctx import workflow_build
 from orquestra.workflow_shared.packaging import (
     get_current_python_version,
     get_current_sdk_version,
 )
 from orquestra.workflow_shared.schema import ir, responses
-from orquestra.workflow_shared import parse_git_url
+from pip_api._parse_requirements import Requirement
 
 from . import _dsl, _workflow
 

@@ -10,12 +10,12 @@ from unittest.mock import Mock
 
 import inquirer  # type: ignore # noqa
 import pytest
-
-from orquestra.sdk._client._base.cli._ui._prompts import SINGLE_INPUT, Prompter
 from orquestra.workflow_shared.exceptions import (
     NoOptionsAvailableError,
     UserCancelledPrompt,
 )
+
+from orquestra.sdk._client._base.cli._ui._prompts import SINGLE_INPUT, Prompter
 
 prompter = Prompter()
 

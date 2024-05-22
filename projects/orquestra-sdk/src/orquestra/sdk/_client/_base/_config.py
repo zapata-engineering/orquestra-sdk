@@ -12,8 +12,6 @@ from typing import Any, List, Mapping, Optional, Union
 from urllib.parse import ParseResult, urlparse
 
 import filelock
-from pydantic import ValidationError
-
 import orquestra.workflow_shared.exceptions as exceptions
 from orquestra.workflow_shared.schema.configs import (
     CONFIG_FILE_CURRENT_VERSION,
@@ -22,6 +20,7 @@ from orquestra.workflow_shared.schema.configs import (
     RuntimeConfigurationFile,
     RuntimeName,
 )
+from pydantic import ValidationError
 
 from ._env import (
     CONFIG_PATH_ENV,

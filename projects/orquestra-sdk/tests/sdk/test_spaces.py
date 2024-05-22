@@ -5,6 +5,7 @@
 import typing as t
 
 import pytest
+from orquestra.workflow_shared._spaces._structs import ProjectRef
 
 from orquestra.sdk._client._base._env import CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
 from orquestra.sdk._client._base._spaces._api import (
@@ -12,7 +13,6 @@ from orquestra.sdk._client._base._spaces._api import (
     make_workspace_zri,
 )
 from orquestra.sdk._client._base._spaces._resolver import resolve_studio_ref
-from orquestra.workflow_shared._spaces._structs import ProjectRef
 
 
 @pytest.mark.parametrize(

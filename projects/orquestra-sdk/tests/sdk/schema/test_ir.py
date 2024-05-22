@@ -7,7 +7,6 @@ Tests for the little bits of code we have in ``orquestra.sdk.schema.ir``.
 from pathlib import Path
 
 import pytest
-
 from orquestra.workflow_shared import exceptions
 from orquestra.workflow_shared.schema import ir
 

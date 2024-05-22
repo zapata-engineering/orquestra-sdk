@@ -18,10 +18,10 @@ from unittest.mock import Mock
 
 import pytest
 import responses
+from orquestra.workflow_shared.schema import configs
 
 import orquestra.sdk._client._base._config
 import orquestra.sdk._client.secrets._client
-from orquestra.workflow_shared.schema import configs
 
 
 class Snippets:

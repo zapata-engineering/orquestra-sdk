@@ -5,10 +5,10 @@ import re
 from typing import Callable, List
 
 import pytest
-
-from orquestra.sdk._client._base.cli._ui import _errors
 from orquestra.workflow_shared import exceptions
 from orquestra.workflow_shared.schema.workflow_run import State
+
+from orquestra.sdk._client._base.cli._ui import _errors
 
 from . import exception_makers
 

@@ -3,7 +3,6 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
-
 from orquestra.workflow_shared.serde import deserialize
 
 DATA_PATH = Path(__file__).parent / "data"

@@ -8,7 +8,10 @@ from itertools import chain
 
 from orquestra.workflow_shared import serde
 from orquestra.workflow_shared.abc import ArtifactValue, RuntimeInterface
-from orquestra.workflow_shared.exceptions import TaskRunNotFound, WorkflowRunIDNotFoundError
+from orquestra.workflow_shared.exceptions import (
+    TaskRunNotFound,
+    WorkflowRunIDNotFoundError,
+)
 from orquestra.workflow_shared.exec_ctx import ExecContext, get_current_exec_context
 from orquestra.workflow_shared.logs import LogOutput
 from orquestra.workflow_shared.schema import ir

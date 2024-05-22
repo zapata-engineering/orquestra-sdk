@@ -7,8 +7,6 @@ import logging
 import typing as t
 import warnings
 
-from packaging.version import parse as parse_version
-
 from orquestra.workflow_shared.abc import RuntimeInterface
 from orquestra.workflow_shared.exceptions import (
     ConfigFileNotFoundError,
@@ -20,6 +18,7 @@ from orquestra.workflow_shared.schema.configs import (
     RuntimeConfiguration,
     RuntimeName,
 )
+from packaging.version import parse as parse_version
 
 from .. import _config
 from .._factory import build_runtime_from_config

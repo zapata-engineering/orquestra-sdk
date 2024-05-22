@@ -5,22 +5,8 @@ from datetime import timedelta
 from typing import ContextManager, List, Optional
 from unittest.mock import DEFAULT, MagicMock, Mock, call, create_autospec
 
-import pytest
-
-import orquestra.sdk as sdk
 import orquestra.workflow_shared._retry
-from orquestra.sdk._client._base._driver import (
-    _ce_runtime,
-    _client,
-    _exceptions,
-    _models,
-)
-from orquestra.sdk._client._base._testing._example_wfs import (
-    add,
-    my_workflow,
-    workflow_parametrised_with_resources,
-    workflow_with_different_resources,
-)
+import pytest
 from orquestra.workflow_shared import exceptions, serde
 from orquestra.workflow_shared._spaces._structs import Project, ProjectRef, Workspace
 from orquestra.workflow_shared.logs import LogOutput
@@ -34,6 +20,20 @@ from orquestra.workflow_shared.schema.workflow_run import (
     State,
     WorkflowRun,
     WorkflowRunId,
+)
+
+import orquestra.sdk as sdk
+from orquestra.sdk._client._base._driver import (
+    _ce_runtime,
+    _client,
+    _exceptions,
+    _models,
+)
+from orquestra.sdk._client._base._testing._example_wfs import (
+    add,
+    my_workflow,
+    workflow_parametrised_with_resources,
+    workflow_with_different_resources,
 )
 
 

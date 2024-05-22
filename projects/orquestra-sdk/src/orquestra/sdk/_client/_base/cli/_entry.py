@@ -10,7 +10,6 @@ from pathlib import Path
 
 import click
 import cloup
-
 from orquestra.workflow_shared.schema.configs import RuntimeName
 
 from . import _cli_logs

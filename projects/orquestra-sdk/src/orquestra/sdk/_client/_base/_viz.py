@@ -8,7 +8,6 @@ import typing as t
 from dataclasses import dataclass
 
 import graphviz  # type: ignore
-
 from orquestra.workflow_shared.schema import ir
 
 NodeId = str

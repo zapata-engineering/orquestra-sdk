@@ -14,11 +14,11 @@ import mlflow
 import pytest
 import responses
 import responses.matchers
+from orquestra.workflow_shared.schema import configs
 from pytest import MonkeyPatch
 
 from orquestra import sdk
 from orquestra.sdk._client._base import _config
-from orquestra.workflow_shared.schema import configs
 
 
 class Snippets:

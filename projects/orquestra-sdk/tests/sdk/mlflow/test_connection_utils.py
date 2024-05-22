@@ -7,11 +7,11 @@ from contextlib import suppress as do_not_raise
 from typing import List
 from unittest.mock import Mock, create_autospec
 
+import orquestra.workflow_shared.exceptions as exceptions
 import pytest
 from pytest import MonkeyPatch
 from requests import Response, Session
 
-import orquestra.workflow_shared.exceptions as exceptions
 from orquestra import sdk
 from orquestra.sdk._client._base._env import (
     CURRENT_CLUSTER_ENV,

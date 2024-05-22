@@ -13,7 +13,6 @@ from tempfile import TemporaryDirectory
 from unittest.mock import create_autospec
 
 import pytest
-
 from orquestra.workflow_runtime._ray._logs import _markers
 from orquestra.workflow_shared.dates import _dates
 

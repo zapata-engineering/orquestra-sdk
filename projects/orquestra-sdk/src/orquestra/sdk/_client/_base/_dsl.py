@@ -37,9 +37,6 @@ if TYPE_CHECKING:
     from pip_api._parse_requirements import Requirement
 
 import wrapt  # type: ignore
-
-# Needed for fully-qualified type annotations.
-import orquestra.sdk
 from orquestra.workflow_shared.exceptions import (
     DirtyGitRepo,
     InvalidTaskDefinitionError,
@@ -47,6 +44,9 @@ from orquestra.workflow_shared.exceptions import (
 )
 from orquestra.workflow_shared.kubernetes.quantity import parse_quantity
 from orquestra.workflow_shared.packaging import PackagingError, get_installed_version
+
+# Needed for fully-qualified type annotations.
+import orquestra.sdk
 
 from . import _ast
 

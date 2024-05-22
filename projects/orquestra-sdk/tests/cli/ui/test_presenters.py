@@ -9,20 +9,23 @@ from pathlib import Path
 from unittest.mock import Mock, create_autospec
 
 import pytest
-from rich.console import Console
-
-from orquestra import sdk
-from orquestra.sdk._client._base.cli._ui import _errors
-from orquestra.sdk._client._base.cli._ui import _models as ui_models
-from orquestra.sdk._client._base.cli._ui import _presenters
 from orquestra.workflow_shared import serde
 from orquestra.workflow_shared._spaces._structs import Project, Workspace
 from orquestra.workflow_shared.dates._dates import Instant
 from orquestra.workflow_shared.logs._interfaces import LogOutput
 from orquestra.workflow_shared.schema.configs import RuntimeConfiguration
 from orquestra.workflow_shared.schema.ir import ArtifactFormat
-from orquestra.workflow_shared.schema.responses import ResponseStatusCode, ServiceResponse
+from orquestra.workflow_shared.schema.responses import (
+    ResponseStatusCode,
+    ServiceResponse,
+)
 from orquestra.workflow_shared.schema.workflow_run import RunStatus, State
+from rich.console import Console
+
+from orquestra import sdk
+from orquestra.sdk._client._base.cli._ui import _errors
+from orquestra.sdk._client._base.cli._ui import _models as ui_models
+from orquestra.sdk._client._base.cli._ui import _presenters
 
 
 @sdk.task

@@ -2,7 +2,6 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 import jwt
-
 from orquestra.workflow_shared.exceptions import ExpiredTokenError, InvalidTokenError
 
 

@@ -5,7 +5,6 @@
 from unittest.mock import Mock
 
 import pytest
-
 from orquestra.workflow_runtime._ray._client import RayClient
 
 
@@ -97,9 +96,8 @@ class TestClient:
 
     class TestOutput:
         def test_retry_on_error(self, client: RayClient, monkeypatch):
-            import ray
-
             import orquestra.workflow_shared._retry
+            import ray
 
             get_mock = Mock()
             get_mock.side_effect = [
@@ -118,9 +116,8 @@ class TestClient:
             assert get_mock.call_count == 4
 
         def test_retry_on_error_always_fails(self, client: RayClient, monkeypatch):
-            import ray
-
             import orquestra.workflow_shared._retry
+            import ray
 
             get_mock = Mock()
             get_mock.side_effect = [ray.exceptions.RaySystemError(Mock())] * 20

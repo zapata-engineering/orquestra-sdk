@@ -6,10 +6,10 @@ from pathlib import Path
 from unittest.mock import create_autospec
 
 import pytest
-
-from orquestra.sdk._client._base.cli import _dumpers
 from orquestra.workflow_shared.logs._interfaces import WorkflowLogs
 from orquestra.workflow_shared.schema.ir import ArtifactFormat
+
+from orquestra.sdk._client._base.cli import _dumpers
 
 
 class TestWFOutputDumper:

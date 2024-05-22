@@ -2,7 +2,6 @@
 # © Copyright 2021 - 2024 Zapata Computing Inc.
 ################################################################################
 import pytest
-
 from orquestra.workflow_shared.schema import configs, ir, workflow_run
 
 

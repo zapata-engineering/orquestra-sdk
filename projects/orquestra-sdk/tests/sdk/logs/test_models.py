@@ -6,7 +6,6 @@ from typing import List
 from unittest.mock import Mock, PropertyMock, create_autospec
 
 import pytest
-
 from orquestra.workflow_shared.logs import _models
 
 

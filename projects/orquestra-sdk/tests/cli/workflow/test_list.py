@@ -8,11 +8,11 @@ import typing as t
 from unittest.mock import Mock
 
 import pytest
-
-from orquestra.sdk._client._base.cli._workflow import _list
 from orquestra.workflow_shared import exceptions as exceptions
 from orquestra.workflow_shared.dates import _dates
 from orquestra.workflow_shared.schema.workflow_run import RunStatus, State
+
+from orquestra.sdk._client._base.cli._workflow import _list
 
 
 class TestAction:

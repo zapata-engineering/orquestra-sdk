@@ -7,20 +7,20 @@ from typing import Any, Dict, List, Optional, Union
 from unittest.mock import ANY, Mock, call, create_autospec
 
 import pytest
+from orquestra.workflow_runtime._ray import _build_workflow, _client
+from orquestra.workflow_shared import parse_git_url, serde
+from orquestra.workflow_shared._graphs import iter_invocations_topologically
+from orquestra.workflow_shared.exceptions import OrquestraSDKVersionMismatchWarning
+from orquestra.workflow_shared.schema import ir
+from orquestra.workflow_shared.schema.ir import GitURL, SecretNode
+from orquestra.workflow_shared.schema.responses import WorkflowResult
 
 import orquestra.sdk as sdk
 import orquestra.sdk._client.secrets
 from orquestra.sdk._client._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
 )
-from orquestra.workflow_runtime._ray import _build_workflow, _client
-from orquestra.workflow_shared import serde
-from orquestra.workflow_shared._graphs import iter_invocations_topologically
-from orquestra.workflow_shared.exceptions import OrquestraSDKVersionMismatchWarning
-from orquestra.workflow_shared.schema import ir
-from orquestra.workflow_shared.schema.ir import GitURL, SecretNode
-from orquestra.workflow_shared.schema.responses import WorkflowResult
-from orquestra.workflow_shared import parse_git_url
+
 
 @pytest.fixture
 def git_url() -> GitURL:
@@ -212,9 +212,7 @@ class TestPipString:
                 (
                     ir.GitImport(
                         id="mock-import",
-                        repo_url=parse_git_url(
-                            "ssh://git@mock/mock/mock"
-                        ),
+                        repo_url=parse_git_url("ssh://git@mock/mock/mock"),
                         git_ref="mock",
                     ),
                     ["git+ssh://git@mock/mock/mock@mock"],

@@ -17,8 +17,6 @@ from urllib.parse import urljoin
 
 import pydantic
 import requests
-from requests import codes
-
 from orquestra.workflow_shared import VERSION_REGEX, ProjectRef, exceptions
 from orquestra.workflow_shared.orqdantic import TypeAdapter
 from orquestra.workflow_shared.schema.ir import WorkflowDef
@@ -33,6 +31,7 @@ from orquestra.workflow_shared.schema.workflow_run import (
     WorkflowRunSummary,
     WorkspaceId,
 )
+from requests import codes
 
 from .._spaces._api import make_workspace_zri
 from . import _exceptions, _models

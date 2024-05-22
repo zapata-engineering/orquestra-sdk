@@ -22,13 +22,13 @@ from typing import (
     overload,
 )
 
-from typing_extensions import ParamSpec
-
 import orquestra.workflow_shared.schema.ir as ir
-from orquestra.sdk import secrets
 from orquestra.workflow_shared import exceptions
 from orquestra.workflow_shared.exceptions import WorkflowSyntaxError
 from orquestra.workflow_shared.schema.workflow_run import ProjectId, WorkspaceId
+from typing_extensions import ParamSpec
+
+from orquestra.sdk import secrets
 
 from . import _api, _dsl, loader
 from ._ast import CallVisitor, NodeReference, NodeReferenceType, normalize_indents

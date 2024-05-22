@@ -9,7 +9,10 @@ from pathlib import Path
 
 from orquestra.workflow_shared import serde
 from orquestra.workflow_shared.logs import LogOutput, WorkflowLogs
-from orquestra.workflow_shared.schema.workflow_run import TaskInvocationId, WorkflowRunId
+from orquestra.workflow_shared.schema.workflow_run import (
+    TaskInvocationId,
+    WorkflowRunId,
+)
 
 
 class WFOutputDumper:

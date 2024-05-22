@@ -23,17 +23,6 @@ from unittest.mock import (
 )
 
 import pytest
-
-from orquestra.sdk import current_exec_ctx
-from orquestra.sdk._client._base import _api, _dsl, _traversal, _workflow
-from orquestra.sdk._client._base._api._task_run import TaskRun
-from orquestra.sdk._client._base._env import (
-    CURRENT_CLUSTER_ENV,
-    CURRENT_PROJECT_ENV,
-    CURRENT_WORKSPACE_ENV,
-)
-from orquestra.sdk._client._base._in_process_runtime import InProcessRuntime
-from orquestra.sdk._client._base._spaces._api import list_projects, list_workspaces
 from orquestra.workflow_shared import serde
 from orquestra.workflow_shared._spaces._structs import ProjectRef, Workspace
 from orquestra.workflow_shared.abc import RuntimeInterface
@@ -49,13 +38,28 @@ from orquestra.workflow_shared.exceptions import (
     WorkflowRunNotFoundError,
 )
 from orquestra.workflow_shared.exec_ctx import ExecContext, _exec_ctx
-from orquestra.workflow_shared.logs._interfaces import LogOutput, LogReader, WorkflowLogs
+from orquestra.workflow_shared.logs._interfaces import (
+    LogOutput,
+    LogReader,
+    WorkflowLogs,
+)
 from orquestra.workflow_shared.schema import ir
 from orquestra.workflow_shared.schema.configs import RuntimeName
 from orquestra.workflow_shared.schema.responses import JSONResult
 from orquestra.workflow_shared.schema.workflow_run import ProjectId, RunStatus, State
 from orquestra.workflow_shared.schema.workflow_run import TaskRun as TaskRunModel
 from orquestra.workflow_shared.schema.workflow_run import WorkspaceId
+
+from orquestra.sdk import current_exec_ctx
+from orquestra.sdk._client._base import _api, _dsl, _traversal, _workflow
+from orquestra.sdk._client._base._api._task_run import TaskRun
+from orquestra.sdk._client._base._env import (
+    CURRENT_CLUSTER_ENV,
+    CURRENT_PROJECT_ENV,
+    CURRENT_WORKSPACE_ENV,
+)
+from orquestra.sdk._client._base._in_process_runtime import InProcessRuntime
+from orquestra.sdk._client._base._spaces._api import list_projects, list_workspaces
 
 from ..data.complex_serialization.workflow_defs import (
     capitalize,

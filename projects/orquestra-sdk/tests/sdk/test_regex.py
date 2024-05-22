@@ -4,7 +4,6 @@
 import re
 
 import pytest
-
 from orquestra.workflow_shared._regex import SEMVER_REGEX, VERSION_REGEX
 
 
