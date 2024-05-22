@@ -326,7 +326,7 @@ def wf_with_log(msg: str):
 def get_exec_ctx() -> str:
     import orquestra.workflow_shared.exec_ctx
 
-    ctx = orquestra.sdk._shared.exec_ctx.get_current_exec_context()
+    ctx = orquestra.workflow_shared.exec_ctx.get_current_exec_context()
     return ctx.name
 
 
