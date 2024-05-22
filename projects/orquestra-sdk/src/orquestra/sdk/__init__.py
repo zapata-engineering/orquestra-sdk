@@ -38,12 +38,9 @@ from ._client._base._workflow import (
     WorkflowTemplate,
     workflow,
 )
-from ._shared import Project, ProjectRef, Workspace
-from ._shared.logs import LogOutput, WorkflowLogs
-
-# It's already in a public module, but we'll re-export it under `orquestra.sdk.*` anyway
-# because it's commonly used to filter task runs.
-from ._shared.schema.workflow_run import State
+from orquestra.workflow_shared import Project, ProjectRef, Workspace
+from orquestra.workflow_shared.logs import LogOutput, WorkflowLogs
+from orquestra.workflow_shared.schema.workflow_run import State
 
 __all__ = [
     "ArtifactFuture",

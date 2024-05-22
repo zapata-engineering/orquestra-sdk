@@ -25,10 +25,10 @@ from orquestra.sdk._client._base._driver._models import (
     Resources,
     SystemLogSourceType,
 )
-from orquestra.sdk._shared._spaces._structs import ProjectRef
-from orquestra.sdk._shared.schema.ir import WorkflowDef
-from orquestra.sdk._shared.schema.responses import JSONResult, PickleResult
-from orquestra.sdk._shared.schema.workflow_run import RunStatus, State, TaskRun
+from orquestra.workflow_shared._spaces._structs import ProjectRef
+from orquestra.workflow_shared.schema.ir import WorkflowDef
+from orquestra.workflow_shared.schema.responses import JSONResult, PickleResult
+from orquestra.workflow_shared.schema.workflow_run import RunStatus, State, TaskRun
 
 from . import resp_mocks
 

@@ -2,9 +2,9 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 
-from orquestra.sdk._shared import exceptions
-from orquestra.sdk._shared.abc import RuntimeInterface
-from orquestra.sdk._shared.schema.configs import RuntimeConfiguration, RuntimeName
+from orquestra.workflow_shared import exceptions
+from orquestra.workflow_shared.abc import RuntimeInterface
+from orquestra.workflow_shared.schema.configs import RuntimeConfiguration, RuntimeName
 
 
 def build_runtime_from_config(
@@ -20,9 +20,9 @@ def build_runtime_from_config(
     # subgraphs for Ray and for CE are distinct, and both take a lot of time to
     # import.
     if config.runtime_name == RuntimeName.RAY_LOCAL:
-        import orquestra.sdk._runtime._ray._dag
+        import orquestra.workflow_runtime._ray._dag
 
-        return orquestra.sdk._runtime._ray._dag.RayRuntime(
+        return orquestra.workflow_runtime._ray._dag.RayRuntime(
             config=config,
         )
     elif config.runtime_name == RuntimeName.IN_PROCESS:

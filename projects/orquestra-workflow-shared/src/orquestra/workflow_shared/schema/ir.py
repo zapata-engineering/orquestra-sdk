@@ -64,7 +64,7 @@ class GitImport(BaseModel):
     def _backwards_compatible_repo_url(cls, v):
         """Allows older models with a string URL to be imported."""
         # Prevent circular imports
-        from ..._client._base._git_url_utils import parse_git_url
+        from .._git_url_utils import parse_git_url
 
         if not isinstance(v, str):
             return v
@@ -430,8 +430,8 @@ class WorkflowDef(BaseModel):
     @field_validator("metadata", mode="after")
     def sdk_version_up_to_date(cls, v: t.Optional[WorkflowMetadata]):
         # Workaround for circular imports
-        from orquestra.sdk._shared.packaging import _versions
-        from orquestra.sdk._shared.schema import _compat
+        from ..packaging import _versions
+        from ..schema import _compat
 
         from .. import exceptions
 

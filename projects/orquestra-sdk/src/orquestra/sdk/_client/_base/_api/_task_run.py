@@ -6,17 +6,17 @@ import typing as t
 from collections import namedtuple
 from itertools import chain
 
-from orquestra.sdk._shared import serde
-from orquestra.sdk._shared.abc import ArtifactValue, RuntimeInterface
-from orquestra.sdk._shared.exceptions import TaskRunNotFound, WorkflowRunIDNotFoundError
-from orquestra.sdk._shared.exec_ctx import ExecContext, get_current_exec_context
-from orquestra.sdk._shared.logs import LogOutput
-from orquestra.sdk._shared.schema import ir
-from orquestra.sdk._shared.schema.responses import WorkflowResult
-from orquestra.sdk._shared.schema.workflow_run import State, TaskInvocationId
-from orquestra.sdk._shared.schema.workflow_run import TaskRun as TaskRunModel
-from orquestra.sdk._shared.schema.workflow_run import TaskRunId, WorkflowRunId
-from orquestra.sdk._shared.serde import deserialize_constant
+from orquestra.workflow_shared import serde
+from orquestra.workflow_shared.abc import ArtifactValue, RuntimeInterface
+from orquestra.workflow_shared.exceptions import TaskRunNotFound, WorkflowRunIDNotFoundError
+from orquestra.workflow_shared.exec_ctx import ExecContext, get_current_exec_context
+from orquestra.workflow_shared.logs import LogOutput
+from orquestra.workflow_shared.schema import ir
+from orquestra.workflow_shared.schema.responses import WorkflowResult
+from orquestra.workflow_shared.schema.workflow_run import State, TaskInvocationId
+from orquestra.workflow_shared.schema.workflow_run import TaskRun as TaskRunModel
+from orquestra.workflow_shared.schema.workflow_run import TaskRunId, WorkflowRunId
+from orquestra.workflow_shared.serde import deserialize_constant
 
 
 class TaskRun:
@@ -268,13 +268,13 @@ def _get_ray_backend_ids() -> CurrentRunIDs:
         The IDs associated with the current run, in a named tuple. See: CurrentRunIDs
     """
     # Deferred import in case Ray isn't installed
-    import orquestra.sdk._runtime._ray._build_workflow
+    import orquestra.workflow_runtime._ray._build_workflow
 
     (
         wf_run_id,
         task_inv_id,
         task_run_id,
-    ) = orquestra.sdk._runtime._ray._build_workflow.get_current_ids()
+    ) = orquestra.workflow_runtime._ray._build_workflow.get_current_ids()
 
     if wf_run_id is None:
         raise WorkflowRunIDNotFoundError("Could not recover Workflow Run ID")

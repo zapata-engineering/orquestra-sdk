@@ -8,7 +8,7 @@ from typing import overload
 
 from inquirer import errors  # type: ignore # noqa
 
-from orquestra.sdk._shared import exceptions
+from orquestra.workflow_shared import exceptions
 
 # One of our transitive dependencies shows DeprecationWarnings related to invalid usage
 # of distutils. There's nothing we can do about it, so until it's fixed upstream we can

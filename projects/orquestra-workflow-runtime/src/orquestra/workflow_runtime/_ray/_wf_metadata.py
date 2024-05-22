@@ -5,8 +5,8 @@
 import json
 import typing as t
 
-from orquestra.sdk._shared.orqdantic import BaseModel
-from orquestra.sdk._shared.schema import ir, workflow_run
+from orquestra.workflow_shared.orqdantic import BaseModel
+from orquestra.workflow_shared.schema import ir, workflow_run
 
 
 class WfUserMetadata(BaseModel):

@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from freezegun import freeze_time
 
-import orquestra.sdk._shared.dates as dates
+import orquestra.workflow_shared.dates as dates
 
 
 class TestNow:

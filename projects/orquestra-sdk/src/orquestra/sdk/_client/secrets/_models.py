@@ -7,7 +7,7 @@ API spec: https://github.com/zapatacomputing/config-service/tree/main/openapi/sr
 """
 from typing import Optional
 
-from orquestra.sdk._shared.orqdantic import BaseModel
+from orquestra.workflow_shared.orqdantic import BaseModel
 
 SecretName = str
 SecretValue = str

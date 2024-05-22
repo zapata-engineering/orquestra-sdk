@@ -24,17 +24,17 @@ from rich.spinner import Spinner
 from rich.table import Column, Table
 from tabulate import tabulate
 
-from orquestra.sdk._shared import serde
-from orquestra.sdk._shared.dates import Instant, from_unix_time
-from orquestra.sdk._shared.logs import LogOutput, WorkflowLogs
-from orquestra.sdk._shared.schema import responses
-from orquestra.sdk._shared.schema.configs import (
+from orquestra.workflow_shared import serde
+from orquestra.workflow_shared.dates import Instant, from_unix_time
+from orquestra.workflow_shared.logs import LogOutput, WorkflowLogs
+from orquestra.workflow_shared.schema import responses
+from orquestra.workflow_shared.schema.configs import (
     ConfigName,
     RuntimeConfiguration,
     RuntimeName,
 )
-from orquestra.sdk._shared.schema.ir import ArtifactFormat
-from orquestra.sdk._shared.schema.workflow_run import TaskInvocationId, WorkflowRunId
+from orquestra.workflow_shared.schema.ir import ArtifactFormat
+from orquestra.workflow_shared.schema.workflow_run import TaskInvocationId, WorkflowRunId
 
 from ...._base import _env
 from . import _errors

@@ -17,15 +17,16 @@ from functools import singledispatch
 
 from pip_api._parse_requirements import Requirement
 
-from orquestra.sdk._shared import exceptions, serde
-from orquestra.sdk._shared.exec_ctx import workflow_build
-from orquestra.sdk._shared.packaging import (
+from orquestra.workflow_shared import exceptions, serde
+from orquestra.workflow_shared.exec_ctx import workflow_build
+from orquestra.workflow_shared.packaging import (
     get_current_python_version,
     get_current_sdk_version,
 )
-from orquestra.sdk._shared.schema import ir, responses
+from orquestra.workflow_shared.schema import ir, responses
+from orquestra.workflow_shared import parse_git_url
 
-from . import _dsl, _git_url_utils, _workflow
+from . import _dsl, _workflow
 
 N_BYTES_IN_HASH = 8
 
@@ -397,14 +398,14 @@ def _make_import_model(imp: _dsl.Import):
             id=id_,
         )
     elif isinstance(imp, _dsl.GitImport):
-        repo_url = _git_url_utils.parse_git_url(imp.repo_url)
+        repo_url = parse_git_url(imp.repo_url)
         return ir.GitImport(
             id=id_,
             repo_url=repo_url,
             git_ref=imp.git_ref,
         )
     elif isinstance(imp, _dsl.GitImportWithAuth):
-        url = _git_url_utils.parse_git_url(imp.repo_url)
+        url = parse_git_url(imp.repo_url)
         url.user = imp.username
         if imp.auth_secret is not None:
             url.password = ir.SecretNode(

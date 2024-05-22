@@ -3,7 +3,7 @@
 ################################################################################
 import pytest
 
-from orquestra.sdk._runtime._ray import _id_gen
+from orquestra.workflow_runtime._ray import _id_gen
 
 
 @pytest.mark.parametrize("char_length", [4, 7, 10])

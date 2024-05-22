@@ -4,9 +4,9 @@
 """Code for 'orq workflow stop'."""
 import typing as t
 
-from orquestra.sdk._shared import exceptions
-from orquestra.sdk._shared.schema.configs import ConfigName
-from orquestra.sdk._shared.schema.workflow_run import WorkflowRunId
+from orquestra.workflow_shared import exceptions
+from orquestra.workflow_shared.schema.configs import ConfigName
+from orquestra.workflow_shared.schema.workflow_run import WorkflowRunId
 
 from .. import _arg_resolvers, _repos
 from .._ui import _presenters

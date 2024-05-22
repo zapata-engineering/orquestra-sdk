@@ -4,10 +4,10 @@
 """Code for user-facing utilities related to secrets."""
 import typing as t
 
-from orquestra.sdk._shared import exceptions as sdk_exc
-from orquestra.sdk._shared.exec_ctx import ExecContext, get_current_exec_context
-from orquestra.sdk._shared.schema.configs import ConfigName
-from orquestra.sdk._shared.schema.workflow_run import WorkspaceId
+from orquestra.workflow_shared import exceptions as sdk_exc
+from orquestra.workflow_shared.exec_ctx import ExecContext, get_current_exec_context
+from orquestra.workflow_shared.schema.configs import ConfigName
+from orquestra.workflow_shared.schema.workflow_run import WorkspaceId
 
 from .._base import _dsl
 from . import _auth, _exceptions, _models

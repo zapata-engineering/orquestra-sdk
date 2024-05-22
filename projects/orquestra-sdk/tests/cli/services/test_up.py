@@ -14,7 +14,7 @@ from orquestra.sdk._client._base import _services
 from orquestra.sdk._client._base.cli import _arg_resolvers
 from orquestra.sdk._client._base.cli._services import _up
 from orquestra.sdk._client._base.cli._ui import _presenters
-from orquestra.sdk._shared.schema.responses import ServiceResponse
+from orquestra.workflow_shared.schema.responses import ServiceResponse
 
 
 class TestAction:

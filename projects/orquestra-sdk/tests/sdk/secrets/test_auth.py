@@ -11,8 +11,8 @@ from pathlib import Path
 import pytest
 
 from orquestra.sdk._client.secrets import _auth
-from orquestra.sdk._shared import exceptions
-from orquestra.sdk._shared.schema import configs
+from orquestra.workflow_shared import exceptions
+from orquestra.workflow_shared.schema import configs
 
 
 class TestAuthorizedClient:

@@ -8,7 +8,7 @@ from typing import Optional
 from urllib3.exceptions import LocationParseError
 from urllib3.util import parse_url
 
-from orquestra.sdk._shared.schema.ir import GitURL
+from orquestra.workflow_shared.schema.ir import GitURL
 
 
 def _split_auth(auth_value: Optional[str]):

@@ -4,7 +4,7 @@
 
 import pytest
 
-from orquestra.sdk._shared.logs._interfaces import LogOutput, WorkflowLogs
+from orquestra.workflow_shared.logs._interfaces import LogOutput, WorkflowLogs
 
 
 def _logs_output(name: str):

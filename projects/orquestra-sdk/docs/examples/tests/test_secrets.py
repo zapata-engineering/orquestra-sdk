@@ -21,7 +21,7 @@ import responses
 
 import orquestra.sdk._client._base._config
 import orquestra.sdk._client.secrets._client
-from orquestra.sdk._shared.schema import configs
+from orquestra.workflow_shared.schema import configs
 
 
 class Snippets:

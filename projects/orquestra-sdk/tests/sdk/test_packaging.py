@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from orquestra.sdk._shared import packaging
+from orquestra.workflow_shared import packaging
 
 try:
     import importlib.metadata as metadata  # type: ignore

@@ -7,7 +7,7 @@ from unittest.mock import Mock, PropertyMock, create_autospec
 
 import pytest
 
-from orquestra.sdk._shared.logs import _models
+from orquestra.workflow_shared.logs import _models
 
 
 class TestLogStreamType:

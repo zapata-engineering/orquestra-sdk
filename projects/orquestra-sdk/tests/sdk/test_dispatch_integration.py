@@ -6,8 +6,8 @@ import sys
 import pytest
 
 from orquestra.sdk._client._base import _dsl, loader
-from orquestra.sdk._shared import dispatch
-from orquestra.sdk._shared.schema import ir
+from orquestra.workflow_shared import dispatch
+from orquestra.workflow_shared.schema import ir
 
 
 class TestModuleCaching:

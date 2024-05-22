@@ -7,7 +7,7 @@ user's project state.
 from pathlib import Path
 
 from orquestra.sdk._client._base import _config
-from orquestra.sdk._shared.schema import configs
+from orquestra.workflow_shared.schema import configs
 
 
 def write_user_config_file(

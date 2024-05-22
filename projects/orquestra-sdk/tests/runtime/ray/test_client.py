@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from orquestra.sdk._runtime._ray._client import RayClient
+from orquestra.workflow_runtime._ray._client import RayClient
 
 
 class TestClient:
@@ -99,7 +99,7 @@ class TestClient:
         def test_retry_on_error(self, client: RayClient, monkeypatch):
             import ray
 
-            import orquestra.sdk._shared._retry
+            import orquestra.workflow_shared._retry
 
             get_mock = Mock()
             get_mock.side_effect = [
@@ -110,7 +110,7 @@ class TestClient:
             ]
 
             monkeypatch.setattr(ray, "get", get_mock)
-            monkeypatch.setattr(orquestra.sdk._shared._retry.time, "sleep", Mock())
+            monkeypatch.setattr(orquestra.workflow_shared._retry.time, "sleep", Mock())
 
             ret_val = client.get(Mock())
 
@@ -120,13 +120,13 @@ class TestClient:
         def test_retry_on_error_always_fails(self, client: RayClient, monkeypatch):
             import ray
 
-            import orquestra.sdk._shared._retry
+            import orquestra.workflow_shared._retry
 
             get_mock = Mock()
             get_mock.side_effect = [ray.exceptions.RaySystemError(Mock())] * 20
 
             monkeypatch.setattr(ray, "get", get_mock)
-            monkeypatch.setattr(orquestra.sdk._shared._retry.time, "sleep", Mock())
+            monkeypatch.setattr(orquestra.workflow_shared._retry.time, "sleep", Mock())
 
             with pytest.raises(ray.exceptions.RaySystemError):
                 client.get(Mock())

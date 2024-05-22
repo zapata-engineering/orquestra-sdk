@@ -8,7 +8,7 @@ import sys
 import typing as t
 from functools import singledispatch
 
-from ..schema import ir
+from .schema import ir
 from . import serde
 
 

@@ -5,8 +5,8 @@
 
 import pytest
 
-from orquestra.sdk._client._base import _git_url_utils
-from orquestra.sdk._shared.schema.ir import GitURL
+from orquestra.workflow_shared import _git_url_utils
+from orquestra.workflow_shared.schema.ir import GitURL
 
 
 class TestParseGitURL:

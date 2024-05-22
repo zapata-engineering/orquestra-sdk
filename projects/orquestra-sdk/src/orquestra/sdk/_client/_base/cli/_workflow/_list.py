@@ -4,9 +4,9 @@
 """Code for 'orq workflow list'."""
 import typing as t
 
-from orquestra.sdk._shared import exceptions as exceptions
-from orquestra.sdk._shared.schema.configs import ConfigName
-from orquestra.sdk._shared.schema.workflow_run import WorkflowRunSummary, WorkspaceId
+from orquestra.workflow_shared import exceptions as exceptions
+from orquestra.workflow_shared.schema.configs import ConfigName
+from orquestra.workflow_shared.schema.workflow_run import WorkflowRunSummary, WorkspaceId
 
 from .. import _arg_resolvers, _repos
 from .._ui import _presenters

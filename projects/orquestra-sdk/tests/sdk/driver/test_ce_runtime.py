@@ -8,7 +8,7 @@ from unittest.mock import DEFAULT, MagicMock, Mock, call, create_autospec
 import pytest
 
 import orquestra.sdk as sdk
-import orquestra.sdk._shared._retry
+import orquestra.workflow_shared._retry
 from orquestra.sdk._client._base._driver import (
     _ce_runtime,
     _client,
@@ -21,15 +21,15 @@ from orquestra.sdk._client._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
     workflow_with_different_resources,
 )
-from orquestra.sdk._shared import exceptions, serde
-from orquestra.sdk._shared._spaces._structs import Project, ProjectRef, Workspace
-from orquestra.sdk._shared.logs import LogOutput
-from orquestra.sdk._shared.schema.ir import WorkflowDef
-from orquestra.sdk._shared.schema.responses import (
+from orquestra.workflow_shared import exceptions, serde
+from orquestra.workflow_shared._spaces._structs import Project, ProjectRef, Workspace
+from orquestra.workflow_shared.logs import LogOutput
+from orquestra.workflow_shared.schema.ir import WorkflowDef
+from orquestra.workflow_shared.schema.responses import (
     ComputeEngineWorkflowResult,
     JSONResult,
 )
-from orquestra.sdk._shared.schema.workflow_run import (
+from orquestra.workflow_shared.schema.workflow_run import (
     RunStatus,
     State,
     WorkflowRun,
@@ -653,7 +653,7 @@ class TestGetWorkflowRunResultsNonBlocking:
             mocked_client.get_workflow_run.return_value = workflow_run_status(
                 State.SUCCEEDED
             )
-            monkeypatch.setattr(orquestra.sdk._shared._retry.time, "sleep", Mock())
+            monkeypatch.setattr(orquestra.workflow_shared._retry.time, "sleep", Mock())
             # When
             with pytest.raises(exceptions.WorkflowResultsNotReadyError):
                 _ = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
@@ -676,7 +676,7 @@ class TestGetWorkflowRunResultsNonBlocking:
             )
             monkeypatch.setattr(serde, "deserialize", lambda x: x)
 
-            monkeypatch.setattr(orquestra.sdk._shared._retry.time, "sleep", Mock())
+            monkeypatch.setattr(orquestra.workflow_shared._retry.time, "sleep", Mock())
             # When
             _ = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
 

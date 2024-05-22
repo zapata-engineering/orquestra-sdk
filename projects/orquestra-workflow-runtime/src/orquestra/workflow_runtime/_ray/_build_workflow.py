@@ -15,18 +15,18 @@ from packaging import version
 from typing_extensions import assert_never
 
 from orquestra.sdk import secrets
-from orquestra.sdk._shared import (
+from orquestra.workflow_shared import (
     SEMVER_REGEX,
     dispatch,
     exceptions,
     iter_invocations_topologically,
     serde,
 )
-from orquestra.sdk._shared.exec_ctx import ray as exec_ctx_ray
-from orquestra.sdk._shared.kubernetes.quantity import parse_quantity
-from orquestra.sdk._shared.packaging import get_installed_version
-from orquestra.sdk._shared.schema import ir, responses, workflow_run
-from orquestra.sdk._shared.schema.ir import GitURL
+from orquestra.workflow_shared.exec_ctx import ray as exec_ctx_ray
+from orquestra.workflow_shared.kubernetes.quantity import parse_quantity
+from orquestra.workflow_shared.packaging import get_installed_version
+from orquestra.workflow_shared.schema import ir, responses, workflow_run
+from orquestra.workflow_shared.schema.ir import GitURL
 
 from . import _client, _id_gen
 from ._dirs import redirected_logs_dir

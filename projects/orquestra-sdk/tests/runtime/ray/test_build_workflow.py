@@ -10,18 +10,17 @@ import pytest
 
 import orquestra.sdk as sdk
 import orquestra.sdk._client.secrets
-from orquestra.sdk._client._base import _git_url_utils
 from orquestra.sdk._client._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
 )
-from orquestra.sdk._runtime._ray import _build_workflow, _client
-from orquestra.sdk._shared import serde
-from orquestra.sdk._shared._graphs import iter_invocations_topologically
-from orquestra.sdk._shared.exceptions import OrquestraSDKVersionMismatchWarning
-from orquestra.sdk._shared.schema import ir
-from orquestra.sdk._shared.schema.ir import GitURL, SecretNode
-from orquestra.sdk._shared.schema.responses import WorkflowResult
-
+from orquestra.workflow_runtime._ray import _build_workflow, _client
+from orquestra.workflow_shared import serde
+from orquestra.workflow_shared._graphs import iter_invocations_topologically
+from orquestra.workflow_shared.exceptions import OrquestraSDKVersionMismatchWarning
+from orquestra.workflow_shared.schema import ir
+from orquestra.workflow_shared.schema.ir import GitURL, SecretNode
+from orquestra.workflow_shared.schema.responses import WorkflowResult
+from orquestra.workflow_shared import parse_git_url
 
 @pytest.fixture
 def git_url() -> GitURL:
@@ -205,7 +204,7 @@ class TestPipString:
                 (
                     ir.GitImport(
                         id="mock-import",
-                        repo_url=_git_url_utils.parse_git_url("https://mock/mock/mock"),
+                        repo_url=parse_git_url("https://mock/mock/mock"),
                         git_ref="mock",
                     ),
                     ["git+https://mock/mock/mock@mock"],
@@ -213,7 +212,7 @@ class TestPipString:
                 (
                     ir.GitImport(
                         id="mock-import",
-                        repo_url=_git_url_utils.parse_git_url(
+                        repo_url=parse_git_url(
                             "ssh://git@mock/mock/mock"
                         ),
                         git_ref="mock",
@@ -223,7 +222,7 @@ class TestPipString:
                 (
                     ir.GitImport(
                         id="mock-import",
-                        repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
+                        repo_url=parse_git_url("git@mock:mock/mock"),
                         git_ref="mock",
                     ),
                     ["git+ssh://git@mock/mock/mock@mock"],
@@ -231,7 +230,7 @@ class TestPipString:
                 (
                     ir.GitImport(
                         id="mock-import",
-                        repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
+                        repo_url=parse_git_url("git@mock:mock/mock"),
                         git_ref="mock",
                         package_name="pack_mock",
                     ),
@@ -240,7 +239,7 @@ class TestPipString:
                 (
                     ir.GitImport(
                         id="mock-import",
-                        repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
+                        repo_url=parse_git_url("git@mock:mock/mock"),
                         git_ref="mock",
                         package_name="pack_mock",
                         extras=None,
@@ -250,7 +249,7 @@ class TestPipString:
                 (
                     ir.GitImport(
                         id="mock-import",
-                        repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
+                        repo_url=parse_git_url("git@mock:mock/mock"),
                         git_ref="mock",
                         package_name="pack_mock",
                         extras=("extra_mock",),
@@ -260,7 +259,7 @@ class TestPipString:
                 (
                     ir.GitImport(
                         id="mock-import",
-                        repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
+                        repo_url=parse_git_url("git@mock:mock/mock"),
                         git_ref="mock",
                         package_name="pack_mock",
                         extras=("extra_mock", "e_mock"),
@@ -273,7 +272,7 @@ class TestPipString:
                 (
                     ir.GitImport(
                         id="mock-import",
-                        repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
+                        repo_url=parse_git_url("git@mock:mock/mock"),
                         git_ref="mock",
                         package_name=None,
                         extras=("extra_mock", "e_mock"),
@@ -288,7 +287,7 @@ class TestPipString:
         def test_no_env_set(self):
             imp = ir.GitImport(
                 id="mock-import",
-                repo_url=_git_url_utils.parse_git_url("git@mock:mock/mock"),
+                repo_url=parse_git_url("git@mock:mock/mock"),
                 git_ref="mock",
             )
             pip = _build_workflow._pip_string(imp)
@@ -818,6 +817,6 @@ class TestHandlingSDKVersions:
             # Then
             warning: str = e.exconly().strip()
             assert re.match(
-                r"^orquestra\.sdk\._shared\.exceptions\.OrquestraSDKVersionMismatchWarning: The definition for task `task-hello-orquestra-.*` declares `orquestra-sdk(?P<dependency>.*)` as a dependency. The current SDK version (\((?P<installed>.*)\) )?is automatically installed in task environments. The specified dependency will be ignored.$",  # noqa: E501
+                r"^orquestra\.workflow_shared\.exceptions\.OrquestraSDKVersionMismatchWarning: The definition for task `task-hello-orquestra-.*` declares `orquestra-sdk(?P<dependency>.*)` as a dependency. The current SDK version (\((?P<installed>.*)\) )?is automatically installed in task environments. The specified dependency will be ignored.$",  # noqa: E501
                 warning,
             ), warning

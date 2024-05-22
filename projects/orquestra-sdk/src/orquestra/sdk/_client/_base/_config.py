@@ -14,8 +14,8 @@ from urllib.parse import ParseResult, urlparse
 import filelock
 from pydantic import ValidationError
 
-import orquestra.sdk._shared.exceptions as exceptions
-from orquestra.sdk._shared.schema.configs import (
+import orquestra.workflow_shared.exceptions as exceptions
+from orquestra.workflow_shared.schema.configs import (
     CONFIG_FILE_CURRENT_VERSION,
     ConfigName,
     RuntimeConfiguration,

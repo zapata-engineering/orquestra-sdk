@@ -21,17 +21,17 @@ from freezegun import freeze_time
 from orquestra import sdk
 from orquestra.sdk._client._base._config import LOCAL_RUNTIME_CONFIGURATION
 from orquestra.sdk._client._base._testing import _example_wfs, _ipc
-from orquestra.sdk._runtime._ray import _build_workflow, _client, _dag, _ray_logs
-from orquestra.sdk._runtime._ray._env import (
+from orquestra.workflow_runtime._ray import _build_workflow, _client, _dag, _ray_logs
+from orquestra.workflow_runtime._ray._env import (
     RAY_DOWNLOAD_GIT_IMPORTS_ENV,
     RAY_TEMP_PATH_ENV,
 )
-from orquestra.sdk._shared import exceptions
-from orquestra.sdk._shared.abc import RuntimeInterface
-from orquestra.sdk._shared.schema import ir
-from orquestra.sdk._shared.schema.responses import JSONResult
-from orquestra.sdk._shared.schema.workflow_run import State, WorkflowRunId
-from orquestra.sdk._shared.serde import deserialize
+from orquestra.workflow_shared import exceptions
+from orquestra.workflow_shared.abc import RuntimeInterface
+from orquestra.workflow_shared.schema import ir
+from orquestra.workflow_shared.schema.responses import JSONResult
+from orquestra.workflow_shared.schema.workflow_run import State, WorkflowRunId
+from orquestra.workflow_shared.serde import deserialize
 
 # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
 # unraisable exceptions. Last tested with Ray 2.4.0.

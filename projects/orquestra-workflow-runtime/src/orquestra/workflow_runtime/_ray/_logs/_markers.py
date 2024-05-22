@@ -17,10 +17,10 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-from orquestra.sdk._shared.dates import Instant, from_isoformat, local_isoformat
-from orquestra.sdk._shared.dates import now as dates_now
-from orquestra.sdk._shared.schema.ir import TaskInvocationId
-from orquestra.sdk._shared.schema.workflow_run import WorkflowRunId
+from orquestra.workflow_shared.dates import Instant, from_isoformat, local_isoformat
+from orquestra.workflow_shared.dates import now as dates_now
+from orquestra.workflow_shared.schema.ir import TaskInvocationId
+from orquestra.workflow_shared.schema.workflow_run import WorkflowRunId
 
 ORQ_MARKER_PREFIX = "ORQ-MARKER:"
 ORQ_MARKER_PATTERN = re.compile(re.escape(ORQ_MARKER_PREFIX) + r"(.+)")
