@@ -16,7 +16,7 @@ from orquestra.workflow_shared.exec_ctx import ExecContext, get_current_exec_con
 from orquestra.workflow_shared.logs import LogOutput
 from orquestra.workflow_shared.schema import ir
 from orquestra.workflow_shared.schema.responses import WorkflowResult
-from orquestra.workflow_shared.schema.workflow_run import State, TaskInvocationId
+from orquestra.workflow_shared.schema.workflow_run import State
 from orquestra.workflow_shared.schema.workflow_run import TaskRun as TaskRunModel
 from orquestra.workflow_shared.schema.workflow_run import TaskRunId, WorkflowRunId
 from orquestra.workflow_shared.serde import deserialize_constant
@@ -39,7 +39,7 @@ class TaskRun:
     def __init__(
         self,
         task_run_id: TaskRunId,
-        task_invocation_id: TaskInvocationId,
+        task_invocation_id: ir.TaskInvocationId,
         workflow_run_id: WorkflowRunId,
         runtime: RuntimeInterface,
         wf_def: ir.WorkflowDef,
@@ -72,7 +72,7 @@ class TaskRun:
         return self._task_run_id
 
     @property
-    def task_invocation_id(self) -> TaskInvocationId:
+    def task_invocation_id(self) -> ir.TaskInvocationId:
         return self._task_invocation_id
 
     @property
@@ -148,7 +148,7 @@ class TaskRun:
     def _find_value_by_id(
         self,
         arg_id: ir.ArgumentId,
-        available_outputs: t.Mapping[TaskInvocationId, WorkflowResult],
+        available_outputs: t.Mapping[ir.TaskInvocationId, WorkflowResult],
     ) -> ArtifactValue:
         """Find and deserialize input artifact value based on the artifact/argument ID.
 
@@ -256,7 +256,7 @@ class TaskRun:
 
 class CurrentRunIDs(t.NamedTuple):
     workflow_run_id: WorkflowRunId
-    task_invocation_id: t.Optional[TaskInvocationId]
+    task_invocation_id: t.Optional[ir.TaskInvocationId]
     task_run_id: t.Optional[TaskRunId]
 
 

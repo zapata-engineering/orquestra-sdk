@@ -653,7 +653,11 @@ class TestGetWorkflowRunResultsNonBlocking:
             mocked_client.get_workflow_run.return_value = workflow_run_status(
                 State.SUCCEEDED
             )
-            monkeypatch.setattr(orquestra.workflow_shared._retry.time, "sleep", Mock())
+            monkeypatch.setattr(
+                orquestra.workflow_shared._retry.time,  # type:ignore[reportPrivateImportUsage] # noqa: E501
+                "sleep",
+                Mock(),
+            )
             # When
             with pytest.raises(exceptions.WorkflowResultsNotReadyError):
                 _ = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
@@ -676,7 +680,11 @@ class TestGetWorkflowRunResultsNonBlocking:
             )
             monkeypatch.setattr(serde, "deserialize", lambda x: x)
 
-            monkeypatch.setattr(orquestra.workflow_shared._retry.time, "sleep", Mock())
+            monkeypatch.setattr(
+                orquestra.workflow_shared._retry.time,  # type:ignore[reportPrivateImportUsage] # noqa: E501
+                "sleep",
+                Mock(),
+            )
             # When
             _ = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
 

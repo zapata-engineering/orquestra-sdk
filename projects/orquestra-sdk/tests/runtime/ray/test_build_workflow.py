@@ -491,8 +491,8 @@ class TestMakeDag:
 class TestArgumentUnwrapper:
     @pytest.fixture
     def mock_secret_get(self, monkeypatch: pytest.MonkeyPatch):
-        secrets_get = create_autospec(_build_workflow.secrets.get)
-        monkeypatch.setattr(_build_workflow.secrets, "get", secrets_get)
+        secrets_get = create_autospec(orquestra.workflow_shared.secrets.get)
+        monkeypatch.setattr(orquestra.workflow_shared.secrets, "get", secrets_get)
         return secrets_get
 
     @pytest.fixture

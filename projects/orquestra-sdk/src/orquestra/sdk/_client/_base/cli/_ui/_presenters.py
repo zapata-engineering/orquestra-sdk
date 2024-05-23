@@ -24,11 +24,8 @@ from orquestra.workflow_shared.schema.configs import (
     RuntimeConfiguration,
     RuntimeName,
 )
-from orquestra.workflow_shared.schema.ir import ArtifactFormat
-from orquestra.workflow_shared.schema.workflow_run import (
-    TaskInvocationId,
-    WorkflowRunId,
-)
+from orquestra.workflow_shared.schema.ir import ArtifactFormat, TaskInvocationId
+from orquestra.workflow_shared.schema.workflow_run import WorkflowRunId
 from rich.box import SIMPLE_HEAVY
 from rich.console import Console, Group, RenderableType
 from rich.live import Live

@@ -108,7 +108,11 @@ class TestClient:
             ]
 
             monkeypatch.setattr(ray, "get", get_mock)
-            monkeypatch.setattr(orquestra.workflow_shared._retry.time, "sleep", Mock())
+            monkeypatch.setattr(
+                orquestra.workflow_shared._retry.time,  # type:ignore[reportPrivateImportUsage] # noqa: E501
+                "sleep",
+                Mock(),
+            )
 
             ret_val = client.get(Mock())
 
@@ -123,7 +127,11 @@ class TestClient:
             get_mock.side_effect = [ray.exceptions.RaySystemError(Mock())] * 20
 
             monkeypatch.setattr(ray, "get", get_mock)
-            monkeypatch.setattr(orquestra.workflow_shared._retry.time, "sleep", Mock())
+            monkeypatch.setattr(
+                orquestra.workflow_shared._retry.time,  # type:ignore[reportPrivateImportUsage] # noqa: E501
+                "sleep",
+                Mock(),
+            )
 
             with pytest.raises(ray.exceptions.RaySystemError):
                 client.get(Mock())
