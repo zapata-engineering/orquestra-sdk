@@ -8,8 +8,8 @@ Tests for orquestra.sdk._base._api._task_run.
 import typing as t
 from unittest.mock import Mock, create_autospec
 
+import orquestra.workflow_runtime
 import pytest
-from orquestra.workflow_runtime._ray import _build_workflow
 from orquestra.workflow_shared import serde
 from orquestra.workflow_shared.abc import RuntimeInterface
 from orquestra.workflow_shared.exceptions import TaskRunNotFound
@@ -542,7 +542,7 @@ def mock_ray_context(monkeypatch):
     task_inv_id = "inv-1-generate-data"
     task_run_id = f"{wf_run_id}@{task_inv_id}"
     monkeypatch.setattr(
-        _build_workflow,
+        orquestra.workflow_runtime,
         "get_current_ids",
         Mock(return_value=(wf_run_id, task_inv_id, task_run_id)),
     )

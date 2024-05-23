@@ -12,12 +12,12 @@ from datetime import timedelta
 from unittest.mock import create_autospec
 
 import pytest
-from orquestra.workflow_runtime.secrets import _client, _models
 from orquestra.workflow_shared import exceptions, serde
 from orquestra.workflow_shared._spaces._structs import ProjectRef
 from orquestra.workflow_shared.dates import _dates
 from orquestra.workflow_shared.schema import ir
 from orquestra.workflow_shared.schema.workflow_run import State, WorkflowRunId
+from orquestra.workflow_shared.secrets import _client, _models
 
 from orquestra import sdk
 from orquestra.sdk._client._base._in_process_runtime import InProcessRuntime

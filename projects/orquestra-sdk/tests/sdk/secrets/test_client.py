@@ -8,8 +8,8 @@ refactored to be unit tests before going on with the target implementation.
 """
 import pytest
 import responses
-from orquestra.workflow_runtime.secrets import _exceptions, _models
-from orquestra.workflow_runtime.secrets._client import SecretsClient
+from orquestra.workflow_shared.secrets import _exceptions, _models
+from orquestra.workflow_shared.secrets._client import SecretsClient
 
 from . import resp_mocks
 

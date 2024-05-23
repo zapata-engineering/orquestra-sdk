@@ -9,8 +9,8 @@ from typing import Callable
 from unittest.mock import Mock
 
 import pytest
-from orquestra.workflow_runtime.secrets import _auth, _exceptions, _models
 from orquestra.workflow_shared import exceptions as sdk_exc
+from orquestra.workflow_shared.secrets import _auth, _exceptions, _models
 
 from orquestra import sdk
 
