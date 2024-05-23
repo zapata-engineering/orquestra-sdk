@@ -8,8 +8,6 @@ from pathlib import Path
 from orquestra.workflow_shared import exceptions
 from orquestra.workflow_shared.schema.configs import ConfigName
 
-from .._base import _config
-from .._base._env import PASSPORT_FILE_ENV
 from ._client import SecretsClient
 
 # We assume that we can access the Config Service under a well-known URI if the passport
@@ -18,6 +16,7 @@ BASE_URI = "http://config-service.config-service:8099"
 
 
 def _authorize_with_passport() -> t.Optional[SecretsClient]:
+    from orquestra.sdk._client._base._env import PASSPORT_FILE_ENV
     if (passport_path := os.getenv(PASSPORT_FILE_ENV)) is None:
         return None
 
@@ -26,6 +25,11 @@ def _authorize_with_passport() -> t.Optional[SecretsClient]:
 
 
 def _read_config_opts(config_name: ConfigName):
+    # This import is awful, as it makes shared code dependent on client.
+    # In reality, this function in only called on client side, so from functional
+    # perspective this will work.
+    from orquestra.sdk._client._base import _config
+
     try:
         cfg = _config.read_config(config_name=config_name)
     except exceptions.ConfigNameNotFoundError:

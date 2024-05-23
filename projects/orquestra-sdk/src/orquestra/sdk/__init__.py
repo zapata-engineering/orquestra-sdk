@@ -3,10 +3,10 @@
 ################################################################################
 """Orquestra SDK allows to define computational workflows using Python DSL."""
 
-from orquestra.workflow_runtime import secrets
-from orquestra.workflow_shared import Project, ProjectRef, Workspace
+from orquestra.workflow_shared import Project, ProjectRef, Workspace, secrets
 from orquestra.workflow_shared.logs import LogOutput, WorkflowLogs
 from orquestra.workflow_shared.schema.workflow_run import State
+from orquestra.workflow_shared.secrets import Secret
 
 from ._client import mlflow
 from ._client._base._api import (
@@ -32,7 +32,6 @@ from ._client._base._dsl import (
     LocalImport,
     PythonImports,
     Resources,
-    Secret,
     TaskDef,
     task,
 )

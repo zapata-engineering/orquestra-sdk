@@ -3,19 +3,58 @@
 ################################################################################
 """Code for user-facing utilities related to secrets."""
 import typing as t
+from typing import NamedTuple
 
 from orquestra.workflow_shared import exceptions as sdk_exc
 from orquestra.workflow_shared.exec_ctx import ExecContext, get_current_exec_context
 from orquestra.workflow_shared.schema.configs import ConfigName
 from orquestra.workflow_shared.schema.workflow_run import WorkspaceId
 
-from .._base import _dsl
 from . import _auth, _exceptions, _models
 
 
 def _translate_to_zri(workspace_id: WorkspaceId, secret_name: str) -> str:
     """Create ZRI from workspace_id and secret_name."""
     return f"zri:v1::0:{workspace_id}:secret:{secret_name}"
+
+_secret_as_string_error = (
+    "Invalid usage of a Secret object. Secrets are not "
+    "available when building the workflow graph and cannot"
+    " be used as strings. If you need to use a Secret's"
+    " value, this must be done inside of a task."
+)
+
+class Secret(NamedTuple):
+    name: str
+    # Config name is only used for the local runtimes where we can't infer the location
+    # where we get a secret's value from.
+    # This matches the behaviour of `sdk.secrets.get` where the config name is used to
+    # get a secret when running locally.
+    config_name: t.Optional[str] = None
+    # Workspace ID is used by local and remote runtimes to fetch a secret from a
+    # specific workspace.
+    workspace_id: t.Optional[str] = None
+
+    def __reduce__(self) -> str | tuple[t.Any, ...]:
+        # We need to override the pickling behaviour for Secret
+        # This is because we override other dunder methods which cause the normal
+        # picling behaviour to fail.
+        return (self.__class__, (self.name, self.config_name, self.workspace_id))
+
+    def __getattr__(self, item):
+        try:
+            return self.__getattribute__(item)
+        except AttributeError as e:
+            raise AttributeError(_secret_as_string_error) from e
+
+    def __getitem__(self, item):
+        raise AttributeError(_secret_as_string_error)
+
+    def __str__(self):
+        raise AttributeError(_secret_as_string_error)
+
+    def __iter__(self):
+        raise AttributeError(_secret_as_string_error)
 
 
 def get(
@@ -56,7 +95,7 @@ def get(
     if get_current_exec_context() == ExecContext.WORKFLOW_BUILD:
         return t.cast(
             str,
-            _dsl.Secret(name=name, config_name=config_name, workspace_id=workspace_id),
+            Secret(name=name, config_name=config_name, workspace_id=workspace_id),
         )
 
     try:

@@ -26,6 +26,7 @@ import orquestra.workflow_shared.schema.ir as ir
 from orquestra.workflow_shared import exceptions
 from orquestra.workflow_shared.exceptions import WorkflowSyntaxError
 from orquestra.workflow_shared.schema.workflow_run import ProjectId, WorkspaceId
+from orquestra.workflow_shared.secrets import Secret
 from typing_extensions import ParamSpec
 
 from orquestra.sdk import secrets
@@ -37,7 +38,6 @@ from ._dsl import (
     FunctionRef,
     Import,
     ImportTypes,
-    Secret,
     TaskDef,
     UnknownPlaceholderInCustomNameWarning,
     get_fn_ref,

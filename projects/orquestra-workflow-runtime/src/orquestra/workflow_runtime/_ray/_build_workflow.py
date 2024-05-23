@@ -14,7 +14,7 @@ import pydantic
 from packaging import version
 from typing_extensions import assert_never
 
-from orquestra.sdk import secrets
+from orquestra.workflow_shared import secrets
 from orquestra.workflow_shared import (
     SEMVER_REGEX,
     dispatch,

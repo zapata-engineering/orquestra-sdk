@@ -22,6 +22,7 @@ from orquestra.workflow_shared.packaging import (
     get_current_sdk_version,
 )
 from orquestra.workflow_shared.schema import ir, responses
+from orquestra.workflow_shared.secrets import Secret
 from pip_api._parse_requirements import Requirement
 
 from . import _dsl, _workflow
@@ -254,7 +255,7 @@ class GraphTraversal:
                 seen_futures.add(n)
                 seen_invocations.add(n.invocation)
 
-            elif isinstance(n, _dsl.Secret):
+            elif isinstance(n, Secret):
                 self._secrets[_make_key(n)] = ir.SecretNode(
                     id=f"secret-{secret_counter}",
                     secret_name=n.name,
@@ -315,7 +316,7 @@ class GraphTraversal:
         if isinstance(node, _dsl.ArtifactFuture):
             return self._future_artifacts[node].id
 
-        elif isinstance(node, _dsl.Secret):
+        elif isinstance(node, Secret):
             return self._secrets[key].id
         else:
             return self._constants[key].id
