@@ -1232,13 +1232,13 @@ class TestGetCurrentIDs:
         @sdk.task(source_import=sdk.InlineImport())
         def dump_ids():
             # Separate import just to avoid weird global state passing via closure.
-            import orquestra.workflow_runtime._ray._build_workflow
+            from orquestra.workflow_runtime import get_current_ids
 
             (
                 wf_run_id,
                 task_inv_id,
                 task_run_id,
-            ) = orquestra.workflow_runtime._ray._build_workflow.get_current_ids()
+            ) = get_current_ids()
 
             ids_dict = {
                 "wf_run_id": wf_run_id,

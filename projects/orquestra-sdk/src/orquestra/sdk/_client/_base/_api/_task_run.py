@@ -271,13 +271,13 @@ def _get_ray_backend_ids() -> CurrentRunIDs:
         The IDs associated with the current run, in a named tuple. See: CurrentRunIDs
     """
     # Deferred import in case Ray isn't installed
-    import orquestra.workflow_runtime._ray._build_workflow
+    from orquestra.workflow_runtime import get_current_ids
 
     (
         wf_run_id,
         task_inv_id,
         task_run_id,
-    ) = orquestra.workflow_runtime._ray._build_workflow.get_current_ids()
+    ) = get_current_ids()
 
     if wf_run_id is None:
         raise WorkflowRunIDNotFoundError("Could not recover Workflow Run ID")

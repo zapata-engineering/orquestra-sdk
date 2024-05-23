@@ -8,11 +8,7 @@ import subprocess
 from pathlib import Path
 from typing import Protocol
 
-from orquestra.workflow_runtime._ray._dirs import (
-    ray_plasma_path,
-    ray_storage_path,
-    ray_temp_path,
-)
+from orquestra.workflow_runtime import ray_plasma_path, ray_storage_path, ray_temp_path
 
 ORQUESTRA_BASE_PATH = Path.home() / ".orquestra"
 
