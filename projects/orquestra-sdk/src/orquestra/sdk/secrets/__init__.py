@@ -4,7 +4,7 @@
 # THIS FILE IS A SHIM TO REEXPORT SYMBOLS AS PUBLIC API
 # DO NOT PUT ANY LOGIC INTO THIS FILE.
 
-from orquestra.workflow_runtime.secrets import delete, get, list, set
+from orquestra.workflow_shared.secrets import delete, get, list, set
 
 __all__ = [
     "delete",

@@ -35,7 +35,7 @@ class Secret(NamedTuple):
     # specific workspace.
     workspace_id: t.Optional[str] = None
 
-    def __reduce__(self) -> str | tuple[t.Any, ...]:
+    def __reduce__(self) -> t.Union[str, tuple[t.Any, ...]]:
         # We need to override the pickling behaviour for Secret
         # This is because we override other dunder methods which cause the normal
         # picling behaviour to fail.
