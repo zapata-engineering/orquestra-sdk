@@ -9,10 +9,9 @@ import json
 from pathlib import Path
 
 import pytest
+from orquestra.workflow_runtime.secrets import _auth
 from orquestra.workflow_shared import exceptions
 from orquestra.workflow_shared.schema import configs
-
-from orquestra.sdk._client.secrets import _auth
 
 
 class TestAuthorizedClient:

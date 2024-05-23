@@ -6,6 +6,7 @@ import re
 from typing import Any, Dict, List, Optional, Union
 from unittest.mock import ANY, Mock, call, create_autospec
 
+import orquestra.workflow_runtime.secrets
 import pytest
 from orquestra.workflow_runtime._ray import _build_workflow, _client
 from orquestra.workflow_shared import parse_git_url, serde
@@ -16,7 +17,6 @@ from orquestra.workflow_shared.schema.ir import GitURL, SecretNode
 from orquestra.workflow_shared.schema.responses import WorkflowResult
 
 import orquestra.sdk as sdk
-import orquestra.sdk._client.secrets
 from orquestra.sdk._client._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
 )
@@ -90,9 +90,9 @@ class TestBuildGitURL:
         assert url == "https://github.com/zapata-engineering/orquestra-sdk"
 
     def test_with_password(self, monkeypatch: pytest.MonkeyPatch, git_url: GitURL):
-        secrets_get = create_autospec(orquestra.sdk.secrets.get)
+        secrets_get = create_autospec(orquestra.workflow_runtime.secrets.get)
         secrets_get.return_value = "<mocked secret>"
-        monkeypatch.setattr(orquestra.sdk.secrets, "get", secrets_get)
+        monkeypatch.setattr(orquestra.workflow_runtime.secrets, "get", secrets_get)
 
         secret_name = "my_secret"
         secret_config = "secret config"
