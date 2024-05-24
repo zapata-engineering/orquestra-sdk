@@ -8,11 +8,7 @@ import typing as t
 from dataclasses import dataclass
 
 from .schema import configs, ir
-from .schema.workflow_run import (
-    State,
-    TaskInvocationId,
-    WorkflowRunId,
-)
+from .schema.workflow_run import State, TaskInvocationId, WorkflowRunId
 
 
 class WorkflowSyntaxError(Exception):

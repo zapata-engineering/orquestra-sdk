@@ -17,12 +17,14 @@ def _translate_to_zri(workspace_id: WorkspaceId, secret_name: str) -> str:
     """Create ZRI from workspace_id and secret_name."""
     return f"zri:v1::0:{workspace_id}:secret:{secret_name}"
 
+
 _secret_as_string_error = (
     "Invalid usage of a Secret object. Secrets are not "
     "available when building the workflow graph and cannot"
     " be used as strings. If you need to use a Secret's"
     " value, this must be done inside of a task."
 )
+
 
 class Secret(NamedTuple):
     name: str

@@ -24,7 +24,6 @@ from orquestra.workflow_shared.schema.responses import WorkflowResult
 from orquestra.workflow_shared.schema.workflow_run import (
     RunStatus,
     State,
-    TaskInvocationId,
     TaskRun,
     WorkflowRun,
     WorkflowRunId,
@@ -625,7 +624,7 @@ class RayRuntime(RuntimeInterface):
         )
 
     def get_output(
-        self, workflow_run_id: WorkflowRunId, task_invocation_id: TaskInvocationId
+        self, workflow_run_id: WorkflowRunId, task_invocation_id: ir.TaskInvocationId
     ) -> WorkflowResult:
         """Returns single output for a workflow run.
 
@@ -699,7 +698,7 @@ class RayRuntime(RuntimeInterface):
     def get_workflow_logs(self, wf_run_id: WorkflowRunId):
         return self._log_reader.get_workflow_logs(wf_run_id)
 
-    def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: TaskInvocationId):
+    def get_task_logs(self, wf_run_id: WorkflowRunId, task_inv_id: ir.TaskInvocationId):
         return self._log_reader.get_task_logs(wf_run_id, task_inv_id)
 
     def list_workflow_runs(

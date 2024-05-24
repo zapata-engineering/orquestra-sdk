@@ -11,15 +11,12 @@ from functools import singledispatch
 from pathlib import Path
 
 import pydantic
-from packaging import version
-from typing_extensions import assert_never
-
-from orquestra.workflow_shared import secrets
 from orquestra.workflow_shared import (
     SEMVER_REGEX,
     dispatch,
     exceptions,
     iter_invocations_topologically,
+    secrets,
     serde,
 )
 from orquestra.workflow_shared.exec_ctx import ray as exec_ctx_ray
@@ -27,6 +24,8 @@ from orquestra.workflow_shared.kubernetes.quantity import parse_quantity
 from orquestra.workflow_shared.packaging import get_installed_version
 from orquestra.workflow_shared.schema import ir, responses, workflow_run
 from orquestra.workflow_shared.schema.ir import GitURL
+from packaging import version
+from typing_extensions import assert_never
 
 from . import _client, _id_gen
 from ._dirs import redirected_logs_dir

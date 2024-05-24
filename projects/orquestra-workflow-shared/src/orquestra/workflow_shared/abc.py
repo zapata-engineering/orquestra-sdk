@@ -13,9 +13,8 @@ import typing as t
 from abc import ABC, abstractmethod
 from datetime import timedelta
 
-from .exceptions import WorkspacesNotSupportedError
-
 from ._spaces import Project, ProjectRef, Workspace
+from .exceptions import WorkspacesNotSupportedError
 from .logs import LogOutput, LogReader, WorkflowLogs
 from .schema.ir import TaskInvocationId, WorkflowDef
 from .schema.responses import WorkflowResult

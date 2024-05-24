@@ -19,7 +19,7 @@ When ``orquestra.sdk.secrets`` is used inside a task running remotely on the Orq
 Platform, it uses a server-side authorization mechanism handled automatically.
 """
 
-from ._api import delete, get, list, set, Secret
+from ._api import Secret, delete, get, list, set
 
 __all__ = [
     "delete",

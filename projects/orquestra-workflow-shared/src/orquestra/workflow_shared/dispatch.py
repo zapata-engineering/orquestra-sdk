@@ -8,8 +8,8 @@ import sys
 import typing as t
 from functools import singledispatch
 
-from .schema import ir
 from . import serde
+from .schema import ir
 
 
 def _locate_callable(fn_ref_dict) -> t.Callable:

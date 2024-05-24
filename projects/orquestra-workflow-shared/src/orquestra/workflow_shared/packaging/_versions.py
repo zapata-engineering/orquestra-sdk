@@ -14,7 +14,6 @@ except ModuleNotFoundError:  # pragma: no cover
 import packaging.version
 
 from ..exceptions import BaseRuntimeError
-
 from ..schema import ir
 
 

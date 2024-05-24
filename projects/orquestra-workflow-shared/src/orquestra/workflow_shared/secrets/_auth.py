@@ -17,6 +17,7 @@ BASE_URI = "http://config-service.config-service:8099"
 
 def _authorize_with_passport() -> t.Optional[SecretsClient]:
     from orquestra.sdk._client._base._env import PASSPORT_FILE_ENV
+
     if (passport_path := os.getenv(PASSPORT_FILE_ENV)) is None:
         return None
 
