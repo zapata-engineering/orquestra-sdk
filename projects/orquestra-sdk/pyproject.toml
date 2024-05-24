@@ -30,7 +30,6 @@ requires-python = ">= 3.8"
 # the same API.
 dependencies = [
     "orquestra-workflow-runtime @ {root:uri}/../orquestra-workflow-runtime", # TO BE REMOVED
-    "orquestra-workflow-shared @ {root:uri}/../orquestra-workflow-shared", # TO BE REMOVED
 
     # Schema definition
     "pydantic>1.10.7",
