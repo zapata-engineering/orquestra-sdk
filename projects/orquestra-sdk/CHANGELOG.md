@@ -14,6 +14,8 @@
 
 💅 *Improvements*
 
+* `orquestra-sdk-base` CPU image is now built on `arm64`
+
 🥷 *Internal*
 
 📃 *Docs*

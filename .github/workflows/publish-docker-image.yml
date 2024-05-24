@@ -81,4 +81,4 @@ jobs:
           # DUE TO JSON LIMITATIONS, NEWLINES MUST BE EXPLICITLY ADDED AS \n
           docker_build_args: SDK_REQUIREMENT=${{ inputs.sdk_requirement }}
           # leave blank for linux/amd64 (recommended)
-          target_platforms: ''
+          target_platforms: 'linux/amd64,linux/arm64'
