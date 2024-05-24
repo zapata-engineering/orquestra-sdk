@@ -2,6 +2,9 @@
 requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
+[tool.hatch.metadata]
+allow-direct-references = true  # TO BE REMOVED WHEN NO LONGER INSTALLING PACKAGES FROM LOCAL DIRS
+
 [project]
 authors = [
     { name = "Zapata Computing Inc.", email = "info@zapatacomputing.com" },
@@ -26,6 +29,7 @@ requires-python = ">= 3.8"
 # version we can easily install and test, even if there are older versions with
 # the same API.
 dependencies = [
+    "orquestra-workflow-shared @ {root:uri}/../orquestra-workflow-shared", # TO BE REMOVED
     # Schema definition
     "pydantic>1.10.7",
     # Pickling library
