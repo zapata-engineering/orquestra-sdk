@@ -71,37 +71,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-ray = [
-    "ray==2.9.0",
-    "virtualenv>=20.0.24, !=20.21.1",  # Ray depends on this, but it's missing from the base requirements.
-    "async-timeout",       # Ray depends on this, but its missing from ray requirements. Can be removed when https://github.com/ray-project/ray/issues/41267 is fixed.
-]
 
-dashboard = [
-    "orquestra-sdk[ray]",
-    "ray[default]",    
-]
-
-all = ["orquestra-sdk[dashboard]"]
-
-# Docs-specific deps. This list should match the requirements we're using in
-# the multi-repo docs builds.
-docs = [
-    "sphinx<7.0,>6.0",
-    "furo==2023.7.26",
-    "sphinx_design==0.4.1",
-    "sphinx-autobuild==2021.3.14",
-    "sphinx-autoapi==2.1.1",
-    "sphinxcontrib-youtube==1.2.0",
-    "sphinxcontrib-autoprogram==0.1.8",
-    "sphinx-copybutton==0.5.2",
-    "sphinx-click==4.4.0",
-    "sphinx-togglebutton==0.3.2",
-    "sphinxemoji==0.2.0",
-    "Jinja2>=3.0.0",
-]
 dev = [
-    "orquestra-sdk[all,docs]",
     "black~=23.7",
     "diff_cover",
     "flake8>=4.0.0",
