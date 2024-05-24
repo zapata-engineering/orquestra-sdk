@@ -8,8 +8,6 @@
 # make test PYTHON=/tmp/other/python/version
 PYTHON="python"
 
-DOCS_BUILD_DIR = docs/_build
-
 clean:
 	find . -regex '^.*\(__pycache__\|\.py[co]\)$$' -delete;
 	find . -type d -name __pycache__ -exec rm -r {} \+
@@ -19,13 +17,10 @@ clean:
 	rm -rf tests/.pytest_cache;
 	rm -rf dist build
 	rm -f .coverage*
-	rm -rf "$(DOCS_BUILD_DIR)"
 
 
 test:
 	$(PYTHON) -m pytest \
-		--ignore=tests/runtime/performance \
-		--ignore=tests/sdk/typing \
 		--durations=10 \
 		tests
 
@@ -59,16 +54,6 @@ BASE_BRANCH := $(if $(GITHUB_BASE_REF),$(GITHUB_BASE_REF),main)
 github-actions-coverage-report:
 	@$(PYTHON) -m coverage report --show-missing
 	@$(PYTHON) -m diff_cover.diff_cover_tool coverage.xml --compare-branch=origin/$(BASE_BRANCH)
-
-# We need to set PATH here because performance test calls the `orq` CLI in a subprocess.
-performance:
-	$(PYTHON) -m pytest --durations=0 tests/runtime/performance
-
-
-# This is NOT mypy checking, it is ensuring the Workflow SDK has correct type hints for our users
-user-typing:
-	$(PYTHON) -m pytest tests/sdk/typing
-
 
 github_actions:
 	$(PYTHON) -m pip install --upgrade pip
@@ -132,10 +117,7 @@ style-fix:
 test-fast:
 	$(PYTHON) -m pytest \
 		-m "not slow" \
-		--ignore=tests/runtime/performance \
-		--ignore=tests/sdk/typing \
 		--durations=10 \
-		docs/examples/tests \
 		tests
 
 

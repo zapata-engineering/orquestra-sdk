@@ -158,14 +158,7 @@ explicit_package_bases = true
 # directory path. If your repo has a different layout you can add the appropriate paths
 # by setting MYPYPATH env variable.
 mypy_path = "src:src/python"
-exclude = [
-    # Exclude anything in an examples directory, except the docs/examples dir.
-    '^(?!docs\/examples\/).*examples\/.*$',
-    # Exclude our test files where we invoke mypy from pytest.
-    "tests/sdk/typing",
-    # Workaround for misbehaving 3rd-party libraries.
-    "src/orquestra/sdk/_client/dremio/_flight_facade.py",
-]
+
 # Without this, mypy would skip typechecking functions that don't have type
 # annotations in the signature.
 check_untyped_defs = true
@@ -175,8 +168,6 @@ omit = [
     # main.py should be checked separately in an integration test.
     "*/main.py",
     "*/__init__.py",
-    # This is vendored source code from another project
-    "src/orquestra/sdk/shared/kubernetes/quantity.py",
 ]
 
 [tool.coverage.report]
@@ -246,9 +237,3 @@ per-file-ignores = [
 max-line-length = 88
 count = true
 arg-type-hints-in-docstring = false
-
-[tool.pyright]
-exclude = [
-    # This is 3rd party file which is not compatible for pyright. Ignore it as a whole
-    "src/orquestra/sdk/_client/_base/cli/_ui/_click_default_group.py",
-]
