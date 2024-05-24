@@ -32,7 +32,16 @@ jobs:
           filters: |
             projects/orquestra-sdk:
               - .github/workflows/**
-              - projects/orquestra-sdk/**
+              - projects/orquestra-sdk/**    
+              - projects/orquestra-workflow-runtime/**
+              - projects/orquestra-workflow-shared/**
+            projects/orquestra-workflow-runtime:
+              - .github/workflows/**
+              - projects/orquestra-workflow-runtime/**
+              - projects/orquestra-workflow-shared/**
+            projects/orquestra-workflow-shared:
+              - .github/workflows/**
+              - projects/orquestra-workflow-shared/**
   tests:
     # call the reusable workflow for the packages that changed
     needs: find-changes
