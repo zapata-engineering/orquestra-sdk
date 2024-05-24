@@ -32,7 +32,7 @@ jobs:
           filters: |
             projects/orquestra-sdk:
               - .github/workflows/**
-              - projects/orquestra-sdk/**    
+              - projects/orquestra-sdk/**
               - projects/orquestra-workflow-runtime/**
               - projects/orquestra-workflow-shared/**
             projects/orquestra-workflow-runtime:
