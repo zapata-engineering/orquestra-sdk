@@ -14,6 +14,7 @@ from orquestra.workflow_shared.exceptions import (
     ConfigNameNotFoundError,
     RuntimeConfigError,
 )
+from orquestra.workflow_shared.env import PASSPORT_FILE_ENV
 from requests import Response, Session
 
 from orquestra import sdk
@@ -75,9 +76,9 @@ def _read_passport_token() -> str:
     Raises:
         EnvironmentError: when the PASSPORT_FILE_ENV environment variable is not set.
     """
-    if not (passport_file_path := os.getenv(_env.PASSPORT_FILE_ENV)):
+    if not (passport_file_path := os.getenv(PASSPORT_FILE_ENV)):
         raise EnvironmentError(
-            f"The '{_env.PASSPORT_FILE_ENV}' environment variable is not set."
+            f"The '{PASSPORT_FILE_ENV}' environment variable is not set."
         )
     return Path(passport_file_path).read_text()
 

@@ -16,11 +16,6 @@ Example:
     ORQ_CONFIG_PATH=/tmp/config.json
 """
 
-PASSPORT_FILE_ENV = "ORQUESTRA_PASSPORT_FILE"
-"""
-Consumed by the Workflow SDK to set auth in remote contexts
-"""
-
 CURRENT_CLUSTER_ENV = "ORQ_CURRENT_CLUSTER"
 """
 Set by Studio and CE to share cluster's URL

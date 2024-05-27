@@ -19,9 +19,9 @@ from orquestra.sdk._client._base._env import (
     MLFLOW_ARTIFACTS_DIR,
     MLFLOW_CR_NAME,
     MLFLOW_PORT,
-    PASSPORT_FILE_ENV,
 )
 
+from orquestra.workflow_shared.env import PASSPORT_FILE_ENV
 
 class TestGetTempArtifactsDir:
     class TestWithRemote:

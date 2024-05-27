@@ -26,8 +26,9 @@ from ._env import (
     CONFIG_PATH_ENV,
     CURRENT_CLUSTER_ENV,
     CURRENT_CONFIG_ENV,
-    PASSPORT_FILE_ENV,
 )
+
+from orquestra.workflow_shared.env import PASSPORT_FILE_ENV
 
 # Why JSON?
 #  The Python TOML package is unmaintained as of 2022-02-18.
