@@ -7,7 +7,7 @@ authors = [
     { name = "Zapata Computing Inc.", email = "info@zapatacomputing.com" },
 ]
 name = "orquestra-workflow-shared"
-description = "Compose Orquestra workflows using a Python DSL"
+description = "Code shared between Orquestra SDK clients and workflow execution servers"
 readme = "README.md"
 license = { file = "LICENSE" }
 classifiers = [

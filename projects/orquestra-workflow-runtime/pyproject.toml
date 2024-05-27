@@ -7,10 +7,10 @@ allow-direct-references = true  # TO BE REMOVED WHEN NO LONGER INSTALLING PACKAG
 
 [project]
 authors = [
-    { name = "Zapata Computing Inc.", email = "info@zapatacomputing.com" },
+    { name = "Zapata Computing Inc.", email = "info@zapata.ai" },
 ]
 name = "orquestra-workflow-runtime"
-description = "Compose Orquestra workflows using a Python DSL"
+description = "Execute Orquestra workflows"
 readme = "README.md"
 license = { file = "LICENSE" }
 classifiers = [
