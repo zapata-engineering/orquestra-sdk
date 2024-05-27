@@ -6,7 +6,6 @@ import typing as t
 from pathlib import Path
 from typing import Protocol
 
-from orquestra.workflow_shared import exceptions
 from orquestra.workflow_shared.schema.configs import ConfigName
 from ..env import PASSPORT_FILE_ENV
 
@@ -19,12 +18,14 @@ BASE_URI = "http://config-service.config-service:8099"
 
 
 class SecretAuthorization(Protocol):
-    def authorize(self) -> t.Optional[SecretsClient]:
+    @staticmethod
+    def authorize(config_name) -> t.Optional[SecretsClient]:
         ...
 
 
 class PassportAuthorization:
-    def authorize(self) -> t.Optional[SecretsClient]:
+    @staticmethod
+    def authorize(_) -> t.Optional[SecretsClient]:
         if (passport_path := os.getenv(PASSPORT_FILE_ENV)) is None:
             return None
 
@@ -33,42 +34,18 @@ class PassportAuthorization:
 
 
 class AuthorizationMethodStorage:
-    def __init__(self):
-        self.authorizations: t.List[SecretAuthorization] = [PassportAuthorization()]
+    authorizations: t.List[SecretAuthorization] = [PassportAuthorization()]
 
-    def register_authorization(self, authorization: SecretAuthorization):
-        self.authorizations.append(authorization)
+    @staticmethod
+    def register_authorization(authorization: SecretAuthorization):
+        AuthorizationMethodStorage.authorizations.append(authorization)
 
-    def authorize(self) -> t.Optional[SecretsClient]:
-        for auth in self.authorizations:
-            client = auth.authorize()
+    @staticmethod
+    def authorize(config_name) -> t.Optional[SecretsClient]:
+        for auth in AuthorizationMethodStorage.authorizations:
+            client = auth.authorize(config_name)
             if client is not None:
                 return client
-
-
-def _read_config_opts(config_name: ConfigName):
-    # This import is awful, as it makes shared code dependent on client.
-    # In reality, this function in only called on client side, so from functional
-    # perspective this will work.
-    from orquestra.sdk._client._base import _config  # type: ignore
-
-    try:
-        cfg = _config.read_config(config_name=config_name)
-    except exceptions.ConfigNameNotFoundError:
-        raise
-
-    return cfg.runtime_options
-
-
-def _authorize_with_config(
-    config_name: ConfigName,
-) -> SecretsClient:
-    try:
-        opts = _read_config_opts(config_name)
-    except exceptions.ConfigNameNotFoundError:
-        raise
-
-    return SecretsClient.from_token(base_uri=opts["uri"], token=opts["token"])
 
 
 def authorized_client(config_name: t.Optional[ConfigName]) -> SecretsClient:
@@ -86,20 +63,7 @@ def authorized_client(config_name: t.Optional[ConfigName]) -> SecretsClient:
             found.
 
     """
-    # At the moment there are only two ways to authorize the secrets client: passport
-    # and config file. If more schemes are developed in the future, they should be
-    # added here.
     auth_methods = AuthorizationMethodStorage()
 
-    if client := auth_methods.authorize():
+    if client := auth_methods.authorize(config_name):
         return client
-
-    if config_name is None:
-        raise exceptions.ConfigNameNotFoundError(
-            "Please provide config name while accessing the secrets locally"
-        )
-
-    try:
-        return _authorize_with_config(config_name)
-    except exceptions.ConfigNameNotFoundError:
-        raise

@@ -20,6 +20,8 @@ Platform, it uses a server-side authorization mechanism handled automatically.
 """
 
 from ._api import Secret, delete, get, list, set
+from ._auth import AuthorizationMethodStorage
+from ._client import SecretsClient
 
 __all__ = [
     "delete",
@@ -27,4 +29,6 @@ __all__ = [
     "list",
     "set",
     "Secret",
+    "AuthorizationMethodStorage",
+    "SecretsClient",
 ]

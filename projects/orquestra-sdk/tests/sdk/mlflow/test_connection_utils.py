@@ -9,6 +9,7 @@ from unittest.mock import Mock, create_autospec
 
 import orquestra.workflow_shared.exceptions as exceptions
 import pytest
+from orquestra.workflow_shared.env import PASSPORT_FILE_ENV
 from pytest import MonkeyPatch
 from requests import Response, Session
 
@@ -21,7 +22,6 @@ from orquestra.sdk._client._base._env import (
     MLFLOW_PORT,
 )
 
-from orquestra.workflow_shared.env import PASSPORT_FILE_ENV
 
 class TestGetTempArtifactsDir:
     class TestWithRemote:
