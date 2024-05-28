@@ -1,0 +1,5 @@
+from orquestra.workflow_shared.secrets import AuthorizationMethodStorage
+
+from ._secrets._auth import ConfigAuthorization
+
+AuthorizationMethodStorage.register_authorization(ConfigAuthorization)
