@@ -9,11 +9,10 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
-
-from orquestra.sdk._runtime._ray import _ray_logs
-from orquestra.sdk._runtime._ray._logs import _markers
-from orquestra.sdk._shared.dates import _dates
-from orquestra.sdk._shared.logs import LogOutput
+from orquestra.workflow_runtime._ray import _ray_logs
+from orquestra.workflow_runtime._ray._logs import _markers
+from orquestra.workflow_shared.dates import _dates
+from orquestra.workflow_shared.logs import LogOutput
 
 DATA_DIR = Path(__file__).parent / "data"
 TEST_RAY_TEMP = DATA_DIR / "legacy_logs" / "ray_temp"

@@ -4,8 +4,7 @@
 import re
 
 import pytest
-
-from orquestra.sdk._shared._regex import SEMVER_REGEX, VERSION_REGEX
+from orquestra.workflow_shared._regex import SEMVER_REGEX, VERSION_REGEX
 
 
 @pytest.mark.parametrize(

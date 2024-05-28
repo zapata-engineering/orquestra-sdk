@@ -4,9 +4,9 @@
 import os
 
 import pytest
+from orquestra.workflow_shared.exceptions import EnvVarNotFoundError
 
 from orquestra.sdk._client.dremio import _env_var_reader
-from orquestra.sdk._shared.exceptions import EnvVarNotFoundError
 
 
 class TestEnvReader:

@@ -14,7 +14,7 @@ import typing as t
 from contextlib import contextmanager
 from pathlib import Path
 
-from orquestra.sdk._runtime._ray import _dag
+from orquestra.workflow_runtime import RayParams, RayRuntime
 
 
 @contextmanager
@@ -57,7 +57,7 @@ def ray_suitable_temp_dir():
 
 
 @contextmanager
-def make_ray_conn(storage_path: t.Optional[str] = None) -> t.Iterator[_dag.RayParams]:
+def make_ray_conn(storage_path: t.Optional[str] = None) -> t.Iterator[RayParams]:
     """Initializes ray connection.
 
     By default, starts a linked cluster on its own.
@@ -91,7 +91,7 @@ def make_ray_conn(storage_path: t.Optional[str] = None) -> t.Iterator[_dag.RayPa
             address = "local"
             storage_path = storage_path or str(tmp_path / "ray" / "storage")
             ray_temp_dir = str(tmp_path / "ray" / "tmp")
-        params = _dag.RayParams(
+        params = RayParams(
             address=address,
             log_to_driver=False,
             storage=storage_path,
@@ -102,9 +102,9 @@ def make_ray_conn(storage_path: t.Optional[str] = None) -> t.Iterator[_dag.RayPa
         # unfortunately it wrecks the PDB in pytest. To workaround this we can
         # bring back the old handler after initializing Ray connection.
         breakpoint_handler = os.environ.get("PYTHONBREAKPOINT", "")
-        _dag.RayRuntime.startup(params)
+        RayRuntime.startup(params)
         os.environ["PYTHONBREAKPOINT"] = breakpoint_handler
 
         yield params
 
-        _dag.RayRuntime.shutdown()
+        RayRuntime.shutdown()

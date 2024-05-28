@@ -10,8 +10,7 @@ here.
 """
 
 import pytest
-
-from orquestra.sdk._shared.schema.workflow_run import State
+from orquestra.workflow_shared.schema.workflow_run import State
 
 
 class TestState:

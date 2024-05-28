@@ -17,21 +17,25 @@ from pathlib import Path
 
 import pytest
 from freezegun import freeze_time
+from orquestra.workflow_runtime._ray import _build_workflow, _client, _dag, _ray_logs
+from orquestra.workflow_runtime._ray._env import (
+    RAY_DOWNLOAD_GIT_IMPORTS_ENV,
+    RAY_TEMP_PATH_ENV,
+)
+from orquestra.workflow_shared import exceptions
+from orquestra.workflow_shared.abc import RuntimeInterface
+from orquestra.workflow_shared.schema import ir
+from orquestra.workflow_shared.schema.responses import JSONResult
+from orquestra.workflow_shared.schema.workflow_run import (
+    State,
+    WorkflowRun,
+    WorkflowRunId,
+)
+from orquestra.workflow_shared.serde import deserialize
 
 from orquestra import sdk
 from orquestra.sdk._client._base._config import LOCAL_RUNTIME_CONFIGURATION
 from orquestra.sdk._client._base._testing import _example_wfs, _ipc
-from orquestra.sdk._runtime._ray import _build_workflow, _client, _dag, _ray_logs
-from orquestra.sdk._runtime._ray._env import (
-    RAY_DOWNLOAD_GIT_IMPORTS_ENV,
-    RAY_TEMP_PATH_ENV,
-)
-from orquestra.sdk._shared import exceptions
-from orquestra.sdk._shared.abc import RuntimeInterface
-from orquestra.sdk._shared.schema import ir
-from orquestra.sdk._shared.schema.responses import JSONResult
-from orquestra.sdk._shared.schema.workflow_run import State, WorkflowRunId
-from orquestra.sdk._shared.serde import deserialize
 
 # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
 # unraisable exceptions. Last tested with Ray 2.4.0.
@@ -399,7 +403,7 @@ class TestRayRuntimeMethods:
             wf_run_ids = {run.id for run in wf_runs}
             assert run_id1 in wf_run_ids
             assert run_id2 in wf_run_ids
-            assert all(isinstance(run, _dag.WorkflowRun) for run in wf_runs)
+            assert all(isinstance(run, WorkflowRun) for run in wf_runs)
 
     class TestStopWorkflow:
         """
@@ -1232,13 +1236,13 @@ class TestGetCurrentIDs:
         @sdk.task(source_import=sdk.InlineImport())
         def dump_ids():
             # Separate import just to avoid weird global state passing via closure.
-            import orquestra.sdk._runtime._ray._build_workflow
+            from orquestra.workflow_runtime import get_current_ids
 
             (
                 wf_run_id,
                 task_inv_id,
                 task_run_id,
-            ) = orquestra.sdk._runtime._ray._build_workflow.get_current_ids()
+            ) = get_current_ids()
 
             ids_dict = {
                 "wf_run_id": wf_run_id,

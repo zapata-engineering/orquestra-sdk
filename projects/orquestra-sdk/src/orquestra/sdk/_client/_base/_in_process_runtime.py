@@ -8,20 +8,19 @@ import warnings
 from contextlib import contextmanager
 from datetime import timedelta
 
-from orquestra.sdk import secrets
-from orquestra.sdk._shared import (
+from orquestra.workflow_shared import (
     ProjectRef,
     abc,
     exceptions,
     iter_invocations_topologically,
     serde,
 )
-from orquestra.sdk._shared.dates import Instant
-from orquestra.sdk._shared.dates import now as dates_now
-from orquestra.sdk._shared.dispatch import locate_fn_ref
-from orquestra.sdk._shared.schema import ir
-from orquestra.sdk._shared.schema.responses import WorkflowResult
-from orquestra.sdk._shared.schema.workflow_run import (
+from orquestra.workflow_shared.dates import Instant
+from orquestra.workflow_shared.dates import now as dates_now
+from orquestra.workflow_shared.dispatch import locate_fn_ref
+from orquestra.workflow_shared.schema import ir
+from orquestra.workflow_shared.schema.responses import WorkflowResult
+from orquestra.workflow_shared.schema.workflow_run import (
     RunStatus,
     State,
     TaskRun,
@@ -31,6 +30,8 @@ from orquestra.sdk._shared.schema.workflow_run import (
     WorkflowRunSummary,
     WorkspaceId,
 )
+
+from orquestra.sdk import secrets
 
 WfRunId = str
 ArtifactValue = t.Any

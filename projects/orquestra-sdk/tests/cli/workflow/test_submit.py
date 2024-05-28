@@ -8,12 +8,12 @@ import warnings
 from unittest.mock import Mock, create_autospec
 
 import pytest
+from orquestra.workflow_shared import exceptions
 
 from orquestra.sdk._client._base.cli import _repos
 from orquestra.sdk._client._base.cli._arg_resolvers import SpacesResolver
 from orquestra.sdk._client._base.cli._ui import _presenters, _prompts
 from orquestra.sdk._client._base.cli._workflow import _submit
-from orquestra.sdk._shared import exceptions
 
 
 def _assert_called_with_type(mock: Mock, *args_types, **kwargs_types):

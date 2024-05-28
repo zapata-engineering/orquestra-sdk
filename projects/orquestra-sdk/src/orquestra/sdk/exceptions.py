@@ -4,7 +4,7 @@
 # THIS FILE IS A SHIM TO REEXPORT SYMBOLS AS PUBLIC API
 # DO NOT PUT ANY LOGIC INTO THIS FILE.
 
-from orquestra.sdk._shared.exceptions import (
+from orquestra.workflow_shared.exceptions import (
     BaseRuntimeError,
     ConfigFileNotFoundError,
     ConfigNameNotFoundError,

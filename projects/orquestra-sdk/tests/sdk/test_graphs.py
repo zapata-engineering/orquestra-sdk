@@ -2,8 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 import pytest
-
-from orquestra.sdk._shared import _graphs
+from orquestra.workflow_shared import _graphs
 
 
 class TestTopologicalSort:

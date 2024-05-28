@@ -7,7 +7,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Protocol, Sequence, Union
 
-from orquestra.sdk._shared import (
+from orquestra.workflow_shared import (
     Project,
     ProjectRef,
     Workspace,
@@ -15,10 +15,10 @@ from orquestra.sdk._shared import (
     retry,
     serde,
 )
-from orquestra.sdk._shared.abc import RuntimeInterface
-from orquestra.sdk._shared.exceptions import IgnoredFieldWarning
-from orquestra.sdk._shared.kubernetes.quantity import parse_quantity
-from orquestra.sdk._shared.logs import (
+from orquestra.workflow_shared.abc import RuntimeInterface
+from orquestra.workflow_shared.exceptions import IgnoredFieldWarning
+from orquestra.workflow_shared.kubernetes.quantity import parse_quantity
+from orquestra.workflow_shared.logs import (
     LogAccumulator,
     LogOutput,
     LogStreamType,
@@ -26,17 +26,17 @@ from orquestra.sdk._shared.logs import (
     is_env_setup,
     is_worker,
 )
-from orquestra.sdk._shared.schema.configs import RuntimeConfiguration
-from orquestra.sdk._shared.schema.ir import (
+from orquestra.workflow_shared.schema.configs import RuntimeConfiguration
+from orquestra.workflow_shared.schema.ir import (
     ArtifactFormat,
     TaskInvocationId,
     WorkflowDef,
 )
-from orquestra.sdk._shared.schema.responses import (
+from orquestra.workflow_shared.schema.responses import (
     ComputeEngineWorkflowResult,
     WorkflowResult,
 )
-from orquestra.sdk._shared.schema.workflow_run import (
+from orquestra.workflow_shared.schema.workflow_run import (
     State,
     TaskRunId,
     WorkflowRun,

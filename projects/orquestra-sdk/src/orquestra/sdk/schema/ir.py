@@ -4,7 +4,7 @@
 # THIS FILE IS A SHIM TO REEXPORT SYMBOLS AS PUBLIC API
 # DO NOT PUT ANY LOGIC INTO THIS FILE.
 
-from orquestra.sdk._shared.schema.ir import (
+from orquestra.workflow_shared.schema.ir import (
     ArgumentId,
     ArtifactFormat,
     ArtifactNode,

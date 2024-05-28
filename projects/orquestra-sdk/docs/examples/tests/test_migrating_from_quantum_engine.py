@@ -5,9 +5,9 @@
 import typing as t
 
 import pytest
+from orquestra.workflow_shared.schema import ir
 
 from orquestra import sdk
-from orquestra.sdk._shared.schema import ir
 
 
 class Snippets:

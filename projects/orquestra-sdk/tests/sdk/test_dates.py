@@ -8,10 +8,9 @@ Unit tests for ``orquestra.sdk._base._dates``.
 import re
 from datetime import datetime, timedelta, timezone
 
+import orquestra.workflow_shared.dates as dates
 import pytest
 from freezegun import freeze_time
-
-import orquestra.sdk._shared.dates as dates
 
 
 class TestNow:

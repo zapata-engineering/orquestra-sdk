@@ -37,16 +37,17 @@ if TYPE_CHECKING:
     from pip_api._parse_requirements import Requirement
 
 import wrapt  # type: ignore
-
-# Needed for fully-qualified type annotations.
-import orquestra.sdk
-from orquestra.sdk._shared.exceptions import (
+from orquestra.workflow_shared.exceptions import (
     DirtyGitRepo,
     InvalidTaskDefinitionError,
     WorkflowSyntaxError,
 )
-from orquestra.sdk._shared.kubernetes.quantity import parse_quantity
-from orquestra.sdk._shared.packaging import PackagingError, get_installed_version
+from orquestra.workflow_shared.kubernetes.quantity import parse_quantity
+from orquestra.workflow_shared.packaging import PackagingError, get_installed_version
+from orquestra.workflow_shared.secrets import Secret
+
+# Needed for fully-qualified type annotations.
+import orquestra.sdk
 
 from . import _ast
 
@@ -78,48 +79,7 @@ Constant = Any
 # function calls).
 Argument = Union[Constant, "ArtifactFuture", "Secret"]
 
-_secret_as_string_error = (
-    "Invalid usage of a Secret object. Secrets are not "
-    "available when building the workflow graph and cannot"
-    " be used as strings. If you need to use a Secret's"
-    " value, this must be done inside of a task."
-)
-
-
 _TaskReturn = TypeVar("_TaskReturn")
-
-
-class Secret(NamedTuple):
-    name: str
-    # Config name is only used for the local runtimes where we can't infer the location
-    # where we get a secret's value from.
-    # This matches the behaviour of `sdk.secrets.get` where the config name is used to
-    # get a secret when running locally.
-    config_name: Optional[str] = None
-    # Workspace ID is used by local and remote runtimes to fetch a secret from a
-    # specific workspace.
-    workspace_id: Optional[str] = None
-
-    def __reduce__(self) -> str | tuple[Any, ...]:
-        # We need to override the pickling behaviour for Secret
-        # This is because we override other dunder methods which cause the normal
-        # picling behaviour to fail.
-        return (self.__class__, (self.name, self.config_name, self.workspace_id))
-
-    def __getattr__(self, item):
-        try:
-            return self.__getattribute__(item)
-        except AttributeError as e:
-            raise AttributeError(_secret_as_string_error) from e
-
-    def __getitem__(self, item):
-        raise AttributeError(_secret_as_string_error)
-
-    def __str__(self):
-        raise AttributeError(_secret_as_string_error)
-
-    def __iter__(self):
-        raise AttributeError(_secret_as_string_error)
 
 
 @dataclass(frozen=True, eq=True)
