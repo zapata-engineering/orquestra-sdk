@@ -17,14 +17,13 @@ from orquestra.workflow_shared.schema import ir
 def cleanup():
     yield
     importlib.invalidate_caches()
-    importlib.reload(sys.modules["orquestra.sdk.examples.exportable_wf"])
 
 
 class TestLocateFnRef:
     def test_default_search_path(self):
         fn = dispatch.locate_fn_ref(
             ir.FileFunctionRef(
-                file_path="src/orquestra/sdk/examples/workflow_defs.py",
+                file_path="tests/data/example.py",
                 function_name="hello",
             )
         )
