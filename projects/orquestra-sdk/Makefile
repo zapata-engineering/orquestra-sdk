@@ -77,6 +77,8 @@ user-typing:
 github_actions:
 	$(PYTHON) -m pip install --upgrade pip
 	$(PYTHON) -m pip install -e '.[dev]'
+	$(PYTHON) -m pip install -e '../orquestra-workflow-runtime[ray]'
+	$(PYTHON) -m pip install -e '../orquestra-workflow-shared'
 
 # Install deps required to build wheel. Used for release automation. See also:
 # https://github.com/zapatacomputing/cicd-actions/blob/67dd6765157e0baefee0dc874e0f46ccd2075657/.github/workflows/py-wheel-build-and-push.yml#L26
