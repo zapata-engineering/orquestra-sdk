@@ -8,10 +8,9 @@ import typing as t
 from pathlib import Path
 
 from graphviz import Digraph  # type: ignore
-
-from orquestra.sdk._shared import exceptions
-from orquestra.sdk._shared.schema.configs import ConfigName
-from orquestra.sdk._shared.schema.workflow_run import WorkflowRun, WorkflowRunId
+from orquestra.workflow_shared import exceptions
+from orquestra.workflow_shared.schema.configs import ConfigName
+from orquestra.workflow_shared.schema.workflow_run import WorkflowRun, WorkflowRunId
 
 from .. import _arg_resolvers, _repos
 from .._ui import _presenters, _prompts

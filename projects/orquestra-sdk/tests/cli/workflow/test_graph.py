@@ -11,12 +11,12 @@ from typing import Optional
 from unittest.mock import create_autospec
 
 import pytest
+from orquestra.workflow_shared.schema.ir import WorkflowDef
+from orquestra.workflow_shared.schema.workflow_run import WorkflowRun
 
 from orquestra.sdk._client._base.cli import _arg_resolvers, _repos
 from orquestra.sdk._client._base.cli._ui import _presenters, _prompts
 from orquestra.sdk._client._base.cli._workflow import _graph
-from orquestra.sdk._shared.schema.ir import WorkflowDef
-from orquestra.sdk._shared.schema.workflow_run import WorkflowRun
 
 
 @pytest.mark.parametrize("file", [None, create_autospec(Path)])
