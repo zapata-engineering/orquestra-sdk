@@ -12,8 +12,8 @@ Before extending this file with tests, please consider extracting your logic awa
 the exception class.
 """
 
-from orquestra.sdk._shared.exceptions import RuntimeQuerySummaryError
-from orquestra.sdk._shared.schema.configs import RuntimeName
+from orquestra.workflow_shared.exceptions import RuntimeQuerySummaryError
+from orquestra.workflow_shared.schema.configs import RuntimeName
 
 
 class TestRuntimeQuerySummaryError:

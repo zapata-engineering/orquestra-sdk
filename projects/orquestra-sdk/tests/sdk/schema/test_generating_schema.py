@@ -2,8 +2,7 @@
 # © Copyright 2021 - 2024 Zapata Computing Inc.
 ################################################################################
 import pytest
-
-from orquestra.sdk._shared.schema import configs, ir, workflow_run
+from orquestra.workflow_shared.schema import configs, ir, workflow_run
 
 
 @pytest.mark.parametrize(

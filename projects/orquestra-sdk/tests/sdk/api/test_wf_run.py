@@ -23,6 +23,32 @@ from unittest.mock import (
 )
 
 import pytest
+from orquestra.workflow_shared import serde
+from orquestra.workflow_shared._spaces._structs import ProjectRef, Workspace
+from orquestra.workflow_shared.abc import RuntimeInterface
+from orquestra.workflow_shared.exceptions import (
+    ProjectInvalidError,
+    RayNotRunningError,
+    RemoteConnectionError,
+    RuntimeQuerySummaryError,
+    UnauthorizedError,
+    VersionMismatch,
+    WorkflowRunCanNotBeTerminated,
+    WorkflowRunNotFinished,
+    WorkflowRunNotFoundError,
+)
+from orquestra.workflow_shared.exec_ctx import ExecContext, _exec_ctx
+from orquestra.workflow_shared.logs._interfaces import (
+    LogOutput,
+    LogReader,
+    WorkflowLogs,
+)
+from orquestra.workflow_shared.schema import ir
+from orquestra.workflow_shared.schema.configs import RuntimeName
+from orquestra.workflow_shared.schema.responses import JSONResult
+from orquestra.workflow_shared.schema.workflow_run import ProjectId, RunStatus, State
+from orquestra.workflow_shared.schema.workflow_run import TaskRun as TaskRunModel
+from orquestra.workflow_shared.schema.workflow_run import WorkspaceId
 
 from orquestra.sdk import current_exec_ctx
 from orquestra.sdk._client._base import _api, _dsl, _traversal, _workflow
@@ -34,28 +60,6 @@ from orquestra.sdk._client._base._env import (
 )
 from orquestra.sdk._client._base._in_process_runtime import InProcessRuntime
 from orquestra.sdk._client._base._spaces._api import list_projects, list_workspaces
-from orquestra.sdk._shared import serde
-from orquestra.sdk._shared._spaces._structs import ProjectRef, Workspace
-from orquestra.sdk._shared.abc import RuntimeInterface
-from orquestra.sdk._shared.exceptions import (
-    ProjectInvalidError,
-    RayNotRunningError,
-    RemoteConnectionError,
-    RuntimeQuerySummaryError,
-    UnauthorizedError,
-    VersionMismatch,
-    WorkflowRunCanNotBeTerminated,
-    WorkflowRunNotFinished,
-    WorkflowRunNotFoundError,
-)
-from orquestra.sdk._shared.exec_ctx import ExecContext, _exec_ctx
-from orquestra.sdk._shared.logs._interfaces import LogOutput, LogReader, WorkflowLogs
-from orquestra.sdk._shared.schema import ir
-from orquestra.sdk._shared.schema.configs import RuntimeName
-from orquestra.sdk._shared.schema.responses import JSONResult
-from orquestra.sdk._shared.schema.workflow_run import ProjectId, RunStatus, State
-from orquestra.sdk._shared.schema.workflow_run import TaskRun as TaskRunModel
-from orquestra.sdk._shared.schema.workflow_run import WorkspaceId
 
 from ..data.complex_serialization.workflow_defs import (
     capitalize,
@@ -1850,7 +1854,7 @@ class TestListWorkflows:
 
         # THEN
         assert e.exconly() == (
-            "orquestra.sdk._shared.exceptions.ProjectInvalidError: The project "
+            "orquestra.workflow_shared.exceptions.ProjectInvalidError: The project "
             "`<project ID sentinel>` cannot be uniquely identified without a workspace "
             "parameter."
         )
@@ -2035,7 +2039,7 @@ class TestListWorkflowSummaries:
 
         # THEN
         assert e.exconly() == (
-            "orquestra.sdk._shared.exceptions.ProjectInvalidError: The project "
+            "orquestra.workflow_shared.exceptions.ProjectInvalidError: The project "
             "`<project ID sentinel>` cannot be uniquely identified without a workspace "
             "parameter."
         )

@@ -8,20 +8,22 @@ Tests for orquestra.sdk._base._api._task_run.
 import typing as t
 from unittest.mock import Mock, create_autospec
 
+import orquestra.workflow_runtime
 import pytest
+from orquestra.workflow_shared import serde
+from orquestra.workflow_shared.abc import RuntimeInterface
+from orquestra.workflow_shared.exceptions import TaskRunNotFound
+from orquestra.workflow_shared.exec_ctx import _exec_ctx
+from orquestra.workflow_shared.logs._interfaces import LogReader
+from orquestra.workflow_shared.schema import ir
+from orquestra.workflow_shared.schema.workflow_run import RunStatus, State
+from orquestra.workflow_shared.schema.workflow_run import TaskRun as TaskRunModel
+from orquestra.workflow_shared.schema.workflow_run import (
+    WorkflowRun as WorkflowRunModel,
+)
 
 import orquestra.sdk as sdk
 from orquestra.sdk._client._base import _api, _in_process_runtime, _workflow
-from orquestra.sdk._runtime._ray import _build_workflow
-from orquestra.sdk._shared import serde
-from orquestra.sdk._shared.abc import RuntimeInterface
-from orquestra.sdk._shared.exceptions import TaskRunNotFound
-from orquestra.sdk._shared.exec_ctx import _exec_ctx
-from orquestra.sdk._shared.logs._interfaces import LogReader
-from orquestra.sdk._shared.schema import ir
-from orquestra.sdk._shared.schema.workflow_run import RunStatus, State
-from orquestra.sdk._shared.schema.workflow_run import TaskRun as TaskRunModel
-from orquestra.sdk._shared.schema.workflow_run import WorkflowRun as WorkflowRunModel
 
 from ..data.complex_serialization.workflow_defs import capitalize, join_strings
 
@@ -540,7 +542,7 @@ def mock_ray_context(monkeypatch):
     task_inv_id = "inv-1-generate-data"
     task_run_id = f"{wf_run_id}@{task_inv_id}"
     monkeypatch.setattr(
-        _build_workflow,
+        orquestra.workflow_runtime,
         "get_current_ids",
         Mock(return_value=(wf_run_id, task_inv_id, task_run_id)),
     )

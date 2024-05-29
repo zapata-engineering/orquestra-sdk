@@ -37,7 +37,7 @@ on:
         type: boolean
 
 concurrency:
-  group: ${{ github.workflow }}-style-${{ github.ref }}
+  group: ${{ github.workflow }}-style-${{ github.ref }}-${{ inputs.target_path }}
   cancel-in-progress: true
 
 jobs:

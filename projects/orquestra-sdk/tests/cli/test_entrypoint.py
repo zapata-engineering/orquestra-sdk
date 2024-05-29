@@ -11,12 +11,14 @@ from pathlib import Path
 from unittest.mock import ANY, Mock
 
 import pytest
+from orquestra.workflow_shared.schema.configs import RuntimeName
 
 from orquestra.sdk._client._base.cli import _entry
 from orquestra.sdk._client._base.cli._login import _login
 from orquestra.sdk._client._base.cli._services import _down, _up
 from orquestra.sdk._client._base.cli._workflow import _graph, _list
 from orquestra.sdk._shared.schema.configs import RuntimeName
+
 
 
 @pytest.fixture()

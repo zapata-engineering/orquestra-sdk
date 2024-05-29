@@ -12,6 +12,12 @@ from datetime import timedelta
 from unittest.mock import create_autospec
 
 import pytest
+from orquestra.workflow_shared import exceptions, serde
+from orquestra.workflow_shared._spaces._structs import ProjectRef
+from orquestra.workflow_shared.dates import _dates
+from orquestra.workflow_shared.schema import ir
+from orquestra.workflow_shared.schema.workflow_run import State, WorkflowRunId
+from orquestra.workflow_shared.secrets import _client, _models
 
 from orquestra import sdk
 from orquestra.sdk._client._base._in_process_runtime import InProcessRuntime
@@ -19,12 +25,6 @@ from orquestra.sdk._client._base._testing._example_wfs import (
     wf_with_explicit_n_outputs,
     wf_with_secrets,
 )
-from orquestra.sdk._client.secrets import _client, _models
-from orquestra.sdk._shared import exceptions, serde
-from orquestra.sdk._shared._spaces._structs import ProjectRef
-from orquestra.sdk._shared.dates import _dates
-from orquestra.sdk._shared.schema import ir
-from orquestra.sdk._shared.schema.workflow_run import State, WorkflowRunId
 
 from .data.complex_serialization.workflow_defs import (
     wf_pass_callables_from_task,

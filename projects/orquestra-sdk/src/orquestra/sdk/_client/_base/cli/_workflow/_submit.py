@@ -4,7 +4,7 @@
 """Code for 'orq workflow submit'."""
 import typing as t
 
-from orquestra.sdk._shared import exceptions
+from orquestra.workflow_shared import exceptions
 
 from .. import _arg_resolvers, _repos
 from .._ui import _presenters, _prompts

@@ -15,23 +15,25 @@ from functools import singledispatch
 from types import ModuleType
 
 import requests
+
 from typing_extensions import assert_never
 
 from orquestra import sdk
 from orquestra.sdk._client._base._viz import wf_def_to_graphviz
-from orquestra.sdk._shared import exceptions
-from orquestra.sdk._shared.abc import ArtifactValue
-from orquestra.sdk._shared.dates import from_unix_time
-from orquestra.sdk._shared.logs import LogOutput, WorkflowLogs
-from orquestra.sdk._shared.schema import result_is_packed
-from orquestra.sdk._shared.schema.configs import (
+
+from orquestra.workflow_shared import exceptions
+from orquestra.workflow_shared.abc import ArtifactValue
+from orquestra.workflow_shared.dates import from_unix_time
+from orquestra.workflow_shared.logs import LogOutput, WorkflowLogs
+from orquestra.workflow_shared.schema import result_is_packed
+from orquestra.workflow_shared.schema.configs import (
     ConfigName,
     RemoteRuntime,
     RuntimeConfiguration,
     RuntimeName,
 )
-from orquestra.sdk._shared.schema.ir import TaskInvocationId, WorkflowDef
-from orquestra.sdk._shared.schema.workflow_run import (
+from orquestra.workflow_shared.schema.ir import TaskInvocationId, WorkflowDef
+from orquestra.workflow_shared.schema.workflow_run import (
     ProjectId,
     State,
     TaskRun,
@@ -41,6 +43,9 @@ from orquestra.sdk._shared.schema.workflow_run import (
     WorkflowRunSummary,
     WorkspaceId,
 )
+from typing_extensions import assert_never
+
+from orquestra import sdk
 
 from ..._base import _config, loader
 from ..._base._driver._client import DriverClient, ExternalUriProvider

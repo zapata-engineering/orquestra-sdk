@@ -15,17 +15,17 @@ import warnings
 from collections import OrderedDict
 from functools import singledispatch
 
-from pip_api._parse_requirements import Requirement
-
-from orquestra.sdk._shared import exceptions, serde
-from orquestra.sdk._shared.exec_ctx import workflow_build
-from orquestra.sdk._shared.packaging import (
+from orquestra.workflow_shared import exceptions, parse_git_url, serde
+from orquestra.workflow_shared.exec_ctx import workflow_build
+from orquestra.workflow_shared.packaging import (
     get_current_python_version,
     get_current_sdk_version,
 )
-from orquestra.sdk._shared.schema import ir, responses
+from orquestra.workflow_shared.schema import ir, responses
+from orquestra.workflow_shared.secrets import Secret
+from pip_api._parse_requirements import Requirement
 
-from . import _dsl, _git_url_utils, _workflow
+from . import _dsl, _workflow
 
 N_BYTES_IN_HASH = 8
 
@@ -255,7 +255,7 @@ class GraphTraversal:
                 seen_futures.add(n)
                 seen_invocations.add(n.invocation)
 
-            elif isinstance(n, _dsl.Secret):
+            elif isinstance(n, Secret):
                 self._secrets[_make_key(n)] = ir.SecretNode(
                     id=f"secret-{secret_counter}",
                     secret_name=n.name,
@@ -316,7 +316,7 @@ class GraphTraversal:
         if isinstance(node, _dsl.ArtifactFuture):
             return self._future_artifacts[node].id
 
-        elif isinstance(node, _dsl.Secret):
+        elif isinstance(node, Secret):
             return self._secrets[key].id
         else:
             return self._constants[key].id
@@ -397,14 +397,14 @@ def _make_import_model(imp: _dsl.Import):
             id=id_,
         )
     elif isinstance(imp, _dsl.GitImport):
-        repo_url = _git_url_utils.parse_git_url(imp.repo_url)
+        repo_url = parse_git_url(imp.repo_url)
         return ir.GitImport(
             id=id_,
             repo_url=repo_url,
             git_ref=imp.git_ref,
         )
     elif isinstance(imp, _dsl.GitImportWithAuth):
-        url = _git_url_utils.parse_git_url(imp.repo_url)
+        url = parse_git_url(imp.repo_url)
         url.user = imp.username
         if imp.auth_secret is not None:
             url.password = ir.SecretNode(

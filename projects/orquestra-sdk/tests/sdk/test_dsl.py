@@ -13,12 +13,15 @@ from unittest.mock import Mock
 import git
 import pip_api.exceptions
 import pytest
+from orquestra.workflow_shared.exceptions import (
+    DirtyGitRepo,
+    InvalidTaskDefinitionError,
+)
+from orquestra.workflow_shared.packaging import _versions
+from orquestra.workflow_shared.serde import deserialize_pickle, serialize_pickle
 
 import orquestra.sdk as sdk
 from orquestra.sdk._client._base import _dsl, loader
-from orquestra.sdk._shared.exceptions import DirtyGitRepo, InvalidTaskDefinitionError
-from orquestra.sdk._shared.packaging import _versions
-from orquestra.sdk._shared.serde import deserialize_pickle, serialize_pickle
 
 DEFAULT_LOCAL_REPO_PATH = Path(__file__).parent.resolve()
 
