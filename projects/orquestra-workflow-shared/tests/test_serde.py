@@ -6,10 +6,11 @@ import json
 import numpy as np
 import numpy.testing
 import pytest
+from pydantic import ValidationError
+
 from orquestra.workflow_shared import serde
 from orquestra.workflow_shared.schema import ir
 from orquestra.workflow_shared.schema.responses import JSONResult
-from pydantic import ValidationError
 
 ROUNDTRIP_EXAMPLES = [
     None,

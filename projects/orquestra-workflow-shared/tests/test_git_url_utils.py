@@ -4,6 +4,7 @@
 
 
 import pytest
+
 from orquestra.workflow_shared import _git_url_utils
 from orquestra.workflow_shared.schema.ir import GitURL
 

@@ -7,6 +7,7 @@ import traceback
 import typing as t
 
 import pytest
+
 from orquestra.workflow_shared import dispatch
 from orquestra.workflow_shared.schema import ir
 

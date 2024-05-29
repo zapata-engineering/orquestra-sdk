@@ -10,6 +10,7 @@ here.
 """
 
 import pytest
+
 from orquestra.workflow_shared.schema.workflow_run import State
 
 

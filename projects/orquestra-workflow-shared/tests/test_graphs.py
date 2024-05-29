@@ -2,6 +2,7 @@
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
 import pytest
+
 from orquestra.workflow_shared import _graphs
 
 
