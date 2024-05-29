@@ -40,6 +40,7 @@ from orquestra.workflow_shared.schema.workflow_run import (
 from typing_extensions import assert_never
 
 from orquestra import sdk
+from orquestra.sdk._client._base._viz import wf_def_to_graphviz
 
 from ..._base import _config, loader
 from ..._base._driver._client import DriverClient, ExternalUriProvider
@@ -855,3 +856,7 @@ class WorkflowDefRepo:
         except exceptions.WorkflowSyntaxError:
             # Explicit re-raise
             raise
+
+    def wf_def_to_graphviz(self, wf_def: WorkflowDef):
+        """Wrapper for the wf_def_to_graphviz helper."""
+        return wf_def_to_graphviz(wf_def)
