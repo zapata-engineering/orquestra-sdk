@@ -15,12 +15,6 @@ from functools import singledispatch
 from types import ModuleType
 
 import requests
-
-from typing_extensions import assert_never
-
-from orquestra import sdk
-from orquestra.sdk._client._base._viz import wf_def_to_graphviz
-
 from orquestra.workflow_shared import exceptions
 from orquestra.workflow_shared.abc import ArtifactValue
 from orquestra.workflow_shared.dates import from_unix_time
@@ -46,6 +40,7 @@ from orquestra.workflow_shared.schema.workflow_run import (
 from typing_extensions import assert_never
 
 from orquestra import sdk
+from orquestra.sdk._client._base._viz import wf_def_to_graphviz
 
 from ..._base import _config, loader
 from ..._base._driver._client import DriverClient, ExternalUriProvider
