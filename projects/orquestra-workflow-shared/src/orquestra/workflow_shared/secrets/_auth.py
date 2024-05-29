@@ -24,7 +24,7 @@ class SecretAuthorization(Protocol):
 
 class PassportAuthorization:
     @staticmethod
-    def authorize(_) -> t.Optional[SecretsClient]:
+    def authorize(config_name) -> t.Optional[SecretsClient]:
         if (passport_path := os.getenv(PASSPORT_FILE_ENV)) is None:
             return None
 
@@ -45,6 +45,7 @@ class AuthorizationMethodStorage:
             client = auth.authorize(config_name)
             if client is not None:
                 return client
+        return None
 
 
 def authorized_client(config_name: t.Optional[ConfigName]) -> SecretsClient:
@@ -56,8 +57,13 @@ def authorized_client(config_name: t.Optional[ConfigName]) -> SecretsClient:
 
     Args:
         config_name: the config to be used for authorisation.
+
+    Raises:
+        AssertionError: if none of the methods returned proper authorized client
     """
     auth_methods = AuthorizationMethodStorage()
 
     if client := auth_methods.authorize(config_name):
         return client
+    else:
+        raise AssertionError("No authorization method returned proper client")
