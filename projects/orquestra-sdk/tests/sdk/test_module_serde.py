@@ -1,5 +1,6 @@
-import orquestra.sdk as sdk
 from orquestra.workflow_shared import serde
+
+import orquestra.sdk as sdk
 
 
 def test_sdk_can_be_serialised():
