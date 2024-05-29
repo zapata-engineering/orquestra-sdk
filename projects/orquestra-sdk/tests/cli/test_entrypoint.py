@@ -395,7 +395,6 @@ class TestGraph:
 
             # Then
             mock_action.assert_called_once_with(
-                workflow=None,
                 config=expected_config,
                 wf_run_id=expected_wf_run_id,
                 module=None,
@@ -446,7 +445,6 @@ class TestGraph:
 
             # Then
             mock_action.assert_called_once_with(
-                workflow=None,
                 config=None,
                 wf_run_id=None,
                 module=expected_module,
@@ -457,82 +455,14 @@ class TestGraph:
 
         @staticmethod
         @pytest.mark.parametrize(
-            "additional_options, expected_options",
-            [
-                (
-                    [],
-                    {
-                        "config": None,
-                        "wf_run_id": None,
-                        "module": None,
-                        "name": None,
-                    },
-                ),
-                (
-                    ["-c", "foo"],
-                    {
-                        "config": "foo",
-                        "wf_run_id": None,
-                        "module": None,
-                        "name": None,
-                    },
-                ),
-                (
-                    ["-n", "foo"],
-                    {
-                        "config": None,
-                        "wf_run_id": None,
-                        "module": None,
-                        "name": "foo",
-                    },
-                ),
-            ],
-        )
-        def test_indeterminate(
-            entrypoint,
-            monkeypatch,
-            additional_options: list[str],
-            expected_options: dict,
-            file: list[str],
-            expected_file: str,
-        ):
-            # GIVEN
-            entrypoint(
-                ["workflow", "graph", "<WORKFLOW SENTINEL>"] + additional_options + file
-            )
-
-            monkeypatch.setattr(sys, "exit", mock_exit := Mock())
-            monkeypatch.setattr(
-                _graph.Action,
-                "on_cmd_call",
-                mock_action := Mock(),
-            )
-
-            # When
-            _entry.main()
-
-            # Then
-            mock_action.assert_called_once_with(
-                workflow="<WORKFLOW SENTINEL>",
-                **expected_options,
-                file=expected_file,
-            )
-            mock_exit.assert_called_with(0)
-
-        @staticmethod
-        @pytest.mark.parametrize(
             "arguments",
             [
-                ["foo", "-m", "bar"],
-                ["foo", "--id", "bar"],
                 ["-m", "foo", "-c", "bar"],
                 ["-m", "foo", "--id", "bar"],
                 ["-n", "foo", "-c", "bar"],
                 ["-n", "foo", "--id", "bar"],
             ],
             ids=(
-                "Indeterminate workflow arg plus module option",
-                "Indeterminate workflow arg plut id option",
                 "module (local definition) and config (previously submitted)",
                 "module (local definition) and workflow id (previously submitted)",
                 "name (local definition) and config (previously submitted)",

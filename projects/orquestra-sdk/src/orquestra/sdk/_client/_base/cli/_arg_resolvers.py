@@ -530,6 +530,23 @@ class WFDefResolver:
         self._prompter = prompter
         self._wf_def_repo = wf_def_repo
 
+    def resolve_module_spec(self, module_spec: t.Optional[str]) -> str:
+        """Resolve a module_spec argument.
+
+        If the module_spec is provided it is returned unchanged.
+        If the module_spec is not provided the user is prompted to provide one.
+        """
+        resolved_module_spec = module_spec or self._prompter.ask_for_str(
+            message=(
+                "Please specify the workflow definition module. "
+                "This may be as a path to the file, or a dotted import."
+            ),
+            default=None,
+            allow_none=False,
+        )
+        assert resolved_module_spec is not None
+        return resolved_module_spec
+
     def resolve_fn_name(self, module: ModuleType, name: t.Optional[str]) -> str:
         """Resolve a string matching the name of the chosen function within the module.
 

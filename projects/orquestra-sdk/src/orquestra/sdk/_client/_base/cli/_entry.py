@@ -152,19 +152,6 @@ def view(wf_run_id: t.Optional[str], config: t.Optional[str]):
 
 
 @workflow.command()
-@cloup.argument(
-    "workflow",
-    required=False,
-    help="""
-May be one of the following:\n
-1) Location of the module where the workflow is defined. Can be a dotted
-name like 'package.module' or a filepath like 'my_proj/workflows.py'. If
-it's a filepath, the project layout is assumed to be "flat-layout" or
-"src-layout" as defined by Setuptools:
-https://setuptools.pypa.io/en/latest/userguide/package_discovery.html#automatic-discovery.\n
-2) The workflow run ID of a previously submitted workflow.
-    """,
-)
 @CONFIG_OPTION
 @cloup.option(
     "--id",
@@ -197,14 +184,11 @@ selecting a function from the ones available in 'module'.
     ),
     type=click.Path(file_okay=True, dir_okay=False, writable=True, path_type=Path),
 )
-@constraint(mutually_exclusive, ["workflow", "id"])
-@constraint(mutually_exclusive, ["workflow", "module"])
 @constraint(mutually_exclusive, ["config", "module"])
 @constraint(mutually_exclusive, ["config", "name"])
 @constraint(mutually_exclusive, ["id", "module"])
 @constraint(mutually_exclusive, ["id", "name"])
 def graph(
-    workflow: t.Optional[str],
     config: t.Optional[str],
     id: t.Optional[str],
     module: t.Optional[str],
@@ -216,7 +200,6 @@ def graph(
 
     action = Action()
     action.on_cmd_call(
-        workflow=workflow,
         config=config,
         wf_run_id=id,
         module=module,

@@ -11,7 +11,7 @@ from graphviz import Digraph  # type: ignore
 
 from orquestra.sdk._shared import exceptions
 from orquestra.sdk._shared.schema.configs import ConfigName
-from orquestra.sdk._shared.schema.workflow_run import WorkflowRunId
+from orquestra.sdk._shared.schema.workflow_run import WorkflowRun, WorkflowRunId
 
 from .. import _arg_resolvers, _repos
 from .._ui import _presenters, _prompts
@@ -60,8 +60,6 @@ class Action:
 
     def _on_cmd_call_with_exceptions(
         self,
-        # Could be a local workflow def or a previously submitted workflow run
-        workflow: t.Optional[t.Union[WorkflowRunId, str]] = None,
         # Submitted workflow run options
         config: t.Optional[ConfigName] = None,
         wf_run_id: t.Optional[WorkflowRunId] = None,
@@ -71,17 +69,6 @@ class Action:
         # Applies in all cases
         file: t.Optional[Path] = None,
     ):
-        # There are three ways to uniquely identify a workflow def: explicitly via the
-        # wf_run_id argument; explicitly via the module argument; or implicitly via the
-        # workflow argument. If more than one of these is specified, we can't know what
-        # is intended. This _should_ be prevented at the CLI layer, but just in case we
-        # also check for it here.
-        id_args = sum([arg is not None for arg in [workflow, wf_run_id, module]])
-        assert id_args <= 1, (
-            "This combination of CLI args should be forbidden but has been allowed, "
-            "please report this as a bug."
-        )
-
         # Set up combinations of args that correspond to the local definition path and
         # the previously submitted workflow path.
         submitted_args = [config, wf_run_id]
@@ -89,33 +76,29 @@ class Action:
 
         if any([arg is not None for arg in local_args]):
             # At least one argument unique to the local workflowdef path has been passed
-            assert (_module := module or workflow) is not None
-            graph = self._resolve_local_workflow_def_graph(_module, name)
+            graph = self._resolve_local_workflow_def_graph(module, name)
         elif any([arg is not None for arg in submitted_args]):
             # At least one argument uniwue to the previously submitted workflowdef path
             # has been passed.
-            graph = self._resolve_submitted_workflow_def_graph(
-                config, wf_run_id or workflow
-            )
+            graph = self._resolve_submitted_workflow_def_graph(config, wf_run_id)
         else:
             # We can't tell which path we're on from which args are provided, try each
             # path.
             try:
-                assert (_module := module or workflow) is not None
-                graph = self._resolve_local_workflow_def_graph(_module, name)
+                graph = self._resolve_local_workflow_def_graph(module, name)
             except (exceptions.WorkflowDefinitionModuleNotFound, AssertionError):
-                graph = self._resolve_submitted_workflow_def_graph(
-                    config, wf_run_id or workflow
-                )
+                graph = self._resolve_submitted_workflow_def_graph(config, wf_run_id)
 
         # Display the graph
         self._graph_presenter.view(graph, file)
 
     def _resolve_local_workflow_def_graph(
-        self, module: str, name: t.Optional[str]
+        self, module: t.Optional[str], name: t.Optional[str]
     ) -> Digraph:
         """Resolve a graph from a local workflow definition."""
-        resolved_module = self._wf_def_repo.get_module_from_spec(module)
+        resolved_module_spec = self._wf_def_resolver.resolve_module_spec(module)
+
+        resolved_module = self._wf_def_repo.get_module_from_spec(resolved_module_spec)
 
         resolved_fn_name = self._wf_def_resolver.resolve_fn_name(resolved_module, name)
 
@@ -124,8 +107,12 @@ class Action:
         )
         return resolved_wf_def.graph
 
-    def _resolve_submitted_workflow_def_graph(self, config, wf_run_id) -> Digraph:
+    def _resolve_submitted_workflow_def_graph(
+        self, config: t.Optional[ConfigName], wf_run_id: t.Optional[WorkflowRunId]
+    ) -> Digraph:
         """Resolve a graph from the definition of a submitted workflow."""
-        resolved_config = self._config_resolver.resolve(wf_run_id, config)
-        wf_run = self._wf_run_resolver.resolve_run(wf_run_id, resolved_config)
+        resolved_config: ConfigName = self._config_resolver.resolve(wf_run_id, config)
+        wf_run: WorkflowRun = self._wf_run_resolver.resolve_run(
+            wf_run_id, resolved_config
+        )
         return self._wf_def_repo.wf_def_to_graphviz(wf_run.workflow_def)
