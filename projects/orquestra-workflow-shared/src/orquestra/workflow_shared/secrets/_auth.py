@@ -7,10 +7,9 @@ from pathlib import Path
 from typing import Protocol
 
 from orquestra.workflow_shared.schema.configs import ConfigName
+
 from ..env import PASSPORT_FILE_ENV
-
 from ._client import SecretsClient
-
 
 # We assume that we can access the Config Service under a well-known URI if the passport
 # auth is being used. This relies on the DNS configuration on the remote cluster.
