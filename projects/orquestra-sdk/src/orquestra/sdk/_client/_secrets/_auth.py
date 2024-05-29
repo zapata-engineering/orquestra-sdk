@@ -34,5 +34,5 @@ def _authorize_with_config(
 
 class ConfigAuthorization:
     @staticmethod
-    def authorize(config) -> t.Optional[SecretsClient]:
-        return _authorize_with_config(config)
+    def authorize(config_name) -> t.Optional[SecretsClient]:
+        return _authorize_with_config(config_name)
