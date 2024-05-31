@@ -1,8 +1,9 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023 - 2024 Zapata Computing Inc.
 ################################################################################
 import typing as t
 from datetime import timedelta
+from types import ModuleType
 from unittest.mock import Mock, create_autospec
 
 import pytest
@@ -1718,3 +1719,99 @@ class TestSpacesResolver:
 
             # Resolver should return the user's choice.
             assert resolved_project == selected_project.project_id
+
+
+class TestWFDefResolver:
+    class TestResolveFNName:
+        @staticmethod
+        def test_returns_name_unchanged():
+            # Given
+            name = "<name sentinel>"
+            module = create_autospec(ModuleType)
+            prompter = create_autospec(_prompts.Prompter)
+            wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
+            resolver = _arg_resolvers.WFDefResolver(
+                prompter=prompter, wf_def_repo=wf_def_repo
+            )
+
+            # When
+            resolved_name = resolver.resolve_fn_name(module=module, name=name)
+
+            # Then
+            assert resolved_name == name
+            prompter.assert_not_called()
+
+        @staticmethod
+        def test_single_name():
+            # Given
+            name = None
+            module = create_autospec(ModuleType)
+            prompter = create_autospec(_prompts.Prompter)
+            wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
+
+            wf_def_repo.get_workflow_names.return_value = ["wf_names_list_0"]
+
+            resolver = _arg_resolvers.WFDefResolver(
+                prompter=prompter, wf_def_repo=wf_def_repo
+            )
+
+            # When
+            resolved_name = resolver.resolve_fn_name(module=module, name=name)
+
+            # Then
+            assert resolved_name == "wf_names_list_0"
+            prompter.assert_not_called()
+
+        @staticmethod
+        def test_prompts_user_to_choose_between_multiple_names():
+            # Given
+            name = None
+            module = create_autospec(ModuleType)
+            prompter = create_autospec(_prompts.Prompter)
+            wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
+
+            wf_def_repo.get_workflow_names.return_value = (
+                wf_names_list := ["wf_names_list_0", "wf_names_list_1"]
+            )
+            prompter.choice.return_value = (name_sentinel := "<name sentinel>")
+
+            resolver = _arg_resolvers.WFDefResolver(
+                prompter=prompter, wf_def_repo=wf_def_repo
+            )
+
+            # When
+            resolved_name = resolver.resolve_fn_name(module=module, name=name)
+
+            # Then
+            wf_def_repo.get_workflow_names.assert_called_once_with(module)
+            prompter.choice.assert_called_once_with(
+                wf_names_list, message="Workflow definition"
+            )
+            assert resolved_name == name_sentinel
+
+        @staticmethod
+        def test_explicit_reraise():
+            # Given
+            name = None
+            module = create_autospec(ModuleType)
+            prompter = create_autospec(_prompts.Prompter)
+            wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
+
+            wf_def_repo.get_workflow_names.side_effect = (
+                exceptions.NoWorkflowDefinitionsFound(
+                    module_name_sentinel := "<module name sentinel>"
+                )
+            )
+
+            resolver = _arg_resolvers.WFDefResolver(
+                prompter=prompter, wf_def_repo=wf_def_repo
+            )
+
+            # When
+            with pytest.raises(exceptions.NoWorkflowDefinitionsFound) as e:
+                _ = resolver.resolve_fn_name(module=module, name=name)
+
+            # Then
+            assert module_name_sentinel in e.exconly()
+            wf_def_repo.get_workflow_names.assert_called_once_with(module)
+            prompter.assert_not_called()

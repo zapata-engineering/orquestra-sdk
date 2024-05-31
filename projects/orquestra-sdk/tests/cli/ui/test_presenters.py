@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022-2024 Zapata Computing Inc.
 ################################################################################
 import sys
 import typing as t
@@ -926,3 +926,42 @@ class TestPromptPresenter:
 
             assert "id2" in labels[2]
             assert "name2" in labels[2]
+
+
+class TestGraphPresenter:
+    class TestView:
+        @staticmethod
+        def test_default_file():
+            # Given
+            mock_graph = create_autospec(_presenters.Digraph)
+
+            # When
+            _presenters.GraphPresenter().view(mock_graph, file=None)
+
+            # Then
+            mock_graph.view.assert_called_once_with(filename=None, cleanup=True)
+
+        @staticmethod
+        def test_explicit_reraise():
+            # Given
+            mock_graph = create_autospec(_presenters.Digraph)
+            mock_graph.view.side_effect = _presenters.ExecutableNotFound("foo")
+
+            # When
+            with pytest.raises(_presenters.ExecutableNotFound):
+                _presenters.GraphPresenter().view(mock_graph, file=None)
+
+            # Then
+            mock_graph.view.assert_called_once_with(filename=None, cleanup=True)
+
+        @staticmethod
+        def test_custom_file():
+            # Given
+            mock_graph = create_autospec(_presenters.Digraph)
+            mock_file = create_autospec(Path)
+
+            # When
+            _presenters.GraphPresenter().view(mock_graph, file=mock_file)
+
+            # Then
+            mock_graph.view.assert_called_once_with(cleanup=True, filename=mock_file)

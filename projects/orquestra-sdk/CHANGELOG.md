@@ -6,6 +6,8 @@
 
 🔥 *Features*
 
+* Add `orq wf graph` CLI command to generate a graph of a workflow definition.
+
 🧟 *Deprecations*
 
 👩‍🔬 *Experimental*
