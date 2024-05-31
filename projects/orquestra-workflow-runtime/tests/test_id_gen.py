@@ -2,6 +2,7 @@
 # © Copyright 2022 Zapata Computing Inc.
 ################################################################################
 import pytest
+
 from orquestra.workflow_runtime._ray import _id_gen
 
 

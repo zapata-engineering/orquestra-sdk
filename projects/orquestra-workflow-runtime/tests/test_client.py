@@ -5,6 +5,7 @@
 from unittest.mock import Mock
 
 import pytest
+
 from orquestra.workflow_runtime._ray._client import RayClient
 
 

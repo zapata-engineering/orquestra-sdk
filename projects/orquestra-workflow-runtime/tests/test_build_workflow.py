@@ -1,16 +1,13 @@
-import re
-from typing import Any, Dict, List, Optional, Union
-from unittest.mock import ANY, Mock, call, create_autospec
+from unittest.mock import Mock, call, create_autospec
 
 import orquestra.workflow_shared.secrets
 import pytest
-from orquestra.workflow_runtime._ray import _build_workflow, _client
 from orquestra.workflow_shared import parse_git_url, serde
-from orquestra.workflow_shared._graphs import iter_invocations_topologically
-from orquestra.workflow_shared.exceptions import OrquestraSDKVersionMismatchWarning
 from orquestra.workflow_shared.schema import ir
 from orquestra.workflow_shared.schema.ir import GitURL, SecretNode
 from orquestra.workflow_shared.schema.responses import WorkflowResult
+
+from orquestra.workflow_runtime._ray import _build_workflow
 
 
 @pytest.fixture
@@ -113,6 +110,7 @@ class TestBuildGitURL:
         with pytest.raises(ValueError) as exc_info:
             _ = _build_workflow._build_git_url(git_url, "custom_protocol")
         exc_info.match("Unknown protocol: `custom_protocol`")
+
 
 class TestPipString:
     @pytest.fixture()

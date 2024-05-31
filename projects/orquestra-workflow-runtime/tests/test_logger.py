@@ -6,8 +6,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 
 class TestRayLogger:
     def test_ray_logs_silenced(self, tmp_path: Path):

@@ -10,12 +10,13 @@ from pathlib import Path
 from unittest.mock import Mock, PropertyMock, create_autospec
 
 import pytest
-from orquestra.workflow_runtime._ray import _client, _dag, _ray_logs
 from orquestra.workflow_shared import exceptions
 from orquestra.workflow_shared._spaces._structs import ProjectRef
 from orquestra.workflow_shared.dates import _dates
+from orquestra.workflow_shared.schema.configs import RuntimeConfiguration, RuntimeName
 from orquestra.workflow_shared.schema.workflow_run import State
-from orquestra.workflow_shared.schema.configs import RuntimeName, RuntimeConfiguration
+
+from orquestra.workflow_runtime._ray import _client, _dag, _ray_logs
 
 TEST_TIME = _dates.now()
 
@@ -249,16 +250,16 @@ class TestRayRuntime:
     @pytest.fixture
     def runtime_config():
         return RuntimeConfiguration(
-        config_name = "local",
-        runtime_name= RuntimeName.RAY_LOCAL,
-        runtime_options={
-            "address": "auto",
-            "log_to_driver": False,
-            "storage": None,
-            "temp_dir": None,
-            "configure_logging": False,
-        },
-)
+            config_name="local",
+            runtime_name=RuntimeName.RAY_LOCAL,
+            runtime_options={
+                "address": "auto",
+                "log_to_driver": False,
+                "storage": None,
+                "temp_dir": None,
+                "configure_logging": False,
+            },
+        )
 
     class TestReadingLogs:
         """
