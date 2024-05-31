@@ -15,11 +15,7 @@ from orquestra.workflow_shared import exceptions
 from orquestra.workflow_shared._spaces._structs import ProjectRef
 from orquestra.workflow_shared.dates import _dates
 from orquestra.workflow_shared.schema.workflow_run import State
-
-from orquestra.sdk._client._base._config import (
-    LOCAL_RUNTIME_CONFIGURATION,
-    RuntimeConfiguration,
-)
+from orquestra.workflow_shared.schema.configs import RuntimeName, RuntimeConfiguration
 
 TEST_TIME = _dates.now()
 
@@ -252,7 +248,17 @@ class TestRayRuntime:
     @staticmethod
     @pytest.fixture
     def runtime_config():
-        return LOCAL_RUNTIME_CONFIGURATION
+        return RuntimeConfiguration(
+        config_name = "local",
+        runtime_name= RuntimeName.RAY_LOCAL,
+        runtime_options={
+            "address": "auto",
+            "log_to_driver": False,
+            "storage": None,
+            "temp_dir": None,
+            "configure_logging": False,
+        },
+)
 
     class TestReadingLogs:
         """

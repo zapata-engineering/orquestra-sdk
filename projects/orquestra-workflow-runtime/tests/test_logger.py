@@ -9,7 +9,6 @@ from pathlib import Path
 import pytest
 
 
-@pytest.mark.slow
 class TestRayLogger:
     def test_ray_logs_silenced(self, tmp_path: Path):
         # Given
