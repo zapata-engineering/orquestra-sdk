@@ -6,8 +6,6 @@ Integration tests for our code that uses Ray. This file should be kept as small
 as possible, because it's slow to run. Please consider using unit tests and
 RuntimeInterface mocks instead of extending this file.
 """
-from orquestra.workflow_shared._graphs import iter_invocations_topologically
-from orquestra.workflow_shared.exceptions import OrquestraSDKVersionMismatchWarning
 import json
 import os
 import re
@@ -17,6 +15,7 @@ import typing as t
 from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import ANY, Mock, call, create_autospec
+
 import pytest
 from freezegun import freeze_time
 from orquestra.workflow_runtime._ray import _build_workflow, _client, _dag, _ray_logs
@@ -24,11 +23,10 @@ from orquestra.workflow_runtime._ray._env import (
     RAY_DOWNLOAD_GIT_IMPORTS_ENV,
     RAY_TEMP_PATH_ENV,
 )
-from orquestra.sdk._client._base._testing._example_wfs import (
-    workflow_parametrised_with_resources,
-)
 from orquestra.workflow_shared import exceptions
+from orquestra.workflow_shared._graphs import iter_invocations_topologically
 from orquestra.workflow_shared.abc import RuntimeInterface
+from orquestra.workflow_shared.exceptions import OrquestraSDKVersionMismatchWarning
 from orquestra.workflow_shared.schema import ir
 from orquestra.workflow_shared.schema.responses import JSONResult
 from orquestra.workflow_shared.schema.workflow_run import (
@@ -41,6 +39,9 @@ from orquestra.workflow_shared.serde import deserialize
 from orquestra import sdk
 from orquestra.sdk._client._base._config import LOCAL_RUNTIME_CONFIGURATION
 from orquestra.sdk._client._base._testing import _example_wfs, _ipc
+from orquestra.sdk._client._base._testing._example_wfs import (
+    workflow_parametrised_with_resources,
+)
 
 # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
 # unraisable exceptions. Last tested with Ray 2.4.0.

@@ -5,6 +5,8 @@
 A script for regenerating the recorded logs in the "./ray_temp" dir. The
 recorded logs are used as inputs for tests.
 
+It requires orquestra SDK client to be installed.
+
 This file is a developer-only utility. It automates updating the test inputs,
 e.g. after moving to a different Ray version.
 
@@ -20,7 +22,7 @@ import os
 import shutil
 from pathlib import Path
 
-from orquestra.sdk._client._base._testing import _example_wfs
+from orquestra.sdk._client._base._testing import _example_wfs  # type: ignore
 
 REAL_RAY_TEMP = Path.home() / ".orquestra" / "ray"
 TEST_RAY_TEMP = Path(__file__).parent / "ray_temp"
