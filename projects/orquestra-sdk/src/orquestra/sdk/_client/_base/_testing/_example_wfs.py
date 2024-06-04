@@ -217,22 +217,6 @@ def add(a, b):
 
 
 @sdk.task
-def add_slow(a, b):
-    time.sleep(10)
-
-    return a + b
-
-
-@sdk.workflow
-def serial_wf_with_slow_middle_task():
-    art1 = add(21, 37)
-    art2 = add_slow(art1, art1)
-    art3 = add(art2, art2)
-
-    return [art3]
-
-
-@sdk.task
 def add_with_trigger(a, b, port, timeout: float):
     """Simulates a task that takes some time to run.
 
@@ -241,25 +225,6 @@ def add_with_trigger(a, b, port, timeout: float):
     ipc.TriggerClient(port).wait_on_trigger(timeout)
 
     return a + b
-
-
-@sdk.task
-def long_task(*_):
-    import time
-
-    # sleep for an hour - just in case someone forgets to terminate this buddy
-    time.sleep(60 * 60)
-
-
-@sdk.workflow
-def infinite_workflow():
-    """Allows reproducing scenario where tasks take some time to run.
-
-    This workflow is used to test termination as it will never complete.
-    This workflow isn't actually infinite - it just takes an hour of sleep time to
-    complete.
-    """
-    return long_task()
 
 
 @sdk.workflow

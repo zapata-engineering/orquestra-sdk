@@ -59,6 +59,7 @@ dev = [
     "black~=23.7",
     "diff_cover",
     "flake8>=4.0.0",
+    "freezegun",
     "Flake8-pyproject>=1.2.3",
     "isort~=5.9.0",
     "mypy~=0.910",                # bumping caused issues - ORQSDK-966
