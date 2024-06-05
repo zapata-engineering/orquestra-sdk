@@ -108,9 +108,6 @@ def _count_task_runs(wf_run, state: State) -> int:
 @pytest.mark.filterwarnings(
     "ignore::orquestra.workflow_shared.exceptions.VersionMismatch"
 )
-@pytest.mark.skipif(
-    sys.version_info < (3, 11), reason="Pickle internals changed in Python 3.11"
-)
 class TestRayRuntimeMethods:
     """
     Tests that call RayRuntime methods with a real Ray connection and
@@ -122,6 +119,9 @@ class TestRayRuntimeMethods:
         Tests that validate .create_workflow_run().
         """
 
+        @pytest.mark.skipif(
+            sys.version_info < (3, 11), reason="Pickle internals changed in Python 3.11"
+        )
         def test_running_same_workflow_def_twice(self, runtime: _dag.RayRuntime):
             path_to_json = Path(__file__).parent.joinpath("data/multioutput.json")
             with open(path_to_json, "r", encoding="utf-8") as f:
@@ -139,6 +139,9 @@ class TestRayRuntimeMethods:
 
             assert output1 == output2
 
+        @pytest.mark.skipif(
+            sys.version_info < (3, 11), reason="Pickle internals changed in Python 3.11"
+        )
         def test_sets_context(self, runtime: _dag.RayRuntime):
             path_to_json = Path(__file__).parent.joinpath("data/wf_with_exec_ctx.json")
             with open(path_to_json, "r", encoding="utf-8") as f:
@@ -266,6 +269,9 @@ class TestRayRuntimeMethods:
                     assert status.start_time is not None
                     assert status.end_time is not None
 
+        @pytest.mark.skipif(
+            sys.version_info < (3, 11), reason="Pickle internals changed in Python 3.11"
+        )
         def test_status_after_awaiting(self, runtime: _dag.RayRuntime):
             """
             Verifies that we report status correctly when all tasks are
@@ -403,6 +409,9 @@ class TestRayRuntimeMethods:
                 f"\n-OTHER:\n{logs}"
             )
 
+        @pytest.mark.skipif(
+            sys.version_info < (3, 11), reason="Pickle internals changed in Python 3.11"
+        )
         def test_exception_in_task_stops_execution(self, runtime: _dag.RayRuntime):
             """
             The workflow graph:
@@ -490,6 +499,9 @@ class TestRayRuntimeMethods:
                     assert wf_run.status.state == State.TERMINATED
                     break
 
+        @pytest.mark.skipif(
+            sys.version_info < (3, 11), reason="Pickle internals changed in Python 3.11"
+        )
         @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
         def test_on_finished_workflow(self, runtime: _dag.RayRuntime, tmp_path):
             path_to_json = Path(__file__).parent.joinpath(
@@ -515,6 +527,9 @@ class TestRayRuntimeMethods:
         Tests that validate get_workflow_run_outputs_non_blocking
         """
 
+        @pytest.mark.skipif(
+            sys.version_info < (3, 11), reason="Pickle internals changed in Python 3.11"
+        )
         def test_happy_path(self, runtime: _dag.RayRuntime):
             path_to_json = Path(__file__).parent.joinpath("data/greet_wf.json")
             with open(path_to_json, "r", encoding="utf-8") as f:
@@ -547,6 +562,9 @@ class TestRayRuntimeMethods:
         Tests that validate .get_available_outputs().
         """
 
+        @pytest.mark.skipif(
+            sys.version_info < (3, 11), reason="Pickle internals changed in Python 3.11"
+        )
         def test_after_a_failed_task(self, runtime: _dag.RayRuntime):
             """
             The workflow graph:
@@ -587,6 +605,9 @@ class TestRayRuntimeMethods:
             task_output = list(inv_artifacts.values())[0]
             assert task_output == JSONResult(value="58")
 
+    @pytest.mark.skipif(
+        sys.version_info < (3, 11), reason="Pickle internals changed in Python 3.11"
+    )
     class TestGetOutput:
         """
         Tests that validate .get_output().
