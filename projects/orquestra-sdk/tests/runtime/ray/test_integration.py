@@ -8,11 +8,9 @@ RuntimeInterface mocks instead of extending this file.
 """
 import json
 import os
-
 import sys
 import time
 import typing as t
-
 from pathlib import Path
 from unittest.mock import ANY, Mock, call, create_autospec
 
@@ -26,10 +24,7 @@ from orquestra.workflow_shared import exceptions
 from orquestra.workflow_shared.abc import RuntimeInterface
 from orquestra.workflow_shared.schema import ir
 from orquestra.workflow_shared.schema.responses import JSONResult
-from orquestra.workflow_shared.schema.workflow_run import (
-    State,
-    WorkflowRunId,
-)
+from orquestra.workflow_shared.schema.workflow_run import State, WorkflowRunId
 
 from orquestra import sdk
 from orquestra.sdk._client._base._config import LOCAL_RUNTIME_CONFIGURATION
@@ -1072,6 +1067,7 @@ class TestMakeDag:
                     **expected_kwargs,
                 )
 
+
 @pytest.mark.slow
 class TestRayRuntimeMethods:
     def test_in_progress_workflow(self, runtime: _dag.RayRuntime, tmp_path):
@@ -1101,9 +1097,10 @@ class TestRayRuntimeMethods:
             trigger.trigger()
             trigger.close()
 
-
     @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
-    def test_after_one_task_finishes(self, runtime: _dag.RayRuntime, tmp_path):
+    def test_get_outputs_after_one_task_finishes(
+        self, runtime: _dag.RayRuntime, tmp_path
+    ):
         """
         Workflow graph in the scenario under test:
           [ ]  => finished
@@ -1135,9 +1132,7 @@ class TestRayRuntimeMethods:
                 pytest.fail(f"Unexpected wf run state: {wf_run}")
 
             succeeded_runs = [
-                run
-                for run in wf_run.task_runs
-                if run.status.state == State.SUCCEEDED
+                run for run in wf_run.task_runs if run.status.state == State.SUCCEEDED
             ]
             if len(succeeded_runs) >= 1:
                 break
@@ -1164,7 +1159,9 @@ class TestRayRuntimeMethods:
             trigger.close()
 
     @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
-    def test_after_one_task_finishes(self, runtime: _dag.RayRuntime, tmp_path):
+    def test_get_output_after_one_task_finishes(
+        self, runtime: _dag.RayRuntime, tmp_path
+    ):
         """
         Workflow graph in the scenario under test:
           [ ]  => finished
@@ -1196,9 +1193,7 @@ class TestRayRuntimeMethods:
                 pytest.fail(f"Unexpected wf run state: {wf_run}")
 
             succeeded_runs = [
-                run
-                for run in wf_run.task_runs
-                if run.status.state == State.SUCCEEDED
+                run for run in wf_run.task_runs if run.status.state == State.SUCCEEDED
             ]
             if len(succeeded_runs) >= 1:
                 break

@@ -1,7 +1,6 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-import time
 from typing import Optional, Sequence, Tuple
 
 import orquestra.sdk as sdk
@@ -285,19 +284,6 @@ def add_with_log(a, b, msg: str):
 @sdk.workflow
 def wf_with_log(msg: str):
     return [add_with_log(12, 34, msg)]
-
-
-@sdk.task
-def get_exec_ctx() -> str:
-    import orquestra.workflow_shared.exec_ctx
-
-    ctx = orquestra.workflow_shared.exec_ctx.get_current_exec_context()
-    return ctx.name
-
-
-@sdk.workflow
-def wf_with_exec_ctx():
-    return [get_exec_ctx()]
 
 
 @sdk.workflow
