@@ -26,6 +26,8 @@ from orquestra.workflow_runtime._testing import _connections
 def patch_orquestra_version(monkeypatch):
     import orquestra.workflow_shared.packaging._versions
 
+    import orquestra.workflow_runtime._ray._build_workflow
+
     monkeypatch.setattr(
         orquestra.workflow_shared.packaging._versions,
         "get_installed_version",
