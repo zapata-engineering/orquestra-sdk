@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import sys
 import time
 import typing as t
 from datetime import datetime, timezone
@@ -103,6 +104,13 @@ def _count_task_runs(wf_run, state: State) -> int:
     return len([run for run in wf_run.task_runs if run.status.state == state])
 
 
+# For now, we are using hardcoded pickles which wont work on different python versions.
+@pytest.mark.filterwarnings(
+    "ignore::orquestra.workflow_shared.exceptions.VersionMismatch"
+)
+@pytest.mark.skipif(
+    sys.version_info < (3, 11), reason="Pickle internals changed in Python 3.11"
+)
 class TestRayRuntimeMethods:
     """
     Tests that call RayRuntime methods with a real Ray connection and
