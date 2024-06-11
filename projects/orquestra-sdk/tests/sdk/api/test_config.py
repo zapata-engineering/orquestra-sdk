@@ -19,8 +19,8 @@ from orquestra.workflow_shared.schema.configs import (
     RuntimeName,
 )
 
-from orquestra.sdk._client._base import _config
-from orquestra.sdk._client._base._api import _config as api_cfg
+from orquestra.sdk._client._base import _config as api_cfg
+from orquestra.sdk._client._base._config import _settings
 
 from ..data.configs import TEST_CONFIG_JSON, TEST_CONFIGS_DICT
 
@@ -225,10 +225,10 @@ class TestRuntimeConfiguration:
             config_names = api_cfg.RuntimeConfig.list_configs()
 
             assert config_names == [name for name in TEST_CONFIGS_DICT] + list(
-                _config.UNIQUE_CONFIGS
+                _settings.UNIQUE_CONFIGS
             )
             # this config name should appear only when proper env var is set
-            assert _config.AUTO_CONFIG_NAME not in config_names
+            assert _settings.AUTO_CONFIG_NAME not in config_names
 
         @staticmethod
         def test_custom_file_location(
@@ -239,7 +239,7 @@ class TestRuntimeConfiguration:
             config_names = api_cfg.RuntimeConfig.list_configs()
 
             assert config_names == [name for name in TEST_CONFIGS_DICT] + list(
-                _config.UNIQUE_CONFIGS
+                _settings.UNIQUE_CONFIGS
             )
 
         @staticmethod
@@ -249,7 +249,7 @@ class TestRuntimeConfiguration:
 
             config_names = api_cfg.RuntimeConfig.list_configs()
 
-            assert config_names == list(_config.UNIQUE_CONFIGS)
+            assert config_names == list(_settings.UNIQUE_CONFIGS)
 
         @staticmethod
         def test_no_configs_key(patch_config_location):
@@ -258,14 +258,14 @@ class TestRuntimeConfiguration:
 
             config_names = api_cfg.RuntimeConfig.list_configs()
 
-            assert config_names == list(_config.UNIQUE_CONFIGS)
+            assert config_names == list(_settings.UNIQUE_CONFIGS)
 
         @staticmethod
         def test_auto_config_name(monkeypatch, tmp_config_json):
             monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", "some_file_path")
             config_names = api_cfg.RuntimeConfig.list_configs()
 
-            assert _config.AUTO_CONFIG_NAME in config_names
+            assert _settings.AUTO_CONFIG_NAME in config_names
 
     class TestLoad:
         @pytest.mark.parametrize("config_name", [name for name in TEST_CONFIGS_DICT])

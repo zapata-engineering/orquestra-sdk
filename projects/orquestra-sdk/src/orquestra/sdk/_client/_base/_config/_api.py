@@ -1,27 +1,24 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022-2024 Zapata Computing Inc.
 ################################################################################
 
-import json
 import logging
 import typing as t
 import warnings
 
 from orquestra.workflow_shared.abc import RuntimeInterface
 from orquestra.workflow_shared.exceptions import (
-    ConfigFileNotFoundError,
     ConfigNameNotFoundError,
+    RuntimeConfigError,
 )
 from orquestra.workflow_shared.schema.configs import (
-    CONFIG_FILE_CURRENT_VERSION,
     ConfigName,
     RuntimeConfiguration,
     RuntimeName,
 )
-from packaging.version import parse as parse_version
 
-from .. import _config
 from .._factory import build_runtime_from_config
+from . import _fs, _settings
 
 
 class RuntimeConfig:
@@ -67,14 +64,14 @@ class RuntimeConfig:
                 f'"{runtime_name}" is not a valid runtime name. Valid names are:\n'
                 + "\n".join(f'"{x.value}"' for x in RuntimeName)
             ) from e
-        self._config_save_file = _config.get_config_file_path()
+        self._config_save_file = _fs.get_config_file_path()
 
     def __str__(self) -> str:
         outstr = (
             f"RuntimeConfiguration '{self._name}' " f"for runtime {self._runtime_name} "
         )
         params_str = " with parameters:"
-        for key in _config.RUNTIME_OPTION_NAMES:
+        for key in _settings.RUNTIME_OPTION_NAMES:
             try:
                 params_str += f"\n- {key}: {getattr(self, key)}"
             except AttributeError:
@@ -108,7 +105,7 @@ class RuntimeConfig:
         around.
         """
         runtime_options: dict = {}
-        for key in _config.RUNTIME_OPTION_NAMES:
+        for key in _settings.RUNTIME_OPTION_NAMES:
             if hasattr(self, key):
                 runtime_options[key] = getattr(self, key)
         return runtime_options
@@ -160,7 +157,7 @@ class RuntimeConfig:
             token: Authorisation token for access to the cluster.
         """
         runtime_name = RuntimeName.CE_REMOTE
-        config_name = _config.generate_config_name(runtime_name, uri)
+        config_name = _fs.generate_config_name(runtime_name, uri)
 
         config = RuntimeConfig(
             runtime_name,
@@ -169,7 +166,7 @@ class RuntimeConfig:
         )
         setattr(config, "uri", uri)
         setattr(config, "token", token)
-        _config.save_or_update(config_name, runtime_name, config._get_runtime_options())
+        _fs.save_or_update(config_name, runtime_name, config._get_runtime_options())
 
         return config
 
@@ -183,7 +180,7 @@ class RuntimeConfig:
             Runtime: The runtime specified by the configuration.
         """
         runtime_options = {}
-        for key in _config.RUNTIME_OPTION_NAMES:
+        for key in _settings.RUNTIME_OPTION_NAMES:
             try:
                 runtime_options[key] = getattr(self, key)
             except AttributeError:
@@ -207,9 +204,9 @@ class RuntimeConfig:
         Returns:
             list: list of configurations within the save file.
         """
-        configs = _config.read_config_names() + list(_config.UNIQUE_CONFIGS)
-        if _config.is_passport_file_available():
-            configs.append(_config.AUTO_CONFIG_NAME)
+        configs = _fs.read_config_names() + list(_settings.UNIQUE_CONFIGS)
+        if _fs.is_passport_file_available():
+            configs.append(_settings.AUTO_CONFIG_NAME)
         return configs
 
     @classmethod
@@ -238,41 +235,15 @@ class RuntimeConfig:
         # Doing this check here covers us for cases where the config file doesn't
         # exist but the user is trying to load one of the built in configs. There's
         # not need to create the config file in this case.
-        if config_name in _config.SPECIAL_CONFIG_NAME_DICT:
-            return cls._config_from_runtimeconfiguration(
-                _config.read_config(config_name)
-            )
+        if config_name in _settings.SPECIAL_CONFIG_NAME_DICT:
+            return cls._config_from_runtimeconfiguration(_fs.read_config(config_name))
 
         # Get the data from the save file
-        _config_save_file = _config.get_config_file_path()
-        with open(_config_save_file, "r") as f:
-            data = json.load(f)
-
-        # Migrate the file if necessary
-        file_version = parse_version(data["version"])
-        current_version = parse_version(CONFIG_FILE_CURRENT_VERSION)
-        if file_version < current_version:
-            warnings.warn(
-                f"The config file at {_config_save_file} is out of date and will be "
-                "migrated to the current version "
-                f"(file has version {data['version']}, "
-                f"the current version is {CONFIG_FILE_CURRENT_VERSION})."
-            )
-            migrate_config_file()
-            with open(_config_save_file, "r") as f:
-                data = json.load(f)
-        elif file_version > current_version:
-            raise ConfigFileNotFoundError(
-                f"The config file at {_config_save_file} is a higher version than this "
-                "version of the SDK supports "
-                f"(file has version {data['version']}, "
-                f"SDK supports versions up to {CONFIG_FILE_CURRENT_VERSION}). "
-                "Please check that your version of the SDK is up to date."
-            )
+        _config_save_file = _fs.get_config_file_path()
 
         # Read in the config from the file.
         try:
-            config_data: RuntimeConfiguration = _config.read_config(config_name)
+            config_data: RuntimeConfiguration = _fs.read_config(config_name)
         except ConfigNameNotFoundError as e:
             raise ConfigNameNotFoundError(
                 f"No config with name '{config_name}' "
@@ -312,8 +283,6 @@ class RuntimeConfig:
             setattr(interpreted_config, key, config.runtime_options[key])
         return interpreted_config
 
-    # endregion LOADING FROM FILE
-
     def update_saved_token(self, token: str):
         """Update the stored auth token for this configuration.
 
@@ -333,15 +302,13 @@ class RuntimeConfig:
                 "Nothing has been saved."
             )
 
-        old_config = self._config_from_runtimeconfiguration(
-            _config.read_config(self._name)
-        )
+        old_config = self._config_from_runtimeconfiguration(_fs.read_config(self._name))
 
         new_runtime_options: dict = old_config._get_runtime_options()
         new_runtime_options["token"] = token
 
         self.token = token
-        _config.update_config(
+        _fs.update_config(
             config_name=self._name,
             runtime_name=self._runtime_name,
             new_runtime_options=new_runtime_options,
@@ -355,55 +322,10 @@ class RuntimeConfig:
 
 def migrate_config_file():
     """Update the stored configs."""
-    # resolve list of files to migrate
-    _config_file_path = _config.get_config_file_path().resolve()
-    # Load existing file contents
-    with open(_config_file_path, "r") as f:
-        data = json.load(f)
-
-    # Check version
-    file_version = parse_version(data["version"])
-    current_version = parse_version(CONFIG_FILE_CURRENT_VERSION)
-    version_changed: bool = False
-    if file_version > current_version:
-        print(
-            f"The file at {_config_file_path} cannot be migrated as its version is "
-            "already greater than target version "
-            f"(file is version {data['version']}, "
-            f"current migration target is version {CONFIG_FILE_CURRENT_VERSION})."
-        )
-        return
-    elif file_version < current_version:
-        data["version"] = CONFIG_FILE_CURRENT_VERSION
-        version_changed = True
-
-    # Update configs
-    changed: list = []
-    for config_name in data["configs"]:
-        if (
-            data["configs"][config_name]["runtime_name"] == RuntimeName.RAY_LOCAL
-            and "temp_dir" not in data["configs"][config_name]["runtime_options"]
-        ):
-            data["configs"][config_name]["runtime_options"]["temp_dir"] = None
-            changed.append(config_name)
-
-    # Write back to file if necessary)
-    if len(changed) == 0 and not version_changed:
-        print(f"No changes required for file '{_config_file_path}'")
-        return
-    else:
-        with open(_config_file_path, "w") as f:
-            f.write(json.dumps(data, indent=2))
-
-    # Report changes to user
-    print(
-        f"Successfully migrated file {_config_file_path} to version "
-        f"{CONFIG_FILE_CURRENT_VERSION}. "
-        f"Updated {len(changed)} entr{'y' if len(changed) == 1 else 'ies'}"
-        f"{'.' if len(changed) == 0 else ':'}"
+    warnings.warn(
+        "migrate_config_file is deprecated and does nothing. Please contact"
+        "SDK team if you need to migrate your config file"
     )
-    for config_name in changed:
-        print(f" - {config_name}")
 
 
 def resolve_config(
@@ -419,3 +341,13 @@ def resolve_config(
         raise TypeError(f"'config' is of unsupported type {type(config)}.")
 
     return resolved_config
+
+
+def get_config_option(config_name, option: str):
+    try:
+        option = _fs.read_config(config_name).runtime_options[option]
+    except KeyError:
+        raise RuntimeConfigError(
+            f"Selected config: {config_name} does not have option {option}. "
+        )
+    return option

@@ -34,7 +34,7 @@ from orquestra.workflow_shared.schema.workflow_run import (
 from orquestra.workflow_shared.serde import deserialize
 
 from orquestra import sdk
-from orquestra.sdk._client._base._config import LOCAL_RUNTIME_CONFIGURATION
+from orquestra.sdk._client._base._config._settings import LOCAL_RUNTIME_CONFIGURATION
 from orquestra.sdk._client._base._testing import _example_wfs, _ipc
 
 # Ray mishandles log file handlers and we get "_io.FileIO [closed]"

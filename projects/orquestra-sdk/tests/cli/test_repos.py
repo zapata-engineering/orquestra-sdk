@@ -30,7 +30,7 @@ from orquestra.workflow_shared.schema.workflow_run import WorkflowRunSummary
 
 from orquestra import sdk
 from orquestra.sdk._client._base import _config
-from orquestra.sdk._client._base._config import SPECIAL_CONFIG_NAME_DICT
+from orquestra.sdk._client._base._config._settings import SPECIAL_CONFIG_NAME_DICT
 from orquestra.sdk._client._base._driver._client import DriverClient
 from orquestra.sdk._client._base._testing import _example_wfs, _reloaders
 from orquestra.sdk._client._base.cli import _repos

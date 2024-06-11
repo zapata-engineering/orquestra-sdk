@@ -23,7 +23,8 @@ import orquestra.workflow_shared.exceptions as exceptions
 import pytest
 from orquestra.workflow_shared.schema.configs import RuntimeName
 
-from orquestra.sdk._client._base import _config
+import orquestra.sdk._client._base._config._fs as _config
+from orquestra.sdk._client._base._config._settings import LOCK_FILE_NAME
 
 from .data.configs import TEST_CONFIG_JSON
 
@@ -327,9 +328,7 @@ class TestReadConfigNames:
     @pytest.mark.slow
     def test_filelock_timeout(tmp_default_config_json):
         with pytest.raises(IOError):
-            with filelock.FileLock(
-                _config._get_config_directory() / _config.LOCK_FILE_NAME
-            ):
+            with filelock.FileLock(_config._get_config_directory() / LOCK_FILE_NAME):
                 _config.read_config_names()
 
     @staticmethod

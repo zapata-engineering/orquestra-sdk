@@ -12,15 +12,14 @@ from ._client import mlflow
 from ._client._base._api import (
     CurrentExecutionCtx,
     CurrentRunIDs,
-    RuntimeConfig,
     TaskRun,
     WorkflowRun,
     current_exec_ctx,
     current_run_ids,
     list_workflow_run_summaries,
     list_workflow_runs,
-    migrate_config_file,
 )
+from ._client._base._config import RuntimeConfig, migrate_config_file
 from ._client._base._dsl import (
     ArtifactFuture,
     DataAggregation,

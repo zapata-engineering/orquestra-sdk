@@ -16,7 +16,7 @@ from orquestra.workflow_shared._spaces._structs import ProjectRef
 from orquestra.workflow_shared.dates import _dates
 from orquestra.workflow_shared.schema.workflow_run import State
 
-from orquestra.sdk._client._base._config import (
+from orquestra.sdk._client._base._config._settings import (
     LOCAL_RUNTIME_CONFIGURATION,
     RuntimeConfiguration,
 )

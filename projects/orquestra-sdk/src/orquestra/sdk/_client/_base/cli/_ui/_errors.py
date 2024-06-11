@@ -15,7 +15,7 @@ from rich.box import SIMPLE_HEAVY
 from rich.console import Console
 from rich.table import Column, Table
 
-from ...._base._config import IN_PROCESS_CONFIG_NAME, RAY_CONFIG_NAME_ALIAS
+from ...._base._config._settings import IN_PROCESS_CONFIG_NAME, RAY_CONFIG_NAME_ALIAS
 
 
 def _compact_tb(tb: TracebackType):

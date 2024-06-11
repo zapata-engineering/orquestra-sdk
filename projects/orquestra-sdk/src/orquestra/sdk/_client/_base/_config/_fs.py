@@ -22,80 +22,13 @@ from orquestra.workflow_shared.schema.configs import (
 )
 from pydantic import ValidationError
 
-from ._env import (
+from .._env import (
     CONFIG_PATH_ENV,
     CURRENT_CLUSTER_ENV,
     CURRENT_CONFIG_ENV,
     PASSPORT_FILE_ENV,
 )
-
-# Why JSON?
-#  The Python TOML package is unmaintained as of 2022-02-18.
-#  It is not compatible with the 1.0 version of the TOML spec:
-#    https://github.com/uiri/toml/issues/267#issuecomment-886139340
-#  YAML is not accepted by Pydantic's parse_file and is unlikely to ever be supported:
-#    https://github.com/samuelcolvin/pydantic/issues/136
-CONFIG_FILE_NAME = "config.json"
-LOCK_FILE_NAME = "config.json.lock"
-BUILT_IN_CONFIG_NAME = "local"
-RAY_CONFIG_NAME_ALIAS = "ray"
-IN_PROCESS_CONFIG_NAME = "in_process"
-AUTO_CONFIG_NAME = "auto"
-
-LOCAL_RUNTIME_CONFIGURATION = RuntimeConfiguration(
-    config_name=BUILT_IN_CONFIG_NAME,
-    runtime_name=RuntimeName.RAY_LOCAL,
-    runtime_options={
-        "address": "auto",
-        "log_to_driver": False,
-        "storage": None,
-        "temp_dir": None,
-        "configure_logging": False,
-    },
-)
-IN_PROCESS_RUNTIME_CONFIGURATION = RuntimeConfiguration(
-    config_name=IN_PROCESS_CONFIG_NAME,
-    runtime_name=RuntimeName.IN_PROCESS,
-    runtime_options={},
-)
-# this runtime config is not ready-to-be-used without runtime options
-SAME_CLUSTER_RUNTIME_CONFIGURATION = RuntimeConfiguration(
-    config_name=AUTO_CONFIG_NAME,
-    runtime_name=RuntimeName.CE_REMOTE,
-    runtime_options={},
-)
-
-SPECIAL_CONFIG_NAME_DICT = {
-    IN_PROCESS_CONFIG_NAME: IN_PROCESS_RUNTIME_CONFIGURATION,
-    BUILT_IN_CONFIG_NAME: LOCAL_RUNTIME_CONFIGURATION,
-    RAY_CONFIG_NAME_ALIAS: LOCAL_RUNTIME_CONFIGURATION,
-    AUTO_CONFIG_NAME: SAME_CLUSTER_RUNTIME_CONFIGURATION,
-}
-# Unique config list to prompt to the users. Separate from SPECIAL_CONFIG_NAME_DICT
-# as SPECIAL_CONFIG_NAME_DICT might have duplicate names which could be confusing for
-# the user
-UNIQUE_CONFIGS = {RAY_CONFIG_NAME_ALIAS, IN_PROCESS_CONFIG_NAME}
-CLI_IGNORED_CONFIGS = {IN_PROCESS_CONFIG_NAME}
-
-
-# region: runtime options
-RAY_RUNTIME_OPTIONS: List[str] = [
-    "address",
-    "log_to_driver",
-    "storage",
-    "temp_dir",
-    "configure_logging",
-]
-CE_RUNTIME_OPTIONS: List[str] = [
-    "uri",
-    "token",
-]
-IN_PROCESS_RUNTIME_OPTIONS: List[str] = []
-RUNTIME_OPTION_NAMES: List[str] = list(
-    set(RAY_RUNTIME_OPTIONS + IN_PROCESS_RUNTIME_OPTIONS + CE_RUNTIME_OPTIONS)
-)
-BOOLEAN_RUNTIME_OPTIONS: List[str] = ["log_to_driver", "configure_logging"]
-# endregion
+from . import _settings
 
 
 def get_config_file_path() -> Path:
@@ -109,7 +42,7 @@ def get_config_file_path() -> Path:
     if config_file_path is not None:
         _config_file_path = Path(config_file_path).resolve()
     else:
-        _config_file_path = Path.home() / ".orquestra" / CONFIG_FILE_NAME
+        _config_file_path = Path.home() / ".orquestra" / _settings.CONFIG_FILE_NAME
     _ensure_directory(_config_file_path.parent)
     return _config_file_path
 
@@ -196,7 +129,7 @@ def _resolve_remote_auto_config(config_name) -> RuntimeConfiguration:
             "under its value"
         ) from e
 
-    runtime_config = SPECIAL_CONFIG_NAME_DICT[config_name]
+    runtime_config = _settings.SPECIAL_CONFIG_NAME_DICT[config_name]
 
     try:
         netloc = os.environ[CURRENT_CLUSTER_ENV]
@@ -220,9 +153,9 @@ def _resolve_remote_auto_config(config_name) -> RuntimeConfiguration:
 def _resolve_local_auto_config(config_env: str) -> RuntimeConfiguration:
     # if someone sets "auto" as CURRENT_CONFIG_ENV variable, we would get into infinite
     # recursion here.
-    if config_env == AUTO_CONFIG_NAME:
+    if config_env == _settings.AUTO_CONFIG_NAME:
         raise exceptions.RuntimeConfigError(
-            f"{AUTO_CONFIG_NAME} can not be the value "
+            f"{_settings.AUTO_CONFIG_NAME} can not be the value "
             f"of {CURRENT_CONFIG_ENV} env variable."
         )
     try:
@@ -255,11 +188,11 @@ def _resolve_auto_config(config_name) -> RuntimeConfiguration:
 def _handle_config_name_special_cases(config_name: str) -> RuntimeConfiguration:
     # special cases: the built-in config ('local') and in process config have
     # hardcoded runtime options.
-    if config_name in SPECIAL_CONFIG_NAME_DICT:
-        if config_name == AUTO_CONFIG_NAME:
+    if config_name in _settings.SPECIAL_CONFIG_NAME_DICT:
+        if config_name == _settings.AUTO_CONFIG_NAME:
             return _resolve_auto_config(config_name)
         else:
-            return SPECIAL_CONFIG_NAME_DICT[config_name]
+            return _settings.SPECIAL_CONFIG_NAME_DICT[config_name]
     else:
         raise NotImplementedError(
             f"Config name '{config_name}' is reserved, but we don't have a config "
@@ -309,11 +242,11 @@ def _validate_runtime_options(
     # Get list of options for this runtime
     permitted_options: list
     if runtime_name == RuntimeName.RAY_LOCAL:
-        permitted_options = RAY_RUNTIME_OPTIONS
+        permitted_options = _settings.RAY_RUNTIME_OPTIONS
     elif runtime_name == RuntimeName.IN_PROCESS:
-        permitted_options = IN_PROCESS_RUNTIME_OPTIONS
+        permitted_options = _settings.IN_PROCESS_RUNTIME_OPTIONS
     elif runtime_name == RuntimeName.CE_REMOTE:
-        permitted_options = CE_RUNTIME_OPTIONS
+        permitted_options = _settings.CE_RUNTIME_OPTIONS
     else:
         raise NotImplementedError(
             "No runtime option validation is defined for runtime {runtime_name}."
@@ -331,7 +264,7 @@ def _validate_runtime_options(
 def save_or_update(
     config_name: ConfigName, runtime_name: RuntimeName, runtime_options: dict
 ):
-    if config_name in SPECIAL_CONFIG_NAME_DICT:
+    if config_name in _settings.SPECIAL_CONFIG_NAME_DICT:
         raise ValueError(f"Can't update {config_name}, it's a reserved name")
 
     if config_name in read_config_names():
@@ -355,7 +288,7 @@ def write_config(
     # Check that the runtime name is valid and that the runtime options relate to it.
     resolved_runtime_options = _validate_runtime_options(runtime_name, runtime_options)
 
-    with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME):
+    with filelock.FileLock(_get_config_directory() / _settings.LOCK_FILE_NAME):
         resolved_prev_config_file = _resolve_config_file()
 
         _save_new_config_file(
@@ -389,7 +322,7 @@ def update_config(
         RuntimeConfigError:
             - if one or more runtime options are not valid for this runtime.
     """
-    with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME):
+    with filelock.FileLock(_get_config_directory() / _settings.LOCK_FILE_NAME):
         config_file = _resolve_config_file()
 
         resolved_prev_config_entry = (
@@ -433,9 +366,9 @@ def generate_config_name(
             )
         new_name = _generate_cluster_uri_name(uri)
     elif runtime_name == RuntimeName.RAY_LOCAL:
-        new_name = BUILT_IN_CONFIG_NAME
+        new_name = _settings.BUILT_IN_CONFIG_NAME
     elif runtime_name == RuntimeName.IN_PROCESS:
-        new_name = IN_PROCESS_CONFIG_NAME
+        new_name = _settings.IN_PROCESS_CONFIG_NAME
     else:
         raise NotImplementedError(
             f"No config naming schema is defined for Runtime '{runtime_name}'."
@@ -465,10 +398,10 @@ def read_config(
             config matching `config_name` exists.
         orquestra.sdk.exceptions.ConfigFileNotFoundError: when no config file exists.
     """
-    if config_name in SPECIAL_CONFIG_NAME_DICT:
+    if config_name in _settings.SPECIAL_CONFIG_NAME_DICT:
         return _handle_config_name_special_cases(config_name)
 
-    with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME):
+    with filelock.FileLock(_get_config_directory() / _settings.LOCK_FILE_NAME):
         config_file = _resolve_config_file()
     # Handle missing file or config not in file
     if config_file is None:
@@ -489,7 +422,9 @@ def read_config_names() -> List[str]:
             If the file does not exist, returns an empty list.
     """
     try:
-        with filelock.FileLock(_get_config_directory() / LOCK_FILE_NAME, timeout=3):
+        with filelock.FileLock(
+            _get_config_directory() / _settings.LOCK_FILE_NAME, timeout=3
+        ):
             config_file = _open_config_file()
             return [name for name in config_file.configs]
     except (

@@ -33,6 +33,7 @@ from orquestra.sdk import secrets
 
 from . import _api, _dsl, loader
 from ._ast import CallVisitor, NodeReference, NodeReferenceType, normalize_indents
+from ._config import RuntimeConfig
 from ._dsl import (
     DataAggregation,
     FunctionRef,
@@ -150,7 +151,7 @@ class WorkflowDef(Generic[_R]):
 
     def run(
         self,
-        config: Union[_api.RuntimeConfig, str],
+        config: Union[RuntimeConfig, str],
         project_dir: Optional[Union[str, Path]] = None,
         workspace_id: Optional[WorkspaceId] = None,
         project_id: Optional[ProjectId] = None,

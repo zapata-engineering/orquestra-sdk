@@ -19,7 +19,7 @@ from requests import Response, Session
 from orquestra import sdk
 
 from .._base import _env
-from .._base._config import read_config
+from .._base._config import get_config_option
 from .._base._env import CURRENT_USER_ENV
 from .._base._jwt import get_email_from_jwt_token
 from .._base._services import ORQUESTRA_BASE_PATH
@@ -233,8 +233,8 @@ def get_current_user(config_name: t.Optional[str]) -> str:
         raise ConfigNameNotFoundError("Unable to get current user without config.")
 
     try:
-        token = read_config(config_name).runtime_options["token"]
-    except KeyError:
+        token = get_config_option(config_name, "token")
+    except RuntimeConfigError:
         raise RuntimeConfigError(
             "Selected config does not have remote token configured. "
             "Did you log in with it?"

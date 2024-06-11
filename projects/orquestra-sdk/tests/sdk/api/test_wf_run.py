@@ -51,7 +51,7 @@ from orquestra.workflow_shared.schema.workflow_run import TaskRun as TaskRunMode
 from orquestra.workflow_shared.schema.workflow_run import WorkspaceId
 
 from orquestra.sdk import current_exec_ctx
-from orquestra.sdk._client._base import _api, _dsl, _traversal, _workflow
+from orquestra.sdk._client._base import _api, _config, _dsl, _traversal, _workflow
 from orquestra.sdk._client._base._api._task_run import TaskRun
 from orquestra.sdk._client._base._env import (
     CURRENT_CLUSTER_ENV,
@@ -796,10 +796,10 @@ class TestWorkflowRun:
             return sample_wf_def.model
 
         @pytest.mark.parametrize(
-            "config", ["in_process", _api.RuntimeConfig.in_process()]
+            "config", ["in_process", _config.RuntimeConfig.in_process()]
         )
         def test_happy_path(
-            self, wf_ir_def: ir.WorkflowDef, config: _api.RuntimeConfig
+            self, wf_ir_def: ir.WorkflowDef, config: _config.RuntimeConfig
         ):
             wf_run = _api.WorkflowRun.start_from_ir(wf_ir_def, config)
 
