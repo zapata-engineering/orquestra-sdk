@@ -21,7 +21,7 @@ import pytest
 import responses
 from orquestra.workflow_shared.schema import configs
 
-import orquestra.sdk._client._base._config
+import orquestra.sdk._client._base._config._fs
 
 
 class Snippets:
@@ -96,7 +96,7 @@ class TestSecrets:
     @pytest.fixture
     def config_entry(monkeypatch, base_uri):
         monkeypatch.setattr(
-            orquestra.sdk._client._base._config,
+            orquestra.sdk._client._base._config._fs,
             "read_config",
             Mock(
                 return_value=configs.RuntimeConfiguration(

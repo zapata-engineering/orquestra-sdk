@@ -32,7 +32,9 @@ def patch_runtime_option_validation(monkeypatch):
             return input
 
     monkeypatch.setattr(
-        orquestra.sdk._client._base._config._fs, "_validate_runtime_options", assume_valid
+        orquestra.sdk._client._base._config._fs,
+        "_validate_runtime_options",
+        assume_valid,
     )
 
 

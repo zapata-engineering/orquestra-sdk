@@ -324,7 +324,8 @@ def migrate_config_file():
     """Update the stored configs."""
     warnings.warn(
         "migrate_config_file is deprecated and does nothing. Please contact"
-        "SDK team if you need to migrate your config file"
+        "SDK team if you need to migrate your config file",
+        category=DeprecationWarning,
     )
 
 
