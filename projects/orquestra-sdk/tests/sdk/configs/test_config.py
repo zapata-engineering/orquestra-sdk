@@ -26,7 +26,7 @@ from orquestra.workflow_shared.schema.configs import RuntimeName
 import orquestra.sdk._client._base._config._fs as _config
 from orquestra.sdk._client._base._config._settings import LOCK_FILE_NAME
 
-from .data.configs import TEST_CONFIG_JSON
+from ..data.configs import TEST_CONFIG_JSON
 
 
 class TestSaveOrUpdate:
