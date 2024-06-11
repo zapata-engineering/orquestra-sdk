@@ -32,10 +32,10 @@ def _read_config_opts(config_name: ConfigName):
     # This import is awful, as it makes shared code dependent on client.
     # In reality, this function in only called on client side, so from functional
     # perspective this will work.
-    from orquestra.sdk._client._base import _config  # type: ignore
+    from orquestra.sdk._client._base._config._fs import read_config  # type: ignore
 
     try:
-        cfg = _config.read_config(config_name=config_name)
+        cfg = read_config(config_name=config_name)
     except exceptions.ConfigNameNotFoundError:
         raise
 
