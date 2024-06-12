@@ -442,7 +442,19 @@ class WorkflowTemplate(Generic[_P, _R]):
                 "Parametrized WorkflowTemplates cannot be serialised yet"
             )
         else:
-            return self().model
+            # `WorkflowTemplate.__call__` accepts arguments if and only if the
+            # underlying function has parameters.
+            # The `self.is_parametrized` property tells us if the workflow function
+            # is parametrized.
+            # However, `self.__call__()` accepts a Paramspec `_P` as the input
+            # parameter type (`_P.args` and `_P.kwargs`).
+            # This causes a type error in Pyright because Pyright does not have the
+            # information that `is_parametrized` tells us if `_P` has any members.
+            # When `is_parametrized` is false, we know that `_P.args` and `_P.kwargs`
+            # are empty.
+            # This means, that when we are in this branch, we can be sure that
+            # `__call__` does not accept any args or kwargs.
+            return self().model  # type: ignore
 
 
 # ----- decorator helpers -----
