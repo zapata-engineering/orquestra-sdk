@@ -4,6 +4,8 @@
 
 🚨 *Breaking Changes*
 
+* Update `ray` dependency to version 2.24.0
+
 🔥 *Features*
 
 * Add `orq wf graph` CLI command to generate a graph of a workflow definition.
