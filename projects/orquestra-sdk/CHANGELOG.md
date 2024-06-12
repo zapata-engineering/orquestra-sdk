@@ -10,6 +10,8 @@
 
 🧟 *Deprecations*
 
+* Deprecate `migrate_config_file`. Please contact SDK team if you need your config to be migrated.
+
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
