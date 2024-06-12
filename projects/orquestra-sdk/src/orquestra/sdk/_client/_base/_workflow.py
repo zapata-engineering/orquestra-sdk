@@ -441,7 +441,12 @@ class WorkflowTemplate(Generic[_P, _R]):
                 "Parametrized WorkflowTemplates cannot be serialised yet"
             )
         else:
-            return self().model
+            # The reason we do type: ignore here is the following:
+            # self.__call__() accepts Paramspec _P as input types. But since we know
+            # that _P is empty (self.is_parametrized above doing as basically a type
+            # assertion) we can call __call__ that way, but  type checkers do not know
+            # that.
+            return self().model  # type: ignore
 
 
 # ----- decorator helpers -----
