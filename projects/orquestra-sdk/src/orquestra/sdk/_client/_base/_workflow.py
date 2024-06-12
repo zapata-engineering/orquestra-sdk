@@ -441,11 +441,18 @@ class WorkflowTemplate(Generic[_P, _R]):
                 "Parametrized WorkflowTemplates cannot be serialised yet"
             )
         else:
-            # The reason we do type: ignore here is the following:
-            # self.__call__() accepts Paramspec _P as input types. But since we know
-            # that _P is empty (self.is_parametrized above doing as basically a type
-            # assertion) we can call __call__ that way, but  type checkers do not know
-            # that.
+            # `WorkflowTemplate.__call__` accepts arguments if and only if the
+            # underlying function has parameters.
+            # The `self.is_parametrized` property tells us if the workflow function
+            # is parametrized.
+            # However, `self.__call__()` accepts a Paramspec `_P` as the input
+            # parameter type (`_P.args` and `_P.kwargs`).
+            # This causes a type error in Pyright because Pyright does not have the
+            # information that `is_parametrized` tells us if `_P` has any members.
+            # When `is_parametrized` is false, we know that `_P.args` and `_P.kwargs`
+            # are empty.
+            # This means, that when we are in this branch, we can be sure that
+            # `__call__` does not accept any args or kwargs.
             return self().model  # type: ignore
 
 
