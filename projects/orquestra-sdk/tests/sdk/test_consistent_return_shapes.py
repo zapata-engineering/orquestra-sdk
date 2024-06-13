@@ -25,7 +25,6 @@ import os
 import re
 import shutil
 import subprocess
-import sys
 import tempfile
 import typing as t
 from pathlib import Path
@@ -433,10 +432,6 @@ class TestAPI:
     "ray",
     "mock_config_env_var",
 )
-@pytest.mark.skipif(
-    sys.platform.startswith("win32"),
-    reason="Windows uses different symbols than macOS and Linux",
-)
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.slow
 class TestCLI:
@@ -459,7 +454,9 @@ class TestCLI:
         )
 
         m = re.match(
-            r"Workflow Submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
+            r".*Workflow Submitted! Run ID: (?P<run_id>.*)",
+            run_ray.stdout.decode(),
+            re.S,
         )
 
         assert (
@@ -521,7 +518,9 @@ class TestCLI:
         )
 
         m = re.match(
-            r"Workflow Submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
+            r".*Workflow Submitted! Run ID: (?P<run_id>.*)",
+            run_ray.stdout.decode(),
+            re.S,
         )
         assert (
             m is not None
@@ -594,7 +593,9 @@ class TestCLIDownloadDir:
         ), f"STDOUT: {run_ce.stdout.decode()},\n\nSTDERR: {run_ce.stderr.decode()}"
 
         m = re.match(
-            r"Workflow Submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
+            r".*Workflow Submitted! Run ID: (?P<run_id>.*)",
+            run_ray.stdout.decode(),
+            re.S,
         )
         assert (
             m is not None
@@ -674,7 +675,9 @@ class TestCLIDownloadDir:
         )
 
         m = re.match(
-            r"Workflow Submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
+            r".*Workflow Submitted! Run ID: (?P<run_id>.*)",
+            run_ray.stdout.decode(),
+            re.S,
         )
         assert (
             m is not None

@@ -3,10 +3,10 @@
 ################################################################################
 """Snippets and tests used in the "Parametrized Workflows" tutorial."""
 
+import re
 import subprocess
 import sys
 from pathlib import Path
-import re
 
 import pytest
 
