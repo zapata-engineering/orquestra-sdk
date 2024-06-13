@@ -446,7 +446,7 @@ class TestCLI:
             check=True,
             capture_output=True,
         )
-
+        assert False, f"out: {run_ray.stdout.decode()}, err: {run_ray.stderr.decode()}"
         m = re.match(
             r".*Workflow Submitted! Run ID: (?P<run_id>.*)",
             run_ray.stdout.decode(),
