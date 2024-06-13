@@ -109,7 +109,7 @@ class TestSnippets:
         std_out = str(proc.stdout, "utf-8")
         assert "RUNNING" in std_out or "SUCCEEDED" in std_out
 
-        TestSnippets.wf_id = re.findall("wf.*", std_out)
+        TestSnippets.wf_id = re.findall("wf.*", std_out)[0]
 
     @staticmethod
     @pytest.mark.dependency(depends=["TestSnippets::test_execute_workflow"])
