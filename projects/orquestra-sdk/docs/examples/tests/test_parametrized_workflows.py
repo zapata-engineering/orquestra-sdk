@@ -6,6 +6,7 @@
 import subprocess
 import sys
 from pathlib import Path
+import re
 
 import pytest
 
@@ -107,11 +108,8 @@ class TestSnippets:
         proc.check_returncode()
         std_out = str(proc.stdout, "utf-8")
         assert "RUNNING" in std_out or "SUCCEEDED" in std_out
-        assert (
-            False
-        ), f"STDOUT: {proc.stdout.decode()}, \n STDERR: {proc.stderr.decode()}"
 
-        TestSnippets.wf_id = std_out.split()[0]
+        TestSnippets.wf_id = re.findall("wf.*", std_out)
 
     @staticmethod
     @pytest.mark.dependency(depends=["TestSnippets::test_execute_workflow"])
