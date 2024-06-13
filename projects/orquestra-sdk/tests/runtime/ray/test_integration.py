@@ -319,9 +319,6 @@ class TestRayRuntimeMethods:
                     9999, 1, 1, tzinfo=timezone.utc
                 )
 
-        @pytest.mark.skipif(
-            sys.platform.startswith("win32"), reason="File writing on windows is slow."
-        )
         def test_handles_ray_environment_setup_error(
             self, runtime: _dag.RayRuntime, shared_ray_conn
         ):
