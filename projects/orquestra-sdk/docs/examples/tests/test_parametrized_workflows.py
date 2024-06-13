@@ -126,7 +126,9 @@ class TestSnippets:
         # When
         # Call the snippet
         proc = subprocess.run([sys.executable, str(src_file)], capture_output=True)
-
+        assert (
+            False
+        ), f"STDOUT: {proc.stdout.decode()}, \n STDERR: {proc.stderr.decode()}"
         # Then
         proc.check_returncode()
         std_out = str(proc.stdout, "utf-8")
