@@ -22,6 +22,8 @@
 
 📃 *Docs*
 
+* Correct docstring of DremioClient to remove erronious reference to `ORQ_DREMIO_HOST`.
+
 ## v0.64.0
 
 🔥 *Features*
