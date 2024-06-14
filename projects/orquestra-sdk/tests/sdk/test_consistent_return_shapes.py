@@ -448,9 +448,8 @@ class TestCLI:
         )
 
         m = re.match(
-            r".*Workflow Submitted! Run ID: (?P<run_id>.*\n)",
+            r"(.|\n)*Workflow Submitted! Run ID: (?P<run_id>.*)",
             run_ray.stdout.decode(),
-            re.S,
         )
 
         assert (
@@ -512,9 +511,8 @@ class TestCLI:
         )
 
         m = re.match(
-            r".*Workflow Submitted! Run ID: (?P<run_id>.*\n)",
+            r"(.|\n)*Workflow Submitted! Run ID: (?P<run_id>.*)",
             run_ray.stdout.decode(),
-            re.S,
         )
         assert (
             m is not None
@@ -587,9 +585,8 @@ class TestCLIDownloadDir:
         ), f"STDOUT: {run_ce.stdout.decode()},\n\nSTDERR: {run_ce.stderr.decode()}"
 
         m = re.match(
-            r".*Workflow Submitted! Run ID: (?P<run_id>.*\n)",
+            r"(.|\n)*Workflow Submitted! Run ID: (?P<run_id>.*)",
             run_ray.stdout.decode(),
-            re.S,
         )
         assert (
             m is not None
@@ -669,9 +666,8 @@ class TestCLIDownloadDir:
         )
 
         m = re.match(
-            r".*Workflow Submitted! Run ID: (?P<run_id>.*\n)",
+            r"(.|\n)*Workflow Submitted! Run ID: (?P<run_id>.*)",
             run_ray.stdout.decode(),
-            re.S,
         )
         assert (
             m is not None
