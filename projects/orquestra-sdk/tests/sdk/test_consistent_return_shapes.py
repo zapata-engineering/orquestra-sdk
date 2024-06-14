@@ -446,9 +446,9 @@ class TestCLI:
             check=True,
             capture_output=True,
         )
-        assert False, f"out: {run_ray.stdout.decode()}, err: {run_ray.stderr.decode()}"
+
         m = re.match(
-            r".*Workflow Submitted! Run ID: (?P<run_id>.*)",
+            r".*Workflow Submitted! Run ID: (?P<run_id>.*\n)",
             run_ray.stdout.decode(),
             re.S,
         )
@@ -512,7 +512,7 @@ class TestCLI:
         )
 
         m = re.match(
-            r".*Workflow Submitted! Run ID: (?P<run_id>.*)",
+            r".*Workflow Submitted! Run ID: (?P<run_id>.*\n)",
             run_ray.stdout.decode(),
             re.S,
         )
@@ -587,7 +587,7 @@ class TestCLIDownloadDir:
         ), f"STDOUT: {run_ce.stdout.decode()},\n\nSTDERR: {run_ce.stderr.decode()}"
 
         m = re.match(
-            r".*Workflow Submitted! Run ID: (?P<run_id>.*)",
+            r".*Workflow Submitted! Run ID: (?P<run_id>.*\n)",
             run_ray.stdout.decode(),
             re.S,
         )
@@ -669,7 +669,7 @@ class TestCLIDownloadDir:
         )
 
         m = re.match(
-            r".*Workflow Submitted! Run ID: (?P<run_id>.*)",
+            r".*Workflow Submitted! Run ID: (?P<run_id>.*\n)",
             run_ray.stdout.decode(),
             re.S,
         )
