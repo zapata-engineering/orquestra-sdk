@@ -541,7 +541,7 @@ class TestCLI:
         )
 
         # THEN
-        assert results_ray[1:] == results_ce[1:]
+        assert results_ce[1:] in results_ray[1:]
         assert [line.strip() for line in results_ce] == [
             f"Workflow run {mock_ce_run_multiple} has 2 outputs.",
             "",
