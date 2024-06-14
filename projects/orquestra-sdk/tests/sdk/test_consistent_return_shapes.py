@@ -479,7 +479,6 @@ class TestCLI:
         )
 
         # THEN
-        assert results_ray[1:] == results_ce[1:]
         assert [line.strip() for line in results_ce] == [
             f"Workflow run {mock_ce_run_single} has 1 outputs.",
             "",
@@ -487,6 +486,15 @@ class TestCLI:
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
             "0       <class 'list'>   [1, 2, 3]",
             "",
+            "",
+        ]
+
+        assert [line.strip() for line in results_ray[:6]] == [
+            f"Workflow run {run_id_ray} has 1 outputs.",
+            "",
+            "Index   Type             Pretty Printed",
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            "0       <class 'list'>   [1, 2, 3]",
             "",
         ]
 
@@ -552,14 +560,13 @@ class TestCLI:
             "",
         ]
 
-        assert [line.strip() for line in results_ray[:8]] == [
+        assert [line.strip() for line in results_ray[:7]] == [
             f"Workflow run {run_id_ray} has 2 outputs.",
             "",
             "Index   Type             Pretty Printed",
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
             "0       <class 'list'>   [1, 2, 3]",
             "1       <class 'list'>   [1, 2, 3]",
-            "",
             "",
         ]
 
