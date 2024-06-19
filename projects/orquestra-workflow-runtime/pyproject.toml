@@ -39,7 +39,7 @@ dependencies = [
     # Capture stdout/stderr
     "wurlitzer>=3.0",
     # pyarrow 16.0 crashed ray workers for unknown reason. Crashes were not
-    # reproducable on mac - so carefull with taking that restriction away.
+    # reproducible on mac - so be careful with taking that restriction away.
     "pyarrow>=10.0,<16.0",
 ]
 
