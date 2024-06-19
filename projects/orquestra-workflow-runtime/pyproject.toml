@@ -26,7 +26,7 @@ requires-python = ">= 3.8"
 # version we can easily install and test, even if there are older versions with
 # the same API.
 dependencies = [
-    "orquestra-workflow-shared==0.0.1",
+    "orquestra-workflow-shared>=0.1.0",
     # Schema definition
     "pydantic>1.10.7",
     # Python Standard Library Backports
@@ -38,6 +38,9 @@ dependencies = [
     "PyJWT>=2.6",
     # Capture stdout/stderr
     "wurlitzer>=3.0",
+    # pyarrow 16.0 crashed ray workers for unknown reason. Crashes were not
+    # reproducible on mac - so be careful with taking that restriction away.
+    "pyarrow>=10.0,<16.0",
 ]
 
 [project.optional-dependencies]

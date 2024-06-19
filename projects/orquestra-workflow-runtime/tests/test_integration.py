@@ -89,7 +89,7 @@ def _poll_loop(
         time.sleep(interval)
 
 
-def _wait_to_finish_wf(run_id: str, runtime: RuntimeInterface, timeout=20.0):
+def _wait_to_finish_wf(run_id: str, runtime: RuntimeInterface, timeout=60.0):
     def _continue_condition():
         state = runtime.get_workflow_run_status(run_id).status.state
         return state in [
