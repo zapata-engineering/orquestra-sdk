@@ -6,11 +6,9 @@ on:
       sdk_requirement:
         type: string
         description: |
-          Orquestra SDK requirement to build the image with. 
-          Example of using a published version of the SDK:
-          orquestra-sdk[ray]==0.63.0
-          Example of using an unpublished version:
-          orquestra-sdk[ray] @ git+https://github.com/zapata-engineering/orquestra-sdk.git@v0.63.0#subdirectory=projects/orquestra-sdk
+          Orquestra SDK revision
+          You can use git tag (like "v0.62.0")
+          or branch name (like "main")
       docker_tag:
         type: string
         description: |
