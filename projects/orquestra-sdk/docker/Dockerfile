@@ -38,7 +38,9 @@ RUN <<EOF
 set -ex
 . "$VIRTUAL_ENV/bin/activate"
 python -m pip install --no-cache-dir -U pip wheel
-python -m pip install --no-cache-dir "${SDK_REQUIREMENT}"
+python -m pip install "orquestra-sdk[ray] @ git+https://github.com/zapata-engineering/orquestra-sdk.git@${SDK_REQUIREMENT}#subdirectory=projects/orquestra-sdk"
+python -m pip install "orquestra-workflow-runtime[ray] @ git+https://github.com/zapata-engineering/orquestra-sdk.git@${SDK_REQUIREMENT}#subdirectory=projects/orquestra-workflow-runtime"
+python -m pip install "orquestra-workflow-shared @ git+https://github.com/zapata-engineering/orquestra-sdk.git@${SDK_REQUIREMENT}#subdirectory=projects/orquestra-workflow-shared"
 EOF
 
 # Prefer to use pip, python, and other binaries from the virtual env.
