@@ -4,6 +4,8 @@
 
 🚨 *Breaking Changes*
 
+* Update `ray` dependency to version 2.24.0
+
 🔥 *Features*
 
 🧟 *Deprecations*

@@ -25,7 +25,6 @@ import os
 import re
 import shutil
 import subprocess
-import sys
 import tempfile
 import typing as t
 from pathlib import Path
@@ -73,7 +72,7 @@ def get_list():
 
 
 @sdk.workflow
-def wf_return_single_packed_value():
+def sig():
     a = get_list()
     return a
 
@@ -87,9 +86,7 @@ def wf_return_multiple_packed_values():
 
 ORQUESTRA_IMPORT = "import orquestra.sdk as sdk"
 TASK_DEF = inspect.getsource(get_list)
-WORKFLOW_DEF_SINGLE = "\n".join(
-    [ORQUESTRA_IMPORT, TASK_DEF, inspect.getsource(wf_return_single_packed_value)]
-)
+WORKFLOW_DEF_SINGLE = "\n".join([ORQUESTRA_IMPORT, TASK_DEF, inspect.getsource(sig)])
 WORKFLOW_DEF_MULTIPLE = "\n".join(
     [ORQUESTRA_IMPORT, TASK_DEF, inspect.getsource(wf_return_multiple_packed_values)]
 )
@@ -185,9 +182,7 @@ def mock_ce_run_single(post, get, httpserver: pytest_httpserver.HTTPServer) -> s
 
     get(
         f"/api/workflow-definitions/{wf_def_id}",
-        resp_mocks.make_get_wf_def_response(
-            id_=wf_def_id, wf_def=wf_return_single_packed_value().model
-        ),
+        resp_mocks.make_get_wf_def_response(id_=wf_def_id, wf_def=sig().model),
     )
     # endregion
 
@@ -257,9 +252,7 @@ def mock_ce_run_multiple(post, get) -> str:
     )
     get(
         f"/api/workflow-definitions/{wf_def_id}",
-        resp_mocks.make_get_wf_def_response(
-            id_=wf_def_id, wf_def=wf_return_single_packed_value().model
-        ),
+        resp_mocks.make_get_wf_def_response(id_=wf_def_id, wf_def=sig().model),
     )
     # endregion
     #
@@ -353,9 +346,9 @@ class TestAPI:
         single_result_vanilla,
     ):
         # GIVEN
-        ip_run = wf_return_single_packed_value().run(sdk.RuntimeConfig.in_process())
-        ray_run = wf_return_single_packed_value().run(sdk.RuntimeConfig.ray())
-        ce_run = wf_return_single_packed_value().run(sdk.RuntimeConfig.load("CE"))
+        ip_run = sig().run(sdk.RuntimeConfig.in_process())
+        ray_run = sig().run(sdk.RuntimeConfig.ray())
+        ce_run = sig().run(sdk.RuntimeConfig.load("CE"))
         for run in [ip_run, ray_run]:
             run.wait_until_finished()
 
@@ -433,10 +426,6 @@ class TestAPI:
     "ray",
     "mock_config_env_var",
 )
-@pytest.mark.skipif(
-    sys.platform.startswith("win32"),
-    reason="Windows uses different symbols than macOS and Linux",
-)
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
 @pytest.mark.slow
 class TestCLI:
@@ -459,7 +448,8 @@ class TestCLI:
         )
 
         m = re.match(
-            r"Workflow Submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
+            r"(.|\n)*Workflow Submitted! Run ID: (?P<run_id>.*)",
+            run_ray.stdout.decode(),
         )
 
         assert (
@@ -489,7 +479,6 @@ class TestCLI:
         )
 
         # THEN
-        assert results_ray[1:] == results_ce[1:]
         assert [line.strip() for line in results_ce] == [
             f"Workflow run {mock_ce_run_single} has 1 outputs.",
             "",
@@ -497,6 +486,15 @@ class TestCLI:
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
             "0       <class 'list'>   [1, 2, 3]",
             "",
+            "",
+        ]
+
+        assert [line.strip() for line in results_ray[:6]] == [
+            f"Workflow run {run_id_ray} has 1 outputs.",
+            "",
+            "Index   Type             Pretty Printed",
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            "0       <class 'list'>   [1, 2, 3]",
             "",
         ]
 
@@ -521,7 +519,8 @@ class TestCLI:
         )
 
         m = re.match(
-            r"Workflow Submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
+            r"(.|\n)*Workflow Submitted! Run ID: (?P<run_id>.*)",
+            run_ray.stdout.decode(),
         )
         assert (
             m is not None
@@ -550,7 +549,6 @@ class TestCLI:
         )
 
         # THEN
-        assert results_ray[1:] == results_ce[1:]
         assert [line.strip() for line in results_ce] == [
             f"Workflow run {mock_ce_run_multiple} has 2 outputs.",
             "",
@@ -559,6 +557,16 @@ class TestCLI:
             "0       <class 'list'>   [1, 2, 3]",
             "1       <class 'list'>   [1, 2, 3]",
             "",
+            "",
+        ]
+
+        assert [line.strip() for line in results_ray[:7]] == [
+            f"Workflow run {run_id_ray} has 2 outputs.",
+            "",
+            "Index   Type             Pretty Printed",
+            "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+            "0       <class 'list'>   [1, 2, 3]",
+            "1       <class 'list'>   [1, 2, 3]",
             "",
         ]
 
@@ -594,7 +602,8 @@ class TestCLIDownloadDir:
         ), f"STDOUT: {run_ce.stdout.decode()},\n\nSTDERR: {run_ce.stderr.decode()}"
 
         m = re.match(
-            r"Workflow Submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
+            r"(.|\n)*Workflow Submitted! Run ID: (?P<run_id>.*)",
+            run_ray.stdout.decode(),
         )
         assert (
             m is not None
@@ -674,7 +683,8 @@ class TestCLIDownloadDir:
         )
 
         m = re.match(
-            r"Workflow Submitted! Run ID: (?P<run_id>.*)", run_ray.stdout.decode()
+            r"(.|\n)*Workflow Submitted! Run ID: (?P<run_id>.*)",
+            run_ray.stdout.decode(),
         )
         assert (
             m is not None
