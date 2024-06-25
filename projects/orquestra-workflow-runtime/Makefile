@@ -26,7 +26,7 @@ test:
 
 
 # Min code-test coverage measured for the whole project required for CI checks to pass.
-MIN_COVERAGE=0
+MIN_COVERAGE=75
 
 
 # Option explanation:

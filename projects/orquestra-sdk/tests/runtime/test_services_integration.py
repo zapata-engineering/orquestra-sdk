@@ -4,9 +4,9 @@
 import subprocess
 
 import pytest
+from orquestra.workflow_runtime._testing._connections import ray_suitable_temp_dir
 
 from orquestra.sdk._client._base._services import RayManager
-from orquestra.sdk._client._base._testing._connections import ray_suitable_temp_dir
 
 
 @pytest.mark.slow
