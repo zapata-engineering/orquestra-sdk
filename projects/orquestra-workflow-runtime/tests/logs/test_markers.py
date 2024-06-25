@@ -74,6 +74,9 @@ def test_platform_correct_log_implementation(
         marker_logs.assert_called_with(wf_run_id, task_inv_id)
 
 
+@pytest.mark.skipif(
+    sys.platform.startswith("win32"), reason="Wurlitzer doesn't support Windows"
+)
 class TestLogRedirection:
     def test_stdout_redirected(
         self,
