@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022-2024 Zapata Computing Inc.
 ################################################################################
 """Utilities for presenting human-readable text output from dorq commands.
 
@@ -15,6 +15,8 @@ from pathlib import Path
 from typing import List, Optional, Sequence
 
 import click
+from graphviz import Digraph  # type: ignore
+from graphviz.exceptions import ExecutableNotFound  # type: ignore
 from orquestra.workflow_shared import serde
 from orquestra.workflow_shared.dates import Instant, from_unix_time
 from orquestra.workflow_shared.logs import LogOutput, WorkflowLogs
@@ -209,9 +211,11 @@ class ServicePresenter(RichPresenter):
         for svc in services:
             status_table.add_row(
                 svc.name,
-                "[green]Running[/green]"
-                if svc.is_running
-                else "[red]Not Running[/red]",
+                (
+                    "[green]Running[/green]"
+                    if svc.is_running
+                    else "[red]Not Running[/red]"
+                ),
                 svc.info or "",
             )
         self._console.print(status_table)
@@ -282,18 +286,22 @@ class ConfigPresenter:
                         click.style(config.config_name, bold=True),
                         #
                         # show runtime name, colour coded blue for CE and red for QE
-                        click.style(config.runtime_name, fg="blue")
-                        if config.runtime_name == RuntimeName.CE_REMOTE
-                        else click.style(config.runtime_name, fg="red"),
+                        (
+                            click.style(config.runtime_name, fg="blue")
+                            if config.runtime_name == RuntimeName.CE_REMOTE
+                            else click.style(config.runtime_name, fg="red")
+                        ),
                         #
                         # show cluster URI
                         config.runtime_options["uri"],
                         #
                         # show a green tick if the token is current, and a red cross if
                         # it is not.
-                        click.style("\u2713", fg="green")
-                        if status[config.config_name]
-                        else click.style("\u2A09", fg="red"),
+                        (
+                            click.style("\u2713", fg="green")
+                            if status[config.config_name]
+                            else click.style("\u2A09", fg="red")
+                        ),
                     ]
                     for config in configs
                 ],
@@ -423,9 +431,9 @@ class PromptPresenter:
         # There is also expectations that labels correspond to matching wfs list indices
         wfs = sorted(
             wfs,
-            key=lambda wf: wf.status.start_time
-            if wf.status.start_time
-            else from_unix_time(0),
+            key=lambda wf: (
+                wf.status.start_time if wf.status.start_time else from_unix_time(0)
+            ),
             reverse=True,
         )
 
@@ -481,3 +489,22 @@ class PromptPresenter:
         tabulated_labels = tabulate(labels, tablefmt="plain").split("\n")
 
         return tabulated_labels, projects
+
+
+class GraphPresenter:
+    """User-facing presentation for the graph representation of a workflow def."""
+
+    def view(self, graph: Digraph, file: Optional[Path]):
+        """Display the graph in a popup window.
+
+        Args:
+            graph: The graph to be shown.
+            file: If specified, the graph will be saved to the specified location.
+
+        Raises:
+            ExecutableNotFound: when there is not a global GraphViz install.
+        """
+        try:
+            graph.view(filename=file, cleanup=True)
+        except ExecutableNotFound:
+            raise

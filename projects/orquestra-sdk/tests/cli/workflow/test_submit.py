@@ -5,12 +5,13 @@
 Unit tests for 'orq wf submit' glue code.
 """
 import warnings
+from typing import Optional
 from unittest.mock import Mock, create_autospec
 
 import pytest
 from orquestra.workflow_shared import exceptions
 
-from orquestra.sdk._client._base.cli import _repos
+from orquestra.sdk._client._base.cli import _arg_resolvers, _repos
 from orquestra.sdk._client._base.cli._arg_resolvers import SpacesResolver
 from orquestra.sdk._client._base.cli._ui import _presenters, _prompts
 from orquestra.sdk._client._base.cli._workflow import _submit
@@ -42,10 +43,11 @@ class TestAction:
     class TestPassingAllValues:
         @staticmethod
         @pytest.mark.parametrize("force", [False, True])
-        def test_success(force: bool):
+        @pytest.mark.parametrize("name", [None, "<cli_name_sentinel>"])
+        def test_success(force: bool, name: Optional[str]):
             # Given
             module = "my_wfs"
-            name = "sample_wf"
+            resolved_name = "sample_wf"
             config = "cluster_z"
             workspace = "ws"
             project = "project'"
@@ -54,6 +56,9 @@ class TestAction:
             submit_presenter = create_autospec(_presenters.WFRunPresenter)
             error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
 
+            wf_def_resolver = create_autospec(_arg_resolvers.WFDefResolver)
+            wf_def_resolver.resolve_fn_name.return_value = resolved_name
+
             wf_run_id = "wf.test"
             wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
             # submit() doesn't raise = no effect of the "--force" flag
@@ -61,6 +66,7 @@ class TestAction:
 
             wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
             wf_def_repo.get_module_from_spec.return_value = module
+
             wf_def_sentinel = "<wf def sentinel>"
             wf_def_repo.get_workflow_def.return_value = wf_def_sentinel
 
@@ -70,17 +76,21 @@ class TestAction:
                 error_presenter=error_presenter,
                 wf_run_repo=wf_run_repo,
                 wf_def_repo=wf_def_repo,
+                wf_def_resolver=wf_def_resolver,
             )
 
             # When
             action.on_cmd_call(module, name, config, workspace, project, force)
 
             # Then
+            # We expect the name resolver to be called
+            wf_def_resolver.resolve_fn_name.assert_called_once_with(module, name)
+
             # We don't expect prompts.
             prompter.choice.assert_not_called()
 
             # We expect getting workflow def from the module.
-            wf_def_repo.get_workflow_def.assert_called_with(module, name)
+            wf_def_repo.get_workflow_def.assert_called_with(module, resolved_name)
 
             # We expect submitting the retrieved wf def to the passed config cluster.
             wf_run_repo.submit.assert_called_with(
@@ -93,222 +103,6 @@ class TestAction:
 
             # We expect telling the user the wf run ID.
             submit_presenter.show_submitted_wf_run.assert_called_with(wf_run_id)
-
-    class TestOmittingName:
-        @staticmethod
-        @pytest.mark.parametrize("force", [False, True])
-        def test_multiple_wf_defs_in_module(force: bool):
-            # Given
-            module = "my_wfs"
-            name = None
-            config = "cluster_z"
-            workspace = "workspace"
-            project = "project"
-
-            wf_names = ["my_wf1", "my_wf2"]
-            selected_name = wf_names[1]
-
-            prompter = create_autospec(_prompts.Prompter)
-            prompter.choice.return_value = selected_name
-
-            submit_presenter = create_autospec(_presenters.WFRunPresenter)
-            error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
-
-            wf_run_id = "wf.test"
-            wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
-            # submit() doesn't raise = no effect of the "--force" flag
-            wf_run_repo.submit.return_value = wf_run_id
-
-            wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
-            wf_def_repo.get_module_from_spec.return_value = module
-            wf_def_repo.get_workflow_names.return_value = wf_names
-
-            wf_def_sentinel = "<wf def sentinel>"
-            wf_def_repo.get_workflow_def.return_value = wf_def_sentinel
-
-            action = _submit.Action(
-                prompter=prompter,
-                submit_presenter=submit_presenter,
-                error_presenter=error_presenter,
-                wf_run_repo=wf_run_repo,
-                wf_def_repo=wf_def_repo,
-            )
-
-            # When
-            action.on_cmd_call(module, name, config, workspace, project, force)
-
-            # Then
-            # We expect prompting for selection of the workflow name.
-            prompter.choice.assert_called_with(wf_names, message="Workflow definition")
-
-            # We expect getting workflow def from the module, with the name selected
-            # by the prompt.
-            wf_def_repo.get_workflow_def.assert_called_with(module, selected_name)
-
-            # We expect submitting the retrieved wf def to the passed config cluster.
-            wf_run_repo.submit.assert_called_with(
-                wf_def_sentinel,
-                config,
-                ignore_dirty_repo=force,
-                workspace_id=workspace,
-                project_id=project,
-            )
-
-            # We expect telling the user the wf run ID.
-            submit_presenter.show_submitted_wf_run.assert_called_with(wf_run_id)
-
-        @staticmethod
-        @pytest.mark.parametrize("force", [False, True])
-        def test_single_wf_def(force: bool):
-            # Given
-            module = "my_wfs"
-            name = None
-            config = "cluster_z"
-            workspace = "workspace"
-            project = "project"
-
-            wf_names = ["my_wf1"]
-
-            prompter = create_autospec(_prompts.Prompter)
-
-            submit_presenter = create_autospec(_presenters.WFRunPresenter)
-            error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
-
-            wf_run_id = "wf.test"
-            wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
-            # submit() doesn't raise = no effect of the "--force" flag
-            wf_run_repo.submit.return_value = wf_run_id
-
-            wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
-            wf_def_repo.get_module_from_spec.return_value = module
-            wf_def_repo.get_workflow_names.return_value = wf_names
-
-            wf_def_sentinel = "<wf def sentinel>"
-            wf_def_repo.get_workflow_def.return_value = wf_def_sentinel
-
-            action = _submit.Action(
-                prompter=prompter,
-                submit_presenter=submit_presenter,
-                error_presenter=error_presenter,
-                wf_run_repo=wf_run_repo,
-                wf_def_repo=wf_def_repo,
-            )
-
-            # When
-            action.on_cmd_call(module, name, config, workspace, project, force)
-
-            # Then
-            # We don't expect prompts.
-            prompter.choice.assert_not_called()
-
-            # We expect getting workflow def from the module, with the only
-            # available name.
-            wf_def_repo.get_workflow_def.assert_called_with(module, wf_names[0])
-
-            # We expect submitting the retrieved wf def to the passed config cluster.
-            wf_run_repo.submit.assert_called_with(
-                wf_def_sentinel,
-                config,
-                ignore_dirty_repo=force,
-                workspace_id=workspace,
-                project_id=project,
-            )
-
-            # We expect telling the user the wf run ID.
-            submit_presenter.show_submitted_wf_run.assert_called_with(wf_run_id)
-
-        @staticmethod
-        @pytest.mark.parametrize("force", [False, True])
-        def test_no_wf_defs_in_module(force: bool):
-            # Given
-            module = "my_wfs"
-            name = None
-            config = "cluster_z"
-            workspace = "workspace"
-            project = "project"
-
-            prompter = create_autospec(_prompts.Prompter)
-            submit_presenter = create_autospec(_presenters.WFRunPresenter)
-            error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
-            wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
-            wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
-            wf_def_repo.get_workflow_names.side_effect = (
-                exceptions.NoWorkflowDefinitionsFound(module_name=module)
-            )
-
-            action = _submit.Action(
-                prompter=prompter,
-                submit_presenter=submit_presenter,
-                error_presenter=error_presenter,
-                wf_run_repo=wf_run_repo,
-                wf_def_repo=wf_def_repo,
-            )
-
-            # When
-            action.on_cmd_call(module, name, config, workspace, project, force)
-
-            # Then
-            # We don't expect prompts.
-            prompter.choice.assert_not_called()
-
-            # We don't expect getting any workflow.
-            wf_def_repo.get_workflow_def.assert_not_called()
-
-            # We don't expect submits.
-            wf_run_repo.submit.assert_not_called()
-
-            # We expect presenting the error.
-            _assert_called_with_type(
-                error_presenter.show_error, exceptions.NoWorkflowDefinitionsFound
-            )
-
-        @staticmethod
-        @pytest.mark.parametrize("force", [False, True])
-        def test_invalid_module(force: bool):
-            module = "doesnt_exist"
-            name = None
-            config = "cluster_z"
-            workspace = "workspace"
-            project = "project"
-
-            prompter = create_autospec(_prompts.Prompter)
-            submit_presenter = create_autospec(_presenters.WFRunPresenter)
-            error_presenter = create_autospec(_presenters.WrappedCorqOutputPresenter)
-            wf_run_repo = create_autospec(_repos.WorkflowRunRepo)
-
-            sys_path = [module, "foo", "bar"]
-            wf_def_repo = create_autospec(_repos.WorkflowDefRepo)
-            wf_def_repo.get_module_from_spec.side_effect = (
-                exceptions.WorkflowDefinitionModuleNotFound(
-                    module_name=module, sys_path=sys_path
-                )
-            )
-
-            action = _submit.Action(
-                prompter=prompter,
-                submit_presenter=submit_presenter,
-                error_presenter=error_presenter,
-                wf_run_repo=wf_run_repo,
-                wf_def_repo=wf_def_repo,
-            )
-
-            # When
-            action.on_cmd_call(module, name, config, workspace, project, force)
-
-            # Then
-            # We don't expect prompts.
-            prompter.choice.assert_not_called()
-
-            # We don't expect loading defs.
-            wf_def_repo.get_workflow_def.assert_not_called()
-
-            # We don't expect submits.
-            wf_run_repo.submit.assert_not_called()
-
-            # We expect telling the user about the error.
-            _assert_called_with_type(
-                error_presenter.show_error, exceptions.WorkflowDefinitionModuleNotFound
-            )
 
     class TestDirtyRepo:
         """
@@ -353,12 +147,16 @@ class TestAction:
             wf_def_sentinel = "<wf def sentinel>"
             wf_def_repo.get_workflow_def.return_value = wf_def_sentinel
 
+            wf_def_resolver = create_autospec(_arg_resolvers.WFDefResolver)
+            wf_def_resolver.resolve_fn_name.return_value = name
+
             action = _submit.Action(
                 prompter=prompter,
                 submit_presenter=submit_presenter,
                 error_presenter=error_presenter,
                 wf_run_repo=wf_run_repo,
                 wf_def_repo=wf_def_repo,
+                wf_def_resolver=wf_def_resolver,
             )
 
             # Then
@@ -409,12 +207,16 @@ class TestAction:
             wf_def_sentinel = "<wf def sentinel>"
             wf_def_repo.get_workflow_def.return_value = wf_def_sentinel
 
+            wf_def_resolver = create_autospec(_arg_resolvers.WFDefResolver)
+            wf_def_resolver.resolve_fn_name.return_value = name
+
             action = _submit.Action(
                 prompter=prompter,
                 submit_presenter=submit_presenter,
                 error_presenter=error_presenter,
                 wf_run_repo=wf_run_repo,
                 wf_def_repo=wf_def_repo,
+                wf_def_resolver=wf_def_resolver,
             )
 
             # Then
@@ -466,6 +268,9 @@ class TestAction:
                     exceptions.WorkspacesNotSupportedError()
                 )
 
+            wf_def_resolver = create_autospec(_arg_resolvers.WFDefResolver)
+            wf_def_resolver.resolve_fn_name.return_value = name
+
             action = _submit.Action(
                 prompter=prompter,
                 submit_presenter=submit_presenter,
@@ -473,6 +278,7 @@ class TestAction:
                 wf_run_repo=wf_run_repo,
                 wf_def_repo=wf_def_repo,
                 spaces_resolver=spaces_resolver,
+                wf_def_resolver=wf_def_resolver,
             )
 
             # When
