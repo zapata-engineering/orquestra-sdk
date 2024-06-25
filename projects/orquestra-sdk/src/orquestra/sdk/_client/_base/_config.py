@@ -13,6 +13,7 @@ from urllib.parse import ParseResult, urlparse
 
 import filelock
 import orquestra.workflow_shared.exceptions as exceptions
+from orquestra.workflow_shared.env import PASSPORT_FILE_ENV
 from orquestra.workflow_shared.schema.configs import (
     CONFIG_FILE_CURRENT_VERSION,
     ConfigName,
@@ -22,12 +23,7 @@ from orquestra.workflow_shared.schema.configs import (
 )
 from pydantic import ValidationError
 
-from ._env import (
-    CONFIG_PATH_ENV,
-    CURRENT_CLUSTER_ENV,
-    CURRENT_CONFIG_ENV,
-    PASSPORT_FILE_ENV,
-)
+from ._env import CONFIG_PATH_ENV, CURRENT_CLUSTER_ENV, CURRENT_CONFIG_ENV
 
 # Why JSON?
 #  The Python TOML package is unmaintained as of 2022-02-18.
