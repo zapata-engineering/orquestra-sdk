@@ -15,7 +15,9 @@ jobs:
   tests:
     strategy:
       matrix:
-        package: ["projects/orquestra-sdk"]
+        package: ["projects/orquestra-sdk",
+                  "projects/orquestra-workflow-runtime",
+                  "projects/orquestra-workflow-shared"]
     uses: ./.github/workflows/package-coverage.yml
     with:
       target_path: ${{ matrix.package }}
@@ -26,7 +28,9 @@ jobs:
   style:
     strategy:
       matrix:
-        package: ["projects/orquestra-sdk"]
+        package: ["projects/orquestra-sdk",
+                  "projects/orquestra-workflow-runtime",
+                  "projects/orquestra-workflow-shared"]
     uses: ./.github/workflows/package-style.yml
     with:
       target_path: ${{ matrix.package }}
