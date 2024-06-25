@@ -222,6 +222,9 @@ class TestRayRuntimeMethods:
         Tests that validate .get_workflow_run_status().
         """
 
+        @pytest.mark.skipif(
+            sys.version_info < (3, 11), reason="Pickle internals changed in Python 3.11"
+        )
         def test_status_right_after_start(self, runtime: _dag.RayRuntime):
             """
             Verifies that we report status correctly before workflow ends.
