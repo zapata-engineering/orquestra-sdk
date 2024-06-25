@@ -1,3 +1,6 @@
+################################################################################
+# © Copyright 2024 Zapata Computing Inc.
+################################################################################
 import typing as t
 
 from orquestra.workflow_shared import exceptions
