@@ -11,6 +11,7 @@
 🧟 *Deprecations*
 
 * Deprecate `migrate_config_file`. Please contact SDK team if you need your config to be migrated.
+* Deprecation of `WorkflowDef.run()` method when running on CE without specifying workspace.
 
 👩‍🔬 *Experimental*
 
