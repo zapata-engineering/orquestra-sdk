@@ -26,54 +26,26 @@ requires-python = ">= 3.8"
 # version we can easily install and test, even if there are older versions with
 # the same API.
 dependencies = [
-    "orquestra-workflow-shared==0.0.1",
+    "orquestra-workflow-shared>=0.1.0",
     # Schema definition
     "pydantic>1.10.7",
-    # Pickling library
-    "cloudpickle==2.2.1",
-    # We should keep `dill` to make sure old workflows can be unpickled.
-    "dill==0.3.6",
-    # Enhances wrapping of user's functions
-    "wrapt",
-    # Configuration file locking
-    "filelock>=3.3.2",
-    # Parse version strings
-    "packaging>=21",
-    # For different import types in SDK
-    "GitPython",
-    "pip-api>=0.0.30",
     # Python Standard Library Backports
     "importlib_metadata>=4.0",
     "typing-extensions>=4.1.0",
     # Web requests for external services
     "requests>=2.28",
-    # Nice workflow visualizations
-    "graphviz",
-    # CLI utilities
-    "argcomplete",
-    # click 8.1.4 introduced type checking errors
-    # see https://github.com/pallets/click/issues/2558
-    "click>=8.0, != 8.1.4",
-    "cloup>=2.0",
-    "inquirer>=3.0",
-    "tabulate",
-    "rich>=13.5",
-    # For automatic login
-    "aiohttp>=3.9.0",
     # Decoding JWTs
     "PyJWT>=2.6",
     # Capture stdout/stderr
     "wurlitzer>=3.0",
-    # For dremio client
     # pyarrow 16.0 crashed ray workers for unknown reason. Crashes were not
-    # reproducable on mac - so carefull with taking that restriction away.
+    # reproducible on mac - so be careful with taking that restriction away.
     "pyarrow>=10.0,<16.0",
-    "pandas>=1.4",
 ]
 
 [project.optional-dependencies]
 ray = [
-    "ray==2.9.0",
+    "ray==2.24.0",
     "virtualenv>=20.0.24, !=20.21.1",  # Ray depends on this, but it's missing from the base requirements.
     "async-timeout",       # Ray depends on this, but its missing from ray requirements. Can be removed when https://github.com/ray-project/ray/issues/41267 is fixed.
 ]
@@ -90,15 +62,13 @@ dev = [
     "black~=23.7",
     "diff_cover",
     "flake8>=4.0.0",
-    "Flake8-pyproject>=1.2.3",
     "freezegun",
+    "Flake8-pyproject>=1.2.3",
     "isort~=5.9.0",
-    "mlflow-skinny",              # Required for testing snippets in docs.
     "mypy~=0.910",                # bumping caused issues - ORQSDK-966
-    "numpy",
     "pydoclint",                  # Linter for python docstrings. Provides a flake8 plugin.
     "pymarkdownlnt",              # Linter for markdown files.
-    "pyright!=1.1.340,!=1.1.341", # those 2 versions had bug that caused infinite loops
+    "pyright", # those 2 versions had bug that caused infinite loops
     "pytest>=6.2",
     "pytest-cov>=2.12",
     "pytest-dependency",
@@ -106,12 +76,8 @@ dev = [
     "pytest-timeout>=2.0.0",
     "responses>=0.20,!=0.24",
     "ruff>=0.2.0",
-    "scikit-learn",
-    "types-psutil",
-    "types-Pygments",
     "types-requests",
     "types-setuptools",
-    "types-tabulate",
 ]
 
 [project.urls]
@@ -226,6 +192,8 @@ ignore = [
     'DOC201', # Function/method does not have a return section in docstring
     'DOC203', # Return type(s) in docstring not consistent with the return annotation
     'DOC301', # `__init__()` should not have a docstring
+    'DOC601', # Class docstring contains fewer class attributes than actual class attributes
+    'DOC603', # Class docstring attributes are different from actual class attributes
     'W503',   # Line break occurred before a binary operator
 ]
 per-file-ignores = [

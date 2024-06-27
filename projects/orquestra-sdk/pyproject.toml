@@ -26,8 +26,8 @@ requires-python = ">= 3.8"
 # version we can easily install and test, even if there are older versions with
 # the same API.
 dependencies = [
-    "orquestra-workflow-runtime==0.0.1",
-    "orquestra-workflow-shared==0.0.1",
+    "orquestra-workflow-runtime>=0.1.0",
+    "orquestra-workflow-shared>=0.1.0",
 
     # Schema definition
     "pydantic>1.10.7",
@@ -68,15 +68,12 @@ dependencies = [
     # Capture stdout/stderr
     "wurlitzer>=3.0",
     # For dremio client
-    # pyarrow 16.0 crashed ray workers for unknown reason. Crashes were not
-    # reproducable on mac - so carefull with taking that restriction away.
-    "pyarrow>=10.0,<16.0",
     "pandas>=1.4",
 ]
 
 [project.optional-dependencies]
 ray = [
-    "ray==2.9.0",
+    "ray==2.24.0",
     "virtualenv>=20.0.24, !=20.21.1",  # Ray depends on this, but it's missing from the base requirements.
     "async-timeout",       # Ray depends on this, but its missing from ray requirements. Can be removed when https://github.com/ray-project/ray/issues/41267 is fixed.
 ]
@@ -257,6 +254,8 @@ ignore = [
     'DOC201', # Function/method does not have a return section in docstring
     'DOC203', # Return type(s) in docstring not consistent with the return annotation
     'DOC301', # `__init__()` should not have a docstring
+    'DOC601', # Class docstring contains fewer class attributes than actual class attributes
+    'DOC603', # Class docstring attributes are different from actual class attributes
     'W503',   # Line break occurred before a binary operator
 ]
 per-file-ignores = [

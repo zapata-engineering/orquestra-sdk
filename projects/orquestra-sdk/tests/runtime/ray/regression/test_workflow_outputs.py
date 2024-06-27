@@ -6,10 +6,11 @@ from typing import Any, Dict, Tuple, Union
 
 import pytest
 from orquestra.workflow_runtime._ray import _client, _dag
+from orquestra.workflow_runtime._testing import _connections
 from orquestra.workflow_shared.serde import deserialize
 
 from orquestra.sdk._client._base._config._settings import LOCAL_RUNTIME_CONFIGURATION
-from orquestra.sdk._client._base._testing import _connections
+
 
 PRODUCING_SDK_VERSIONS_TO_TEST = ["0.46.0", "0.47.0"]
 BASE_PATH = Path(__file__).parent / "data"

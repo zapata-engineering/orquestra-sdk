@@ -4,9 +4,9 @@
 
 🚨 *Breaking Changes*
 
-🔥 *Features*
+* Update `ray` dependency to version 2.24.0
 
-* Add `orq wf graph` CLI command to generate a graph of a workflow definition.
+🔥 *Features*
 
 🧟 *Deprecations*
 
@@ -18,11 +18,23 @@
 
 💅 *Improvements*
 
-* `orquestra-sdk-base` CPU image is now built on `arm64`
-
 🥷 *Internal*
 
 📃 *Docs*
+
+## v0.65.0
+
+🔥 *Features*
+
+* Add `orq wf graph` CLI command to generate a graph of a workflow definition.
+
+💅 *Improvements*
+
+* `orquestra-sdk-base` CPU image is now built on `arm64`
+
+📃 *Docs*
+
+* Correct docstring of DremioClient to remove erronious reference to `ORQ_DREMIO_HOST`.
 
 ## v0.64.0
 
