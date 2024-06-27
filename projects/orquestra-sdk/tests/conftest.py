@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022 Zapata Computing Inc.
+# © Copyright 2024 Zapata Computing Inc.
 ################################################################################
 """Pytest's requirement to share fixtures across test files.
 """

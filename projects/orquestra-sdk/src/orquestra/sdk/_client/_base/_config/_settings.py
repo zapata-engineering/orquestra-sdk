@@ -1,3 +1,7 @@
+################################################################################
+# © Copyright 2022-2024 Zapata Computing Inc.
+################################################################################
+
 from typing import List
 
 from orquestra.workflow_shared.schema.configs import RuntimeConfiguration, RuntimeName
