@@ -321,7 +321,8 @@ class RuntimeConfig:
 
 
 def migrate_config_file():
-    """Update the stored configs."""
+    """This function is deprecated and no longer functional.
+    It was left out in case some users kept it in their code."""
     warnings.warn(
         "migrate_config_file is deprecated and does nothing. Please contact"
         "SDK team if you need to migrate your config file",
