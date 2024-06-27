@@ -13,11 +13,10 @@ import pytest
 from orquestra.workflow_shared import exceptions
 from orquestra.workflow_shared._spaces._structs import ProjectRef
 from orquestra.workflow_shared.dates import _dates
-from orquestra.workflow_shared.schema.configs import RuntimeName, RuntimeConfiguration
+from orquestra.workflow_shared.schema.configs import RuntimeConfiguration, RuntimeName
 from orquestra.workflow_shared.schema.workflow_run import State
 
 from orquestra.workflow_runtime._ray import _client, _dag, _ray_logs
-
 
 TEST_TIME = _dates.now()
 
