@@ -10,6 +10,8 @@
 
 🧟 *Deprecations*
 
+* Deprecation of `WorkflowDef.run()` method when running on CE without specifying workspace.
+
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*

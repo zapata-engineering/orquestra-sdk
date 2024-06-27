@@ -348,7 +348,9 @@ class TestAPI:
         # GIVEN
         ip_run = sig().run(sdk.RuntimeConfig.in_process())
         ray_run = sig().run(sdk.RuntimeConfig.ray())
-        ce_run = sig().run(sdk.RuntimeConfig.load("CE"))
+        ce_run = sig().run(
+            sdk.RuntimeConfig.load("CE"), workspace_id="ws", project_id="proj"
+        )
         for run in [ip_run, ray_run]:
             run.wait_until_finished()
 
@@ -387,7 +389,10 @@ class TestAPI:
         # GIVEN
         ip_run = wf_return_multiple_packed_values().run(sdk.RuntimeConfig.in_process())
         ray_run = wf_return_multiple_packed_values().run(sdk.RuntimeConfig.ray())
-        ce_run = wf_return_multiple_packed_values().run(sdk.RuntimeConfig.load("CE"))
+
+        ce_run = wf_return_multiple_packed_values().run(
+            sdk.RuntimeConfig.load("CE"), workspace_id="ws", project_id="proj"
+        )
 
         for run in [ip_run, ray_run]:
             run.wait_until_finished()

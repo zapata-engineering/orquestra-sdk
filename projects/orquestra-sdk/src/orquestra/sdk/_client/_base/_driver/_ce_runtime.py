@@ -162,6 +162,13 @@ class CERuntime(RuntimeInterface):
         Returns:
             the workflow run ID.
         """
+        if project is None or project.workspace_id is None:
+            warnings.warn(
+                "Please specify workspace ID directly for submitting CE workflows."
+                " Support for default workspace will be removed in the next release",
+                category=PendingDeprecationWarning,
+            )
+
         max_invocation_resources = _get_max_resources(workflow_def)
 
         if workflow_def.resources is not None:
