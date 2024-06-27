@@ -13,10 +13,8 @@ import pytest
 from orquestra.workflow_shared import exceptions
 from orquestra.workflow_shared._spaces._structs import ProjectRef
 from orquestra.workflow_shared.dates import _dates
-from orquestra.workflow_shared.schema.configs import RuntimeName
+from orquestra.workflow_shared.schema.configs import RuntimeName, RuntimeConfiguration
 from orquestra.workflow_shared.schema.workflow_run import State
-
-from orquestra.sdk._client._base._config._settings import RuntimeConfiguration
 
 from orquestra.workflow_runtime._ray import _client, _dag, _ray_logs
 
@@ -277,7 +275,7 @@ class TestRayRuntime:
             def test_direct_ray(
                 monkeypatch,
                 tmp_path: Path,
-                runtime_config: RuntimeConfiguration,
+                runtime_config,
                 mock_ray_startup,
             ):
                 """
@@ -310,7 +308,7 @@ class TestRayRuntime:
             def test_direct_ray(
                 monkeypatch,
                 tmp_path: Path,
-                runtime_config: RuntimeConfiguration,
+                runtime_config,
                 mock_ray_startup,
             ):
                 """
