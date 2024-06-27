@@ -96,7 +96,7 @@ class TestSecrets:
     @pytest.fixture
     def config_entry(monkeypatch, base_uri):
         monkeypatch.setattr(
-            orquestra.sdk._client._base._config._fs,
+            orquestra.sdk._client._secrets._auth,
             "read_config",
             Mock(
                 return_value=configs.RuntimeConfiguration(

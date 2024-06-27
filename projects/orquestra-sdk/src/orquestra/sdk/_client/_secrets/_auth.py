@@ -7,7 +7,7 @@ from orquestra.workflow_shared import exceptions
 from orquestra.workflow_shared.schema.configs import ConfigName
 from orquestra.workflow_shared.secrets import SecretsClient
 
-from .._base import _config
+from .._base._config._fs import read_config
 
 
 def _read_config_opts(config_name: ConfigName):
@@ -17,7 +17,7 @@ def _read_config_opts(config_name: ConfigName):
         )
 
     try:
-        cfg = _config.read_config(config_name=config_name)
+        cfg = read_config(config_name=config_name)
     except exceptions.ConfigNameNotFoundError:
         raise
 
