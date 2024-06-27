@@ -13,7 +13,7 @@ from urllib.parse import ParseResult, urlparse
 
 import filelock
 import orquestra.workflow_shared.exceptions as exceptions
-
+from orquestra.workflow_shared.env import PASSPORT_FILE_ENV
 from orquestra.workflow_shared.schema.configs import (
     CONFIG_FILE_CURRENT_VERSION,
     ConfigName,
@@ -21,14 +21,9 @@ from orquestra.workflow_shared.schema.configs import (
     RuntimeConfigurationFile,
     RuntimeName,
 )
-from orquestra.workflow_shared.env import PASSPORT_FILE_ENV
 from pydantic import ValidationError
 
-from .._env import (
-    CONFIG_PATH_ENV,
-    CURRENT_CLUSTER_ENV,
-    CURRENT_CONFIG_ENV,
-)
+from .._env import CONFIG_PATH_ENV, CURRENT_CLUSTER_ENV, CURRENT_CONFIG_ENV
 from . import _settings
 
 

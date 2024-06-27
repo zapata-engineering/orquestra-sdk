@@ -11,7 +11,6 @@ from orquestra.workflow_shared.serde import deserialize
 
 from orquestra.sdk._client._base._config._settings import LOCAL_RUNTIME_CONFIGURATION
 
-
 PRODUCING_SDK_VERSIONS_TO_TEST = ["0.46.0", "0.47.0"]
 BASE_PATH = Path(__file__).parent / "data"
 
