@@ -44,6 +44,7 @@ else:
     WorkflowStorage = WorkflowStorage
     Storage = RayStorage
     RuntimeEnv = ray.runtime_env.RuntimeEnv
+    RuntimeEnvConfig = ray.runtime_env.RuntimeEnvConfig
     FunctionNode = ray.dag.FunctionNode
     LogPrefixActorName = ray._private.ray_constants.LOG_PREFIX_ACTOR_NAME
     LogPrefixTaskName = ray._private.ray_constants.LOG_PREFIX_TASK_NAME

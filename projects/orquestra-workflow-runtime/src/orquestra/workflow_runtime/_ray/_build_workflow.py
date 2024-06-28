@@ -31,6 +31,7 @@ from . import _client, _id_gen
 from ._dirs import redirected_logs_dir
 from ._env import RAY_DOWNLOAD_GIT_IMPORTS_ENV, RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV
 from ._logs import _markers
+from ._ray_settings import VENV_SETUP_TIMEOUT_SECONDS
 from ._wf_metadata import InvUserMetadata, pydatic_to_json_dict
 
 DEFAULT_IMAGE_TEMPLATE = "hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:{}"
@@ -557,12 +558,14 @@ def make_ray_dag(
 
         pip = _import_pip_env(invocation, workflow_def, imports_pip_strings)
         env_vars = invocation.env_vars
-        # if we have pip env setting, or env_vars then we create runtime object
-        # otherwise we just leave it as None
-        runtime_env = (
-            _client.RuntimeEnv(pip=pip if len(pip) > 0 else None, env_vars=env_vars)
-            if len(pip) > 0 or env_vars
-            else None
+
+        runtime_env_config = _client.RuntimeEnvConfig(
+            setup_timeout_seconds=VENV_SETUP_TIMEOUT_SECONDS
+        )
+        runtime_env = _client.RuntimeEnv(
+            pip=pip if len(pip) > 0 else None,
+            env_vars=env_vars if env_vars else None,
+            config=runtime_env_config,
         )
 
         ray_options = {
