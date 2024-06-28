@@ -147,7 +147,7 @@ class CERuntime(RuntimeInterface):
             client: The DriverClient through which the runtime should communicate.
             verbose: if `True`, CERuntime may print debug information about
                 its inner working to stderr.
-            token: bearers token used to authenticate with the cluster
+            token: bearer's token used to authenticate with the cluster
 
         Raises:
             RuntimeConfigError: when the config is invalid.
