@@ -296,7 +296,7 @@ it usually means ``pip`` has a problem with resolving and installing dependent p
 Usually, this suggests a problem with mutually exclusive constraints in your ``pip`` packages, also known as `dependency hell <https://en.wikipedia.org/wiki/Dependency_hell>`_.
 ``pip`` desperately tries all combinations of dependencies, and the dependencies of dependencies, which can take a long time, without a guarantee of finding a combination that matches all version constraints.
 In Orquestra, this process needs to finish under 10 minutes, or the workflow is stopped.
-For more information about ``pip``, dependency resolution, and backtracking, see: `Dependency Resolution - pip documentation<https://pip.pypa.io/en/stable/topics/dependency-resolution/>`_.
+For more information about ``pip``, dependency resolution, and backtracking, see: `Dependency Resolution - pip documentation <https://pip.pypa.io/en/stable/topics/dependency-resolution/>`_.
 
 In normal circumstances, ``pip`` emits prints warnings when an excessive backtracking occurs, but unfortunately these logs don't always show up in Orquestra.
 Orquestra delegates the dependency installation to Ray, which takes control over the installation process with ``pip``.
