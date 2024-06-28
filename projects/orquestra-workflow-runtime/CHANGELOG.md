@@ -6,6 +6,8 @@
 
 🔥 *Features*
 
+* Increase Ray venv setup timeout from 10 mins to 1 hour
+
 🧟 *Deprecations*
 
 👩‍🔬 *Experimental*
