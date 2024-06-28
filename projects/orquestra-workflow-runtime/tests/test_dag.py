@@ -274,7 +274,7 @@ class TestRayRuntime:
             def test_direct_ray(
                 monkeypatch,
                 tmp_path: Path,
-                runtime_config: RuntimeConfiguration,
+                runtime_config,
                 mock_ray_startup,
             ):
                 """
@@ -307,7 +307,7 @@ class TestRayRuntime:
             def test_direct_ray(
                 monkeypatch,
                 tmp_path: Path,
-                runtime_config: RuntimeConfiguration,
+                runtime_config,
                 mock_ray_startup,
             ):
                 """

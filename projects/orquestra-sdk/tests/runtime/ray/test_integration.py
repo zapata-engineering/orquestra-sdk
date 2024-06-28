@@ -27,7 +27,7 @@ from orquestra.workflow_shared.schema.responses import JSONResult
 from orquestra.workflow_shared.schema.workflow_run import State, WorkflowRunId
 
 from orquestra import sdk
-from orquestra.sdk._client._base._config import LOCAL_RUNTIME_CONFIGURATION
+from orquestra.sdk._client._base._config._settings import LOCAL_RUNTIME_CONFIGURATION
 from orquestra.sdk._client._base._testing import _example_wfs, _ipc
 from orquestra.sdk._client._base._testing._example_wfs import (
     workflow_parametrised_with_resources,

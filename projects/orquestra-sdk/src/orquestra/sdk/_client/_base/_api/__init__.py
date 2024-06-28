@@ -7,7 +7,6 @@ We re-export symbols here for grouping concepts under the "api" umbrella, e.g.
 "_api.WorkflowRun".
 """
 
-from ._config import RuntimeConfig, migrate_config_file
 from ._task_run import CurrentRunIDs, TaskRun, current_run_ids
 from ._wf_run import (
     CurrentExecutionCtx,
@@ -18,13 +17,11 @@ from ._wf_run import (
 )
 
 __all__ = [
-    "RuntimeConfig",
     "TaskRun",
     "current_run_ids",
     "WorkflowRun",
     "list_workflow_runs",
     "list_workflow_run_summaries",
-    "migrate_config_file",
     "CurrentRunIDs",
     "current_exec_ctx",
     "CurrentExecutionCtx",

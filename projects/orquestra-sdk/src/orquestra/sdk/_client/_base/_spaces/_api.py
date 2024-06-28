@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2024 Zapata Computing Inc.
 ################################################################################
 import typing as t
 
@@ -8,7 +8,7 @@ from orquestra.workflow_shared.exceptions import ConfigNameNotFoundError
 from orquestra.workflow_shared.schema.configs import ConfigName
 from orquestra.workflow_shared.schema.workflow_run import WorkspaceId
 
-from .._api._config import RuntimeConfig, resolve_config
+from .._config import RuntimeConfig, resolve_config
 
 
 def list_workspaces(

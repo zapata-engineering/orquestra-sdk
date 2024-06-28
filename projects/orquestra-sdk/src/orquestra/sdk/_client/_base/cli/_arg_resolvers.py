@@ -26,7 +26,7 @@ from orquestra.workflow_shared.schema.workflow_run import (
 )
 
 from ..._base import _services
-from ..._base._config import IN_PROCESS_CONFIG_NAME
+from ..._base._config._settings import IN_PROCESS_CONFIG_NAME
 from . import _repos
 from ._ui import _presenters, _prompts
 

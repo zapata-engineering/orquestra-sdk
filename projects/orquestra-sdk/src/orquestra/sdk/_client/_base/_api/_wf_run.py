@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022-2024 Zapata Computing Inc.
 ################################################################################
 
 """User-facing ``WorkflowRun`` object.
@@ -54,10 +54,10 @@ from orquestra.workflow_shared.schema.workflow_run import (
     WorkspaceId,
 )
 
-from .._config import IN_PROCESS_CONFIG_NAME, RAY_CONFIG_NAME_ALIAS
+from .._config import RuntimeConfig, resolve_config
+from .._config._settings import IN_PROCESS_CONFIG_NAME, RAY_CONFIG_NAME_ALIAS
 from .._env import CURRENT_CLUSTER_ENV, CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
 from .._spaces._resolver import resolve_studio_ref, resolve_studio_workspace_ref
-from ._config import RuntimeConfig, resolve_config
 from ._task_run import TaskRun
 
 

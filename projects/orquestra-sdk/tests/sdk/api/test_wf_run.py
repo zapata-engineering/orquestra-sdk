@@ -51,7 +51,7 @@ from orquestra.workflow_shared.schema.workflow_run import TaskRun as TaskRunMode
 from orquestra.workflow_shared.schema.workflow_run import WorkspaceId
 
 from orquestra.sdk import current_exec_ctx
-from orquestra.sdk._client._base import _api, _dsl, _traversal, _workflow
+from orquestra.sdk._client._base import _api, _config, _dsl, _traversal, _workflow
 from orquestra.sdk._client._base._api._task_run import TaskRun
 from orquestra.sdk._client._base._env import (
     CURRENT_CLUSTER_ENV,
@@ -139,7 +139,7 @@ class TestRunningInProcess:
     class TestWithConfig:
         @staticmethod
         def test_pass_config():
-            config = _api.RuntimeConfig.in_process()
+            config = _config.RuntimeConfig.in_process()
             run = wf_pass_tuple().run(config)
             results = run.get_results()
 
@@ -254,7 +254,7 @@ class TestWorkflowRun:
                 run_id = "wf.mine.1234"
 
                 # Set up config
-                config = _api.RuntimeConfig(
+                config = _config.RuntimeConfig(
                     runtime_name=RuntimeName.IN_PROCESS,
                     name="name",
                     bypass_factory_methods=True,
@@ -288,13 +288,13 @@ class TestWorkflowRun:
 
                 # Set up config
                 config_name = "ray"
-                config_obj = _api.RuntimeConfig(
+                config_obj = _config.RuntimeConfig(
                     runtime_name=RuntimeName.RAY_LOCAL,
                     name=config_name,
                     bypass_factory_methods=True,
                 )
                 monkeypatch.setattr(
-                    _api.RuntimeConfig, "load", Mock(return_value=config_obj)
+                    _config.RuntimeConfig, "load", Mock(return_value=config_obj)
                 )
 
                 # Set up runtime
@@ -343,14 +343,14 @@ class TestWorkflowRun:
                         run_id = sentinel.wf_run_id
 
                         # Set up config
-                        config_obj = _api.RuntimeConfig.ray()
+                        config_obj = _config.RuntimeConfig.ray()
                         monkeypatch.setattr(
-                            _api.RuntimeConfig,
+                            _config.RuntimeConfig,
                             "list_configs",
                             Mock(return_value=[config_obj.name]),
                         )
                         monkeypatch.setattr(
-                            _api.RuntimeConfig, "load", Mock(return_value=config_obj)
+                            _config.RuntimeConfig, "load", Mock(return_value=config_obj)
                         )
 
                         # Set up runtime
@@ -379,21 +379,21 @@ class TestWorkflowRun:
                         run_id = sentinel.wf_run_id
 
                         # Set up configs
-                        config1 = _api.RuntimeConfig.ray()
-                        config2 = _api.RuntimeConfig.ce(
+                        config1 = _config.RuntimeConfig.ray()
+                        config2 = _config.RuntimeConfig.ce(
                             uri="https://cluster2.example.com", token="a token"
                         )
                         configs_dict = {
                             config.name: config for config in [config1, config2]
                         }
                         monkeypatch.setattr(
-                            _api.RuntimeConfig,
+                            _config.RuntimeConfig,
                             "list_configs",
                             Mock(return_value=list(configs_dict.keys())),
                         )
 
                         monkeypatch.setattr(
-                            _api.RuntimeConfig, "load", configs_dict.__getitem__
+                            _config.RuntimeConfig, "load", configs_dict.__getitem__
                         )
 
                         # Set up runtimes
@@ -429,21 +429,21 @@ class TestWorkflowRun:
                         run_id = sentinel.wf_run_id
 
                         # Set up configs
-                        config1 = _api.RuntimeConfig.ray()
-                        config2 = _api.RuntimeConfig.ce(
+                        config1 = _config.RuntimeConfig.ray()
+                        config2 = _config.RuntimeConfig.ce(
                             uri="https://cluster2.example.com", token="a token"
                         )
                         configs_dict = {
                             config.name: config for config in [config1, config2]
                         }
                         monkeypatch.setattr(
-                            _api.RuntimeConfig,
+                            _config.RuntimeConfig,
                             "list_configs",
                             Mock(return_value=list(configs_dict.keys())),
                         )
 
                         monkeypatch.setattr(
-                            _api.RuntimeConfig, "load", configs_dict.__getitem__
+                            _config.RuntimeConfig, "load", configs_dict.__getitem__
                         )
 
                         # Set up runtimes
@@ -479,11 +479,11 @@ class TestWorkflowRun:
                         run_id = sentinel.wf_run_id
 
                         # Set up configs
-                        config1 = _api.RuntimeConfig.ray()
-                        config2 = _api.RuntimeConfig.ce(
+                        config1 = _config.RuntimeConfig.ray()
+                        config2 = _config.RuntimeConfig.ce(
                             uri="https://cluster2.example.com", token="a token"
                         )
-                        config3 = _api.RuntimeConfig.ce(
+                        config3 = _config.RuntimeConfig.ce(
                             uri="https://cluster3.example.com", token="a token"
                         )
                         configs_dict = {
@@ -491,13 +491,13 @@ class TestWorkflowRun:
                             for config in [config1, config2, config3]
                         }
                         monkeypatch.setattr(
-                            _api.RuntimeConfig,
+                            _config.RuntimeConfig,
                             "list_configs",
                             Mock(return_value=list(configs_dict.keys())),
                         )
 
                         monkeypatch.setattr(
-                            _api.RuntimeConfig, "load", configs_dict.__getitem__
+                            _config.RuntimeConfig, "load", configs_dict.__getitem__
                         )
 
                         # Set up runtimes
@@ -539,11 +539,11 @@ class TestWorkflowRun:
                         run_id = sentinel.wf_run_id
 
                         # Set up configs
-                        config1 = _api.RuntimeConfig.ray()
-                        config2 = _api.RuntimeConfig.ce(
+                        config1 = _config.RuntimeConfig.ray()
+                        config2 = _config.RuntimeConfig.ce(
                             uri="https://cluster2.example.com", token="a token"
                         )
-                        config3 = _api.RuntimeConfig.ce(
+                        config3 = _config.RuntimeConfig.ce(
                             uri="https://cluster3.example.com", token="a token"
                         )
                         # pretend that config2 is old QE config
@@ -554,13 +554,13 @@ class TestWorkflowRun:
                             for config in [config1, config2, config3]
                         }
                         monkeypatch.setattr(
-                            _api.RuntimeConfig,
+                            _config.RuntimeConfig,
                             "list_configs",
                             Mock(return_value=list(configs_dict.keys())),
                         )
 
                         monkeypatch.setattr(
-                            _api.RuntimeConfig, "load", configs_dict.__getitem__
+                            _config.RuntimeConfig, "load", configs_dict.__getitem__
                         )
 
                         # Set up runtimes
@@ -602,14 +602,14 @@ class TestWorkflowRun:
                         run_id = sentinel.wf_run_id
 
                         # Set up configs
-                        config_obj = _api.RuntimeConfig.ray()
+                        config_obj = _config.RuntimeConfig.ray()
                         monkeypatch.setattr(
-                            _api.RuntimeConfig,
+                            _config.RuntimeConfig,
                             "list_configs",
                             Mock(return_value=[config_obj.name]),
                         )
                         monkeypatch.setattr(
-                            _api.RuntimeConfig, "load", Mock(return_value=config_obj)
+                            _config.RuntimeConfig, "load", Mock(return_value=config_obj)
                         )
 
                         # Set up runtimes
@@ -643,14 +643,14 @@ class TestWorkflowRun:
                         run_id = sentinel.wf_run_id
 
                         # Set up configs
-                        config_obj = _api.RuntimeConfig.ray()
+                        config_obj = _config.RuntimeConfig.ray()
                         monkeypatch.setattr(
-                            _api.RuntimeConfig,
+                            _config.RuntimeConfig,
                             "list_configs",
                             Mock(return_value=[config_obj.name]),
                         )
                         monkeypatch.setattr(
-                            _api.RuntimeConfig, "load", Mock(return_value=config_obj)
+                            _config.RuntimeConfig, "load", Mock(return_value=config_obj)
                         )
 
                         # Set up runtimes
@@ -683,20 +683,20 @@ class TestWorkflowRun:
                         run_id = sentinel.wf_run_id
 
                         # Set up configs
-                        config1 = _api.RuntimeConfig.ray()
+                        config1 = _config.RuntimeConfig.ray()
                         uri2 = "https://cluster2.example.com"
-                        config2 = _api.RuntimeConfig.ce(uri=uri2, token="a token")
+                        config2 = _config.RuntimeConfig.ce(uri=uri2, token="a token")
                         configs_dict = {
                             config.name: config for config in [config1, config2]
                         }
                         monkeypatch.setattr(
-                            _api.RuntimeConfig,
+                            _config.RuntimeConfig,
                             "list_configs",
                             Mock(return_value=list(configs_dict.keys())),
                         )
 
                         monkeypatch.setattr(
-                            _api.RuntimeConfig, "load", configs_dict.__getitem__
+                            _config.RuntimeConfig, "load", configs_dict.__getitem__
                         )
 
                         # Set up runtimes
@@ -739,20 +739,20 @@ class TestWorkflowRun:
                         run_id = sentinel.wf_run_id
 
                         # Set up configs
-                        config1 = _api.RuntimeConfig.ray()
+                        config1 = _config.RuntimeConfig.ray()
                         uri2 = "https://cluster2.example.com"
-                        config2 = _api.RuntimeConfig.ce(uri=uri2, token="a token")
+                        config2 = _config.RuntimeConfig.ce(uri=uri2, token="a token")
                         configs_dict = {
                             config.name: config for config in [config1, config2]
                         }
                         monkeypatch.setattr(
-                            _api.RuntimeConfig,
+                            _config.RuntimeConfig,
                             "list_configs",
                             Mock(return_value=list(configs_dict.keys())),
                         )
 
                         monkeypatch.setattr(
-                            _api.RuntimeConfig, "load", configs_dict.__getitem__
+                            _config.RuntimeConfig, "load", configs_dict.__getitem__
                         )
 
                         # Set up runtimes
@@ -796,10 +796,10 @@ class TestWorkflowRun:
             return sample_wf_def.model
 
         @pytest.mark.parametrize(
-            "config", ["in_process", _api.RuntimeConfig.in_process()]
+            "config", ["in_process", _config.RuntimeConfig.in_process()]
         )
         def test_happy_path(
-            self, wf_ir_def: ir.WorkflowDef, config: _api.RuntimeConfig
+            self, wf_ir_def: ir.WorkflowDef, config: _config.RuntimeConfig
         ):
             wf_run = _api.WorkflowRun.start_from_ir(wf_ir_def, config)
 
@@ -810,7 +810,7 @@ class TestWorkflowRun:
                 _api.WorkflowRun.start_from_ir(wf_ir_def, 123)  # type: ignore
 
         def test_different_runtime(self, wf_ir_def: ir.WorkflowDef, mock_runtime: Mock):
-            mock_config = MagicMock(_api.RuntimeConfig)
+            mock_config = MagicMock(_config.RuntimeConfig)
             mock_config._runtime_name = "runtime_name"
             mock_config._get_runtime.return_value = mock_runtime
 
@@ -1661,7 +1661,7 @@ class TestWorkflowRun:
     class TestGetConfig:
         @staticmethod
         def test_happy_path():
-            config = _api.RuntimeConfig.in_process()
+            config = _config.RuntimeConfig.in_process()
             wf = wf_pass_tuple().run(config=config)
 
             assert wf.config == config
@@ -1754,10 +1754,10 @@ class TestListWorkflows:
         runtime = Mock(RuntimeInterface)
         # For getting workflow ID
         runtime.list_workflow_runs.return_value = [run, run, run]
-        mock_config = MagicMock(_api.RuntimeConfig)
+        mock_config = MagicMock(_config.RuntimeConfig)
         mock_config._get_runtime.return_value = runtime
         monkeypatch.setattr(
-            _api.RuntimeConfig, "load", MagicMock(return_value=mock_config)
+            _config.RuntimeConfig, "load", MagicMock(return_value=mock_config)
         )
 
         return runtime
@@ -1888,11 +1888,11 @@ class TestListWorkflows:
         monkeypatch.setenv("ORQ_CURRENT_PROJECT", "env_project")
 
         # overwrite config name
-        mock_config = MagicMock(_api.RuntimeConfig)
+        mock_config = MagicMock(_config.RuntimeConfig)
         mock_config._get_runtime.return_value = mock_config_runtime
         mock_config.name = "auto"
         monkeypatch.setattr(
-            _api.RuntimeConfig, "load", MagicMock(return_value=mock_config)
+            _config.RuntimeConfig, "load", MagicMock(return_value=mock_config)
         )
 
         # WHEN
@@ -1939,10 +1939,10 @@ class TestListWorkflowSummaries:
         runtime = Mock(RuntimeInterface)
         # For getting workflow ID
         runtime.list_workflow_run_summaries.return_value = [run, run, run]
-        mock_config = MagicMock(_api.RuntimeConfig)
+        mock_config = MagicMock(_config.RuntimeConfig)
         mock_config._get_runtime.return_value = runtime
         monkeypatch.setattr(
-            _api.RuntimeConfig, "load", MagicMock(return_value=mock_config)
+            _config.RuntimeConfig, "load", MagicMock(return_value=mock_config)
         )
 
         return runtime
@@ -2073,11 +2073,11 @@ class TestListWorkflowSummaries:
         monkeypatch.setenv("ORQ_CURRENT_PROJECT", "env_project")
 
         # overwrite config name
-        mock_config = MagicMock(_api.RuntimeConfig)
+        mock_config = MagicMock(_config.RuntimeConfig)
         mock_config._get_runtime.return_value = mock_config_runtime
         mock_config.name = "auto"
         monkeypatch.setattr(
-            _api.RuntimeConfig, "load", MagicMock(return_value=mock_config)
+            _config.RuntimeConfig, "load", MagicMock(return_value=mock_config)
         )
 
         # WHEN
@@ -2175,7 +2175,7 @@ class TestProjectId:
         monkeypatch.setattr(
             InProcessRuntime, "create_workflow_run", workflow_create_mock
         )
-        monkeypatch.setattr(_api._config.RuntimeConfig, "name", "auto")
+        monkeypatch.setattr(_config.RuntimeConfig, "name", "auto")
         with raises:
             wf_def.run("in_process", workspace_id=workspace_id, project_id=project_id)
             workflow_create_mock.assert_called_once_with(wf_def.model, expected, False)
@@ -2195,10 +2195,10 @@ class TestListWorkspaces:
         runtime = Mock(RuntimeInterface)
         # For getting workflow ID
         runtime.list_workspaces.return_value = [ws, ws]
-        mock_config = MagicMock(_api.RuntimeConfig)
+        mock_config = MagicMock(_config.RuntimeConfig)
         mock_config._get_runtime.return_value = runtime
         monkeypatch.setattr(
-            _api.RuntimeConfig, "load", MagicMock(return_value=mock_config)
+            _config.RuntimeConfig, "load", MagicMock(return_value=mock_config)
         )
 
         return runtime
@@ -2228,10 +2228,10 @@ class TestListProjects:
         runtime = Mock(RuntimeInterface)
         # For getting workflow ID
         runtime.list_projects.return_value = [ws, ws]
-        mock_config = MagicMock(_api.RuntimeConfig)
+        mock_config = MagicMock(_config.RuntimeConfig)
         mock_config._get_runtime.return_value = runtime
         monkeypatch.setattr(
-            _api.RuntimeConfig, "load", MagicMock(return_value=mock_config)
+            _config.RuntimeConfig, "load", MagicMock(return_value=mock_config)
         )
 
         return runtime

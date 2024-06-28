@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022-2024 Zapata Computing Inc.
 ################################################################################
 """
 Tests for orquestra.sdk._base.api_cfg._config.
@@ -9,18 +9,14 @@ import json
 import typing as t
 import warnings
 from pathlib import Path
-from unittest.mock import mock_open, patch
 
 import pytest
 from orquestra.workflow_shared import exceptions
 from orquestra.workflow_shared.exceptions import ConfigNameNotFoundError
-from orquestra.workflow_shared.schema.configs import (
-    CONFIG_FILE_CURRENT_VERSION,
-    RuntimeName,
-)
+from orquestra.workflow_shared.schema.configs import RuntimeName
 
-from orquestra.sdk._client._base import _config
-from orquestra.sdk._client._base._api import _config as api_cfg
+from orquestra.sdk._client._base import _config as api_cfg
+from orquestra.sdk._client._base._config import _settings
 
 from ..data.configs import TEST_CONFIG_JSON, TEST_CONFIGS_DICT
 
@@ -225,10 +221,10 @@ class TestRuntimeConfiguration:
             config_names = api_cfg.RuntimeConfig.list_configs()
 
             assert config_names == [name for name in TEST_CONFIGS_DICT] + list(
-                _config.UNIQUE_CONFIGS
+                _settings.UNIQUE_CONFIGS
             )
             # this config name should appear only when proper env var is set
-            assert _config.AUTO_CONFIG_NAME not in config_names
+            assert _settings.AUTO_CONFIG_NAME not in config_names
 
         @staticmethod
         def test_custom_file_location(
@@ -239,7 +235,7 @@ class TestRuntimeConfiguration:
             config_names = api_cfg.RuntimeConfig.list_configs()
 
             assert config_names == [name for name in TEST_CONFIGS_DICT] + list(
-                _config.UNIQUE_CONFIGS
+                _settings.UNIQUE_CONFIGS
             )
 
         @staticmethod
@@ -249,7 +245,7 @@ class TestRuntimeConfiguration:
 
             config_names = api_cfg.RuntimeConfig.list_configs()
 
-            assert config_names == list(_config.UNIQUE_CONFIGS)
+            assert config_names == list(_settings.UNIQUE_CONFIGS)
 
         @staticmethod
         def test_no_configs_key(patch_config_location):
@@ -258,14 +254,14 @@ class TestRuntimeConfiguration:
 
             config_names = api_cfg.RuntimeConfig.list_configs()
 
-            assert config_names == list(_config.UNIQUE_CONFIGS)
+            assert config_names == list(_settings.UNIQUE_CONFIGS)
 
         @staticmethod
         def test_auto_config_name(monkeypatch, tmp_config_json):
             monkeypatch.setenv("ORQUESTRA_PASSPORT_FILE", "some_file_path")
             config_names = api_cfg.RuntimeConfig.list_configs()
 
-            assert _config.AUTO_CONFIG_NAME in config_names
+            assert _settings.AUTO_CONFIG_NAME in config_names
 
     class TestLoad:
         @pytest.mark.parametrize("config_name", [name for name in TEST_CONFIGS_DICT])
@@ -406,257 +402,11 @@ class TestRuntimeConfiguration:
                         api_cfg.RuntimeConfig.load("auto")
 
 
-@pytest.mark.parametrize(
-    "input_config_file, expected_output_config_file, expected_stdout",
-    [
-        (  # No changes required
-            {
-                "configs": {
-                    "single_config_no_changes": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {"temp_dir": "test_temp_dir"},
-                    }
-                },
-                "version": CONFIG_FILE_CURRENT_VERSION,
-            },
-            {
-                "configs": {
-                    "single_config_no_changes": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {"temp_dir": "test_temp_dir"},
-                    }
-                },
-                "version": CONFIG_FILE_CURRENT_VERSION,
-            },
-            ["No changes required for file"],
-        ),
-        (  # 2 config files, only one of which needs changing"
-            {
-                "configs": {
-                    "2_configs_1_needs_changing": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {},
-                    },
-                    "not_this_one": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {"temp_dir": None},
-                    },
-                },
-                "version": CONFIG_FILE_CURRENT_VERSION,
-            },
-            {
-                "configs": {
-                    "2_configs_1_needs_changing": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {"temp_dir": None},
-                    },
-                    "not_this_one": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {"temp_dir": None},
-                    },
-                },
-                "version": CONFIG_FILE_CURRENT_VERSION,
-            },
-            [
-                "Successfully migrated file ",
-                f" to version {CONFIG_FILE_CURRENT_VERSION}. Updated 1 entry:\n - 2_configs_1_needs_changing",  # NOQA E501
-            ],
-        ),
-        (  # 1 config that needs changing, has additional fields that shouldn't change.
-            {
-                "configs": {
-                    "single_config_with_additional_fields": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {"blah": "blah_val"},
-                    }
-                },
-                "version": CONFIG_FILE_CURRENT_VERSION,
-            },
-            {
-                "configs": {
-                    "single_config_with_additional_fields": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {
-                            "blah": "blah_val",
-                            "temp_dir": None,
-                        },
-                    }
-                },
-                "version": CONFIG_FILE_CURRENT_VERSION,
-            },
-            [
-                "Successfully migrated file ",
-                f" to version {CONFIG_FILE_CURRENT_VERSION}. Updated 1 entry:\n - single_config_with_additional_fields",  # NOQA E501
-            ],
-        ),
-        (  # multiple configs, all need updating
-            {
-                "configs": {
-                    "multiple_configs_need_updating": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {},
-                    },
-                    "this_one_too": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {
-                            "blah": "other_blah_val",
-                        },
-                    },
-                },
-                "version": CONFIG_FILE_CURRENT_VERSION,
-            },
-            {
-                "configs": {
-                    "multiple_configs_need_updating": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {
-                            "temp_dir": None,
-                        },
-                    },
-                    "this_one_too": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {
-                            "blah": "other_blah_val",
-                            "temp_dir": None,
-                        },
-                    },
-                },
-                "version": CONFIG_FILE_CURRENT_VERSION,
-            },
-            [
-                "Successfully migrated file ",
-                f" to version {CONFIG_FILE_CURRENT_VERSION}. Updated 2 entries:\n - multiple_configs_need_updating\n - this_one_too",  # NOQA E501
-            ],
-        ),
-        (  # Mix of CE and Ray configs - only ray should be updated.
-            {
-                "configs": {
-                    "mix_of_CE_and_RAY": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {},
-                    },
-                    "update_me": {"runtime_name": "RAY_LOCAL", "runtime_options": {}},
-                    "but_not_me": {"runtime_name": "CE_REMOTE", "runtime_options": {}},
-                },
-                "version": CONFIG_FILE_CURRENT_VERSION,
-            },
-            {
-                "configs": {
-                    "mix_of_CE_and_RAY": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {
-                            "temp_dir": None,
-                        },
-                    },
-                    "update_me": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {
-                            "temp_dir": None,
-                        },
-                    },
-                    "but_not_me": {"runtime_name": "CE_REMOTE", "runtime_options": {}},
-                },
-                "version": CONFIG_FILE_CURRENT_VERSION,
-            },
-            [
-                "Successfully migrated file ",
-                f" to version {CONFIG_FILE_CURRENT_VERSION}. Updated 2 entries:\n - mix_of_CE_and_RAY\n - update_me",  # NOQA E501
-            ],
-        ),
-        (  # version alone needs updating
-            {
-                "configs": {
-                    "version_alone_needs_changing": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {"temp_dir": "test_temp_dir"},
-                    }
-                },
-                "version": "0.0.0",
-            },
-            {
-                "configs": {
-                    "version_alone_needs_changing": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {"temp_dir": "test_temp_dir"},
-                    }
-                },
-                "version": CONFIG_FILE_CURRENT_VERSION,
-            },
-            [
-                "Successfully migrated file ",
-                f" to version {CONFIG_FILE_CURRENT_VERSION}. Updated 0 entries.",
-            ],
-        ),
-        (  # version and configs need updating
-            {
-                "configs": {
-                    "version_and_config_need_updating": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {},
-                    }
-                },
-                "version": "0.0.0",
-            },
-            {
-                "configs": {
-                    "version_and_config_need_updating": {
-                        "runtime_name": "RAY_LOCAL",
-                        "runtime_options": {"temp_dir": None},
-                    }
-                },
-                "version": CONFIG_FILE_CURRENT_VERSION,
-            },
-            [
-                "Successfully migrated file ",
-                f" to version {CONFIG_FILE_CURRENT_VERSION}. Updated 1 entry:\n - version_and_config_need_updating",  # NOQA E501
-            ],
-        ),
-    ],
-)
 class TestMigrateConfigFile:
     @staticmethod
-    def test_for_default_file(
-        input_config_file, expected_output_config_file, expected_stdout, capsys
-    ):
-        with patch(
-            "builtins.open",
-            mock_open(read_data=json.dumps(input_config_file)),
-        ) as m:
+    def test_warns():
+        with pytest.warns(DeprecationWarning):
             api_cfg.migrate_config_file()
-
-        if input_config_file == expected_output_config_file:
-            m().write.assert_not_called()
-        else:
-            m().write.assert_called_once_with(
-                json.dumps(expected_output_config_file, indent=2)
-            )
-        captured = capsys.readouterr()
-        for string in expected_stdout:
-            assert string in captured.out
-
-    @staticmethod
-    def test_for_single_custom_file(
-        input_config_file,
-        expected_output_config_file,
-        expected_stdout,
-        capsys,
-        tmp_path,
-        monkeypatch,
-    ):
-        config_file = tmp_path / "test_configs.json"
-        monkeypatch.setenv("ORQ_CONFIG_PATH", str(config_file))
-        with open(config_file, "w") as f:
-            json.dump(input_config_file, f, indent=2)
-
-        api_cfg.migrate_config_file()
-
-        with open(config_file, "r") as f:
-            data = json.load(f)
-
-        assert data == expected_output_config_file
-        captured = capsys.readouterr()
-        for string in expected_stdout:
-            assert string in captured.out
 
 
 class TestUpdateSavedToken:
