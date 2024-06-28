@@ -23,6 +23,8 @@
 
 📃 *Docs*
 
+* Describe `pip` backtracking problem during dependency installation.
+
 ## v0.65.0
 
 🔥 *Features*

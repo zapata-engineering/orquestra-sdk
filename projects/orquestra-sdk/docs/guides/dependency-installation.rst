@@ -276,3 +276,44 @@ These imports have been used in the past, but are not relevant anymore:
 #. ``GitImport(...)``
 #. ``GitImport.infer(...)``
 #. ``LocalImport()``
+
+
+Known Issues
+============
+
+
+``pip`` gets stuck while backtracking
+-------------------------------------
+
+If:
+
+* your workflow started running, but none of the tasks are being executed,
+
+* *Environment Setup Logs* only show *Installing python requirements*, potentially followed by *Failed to install pip packages* and an error stack trace,
+
+it usually means ``pip`` has a problem with resolving and installing dependent packages.
+
+Usually, this suggests a problem with mutually exclusive constraints in your ``pip`` packages, also known as `dependency hell <https://en.wikipedia.org/wiki/Dependency_hell>`_.
+``pip`` desperately tries all combinations of dependencies, and the dependencies of dependencies, which can take a long time, without a guarantee of finding a combination that matches all version constraints.
+In Orquestra, this process needs to finish under 10 minutes, or the workflow is stopped.
+For more information about ``pip``, dependency resolution, and backtracking, see: `Dependency Resolution - pip documentation<https://pip.pypa.io/en/stable/topics/dependency-resolution/>`_.
+
+In normal circumstances, ``pip`` emits prints warnings when an excessive backtracking occurs, but unfortunately these logs don't always show up in Orquestra.
+Orquestra delegates the dependency installation to Ray, which takes control over the installation process with ``pip``.
+This is doubly unfortunate, because not only there's a problem preventing your tasks from running; as a user, you don't even know what's going on until the dependency installation phase times out.
+
+For now, the only known scenario to fix your task dependencies is the following:
+
+#. Create and activate a fresh `virtual environment <https://docs.python.org/3/library/venv.html>`_, outside of Orquestra workflows, eg. on your local machine. If you're using a task with a custom image, you should run your shell inside a container based on that image.
+
+#. Install the ``pip`` dependencies that the task would install in Orquestra. Be mindful of version constraints. Be sure install the dependencies in a single ``pip install`` invocation, as opposed to multiple ``pip install a; pip install b; ...``. A handy way to do this is to write a ``requirements.txt`` file and run ``pip install -r requirements.txt``.
+
+#. Observe the logs ``pip`` emits during this installation. If it takes more time than you would expect, or you can see ``pip`` attempting to install multiple, old versions of your dependencies, it means ``pip`` needs your help with the dependency constraint graph.
+
+#. Improve the dependency constraint graph. Usually this means you have to either:
+
+    #. Relax a constraint, eg. replace ``benchq==0.4.0`` with ``bench>=0.4.0``.
+       This allows ``pip`` to find a set of dependencies with satisfies all the version constraints.
+
+    #. Add a constraint, eg. replace ``benchq`` with ``benchq>=0.7.0``, if you're certain this version will work with other dependencies.
+       This allows ``pip`` to converge faster in its search for a viable set of dependency versions, making it in time before the installation phase times out.
