@@ -1,7 +1,6 @@
 ################################################################################
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
-import time
 from typing import Optional, Sequence, Tuple
 
 import orquestra.sdk as sdk
@@ -217,22 +216,6 @@ def add(a, b):
 
 
 @sdk.task
-def add_slow(a, b):
-    time.sleep(10)
-
-    return a + b
-
-
-@sdk.workflow
-def serial_wf_with_slow_middle_task():
-    art1 = add(21, 37)
-    art2 = add_slow(art1, art1)
-    art3 = add(art2, art2)
-
-    return [art3]
-
-
-@sdk.task
 def add_with_trigger(a, b, port, timeout: float):
     """Simulates a task that takes some time to run.
 
@@ -241,25 +224,6 @@ def add_with_trigger(a, b, port, timeout: float):
     ipc.TriggerClient(port).wait_on_trigger(timeout)
 
     return a + b
-
-
-@sdk.task
-def long_task(*_):
-    import time
-
-    # sleep for an hour - just in case someone forgets to terminate this buddy
-    time.sleep(60 * 60)
-
-
-@sdk.workflow
-def infinite_workflow():
-    """Allows reproducing scenario where tasks take some time to run.
-
-    This workflow is used to test termination as it will never complete.
-    This workflow isn't actually infinite - it just takes an hour of sleep time to
-    complete.
-    """
-    return long_task()
 
 
 @sdk.workflow
@@ -320,19 +284,6 @@ def add_with_log(a, b, msg: str):
 @sdk.workflow
 def wf_with_log(msg: str):
     return [add_with_log(12, 34, msg)]
-
-
-@sdk.task
-def get_exec_ctx() -> str:
-    import orquestra.sdk._shared.exec_ctx
-
-    ctx = orquestra.sdk._shared.exec_ctx.get_current_exec_context()
-    return ctx.name
-
-
-@sdk.workflow
-def wf_with_exec_ctx():
-    return [get_exec_ctx()]
 
 
 @sdk.workflow

@@ -3,19 +3,23 @@
 ################################################################################
 """Orquestra SDK allows to define computational workflows using Python DSL."""
 
-from ._client import mlflow, secrets
+from orquestra.workflow_shared import Project, ProjectRef, Workspace, secrets
+from orquestra.workflow_shared.logs import LogOutput, WorkflowLogs
+from orquestra.workflow_shared.schema.workflow_run import State
+from orquestra.workflow_shared.secrets import Secret
+
+from ._client import mlflow
 from ._client._base._api import (
     CurrentExecutionCtx,
     CurrentRunIDs,
-    RuntimeConfig,
     TaskRun,
     WorkflowRun,
     current_exec_ctx,
     current_run_ids,
     list_workflow_run_summaries,
     list_workflow_runs,
-    migrate_config_file,
 )
+from ._client._base._config import RuntimeConfig, migrate_config_file
 from ._client._base._dsl import (
     ArtifactFuture,
     DataAggregation,
@@ -27,7 +31,6 @@ from ._client._base._dsl import (
     LocalImport,
     PythonImports,
     Resources,
-    Secret,
     TaskDef,
     task,
 )
@@ -38,12 +41,6 @@ from ._client._base._workflow import (
     WorkflowTemplate,
     workflow,
 )
-from ._shared import Project, ProjectRef, Workspace
-from ._shared.logs import LogOutput, WorkflowLogs
-
-# It's already in a public module, but we'll re-export it under `orquestra.sdk.*` anyway
-# because it's commonly used to filter task runs.
-from ._shared.schema.workflow_run import State
 
 __all__ = [
     "ArtifactFuture",

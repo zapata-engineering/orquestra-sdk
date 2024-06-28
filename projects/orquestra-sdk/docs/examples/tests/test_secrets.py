@@ -16,12 +16,12 @@ Test's boundary:
 
 from unittest.mock import Mock
 
+import orquestra.workflow_shared.secrets._client
 import pytest
 import responses
+from orquestra.workflow_shared.schema import configs
 
-import orquestra.sdk._client._base._config
-import orquestra.sdk._client.secrets._client
-from orquestra.sdk._shared.schema import configs
+import orquestra.sdk._client._base._config._fs
 
 
 class Snippets:
@@ -96,7 +96,7 @@ class TestSecrets:
     @pytest.fixture
     def config_entry(monkeypatch, base_uri):
         monkeypatch.setattr(
-            orquestra.sdk._client._base._config,
+            orquestra.sdk._client._secrets._auth,
             "read_config",
             Mock(
                 return_value=configs.RuntimeConfiguration(

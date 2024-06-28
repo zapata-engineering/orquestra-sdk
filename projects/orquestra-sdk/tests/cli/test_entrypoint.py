@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022-2024 Zapata Computing Inc.
 ################################################################################
 
 """
@@ -7,15 +7,16 @@ Tests that validate parsing CLI groups and commands.
 """
 
 import sys
+from pathlib import Path
 from unittest.mock import ANY, Mock
 
 import pytest
+from orquestra.workflow_shared.schema.configs import RuntimeName
 
 from orquestra.sdk._client._base.cli import _entry
 from orquestra.sdk._client._base.cli._login import _login
 from orquestra.sdk._client._base.cli._services import _down, _up
-from orquestra.sdk._client._base.cli._workflow import _list
-from orquestra.sdk._shared.schema.configs import RuntimeName
+from orquestra.sdk._client._base.cli._workflow import _graph, _list
 
 
 @pytest.fixture()
@@ -54,6 +55,7 @@ class TestCommandTreeAssembly:
             ["workflow", "stop"],
             ["workflow", "logs"],
             ["workflow", "results"],
+            ["workflow", "graph"],
             ["task"],
             ["task", "results"],
             ["task", "logs"],
@@ -341,3 +343,162 @@ class TestRestart:
         mock_up_action.assert_called_once_with(
             manage_ray=ray_value, manage_all=all_value
         )
+
+
+class TestGraph:
+    @pytest.mark.parametrize(
+        "file, expected_file",
+        [
+            (["-f", "file"], Path("file")),
+            ([], None),
+        ],
+    )
+    class TestGraphOptions:
+        @staticmethod
+        @pytest.mark.parametrize(
+            "config, expected_config",
+            [
+                (["-c", "foo"], "foo"),
+                (["--config", "foo"], "foo"),
+                ([], None),
+            ],
+        )
+        @pytest.mark.parametrize(
+            "wf_run_id, expected_wf_run_id",
+            [
+                (["--id", "baz"], "baz"),
+                ([], None),
+            ],
+        )
+        def test_submitted_workflow(
+            entrypoint,
+            monkeypatch,
+            config: list[str],
+            expected_config: str,
+            wf_run_id: list[str],
+            expected_wf_run_id: str,
+            file: list[str],
+            expected_file: str,
+        ):
+            # GIVEN
+            entrypoint(["workflow", "graph"] + config + wf_run_id + file)
+
+            monkeypatch.setattr(sys, "exit", mock_exit := Mock())
+            monkeypatch.setattr(
+                _graph.Action,
+                "on_cmd_call",
+                mock_action := Mock(),
+            )
+
+            # When
+            _entry.main()
+
+            # Then
+            mock_action.assert_called_once_with(
+                config=expected_config,
+                wf_run_id=expected_wf_run_id,
+                module=None,
+                name=None,
+                file=expected_file,
+            )
+            mock_exit.assert_called_with(0)
+
+        @staticmethod
+        @pytest.mark.parametrize(
+            "module, expected_module",
+            [
+                (["-m", "foo"], "foo"),
+                (["--module", "foo"], "foo"),
+                ([], None),
+            ],
+        )
+        @pytest.mark.parametrize(
+            "name, expected_name",
+            [
+                (["-n", "bar"], "bar"),
+                (["--name", "bar"], "bar"),
+                ([], None),
+            ],
+        )
+        def test_local_definition(
+            entrypoint,
+            monkeypatch,
+            module: list[str],
+            expected_module: str,
+            name: list[str],
+            expected_name: str,
+            file: list[str],
+            expected_file: str,
+        ):
+            # GIVEN
+            entrypoint(["workflow", "graph"] + module + name + file)
+
+            monkeypatch.setattr(sys, "exit", mock_exit := Mock())
+            monkeypatch.setattr(
+                _graph.Action,
+                "on_cmd_call",
+                mock_action := Mock(),
+            )
+
+            # When
+            _entry.main()
+
+            # Then
+            mock_action.assert_called_once_with(
+                config=None,
+                wf_run_id=None,
+                module=expected_module,
+                name=expected_name,
+                file=expected_file,
+            )
+            mock_exit.assert_called_with(0)
+
+        @staticmethod
+        @pytest.mark.parametrize(
+            "arguments",
+            [
+                ["-m", "foo", "-c", "bar"],
+                ["-m", "foo", "--id", "bar"],
+                ["-n", "foo", "-c", "bar"],
+                ["-n", "foo", "--id", "bar"],
+            ],
+            ids=(
+                "module (local definition) and config (previously submitted)",
+                "module (local definition) and workflow id (previously submitted)",
+                "name (local definition) and config (previously submitted)",
+                "name (local definition) and workflow id (previously submitted)",
+            ),
+        )
+        def test_clashing_options(
+            entrypoint,
+            monkeypatch,
+            arguments: list[str],
+            capsys: pytest.CaptureFixture,
+            file: list[str],
+            expected_file: str,
+        ):
+            """
+            There are two use cases for `orq wf graph` - a local definition and a
+            previously submitted workflow. Here we test that combinations of arguments
+            that mix between these cases are rejected.
+            """
+            # GIVEN
+            entrypoint(["workflow", "graph"] + arguments + file)
+
+            monkeypatch.setattr(sys, "exit", mock_exit := Mock())
+            monkeypatch.setattr(
+                _graph.Action,
+                "on_cmd_call",
+                mock_action := Mock(),
+            )
+
+            # When
+            _entry.main()
+
+            # Then
+            mock_action.assert_not_called()
+            mock_exit.assert_called_with(2)
+            assert (
+                "the following parameters are mutually exclusive"
+                in capsys.readouterr().err
+            )

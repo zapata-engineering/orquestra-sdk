@@ -3,6 +3,7 @@
 ################################################################################
 """Snippets and tests used in the "Parametrized Workflows" tutorial."""
 
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -107,7 +108,8 @@ class TestSnippets:
         proc.check_returncode()
         std_out = str(proc.stdout, "utf-8")
         assert "RUNNING" in std_out or "SUCCEEDED" in std_out
-        TestSnippets.wf_id = std_out.split()[0]
+
+        TestSnippets.wf_id = re.findall("wf.*", std_out)[0]
 
     @staticmethod
     @pytest.mark.dependency(depends=["TestSnippets::test_execute_workflow"])

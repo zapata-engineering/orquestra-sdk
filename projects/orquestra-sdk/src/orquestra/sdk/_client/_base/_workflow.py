@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2024 Zapata Computing Inc.
 ################################################################################
 import ast
 import functools
@@ -22,22 +22,23 @@ from typing import (
     overload,
 )
 
+import orquestra.workflow_shared.schema.ir as ir
+from orquestra.workflow_shared import exceptions
+from orquestra.workflow_shared.exceptions import WorkflowSyntaxError
+from orquestra.workflow_shared.schema.workflow_run import ProjectId, WorkspaceId
+from orquestra.workflow_shared.secrets import Secret
 from typing_extensions import ParamSpec
 
-import orquestra.sdk._shared.schema.ir as ir
 from orquestra.sdk import secrets
-from orquestra.sdk._shared import exceptions
-from orquestra.sdk._shared.exceptions import WorkflowSyntaxError
-from orquestra.sdk._shared.schema.workflow_run import ProjectId, WorkspaceId
 
 from . import _api, _dsl, loader
 from ._ast import CallVisitor, NodeReference, NodeReferenceType, normalize_indents
+from ._config import RuntimeConfig
 from ._dsl import (
     DataAggregation,
     FunctionRef,
     Import,
     ImportTypes,
-    Secret,
     TaskDef,
     UnknownPlaceholderInCustomNameWarning,
     get_fn_ref,
@@ -150,7 +151,7 @@ class WorkflowDef(Generic[_R]):
 
     def run(
         self,
-        config: Union[_api.RuntimeConfig, str],
+        config: Union[RuntimeConfig, str],
         project_dir: Optional[Union[str, Path]] = None,
         workspace_id: Optional[WorkspaceId] = None,
         project_id: Optional[ProjectId] = None,
@@ -441,7 +442,19 @@ class WorkflowTemplate(Generic[_P, _R]):
                 "Parametrized WorkflowTemplates cannot be serialised yet"
             )
         else:
-            return self().model
+            # `WorkflowTemplate.__call__` accepts arguments if and only if the
+            # underlying function has parameters.
+            # The `self.is_parametrized` property tells us if the workflow function
+            # is parametrized.
+            # However, `self.__call__()` accepts a Paramspec `_P` as the input
+            # parameter type (`_P.args` and `_P.kwargs`).
+            # This causes a type error in Pyright because Pyright does not have the
+            # information that `is_parametrized` tells us if `_P` has any members.
+            # When `is_parametrized` is false, we know that `_P.args` and `_P.kwargs`
+            # are empty.
+            # This means, that when we are in this branch, we can be sure that
+            # `__call__` does not accept any args or kwargs.
+            return self().model  # type: ignore
 
 
 # ----- decorator helpers -----

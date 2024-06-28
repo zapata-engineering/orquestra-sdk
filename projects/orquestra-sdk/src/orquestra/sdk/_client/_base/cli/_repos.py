@@ -15,22 +15,19 @@ from functools import singledispatch
 from types import ModuleType
 
 import requests
-from typing_extensions import assert_never
-
-from orquestra import sdk
-from orquestra.sdk._shared import exceptions
-from orquestra.sdk._shared.abc import ArtifactValue
-from orquestra.sdk._shared.dates import from_unix_time
-from orquestra.sdk._shared.logs import LogOutput, WorkflowLogs
-from orquestra.sdk._shared.schema import result_is_packed
-from orquestra.sdk._shared.schema.configs import (
+from orquestra.workflow_shared import exceptions
+from orquestra.workflow_shared.abc import ArtifactValue
+from orquestra.workflow_shared.dates import from_unix_time
+from orquestra.workflow_shared.logs import LogOutput, WorkflowLogs
+from orquestra.workflow_shared.schema import result_is_packed
+from orquestra.workflow_shared.schema.configs import (
     ConfigName,
     RemoteRuntime,
     RuntimeConfiguration,
     RuntimeName,
 )
-from orquestra.sdk._shared.schema.ir import TaskInvocationId, WorkflowDef
-from orquestra.sdk._shared.schema.workflow_run import (
+from orquestra.workflow_shared.schema.ir import TaskInvocationId, WorkflowDef
+from orquestra.workflow_shared.schema.workflow_run import (
     ProjectId,
     State,
     TaskRun,
@@ -40,8 +37,14 @@ from orquestra.sdk._shared.schema.workflow_run import (
     WorkflowRunSummary,
     WorkspaceId,
 )
+from typing_extensions import assert_never
 
-from ..._base import _config, loader
+from orquestra import sdk
+from orquestra.sdk._client._base._viz import wf_def_to_graphviz
+
+from ..._base import loader
+from ..._base._config import _fs as config_fs
+from ..._base._config import _settings as config_settings
 from ..._base._driver._client import DriverClient, ExternalUriProvider
 from ..._base._jwt import check_jwt_without_signature_verification
 from ._ui import _models as ui_models
@@ -670,7 +673,7 @@ class ConfigRepo:
         return [
             config
             for config in sdk.RuntimeConfig.list_configs()
-            if config not in _config.CLI_IGNORED_CONFIGS
+            if config not in config_settings.CLI_IGNORED_CONFIGS
         ]
 
     def list_remote_config_names(self) -> t.Sequence[ConfigName]:
@@ -678,7 +681,7 @@ class ConfigRepo:
         return [
             config
             for config in sdk.RuntimeConfig.list_configs()
-            if config not in _config.SPECIAL_CONFIG_NAME_DICT
+            if config not in config_settings.SPECIAL_CONFIG_NAME_DICT
         ]
 
     def store_token_in_config(self, uri: str, token: str, runtime_name: RemoteRuntime):
@@ -700,7 +703,7 @@ class ConfigRepo:
         except (exceptions.ExpiredTokenError, exceptions.InvalidTokenError):
             raise
 
-        config_name = _config.generate_config_name(runtime_name, uri)
+        config_name = config_fs.generate_config_name(runtime_name, uri)
 
         config = sdk.RuntimeConfig(
             runtime_name,
@@ -709,13 +712,15 @@ class ConfigRepo:
         )
         setattr(config, "uri", uri)
         setattr(config, "token", token)
-        _config.save_or_update(config_name, runtime_name, config._get_runtime_options())
+        config_fs.save_or_update(
+            config_name, runtime_name, config._get_runtime_options()
+        )
 
         return config_name
 
     def read_config(self, config: ConfigName) -> RuntimeConfiguration:
         """Read a stored config."""
-        return _config.read_config(config)
+        return config_fs.read_config(config)
 
 
 class SpacesRepo:
@@ -855,3 +860,7 @@ class WorkflowDefRepo:
         except exceptions.WorkflowSyntaxError:
             # Explicit re-raise
             raise
+
+    def wf_def_to_graphviz(self, wf_def: WorkflowDef):
+        """Wrapper for the wf_def_to_graphviz helper."""
+        return wf_def_to_graphviz(wf_def)

@@ -5,10 +5,10 @@
 from unittest.mock import MagicMock
 
 import pytest
+from orquestra.workflow_shared.schema.configs import RuntimeConfiguration, RuntimeName
 
 from orquestra.sdk._client._base._driver import _client
 from orquestra.sdk._client._base._factory import build_runtime_from_config
-from orquestra.sdk._shared.schema.configs import RuntimeConfiguration, RuntimeName
 
 VALID_JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"  # noqa
 

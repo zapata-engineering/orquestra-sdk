@@ -2,8 +2,7 @@
 # © Copyright 2022-2023 Zapata Computing Inc.
 ################################################################################
 import jwt
-
-from orquestra.sdk._shared.exceptions import ExpiredTokenError, InvalidTokenError
+from orquestra.workflow_shared.exceptions import ExpiredTokenError, InvalidTokenError
 
 
 def check_jwt_without_signature_verification(token: str):

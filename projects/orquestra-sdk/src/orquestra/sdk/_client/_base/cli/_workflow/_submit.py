@@ -4,7 +4,7 @@
 """Code for 'orq workflow submit'."""
 import typing as t
 
-from orquestra.sdk._shared import exceptions
+from orquestra.workflow_shared import exceptions
 
 from .. import _arg_resolvers, _repos
 from .._ui import _presenters, _prompts
@@ -26,6 +26,7 @@ class Action:
         wf_run_repo=_repos.WorkflowRunRepo(),
         config_resolver: t.Optional[_arg_resolvers.ConfigResolver] = None,
         spaces_resolver: t.Optional[_arg_resolvers.SpacesResolver] = None,
+        wf_def_resolver: t.Optional[_arg_resolvers.WFDefResolver] = None,
     ):
         # text IO
         self._prompter = prompter
@@ -40,6 +41,9 @@ class Action:
         )
         self._space_resolver = spaces_resolver or _arg_resolvers.SpacesResolver(
             prompter=prompter
+        )
+        self._wf_def_resolver = wf_def_resolver or _arg_resolvers.WFDefResolver(
+            prompter=prompter, wf_def_repo=self._wf_def_repo
         )
 
     def on_cmd_call(
@@ -90,27 +94,7 @@ class Action:
             raise
 
         # 3. Resolve the definition of the workflow to run
-        resolved_fn_name: str
-        if name is not None:
-            # If passed in explicitly by the user: we take it as-is.
-            resolved_fn_name = name
-        else:
-            # Get all workflow def names in the module
-            try:
-                wf_names = self._wf_def_repo.get_workflow_names(resolved_module)
-            except exceptions.NoWorkflowDefinitionsFound:
-                # Explicit re-raise
-                raise
-
-            if len(wf_names) == 1:
-                # If there's only one workflow def: we submit it.
-                resolved_fn_name = wf_names[0]
-            else:
-                # If there's more workflow defs in this module: we need to ask the user
-                # which one to submit.
-                resolved_fn_name = self._prompter.choice(
-                    wf_names, message="Workflow definition"
-                )
+        resolved_fn_name = self._wf_def_resolver.resolve_fn_name(resolved_module, name)
 
         resolved_wf_def = self._wf_def_repo.get_workflow_def(
             resolved_module, resolved_fn_name

@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022-2024 Zapata Computing Inc.
 ################################################################################
 import sys
 import typing as t
@@ -9,20 +9,23 @@ from pathlib import Path
 from unittest.mock import Mock, create_autospec
 
 import pytest
+from orquestra.workflow_shared import serde
+from orquestra.workflow_shared._spaces._structs import Project, Workspace
+from orquestra.workflow_shared.dates._dates import Instant
+from orquestra.workflow_shared.logs._interfaces import LogOutput
+from orquestra.workflow_shared.schema.configs import RuntimeConfiguration
+from orquestra.workflow_shared.schema.ir import ArtifactFormat
+from orquestra.workflow_shared.schema.responses import (
+    ResponseStatusCode,
+    ServiceResponse,
+)
+from orquestra.workflow_shared.schema.workflow_run import RunStatus, State
 from rich.console import Console
 
 from orquestra import sdk
 from orquestra.sdk._client._base.cli._ui import _errors
 from orquestra.sdk._client._base.cli._ui import _models as ui_models
 from orquestra.sdk._client._base.cli._ui import _presenters
-from orquestra.sdk._shared import serde
-from orquestra.sdk._shared._spaces._structs import Project, Workspace
-from orquestra.sdk._shared.dates._dates import Instant
-from orquestra.sdk._shared.logs._interfaces import LogOutput
-from orquestra.sdk._shared.schema.configs import RuntimeConfiguration
-from orquestra.sdk._shared.schema.ir import ArtifactFormat
-from orquestra.sdk._shared.schema.responses import ResponseStatusCode, ServiceResponse
-from orquestra.sdk._shared.schema.workflow_run import RunStatus, State
 
 
 @sdk.task
@@ -386,10 +389,6 @@ class TestArtifactPresenter:
             assert "wf.1234_1.npz as NUMPY_ARRAY." in output
 
     @staticmethod
-    @pytest.mark.skipif(
-        sys.platform.startswith("win32"),
-        reason="Windows uses different symbols than macOS and Linux",
-    )
     def test_show_workflow_outputs(test_console: Console):
         # Given
         values = [set([21, 38]), {"hello": "there"}]
@@ -417,10 +416,6 @@ class TestArtifactPresenter:
         assert output == expected
 
     @staticmethod
-    @pytest.mark.skipif(
-        sys.platform.startswith("win32"),
-        reason="Windows uses different symbols than macOS and Linux",
-    )
     def test_show_task_outputs(test_console: Console):
         # Given
         values = [set([21, 38]), {"hello": "there"}]
@@ -666,10 +661,6 @@ class TestWorkflowRunPresenter:
         assert output == expected
 
     @staticmethod
-    @pytest.mark.skipif(
-        sys.platform.startswith("win32"),
-        reason="Windows uses different symbols than macOS and Linux",
-    )
     @pytest.mark.parametrize(
         "summary,expected_path",
         [
@@ -748,10 +739,6 @@ class TestWorkflowRunPresenter:
         expected = expected_path.read_text()
         assert output == expected
 
-    @pytest.mark.skipif(
-        sys.platform.startswith("win32"),
-        reason="Windows uses different symbols than macOS and Linux",
-    )
     class TestShowWFList:
         @staticmethod
         def test_show_wf_list_with_owner(
@@ -923,3 +910,42 @@ class TestPromptPresenter:
 
             assert "id2" in labels[2]
             assert "name2" in labels[2]
+
+
+class TestGraphPresenter:
+    class TestView:
+        @staticmethod
+        def test_default_file():
+            # Given
+            mock_graph = create_autospec(_presenters.Digraph)
+
+            # When
+            _presenters.GraphPresenter().view(mock_graph, file=None)
+
+            # Then
+            mock_graph.view.assert_called_once_with(filename=None, cleanup=True)
+
+        @staticmethod
+        def test_explicit_reraise():
+            # Given
+            mock_graph = create_autospec(_presenters.Digraph)
+            mock_graph.view.side_effect = _presenters.ExecutableNotFound("foo")
+
+            # When
+            with pytest.raises(_presenters.ExecutableNotFound):
+                _presenters.GraphPresenter().view(mock_graph, file=None)
+
+            # Then
+            mock_graph.view.assert_called_once_with(filename=None, cleanup=True)
+
+        @staticmethod
+        def test_custom_file():
+            # Given
+            mock_graph = create_autospec(_presenters.Digraph)
+            mock_file = create_autospec(Path)
+
+            # When
+            _presenters.GraphPresenter().view(mock_graph, file=mock_file)
+
+            # Then
+            mock_graph.view.assert_called_once_with(cleanup=True, filename=mock_file)

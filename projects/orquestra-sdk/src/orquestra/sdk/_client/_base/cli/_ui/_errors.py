@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2024 Zapata Computing Inc.
 ################################################################################
 import sys
 from functools import singledispatch
@@ -9,14 +9,13 @@ from typing import Optional
 
 import click
 import rich
+from orquestra.workflow_shared import exceptions
+from orquestra.workflow_shared.schema.responses import ResponseStatusCode
 from rich.box import SIMPLE_HEAVY
 from rich.console import Console
 from rich.table import Column, Table
 
-from orquestra.sdk._shared import exceptions
-from orquestra.sdk._shared.schema.responses import ResponseStatusCode
-
-from ...._base._config import IN_PROCESS_CONFIG_NAME, RAY_CONFIG_NAME_ALIAS
+from ...._base._config._settings import IN_PROCESS_CONFIG_NAME, RAY_CONFIG_NAME_ALIAS
 
 
 def _compact_tb(tb: TracebackType):

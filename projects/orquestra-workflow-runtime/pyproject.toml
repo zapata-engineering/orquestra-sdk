@@ -1,0 +1,204 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+authors = [
+    { name = "Zapata Computing Inc.", email = "info@zapata.ai" },
+]
+name = "orquestra-workflow-runtime"
+description = "Execute Orquestra workflows"
+readme = "README.md"
+license = { file = "LICENSE" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: Apache Software License",
+    "Topic :: Scientific/Engineering",
+]
+dynamic = ["version"]
+requires-python = ">= 3.8"
+
+# As a rule of thumb, the dependencies should be specified with lower bound
+# only.
+#
+# For pratical reasons, when choosing the lower bound, we pick the oldest
+# version we can easily install and test, even if there are older versions with
+# the same API.
+dependencies = [
+    "orquestra-workflow-shared>=0.1.0",
+    # Schema definition
+    "pydantic>1.10.7",
+    # Python Standard Library Backports
+    "importlib_metadata>=4.0",
+    "typing-extensions>=4.1.0",
+    # Web requests for external services
+    "requests>=2.28",
+    # Decoding JWTs
+    "PyJWT>=2.6",
+    # Capture stdout/stderr
+    "wurlitzer>=3.0",
+    # pyarrow 16.0 crashed ray workers for unknown reason. Crashes were not
+    # reproducible on mac - so be careful with taking that restriction away.
+    "pyarrow>=10.0,<16.0",
+]
+
+[project.optional-dependencies]
+ray = [
+    "ray==2.24.0",
+    "virtualenv>=20.0.24, !=20.21.1",  # Ray depends on this, but it's missing from the base requirements.
+    "async-timeout",       # Ray depends on this, but its missing from ray requirements. Can be removed when https://github.com/ray-project/ray/issues/41267 is fixed.
+]
+
+dashboard = [
+    "orquestra-workflow-runtime[ray]",
+    "ray[default]",    
+]
+
+all = ["orquestra-workflow-runtime[dashboard]"]
+
+dev = [
+    "orquestra-workflow-runtime[all]",
+    "black~=23.7",
+    "diff_cover",
+    "flake8>=4.0.0",
+    "freezegun",
+    "Flake8-pyproject>=1.2.3",
+    "isort~=5.9.0",
+    "mypy~=0.910",                # bumping caused issues - ORQSDK-966
+    "pydoclint",                  # Linter for python docstrings. Provides a flake8 plugin.
+    "pymarkdownlnt",              # Linter for markdown files.
+    "pyright", # those 2 versions had bug that caused infinite loops
+    "pytest>=6.2",
+    "pytest-cov>=2.12",
+    "pytest-dependency",
+    "pytest_httpserver",
+    "pytest-timeout>=2.0.0",
+    "responses>=0.20,!=0.24",
+    "ruff>=0.2.0",
+    "types-requests",
+    "types-setuptools",
+]
+
+[project.urls]
+Homepage = "https://github.com/zapata-engineering/orquestra-sdk"
+Documentation = "https://docs.orquestra.io"
+Repository = "https://github.com/zapata-engineering/orquestra-sdk.git"
+Issues = "https://github.com/zapata-engineering/orquestra-sdk/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/orquestra"]
+
+[tool.hatch.version]
+source = "vcs"
+tag-pattern = "^(?P<prefix>orquestra-workflow-runtime-)(?P<version>[vV]?\\d+(?:\\.\\d+){0,2}[^\\+]*)(?:\\+.*)?$"
+
+[tool.hatch.version.raw-options]
+root = "../.."
+# tag-pattern isn't enough when the current commit is not tagged. For development
+# builds, customizing the git describe command is necessary.
+git_describe_command = [
+    "git",
+    "describe",
+    "--tags",
+    "--long",
+    "--dirty",
+    "--match",
+    "orquestra-workflow-runtime-*[0-9]*",
+]
+
+[tool.isort]
+profile = "black"
+
+[tool.mypy]
+# Without this we would have to add an empty __init__.py file for every package.
+namespace_packages = true
+# Without this mypy complains about the same module being imported under different
+# names. Note that this also requires setting `mypy_path`.
+explicit_package_bases = true
+# We usually keep our source code under `src/<namespace>/<library>/...` or
+# `src/python/<namespace>/<library>...`. This option tells mypy to look under that
+# directory path. If your repo has a different layout you can add the appropriate paths
+# by setting MYPYPATH env variable.
+mypy_path = "src:src/python"
+
+# Without this, mypy would skip typechecking functions that don't have type
+# annotations in the signature.
+check_untyped_defs = true
+
+[tool.coverage.run]
+omit = [
+    # main.py should be checked separately in an integration test.
+    "*/main.py",
+    "*/__init__.py",
+]
+
+[tool.coverage.report]
+skip_covered = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "def __str__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "assert_never",
+]
+
+[tool.pytest.ini_options]
+log_level = "INFO"
+
+
+[tool.ruff]
+target-version = "py38"
+
+[tool.ruff.lint]
+select = [
+    "E", # pycodestyle
+    "W", # pycodestyle
+    "F", # pyflakes
+    "D", # pydocstyle
+]
+ignore = [
+    "E203",
+    "E266",
+    "D100",
+    "D101",
+    "D102",
+    "D103",
+    "D104",
+    "D105",
+    "D106",
+    "D107",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.pymarkdown]
+# Our CHANGELOG.md violates all these rules. We can remove them one-by-one when
+# we fix the formatting. Rules reference:
+# https://github.com/jackdewinter/pymarkdown/blob/main/docs/rules.md
+plugins.md013.enabled = false
+
+[tool.flake8]
+style = 'google'
+ignore = [
+    'E203',   # whitespace before ':'
+    'E266',   # Too many leading '#' for block comment
+    'DOC201', # Function/method does not have a return section in docstring
+    'DOC203', # Return type(s) in docstring not consistent with the return annotation
+    'DOC301', # `__init__()` should not have a docstring
+    'DOC601', # Class docstring contains fewer class attributes than actual class attributes
+    'DOC603', # Class docstring attributes are different from actual class attributes
+    'W503',   # Line break occurred before a binary operator
+]
+per-file-ignores = [
+    'abc.py:DOC501', # ABC docstrings don't need "raises NotImplementedError"
+]
+max-line-length = 88
+count = true
+arg-type-hints-in-docstring = false

@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022-2024 Zapata Computing Inc.
 ################################################################################
 """"dorq" CLI entrypoint.
 
@@ -10,8 +10,8 @@ from pathlib import Path
 
 import click
 import cloup
-
-from orquestra.sdk._shared.schema.configs import RuntimeName
+from cloup.constraints import constraint, mutually_exclusive
+from orquestra.workflow_shared.schema.configs import RuntimeName
 
 from . import _cli_logs
 from ._ui._click_default_group import DefaultGroup
@@ -148,6 +148,63 @@ def view(wf_run_id: t.Optional[str], config: t.Optional[str]):
 
     action = Action()
     action.on_cmd_call(wf_run_id, config)
+
+
+@workflow.command()
+@CONFIG_OPTION
+@cloup.option(
+    "--id",
+    type=str,
+    help="The ID of a previously submitted workflow. Replaces the WORKFLOW argument.",
+)
+@cloup.option(
+    "-m",
+    "--module",
+    type=str,
+    help="""
+Location of the module where the workflow is defined. Replaces the WORKFLOW argument.
+    """,
+)
+@cloup.option(
+    "-n",
+    "--name",
+    required=False,
+    help="""
+Name of the workflow function to load from 'module'. If omitted, 'orq' will ask for
+selecting a function from the ones available in 'module'.
+""",
+)
+@cloup.option(
+    "-f",
+    "--file",
+    help=(
+        "Path to store the generated graph. If passed, the command will create a pdf "
+        "file with this name and location."
+    ),
+    type=click.Path(file_okay=True, dir_okay=False, writable=True, path_type=Path),
+)
+@constraint(mutually_exclusive, ["config", "module"])
+@constraint(mutually_exclusive, ["config", "name"])
+@constraint(mutually_exclusive, ["id", "module"])
+@constraint(mutually_exclusive, ["id", "name"])
+def graph(
+    config: t.Optional[str],
+    id: t.Optional[str],
+    module: t.Optional[str],
+    name: t.Optional[str],
+    file: t.Optional[Path],
+):
+    """Generate a graph of a single workflow."""
+    from ._workflow._graph import Action
+
+    action = Action()
+    action.on_cmd_call(
+        config=config,
+        wf_run_id=id,
+        module=module,
+        name=name,
+        file=file,
+    )
 
 
 @workflow.command(name="results", aliases=["outputs"])
@@ -344,6 +401,7 @@ def task_logs(*args, **kwargs):
     from ._task._logs import Action
 
     action = Action()
+
     action.on_cmd_call(*args, **kwargs)
 
 
@@ -452,7 +510,7 @@ server_config_group = cloup.OptionGroup(
 
 @login.command(hidden=True)
 @server_config_group.option(
-    "-c", "--config", required=False, help="The name of an existing configureation."
+    "-c", "--config", required=False, help="The name of an existing configuration."
 )
 @server_config_group.option(
     "-s", "--server", required=False, help="The server URI that you want to log into."

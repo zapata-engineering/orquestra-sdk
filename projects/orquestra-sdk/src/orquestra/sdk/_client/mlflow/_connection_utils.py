@@ -10,13 +10,17 @@ import warnings
 from pathlib import Path
 from typing import Optional, Tuple
 
+from orquestra.workflow_shared.env import PASSPORT_FILE_ENV
+from orquestra.workflow_shared.exceptions import (
+    ConfigNameNotFoundError,
+    RuntimeConfigError,
+)
 from requests import Response, Session
 
 from orquestra import sdk
-from orquestra.sdk._shared.exceptions import ConfigNameNotFoundError, RuntimeConfigError
 
 from .._base import _env
-from .._base._config import read_config
+from .._base._config import get_config_option
 from .._base._env import CURRENT_USER_ENV
 from .._base._jwt import get_email_from_jwt_token
 from .._base._services import ORQUESTRA_BASE_PATH
@@ -72,9 +76,9 @@ def _read_passport_token() -> str:
     Raises:
         EnvironmentError: when the PASSPORT_FILE_ENV environment variable is not set.
     """
-    if not (passport_file_path := os.getenv(_env.PASSPORT_FILE_ENV)):
+    if not (passport_file_path := os.getenv(PASSPORT_FILE_ENV)):
         raise EnvironmentError(
-            f"The '{_env.PASSPORT_FILE_ENV}' environment variable is not set."
+            f"The '{PASSPORT_FILE_ENV}' environment variable is not set."
         )
     return Path(passport_file_path).read_text()
 
@@ -230,8 +234,8 @@ def get_current_user(config_name: t.Optional[str]) -> str:
         raise ConfigNameNotFoundError("Unable to get current user without config.")
 
     try:
-        token = read_config(config_name).runtime_options["token"]
-    except KeyError:
+        token = get_config_option(config_name, "token")
+    except RuntimeConfigError:
         raise RuntimeConfigError(
             "Selected config does not have remote token configured. "
             "Did you log in with it?"

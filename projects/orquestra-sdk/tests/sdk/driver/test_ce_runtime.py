@@ -5,10 +5,24 @@ from datetime import timedelta
 from typing import ContextManager, List, Optional
 from unittest.mock import DEFAULT, MagicMock, Mock, call, create_autospec
 
+import orquestra.workflow_shared._retry
 import pytest
+from orquestra.workflow_shared import exceptions, serde
+from orquestra.workflow_shared._spaces._structs import Project, ProjectRef, Workspace
+from orquestra.workflow_shared.logs import LogOutput
+from orquestra.workflow_shared.schema.ir import WorkflowDef
+from orquestra.workflow_shared.schema.responses import (
+    ComputeEngineWorkflowResult,
+    JSONResult,
+)
+from orquestra.workflow_shared.schema.workflow_run import (
+    RunStatus,
+    State,
+    WorkflowRun,
+    WorkflowRunId,
+)
 
 import orquestra.sdk as sdk
-import orquestra.sdk._shared._retry
 from orquestra.sdk._client._base._driver import (
     _ce_runtime,
     _client,
@@ -20,20 +34,6 @@ from orquestra.sdk._client._base._testing._example_wfs import (
     my_workflow,
     workflow_parametrised_with_resources,
     workflow_with_different_resources,
-)
-from orquestra.sdk._shared import exceptions, serde
-from orquestra.sdk._shared._spaces._structs import Project, ProjectRef, Workspace
-from orquestra.sdk._shared.logs import LogOutput
-from orquestra.sdk._shared.schema.ir import WorkflowDef
-from orquestra.sdk._shared.schema.responses import (
-    ComputeEngineWorkflowResult,
-    JSONResult,
-)
-from orquestra.sdk._shared.schema.workflow_run import (
-    RunStatus,
-    State,
-    WorkflowRun,
-    WorkflowRunId,
 )
 
 
@@ -93,9 +93,10 @@ class TestCreateWorkflowRun:
         mocked_client.create_workflow_run.return_value = workflow_run_id
 
         # When
-        wf_run_id = runtime.create_workflow_run(
-            my_workflow.model, project=None, dry_run=False
-        )
+        with pytest.warns(PendingDeprecationWarning):
+            wf_run_id = runtime.create_workflow_run(
+                my_workflow.model, project=None, dry_run=False
+            )
 
         # Then
         mocked_client.create_workflow_def.assert_called_once_with(
@@ -125,11 +126,12 @@ class TestCreateWorkflowRun:
             mocked_client.create_workflow_run.return_value = workflow_run_id
 
             # When
-            _ = runtime.create_workflow_run(
-                workflow_parametrised_with_resources(memory="10Gi").model,
-                None,
-                dry_run=False,
-            )
+            with pytest.warns(PendingDeprecationWarning):
+                _ = runtime.create_workflow_run(
+                    workflow_parametrised_with_resources(memory="10Gi").model,
+                    None,
+                    dry_run=False,
+                )
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
@@ -151,11 +153,12 @@ class TestCreateWorkflowRun:
             mocked_client.create_workflow_run.return_value = workflow_run_id
 
             # When
-            _ = runtime.create_workflow_run(
-                workflow_parametrised_with_resources(cpu="1000m").model,
-                None,
-                dry_run=False,
-            )
+            with pytest.warns(PendingDeprecationWarning):
+                _ = runtime.create_workflow_run(
+                    workflow_parametrised_with_resources(cpu="1000m").model,
+                    None,
+                    dry_run=False,
+                )
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
@@ -177,9 +180,12 @@ class TestCreateWorkflowRun:
             mocked_client.create_workflow_run.return_value = workflow_run_id
 
             # When
-            _ = runtime.create_workflow_run(
-                workflow_parametrised_with_resources(gpu="1").model, None, dry_run=False
-            )
+            with pytest.warns(PendingDeprecationWarning):
+                _ = runtime.create_workflow_run(
+                    workflow_parametrised_with_resources(gpu="1").model,
+                    None,
+                    dry_run=False,
+                )
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
@@ -201,9 +207,10 @@ class TestCreateWorkflowRun:
             mocked_client.create_workflow_run.return_value = workflow_run_id
 
             # When
-            _ = runtime.create_workflow_run(
-                workflow_with_different_resources().model, None, dry_run=False
-            )
+            with pytest.warns(PendingDeprecationWarning):
+                _ = runtime.create_workflow_run(
+                    workflow_with_different_resources().model, None, dry_run=False
+                )
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
@@ -225,13 +232,14 @@ class TestCreateWorkflowRun:
             mocked_client.create_workflow_run.return_value = workflow_run_id
 
             # When
-            _ = runtime.create_workflow_run(
-                my_workflow()
-                .with_resources(cpu="1", memory="1.5G", gpu="1", nodes=20)
-                .model,
-                None,
-                dry_run=False,
-            )
+            with pytest.warns(PendingDeprecationWarning):
+                _ = runtime.create_workflow_run(
+                    my_workflow()
+                    .with_resources(cpu="1", memory="1.5G", gpu="1", nodes=20)
+                    .model,
+                    None,
+                    dry_run=False,
+                )
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
@@ -267,11 +275,12 @@ class TestCreateWorkflowRun:
         mocked_client.create_workflow_run.return_value = workflow_run_id
 
         # When
-        _ = runtime.create_workflow_run(
-            wf().model,
-            None,
-            dry_run=False,
-        )
+        with pytest.warns(PendingDeprecationWarning):
+            _ = runtime.create_workflow_run(
+                wf().model,
+                None,
+                dry_run=False,
+            )
 
         # Then
         mocked_client.create_workflow_run.assert_called_once_with(
@@ -307,11 +316,12 @@ class TestCreateWorkflowRun:
         mocked_client.create_workflow_run.return_value = workflow_run_id
 
         # When
-        _ = runtime.create_workflow_run(
-            wf().model,
-            None,
-            dry_run=False,
-        )
+        with pytest.warns(PendingDeprecationWarning):
+            _ = runtime.create_workflow_run(
+                wf().model,
+                None,
+                dry_run=False,
+            )
 
         # Then
         mocked_client.create_workflow_run.assert_called_once_with(
@@ -332,7 +342,10 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(exceptions.WorkflowSyntaxError):
-                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
+                with pytest.warns(PendingDeprecationWarning):
+                    _ = runtime.create_workflow_run(
+                        my_workflow.model, None, dry_run=False
+                    )
 
         def test_unknown_http(
             self, mocked_client: MagicMock, runtime: _ce_runtime.CERuntime
@@ -344,7 +357,10 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(_exceptions.UnknownHTTPError):
-                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
+                with pytest.warns(PendingDeprecationWarning):
+                    _ = runtime.create_workflow_run(
+                        my_workflow.model, None, dry_run=False
+                    )
 
         @pytest.mark.parametrize(
             "failure_exc", [_exceptions.InvalidTokenError, _exceptions.ForbiddenError]
@@ -360,7 +376,10 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(exceptions.UnauthorizedError):
-                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
+                with pytest.warns(PendingDeprecationWarning):
+                    _ = runtime.create_workflow_run(
+                        my_workflow.model, None, dry_run=False
+                    )
 
         def test_invalid_project(
             self,
@@ -396,7 +415,10 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(exceptions.WorkflowRunNotStarted):
-                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
+                with pytest.warns(PendingDeprecationWarning):
+                    _ = runtime.create_workflow_run(
+                        my_workflow.model, None, dry_run=False
+                    )
 
         @pytest.mark.parametrize("submitted_version", (None, "0.1.0"))
         @pytest.mark.parametrize(
@@ -416,7 +438,10 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(exceptions.WorkflowRunNotStarted) as exc_info:
-                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
+                with pytest.warns(PendingDeprecationWarning):
+                    _ = runtime.create_workflow_run(
+                        my_workflow.model, None, dry_run=False
+                    )
 
             error_message = str(exc_info.value)
             assert "This is an unsupported version of orquestra-sdk.\n" in error_message
@@ -445,7 +470,10 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(_exceptions.UnknownHTTPError):
-                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
+                with pytest.warns(PendingDeprecationWarning):
+                    _ = runtime.create_workflow_run(
+                        my_workflow.model, None, dry_run=False
+                    )
 
         @pytest.mark.parametrize(
             "failure_exc", [_exceptions.InvalidTokenError, _exceptions.ForbiddenError]
@@ -461,7 +489,10 @@ class TestCreateWorkflowRun:
 
             # When
             with pytest.raises(exceptions.UnauthorizedError):
-                _ = runtime.create_workflow_run(my_workflow.model, None, dry_run=False)
+                with pytest.warns(PendingDeprecationWarning):
+                    _ = runtime.create_workflow_run(
+                        my_workflow.model, None, dry_run=False
+                    )
 
 
 class TestGetWorkflowRunStatus:
@@ -653,7 +684,11 @@ class TestGetWorkflowRunResultsNonBlocking:
             mocked_client.get_workflow_run.return_value = workflow_run_status(
                 State.SUCCEEDED
             )
-            monkeypatch.setattr(orquestra.sdk._shared._retry.time, "sleep", Mock())
+            monkeypatch.setattr(
+                orquestra.workflow_shared._retry.time,  # type:ignore[reportPrivateImportUsage] # noqa: E501
+                "sleep",
+                Mock(),
+            )
             # When
             with pytest.raises(exceptions.WorkflowResultsNotReadyError):
                 _ = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
@@ -676,7 +711,11 @@ class TestGetWorkflowRunResultsNonBlocking:
             )
             monkeypatch.setattr(serde, "deserialize", lambda x: x)
 
-            monkeypatch.setattr(orquestra.sdk._shared._retry.time, "sleep", Mock())
+            monkeypatch.setattr(
+                orquestra.workflow_shared._retry.time,  # type:ignore[reportPrivateImportUsage] # noqa: E501
+                "sleep",
+                Mock(),
+            )
             # When
             _ = runtime.get_workflow_run_outputs_non_blocking(workflow_run_id)
 
@@ -2082,7 +2121,8 @@ def test_ce_resources(
 
     # When
     with context as exec_info:
-        runtime.create_workflow_run(wf().model, None, dry_run=False)
+        with pytest.warns(PendingDeprecationWarning):
+            runtime.create_workflow_run(wf().model, None, dry_run=False)
 
     # Then
     if raises:

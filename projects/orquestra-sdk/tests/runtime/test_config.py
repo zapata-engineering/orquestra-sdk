@@ -18,9 +18,9 @@ the user. It's a lot easier to figure out appropriate behavior this way.
 """
 
 import pytest
+from orquestra.workflow_shared.schema.configs import RuntimeName
 
-from orquestra.sdk._client._base import _config
-from orquestra.sdk._shared.schema.configs import RuntimeName
+from orquestra.sdk._client._base._config import _fs
 
 
 class TestProperties:
@@ -51,12 +51,12 @@ class TestProperties:
             When there's no config file at the start.
             """
 
-            _config.update_config(
+            _fs.update_config(
                 config_name=config_name,
                 runtime_name=runtime_name,
                 new_runtime_options=new_runtime_options,
             )
-            entry = _config.read_config(config_name)
+            entry = _fs.read_config(config_name)
 
             if config_name is not None:
                 assert entry.config_name == config_name

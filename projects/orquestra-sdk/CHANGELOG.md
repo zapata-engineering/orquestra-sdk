@@ -4,11 +4,14 @@
 
 🚨 *Breaking Changes*
 
-* Installing `orquestra-sdk[ray]` no longer installs Ray dashboard. Use `orquestra-sdk[all]` or `orquestra-sdk[dashboard]` instead.
+* Update `ray` dependency to version 2.24.0
 
 🔥 *Features*
 
 🧟 *Deprecations*
+
+* Deprecate `migrate_config_file`. Please contact SDK team if you need your config to be migrated.
+* Deprecation of `WorkflowDef.run()` method when running on CE without specifying workspace.
 
 👩‍🔬 *Experimental*
 
@@ -21,6 +24,20 @@
 🥷 *Internal*
 
 📃 *Docs*
+
+## v0.65.0
+
+🔥 *Features*
+
+* Add `orq wf graph` CLI command to generate a graph of a workflow definition.
+
+💅 *Improvements*
+
+* `orquestra-sdk-base` CPU image is now built on `arm64`
+
+📃 *Docs*
+
+* Correct docstring of DremioClient to remove erronious reference to `ORQ_DREMIO_HOST`.
 
 ## v0.64.0
 

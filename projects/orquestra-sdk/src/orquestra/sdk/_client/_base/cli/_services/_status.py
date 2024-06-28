@@ -1,7 +1,7 @@
 ################################################################################
 # © Copyright 2023 Zapata Computing Inc.
 ################################################################################
-from orquestra.sdk._shared.schema.responses import ServiceResponse
+from orquestra.workflow_shared.schema.responses import ServiceResponse
 
 from .. import _arg_resolvers
 from .._ui import _presenters

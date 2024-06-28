@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022-2024 Zapata Computing Inc.
 ################################################################################
 
 """User-facing ``WorkflowRun`` object.
@@ -18,9 +18,9 @@ from functools import cached_property
 from pathlib import Path
 from urllib.parse import urlparse
 
-from orquestra.sdk._shared import ProjectRef, iter_invocations_topologically, serde
-from orquestra.sdk._shared.abc import RuntimeInterface
-from orquestra.sdk._shared.exceptions import (
+from orquestra.workflow_shared import ProjectRef, iter_invocations_topologically, serde
+from orquestra.workflow_shared.abc import RuntimeInterface
+from orquestra.workflow_shared.exceptions import (
     ConfigFileNotFoundError,
     ConfigNameNotFoundError,
     ProjectInvalidError,
@@ -36,26 +36,28 @@ from orquestra.sdk._shared.exceptions import (
     WorkflowRunNotSucceeded,
     WorkspacesNotSupportedError,
 )
-from orquestra.sdk._shared.exec_ctx import ExecContext, get_current_exec_context
-from orquestra.sdk._shared.logs import WorkflowLogs
-from orquestra.sdk._shared.schema import ir
-from orquestra.sdk._shared.schema.configs import ConfigName
-from orquestra.sdk._shared.schema.responses import WorkflowResult
-from orquestra.sdk._shared.schema.workflow_run import ProjectId, State
-from orquestra.sdk._shared.schema.workflow_run import TaskRun as TaskRunModel
-from orquestra.sdk._shared.schema.workflow_run import TaskRunId
-from orquestra.sdk._shared.schema.workflow_run import WorkflowRun as WorkflowRunModel
-from orquestra.sdk._shared.schema.workflow_run import (
+from orquestra.workflow_shared.exec_ctx import ExecContext, get_current_exec_context
+from orquestra.workflow_shared.logs import WorkflowLogs
+from orquestra.workflow_shared.schema import ir
+from orquestra.workflow_shared.schema.configs import ConfigName
+from orquestra.workflow_shared.schema.responses import WorkflowResult
+from orquestra.workflow_shared.schema.workflow_run import ProjectId, State
+from orquestra.workflow_shared.schema.workflow_run import TaskRun as TaskRunModel
+from orquestra.workflow_shared.schema.workflow_run import TaskRunId
+from orquestra.workflow_shared.schema.workflow_run import (
+    WorkflowRun as WorkflowRunModel,
+)
+from orquestra.workflow_shared.schema.workflow_run import (
     WorkflowRunId,
     WorkflowRunMinimal,
     WorkflowRunSummary,
     WorkspaceId,
 )
 
-from .._config import IN_PROCESS_CONFIG_NAME, RAY_CONFIG_NAME_ALIAS
+from .._config import RuntimeConfig, resolve_config
+from .._config._settings import IN_PROCESS_CONFIG_NAME, RAY_CONFIG_NAME_ALIAS
 from .._env import CURRENT_CLUSTER_ENV, CURRENT_PROJECT_ENV, CURRENT_WORKSPACE_ENV
 from .._spaces._resolver import resolve_studio_ref, resolve_studio_workspace_ref
-from ._config import RuntimeConfig, resolve_config
 from ._task_run import TaskRun
 
 

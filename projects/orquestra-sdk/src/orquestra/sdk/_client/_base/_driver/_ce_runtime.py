@@ -7,8 +7,7 @@ from datetime import timedelta
 from pathlib import Path
 from typing import Dict, List, Optional, Protocol, Sequence, Union
 
-from orquestra.sdk._client._base._jwt import check_jwt_without_signature_verification
-from orquestra.sdk._shared import (
+from orquestra.workflow_shared import (
     Project,
     ProjectRef,
     Workspace,
@@ -16,15 +15,15 @@ from orquestra.sdk._shared import (
     retry,
     serde,
 )
-from orquestra.sdk._shared.abc import RuntimeInterface
-from orquestra.sdk._shared.exceptions import (
+from orquestra.workflow_shared.abc import RuntimeInterface
+from orquestra.workflow_shared.exceptions import (
     ExpiredTokenError,
     IgnoredFieldWarning,
     InvalidTokenError,
     UnauthorizedError,
 )
-from orquestra.sdk._shared.kubernetes.quantity import parse_quantity
-from orquestra.sdk._shared.logs import (
+from orquestra.workflow_shared.kubernetes.quantity import parse_quantity
+from orquestra.workflow_shared.logs import (
     LogAccumulator,
     LogOutput,
     LogStreamType,
@@ -32,17 +31,17 @@ from orquestra.sdk._shared.logs import (
     is_env_setup,
     is_worker,
 )
-from orquestra.sdk._shared.schema.configs import RuntimeConfiguration
-from orquestra.sdk._shared.schema.ir import (
+from orquestra.workflow_shared.schema.configs import RuntimeConfiguration
+from orquestra.workflow_shared.schema.ir import (
     ArtifactFormat,
     TaskInvocationId,
     WorkflowDef,
 )
-from orquestra.sdk._shared.schema.responses import (
+from orquestra.workflow_shared.schema.responses import (
     ComputeEngineWorkflowResult,
     WorkflowResult,
 )
-from orquestra.sdk._shared.schema.workflow_run import (
+from orquestra.workflow_shared.schema.workflow_run import (
     State,
     TaskRunId,
     WorkflowRun,
@@ -51,6 +50,8 @@ from orquestra.sdk._shared.schema.workflow_run import (
     WorkflowRunSummary,
     WorkspaceId,
 )
+
+from orquestra.sdk._client._base._jwt import check_jwt_without_signature_verification
 
 from . import _client, _exceptions, _models
 
@@ -178,7 +179,14 @@ class CERuntime(RuntimeInterface):
         Returns:
             the workflow run ID.
         """
+        if project is None or project.workspace_id is None:
+            warnings.warn(
+                "Please specify workspace ID directly for submitting CE workflows."
+                " Support for default workspace will be removed in the next release",
+                category=PendingDeprecationWarning,
+            )
         _check_token_validity(self._token)
+
         max_invocation_resources = _get_max_resources(workflow_def)
 
         if workflow_def.resources is not None:

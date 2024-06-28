@@ -15,24 +15,26 @@ from unittest.mock import Mock, create_autospec
 
 import pytest
 import requests
+from orquestra.workflow_runtime._ray import _dag
+from orquestra.workflow_shared import exceptions
+from orquestra.workflow_shared.dates import _dates
+from orquestra.workflow_shared.logs._interfaces import LogOutput, WorkflowLogs
+from orquestra.workflow_shared.schema import ir
+from orquestra.workflow_shared.schema.configs import RemoteRuntime, RuntimeName
+from orquestra.workflow_shared.schema.workflow_run import RunStatus, State
+from orquestra.workflow_shared.schema.workflow_run import TaskRun as TaskRunModel
+from orquestra.workflow_shared.schema.workflow_run import (
+    WorkflowRun as WorkflowRunModel,
+)
+from orquestra.workflow_shared.schema.workflow_run import WorkflowRunSummary
 
 from orquestra import sdk
-from orquestra.sdk._client._base import _config
-from orquestra.sdk._client._base._config import SPECIAL_CONFIG_NAME_DICT
+from orquestra.sdk._client._base._config import _fs
+from orquestra.sdk._client._base._config._settings import SPECIAL_CONFIG_NAME_DICT
 from orquestra.sdk._client._base._driver._client import DriverClient
 from orquestra.sdk._client._base._testing import _example_wfs, _reloaders
 from orquestra.sdk._client._base.cli import _repos
 from orquestra.sdk._client._base.cli._ui import _models as ui_models
-from orquestra.sdk._runtime._ray import _dag
-from orquestra.sdk._shared import exceptions
-from orquestra.sdk._shared.dates import _dates
-from orquestra.sdk._shared.logs._interfaces import LogOutput, WorkflowLogs
-from orquestra.sdk._shared.schema import ir
-from orquestra.sdk._shared.schema.configs import RemoteRuntime, RuntimeName
-from orquestra.sdk._shared.schema.workflow_run import RunStatus, State
-from orquestra.sdk._shared.schema.workflow_run import TaskRun as TaskRunModel
-from orquestra.sdk._shared.schema.workflow_run import WorkflowRun as WorkflowRunModel
-from orquestra.sdk._shared.schema.workflow_run import WorkflowRunSummary
 
 from ..sdk.data.configs import TEST_CONFIG_JSON
 
@@ -1214,10 +1216,10 @@ class TestConfigRepo:
             mock_save_or_update = Mock()
 
             monkeypatch.setattr(
-                _config, "generate_config_name", lambda n, m: generated_name
+                _fs, "generate_config_name", lambda n, m: generated_name
             )
 
-            monkeypatch.setattr(_config, "save_or_update", mock_save_or_update)
+            monkeypatch.setattr(_fs, "save_or_update", mock_save_or_update)
 
             # When
             config_name = repo.store_token_in_config(uri, token, runtime_name)
@@ -1534,12 +1536,9 @@ class TestWorkflowDefRepoIntegration:
                 "wf_using_git_imports",
                 "workflow_throwing_3rd_party_exception",
                 "wf_using_python_imports",
-                "serial_wf_with_slow_middle_task",
-                "infinite_workflow",
                 "serial_wf_with_file_triggers",
                 "exception_wf_with_multiple_values",
                 "wf_with_log",
-                "wf_with_exec_ctx",
                 "parametrized_wf",
                 "wf_with_secrets",
                 "workflow_parametrised_with_resources",

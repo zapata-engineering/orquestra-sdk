@@ -6,17 +6,19 @@ user's project state.
 """
 from pathlib import Path
 
-from orquestra.sdk._client._base import _config
-from orquestra.sdk._shared.schema import configs
+from orquestra.workflow_shared.schema import configs
+from orquestra.workflow_shared.schema.configs import CONFIG_FILE_CURRENT_VERSION
+
+from orquestra.sdk._client._base._config import _settings
 
 
 def write_user_config_file(
     dirpath: Path,
     runtime_config: configs.RuntimeConfiguration,
 ):
-    config_file = dirpath / _config.CONFIG_FILE_NAME
+    config_file = dirpath / _settings.CONFIG_FILE_NAME
     config_file_contents = configs.RuntimeConfigurationFile(
-        version=_config.CONFIG_FILE_CURRENT_VERSION,
+        version=CONFIG_FILE_CURRENT_VERSION,
         configs={runtime_config.config_name: runtime_config},
     )
     config_file.write_text(config_file_contents.model_dump_json())

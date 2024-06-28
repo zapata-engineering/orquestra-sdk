@@ -14,11 +14,11 @@ import mlflow
 import pytest
 import responses
 import responses.matchers
+from orquestra.workflow_shared.schema import configs
 from pytest import MonkeyPatch
 
 from orquestra import sdk
-from orquestra.sdk._client._base import _config
-from orquestra.sdk._shared.schema import configs
+from orquestra.sdk._client._base._config import _fs
 
 
 class Snippets:
@@ -113,7 +113,7 @@ def mocked_environ(monkeypatch):
 
 def _mock_config(monkeypatch, tmp_path: Path, base_uri, token):
     monkeypatch.setattr(
-        _config,
+        _fs,
         "get_config_file_path",
         Mock(return_value=tmp_path / "shouldnt_exist.json"),
     )
