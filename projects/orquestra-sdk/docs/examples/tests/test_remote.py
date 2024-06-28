@@ -84,7 +84,8 @@ class TestSnippets:
         from orquestra import sdk
 
         monkeypatch.setenv("ORQ_CONFIG_PATH", str(tmp_path / "config.json"))
-        sdk.RuntimeConfig.ce(uri=f"http://127.0.0.1:{httpserver.port}", token="nice")
+        token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"  # noqa
+        sdk.RuntimeConfig.ce(uri=f"http://127.0.0.1:{httpserver.port}", token=token)
 
     @staticmethod
     @pytest.mark.dependency()

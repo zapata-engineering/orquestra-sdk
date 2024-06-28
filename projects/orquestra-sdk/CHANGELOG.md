@@ -19,6 +19,8 @@
 
 💅 *Improvements*
 
+* Short-circuit token validation. Do client-side verification of CE tokens before sending requests to the server.
+
 🥷 *Internal*
 
 📃 *Docs*

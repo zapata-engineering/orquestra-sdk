@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2024 Zapata Computing Inc.
 ################################################################################
 
 from unittest.mock import MagicMock
@@ -10,13 +10,15 @@ from orquestra.workflow_shared.schema.configs import RuntimeConfiguration, Runti
 from orquestra.sdk._client._base._driver import _client
 from orquestra.sdk._client._base._factory import build_runtime_from_config
 
+VALID_JWT_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"  # noqa
+
 
 @pytest.fixture
 def runtime():
     config = RuntimeConfiguration(
         config_name="hello",
         runtime_name=RuntimeName.CE_REMOTE,
-        runtime_options={"uri": "http://localhost", "token": "blah"},
+        runtime_options={"uri": "http://localhost", "token": VALID_JWT_TOKEN},
     )
 
     return build_runtime_from_config(config=config)
@@ -29,7 +31,7 @@ def runtime_verbose(tmp_path):
     config = RuntimeConfiguration(
         config_name="hello",
         runtime_name=RuntimeName.CE_REMOTE,
-        runtime_options={"uri": "http://localhost", "token": "blah"},
+        runtime_options={"uri": "http://localhost", "token": VALID_JWT_TOKEN},
     )
     # Return a runtime object
     return build_runtime_from_config(config=config, verbose=True)

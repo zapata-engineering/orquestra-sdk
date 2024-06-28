@@ -1,4 +1,4 @@
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022-2024 Zapata Computing Inc.
 ################################################################################
 from contextlib import nullcontext as do_not_raise
 from datetime import timedelta
@@ -2134,3 +2134,30 @@ def test_ce_resources(
             False,
             None,
         )
+
+
+def test_invalid_token(
+    mocked_client: MagicMock,
+    runtime: _ce_runtime.CERuntime,
+    workflow_def_id: str,
+    workflow_run_id: str,
+):
+    runtime._token = "fake token"
+    funcs = [
+        (runtime.create_workflow_run, 3),
+        (runtime.get_workflow_run_status, 1),
+        (runtime.get_workflow_run_outputs_non_blocking, 1),
+        (runtime.get_available_outputs, 1),
+        (runtime.stop_workflow_run, 1),
+        (runtime.list_workflow_run_summaries, 0),
+        (runtime.list_workflow_runs, 0),
+        (runtime.get_workflow_logs, 1),
+        (runtime.get_task_logs, 2),
+        (runtime.list_workspaces, 0),
+        (runtime.list_projects, 1),
+        (runtime.get_workflow_project, 1),
+    ]
+
+    for fun_call, no_of_params in funcs:
+        with pytest.raises(exceptions.UnauthorizedError):
+            fun_call(*[Mock()] * no_of_params)
