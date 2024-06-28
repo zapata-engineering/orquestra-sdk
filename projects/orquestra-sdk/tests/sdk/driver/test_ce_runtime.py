@@ -1,4 +1,4 @@
-# © Copyright 2022-2023 Zapata Computing Inc.
+# © Copyright 2022-2024 Zapata Computing Inc.
 ################################################################################
 from contextlib import nullcontext as do_not_raise
 from datetime import timedelta

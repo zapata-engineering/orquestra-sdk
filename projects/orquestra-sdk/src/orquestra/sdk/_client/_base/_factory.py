@@ -1,5 +1,5 @@
 ################################################################################
-# © Copyright 2023 Zapata Computing Inc.
+# © Copyright 2023-2024 Zapata Computing Inc.
 ################################################################################
 
 from orquestra.workflow_shared import exceptions
