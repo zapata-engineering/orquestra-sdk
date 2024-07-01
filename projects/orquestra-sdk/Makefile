@@ -24,10 +24,9 @@ clean:
 
 test:
 	$(PYTHON) -m pytest \
-		--ignore=tests/integration/performance \
+		--ignore=tests/integration \
 		--ignore=tests/sdk/typing \
 		--durations=10 \
-		docs/examples/tests \
 		tests
 
 
@@ -51,13 +50,13 @@ coverage:
 		--ignore=tests/sdk/typing \
 		--ignore=tests/integration \
 		--durations=10 \
-		docs/examples/tests \
 		tests \
 		&& echo Code coverage Passed the $(MIN_COVERAGE)% mark!
 
 integration:
 	$(PYTHON) -m pytest \
-		tests/integration
+		tests/integration \
+		docs/examples/tests
 
 # Reads the code coverage stats from '.coverage' file and prints a textual,
 # human-readable report to stdout.
