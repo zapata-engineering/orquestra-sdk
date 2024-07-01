@@ -8,8 +8,6 @@ import subprocess
 from pathlib import Path
 from typing import Protocol
 
-from orquestra.workflow_runtime import ray_plasma_path, ray_storage_path, ray_temp_path
-
 ORQUESTRA_BASE_PATH = Path.home() / ".orquestra"
 
 
@@ -46,6 +44,19 @@ class RayManager:
         Raises:
             subprocess.CalledProcessError: if calling the `ray` CLI failed.
         """
+        # Moving import to call-time, as users might not have runtime installed
+        try:
+            from orquestra.workflow_runtime import (
+                ray_plasma_path,
+                ray_storage_path,
+                ray_temp_path,
+            )
+        except ModuleNotFoundError:
+            raise RuntimeError(
+                "Local runtime is not installed. To start local ray "
+                "cluster, please install SDK with proper extra, [ray]"
+            )
+
         ray_temp = ray_temp_path()
         ray_storage = ray_storage_path()
         ray_plasma = ray_plasma_path()

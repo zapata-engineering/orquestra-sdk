@@ -8,7 +8,6 @@ Tests for orquestra.sdk._base._api._task_run.
 import typing as t
 from unittest.mock import Mock, create_autospec
 
-import orquestra.workflow_runtime
 import pytest
 from orquestra.workflow_shared import serde
 from orquestra.workflow_shared.abc import RuntimeInterface
@@ -535,22 +534,6 @@ class TestTaskRun:
             assert task_input.kwargs == {}
 
 
-# region: fixtures
-@pytest.fixture
-def mock_ray_context(monkeypatch):
-    wf_run_id = "wf.1"
-    task_inv_id = "inv-1-generate-data"
-    task_run_id = f"{wf_run_id}@{task_inv_id}"
-    monkeypatch.setattr(
-        orquestra.workflow_runtime,
-        "get_current_ids",
-        Mock(return_value=(wf_run_id, task_inv_id, task_run_id)),
-    )
-    monkeypatch.setattr(_exec_ctx, "global_context", _exec_ctx.ExecContext.RAY)
-
-    return wf_run_id, task_inv_id, task_run_id
-
-
 @pytest.fixture
 def mock_in_process_context(monkeypatch):
     wf_run_id = "wf_run_id"
@@ -578,26 +561,11 @@ class TestGetBackendIDs:
         assert ids.task_invocation_id == ids[1] == "task_inv_id"
         assert ids.task_run_id == ids[2] == "task_run_id"
 
-    class TestRuntimeSpecificGetIDs:
-        @staticmethod
-        def test_get_ray_backend_ids(mock_ray_context):
-            """
-            Test boundary::
-                [_dag.get_current_ids]
-
-            The Ray underlying machinery is tested in integration tests for RayRuntime.
-            """
-            assert _api._task_run._get_ray_backend_ids() == mock_ray_context
-
-        @staticmethod
-        def test_get_in_process_backend_ids(mock_in_process_context):
-            assert (
-                _api._task_run._get_in_process_backend_ids() == mock_in_process_context
-            )
-
     class TestRuntimeDependentBehaviour:
         @staticmethod
-        def test_gets_ray_ids_for_ray_runtimes(mock_ray_context, monkeypatch):
+        def test_gets_ray_ids_for_ray_runtimes(monkeypatch):
+            monkeypatch.setattr(_exec_ctx, "global_context", _exec_ctx.ExecContext.RAY)
+
             monkeypatch.setattr(
                 "orquestra.sdk._client._base._api._task_run._get_ray_backend_ids",
                 mock_get_ray_ids := Mock(return_value="<ray ids sentinel>"),

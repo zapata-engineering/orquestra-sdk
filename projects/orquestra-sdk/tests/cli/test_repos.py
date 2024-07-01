@@ -15,7 +15,6 @@ from unittest.mock import Mock, create_autospec
 
 import pytest
 import requests
-from orquestra.workflow_runtime._ray import _dag
 from orquestra.workflow_shared import exceptions
 from orquestra.workflow_shared.dates import _dates
 from orquestra.workflow_shared.logs._interfaces import LogOutput, WorkflowLogs
@@ -836,9 +835,6 @@ class TestWorkflowRunRepo:
                 sdk, "list_workflow_runs", Mock(return_value=mock_wf_runs)
             )
 
-            # Prevent RayRuntime from connecting to a real cluster.
-            monkeypatch.setattr(_dag.RayRuntime, "startup", Mock())
-
             repo = _repos.WorkflowRunRepo()
 
             # When
@@ -874,9 +870,6 @@ class TestWorkflowRunRepo:
                 "list_workflow_run_summaries",
                 Mock(return_value=mock_wf_run_summaries),
             )
-
-            # Prevent RayRuntime from connecting to a real cluster.
-            monkeypatch.setattr(_dag.RayRuntime, "startup", Mock())
 
             repo = _repos.WorkflowRunRepo()
 
