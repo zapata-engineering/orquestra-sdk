@@ -154,10 +154,9 @@ style-fix:
 test-fast:
 	$(PYTHON) -m pytest \
 		-m "not slow" \
-		--ignore=tests/integration/performance \
+		--ignore=tests/integration \
 		--ignore=tests/sdk/typing \
 		--durations=10 \
-		docs/examples/tests \
 		tests
 
 
