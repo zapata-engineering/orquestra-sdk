@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   # The job ID has to match repo settings for PR required checks
-  TestPerformance:
+  TestIntegration:
     runs-on: ubuntu-latest
     defaults:
       run:

@@ -55,6 +55,7 @@ coverage:
 
 integration:
 	$(PYTHON) -m pytest \
+        --ignore=tests/integration/performance \
 		tests/integration \
 		docs/examples/tests
 
