@@ -24,7 +24,7 @@ clean:
 
 test:
 	$(PYTHON) -m pytest \
-		--ignore=tests/runtime/performance \
+		--ignore=tests/integration/performance \
 		--ignore=tests/sdk/typing \
 		--durations=10 \
 		docs/examples/tests \
@@ -47,7 +47,7 @@ coverage:
 		--cov-fail-under=$(MIN_COVERAGE) \
 		--cov-report xml \
 		--no-cov-on-fail \
-		--ignore=tests/runtime/performance \
+		--ignore=tests/integration/performance \
 		--ignore=tests/sdk/typing \
 		--ignore=tests/integration \
 		--durations=10 \
@@ -71,7 +71,7 @@ github-actions-coverage-report:
 
 # We need to set PATH here because performance test calls the `orq` CLI in a subprocess.
 performance:
-	$(PYTHON) -m pytest --durations=0 tests/runtime/performance
+	$(PYTHON) -m pytest --durations=0 tests/integration/performance
 
 
 # This is NOT mypy checking, it is ensuring the Workflow SDK has correct type hints for our users
@@ -154,7 +154,7 @@ style-fix:
 test-fast:
 	$(PYTHON) -m pytest \
 		-m "not slow" \
-		--ignore=tests/runtime/performance \
+		--ignore=tests/integration/performance \
 		--ignore=tests/sdk/typing \
 		--durations=10 \
 		docs/examples/tests \
