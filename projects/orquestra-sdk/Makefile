@@ -49,10 +49,15 @@ coverage:
 		--no-cov-on-fail \
 		--ignore=tests/runtime/performance \
 		--ignore=tests/sdk/typing \
+		--ignore=tests/integration \
 		--durations=10 \
 		docs/examples/tests \
 		tests \
 		&& echo Code coverage Passed the $(MIN_COVERAGE)% mark!
+
+integration:
+	$(PYTHON) -m pytest \
+		tests/integration
 
 # Reads the code coverage stats from '.coverage' file and prints a textual,
 # human-readable report to stdout.
@@ -74,10 +79,21 @@ user-typing:
 	$(PYTHON) -m pytest tests/sdk/typing
 
 
+# we are uninstalling ray to make sure our tests and SDK client code does not rely
+# on runtime library and ray at all
+# For interactions with runtime and ray we have integration tests
 github_actions:
 	$(PYTHON) -m pip install --upgrade pip
 	$(PYTHON) -m pip install -e '.[dev]'
-	$(PYTHON) -m pip install -e '../orquestra-workflow-runtime[ray]'
+	$(PYTHON) -m pip install -e '../orquestra-workflow-shared'
+	$(PYTHON) -m pip uninstall ray
+    $(PYTHON) -m pip uninstall orquestra-workflow-runtime
+
+
+github-actions-integration:
+	$(PYTHON) -m pip install --upgrade pip
+	$(PYTHON) -m pip install -e '.[dev]'
+    $(PYTHON) -m pip install -e '../orquestra-workflow-runtime'
 	$(PYTHON) -m pip install -e '../orquestra-workflow-shared'
 
 # Install deps required to build wheel. Used for release automation. See also:
