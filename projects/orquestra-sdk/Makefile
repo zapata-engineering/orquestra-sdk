@@ -86,8 +86,8 @@ github_actions:
 	$(PYTHON) -m pip install --upgrade pip
 	$(PYTHON) -m pip install -e '.[dev]'
 	$(PYTHON) -m pip install -e '../orquestra-workflow-shared'
-	$(PYTHON) -m pip uninstall ray
-	$(PYTHON) -m pip uninstall orquestra-workflow-runtime
+	$(PYTHON) -m pip uninstall -y ray
+	$(PYTHON) -m pip uninstall -y orquestra-workflow-runtime
 
 
 github-actions-integration:
