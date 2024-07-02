@@ -15,8 +15,13 @@ from pathlib import Path
 from unittest.mock import ANY, Mock, call, create_autospec
 
 import pytest
-from orquestra.workflow_runtime._ray import _build_workflow, _client, _dag, _ray_logs
-from orquestra.workflow_runtime._ray._env import (
+from orquestra.workflow_runtime._ray import (  # type: ignore
+    _build_workflow,
+    _client,
+    _dag,
+    _ray_logs,
+)
+from orquestra.workflow_runtime._ray._env import (  # type: ignore
     RAY_DOWNLOAD_GIT_IMPORTS_ENV,
     RAY_TEMP_PATH_ENV,
 )
@@ -572,7 +577,7 @@ class TestGetCurrentIDs:
         @sdk.task(source_import=sdk.InlineImport())
         def dump_ids():
             # Separate import just to avoid weird global state passing via closure.
-            from orquestra.workflow_runtime import get_current_ids
+            from orquestra.workflow_runtime import get_current_ids  # type: ignore
 
             (
                 wf_run_id,

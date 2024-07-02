@@ -5,6 +5,6 @@
 # WITH OLD WORKFLOW RESULTS.
 # DO NOT PUT ANY LOGIC INTO THIS FILE.
 
-from orquestra.workflow_runtime import TaskResult
+from orquestra.workflow_runtime import TaskResult  # type: ignore
 
 __all__ = ["TaskResult"]

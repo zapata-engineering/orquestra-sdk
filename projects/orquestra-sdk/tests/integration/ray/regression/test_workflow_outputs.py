@@ -5,8 +5,8 @@ from pathlib import Path
 from typing import Any, Dict, Tuple, Union
 
 import pytest
-from orquestra.workflow_runtime._ray import _client, _dag
-from orquestra.workflow_runtime._testing import _connections
+from orquestra.workflow_runtime._ray import _client, _dag  # type: ignore
+from orquestra.workflow_runtime._testing import _connections  # type: ignore
 from orquestra.workflow_shared.serde import deserialize
 
 from orquestra.sdk._client._base._config._settings import LOCAL_RUNTIME_CONFIGURATION

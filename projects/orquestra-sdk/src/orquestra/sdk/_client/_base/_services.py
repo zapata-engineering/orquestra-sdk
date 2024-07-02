@@ -46,7 +46,7 @@ class RayManager:
         """
         # Moving import to call-time, as users might not have runtime installed
         try:
-            from orquestra.workflow_runtime import (
+            from orquestra.workflow_runtime import (  # type: ignore
                 ray_plasma_path,
                 ray_storage_path,
                 ray_temp_path,
