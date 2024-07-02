@@ -738,8 +738,8 @@ class TestRetries:
         # https://zapatacomputing.atlassian.net/browse/ORQSDK-1024
         # We can just look into the message at peek that the workflow actually failed
         # even tho we report is as RUNNING.
-        import ray.workflow
-        from ray.workflow.common import WorkflowStatus
+        import ray.workflow  # type: ignore
+        from ray.workflow.common import WorkflowStatus  # type: ignore
 
         no_of_retries = 0
 
