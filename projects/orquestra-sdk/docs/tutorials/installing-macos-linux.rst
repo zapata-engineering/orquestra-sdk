@@ -18,6 +18,17 @@ Install the Orquestra Workflow SDK by running:
 This will install ``orquestra-sdk`` and all of its dependencies.
 Note that ``orquestra-sdk`` also includes the :doc:`Orquestra command-line interface <../quickref/cli-reference>`.
 
+Note:
+
+.. code-block:: rst
+
+    When running the command above, you may observe an issue with it trying to install both 0.64.0 and 0.63.0
+    with dependency conflicts error of 'ray==2.9.0; extra == "all"'. 
+    Focus on installing the 0.64.0 version and make sure your Python environment is 3.11.x 
+    as this is the go-to version used by the team that also supports Ray 2.9.0
+
+    For this a virtual environment is highly recommended.
+
 
 Apple Silicon
 =============
