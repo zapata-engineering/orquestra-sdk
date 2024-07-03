@@ -28,6 +28,8 @@ test:
 # Min code-test coverage measured for the whole project required for CI checks to pass.
 MIN_COVERAGE=75
 
+# Nothing to do for this repo
+pre-coverage:
 
 # Option explanation:
 # - '--cov=src' - turn on measuring code coverage. It outputs the results in a
