@@ -29,6 +29,15 @@ test:
 MIN_COVERAGE=75
 
 
+# We do not want to keep the IRs in json form in the repo as maintanance is a big hussle
+# However we want to make sure that during main testing we do not have SDK installed
+pre-coverage:
+	$(PYTHON) -m pip install -e '../orquestra-sdk'
+	$(PYTHON) -m pip install -e '../orquestra-workflow-shared'
+	cd tests/data; $(PYTHON) generate_workflow_defs.py
+	$(PYTHON) -m pip uninstall -y orquestra-sdk
+
+
 # Option explanation:
 # - '--cov=src' - turn on measuring code coverage. It outputs the results in a
 #    '.coverage' binary file. We're not using it, but it can be input to other
