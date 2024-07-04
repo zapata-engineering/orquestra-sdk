@@ -20,7 +20,7 @@ def build_runtime_from_config(
     # subgraphs for Ray and for CE are distinct, and both take a lot of time to
     # import.
     if config.runtime_name == RuntimeName.RAY_LOCAL:
-        from orquestra.workflow_runtime import RayRuntime  # type: ignore
+        from orquestra.workflow_runtime import RayRuntime
 
         return RayRuntime(
             config=config,

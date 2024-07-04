@@ -4,7 +4,7 @@
 import os
 
 import pytest
-from orquestra.workflow_runtime._testing import _connections  # type: ignore
+from orquestra.workflow_runtime._testing import _connections
 
 
 @pytest.fixture(scope="module")

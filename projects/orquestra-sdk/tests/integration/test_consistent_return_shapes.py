@@ -31,7 +31,7 @@ from pathlib import Path
 
 import pytest
 import pytest_httpserver
-from orquestra.workflow_runtime._testing import _connections  # type: ignore
+from orquestra.workflow_runtime._testing import _connections
 from orquestra.workflow_shared.schema.workflow_run import RunStatus, State, TaskRun
 
 import orquestra.sdk as sdk

@@ -4,7 +4,7 @@
 
 
 import pytest
-from orquestra.workflow_runtime import RayRuntime  # type: ignore
+from orquestra.workflow_runtime import RayRuntime
 from orquestra.workflow_shared.exceptions import QERemoved, RuntimeConfigError
 from orquestra.workflow_shared.schema.configs import RuntimeConfiguration, RuntimeName
 
