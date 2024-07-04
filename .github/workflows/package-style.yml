@@ -77,7 +77,7 @@ jobs:
         run: |
           python3 -m venv ./venv
           source ./venv/bin/activate
-          make github_actions
+          make github-actions-integration
 
       - name: Check style
         shell: bash

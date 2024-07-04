@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
-from orquestra.workflow_runtime._testing import _connections  # type: ignore
+from orquestra.workflow_runtime._testing import _connections
 
 import orquestra.sdk as sdk
 

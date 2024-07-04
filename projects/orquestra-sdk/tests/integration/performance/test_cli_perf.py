@@ -20,9 +20,7 @@ import typing as t
 from pathlib import Path
 
 import pytest
-from orquestra.workflow_runtime._testing._connections import (  # type: ignore
-    ray_suitable_temp_dir,
-)
+from orquestra.workflow_runtime._testing._connections import ray_suitable_temp_dir
 
 import orquestra.sdk as sdk
 

@@ -16,11 +16,7 @@ from pathlib import Path
 from unittest.mock import Mock, create_autospec
 
 import pytest
-from orquestra.workflow_runtime import (  # type: ignore
-    ray_plasma_path,
-    ray_storage_path,
-    ray_temp_path,
-)
+from orquestra.workflow_runtime import ray_plasma_path, ray_storage_path, ray_temp_path
 
 from orquestra.sdk._client._base import _services
 from orquestra.sdk._client._base._testing._reloaders import restore_loaded_modules
