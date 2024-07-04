@@ -56,7 +56,7 @@ github-actions-coverage-report:
 	@$(PYTHON) -m diff_cover.diff_cover_tool coverage.xml --compare-branch=origin/$(BASE_BRANCH)
 
 github-actions-integration:
-	make github_actions
+	$(MAKE) github_actions
 
 github_actions:
 	$(PYTHON) -m pip install --upgrade pip
