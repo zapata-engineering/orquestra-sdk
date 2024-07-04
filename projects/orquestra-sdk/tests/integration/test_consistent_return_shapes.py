@@ -35,8 +35,7 @@ from orquestra.workflow_runtime._testing import _connections
 from orquestra.workflow_shared.schema.workflow_run import RunStatus, State, TaskRun
 
 import orquestra.sdk as sdk
-
-from .driver import resp_mocks
+from orquestra.sdk._client._base._testing import resp_mocks
 
 
 # region: workflow definition

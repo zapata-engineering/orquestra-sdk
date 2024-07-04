@@ -1,7 +1,9 @@
-# This workflow runs performance tests
+# This workflow runs integration tests.
+# Those integration tests are used to test compatibility between our 3 packages.
+# In contrast to unit-tests, this workflow installs all 3 packages
 
 # We need a workflow name to be able to schedule it from Github UI
-name: performance
+name: Integration Tests
 
 on:
   # Triggers the workflow on push to main
@@ -20,7 +22,7 @@ concurrency:
 
 jobs:
   # The job ID has to match repo settings for PR required checks
-  TestPerformance:
+  TestIntegration:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -50,4 +52,4 @@ jobs:
         shell: bash
         run: |
           source ./venv/bin/activate
-          make performance
+          make integration
