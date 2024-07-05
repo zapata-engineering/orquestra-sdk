@@ -12,7 +12,7 @@
 
 
 # We need a workflow name to be able to schedule it from Github UI
-name: Integration Tests
+name: Integration Tests PyPi
 
 on:
   # Triggers the workflow on push to main
@@ -31,7 +31,7 @@ concurrency:
 
 jobs:
   # The job ID has to match repo settings for PR required checks
-  TestIntegration:
+  PyPiTestIntegration:
     runs-on: ubuntu-latest
     defaults:
       run:
