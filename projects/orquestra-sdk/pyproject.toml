@@ -72,11 +72,11 @@ dependencies = [
 
 [project.optional-dependencies]
 ray = [
-    "orquestra-workflow-runtime[ray]>=0.1.0",
+    "orquestra-workflow-runtime[ray]~=1.0.0",
 ]
 
 dashboard = [
-    "orquestra-workflow-runtime[dashboard]>=0.1.0",
+    "orquestra-workflow-runtime[dashboard]~=1.0.0",
 ]
 
 all = ["orquestra-sdk[dashboard]"]
