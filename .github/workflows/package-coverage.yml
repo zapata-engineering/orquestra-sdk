@@ -88,6 +88,12 @@ jobs:
           source ./venv/bin/activate
           make github_actions
 
+      - name: Run pre-test setup
+        shell: bash
+        run: |
+          source ./venv/bin/activate
+          make pre-coverage
+
       - name: Run tests and gather coverage stats
         shell: bash
         run: |

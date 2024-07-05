@@ -3,7 +3,6 @@
 ################################################################################
 
 import asyncio
-import sys
 
 import pytest
 from aiohttp import ClientResponse, ClientSession, web
@@ -15,9 +14,6 @@ from orquestra.sdk._client._base.cli._login._login_server import (
 
 
 class TestLoginServer:
-    @pytest.mark.skipif(
-        sys.platform.startswith("win"), reason="This test is buggy on windows"
-    )
     def test_happy_path(self):
         cluster_url = "cluster_url"
         server = LoginServer()
