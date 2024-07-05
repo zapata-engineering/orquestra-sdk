@@ -1,4 +1,4 @@
-# This workflow runs integration tests installing runtime and shared from PyPi
+# This workflow runs integration tests installing runtime and shared from PyPI
 # The purpose of this workflow is to see if current SDK is compatible with the latest
 # released shared and runtime. If it is not, we should release new major version
 # of Shared and/or Runtime and bump minimal requirement on SDK
@@ -12,7 +12,7 @@
 
 
 # We need a workflow name to be able to schedule it from Github UI
-name: Integration Tests PyPi
+name: Integration Tests PyPI
 
 on:
   # Triggers the workflow on push to main
