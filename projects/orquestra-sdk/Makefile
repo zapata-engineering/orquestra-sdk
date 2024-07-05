@@ -33,7 +33,7 @@ test:
 # Min code-test coverage measured for the whole project required for CI checks to pass.
 MIN_COVERAGE=75
 
-# Nothing to do for this repo
+# Nothing to do for this subproject
 pre-coverage:
 
 # Option explanation:
