@@ -1,7 +1,18 @@
-# This workflow runs performance tests
+# This workflow runs integration tests installing runtime and shared from PyPI
+# The purpose of this workflow is to see if current SDK is compatible with the latest
+# released shared and runtime. If it is not, we should release new major version
+# of Shared and/or Runtime and bump minimal requirement on SDK
+
+# Also Note: Due to the possibility of 1 commit being done across all 3 packages
+# making it incompatible, this check is NOT mandatory on github CI so changes can be
+# merged, and then shared/runtime packages can be released.
+
+# Those integration tests are used to test compatibility between our 3 packages.
+# In contrast to unit-tests, this workflow installs all 3 packages
+
 
 # We need a workflow name to be able to schedule it from Github UI
-name: performance
+name: Integration Tests PyPI
 
 on:
   # Triggers the workflow on push to main
@@ -20,7 +31,7 @@ concurrency:
 
 jobs:
   # The job ID has to match repo settings for PR required checks
-  TestPerformance:
+  PyPiTestIntegration:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -44,10 +55,10 @@ jobs:
         run: |
           python3 -m venv ./venv
           source ./venv/bin/activate
-          make github-actions-integration
+          make github-actions-integration-pypi
 
       - name: Run performance test
         shell: bash
         run: |
           source ./venv/bin/activate
-          make performance
+          make integration

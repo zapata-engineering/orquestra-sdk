@@ -24,16 +24,17 @@ clean:
 
 test:
 	$(PYTHON) -m pytest \
-		--ignore=tests/runtime/performance \
+		--ignore=tests/integration \
 		--ignore=tests/sdk/typing \
 		--durations=10 \
-		docs/examples/tests \
 		tests
 
 
 # Min code-test coverage measured for the whole project required for CI checks to pass.
 MIN_COVERAGE=75
 
+# Nothing to do for this subproject
+pre-coverage:
 
 # Option explanation:
 # - '--cov=src' - turn on measuring code coverage. It outputs the results in a
@@ -47,12 +48,18 @@ coverage:
 		--cov-fail-under=$(MIN_COVERAGE) \
 		--cov-report xml \
 		--no-cov-on-fail \
-		--ignore=tests/runtime/performance \
+		--ignore=tests/integration/performance \
 		--ignore=tests/sdk/typing \
+		--ignore=tests/integration \
 		--durations=10 \
-		docs/examples/tests \
 		tests \
 		&& echo Code coverage Passed the $(MIN_COVERAGE)% mark!
+
+integration:
+	$(PYTHON) -m pytest \
+        --ignore=tests/integration/performance \
+		tests/integration \
+		docs/examples/tests
 
 # Reads the code coverage stats from '.coverage' file and prints a textual,
 # human-readable report to stdout.
@@ -66,7 +73,7 @@ github-actions-coverage-report:
 
 # We need to set PATH here because performance test calls the `orq` CLI in a subprocess.
 performance:
-	$(PYTHON) -m pytest --durations=0 tests/runtime/performance
+	$(PYTHON) -m pytest --durations=0 tests/integration/performance
 
 
 # This is NOT mypy checking, it is ensuring the Workflow SDK has correct type hints for our users
@@ -74,11 +81,27 @@ user-typing:
 	$(PYTHON) -m pytest tests/sdk/typing
 
 
+# we are uninstalling ray to make sure our tests and SDK client code does not rely
+# on runtime library and ray at all
+# For interactions with runtime and ray we have integration tests
 github_actions:
 	$(PYTHON) -m pip install --upgrade pip
 	$(PYTHON) -m pip install -e '.[dev]'
-	$(PYTHON) -m pip install -e '../orquestra-workflow-runtime[ray]'
 	$(PYTHON) -m pip install -e '../orquestra-workflow-shared'
+	$(PYTHON) -m pip uninstall -y ray
+	$(PYTHON) -m pip uninstall -y orquestra-workflow-runtime
+
+
+github-actions-integration:
+	$(PYTHON) -m pip install --upgrade pip
+	$(PYTHON) -m pip install -e '.[dev]'
+	$(PYTHON) -m pip install -e '../orquestra-workflow-runtime'
+	$(PYTHON) -m pip install -e '../orquestra-workflow-shared'
+
+
+github-actions-integration-pypi:
+	$(PYTHON) -m pip install --upgrade pip
+	$(PYTHON) -m pip install -e '.[dev]'
 
 # Install deps required to build wheel. Used for release automation. See also:
 # https://github.com/zapatacomputing/cicd-actions/blob/67dd6765157e0baefee0dc874e0f46ccd2075657/.github/workflows/py-wheel-build-and-push.yml#L26
@@ -138,10 +161,9 @@ style-fix:
 test-fast:
 	$(PYTHON) -m pytest \
 		-m "not slow" \
-		--ignore=tests/runtime/performance \
+		--ignore=tests/integration \
 		--ignore=tests/sdk/typing \
 		--durations=10 \
-		docs/examples/tests \
 		tests
 
 

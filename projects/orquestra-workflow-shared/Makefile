@@ -28,6 +28,8 @@ test:
 # Min code-test coverage measured for the whole project required for CI checks to pass.
 MIN_COVERAGE=75
 
+# Nothing to do for this repo
+pre-coverage:
 
 # Option explanation:
 # - '--cov=src' - turn on measuring code coverage. It outputs the results in a
@@ -54,6 +56,9 @@ BASE_BRANCH := $(if $(GITHUB_BASE_REF),$(GITHUB_BASE_REF),main)
 github-actions-coverage-report:
 	@$(PYTHON) -m coverage report --show-missing
 	@$(PYTHON) -m diff_cover.diff_cover_tool coverage.xml --compare-branch=origin/$(BASE_BRANCH)
+
+github-actions-integration:
+	$(MAKE) github_actions
 
 github_actions:
 	$(PYTHON) -m pip install --upgrade pip

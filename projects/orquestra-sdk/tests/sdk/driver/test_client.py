@@ -29,8 +29,7 @@ from orquestra.sdk._client._base._driver._models import (
     Resources,
     SystemLogSourceType,
 )
-
-from . import resp_mocks
+from orquestra.sdk._client._base._testing import resp_mocks
 
 
 @pytest.fixture

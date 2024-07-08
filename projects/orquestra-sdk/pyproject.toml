@@ -26,8 +26,7 @@ requires-python = ">= 3.8"
 # version we can easily install and test, even if there are older versions with
 # the same API.
 dependencies = [
-    "orquestra-workflow-runtime>=0.1.0",
-    "orquestra-workflow-shared>=0.1.0",
+    "orquestra-workflow-shared~=1.0.0",
 
     # Schema definition
     "pydantic>1.10.7",
@@ -73,14 +72,11 @@ dependencies = [
 
 [project.optional-dependencies]
 ray = [
-    "ray==2.24.0",
-    "virtualenv>=20.0.24, !=20.21.1",  # Ray depends on this, but it's missing from the base requirements.
-    "async-timeout",       # Ray depends on this, but its missing from ray requirements. Can be removed when https://github.com/ray-project/ray/issues/41267 is fixed.
+    "orquestra-workflow-runtime[ray]~=1.0.0",
 ]
 
 dashboard = [
-    "orquestra-sdk[ray]",
-    "ray[default]",    
+    "orquestra-workflow-runtime[dashboard]~=1.0.0",
 ]
 
 all = ["orquestra-sdk[dashboard]"]

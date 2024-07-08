@@ -1,8 +1,9 @@
 ################################################################################
 # © Copyright 2022 - 2024 Zapata Computing Inc.
 ################################################################################
-"""
-Recorded HTTP response data. Extracted from the test file because this usually
+"""Recorded HTTP response data.
+
+Extracted from the test file because this usually
 takes a lot of lines. Kept as a Python file for some DRY-ness.
 """
 
@@ -102,8 +103,8 @@ def _list_wf_run_resp(
 
 
 def make_get_wf_def_response(id_: WorkflowDefID, wf_def: WorkflowDef):
-    """
-    Based on:
+    """Generate get wf def response based on schema below.
+
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowDefinition.yaml
     """
     return {
@@ -130,19 +131,18 @@ def make_list_wf_def_paginated_response(
 
 
 def make_create_wf_def_response(id_: WorkflowDefID):
-    """
-    Based on:
+    """Generate create wf def response based on schema below.
+
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/responses/CreateWorkflowDefinitionResponse.yaml
     """
     return {"data": {"id": id_}}
 
 
 def make_error_response(message: str, detail: str, code: Optional[int] = None):
-    """
-    Based on:
+    """Generate error response based on schema below.
+
     https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/Error.yaml
     """
-
     resp: Dict[str, Any] = {
         "message": message,
         "detail": detail,
@@ -158,9 +158,9 @@ def make_error_response(message: str, detail: str, code: Optional[int] = None):
 
 
 def make_submit_wf_run_response(id_: WorkflowRunID):
-    """
-    Based on:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/responses/CreateWorkflowRunResponse.yaml
+    """Generate submit wf run response based on schema below.
+
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/responses/CreateWorkflowRunResponse.yaml
     """
     return {"data": {"id": id_}}
 
@@ -171,9 +171,9 @@ def make_get_wf_run_response(
     status: RunStatus,
     task_runs: List[TaskRun],
 ):
-    """
-    Based on:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml
+    """Generate get wf run response based on schema below.
+
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/schemas/WorkflowRun.yaml
     """
     return {"data": _wf_run_resp(id_, workflow_def_id, status, task_runs)}
 
@@ -191,9 +191,9 @@ def make_list_wf_run_response(
     workflow_def_ids: List[WorkflowDefID],
     statuses: List[RunStatus],
 ):
-    """
-    Based on:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-runs.yaml#L1
+    """Generate list wf run response based on schema below.
+
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-runs.yaml#L1
     """
     # Assume empty task runs for now
     return {
@@ -209,9 +209,9 @@ def make_list_wf_run_paginated_response(
     workflow_def_ids: List[WorkflowDefID],
     statuses: List[RunStatus],
 ):
-    """
-    Based on:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-runs.yaml#L1
+    """Generate list wf run paginated response based on schema below.
+
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/workflow-runs.yaml#L1
     """
     # Assume empty task runs for now
     return {
@@ -227,9 +227,9 @@ def make_list_wf_run_paginated_response(
 
 
 def make_get_wf_run_artifacts_response():
-    """
-    Based on:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/artifacts.yaml#L15
+    """Generate artifacts get response based on schema below.
+
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/artifacts.yaml#L15
     """
     return {
         "data": {
@@ -241,18 +241,17 @@ def make_get_wf_run_artifacts_response():
 
 
 def make_get_wf_run_artifact_response(result_obj: Any):
-    """
-    Based on:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/artifact.yaml#L13
-    """
+    """Generate artifact get response based on schema below.
 
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/artifact.yaml#L13
+    """
     return result_from_artifact(result_obj, ArtifactFormat.AUTO).model_dump()
 
 
 def make_get_wf_run_results_response():
-    """
-    Based on:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/run-results.yaml#L15
+    """Generate wf run result response based on schema below.
+
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/run-results.yaml#L15
     """
     return {
         "data": [
@@ -264,11 +263,10 @@ def make_get_wf_run_results_response():
 
 
 def make_get_wf_run_result_legacy_response(result_obj: Any):
-    """
-    Based on:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/run-result.yaml#L13
-    """
+    """Generate legacy wf run result response based on schema below.
 
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/run-result.yaml#L13
+    """
     return result_from_artifact(result_obj, ArtifactFormat.AUTO).model_dump()
 
 
@@ -276,25 +274,20 @@ DATA_DIR = Path(__file__).parent / "data"
 
 
 def make_get_wf_run_system_logs_response():
-    """
-    As make_get_wf_run_system_logs_response(), but returns bytes that can be decoded.
-    """
+    """Generates system logs response."""
     return (DATA_DIR / "get_wf_system_logs_response" / "sys_logs.tar.gz").read_bytes()
 
 
 def make_get_wf_run_logs_response() -> bytes:
-    """
-    As make_get_wf_run_logs_response(), but returns bytes that can be decoded.
-    """
+    """Generates wf logs response."""
     return (DATA_DIR / "get_wf_logs_response" / "logs.tar.gz").read_bytes()
 
 
 def make_get_task_run_logs_response():
-    """
-    Based on:
-        https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/task-run-logs.yaml#L13
-    """
+    """Generate log response based on schema below.
 
+    https://github.com/zapatacomputing/workflow-driver/blob/34eba4253b56266772795a8a59d6ec7edf88c65a/openapi/src/resources/task-run-logs.yaml#L13.
+    """
     return (DATA_DIR / "get_task_logs_response" / "logs.tar.gz").read_bytes()
 
 

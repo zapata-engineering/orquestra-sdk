@@ -17,6 +17,8 @@
 
 🐛 *Bug Fixes*
 
+* Orquestra-runtime or Ray is no longer required for SDK usage
+
 💅 *Improvements*
 
 * Short-circuit token validation. Do client-side verification of CE tokens before sending requests to the server.
