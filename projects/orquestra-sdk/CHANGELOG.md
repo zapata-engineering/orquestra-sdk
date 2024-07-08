@@ -26,6 +26,7 @@
 📃 *Docs*
 
 * Describe `pip` backtracking problem during dependency installation.
+* Added debugging tips for ray dependency conflicts and preferred Python version on the SDK installation page of `Tutorials`.
 
 ## v0.65.0
 
