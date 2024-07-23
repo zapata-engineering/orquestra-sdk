@@ -50,6 +50,7 @@ ray = [
     "async-timeout",       # Ray depends on this, but its missing from ray requirements. Can be removed when https://github.com/ray-project/ray/issues/41267 is fixed.
 ]
 
+# this extra is left for backward-compatibility reasons.
 dashboard = [
     "orquestra-workflow-runtime[ray]",
 ]
