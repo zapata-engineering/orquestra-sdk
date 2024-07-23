@@ -45,14 +45,13 @@ dependencies = [
 
 [project.optional-dependencies]
 ray = [
-    "ray==2.30.0",
+    "ray[default]==2.30.0",
     "virtualenv>=20.0.24, !=20.21.1",  # Ray depends on this, but it's missing from the base requirements.
     "async-timeout",       # Ray depends on this, but its missing from ray requirements. Can be removed when https://github.com/ray-project/ray/issues/41267 is fixed.
 ]
 
 dashboard = [
     "orquestra-workflow-runtime[ray]",
-    "ray[default]",    
 ]
 
 all = ["orquestra-workflow-runtime[dashboard]"]
