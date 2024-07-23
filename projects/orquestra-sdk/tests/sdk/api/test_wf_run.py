@@ -872,6 +872,7 @@ class TestWorkflowRun:
             )
 
             # When
+            record: pytest.WarningsRecorder
             with pytest.warns(Warning) as record:
                 run.get_status_model()
 
@@ -1920,6 +1921,7 @@ class TestListWorkflows:
         mock_config_runtime.list_workflow_runs.side_effect = raise_warnings
 
         # When
+        record: pytest.WarningsRecorder
         with pytest.warns(Warning) as record:
             _ = _api.list_workflow_runs("mocked_config")
 
@@ -2105,6 +2107,7 @@ class TestListWorkflowSummaries:
         mock_config_runtime.list_workflow_run_summaries.side_effect = raise_warnings
 
         # When
+        record: pytest.WarningsRecorder
         with pytest.warns(Warning) as record:
             _ = _api.list_workflow_run_summaries("mocked_config")
 

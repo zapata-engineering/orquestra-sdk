@@ -63,6 +63,7 @@ def faked_task_wf():
 
 
 def test_workflow_undecorated_task():
+    warnings: pytest.WarningsRecorder
     with pytest.warns(_workflow.NotATaskWarning) as warnings:
         _ = undecorated_task_wf()
 
@@ -87,6 +88,7 @@ def test_workflow_with_fake_imported_task():
     ),
 )
 def test_workflow_with_data_aggregation(data_agg):
+    warns: pytest.WarningsRecorder
     with pytest.warns(Warning) as warns:
 
         @sdk.workflow(

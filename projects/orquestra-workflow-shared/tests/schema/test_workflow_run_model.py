@@ -41,6 +41,7 @@ class TestState:
             state = State.UNKNOWN
 
             # WHEN
+            record: pytest.WarningsRecorder
             with pytest.warns(UserWarning) as record:
                 assert not state.is_completed()
 

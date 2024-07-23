@@ -96,7 +96,7 @@ def test_print_traceback(
         _errors._print_traceback(e)
 
     captured = capsys.readouterr()
-    actual_lines = captured.err.splitlines()
+    actual_lines = str(captured.err).splitlines()
 
     assert len(expected_lines) == len(actual_lines)
 
@@ -178,7 +178,7 @@ class TestPrettyPrintException:
         # debugging.
         # We know the file and function, so let's search for that.
         # We expect one instance on the Exception line, and one in the traceback
-        assert captured.err.count("test_prints_to_std_streams:test_errors.py") == 2
+        assert str(captured.err).count("test_prints_to_std_streams:test_errors.py") == 2
 
     @staticmethod
     @pytest.mark.parametrize(
