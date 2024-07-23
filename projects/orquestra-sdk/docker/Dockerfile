@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.5
 # Base image for running Orquestra tasks.
 # Published at hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base
-FROM python:3.11.9-slim-bullseye
+FROM python:3.11.6-slim-bullseye
 ARG SDK_REQUIREMENT
 
 # Set by BuildKit
@@ -38,7 +38,7 @@ RUN <<EOF
 set -ex
 . "$VIRTUAL_ENV/bin/activate"
 python -m pip install --no-cache-dir -U pip wheel
-python -m pip install --no-cache-dir orquestra-sdk[ray]==0.66.0
+python -m pip install --no-cache-dir ray[default]==2.30
 EOF
 
 # Prefer to use pip, python, and other binaries from the virtual env.
