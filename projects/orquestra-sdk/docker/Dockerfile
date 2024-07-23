@@ -38,6 +38,7 @@ RUN <<EOF
 set -ex
 . "$VIRTUAL_ENV/bin/activate"
 python -m pip install --no-cache-dir -U pip wheel
+python -m pip install --no-cache-dir ray==2.30.0
 EOF
 
 # Prefer to use pip, python, and other binaries from the virtual env.
