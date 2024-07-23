@@ -975,7 +975,7 @@ class TestWFRunResolver:
                 WorkflowLogs.WorkflowLogTypeName.ENV_SETUP,
                 WorkflowLogs.WorkflowLogTypeName.OTHER,
             ]
-
+            e: pytest.WarningsRecorder
             with pytest.warns(UserWarning) as e:
                 resolved_switches = resolver.resolve_log_switches(
                     True, True, True, True, logs

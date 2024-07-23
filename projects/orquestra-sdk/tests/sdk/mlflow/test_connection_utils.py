@@ -167,6 +167,7 @@ class TestGetTrackingURI:
             monkeypatch.setenv(MLFLOW_PORT, "<mlflow port sentinel>")
 
             # When
+            e: pytest.WarningsRecorder
             with pytest.warns(UserWarning) as e:
                 _ = sdk.mlflow.get_tracking_uri(
                     "<workspace id sentinel>", config_name="<config sentinel>"
@@ -305,6 +306,7 @@ class TestGetTrackingToken:
             )
 
             # When
+            e: pytest.WarningsRecorder
             with pytest.warns(UserWarning) as e:
                 _ = sdk.mlflow.get_tracking_token(config_name="<config name sentinel>")
 
