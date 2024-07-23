@@ -588,6 +588,7 @@ def test_artifact_node_custom_names():
         ...
 
     ret = _local_task()
+    warns: pytest.WarningsRecorder
     with pytest.warns(Warning) as warns:
         x = _local_task_1(ret)
         # don't check for specific custom name, but make sure it consists
