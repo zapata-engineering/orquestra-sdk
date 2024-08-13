@@ -3,7 +3,6 @@ Installing
 ==========
 
 This tutorial explains how to install the Orquestra Workflow SDK on macOS and Linux.
-For installation instruction for Windows, see: :doc:`Installing on Windows <installing-windows>`.
 
 
 Install Orquestra Workflow SDK
@@ -16,7 +15,7 @@ Install the Orquestra Workflow SDK by running:
     pip install "orquestra-sdk[all]"
 
 This will install ``orquestra-sdk`` and all of its dependencies.
-Note that ``orquestra-sdk`` also includes the :doc:`Orquestra command-line interface <../quickref/cli-reference>`.
+Note that ``orquestra-sdk`` also includes the :doc:`Orquestra command-line interface <../tutorials/cli-beginners-guide>`.
 
 Troubleshooting Note:
 

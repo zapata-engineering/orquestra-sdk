@@ -59,6 +59,7 @@ nosetests.xml
 
 # Sphinx documentation
 docs/_build/
+projects/orquestra-sdk/docs/_build
 
 # PyBuilder
 target/

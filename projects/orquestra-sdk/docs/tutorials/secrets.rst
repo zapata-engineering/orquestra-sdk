@@ -18,7 +18,7 @@ This is especially important when sending workflows for remote runs.
 Prerequisites
 =============
 
-#. You've installed Orquestra Workflow SDK (:doc:`macOS, Linux<installing-macos-linux>`, :doc:`Windows<installing-windows>`).
+#. You've installed Orquestra Workflow SDK (:doc:`macOS, Linux<installing-macos-linux>`).
 #. You're familiar with :doc:`running workflows remotely<remote>`.
 
 Accessing Secrets From Local Machine
