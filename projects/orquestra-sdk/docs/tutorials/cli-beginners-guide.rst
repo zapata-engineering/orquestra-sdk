@@ -11,7 +11,7 @@ The Beginner's Guide to the Orquestra CLI
 
         orq -V
 
-    For installation instructions, see :doc:`Installing<installing-macos-linux>` or :doc:`Installing on Windows <installing-windows>`.
+    For installation instructions, see :doc:`Installing<installing-macos-linux>`.
 
 Creating a Workflow Definition
 ==============================
