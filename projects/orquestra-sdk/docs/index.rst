@@ -35,7 +35,6 @@ Quick Reference
 
    tutorials/index
    guides/index
-   quickref/index
 
 
 Last change: |today|

@@ -13,5 +13,4 @@ Guides
     resource-management
     version-compatibility
     mlflow
-    migrating-from-quantum-engine
     workspaces-and-projects
