@@ -642,7 +642,6 @@ def make_ray_dag(
     pos_args, pos_args_artifact_nodes = _gather_args(
         workflow_def.output_ids, workflow_def, ray_futures
     )
-    runtime_env = _client.RuntimeEnv(pip=["orquestra-workflow-runtime[ray]==1.0.1"])
     last_future = _make_ray_dag_node(
         client=client,
         # The last step is implicit; it doesn't map to any user-defined Task
@@ -650,7 +649,7 @@ def make_ray_dag(
         ray_options={
             "name": None,
             "metadata": None,
-            "runtime_env": runtime_env,
+            "runtime_env": None,
             "catch_exceptions": True,
             # Set to avoid retrying when the worker crashes.
             # See the comment with the invocation's options for more details.
@@ -669,11 +668,11 @@ def make_ray_dag(
         ),
         dry_run=False,
     )
-    import ray
+
     # Data aggregation step is run with catch_exceptions=True - so it returns tuple of
     # return value and Exception. Here the exception is caught and rethrown in more
     # user-friendly fashion
-    @ray.remote(runtime_env=_client.RuntimeEnv(pip=["orquestra-workflow-runtime[ray]==1.0.1"]))
+    @client.remote
     def handle_data_aggregation_error(result: t.Tuple[t.Any, Exception]):
         # The exception field will be None on success.
         err = result[1]
