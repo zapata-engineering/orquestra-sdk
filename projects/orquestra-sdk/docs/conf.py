@@ -13,7 +13,7 @@
 # -- Project information -----------------------------------------------------
 
 project = "Orquestra Workflow SDK"
-copyright = "2023, Zapata Computing, Inc"
+copyright = "2024, Zapata Computing, Inc"
 author = "your friends at Zapata"
 
 # The full version, including alpha/beta/rc tags

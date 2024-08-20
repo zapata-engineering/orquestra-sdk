@@ -9,7 +9,6 @@ After going through these tutorials, you will be able to build workflows and man
     :maxdepth: 1
 
     installing-macos-linux
-    installing-windows
     cli-beginners-guide
     quickstart
     ray

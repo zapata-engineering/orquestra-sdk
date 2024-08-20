@@ -23,11 +23,11 @@ Quick Reference
 
       A guide of dos and don'ts when writing ``@workflow`` and ``@task`` functions.
 
-   .. grid-item-card:: CLI Reference
-      :link: quickref/cli-reference
+   .. grid-item-card:: CLI guide
+      :link: tutorials/cli-beginners-guide
       :link-type: doc
 
-      Documentation for the ``orq`` command-line interface.
+      Short introduction for the ``orq`` command-line interface.
 
 .. toctree::
    :maxdepth: 2
@@ -35,7 +35,6 @@ Quick Reference
 
    tutorials/index
    guides/index
-   quickref/index
 
 
 Last change: |today|

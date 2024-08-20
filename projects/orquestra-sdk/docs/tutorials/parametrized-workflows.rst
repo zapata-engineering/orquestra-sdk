@@ -8,7 +8,7 @@ Example workflows given in this tutorial will be run in a local Ray instance.
 Prerequisites
 =============
 
-#. You've installed Orquestra Workflow SDK (:doc:`macOS, Linux<installing-macos-linux>`, :doc:`Windows<installing-windows>`).
+#. You've installed Orquestra Workflow SDK (:doc:`macOS, Linux<installing-macos-linux>`).
 #. You've :doc:`started Ray<ray>`.
 
 

@@ -8,7 +8,7 @@ Ray executes your tasks in parallel!
 Prerequisites
 =============
 
-#. You've installed Orquestra Workflow SDK (:doc:`macOS, Linux<installing-macos-linux>`, :doc:`Windows<installing-windows>`).
+#. You've installed Orquestra Workflow SDK (:doc:`macOS, Linux<installing-macos-linux>`).
 #. You've :doc:`defined a task and a workflow<quickstart>` in a ``workflow_defs.py`` file.
 
 
