@@ -4,7 +4,25 @@
 
 🚨 *Breaking Changes*
 
-* Update `ray` dependency to version 2.24.0
+🔥 *Features*
+
+🧟 *Deprecations*
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+## v0.66.0
+
+🚨 *Breaking Changes*
+
+* Update `ray` dependency to version 2.30.0
 
 🔥 *Features*
 
