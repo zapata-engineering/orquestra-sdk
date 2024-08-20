@@ -90,11 +90,55 @@ class GitImportWithAuth:
     """
 
     repo_url: str
-    git_ref: str
+    git_ref: Union[str, DeferredGitRef]
     username: Optional[str]
     auth_secret: Optional[Secret]
     package_name: Optional[str] = None
     extras: Optional[Tuple[str, ...]] = None
+
+
+class DeferredGitRef:
+    def __init__(self, path_to_repo: Union[str, os.PathLike]):
+        self.path_to_repo = path_to_repo
+
+    def resolve(self) -> str:
+        """NotAGitRepo: when the local directory is not a valid git repo."""
+        import git
+
+        try:
+            repo = git.Repo(self.path_to_repo, search_parent_directories=True)
+        except (git.InvalidGitRepositoryError, git.NoSuchPathError) as e:
+            raise NotGitRepo(f"This is not git repo: {self.path_to_repo}", e)
+
+        return repo.head.object.hexsha
+
+
+def ref_infer(local_repo_path: Union[str, os.PathLike] = Path("")) -> DeferredGitRef:
+    """Get git ref to specific local repo.
+
+    The current git repo info is retrieved as default.
+
+    Args:
+        local_repo_path: path to the local repo.
+
+    Usage:
+    In context of SDK Task imports - infer of the repo will happen at workflow
+    submission time to reduce latency.
+
+    @sdk.task(
+        source_import=sdk.GithubImport(
+            "zapatacomputing/my_source_repo",
+            git_ref=sdk.ref_infer(),
+        )
+    )
+        def demo_task():
+            pass
+
+    Usage for other scenarios:
+    def my_fun():
+        sdk.ref_infer("my/path/").infer()
+    """
+    return DeferredGitRef(path_to_repo=local_repo_path)
 
 
 @dataclass(frozen=True, eq=True)
@@ -102,7 +146,7 @@ class GitImport:
     """A task import that uses a Git repository."""
 
     repo_url: str
-    git_ref: str
+    git_ref: Union[str, DeferredGitRef]
 
     @staticmethod
     def infer(
