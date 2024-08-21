@@ -889,6 +889,7 @@ def test_make_import_model_deferred_ref():
 
     ir_import = _traversal._make_import_model(git_import)
 
+    assert isinstance(ir_import, ir.GitImport)
     assert ir_import.repo_url.original_url == "fake"
     assert ir_import.git_ref == _dsl.ref_infer().resolve()
 
@@ -903,6 +904,7 @@ def test_make_import_model_deferred_ref_with_auth():
 
     ir_import = _traversal._make_import_model(git_import)
 
+    assert isinstance(ir_import, ir.GitImport)
     assert ir_import.repo_url.original_url == "fake"
     assert ir_import.git_ref == _dsl.ref_infer().resolve()
 
