@@ -30,9 +30,9 @@ from ._client._base._dsl import (
     InlineImport,
     LocalImport,
     PythonImports,
-    ref_infer,
     Resources,
     TaskDef,
+    ref_infer,
     task,
 )
 from ._client._base._spaces._api import list_projects, list_workspaces
