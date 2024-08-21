@@ -6,6 +6,8 @@
 
 🔥 *Features*
 
+* New function: `sdk.ref_infer` to infer git refs for Git Imports
+
 🧟 *Deprecations*
 
 👩‍🔬 *Experimental*

@@ -355,70 +355,107 @@ def my_fake_repo_setup(tmp_path):
     yield my_fake_repo
 
 
-def test_infer_returns_deferred_import():
-    local_repo = _dsl.GitImport.infer(DEFAULT_LOCAL_REPO_PATH)
-    deferred_git_import = _dsl.DeferredGitImport(DEFAULT_LOCAL_REPO_PATH)
-    assert local_repo.local_repo_path == deferred_git_import.local_repo_path
-    assert local_repo.git_ref == deferred_git_import.git_ref
+class TestDeferredImport:
+    @staticmethod
+    def test_infer_returns_deferred_import():
+        local_repo = _dsl.GitImport.infer(DEFAULT_LOCAL_REPO_PATH)
+        deferred_git_import = _dsl.DeferredGitImport(DEFAULT_LOCAL_REPO_PATH)
+        assert local_repo.local_repo_path == deferred_git_import.local_repo_path
+        assert local_repo.git_ref == deferred_git_import.git_ref
 
+    @staticmethod
+    def test_deferred_git_import(my_fake_repo_setup):
+        my_fake_repo = my_fake_repo_setup
+        deferred_git_import = _dsl.DeferredGitImport(my_fake_repo.working_dir)
+        assert deferred_git_import.local_repo_path == my_fake_repo.working_dir
+        assert deferred_git_import.git_ref is None
 
-def test_deferred_git_import(my_fake_repo_setup):
-    my_fake_repo = my_fake_repo_setup
-    deferred_git_import = _dsl.DeferredGitImport(my_fake_repo.working_dir)
-    assert deferred_git_import.local_repo_path == my_fake_repo.working_dir
-    assert deferred_git_import.git_ref is None
+    @staticmethod
+    def test_deferred_git_import_invalid_repo():
+        with pytest.raises(_dsl.NotGitRepo):
+            _ = _dsl.DeferredGitImport("path_to_git_repo", "my_branch").resolved()
 
-
-def test_deferred_git_import_invalid_repo():
-    with pytest.raises(_dsl.NotGitRepo):
-        _ = _dsl.DeferredGitImport("path_to_git_repo", "my_branch").resolved()
-
-
-@pytest.mark.filterwarnings("ignore: You have uncommitted")
-def test_deferred_git_import_resolved_dirty_repo_does_not_raise(my_fake_repo_setup):
-    my_fake_repo = my_fake_repo_setup
-    # Create an empty file and add it to repo
-    file_name = my_fake_repo.working_dir + "new-file"
-    open(file_name, "wb").close()
-    my_fake_repo.index.add([file_name])
-    _ = _dsl.DeferredGitImport(my_fake_repo.working_dir).resolved()
-
-
-def test_deferred_git_import_resolved_dirty_repo_warning(my_fake_repo_setup):
-    my_fake_repo = my_fake_repo_setup
-    # Create an empty file and add it to repo
-    file_name = my_fake_repo.working_dir + "new-file"
-    open(file_name, "wb").close()
-    my_fake_repo.index.add([file_name])
-    with pytest.warns(DirtyGitRepo):
+    @staticmethod
+    @pytest.mark.filterwarnings("ignore: You have uncommitted")
+    def test_deferred_git_import_resolved_dirty_repo_does_not_raise(my_fake_repo_setup):
+        my_fake_repo = my_fake_repo_setup
+        # Create an empty file and add it to repo
+        file_name = my_fake_repo.working_dir + "new-file"
+        open(file_name, "wb").close()
+        my_fake_repo.index.add([file_name])
         _ = _dsl.DeferredGitImport(my_fake_repo.working_dir).resolved()
 
+    @staticmethod
+    def test_deferred_git_import_resolved_dirty_repo_warning(my_fake_repo_setup):
+        my_fake_repo = my_fake_repo_setup
+        # Create an empty file and add it to repo
+        file_name = my_fake_repo.working_dir + "new-file"
+        open(file_name, "wb").close()
+        my_fake_repo.index.add([file_name])
+        with pytest.warns(DirtyGitRepo):
+            _ = _dsl.DeferredGitImport(my_fake_repo.working_dir).resolved()
 
-def test_deferred_git_import_resolved_no_remote(tmp_path):
-    # Initialize a bare repo
-    my_fake_repo = git.Repo.init(tmp_path / "bare-repo", bare=True)
-    path = my_fake_repo.working_dir
-    assert path is not None
+    @staticmethod
+    def test_deferred_git_import_resolved_no_remote(tmp_path):
+        # Initialize a bare repo
+        my_fake_repo = git.Repo.init(tmp_path / "bare-repo", bare=True)
+        path = my_fake_repo.working_dir
+        assert path is not None
 
-    with pytest.raises(_dsl.NoRemoteRepo):
-        _ = _dsl.DeferredGitImport(str(path)).resolved()
+        with pytest.raises(_dsl.NoRemoteRepo):
+            _ = _dsl.DeferredGitImport(str(path)).resolved()
 
+    @staticmethod
+    def test_deferred_git_import_resolved_detached_head(my_fake_repo_setup):
+        my_fake_repo = my_fake_repo_setup
+        # Detach HEAD
+        my_fake_repo.head.reference = my_fake_repo.commit("HEAD~0")
 
-def test_deferred_git_import_resolved_detached_head(my_fake_repo_setup):
-    my_fake_repo = my_fake_repo_setup
-    # Detach HEAD
-    my_fake_repo.head.reference = my_fake_repo.commit("HEAD~0")
+        with pytest.warns(UserWarning):
+            resolved = _dsl.DeferredGitImport(my_fake_repo.working_dir).resolved()
 
-    with pytest.warns(UserWarning):
+        assert resolved.git_ref == my_fake_repo.head.object.hexsha
+
+    @staticmethod
+    def test_deferred_git_import_resolved(my_fake_repo_setup):
+        my_fake_repo = my_fake_repo_setup
         resolved = _dsl.DeferredGitImport(my_fake_repo.working_dir).resolved()
+        assert resolved.git_ref == my_fake_repo.active_branch.name
 
-    assert resolved.git_ref == my_fake_repo.head.object.hexsha
 
+class TestDeferredRef:
+    @staticmethod
+    def test_ref_infer_returns_deferred_ref():
+        ref = _dsl.ref_infer(DEFAULT_LOCAL_REPO_PATH)
+        assert isinstance(ref, _dsl.DeferredGitRef)
+        assert ref.path_to_repo == DEFAULT_LOCAL_REPO_PATH
 
-def test_deferred_git_import_resolved(my_fake_repo_setup):
-    my_fake_repo = my_fake_repo_setup
-    resolved = _dsl.DeferredGitImport(my_fake_repo.working_dir).resolved()
-    assert resolved.git_ref == my_fake_repo.active_branch.name
+    @staticmethod
+    def test_deferred_git_import(my_fake_repo_setup):
+        my_fake_repo = my_fake_repo_setup
+        deferred_git_ref = _dsl.DeferredGitRef(my_fake_repo.working_dir)
+        assert deferred_git_ref.path_to_repo == my_fake_repo.working_dir
+
+    @staticmethod
+    def test_deferred_git_import_invalid_repo():
+        with pytest.raises(_dsl.NotGitRepo):
+            _ = _dsl.DeferredGitRef("path_to_git_repo").resolve()
+
+    @staticmethod
+    def test_deferred_git_import_resolved_detached_head(my_fake_repo_setup):
+        my_fake_repo = my_fake_repo_setup
+        # Detach HEAD
+        my_fake_repo.head.reference = my_fake_repo.commit("HEAD~0")
+
+        resolved = _dsl.DeferredGitRef(my_fake_repo.working_dir).resolve()
+
+        assert resolved == my_fake_repo.head.object.hexsha
+
+    @staticmethod
+    def test_deferred_git_import_resolved(my_fake_repo_setup):
+        my_fake_repo = my_fake_repo_setup
+        resolved = _dsl.DeferredGitRef(my_fake_repo.working_dir).resolve()
+        assert resolved == my_fake_repo.head.object.hexsha
 
 
 class TestGithubImport:
