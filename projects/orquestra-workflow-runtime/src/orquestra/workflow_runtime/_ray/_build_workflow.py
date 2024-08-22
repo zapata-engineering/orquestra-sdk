@@ -24,6 +24,7 @@ from orquestra.workflow_shared.kubernetes.quantity import parse_quantity
 from orquestra.workflow_shared.packaging import get_installed_version
 from orquestra.workflow_shared.schema import ir, responses, workflow_run
 from orquestra.workflow_shared.schema.ir import GitURL
+from orquestra.workflow_shared.docker_images import DEFAULT_WORKER_IMAGE
 from packaging import version
 from typing_extensions import assert_never
 
@@ -37,8 +38,8 @@ from ._wf_metadata import InvUserMetadata, pydatic_to_json_dict
 DEFAULT_IMAGE_TEMPLATE = "hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:{}"
 
 
-def _get_default_image(template: str, sdk_version: str, num_gpus: t.Optional[int]):
-    image = template.format(sdk_version)
+def _get_default_image(num_gpus: t.Optional[int]):
+    image = DEFAULT_WORKER_IMAGE
     if num_gpus is not None and num_gpus > 0:
         image = f"{image}-cuda"
     return image
@@ -608,10 +609,6 @@ def make_ray_dag(
 
         # Set custom image
         if os.getenv(RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV) is not None:
-            # This makes an assumption that only "new" IRs will get to this point
-            assert workflow_def.metadata is not None, "Expected a >=0.45.0 IR"
-            sdk_version = workflow_def.metadata.sdk_version.original
-
             # Custom "Ray resources" request. The entries need to correspond to the ones
             # used when starting the Ray cluster. See also:
             # https://docs.ray.io/en/latest/ray-core/scheduling/resources.html#custom-resources
@@ -619,7 +616,7 @@ def make_ray_dag(
                 invocation.custom_image
                 or user_task.custom_image
                 or _get_default_image(
-                    DEFAULT_IMAGE_TEMPLATE, sdk_version, ray_options.get("num_gpus")
+                    ray_options.get("num_gpus")
                 )
             )
 
