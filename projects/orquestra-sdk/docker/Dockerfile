@@ -2,7 +2,6 @@
 # Base image for running Orquestra tasks.
 # Published at hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base
 FROM python:3.11.6-slim-bullseye
-ARG SDK_REQUIREMENT
 
 # Set by BuildKit
 ARG TARGETARCH
@@ -38,7 +37,7 @@ RUN <<EOF
 set -ex
 . "$VIRTUAL_ENV/bin/activate"
 python -m pip install --no-cache-dir -U pip wheel
-python -m pip install --no-cache-dir "${SDK_REQUIREMENT}"
+python -m pip install --no-cache-dir ray[default]==2.30
 EOF
 
 # Prefer to use pip, python, and other binaries from the virtual env.
