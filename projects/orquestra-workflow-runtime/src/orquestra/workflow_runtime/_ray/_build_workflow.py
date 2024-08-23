@@ -19,12 +19,12 @@ from orquestra.workflow_shared import (
     secrets,
     serde,
 )
+from orquestra.workflow_shared.docker_images import DEFAULT_WORKER_IMAGE
 from orquestra.workflow_shared.exec_ctx import ray as exec_ctx_ray
 from orquestra.workflow_shared.kubernetes.quantity import parse_quantity
 from orquestra.workflow_shared.packaging import get_installed_version
 from orquestra.workflow_shared.schema import ir, responses, workflow_run
 from orquestra.workflow_shared.schema.ir import GitURL
-from orquestra.workflow_shared.docker_images import DEFAULT_WORKER_IMAGE
 from packaging import version
 from typing_extensions import assert_never
 
@@ -613,9 +613,7 @@ def make_ray_dag(
             ray_options["resources"] = _ray_resources_for_custom_image(
                 invocation.custom_image
                 or user_task.custom_image
-                or _get_default_image(
-                    ray_options.get("num_gpus")
-                )
+                or _get_default_image(ray_options.get("num_gpus"))
             )
 
         ray_result = _make_ray_dag_node(
