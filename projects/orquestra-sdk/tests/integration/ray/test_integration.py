@@ -974,7 +974,7 @@ class TestMakeDag:
                     None,
                     None,
                     {
-                        "image:hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:mocked": 1  # noqa: E501
+                        "image:hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:worker-1.0.0a1": 1  # noqa: E501
                     },
                     {},
                 ),
@@ -982,7 +982,7 @@ class TestMakeDag:
                     None,
                     1,
                     {
-                        "image:hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:mocked-cuda": 1  # noqa: E501
+                        "image:hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:worker-1.0.0a1-cuda": 1  # noqa: E501
                     },
                     {
                         "num_gpus": 1,
