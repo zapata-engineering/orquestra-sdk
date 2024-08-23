@@ -35,8 +35,6 @@ from ._logs import _markers
 from ._ray_settings import VENV_SETUP_TIMEOUT_SECONDS
 from ._wf_metadata import InvUserMetadata, pydatic_to_json_dict
 
-DEFAULT_IMAGE_TEMPLATE = "hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:{}"
-
 
 def _get_default_image(num_gpus: t.Optional[int]):
     image = DEFAULT_WORKER_IMAGE
