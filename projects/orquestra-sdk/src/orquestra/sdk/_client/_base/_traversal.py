@@ -842,13 +842,14 @@ def flatten_graph(
         for dsl_invocation_i, dsl_invocation in enumerate(dsl_invocations)
     }
 
-    sdk_version = get_current_sdk_version()
+    sdk_version = None
     python_version = get_current_python_version()
 
     return ir.WorkflowDef(
         metadata=ir.WorkflowMetadata(
             sdk_version=sdk_version,
             python_version=python_version,
+            head_node_image="hub.stage.nexus.orquestra.io/zapatacomputing/workflow-driver-ray:head-node-1.0.0a1"
         ),
         resources=_make_resources_model(workflow_def._resources, is_task=False),
         # At the moment 'orq submit workflow-def <name>' assumes that the <name> is

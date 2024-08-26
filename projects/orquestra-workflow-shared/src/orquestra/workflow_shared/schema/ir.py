@@ -382,8 +382,9 @@ class Version(BaseModel):
 
 
 class WorkflowMetadata(BaseModel):
-    sdk_version: Version
+    sdk_version: t.Optional[Version]
     python_version: Version
+    head_node_image: str
 
 
 class WorkflowDef(BaseModel):
