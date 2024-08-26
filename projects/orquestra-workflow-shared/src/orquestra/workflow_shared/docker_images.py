@@ -3,5 +3,5 @@
 ################################################################################
 
 DEFAULT_WORKER_IMAGE = (
-    "hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:worker-1.0.0a1"
+    "hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:worker-1.0.0a1"
 )
