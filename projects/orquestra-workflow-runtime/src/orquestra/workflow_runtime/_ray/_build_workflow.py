@@ -455,7 +455,7 @@ def _import_pip_env(
     # parsed_sdk_version = version.parse(current_sdk_version)
     # if not (parsed_sdk_version.is_devrelease or parsed_sdk_version.is_prerelease):
     #     pip_list += [f"orquestra-sdk=={current_sdk_version}"]
-    pip_list += [f"orquestra-sdk==0.66"]
+    pip_list += [f"orquestra-sdk[all]==0.66"]
     return pip_list
 
 
