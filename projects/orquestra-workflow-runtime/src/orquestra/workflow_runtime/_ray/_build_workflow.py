@@ -681,7 +681,8 @@ def make_ray_dag(
         else:
             return result[0]
 
-    return handle_data_aggregation_error.bind(last_future)
+    error = client.add_options(handle_data_aggregation_error, runtime_env=_client.RuntimeEnv(pip=["orquestra-workflow-runtime"]))
+    return error.bind(last_future)
 
 
 def get_current_ids() -> (
