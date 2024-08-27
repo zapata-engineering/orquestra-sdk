@@ -455,7 +455,7 @@ def _import_pip_env(
     # parsed_sdk_version = version.parse(current_sdk_version)
     # if not (parsed_sdk_version.is_devrelease or parsed_sdk_version.is_prerelease):
     #     pip_list += [f"orquestra-sdk=={current_sdk_version}"]
-
+    pip_list += [f"orquestra-sdk==0.66"]
     return pip_list
 
 
@@ -639,7 +639,7 @@ def make_ray_dag(
         ray_options={
             "name": None,
             "metadata": None,
-            "runtime_env": _client.RuntimeEnv(pip=["orquestra-workflow-runtime"]),
+            "runtime_env": _client.RuntimeEnv(pip=["orquestra-sdk==0.66"]),
             "catch_exceptions": True,
             # Set to avoid retrying when the worker crashes.
             # See the comment with the invocation's options for more details.
@@ -665,7 +665,8 @@ def make_ray_dag(
     import ray
     import ray.runtime_env
     RuntimeEnv = ray.runtime_env.RuntimeEnv
-    @ray.remote(runtime_env=RuntimeEnv(pip=["orquestra-workflow-runtime"]))
+
+    @ray.remote(runtime_env=RuntimeEnv(pip=["orquestra-sdk==0.66"]))
     def handle_data_aggregation_error(result: t.Tuple[t.Any, Exception]):
         # The exception field will be None on success.
         err = result[1]
@@ -687,7 +688,7 @@ def make_ray_dag(
         metadata=None,
         max_retries=0,
         catch_exceptions=False,
-        runtime_env=_client.RuntimeEnv(pip=["orquestra-workflow-runtime"]),
+        runtime_env=_client.RuntimeEnv(pip=["orquestra-sdk==0.66"]),
     )
     return error.bind(last_future)
 
