@@ -842,10 +842,7 @@ def flatten_graph(
         for dsl_invocation_i, dsl_invocation in enumerate(dsl_invocations)
     }
 
-    try:
-        sdk_version = get_current_sdk_version()
-    except exceptions.BaseRuntimeError:
-        sdk_version = None
+    sdk_version = get_current_sdk_version()
 
     python_version = get_current_python_version()
 

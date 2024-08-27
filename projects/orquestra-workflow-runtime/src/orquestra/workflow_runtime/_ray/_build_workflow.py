@@ -8,7 +8,7 @@ import time
 import typing as t
 from functools import singledispatch
 from pathlib import Path
-
+import warnings
 import pydantic
 from orquestra.workflow_shared import (
     SEMVER_REGEX,
@@ -437,25 +437,25 @@ def _import_pip_env(
         if not (sdk_dependency := re.match(r"^orquestra-sdk([<|!|=|>|~].*)?$", chunk))
     ]
 
-    # current_sdk_version: str = get_installed_version("orquestra-sdk")
-    #
-    # # If the task definition includes the SDK, warn the user that this does nothing.
-    # if sdk_dependency:
-    #     warnings.warn(
-    #         f"The definition for task `{ir_invocation.task_id}` "
-    #         f"declares `{sdk_dependency[0]}` as a dependency. "
-    #         "The current SDK version "
-    #         + (f"({current_sdk_version}) " if current_sdk_version else "")
-    #         + "is automatically installed in task environments. "
-    #         "The specified dependency will be ignored.",
-    #         exceptions.OrquestraSDKVersionMismatchWarning,
-    #     )
-    #
-    # # Don't add sdk dependency if submitting from a prerelease or dev version.
+    current_sdk_version: str = wf.metadata.sdk_version.original
+
+    # If the task definition includes the SDK, warn the user that this does nothing.
+    if sdk_dependency:
+        warnings.warn(
+            f"The definition for task `{ir_invocation.task_id}` "
+            f"declares `{sdk_dependency[0]}` as a dependency. "
+            "The current SDK version "
+            + (f"({current_sdk_version}) " if current_sdk_version else "")
+            + "is automatically installed in task environments. "
+            "The specified dependency will be ignored.",
+            exceptions.OrquestraSDKVersionMismatchWarning,
+        )
+
+    # Don't add sdk dependency if submitting from a prerelease or dev version.
     # parsed_sdk_version = version.parse(current_sdk_version)
     # if not (parsed_sdk_version.is_devrelease or parsed_sdk_version.is_prerelease):
     #     pip_list += [f"orquestra-sdk=={current_sdk_version}"]
-    pip_list += [f"orquestra-workflow-runtime[all]"]
+
     return pip_list
 
 
