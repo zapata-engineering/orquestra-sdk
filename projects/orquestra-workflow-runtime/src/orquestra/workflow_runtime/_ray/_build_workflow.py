@@ -662,7 +662,10 @@ def make_ray_dag(
     # Data aggregation step is run with catch_exceptions=True - so it returns tuple of
     # return value and Exception. Here the exception is caught and rethrown in more
     # user-friendly fashion
-    @client.remote
+    import ray
+    import ray.runtime_env
+    RuntimeEnv = ray.runtime_env.RuntimeEnv
+    @ray.remote(runtime_env=RuntimeEnv(pip=["orquestra-workflow-runtime"]))
     def handle_data_aggregation_error(result: t.Tuple[t.Any, Exception]):
         # The exception field will be None on success.
         err = result[1]
