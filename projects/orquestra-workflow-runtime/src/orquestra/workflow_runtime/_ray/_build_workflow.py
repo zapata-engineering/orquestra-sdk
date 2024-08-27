@@ -680,7 +680,7 @@ def make_ray_dag(
 
     error = client.add_options(
         handle_data_aggregation_error,
-        name="",
+        name="its_probably_it_isnt_it",
         metadata=None,
         max_retries=0,
         catch_exceptions=False,
