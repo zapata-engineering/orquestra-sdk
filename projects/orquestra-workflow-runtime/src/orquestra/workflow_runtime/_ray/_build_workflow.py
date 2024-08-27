@@ -639,7 +639,7 @@ def make_ray_dag(
         ray_options={
             "name": None,
             "metadata": None,
-            "runtime_env": _client.RuntimeEnv(pip=["orquestra-sdk==0.66"]),
+            "runtime_env": _client.RuntimeEnv(pip=["orquestra-sdk[all]==0.66"]),
             "catch_exceptions": True,
             # Set to avoid retrying when the worker crashes.
             # See the comment with the invocation's options for more details.
@@ -662,11 +662,6 @@ def make_ray_dag(
     # Data aggregation step is run with catch_exceptions=True - so it returns tuple of
     # return value and Exception. Here the exception is caught and rethrown in more
     # user-friendly fashion
-    import ray
-    import ray.runtime_env
-    RuntimeEnv = ray.runtime_env.RuntimeEnv
-
-    @ray.remote(runtime_env=RuntimeEnv(pip=["orquestra-sdk==0.66"]))
     def handle_data_aggregation_error(result: t.Tuple[t.Any, Exception]):
         # The exception field will be None on success.
         err = result[1]
@@ -688,7 +683,7 @@ def make_ray_dag(
         metadata=None,
         max_retries=0,
         catch_exceptions=False,
-        runtime_env=_client.RuntimeEnv(pip=["orquestra-sdk==0.66"]),
+        runtime_env=_client.RuntimeEnv(pip=["orquestra-sdk[all]==0.66"]),
     )
     return error.bind(last_future)
 
