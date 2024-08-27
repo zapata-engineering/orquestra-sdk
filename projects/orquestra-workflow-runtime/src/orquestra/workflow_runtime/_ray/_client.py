@@ -110,7 +110,7 @@ else:
             ray_remote_fn,
             *,
             name: str,
-            metadata: t.Dict[str, t.Any],
+            metadata: t.Optional[t.Dict[str, t.Any]],
             runtime_env: t.Optional[RuntimeEnv],
             catch_exceptions: t.Optional[bool],
             max_retries: int,

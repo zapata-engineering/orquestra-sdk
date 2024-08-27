@@ -6,7 +6,6 @@ import os
 import re
 import time
 import typing as t
-import warnings
 from functools import singledispatch
 from pathlib import Path
 
@@ -22,10 +21,8 @@ from orquestra.workflow_shared import (
 from orquestra.workflow_shared.docker_images import DEFAULT_WORKER_IMAGE
 from orquestra.workflow_shared.exec_ctx import ray as exec_ctx_ray
 from orquestra.workflow_shared.kubernetes.quantity import parse_quantity
-from orquestra.workflow_shared.packaging import get_installed_version
 from orquestra.workflow_shared.schema import ir, responses, workflow_run
 from orquestra.workflow_shared.schema.ir import GitURL
-from packaging import version
 from typing_extensions import assert_never
 
 from . import _client, _id_gen
@@ -681,7 +678,14 @@ def make_ray_dag(
         else:
             return result[0]
 
-    error = client.add_options(handle_data_aggregation_error, runtime_env=_client.RuntimeEnv(pip=["orquestra-workflow-runtime"]))
+    error = client.add_options(
+        handle_data_aggregation_error,
+        name="",
+        metadata=None,
+        max_retries=0,
+        catch_exceptions=False,
+        runtime_env=_client.RuntimeEnv(pip=["orquestra-workflow-runtime"]),
+    )
     return error.bind(last_future)
 
 
