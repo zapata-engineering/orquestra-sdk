@@ -37,8 +37,9 @@ from orquestra.sdk._client._base._testing._example_wfs import (
 # unraisable exceptions. Last tested with Ray 2.4.0.
 pytestmark = pytest.mark.filterwarnings(
     "ignore::pytest.PytestUnraisableExceptionWarning",
-    "ignore::orquestra.workflow_shared.exceptions.OrquestraSDKVersionMismatchWarning"
+    "ignore::orquestra.workflow_shared.exceptions.OrquestraSDKVersionMismatchWarning",
 )
+
 
 @pytest.fixture(scope="module")
 def runtime(
