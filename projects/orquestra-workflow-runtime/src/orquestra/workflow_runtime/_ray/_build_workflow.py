@@ -616,7 +616,7 @@ def make_ray_dag(
         ray_options={
             "name": None,
             "metadata": None,
-            "runtime_env": None,
+            "runtime_env": _client.RuntimeEnv(pip=["orquestra-workflow-runtime[all]"]),
             "catch_exceptions": True,
             # Set to avoid retrying when the worker crashes.
             # See the comment with the invocation's options for more details.

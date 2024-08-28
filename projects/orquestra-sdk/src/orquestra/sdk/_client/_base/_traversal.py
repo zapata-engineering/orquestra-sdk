@@ -834,7 +834,8 @@ def flatten_graph(
                 else:
                     import_models_dict[imp] = _make_import_model(imp)
 
-    sdk_python_import = _dsl.InstalledImport(package_name="orquestra-sdk")
+    sdk_version = get_current_sdk_version()
+    sdk_python_import = _dsl.PythonImports(f"orquestra-sdk[all]=={sdk_version.original}")
     ir_sdk_import = _make_import_model(sdk_python_import)
     import_models_dict[sdk_python_import] = ir_sdk_import
 
