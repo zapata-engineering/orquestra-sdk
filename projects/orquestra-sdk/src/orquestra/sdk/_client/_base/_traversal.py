@@ -572,12 +572,15 @@ def _make_task_model(
     else:
         dependency_import_ids = None
 
+    # we are adding mandatory imports at the end of the list on purpose -
+    # we want to make sure those are actually installed last on the worker as we treat
+    # them as mandatory
     if mandatory_imports:
         mandatory_import_ids = [imp.id for imp in mandatory_imports]
         if not dependency_import_ids:
             dependency_import_ids = mandatory_import_ids
         else:
-            dependency_import_ids += mandatory_import_ids
+            dependency_import_ids.extend(mandatory_import_ids)
 
     resources = _make_resources_model(task._resources)
     parameters = _make_parameters(task._parameters)
