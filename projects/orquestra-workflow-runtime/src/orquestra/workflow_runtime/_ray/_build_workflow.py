@@ -8,7 +8,7 @@ import time
 import typing as t
 from functools import singledispatch
 from pathlib import Path
-import warnings
+
 import pydantic
 from orquestra.workflow_shared import (
     SEMVER_REGEX,
@@ -21,6 +21,7 @@ from orquestra.workflow_shared import (
 from orquestra.workflow_shared.docker_images import DEFAULT_WORKER_IMAGE
 from orquestra.workflow_shared.exec_ctx import ray as exec_ctx_ray
 from orquestra.workflow_shared.kubernetes.quantity import parse_quantity
+from orquestra.workflow_shared.packaging import get_installed_version
 from orquestra.workflow_shared.schema import ir, responses, workflow_run
 from orquestra.workflow_shared.schema.ir import GitURL
 from typing_extensions import assert_never
@@ -427,11 +428,7 @@ def _import_pip_env(
         )
     ]
 
-    pip_list = [
-        chunk
-        for imp in imports
-        for chunk in imports_pip_string[imp.id]
-    ]
+    pip_list = [chunk for imp in imports for chunk in imports_pip_string[imp.id]]
 
     return pip_list
 
@@ -605,6 +602,9 @@ def make_ray_dag(
         for output_id in invocation.output_ids:
             ray_futures[output_id] = ray_result
 
+    runtime_version = get_installed_version("orquestra-workflow-runtime")
+    runtime_pip_string = f"orquestra-workflow-runtime[all]=={runtime_version}"
+
     # Gather futures for the last, fake task, and decide what args we need to unwrap.
     pos_args, pos_args_artifact_nodes = _gather_args(
         workflow_def.output_ids, workflow_def, ray_futures
@@ -616,7 +616,7 @@ def make_ray_dag(
         ray_options={
             "name": None,
             "metadata": None,
-            "runtime_env": _client.RuntimeEnv(pip=["orquestra-workflow-runtime[all]"]),
+            "runtime_env": _client.RuntimeEnv(pip=[runtime_pip_string]),
             "catch_exceptions": True,
             # Set to avoid retrying when the worker crashes.
             # See the comment with the invocation's options for more details.
@@ -657,11 +657,11 @@ def make_ray_dag(
 
     error = client.add_options(
         handle_data_aggregation_error,
-        name="its_probably_it_isnt_it",
+        name="data_aggregation_error_handler",
         metadata=None,
         max_retries=0,
         catch_exceptions=False,
-        runtime_env=_client.RuntimeEnv(pip=["orquestra-workflow-runtime[all]"]),
+        runtime_env=_client.RuntimeEnv(pip=[runtime_pip_string]),
     )
     return error.bind(last_future)
 
