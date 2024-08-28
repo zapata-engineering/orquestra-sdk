@@ -868,7 +868,7 @@ def flatten_graph(
         metadata=ir.WorkflowMetadata(
             sdk_version=sdk_version,
             python_version=python_version,
-            head_node_image="hub.stage.nexus.orquestra.io/zapatacomputing/workflow-driver-ray:head-node-1.0.0a3"
+            head_node_image="hub.stage.nexus.orquestra.io/zapatacomputing/workflow-driver-ray:head-node-1.0.0a3",
         ),
         resources=_make_resources_model(workflow_def._resources, is_task=False),
         # At the moment 'orq submit workflow-def <name>' assumes that the <name> is
