@@ -188,6 +188,7 @@ class TestModelsSerializeProperly:
 
     def test_call_and_model_are_same_for_non_parametrized_workflows(self, monkeypatch):
         monkeypatch.setattr(_traversal, "_global_inline_import_identifier", lambda: 0)
+        monkeypatch.setattr(_traversal, "_gen_id_hash", lambda *_: 0)
         called = _simple_workflow()
         model = _simple_workflow.model
         assert called.model == model
