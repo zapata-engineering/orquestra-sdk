@@ -390,7 +390,8 @@ class TestFlattenGraph:
         source_import = wf.imports[task.source_import_id]
 
         assert task.dependency_import_ids is not None
-        assert len(task.dependency_import_ids) == 1
+        # one from task definition, one default from SDK
+        assert len(task.dependency_import_ids) == 2
         dep_import = wf.imports[task.dependency_import_ids[0]]
 
         # main assertions
@@ -471,8 +472,9 @@ class TestFlattenGraph:
     def test_workflow_with_inline(self):
         wf = wf_with_inline.model
 
-        assert len(wf.imports) == 1
-        (imp,) = wf.imports.values()
+        # one from task definition, one default from SDK
+        assert len(wf.imports) == 2
+        (imp, _) = wf.imports.values()
         assert isinstance(imp, ir.InlineImport)
 
         assert len(wf.tasks) == 1
@@ -483,7 +485,7 @@ class TestFlattenGraph:
         wf = dupe_import_wf.model
 
         tasks = list(wf.tasks.values())
-        assert len(wf.imports) == 1
+        assert len(wf.imports) == 2
         assert len(tasks) == 1
         assert tasks[0].dependency_import_ids is not None
         assert tasks[0].source_import_id not in tasks[0].dependency_import_ids
@@ -768,7 +770,7 @@ CAPITALIZE_TASK_DEF_DUMP = {
     "parameters": [{"name": "text", "kind": "POSITIONAL_OR_KEYWORD"}],
     "output_metadata": {"is_subscriptable": False, "n_outputs": 1},
     "source_import_id": AnyMatchingStr(r"inline-import-\w{1}"),
-    "dependency_import_ids": None,
+    "dependency_import_ids": [AnyMatchingStr(r"python-import-\w{10}")],
     "resources": None,
     "max_retries": None,
     "custom_image": None,
@@ -784,7 +786,7 @@ CAPITALIZE_INLINE_TASK_DEF_DUMP = {
     "parameters": [{"name": "text", "kind": "POSITIONAL_OR_KEYWORD"}],
     "output_metadata": {"is_subscriptable": False, "n_outputs": 1},
     "source_import_id": AnyMatchingStr(r"inline-import-\w{1}"),
-    "dependency_import_ids": None,
+    "dependency_import_ids": [AnyMatchingStr(r"python-import-\w{10}")],
     "resources": None,
     "max_retries": None,
     "custom_image": None,
@@ -802,7 +804,7 @@ GIT_TASK_DEF_DUMP = {
     "parameters": [],
     "output_metadata": {"is_subscriptable": False, "n_outputs": 1},
     "source_import_id": AnyMatchingStr(r"git-\w{10}_hello"),
-    "dependency_import_ids": None,
+    "dependency_import_ids": [AnyMatchingStr(r"python-import-\w{10}")],
     "resources": None,
     "max_retries": None,
     "custom_image": None,
@@ -820,7 +822,8 @@ GENERATE_GRAPH_TASK_DEF_DUMP = {
     "output_metadata": {"is_subscriptable": False, "n_outputs": 1},
     "source_import_id": AnyMatchingStr(r"inline-import-\w{1}"),
     "dependency_import_ids": [
-        AnyMatchingStr(r"git-\w{10}_github_com_zapata_engineering_orquestra_sdk")
+        AnyMatchingStr(r"git-\w{10}_github_com_zapata_engineering_orquestra_sdk"),
+        AnyMatchingStr(r"python-import-\w{10}"),
     ],
     "resources": None,
     "max_retries": None,
@@ -837,7 +840,10 @@ PYTHON_IMPORTS_MANUAL_TASK_DEF_DUMP = {
     "parameters": [{"name": "text", "kind": "POSITIONAL_OR_KEYWORD"}],
     "output_metadata": {"is_subscriptable": False, "n_outputs": 1},
     "source_import_id": AnyMatchingStr(r"inline-import-\w{1}"),
-    "dependency_import_ids": [AnyMatchingStr(r"python-import-\w{10}")],
+    "dependency_import_ids": [
+        AnyMatchingStr(r"python-import-\w{10}"),
+        AnyMatchingStr(r"python-import-\w{10}"),
+    ],
     "resources": None,
     "max_retries": None,
     "custom_image": None,

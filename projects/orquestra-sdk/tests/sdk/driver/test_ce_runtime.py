@@ -23,6 +23,7 @@ from orquestra.workflow_shared.schema.workflow_run import (
 )
 
 import orquestra.sdk as sdk
+from orquestra.sdk._client._base import _traversal
 from orquestra.sdk._client._base._driver import (
     _ce_runtime,
     _client,
@@ -83,6 +84,7 @@ def workflow_run_status(workflow_run_id: WorkflowRunId):
 class TestCreateWorkflowRun:
     def test_happy_path(
         self,
+        monkeypatch: pytest.MonkeyPatch,
         mocked_client: MagicMock,
         runtime: _ce_runtime.CERuntime,
         workflow_def_id: str,
@@ -91,6 +93,7 @@ class TestCreateWorkflowRun:
         # Given
         mocked_client.create_workflow_def.return_value = workflow_def_id
         mocked_client.create_workflow_run.return_value = workflow_run_id
+        monkeypatch.setattr(_traversal, "_gen_id_hash", lambda *_: 0)
 
         # When
         with pytest.warns(PendingDeprecationWarning):
