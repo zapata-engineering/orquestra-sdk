@@ -384,7 +384,8 @@ class Version(BaseModel):
 class WorkflowMetadata(BaseModel):
     sdk_version: t.Optional[Version]
     python_version: Version
-    head_node_image: str
+    # new field added in 0.67. Default to None to allow parsing older IRs
+    head_node_image: t.Optional[str] = None
 
 
 class WorkflowDef(BaseModel):
