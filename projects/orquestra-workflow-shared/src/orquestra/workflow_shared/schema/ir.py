@@ -382,7 +382,7 @@ class Version(BaseModel):
 
 
 class WorkflowMetadata(BaseModel):
-    sdk_version: t.Optional[Version]
+    sdk_version: Version
     python_version: Version
     # new field added in 0.67. Default to None to allow parsing older IRs
     head_node_image: t.Optional[str] = None
@@ -439,40 +439,40 @@ class WorkflowDef(BaseModel):
         try:
             current_version = _versions.get_current_sdk_version()
         except exceptions.BaseRuntimeError:
-            current_version = None
+            # no SDK installed locally, so nothing to validate.
+            return v
 
-        if current_version:
-            if v is None:
+        if v is None:
+            warnings.warn(
+                exceptions.VersionMismatch(
+                    (
+                        "Attempting to read a workflow definition generated with an "
+                        "old version of Orquestra Workflow SDK. Please consider "
+                        "re-running your workflow or downgrading orquestra-sdk. "
+                        "For more information visit: https://docs.orquestra.io/docs/core/sdk/guides/version-compatibility.html"  # noqa: E501
+                    ),
+                    actual=current_version,
+                    needed=None,
+                )
+            )
+            return v
+
+        if not _compat.versions_are_compatible(
+            generated_at=v.sdk_version, current=current_version
+        ):
+            if v.sdk_version:
                 warnings.warn(
                     exceptions.VersionMismatch(
                         (
-                            "Attempting to read a workflow definition generated with an "
-                            "old version of Orquestra Workflow SDK. Please consider "
-                            "re-running your workflow or downgrading orquestra-sdk. "
+                            "Attempting to read a workflow definition generated with a "
+                            "different version of Orquestra Workflow SDK. "
+                            "Please consider re-running your workflow or installing "
+                            f"'orquestra-sdk=={v.sdk_version.original}'. "
                             "For more information visit: https://docs.orquestra.io/docs/core/sdk/guides/version-compatibility.html"  # noqa: E501
                         ),
                         actual=current_version,
-                        needed=None,
+                        needed=v.sdk_version,
                     )
                 )
-                return v
 
-            if not _compat.versions_are_compatible(
-                generated_at=v.sdk_version, current=current_version
-            ):
-                if v.sdk_version:
-                    warnings.warn(
-                        exceptions.VersionMismatch(
-                            (
-                                "Attempting to read a workflow definition generated with a "
-                                "different version of Orquestra Workflow SDK. "
-                                "Please consider re-running your workflow or installing "
-                                f"'orquestra-sdk=={v.sdk_version.original}'. "
-                                "For more information visit: https://docs.orquestra.io/docs/core/sdk/guides/version-compatibility.html"  # noqa: E501
-                            ),
-                            actual=current_version,
-                            needed=v.sdk_version,
-                        )
-                    )
-
-            return v
+        return v
