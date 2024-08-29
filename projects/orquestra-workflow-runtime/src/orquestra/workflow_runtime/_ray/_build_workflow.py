@@ -18,7 +18,6 @@ from orquestra.workflow_shared import (
     secrets,
     serde,
 )
-from orquestra.workflow_shared.docker_images import DEFAULT_WORKER_IMAGE
 from orquestra.workflow_shared.exec_ctx import ray as exec_ctx_ray
 from orquestra.workflow_shared.kubernetes.quantity import parse_quantity
 from orquestra.workflow_shared.packaging import get_installed_version
@@ -32,13 +31,6 @@ from ._env import RAY_DOWNLOAD_GIT_IMPORTS_ENV, RAY_SET_CUSTOM_IMAGE_RESOURCES_E
 from ._logs import _markers
 from ._ray_settings import VENV_SETUP_TIMEOUT_SECONDS
 from ._wf_metadata import InvUserMetadata, pydatic_to_json_dict
-
-
-def _get_default_image(num_gpus: t.Optional[int]):
-    image = DEFAULT_WORKER_IMAGE
-    if num_gpus is not None and num_gpus > 0:
-        image = f"{image}-cuda"
-    return image
 
 
 def _arg_from_graph(argument_id: ir.ArgumentId, workflow_def: ir.WorkflowDef):
@@ -583,8 +575,6 @@ def make_ray_dag(
             # https://docs.ray.io/en/latest/ray-core/scheduling/resources.html#custom-resources
             ray_options["resources"] = _ray_resources_for_custom_image(
                 invocation.custom_image
-                or user_task.custom_image
-                or _get_default_image(ray_options.get("num_gpus"))
             )
 
         ray_result = _make_ray_dag_node(
