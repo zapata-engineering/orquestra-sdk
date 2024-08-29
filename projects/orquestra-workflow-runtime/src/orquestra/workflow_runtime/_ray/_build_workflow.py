@@ -23,6 +23,7 @@ from orquestra.workflow_shared.kubernetes.quantity import parse_quantity
 from orquestra.workflow_shared.packaging import get_installed_version
 from orquestra.workflow_shared.schema import ir, responses, workflow_run
 from orquestra.workflow_shared.schema.ir import GitURL
+from packaging import version
 from typing_extensions import assert_never
 
 from . import _client, _id_gen
@@ -593,7 +594,13 @@ def make_ray_dag(
             ray_futures[output_id] = ray_result
 
     runtime_version = get_installed_version("orquestra-workflow-runtime")
-    runtime_pip_string = f"orquestra-workflow-runtime[all]=={runtime_version}"
+    parsed_runtime_version = version.parse(runtime_version)
+    if not (
+        parsed_runtime_version.is_devrelease or parsed_runtime_version.is_prerelease
+    ):
+        runtime_pip_string = f"orquestra-workflow-runtime[all]=={runtime_version}"
+    else:
+        runtime_pip_string = "orquestra-workflow-runtime[all]"
 
     # Gather futures for the last, fake task, and decide what args we need to unwrap.
     pos_args, pos_args_artifact_nodes = _gather_args(
