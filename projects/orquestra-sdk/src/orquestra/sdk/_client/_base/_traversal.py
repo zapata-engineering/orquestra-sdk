@@ -25,9 +25,16 @@ from orquestra.workflow_shared.schema import ir, responses
 from orquestra.workflow_shared.secrets import Secret
 from pip_api._parse_requirements import Requirement
 
-from . import _dsl, _workflow
+from . import _docker_images, _dsl, _workflow
 
 N_BYTES_IN_HASH = 8
+
+
+def _get_default_image(num_gpus: t.Optional[int]):
+    image = _docker_images.DEFAULT_WORKER_IMAGE
+    if num_gpus is not None and num_gpus > 0:
+        image = f"{image}-cuda"
+    return image
 
 
 def _make_key(obj: t.Any):
@@ -756,6 +763,16 @@ def _make_invocation_model(
         arg_name: graph.get_node_id(arg_val) for arg_name, arg_val in invocation.kwargs
     }
 
+    gpu_used = invocation.resources.gpu or (
+        task_models_dict[invocation.task].resources.gpu
+        if task_models_dict[invocation.task].resources is not None
+        else None
+    )
+    custom_image = (
+        invocation.custom_image
+        or task_models_dict[invocation.task].custom_image
+        or _get_default_image(gpu_used)
+    )
     return ir.TaskInvocation(
         id=_make_invocation_id(
             task_models_dict[invocation.task].fn_ref.function_name,
@@ -767,7 +784,7 @@ def _make_invocation_model(
         kwargs_ids=kwargs_ids,
         output_ids=graph.output_ids_for_invocation(invocation),
         resources=_make_resources_model(invocation.resources),
-        custom_image=invocation.custom_image,
+        custom_image=custom_image,
         env_vars=invocation.env_vars,
     )
 
@@ -871,7 +888,7 @@ def flatten_graph(
         metadata=ir.WorkflowMetadata(
             sdk_version=sdk_version,
             python_version=python_version,
-            head_node_image="hub.stage.nexus.orquestra.io/zapatacomputing/workflow-driver-ray:head-node-1.0.0a3",
+            head_node_image=_docker_images.HEAD_NODE_IMAGE,
         ),
         resources=_make_resources_model(workflow_def._resources, is_task=False),
         # At the moment 'orq submit workflow-def <name>' assumes that the <name> is
