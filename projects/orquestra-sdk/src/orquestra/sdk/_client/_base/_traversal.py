@@ -763,11 +763,17 @@ def _make_invocation_model(
         arg_name: graph.get_node_id(arg_val) for arg_name, arg_val in invocation.kwargs
     }
 
-    gpu_used = invocation.resources.gpu or (
-        task_models_dict[invocation.task].resources.gpu
-        if task_models_dict[invocation.task].resources is not None
-        else None
-    )
+    gpu_used: t.Optional[str]
+    if invocation.resources.gpu:
+        gpu_used = invocation.resources.gpu
+    elif task_models_dict[invocation.task].resources is not None:
+        task_model = task_models_dict[invocation.task]
+        # this is just to silence pyright which doesn't believe elif check
+        assert task_model.resources is not None
+        gpu_used = task_model.resources.gpu
+    else:
+        gpu_used = None
+
     custom_image = (
         invocation.custom_image
         or task_models_dict[invocation.task].custom_image
