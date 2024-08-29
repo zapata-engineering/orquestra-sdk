@@ -30,9 +30,9 @@ from . import _docker_images, _dsl, _workflow
 N_BYTES_IN_HASH = 8
 
 
-def _get_default_image(num_gpus: t.Optional[int]):
+def _get_default_image(num_gpus: t.Optional[str]):
     image = _docker_images.DEFAULT_WORKER_IMAGE
-    if num_gpus is not None and num_gpus > 0:
+    if num_gpus:
         image = f"{image}-cuda"
     return image
 

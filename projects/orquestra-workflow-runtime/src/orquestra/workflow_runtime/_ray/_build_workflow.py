@@ -574,6 +574,12 @@ def make_ray_dag(
             # Custom "Ray resources" request. The entries need to correspond to the ones
             # used when starting the Ray cluster. See also:
             # https://docs.ray.io/en/latest/ray-core/scheduling/resources.html#custom-resources
+            # Since 0.67 we set custom image on every invocation in the client side,
+            # so this should happen
+            assert invocation.custom_image, (
+                f"invocation {invocation.id} had empty "
+                f"custom image field. Please report this as a bug."
+            )
             ray_options["resources"] = _ray_resources_for_custom_image(
                 invocation.custom_image
             )
