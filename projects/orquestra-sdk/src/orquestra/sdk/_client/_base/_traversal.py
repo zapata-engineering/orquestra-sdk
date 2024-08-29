@@ -769,6 +769,7 @@ def _make_invocation_model(
     elif task_models_dict[invocation.task].resources is not None:
         task_model = task_models_dict[invocation.task]
         # this is just to silence pyright which doesn't believe elif check
+        # we dont multiprocess that variables, so we dont have race conditions here
         assert task_model.resources is not None
         gpu_used = task_model.resources.gpu
     else:
