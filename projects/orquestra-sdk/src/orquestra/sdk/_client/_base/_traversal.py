@@ -872,9 +872,9 @@ def flatten_graph(
             warnings.filterwarnings("ignore", message="You have uncommitted changes")
 
             git_ref = _dsl.GitImport.infer().resolved().git_ref
-            sdk_python_import = _dsl.GitImport(
+            sdk_python_import = _dsl.GithubImport(
                 git_ref=git_ref,
-                repo_url="https://github.com/zapata-engineering/orquestra-sdk",
+                repo="zapata-engineering/orquestra-sdk",
             )
 
     ir_sdk_import = _make_import_model(sdk_python_import)
