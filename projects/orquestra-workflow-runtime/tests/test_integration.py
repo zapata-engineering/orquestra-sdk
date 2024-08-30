@@ -22,24 +22,6 @@ from orquestra.workflow_runtime._ray._env import RAY_TEMP_PATH_ENV
 from orquestra.workflow_runtime._testing import _connections
 
 
-# @pytest.fixture(autouse=True)
-# def patch_orquestra_version(monkeypatch):
-#     import orquestra.workflow_shared.packaging._versions
-#
-#     import orquestra.workflow_runtime._ray._build_workflow
-#
-#     monkeypatch.setattr(
-#         orquestra.workflow_shared.packaging._versions,
-#         "get_installed_version",
-#         lambda _: "0.64.0",
-#     )
-#     monkeypatch.setattr(
-#         orquestra.workflow_runtime._ray._build_workflow,
-#         "get_installed_version",
-#         lambda _: "0.64.0",
-#     )
-
-
 @pytest.fixture(autouse=True)
 def set_orq_envs(monkeypatch):
     monkeypatch.setenv(name="ORQ_RAY_DOWNLOAD_GIT_IMPORTS", value="1")

@@ -6,17 +6,14 @@
 The main highlight is `flatten_graph()`.
 """
 
-from collections import OrderedDict
-
 import collections.abc
 import hashlib
 import inspect
 import re
 import typing as t
 import warnings
+from collections import OrderedDict
 from functools import singledispatch
-from packaging import version
-from pip_api._parse_requirements import Requirement
 
 from orquestra.workflow_shared import exceptions, parse_git_url, serde
 from orquestra.workflow_shared.exec_ctx import workflow_build
@@ -26,6 +23,9 @@ from orquestra.workflow_shared.packaging import (
 )
 from orquestra.workflow_shared.schema import ir, responses
 from orquestra.workflow_shared.secrets import Secret
+from packaging import version
+from pip_api._parse_requirements import Requirement
+
 from . import _docker_images, _dsl, _workflow
 
 N_BYTES_IN_HASH = 8
