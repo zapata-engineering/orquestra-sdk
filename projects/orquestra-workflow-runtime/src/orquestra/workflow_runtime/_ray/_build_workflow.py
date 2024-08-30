@@ -395,7 +395,9 @@ def _(imp: ir.GitImport):
 
     # TODO: we should fully support subdirectories as projects
     if url == "git+https://github.com/zapata-engineering/orquestra-sdk.git":
-        return [f"{package_name_string}{url_string}#subdirectory=projects/orquestra-sdk"]
+        return [
+            f"{package_name_string}{url_string}#subdirectory=projects/orquestra-sdk"
+        ]
     else:
         return [f"{package_name_string}{url_string}"]
 
