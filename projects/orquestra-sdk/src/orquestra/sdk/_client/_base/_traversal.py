@@ -867,7 +867,10 @@ def flatten_graph(
             f"orquestra-sdk[all]=={sdk_version.original}"
         )
     else:
-        sdk_python_import = _dsl.GitImport.infer().resolved()
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="You're working on detached HEAD")
+            warnings.filterwarnings("ignore", message="You have uncommitted changes")
+            sdk_python_import = _dsl.GitImport.infer().resolved()
 
     ir_sdk_import = _make_import_model(sdk_python_import)
     import_models_dict[sdk_python_import] = ir_sdk_import
