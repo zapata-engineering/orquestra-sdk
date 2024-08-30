@@ -49,7 +49,7 @@ jobs:
           source ./venv/bin/activate
           make github-actions-integration
 
-      - name: Run performance test
+      - name: Run integration test
         shell: bash
         run: |
           source ./venv/bin/activate

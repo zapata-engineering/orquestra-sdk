@@ -10,6 +10,7 @@ import collections.abc
 import hashlib
 import inspect
 import re
+import os
 import typing as t
 import warnings
 from collections import OrderedDict
@@ -867,11 +868,15 @@ def flatten_graph(
             f"orquestra-sdk[all]=={sdk_version.original}"
         )
     else:
+        # this only happens on dev environment, should not happen on users' machines
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", message="You're working on detached HEAD")
             warnings.filterwarnings("ignore", message="You have uncommitted changes")
-
-            git_ref = _dsl.GitImport.infer().resolved().git_ref
+            # this is a workaround where .model is called outside of SDK repo
+            # its save to do as this should only happen if SDK is installed as editable
+            # install (or from git repository)
+            path_to_sdk = os.path.realpath(__file__)
+            git_ref = _dsl.GitImport.infer(path_to_sdk).resolved().git_ref
             sdk_python_import = _dsl.GithubImport(
                 git_ref=git_ref,
                 repo="zapata-engineering/orquestra-sdk",
