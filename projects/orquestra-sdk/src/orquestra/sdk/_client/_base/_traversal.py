@@ -9,8 +9,8 @@ The main highlight is `flatten_graph()`.
 import collections.abc
 import hashlib
 import inspect
-import re
 import os
+import re
 import typing as t
 import warnings
 from collections import OrderedDict
