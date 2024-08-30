@@ -6,7 +6,6 @@ import orquestra.workflow_shared.secrets
 import pydantic
 import pytest
 from orquestra.workflow_shared import parse_git_url, serde
-from orquestra.workflow_shared._graphs import iter_invocations_topologically
 from orquestra.workflow_shared.schema import ir
 from orquestra.workflow_shared.schema.ir import GitURL, SecretNode, WorkflowDef
 from orquestra.workflow_shared.schema.responses import WorkflowResult
