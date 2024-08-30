@@ -393,7 +393,11 @@ def _(imp: ir.GitImport):
         "" if imp.package_name is None else f"{imp.package_name}{extras_string} @ "
     )
 
-    return [f"{package_name_string}{url_string}"]
+    # TODO: we should fully support subdirectories as projects
+    if url == "git+https://github.com/zapata-engineering/orquestra-sdk.git":
+        return [f"{package_name_string}{url_string}#subdirectory=projects/orquestra-sdk"]
+    else:
+        return [f"{package_name_string}{url_string}"]
 
 
 def _import_pip_env(

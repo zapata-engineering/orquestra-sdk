@@ -875,6 +875,8 @@ def flatten_graph(
             sdk_python_import = _dsl.GithubImport(
                 git_ref=git_ref,
                 repo="zapata-engineering/orquestra-sdk",
+                package_name="orquestra-sdk",
+                extras="all",
             )
 
     ir_sdk_import = _make_import_model(sdk_python_import)
