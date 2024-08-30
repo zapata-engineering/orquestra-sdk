@@ -40,6 +40,11 @@ def patch_orquestra_version(monkeypatch):
     )
 
 
+@pytest.fixture(autouse=True)
+def set_orq_envs(monkeypatch):
+    monkeypatch.setenv(name="ORQ_RAY_DOWNLOAD_GIT_IMPORTS", value="1")
+
+
 @pytest.fixture(scope="module")
 def shared_ray_conn():
     with _connections.make_ray_conn() as ray_params:
