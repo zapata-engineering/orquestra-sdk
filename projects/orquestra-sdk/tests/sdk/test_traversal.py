@@ -1178,6 +1178,7 @@ def test_metadata_on_dev(monkeypatch: pytest.MonkeyPatch):
     # Given
     mocked_installed_version = Mock(return_value="22.42.0.dev1+gitAABBCC.20230101")
     monkeypatch.setattr(_versions, "get_installed_version", mocked_installed_version)
+    monkeypatch.setattr(git.Repo, "is_dirty", Mock(return_value=False))
 
     # When
     wf = workflow().model

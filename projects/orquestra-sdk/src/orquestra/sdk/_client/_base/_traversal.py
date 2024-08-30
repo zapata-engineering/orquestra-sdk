@@ -23,6 +23,7 @@ from orquestra.workflow_shared.packaging import (
 )
 from orquestra.workflow_shared.schema import ir, responses
 from orquestra.workflow_shared.secrets import Secret
+from packaging import version
 from pip_api._parse_requirements import Requirement
 
 from . import _docker_images, _dsl, _workflow
@@ -859,9 +860,15 @@ def flatten_graph(
                     import_models_dict[imp] = _make_import_model(imp)
 
     sdk_version = get_current_sdk_version()
-    sdk_python_import = _dsl.PythonImports(
-        f"orquestra-sdk[all]=={sdk_version.original}"
-    )
+    sdk_version_parsed = version.parse(sdk_version.original)
+
+    if not (sdk_version_parsed.is_devrelease or sdk_version_parsed.is_prerelease):
+        sdk_python_import = _dsl.PythonImports(
+            f"orquestra-sdk[all]=={sdk_version.original}"
+        )
+    else:
+        sdk_python_import = _dsl.GitImport.infer().resolved()
+
     ir_sdk_import = _make_import_model(sdk_python_import)
     import_models_dict[sdk_python_import] = ir_sdk_import
 
