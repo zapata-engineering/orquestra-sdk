@@ -976,7 +976,7 @@ class TestMakeDag:
                     None,
                     None,
                     {
-                        "image:hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:worker-1.0.0a1": 1  # noqa: E501
+                        "image:hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:worker-1.0.0a1": 1  # noqa: E501
                     },
                     {},
                 ),
@@ -984,7 +984,7 @@ class TestMakeDag:
                     None,
                     1,
                     {
-                        "image:hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:worker-1.0.0a1-cuda": 1  # noqa: E501
+                        "image:hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:worker-1.0.0a1-cuda": 1  # noqa: E501
                     },
                     {
                         "num_gpus": 1,
@@ -1057,8 +1057,9 @@ class TestMakeDag:
                 # Then
                 calls = client.add_options.call_args_list
 
-                # We should only have two calls: our invocation and the aggregation step
-                assert len(calls) == 2
+                # We should only have three calls:
+                # invocation aggregation step and error handling for aggregation step
+                assert len(calls) == 3
                 # Checking our call did not have any resources included
                 assert calls[0] == call(
                     ANY,
