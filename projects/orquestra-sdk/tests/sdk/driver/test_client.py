@@ -4,6 +4,7 @@
 """
 Tests for orquestra.sdk._base._driver._client.
 """
+import warnings
 from datetime import timedelta
 from typing import Any, Dict, List, Optional
 from unittest.mock import Mock, create_autospec
@@ -12,11 +13,12 @@ import numpy as np
 import pytest
 import responses
 from orquestra.workflow_shared._spaces._structs import ProjectRef
-from orquestra.workflow_shared.schema.ir import WorkflowDef
+from orquestra.workflow_shared.schema.ir import Version, WorkflowDef
 from orquestra.workflow_shared.schema.responses import JSONResult, PickleResult
 from orquestra.workflow_shared.schema.workflow_run import RunStatus, State, TaskRun
 
 import orquestra.sdk as sdk
+from orquestra.sdk._client._base import _traversal
 from orquestra.sdk._client._base._driver import _exceptions
 from orquestra.sdk._client._base._driver._client import (
     DriverClient,
@@ -133,12 +135,22 @@ class TestClient:
         return "00000000-0000-0000-0000-000000000000"
 
     @pytest.fixture
+    def mask_sdk_version(self, monkeypatch):
+        monkeypatch.setattr(
+            _traversal,
+            "get_current_sdk_version",
+            lambda *_: Version(
+                original="0.66.0", major=0, minor=66, patch=0, is_prerelease=False
+            ),
+        )
+
+    @pytest.fixture
     def status(self):
         return RunStatus(state=State.SUCCEEDED, start_time=None, end_time=None)
 
     @pytest.fixture
     def workflow_def(self):
-        @sdk.task
+        @sdk.task(custom_image="")
         def task():
             return 1
 
@@ -146,7 +158,11 @@ class TestClient:
         def workflow():
             return task()
 
-        return workflow().model
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", "Attempting to read a workflow definition"
+            )
+            return workflow().model
 
     class TestWorkflowDefinitions:
         # ------ queries ------
@@ -454,6 +470,7 @@ class TestClient:
                 ],
             )
             def test_params_encoding(
+                mask_sdk_version,
                 endpoint_mocker,
                 client: DriverClient,
                 workflow_def_id,

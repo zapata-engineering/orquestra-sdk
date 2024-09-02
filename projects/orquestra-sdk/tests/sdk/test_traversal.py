@@ -43,6 +43,18 @@ from .data.complex_serialization.workflow_defs import (
     wf_pass_obj_with_num_from_task,
 )
 
+pytestmark = pytest.mark.filterwarnings(
+    "ignore::pytest.PytestUnraisableExceptionWarning",
+    "ignore::orquestra.workflow_shared.exceptions.VersionMismatch",
+)
+
+
+@pytest.fixture(autouse=True)
+def mask_sdk_version(monkeypatch):
+    mocked_installed_version = Mock(return_value="0.66.0")
+    monkeypatch.setattr(_versions, "get_installed_version", mocked_installed_version)
+    monkeypatch.setattr(git.Repo, "is_dirty", Mock(return_value=False))
+
 
 # --- Tasks used in tests --- #
 @_dsl.task()
