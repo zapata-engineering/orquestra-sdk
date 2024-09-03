@@ -332,7 +332,7 @@ class RayRuntime(RuntimeInterface):
         Raises:
             RayActorNameClashError: when multiple Ray actors exist with the
                 same name.
-            ValueError: asd
+            ValueError: Race condition in starting Ray
             RayNotRunningError: When ray cluster is not running
         """
         # Turn off internal Ray logs, unless there is an error
