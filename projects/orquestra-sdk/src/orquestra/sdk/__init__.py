@@ -32,6 +32,7 @@ from ._client._base._dsl import (
     PythonImports,
     Resources,
     TaskDef,
+    infer_git_ref,
     task,
 )
 from ._client._base._spaces._api import list_projects, list_workspaces
@@ -55,6 +56,7 @@ __all__ = [
     "mlflow",
     "NotATaskWarning",
     "PythonImports",
+    "infer_git_ref",
     "Resources",
     "RuntimeConfig",
     "Secret",

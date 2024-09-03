@@ -100,13 +100,6 @@ def generate_graph():
 
 
 @_dsl.task(
-    source_import=_dsl.GitImport.infer(git_ref="main"),
-)
-def capitalize_infer(text: str):
-    return text.capitalize()
-
-
-@_dsl.task(
     source_import=_dsl.InlineImport(),
 )
 def capitalize_inline(text: str):
@@ -129,11 +122,6 @@ def python_imports_from_requirements(text: str):
 
 @_dsl.task
 def task_arg_test(a, b, *args, c, d="x", **kwargs):
-    pass
-
-
-@_dsl.task
-def pickled(value):
     pass
 
 
@@ -900,6 +888,31 @@ def test_make_import_model_inline_import():
     imp1 = _dsl.InlineImport()
     imp2 = _dsl.InlineImport()
     assert _traversal._make_import_model(imp1) != _traversal._make_import_model(imp2)
+
+
+def test_make_import_model_deferred_ref():
+    git_import = _dsl.GitImport(git_ref=_dsl.infer_git_ref(), repo_url="fake")
+
+    ir_import = _traversal._make_import_model(git_import)
+
+    assert isinstance(ir_import, ir.GitImport)
+    assert ir_import.repo_url.original_url == "fake"
+    assert ir_import.git_ref == _dsl.infer_git_ref().resolve()
+
+
+def test_make_import_model_deferred_ref_with_auth():
+    git_import = _dsl.GitImportWithAuth(
+        git_ref=_dsl.infer_git_ref(),
+        repo_url="fake",
+        username="fake_username",
+        auth_secret=None,
+    )
+
+    ir_import = _traversal._make_import_model(git_import)
+
+    assert isinstance(ir_import, ir.GitImport)
+    assert ir_import.repo_url.original_url == "fake"
+    assert ir_import.git_ref == _dsl.infer_git_ref().resolve()
 
 
 def test_make_import_model_git_import_with_auth():
