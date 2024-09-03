@@ -155,8 +155,8 @@ def get_tracking_uri(workspace_id: str, config_name: Optional[str] = None) -> st
             resp.raise_for_status()
             namespace: str = resp.json()["namespace"]
             mlflow_cr_name, mlflow_port = _get_mlflow_cr_name_and_port()
-        except EnvironmentError as e:
-            raise e
+        except EnvironmentError:
+            raise
 
         return f"http://{mlflow_cr_name}.{namespace}:{mlflow_port}"
     else:
@@ -220,12 +220,10 @@ def get_current_user(config_name: t.Optional[str]) -> str:
             in studio or inside task executed on CE runtime.
 
     Raises:
-        orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was
+        ConfigNameNotFoundError: when no matching config was
             found or when called locally without config parameter
-        orquestra.sdk.exceptions.RuntimeConfigError: when chosen config does not
+        RuntimeConfigError: when chosen config does not
             contain token runtime option
-        orquestra.sdk.exceptions.InvalidTokenError: When token saved inside config
-            is not a valid JWT token
     """
     if CURRENT_USER_ENV in os.environ:
         return os.environ[CURRENT_USER_ENV]
