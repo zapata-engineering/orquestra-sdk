@@ -336,6 +336,9 @@ def multiple_result_vanilla():
 )
 @pytest.mark.filterwarnings("ignore::FutureWarning")
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings(
+    "ignore::orquestra.workflow_shared.exceptions.OrquestraSDKVersionMismatchWarning"
+)
 @pytest.mark.slow
 class TestAPI:
     @staticmethod
@@ -431,6 +434,9 @@ class TestAPI:
     "mock_config_env_var",
 )
 @pytest.mark.filterwarnings("ignore::pytest.PytestUnraisableExceptionWarning")
+@pytest.mark.filterwarnings(
+    "ignore::orquestra.workflow_shared.exceptions.OrquestraSDKVersionMismatchWarning"
+)
 @pytest.mark.slow
 class TestCLI:
     @staticmethod

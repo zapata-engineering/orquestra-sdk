@@ -2164,6 +2164,7 @@ class TestProjectId:
         monkeypatch: pytest.MonkeyPatch,
     ):
         monkeypatch.setattr(_traversal, "_global_inline_import_identifier", lambda: 0)
+        monkeypatch.setattr(_traversal, "_gen_id_hash", lambda *_: 0)
         workflow_create_mock = Mock()
         monkeypatch.setattr(
             InProcessRuntime, "create_workflow_run", workflow_create_mock

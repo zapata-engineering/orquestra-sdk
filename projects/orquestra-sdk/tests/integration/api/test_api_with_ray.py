@@ -12,7 +12,8 @@ import orquestra.sdk as sdk
 # Ray mishandles log file handlers and we get "_io.FileIO [closed]"
 # unraisable exceptions. Last tested with Ray 2.4.0.
 pytestmark = pytest.mark.filterwarnings(
-    "ignore::pytest.PytestUnraisableExceptionWarning"
+    "ignore::pytest.PytestUnraisableExceptionWarning",
+    "ignore::orquestra.workflow_shared.exceptions.OrquestraSDKVersionMismatchWarning",
 )
 
 

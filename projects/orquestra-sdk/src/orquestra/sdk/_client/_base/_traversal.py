@@ -554,10 +554,12 @@ def _make_fn_ref(fn_ref: _dsl.FunctionRef) -> ir.FunctionRef:
 def _make_task_model(
     task: _dsl.TaskDef,
     imports_dict: t.Dict[_dsl.Import, ir.Import],
+    mandatory_imports: t.Optional[t.List[ir.Import]] = None,
 ) -> ir.TaskDef:
     # fn_ref and source_imports are completely resolved during
     # creation of import_models_dict. At this point every task should have
     # those variables set - and they are needed to make task model
+    # mandatory_imports are imports that will be added additionally to every task
     assert task._fn_ref is not None
     assert task._source_import is not None
 
@@ -579,6 +581,16 @@ def _make_task_model(
                 dependency_import_ids.append(dep_id)
     else:
         dependency_import_ids = None
+
+    # we are adding mandatory imports at the end of the list on purpose -
+    # we want to make sure those are actually installed last on the worker as we treat
+    # them as mandatory
+    if mandatory_imports:
+        mandatory_import_ids = [imp.id for imp in mandatory_imports]
+        if not dependency_import_ids:
+            dependency_import_ids = mandatory_import_ids
+        else:
+            dependency_import_ids.extend(mandatory_import_ids)
 
     resources = _make_resources_model(task._resources)
     parameters = _make_parameters(task._parameters)
@@ -822,18 +834,24 @@ def flatten_graph(
         ]:
             if imp not in import_models_dict:
                 if isinstance(imp, _dsl.DeferredGitImport):
-                    cashe_key = (imp.local_repo_path, imp.git_ref)
-                    if cashe_key in cached_git_import_dict:
-                        import_models_dict[imp] = cached_git_import_dict[cashe_key]
+                    cache_key = (imp.local_repo_path, imp.git_ref)
+                    if cache_key in cached_git_import_dict:
+                        import_models_dict[imp] = cached_git_import_dict[cache_key]
                     else:
                         model_import = _make_import_model(imp)
                         import_models_dict[imp] = model_import
-                        cached_git_import_dict[cashe_key] = model_import
+                        cached_git_import_dict[cache_key] = model_import
                 else:
                     import_models_dict[imp] = _make_import_model(imp)
 
+    sdk_python_import = _dsl.InstalledImport(package_name="orquestra-sdk")
+    ir_sdk_import = _make_import_model(sdk_python_import)
+    import_models_dict[sdk_python_import] = ir_sdk_import
+
     task_models_dict: t.Dict[_dsl.TaskDef, ir.TaskDef] = {
-        invocation.task: _make_task_model(invocation.task, import_models_dict)
+        invocation.task: _make_task_model(
+            invocation.task, import_models_dict, [ir_sdk_import]
+        )
         for invocation in graph.invocations
     }
     # make sure we can execute tasks
