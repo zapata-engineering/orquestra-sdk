@@ -180,8 +180,7 @@ else:
                     in Ray.
 
             Raises:
-                ray.workflow.exceptions.WorkflowNotFoundError: if there's no
-                    workflow with this ID.
+                WorkflowRunNotFoundError: if there's no workflow with this ID.
             """
             try:
                 return ray.workflow.get_status(workflow_id)

@@ -11,7 +11,12 @@ from urllib.parse import urljoin
 import requests
 from requests import codes
 
-from . import _exceptions
+from ._exceptions import (
+    InvalidTokenError,
+    SecretAlreadyExistsError,
+    SecretNotFoundError,
+    UnknownHTTPError,
+)
 from ._models import (
     ListSecretsRequest,
     SecretDefinition,
@@ -38,15 +43,14 @@ def _handle_common_errors(response: requests.Response):
         response: the response from the API.
 
     Raises:
-        orquestra.sdk.secrets._exceptions.InvalidTokenError: when the authorization
+        InvalidTokenError: when the authorization
             token is rejected by the remote cluster.
-        orquestra.sdk.secrets._exceptions.UnknownHTTPError: when any other error is
-            raised by the remote cluster.
+        UnknownHTTPError: when any other error is raised by the remote cluster.
     """
     if response.status_code == codes.UNAUTHORIZED:
-        raise _exceptions.InvalidTokenError()
+        raise InvalidTokenError()
     elif not response.ok:
-        raise _exceptions.UnknownHTTPError(response)
+        raise UnknownHTTPError(response)
 
 
 class SecretsClient:
@@ -107,21 +111,19 @@ class SecretsClient:
             name: the name of the secret to be fetched.
 
         Raises:
-            orquestra.sdk.secrets._exceptions.SecretNotFoundError: when no secret with
-                the specified name is found.
-            orquestra.sdk.secrets._exceptions.InvalidTokenError: when the authorization
+            SecretNotFoundError: when no secret with the specified name is found.
+            InvalidTokenError: when the authorization
                 token is rejected by the remote cluster.
-            orquestra.sdk.secrets._exceptions.UnknownHTTPError: when any other error is
-                raised by the remote cluster.
+            UnknownHTTPError: when any other error is raised by the remote cluster.
         """
         resp = self._get(API_ACTIONS["get_secret"].format(name))
 
         if resp.status_code == requests.codes.NOT_FOUND:
-            raise _exceptions.SecretNotFoundError(secret_name=name)
+            raise SecretNotFoundError(secret_name=name)
 
         try:
             _handle_common_errors(resp)
-        except (_exceptions.InvalidTokenError, _exceptions.UnknownHTTPError):
+        except (InvalidTokenError, UnknownHTTPError):
             raise
 
         return SecretDefinition.model_validate(resp.json()["data"]["details"])
@@ -135,10 +137,9 @@ class SecretsClient:
             workspace_id: the ID of the workspace to which the secrets belong.
 
         Raises:
-            orquestra.sdk.secrets._exceptions.InvalidTokenError: when the authorization
+            InvalidTokenError: when the authorization
                 token is rejected by the remote cluster.
-            orquestra.sdk.secrets._exceptions.UnknownHTTPError: when any other error is
-                raised by the remote cluster.
+            UnknownHTTPError: when any other error is raised by the remote cluster.
         """
         resp = self._get(
             API_ACTIONS["list_secrets"],
@@ -150,7 +151,7 @@ class SecretsClient:
         )
         try:
             _handle_common_errors(resp)
-        except (_exceptions.InvalidTokenError, _exceptions.UnknownHTTPError):
+        except (InvalidTokenError, UnknownHTTPError):
             raise
 
         return [SecretNameObj.model_validate(d) for d in resp.json()["data"]]
@@ -164,12 +165,11 @@ class SecretsClient:
             new_secret: the definition of the secret to be created.
 
         Raises:
-            orquestra.sdk.secrets._exceptions.SecretAlreadyExistsError: when a secret
+            SecretAlreadyExistsError: when a secret
                 with the specified name already exists.
-            orquestra.sdk.secrets._exceptions.InvalidTokenError: when the authorization
+            InvalidTokenError: when the authorization
                 token is rejected by the remote cluster.
-            orquestra.sdk.secrets._exceptions.UnknownHTTPError: when any other error is
-                raised by the remote cluster
+            UnknownHTTPError: when any other error is raised by the remote cluster
         """
         resp = self._post(
             API_ACTIONS["create_secret"],
@@ -177,11 +177,11 @@ class SecretsClient:
         )
 
         if resp.status_code == codes.BAD_REQUEST:
-            raise _exceptions.SecretAlreadyExistsError(secret_name=new_secret.name)
+            raise SecretAlreadyExistsError(secret_name=new_secret.name)
 
         try:
             _handle_common_errors(resp)
-        except (_exceptions.InvalidTokenError, _exceptions.UnknownHTTPError):
+        except (InvalidTokenError, UnknownHTTPError):
             raise
 
     def update_secret(self, name: SecretName, value: SecretValue):
@@ -192,11 +192,10 @@ class SecretsClient:
             value: the new value to be assigned to the secret.
 
         Raises:
-            orquestra.sdk.secrets._exceptions.SecretNotFoundError: When no secret with
-                the specified name is found.
-            orquestra.sdk.secrets._exceptions.InvalidTokenError: when the authorization
+            SecretNotFoundError: When no secret with the specified name is found.
+            InvalidTokenError: when the authorization
                 token is rejected by the remote cluster.
-            orquestra.sdk.secrets._exceptions.UnknownHTTPError: when any other error is
+            UnknownHTTPError: when any other error is
                 raised by the remote cluster
         """
         obj = SecretValueObj(value=value)
@@ -206,11 +205,11 @@ class SecretsClient:
         )
 
         if resp.status_code == codes.NOT_FOUND:
-            raise _exceptions.SecretNotFoundError(secret_name=name)
+            raise SecretNotFoundError(secret_name=name)
 
         try:
             _handle_common_errors(resp)
-        except (_exceptions.InvalidTokenError, _exceptions.UnknownHTTPError):
+        except (InvalidTokenError, UnknownHTTPError):
             raise
 
     def delete_secret(self, name: SecretName):
@@ -220,19 +219,18 @@ class SecretsClient:
             name: the name of the secret to be deleted.
 
         Raises:
-            orquestra.sdk.secrets._exceptions.SecretNotFoundError: When no secret with
-                the specified name is found.
-            orquestra.sdk.secrets._exceptions.InvalidTokenError: when the authorization
+            SecretNotFoundError: When no secret with the specified name is found.
+            InvalidTokenError: when the authorization
                 token is rejected by the remote cluster.
-            orquestra.sdk.secrets._exceptions.UnknownHTTPError: when any other error is
+            UnknownHTTPError: when any other error is
                 raised by the remote cluster
         """
         resp = self._delete(API_ACTIONS["delete_secret"].format(name))
 
         if resp.status_code == codes.NOT_FOUND:
-            raise _exceptions.SecretNotFoundError(secret_name=name)
+            raise SecretNotFoundError(secret_name=name)
 
         try:
             _handle_common_errors(resp)
-        except (_exceptions.InvalidTokenError, _exceptions.UnknownHTTPError):
+        except (InvalidTokenError, UnknownHTTPError):
             raise
