@@ -136,7 +136,7 @@ def ref_infer(local_repo_path: Union[str, os.PathLike] = Path("")) -> DeferredGi
 
     Usage for other scenarios:
     def my_fun():
-        sdk.ref_infer("my/path/").infer()
+        sdk.ref_infer("my/path/").resolve()
     """
     return DeferredGitRef(path_to_repo=local_repo_path)
 
