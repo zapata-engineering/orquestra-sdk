@@ -17,6 +17,12 @@ from orquestra.workflow_shared import ProjectRef, exceptions, serde
 from orquestra.workflow_shared.abc import RuntimeInterface
 from orquestra.workflow_shared.dates import Instant, from_unix_time
 from orquestra.workflow_shared.dates import now as dates_now
+from orquestra.workflow_shared.exceptions import (
+    NotFoundError,
+    RayActorNameClashError,
+    RayNotRunningError,
+    WorkflowRunNotFoundError,
+)
 from orquestra.workflow_shared.logs import LogReader
 from orquestra.workflow_shared.schema import ir
 from orquestra.workflow_shared.schema.configs import RuntimeConfiguration
@@ -324,8 +330,10 @@ class RayRuntime(RuntimeInterface):
                 we'll just connect to an already existing one.
 
         Raises:
-            exceptions.RayActorNameClashError: when multiple Ray actors exist with the
+            RayActorNameClashError: when multiple Ray actors exist with the
                 same name.
+            ValueError: asd
+            RayNotRunningError: When ray cluster is not running
         """
         # Turn off internal Ray logs, unless there is an error
         # If Ray is set to configure logging, this will be overridden
@@ -336,7 +344,7 @@ class RayRuntime(RuntimeInterface):
         try:
             client.init(**dataclasses.asdict(ray_params))
         except ConnectionError as e:
-            raise exceptions.RayNotRunningError from e
+            raise RayNotRunningError from e
 
         try:
             client.workflow_init()
@@ -353,7 +361,7 @@ class RayRuntime(RuntimeInterface):
                 str(e),
                 re.IGNORECASE,
             ):
-                raise exceptions.RayActorNameClashError(message) from e
+                raise RayActorNameClashError(message) from e
             else:
                 raise ValueError(message) from e
 
@@ -409,14 +417,13 @@ class RayRuntime(RuntimeInterface):
             workflow_run_id: ID of the workflow run.
 
         Raises:
-            orquestra.sdk.exceptions.WorkflowRunNotFoundError: if no run with
-                ``workflow_run_id`` was found.
+            WorkflowRunNotFoundError: if no run with ``workflow_run_id`` was found.
         """
         try:
             wf_status = self._client.get_workflow_status(workflow_id=workflow_run_id)
             wf_meta = self._client.get_workflow_metadata(workflow_id=workflow_run_id)
         except (_client.workflow_exceptions.WorkflowNotFoundError, ValueError) as e:
-            raise exceptions.WorkflowRunNotFoundError(
+            raise WorkflowRunNotFoundError(
                 f"Workflow run {workflow_run_id} wasn't found"
             ) from e
 
@@ -561,8 +568,7 @@ class RayRuntime(RuntimeInterface):
             workflow_run_id: ID of the workflow run.
 
         Raises:
-            orquestra.sdk.exceptions.WorkflowRunNotFoundError: if no run with
-                ``workflow_run_id`` was found.
+            WorkflowRunNotFoundError: if no run with ``workflow_run_id`` was found.
         """
         # The approach is based on two steps:
         # 1. Get task run status.
@@ -574,9 +580,9 @@ class RayRuntime(RuntimeInterface):
         # isn't possible. Ray always blocks for workflow completion.
         try:
             wf_run = self.get_workflow_run_status(workflow_run_id)
-        except exceptions.WorkflowRunNotFoundError as e:
+        except WorkflowRunNotFoundError:
             # Explicitly re-raise.
-            raise e
+            raise
 
         # Note: matching task invocations with other objects down below relies on the
         # sequence order.
@@ -644,16 +650,16 @@ class RayRuntime(RuntimeInterface):
             ``@task(n_outputs=...)`` value.
 
         Raises:
-            orquestra.sdk.exceptions.WorkflowRunNotFoundError: if no run with
+            WorkflowRunNotFoundError: if no run with
                 ``workflow_run_id`` was found.
-            orquestra.sdk.exceptions.exceptions.NotFoundError: if requested task
+            NotFoundError: if requested task
                 either failed, did not complete yet or outputs are not available
         """
         try:
             _ = self.get_workflow_run_status(workflow_run_id)
-        except exceptions.WorkflowRunNotFoundError as e:
+        except WorkflowRunNotFoundError:
             # Explicitly re-raise.
-            raise e
+            raise
 
         succeeded_obj_ref: _client.ObjectRef = self._client.get_task_output_async(
             workflow_id=workflow_run_id,
@@ -668,7 +674,7 @@ class RayRuntime(RuntimeInterface):
             succeeded_value: t.Any = self._client.get(
                 succeeded_obj_ref, timeout=QUICK_TIMEOUT
             )
-        except exceptions.NotFoundError:
+        except NotFoundError:
             raise
 
         # We need to check if the task output was a TaskResult or any other value.
