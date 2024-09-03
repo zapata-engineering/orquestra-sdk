@@ -23,7 +23,7 @@ jobs:
       target_path: ${{ matrix.package }}
       # Choice of Python versions to run against:
       # * 3.11: the latest officially supported version. Used in CE images.
-      python_versions: '["3.11.6"]'
+      python_versions: '["3.11"]'
       nightly: true
   style:
     strategy:
@@ -34,7 +34,7 @@ jobs:
     uses: ./.github/workflows/package-style.yml
     with:
       target_path: ${{ matrix.package }}
-      python_versions: '["3.11.6"]'
+      python_versions: '["3.11"]'
       nightly: true
   pass:
     # This is a final "check" job that depends on the other jobs, it always runs
