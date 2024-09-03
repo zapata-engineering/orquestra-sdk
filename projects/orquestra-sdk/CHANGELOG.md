@@ -6,7 +6,7 @@
 
 🔥 *Features*
 
-* New function: `sdk.ref_infer` to infer git refs for Git Imports.
+* New function: `sdk.infer_git_ref` to infer git refs for Git Imports.
 * SDK dependency will be explicitly added as a PythonImport to every task submitted. Version will be inferred from local version during submission.
 
 🧟 *Deprecations*

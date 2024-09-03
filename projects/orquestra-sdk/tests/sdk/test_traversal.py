@@ -891,18 +891,18 @@ def test_make_import_model_inline_import():
 
 
 def test_make_import_model_deferred_ref():
-    git_import = _dsl.GitImport(git_ref=_dsl.ref_infer(), repo_url="fake")
+    git_import = _dsl.GitImport(git_ref=_dsl.infer_git_ref(), repo_url="fake")
 
     ir_import = _traversal._make_import_model(git_import)
 
     assert isinstance(ir_import, ir.GitImport)
     assert ir_import.repo_url.original_url == "fake"
-    assert ir_import.git_ref == _dsl.ref_infer().resolve()
+    assert ir_import.git_ref == _dsl.infer_git_ref().resolve()
 
 
 def test_make_import_model_deferred_ref_with_auth():
     git_import = _dsl.GitImportWithAuth(
-        git_ref=_dsl.ref_infer(),
+        git_ref=_dsl.infer_git_ref(),
         repo_url="fake",
         username="fake_username",
         auth_secret=None,
@@ -912,7 +912,7 @@ def test_make_import_model_deferred_ref_with_auth():
 
     assert isinstance(ir_import, ir.GitImport)
     assert ir_import.repo_url.original_url == "fake"
-    assert ir_import.git_ref == _dsl.ref_infer().resolve()
+    assert ir_import.git_ref == _dsl.infer_git_ref().resolve()
 
 
 def test_make_import_model_git_import_with_auth():

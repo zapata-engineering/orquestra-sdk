@@ -113,7 +113,9 @@ class DeferredGitRef:
         return repo.head.object.hexsha
 
 
-def ref_infer(local_repo_path: Union[str, os.PathLike] = Path("")) -> DeferredGitRef:
+def infer_git_ref(
+    local_repo_path: Union[str, os.PathLike] = Path("")
+) -> DeferredGitRef:
     """Get git ref to specific local repo.
 
     The current git repo info is retrieved as default.
@@ -128,7 +130,7 @@ def ref_infer(local_repo_path: Union[str, os.PathLike] = Path("")) -> DeferredGi
     @sdk.task(
         source_import=sdk.GithubImport(
             "zapatacomputing/my_source_repo",
-            git_ref=sdk.ref_infer(),
+            git_ref=sdk.infer_git_ref(),
         )
     )
         def demo_task():
@@ -136,7 +138,7 @@ def ref_infer(local_repo_path: Union[str, os.PathLike] = Path("")) -> DeferredGi
 
     Usage for other scenarios:
     def my_fun():
-        sdk.ref_infer("my/path/").resolve()
+        sdk.infer_git_ref("my/path/").resolve()
     """
     return DeferredGitRef(path_to_repo=local_repo_path)
 

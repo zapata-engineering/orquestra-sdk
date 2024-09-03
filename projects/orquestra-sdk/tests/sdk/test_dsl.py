@@ -425,8 +425,8 @@ class TestDeferredImport:
 
 class TestDeferredRef:
     @staticmethod
-    def test_ref_infer_returns_deferred_ref():
-        ref = _dsl.ref_infer(DEFAULT_LOCAL_REPO_PATH)
+    def test_infer_git_ref_returns_deferred_ref():
+        ref = _dsl.infer_git_ref(DEFAULT_LOCAL_REPO_PATH)
         assert isinstance(ref, _dsl.DeferredGitRef)
         assert ref.path_to_repo == DEFAULT_LOCAL_REPO_PATH
 
