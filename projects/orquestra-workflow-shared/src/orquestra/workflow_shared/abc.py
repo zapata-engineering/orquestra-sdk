@@ -50,6 +50,9 @@ class RuntimeInterface(ABC, LogReader):
                 When omitted, WF will be scheduled at default project
             dry_run: Run the workflow without actually executing any task code.
                 Useful for testing infrastructure, dependency imports, etc.
+
+        Raises:
+            NotImplementedError: when not implemented on given runtime
         """
         raise NotImplementedError()
 
@@ -71,7 +74,7 @@ class RuntimeInterface(ABC, LogReader):
             workflow_run_id: ID identifying the workflow run.
 
         Raises:
-            WorkflowRunNotSucceeded: if the workflow has not yet finished.
+            NotImplementedError: when not implemented on given runtime
         """
         raise NotImplementedError()
 
@@ -113,6 +116,9 @@ class RuntimeInterface(ABC, LogReader):
                 The key is the task's invocation ID.
                 The value is whatever the task function returned, independent of the
                 ``@task(n_outputs=...)`` value.
+
+        Raises:
+            NotImplementedError: when not implemented on given runtime
         """
         raise NotImplementedError()
 
@@ -136,6 +142,9 @@ class RuntimeInterface(ABC, LogReader):
         Returns:
             Whatever the task function returned, independent of the
             ``@task(n_outputs=...)`` value.
+
+        Raises:
+            NotImplementedError: when not implemented on given runtime
         """
         raise NotImplementedError()
 
@@ -153,7 +162,7 @@ class RuntimeInterface(ABC, LogReader):
                 with True/False.
 
         Raises:
-            WorkflowRunCanNotBeTerminated: if workflow run is cannot be terminated.
+            NotImplementedError: when not implemented on given runtime
         """
         raise NotImplementedError()
 
@@ -177,6 +186,9 @@ class RuntimeInterface(ABC, LogReader):
 
         Returns:
                 A list of the workflow runs.
+
+        Raises:
+            NotImplementedError: when not implemented on given runtime
         """
         raise NotImplementedError()
 
@@ -198,7 +210,7 @@ class RuntimeInterface(ABC, LogReader):
             workspace: Only return runs from the specified workspace.
 
         Raises:
-            UnauthorizedError: if the remote cluster rejects the token.
+            NotImplementedError: when not implemented on given runtime
 
         Returns:
             A list of the workflow run summaries.
