@@ -80,7 +80,6 @@ class Prompter:
 
         Raises:
             UserCancelledPrompt: if the user cancels the prompt.
-            exceptions.NoOptionsAvailableError: asb
         """
         # If there are no choices, report it to the user and exit.
         if len(choices) == 0:
