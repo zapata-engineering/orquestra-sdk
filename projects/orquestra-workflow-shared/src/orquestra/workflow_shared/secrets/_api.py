@@ -5,7 +5,11 @@
 import typing as t
 from typing import NamedTuple
 
-from orquestra.workflow_shared import exceptions as sdk_exc
+from orquestra.workflow_shared.exceptions import (
+    ConfigNameNotFoundError,
+    NotFoundError,
+    UnauthorizedError,
+)
 from orquestra.workflow_shared.exec_ctx import ExecContext, get_current_exec_context
 from orquestra.workflow_shared.schema.configs import ConfigName
 from orquestra.workflow_shared.schema.workflow_run import WorkspaceId
@@ -80,12 +84,9 @@ def get(
             remote Orquestra cluster.
 
     Raises:
-        orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was
-            found.
-        orquestra.sdk.exceptions.NotFoundError: when no secret with the given name
-            was found.
-        orquestra.sdk.exceptions.UnauthorizedError: when the authorization with the
-            remote vault failed.
+        ConfigNameNotFoundError: when no matching config was found.
+        NotFoundError: when no secret with the given name was found.
+        UnauthorizedError: when the authorization with the remote vault failed.
 
     Returns:
         Either:
@@ -102,7 +103,7 @@ def get(
 
     try:
         client = _auth.authorized_client(config_name)
-    except sdk_exc.ConfigNameNotFoundError:
+    except ConfigNameNotFoundError:
         raise
 
     if workspace_id:
@@ -112,9 +113,9 @@ def get(
         return client.get_secret(name).value
     # explicit rethrows of known errors
     except _exceptions.InvalidTokenError as e:
-        raise sdk_exc.UnauthorizedError() from e
+        raise UnauthorizedError() from e
     except _exceptions.SecretNotFoundError as e:
-        raise sdk_exc.NotFoundError(f"Couldn't find secret named {name}") from e
+        raise NotFoundError(f"Couldn't find secret named {name}") from e
 
 
 def list(
@@ -136,23 +137,19 @@ def list(
             remote Orquestra cluster.
 
     Raises:
-        orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was
-            found.
-        orquestra.sdk.exceptions.NotFoundError: when no secret with the given name
-            was found.
-        orquestra.sdk.exceptions.UnauthorizedError: when the authorization with the
-            remote vault failed.
+        ConfigNameNotFoundError: when no matching config was found.
+        UnauthorizedError: when the authorization with the remote vault failed.
     """
     try:
         client = _auth.authorized_client(config_name)
-    except sdk_exc.ConfigNameNotFoundError:
+    except ConfigNameNotFoundError:
         raise
 
     try:
         return [obj.name for obj in client.list_secrets(workspace_id)]
     # explicit rethrows of known errors
     except _exceptions.InvalidTokenError as e:
-        raise sdk_exc.UnauthorizedError() from e
+        raise UnauthorizedError() from e
 
 
 def set(
@@ -178,14 +175,12 @@ def set(
             remote Orquestra cluster.
 
     Raises:
-        orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was
-            found.
-        orquestra.sdk.exceptions.UnauthorizedError: when the authorization with the
-            remote vault failed.
+        ConfigNameNotFoundError: when no matching config was found.
+        UnauthorizedError: when the authorization with the remote vault failed.
     """
     try:
         client = _auth.authorized_client(config_name)
-    except sdk_exc.ConfigNameNotFoundError:
+    except ConfigNameNotFoundError:
         raise
 
     try:
@@ -201,7 +196,7 @@ def set(
             client.update_secret(name, value)
     # explicit rethrows of known errors
     except _exceptions.InvalidTokenError as e:
-        raise sdk_exc.UnauthorizedError() from e
+        raise UnauthorizedError() from e
 
 
 def delete(
@@ -225,16 +220,13 @@ def delete(
             remote Orquestra cluster.
 
     Raises:
-        orquestra.sdk.exceptions.ConfigNameNotFoundError: when no matching config was
-            found.
-        orquestra.sdk.exceptions.NotFoundError: when the secret ``name`` couldn't be
-            found.
-        orquestra.sdk.exceptions.UnauthorizedError: when the authorization with the
-            remote vault failed.
+        ConfigNameNotFoundError: when no matching config was found.
+        NotFoundError: when the secret ``name`` couldn't be found.
+        UnauthorizedError: when the authorization with the remote vault failed.
     """
     try:
         client = _auth.authorized_client(config_name)
-    except sdk_exc.ConfigNameNotFoundError:
+    except ConfigNameNotFoundError:
         raise
     if workspace_id:
         name = _translate_to_zri(workspace_id, name)
@@ -242,6 +234,6 @@ def delete(
         client.delete_secret(name)
     # explicit rethrows of known errors
     except _exceptions.SecretNotFoundError as e:
-        raise sdk_exc.NotFoundError(f"Secret {name} not found") from e
+        raise NotFoundError(f"Secret {name} not found") from e
     except _exceptions.InvalidTokenError as e:
-        raise sdk_exc.UnauthorizedError() from e
+        raise UnauthorizedError() from e

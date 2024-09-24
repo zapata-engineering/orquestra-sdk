@@ -407,14 +407,24 @@ def _make_import_model(imp: _dsl.Import):
         )
     elif isinstance(imp, _dsl.GitImport):
         repo_url = parse_git_url(imp.repo_url)
+        git_ref = (
+            imp.git_ref.resolve()
+            if isinstance(imp.git_ref, _dsl.DeferredGitRef)
+            else imp.git_ref
+        )
         return ir.GitImport(
             id=id_,
             repo_url=repo_url,
-            git_ref=imp.git_ref,
+            git_ref=git_ref,
         )
     elif isinstance(imp, _dsl.GitImportWithAuth):
         url = parse_git_url(imp.repo_url)
         url.user = imp.username
+        git_ref = (
+            imp.git_ref.resolve()
+            if isinstance(imp.git_ref, _dsl.DeferredGitRef)
+            else imp.git_ref
+        )
         if imp.auth_secret is not None:
             url.password = ir.SecretNode(
                 id=f"secret-{id_}",
@@ -425,7 +435,7 @@ def _make_import_model(imp: _dsl.Import):
         return ir.GitImport(
             id=id_,
             repo_url=url,
-            git_ref=imp.git_ref,
+            git_ref=git_ref,
             package_name=imp.package_name,
             extras=imp.extras,
         )
