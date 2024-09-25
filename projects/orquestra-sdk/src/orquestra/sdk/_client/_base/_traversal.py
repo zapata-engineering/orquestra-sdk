@@ -9,6 +9,7 @@ The main highlight is `flatten_graph()`.
 import collections.abc
 import hashlib
 import inspect
+import os
 import re
 import typing as t
 import warnings
@@ -23,11 +24,19 @@ from orquestra.workflow_shared.packaging import (
 )
 from orquestra.workflow_shared.schema import ir, responses
 from orquestra.workflow_shared.secrets import Secret
+from packaging import version
 from pip_api._parse_requirements import Requirement
 
-from . import _dsl, _workflow
+from . import _docker_images, _dsl, _workflow
 
 N_BYTES_IN_HASH = 8
+
+
+def _get_default_image(num_gpus: t.Optional[str]):
+    image = _docker_images.DEFAULT_WORKER_IMAGE
+    if num_gpus:
+        image = f"{image}-cuda"
+    return image
 
 
 def _make_key(obj: t.Any):
@@ -766,6 +775,23 @@ def _make_invocation_model(
         arg_name: graph.get_node_id(arg_val) for arg_name, arg_val in invocation.kwargs
     }
 
+    gpu_used: t.Optional[str]
+    if invocation.resources.gpu:
+        gpu_used = invocation.resources.gpu
+    elif task_models_dict[invocation.task].resources is not None:
+        task_model = task_models_dict[invocation.task]
+        # this is just to silence pyright which doesn't believe elif check
+        # we dont multiprocess that variables, so we dont have race conditions here
+        assert task_model.resources is not None
+        gpu_used = task_model.resources.gpu
+    else:
+        gpu_used = None
+
+    custom_image = (
+        invocation.custom_image
+        or task_models_dict[invocation.task].custom_image
+        or _get_default_image(gpu_used)
+    )
     return ir.TaskInvocation(
         id=_make_invocation_id(
             task_models_dict[invocation.task].fn_ref.function_name,
@@ -777,7 +803,7 @@ def _make_invocation_model(
         kwargs_ids=kwargs_ids,
         output_ids=graph.output_ids_for_invocation(invocation),
         resources=_make_resources_model(invocation.resources),
-        custom_image=invocation.custom_image,
+        custom_image=custom_image,
         env_vars=invocation.env_vars,
     )
 
@@ -844,7 +870,30 @@ def flatten_graph(
                 else:
                     import_models_dict[imp] = _make_import_model(imp)
 
-    sdk_python_import = _dsl.InstalledImport(package_name="orquestra-sdk")
+    sdk_version = get_current_sdk_version()
+    sdk_version_parsed = version.parse(sdk_version.original)
+
+    if not (sdk_version_parsed.is_devrelease or sdk_version_parsed.is_prerelease):
+        sdk_python_import = _dsl.PythonImports(
+            f"orquestra-sdk[all]=={sdk_version.original}"
+        )
+    else:
+        # this only happens on dev environment, should not happen on users' machines
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", message="You're working on detached HEAD")
+            warnings.filterwarnings("ignore", message="You have uncommitted changes")
+            # this is a workaround where .model is called outside of SDK repo
+            # its save to do as this should only happen if SDK is installed as editable
+            # install (or from git repository)
+            path_to_sdk = os.path.realpath(__file__)
+            git_ref = _dsl.infer_git_ref(path_to_sdk).resolve()
+            sdk_python_import = _dsl.GithubImport(
+                git_ref=git_ref,
+                repo="zapata-engineering/orquestra-sdk",
+                package_name="orquestra-sdk",
+                extras="all",
+            )
+
     ir_sdk_import = _make_import_model(sdk_python_import)
     import_models_dict[sdk_python_import] = ir_sdk_import
 
@@ -871,12 +920,14 @@ def flatten_graph(
     }
 
     sdk_version = get_current_sdk_version()
+
     python_version = get_current_python_version()
 
     return ir.WorkflowDef(
         metadata=ir.WorkflowMetadata(
             sdk_version=sdk_version,
             python_version=python_version,
+            head_node_image=_docker_images.HEAD_NODE_IMAGE,
         ),
         resources=_make_resources_model(workflow_def._resources, is_task=False),
         # At the moment 'orq submit workflow-def <name>' assumes that the <name> is

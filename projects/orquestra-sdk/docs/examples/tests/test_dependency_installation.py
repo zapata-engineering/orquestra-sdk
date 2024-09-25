@@ -197,7 +197,9 @@ class TestSnippets:
         # Then
         assert src_import.type == "INLINE_IMPORT"
         assert len(deps_imports) == 1
-        assert deps_imports[0].type == "PYTHON_IMPORT"
+        # it depends if you have installed SDK with version from PyPi, or
+        # its local-dev version, it changes what import is used for SDK
+        assert deps_imports[0].type in {"PYTHON_IMPORT", "GIT_IMPORT"}
 
     @staticmethod
     def test_good_practice_python_imports():
@@ -212,7 +214,9 @@ class TestSnippets:
         assert deps_imports is not None
         assert len(deps_imports) == 2
         assert deps_imports[0].type == "PYTHON_IMPORT"
-        assert deps_imports[1].type == "PYTHON_IMPORT"
+        # it depends if you have installed SDK with version from PyPi, or
+        # its local-dev version, it changes what import is used for SDK
+        assert deps_imports[1].type in {"PYTHON_IMPORT", "GIT_IMPORT"}
 
     @staticmethod
     def test_good_practice_git_import_with_auth():
@@ -225,7 +229,9 @@ class TestSnippets:
         # Then
         assert src_import.type == "GIT_IMPORT"
         assert len(deps_imports) == 1
-        assert deps_imports[0].type == "PYTHON_IMPORT"
+        # it depends if you have installed SDK with version from PyPi, or
+        # its local-dev version, it changes what import is used for SDK
+        assert deps_imports[0].type in {"PYTHON_IMPORT", "GIT_IMPORT"}
 
     @staticmethod
     def test_simple_task_explicit():
@@ -239,7 +245,9 @@ class TestSnippets:
         # Then
         assert src_import.type == "INLINE_IMPORT"
         assert len(deps_imports) == 1
-        assert deps_imports[0].type == "PYTHON_IMPORT"
+        # it depends if you have installed SDK with version from PyPi, or
+        # its local-dev version, it changes what import is used for SDK
+        assert deps_imports[0].type in {"PYTHON_IMPORT", "GIT_IMPORT"}
 
     @staticmethod
     def test_python_imports(monkeypatch, tmp_path):
@@ -253,13 +261,14 @@ class TestSnippets:
         for task in [task1, task2, task3]:
             # When
             src_import, deps_imports = _import_models(task)
-
             # Then
             assert src_import.type == "INLINE_IMPORT"
             assert deps_imports is not None
             assert len(deps_imports) == 2
             assert deps_imports[0].type == "PYTHON_IMPORT"
-            assert deps_imports[1].type == "PYTHON_IMPORT"
+            # it depends if you have installed SDK with version from PyPi, or
+            # its local-dev version, it changes what import is used for SDK
+            assert deps_imports[1].type in {"PYTHON_IMPORT", "GIT_IMPORT"}
 
     @staticmethod
     def test_github_import_private_repo():

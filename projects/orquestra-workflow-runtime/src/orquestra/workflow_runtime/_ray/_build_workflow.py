@@ -6,7 +6,6 @@ import os
 import re
 import time
 import typing as t
-import warnings
 from functools import singledispatch
 from pathlib import Path
 
@@ -33,15 +32,6 @@ from ._env import RAY_DOWNLOAD_GIT_IMPORTS_ENV, RAY_SET_CUSTOM_IMAGE_RESOURCES_E
 from ._logs import _markers
 from ._ray_settings import VENV_SETUP_TIMEOUT_SECONDS
 from ._wf_metadata import InvUserMetadata, pydatic_to_json_dict
-
-DEFAULT_IMAGE_TEMPLATE = "hub.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:{}"
-
-
-def _get_default_image(template: str, sdk_version: str, num_gpus: t.Optional[int]):
-    image = template.format(sdk_version)
-    if num_gpus is not None and num_gpus > 0:
-        image = f"{image}-cuda"
-    return image
 
 
 def _arg_from_graph(argument_id: ir.ArgumentId, workflow_def: ir.WorkflowDef):
@@ -403,7 +393,13 @@ def _(imp: ir.GitImport):
         "" if imp.package_name is None else f"{imp.package_name}{extras_string} @ "
     )
 
-    return [f"{package_name_string}{url_string}"]
+    # TODO ORQSDK-1064: we should fully support subdirectories as projects
+    if url == "git+https://github.com/zapata-engineering/orquestra-sdk.git":
+        return [
+            f"{package_name_string}{url_string}#subdirectory=projects/orquestra-sdk"
+        ]
+    else:
+        return [f"{package_name_string}{url_string}"]
 
 
 def _import_pip_env(
@@ -420,9 +416,7 @@ def _import_pip_env(
             specific import
 
     Returns:
-        A list consisting of the python imports declared in the task definition, and the
-            current Orquestra SDK version. The latter is included to prevent tasks from
-            executing with different SDK versions to the head node.
+        A list consisting of the python imports declared in the task definition.
     """
     task_def = wf.tasks[ir_invocation.task_id]
     imports = [
@@ -433,32 +427,7 @@ def _import_pip_env(
         )
     ]
 
-    current_sdk_version: str = get_installed_version("orquestra-sdk")
-
-    sdk_dependency = None
-    pip_list = [
-        chunk
-        for imp in imports
-        for chunk in imports_pip_string[imp.id]
-        if not (sdk_dependency := re.match(r"^orquestra-sdk([<|!|=|>|~].*)?$", chunk))
-    ]
-
-    # If the task definition includes the SDK, warn the user that this does nothing.
-    if sdk_dependency:
-        warnings.warn(
-            f"The definition for task `{ir_invocation.task_id}` "
-            f"declares `{sdk_dependency[0]}` as a dependency. "
-            "The current SDK version "
-            + (f"({current_sdk_version}) " if current_sdk_version else "")
-            + "is automatically installed in task environments. "
-            "The specified dependency will be ignored.",
-            exceptions.OrquestraSDKVersionMismatchWarning,
-        )
-
-    # Don't add sdk dependency if submitting from a prerelease or dev version.
-    parsed_sdk_version = version.parse(current_sdk_version)
-    if not (parsed_sdk_version.is_devrelease or parsed_sdk_version.is_prerelease):
-        pip_list += [f"orquestra-sdk=={current_sdk_version}"]
+    pip_list = [chunk for imp in imports for chunk in imports_pip_string[imp.id]]
 
     return pip_list
 
@@ -608,19 +577,17 @@ def make_ray_dag(
 
         # Set custom image
         if os.getenv(RAY_SET_CUSTOM_IMAGE_RESOURCES_ENV) is not None:
-            # This makes an assumption that only "new" IRs will get to this point
-            assert workflow_def.metadata is not None, "Expected a >=0.45.0 IR"
-            sdk_version = workflow_def.metadata.sdk_version.original
-
             # Custom "Ray resources" request. The entries need to correspond to the ones
             # used when starting the Ray cluster. See also:
             # https://docs.ray.io/en/latest/ray-core/scheduling/resources.html#custom-resources
+            # Since 0.67 we set custom image on every invocation in the client side,
+            # so this should happen
+            assert invocation.custom_image, (
+                f"invocation {invocation.id} had empty "
+                f"custom image field. Please report this as a bug."
+            )
             ray_options["resources"] = _ray_resources_for_custom_image(
                 invocation.custom_image
-                or user_task.custom_image
-                or _get_default_image(
-                    DEFAULT_IMAGE_TEMPLATE, sdk_version, ray_options.get("num_gpus")
-                )
             )
 
         ray_result = _make_ray_dag_node(
@@ -638,6 +605,15 @@ def make_ray_dag(
         for output_id in invocation.output_ids:
             ray_futures[output_id] = ray_result
 
+    runtime_version = get_installed_version("orquestra-workflow-runtime")
+    parsed_runtime_version = version.parse(runtime_version)
+    if not (
+        parsed_runtime_version.is_devrelease or parsed_runtime_version.is_prerelease
+    ):
+        runtime_pip_string = f"orquestra-workflow-runtime[all]=={runtime_version}"
+    else:
+        runtime_pip_string = "orquestra-workflow-runtime[all]"
+
     # Gather futures for the last, fake task, and decide what args we need to unwrap.
     pos_args, pos_args_artifact_nodes = _gather_args(
         workflow_def.output_ids, workflow_def, ray_futures
@@ -649,7 +625,7 @@ def make_ray_dag(
         ray_options={
             "name": None,
             "metadata": None,
-            "runtime_env": None,
+            "runtime_env": _client.RuntimeEnv(pip=[runtime_pip_string]),
             "catch_exceptions": True,
             # Set to avoid retrying when the worker crashes.
             # See the comment with the invocation's options for more details.
@@ -688,7 +664,15 @@ def make_ray_dag(
         else:
             return result[0]
 
-    return handle_data_aggregation_error.bind(last_future)
+    error = client.add_options(
+        handle_data_aggregation_error,
+        name="data_aggregation_error_handler",
+        metadata=None,
+        max_retries=0,
+        catch_exceptions=False,
+        runtime_env=_client.RuntimeEnv(pip=[runtime_pip_string]),
+    )
+    return error.bind(last_future)
 
 
 def get_current_ids() -> (

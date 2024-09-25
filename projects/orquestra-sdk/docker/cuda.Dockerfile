@@ -8,7 +8,6 @@
 ARG CUDA_MINOR_VERSION=11.8
 FROM nvidia/cuda:${CUDA_MINOR_VERSION}.0-runtime-ubuntu22.04
 
-ARG SDK_REQUIREMENT
 ARG PYTHON_VERSION=3.11.6
 ARG TARGETARCH="amd64"
 
@@ -56,7 +55,7 @@ RUN <<EOF
 set -ex
 . "$VIRTUAL_ENV/bin/activate"
 python -m pip install --no-cache-dir -U pip wheel
-python -m pip install --no-cache-dir "${SDK_REQUIREMENT}"
+python -m pip install --no-cache-dir ray[default]==2.30
 EOF
 
 # Prefer to use pip, python, and other binaries from the virtual env.

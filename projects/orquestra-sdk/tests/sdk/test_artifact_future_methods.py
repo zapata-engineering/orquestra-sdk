@@ -11,6 +11,7 @@ from typing_extensions import Required
 
 import orquestra.sdk as sdk
 from orquestra.sdk._client._base import _workflow
+from orquestra.sdk._client._base._docker_images import DEFAULT_WORKER_IMAGE
 from orquestra.sdk._client._base._dsl import ArtifactFuture
 
 _TaskResourcesArgs = t.TypedDict(
@@ -331,7 +332,7 @@ class TestArifactFutureMethodsCalls:
         assert invocations[0].custom_image == CUSTOM_IMAGE_NOT_DEFAULT["custom_image"]
 
         assert invocations[1].resources is None
-        assert invocations[1].custom_image is None
+        assert invocations[1].custom_image == DEFAULT_WORKER_IMAGE
 
     @staticmethod
     def test_artifact_with_resources_workflow_model():
@@ -350,7 +351,7 @@ class TestArifactFutureMethodsCalls:
         assert invocations[0].resources.model_dump() == TASK_RESOURCES_EXPECTED
 
         assert invocations[1].resources is None
-        assert invocations[1].custom_image == invocations[0].custom_image
+        assert f"{invocations[1].custom_image}-cuda" == f"{invocations[0].custom_image}"
 
     @staticmethod
     def test_artifact_with_custom_image_workflow_model():
@@ -368,7 +369,7 @@ class TestArifactFutureMethodsCalls:
         assert invocations[0].custom_image == CUSTOM_IMAGE_NOT_DEFAULT["custom_image"]
 
         assert invocations[1].resources == invocations[0].resources
-        assert invocations[1].custom_image is None
+        assert invocations[1].custom_image == f"{DEFAULT_WORKER_IMAGE}"
 
     @staticmethod
     def test_artifact_with_resources_and_custom_image_workflow_model():
@@ -388,4 +389,4 @@ class TestArifactFutureMethodsCalls:
         assert invocations[0].custom_image == CUSTOM_IMAGE_NOT_DEFAULT["custom_image"]
 
         assert invocations[1].resources is None
-        assert invocations[1].custom_image is None
+        assert invocations[1].custom_image == f"{DEFAULT_WORKER_IMAGE}"
