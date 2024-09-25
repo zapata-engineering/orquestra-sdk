@@ -393,7 +393,7 @@ def _(imp: ir.GitImport):
         "" if imp.package_name is None else f"{imp.package_name}{extras_string} @ "
     )
 
-    # TODO: we should fully support subdirectories as projects
+    # TODO ORQSDK-1064: we should fully support subdirectories as projects
     if url == "git+https://github.com/zapata-engineering/orquestra-sdk.git":
         return [
             f"{package_name_string}{url_string}#subdirectory=projects/orquestra-sdk"

@@ -1058,7 +1058,8 @@ class TestMakeDag:
                 calls = client.add_options.call_args_list
 
                 # We should only have three calls:
-                # invocation aggregation step and error handling for aggregation step
+                # We should only have two calls: invocation and the aggregation step
+                # and error-handling aggregation step
                 assert len(calls) == 3
                 # Checking our call did not have any resources included
                 assert calls[0] == call(

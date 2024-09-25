@@ -1,1 +1,2 @@
+# When running runtime tests, we generate bunch of IR json files in this directory
 *.json
