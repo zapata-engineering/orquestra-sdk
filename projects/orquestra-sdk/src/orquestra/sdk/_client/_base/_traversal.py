@@ -886,7 +886,7 @@ def flatten_graph(
             # its save to do as this should only happen if SDK is installed as editable
             # install (or from git repository)
             path_to_sdk = os.path.realpath(__file__)
-            git_ref = _dsl.GitImport.infer(path_to_sdk).resolved().git_ref
+            git_ref = _dsl.infer_git_ref(path_to_sdk).resolve()
             sdk_python_import = _dsl.GithubImport(
                 git_ref=git_ref,
                 repo="zapata-engineering/orquestra-sdk",
