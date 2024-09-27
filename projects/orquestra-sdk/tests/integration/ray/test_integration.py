@@ -28,6 +28,7 @@ from orquestra.workflow_shared.schema.workflow_run import State, WorkflowRunId
 
 from orquestra import sdk
 from orquestra.sdk._client._base._config._settings import LOCAL_RUNTIME_CONFIGURATION
+from orquestra.sdk._client._base._docker_images import DEFAULT_WORKER_IMAGE
 from orquestra.sdk._client._base._testing import _example_wfs, _ipc
 from orquestra.sdk._client._base._testing._example_wfs import (
     workflow_parametrised_with_resources,
@@ -975,17 +976,13 @@ class TestMakeDag:
                 (
                     None,
                     None,
-                    {
-                        "image:hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:worker-1.0.0a1": 1  # noqa: E501
-                    },
+                    {f"image:{DEFAULT_WORKER_IMAGE}": 1},
                     {},
                 ),
                 (
                     None,
                     1,
-                    {
-                        "image:hub.stage.nexus.orquestra.io/zapatacomputing/orquestra-sdk-base:worker-1.0.0a1-cuda": 1  # noqa: E501
-                    },
+                    {f"image:{DEFAULT_WORKER_IMAGE}-cuda": 1},
                     {
                         "num_gpus": 1,
                     },
