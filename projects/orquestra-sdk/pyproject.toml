@@ -26,7 +26,7 @@ requires-python = ">= 3.8"
 # version we can easily install and test, even if there are older versions with
 # the same API.
 dependencies = [
-    "orquestra-workflow-shared~=1.0.0",
+    "orquestra-workflow-shared~=2.0.0",
 
     # Schema definition
     "pydantic>1.10.7",
@@ -72,11 +72,11 @@ dependencies = [
 
 [project.optional-dependencies]
 ray = [
-    "orquestra-workflow-runtime[ray]~=1.0.0",
+    "orquestra-workflow-runtime[ray]~=2.0.0",
 ]
 
 dashboard = [
-    "orquestra-workflow-runtime[dashboard]~=1.0.0",
+    "orquestra-workflow-runtime[dashboard]~=2.0.0",
 ]
 
 all = ["orquestra-sdk[dashboard]"]
