@@ -21,7 +21,7 @@ jobs:
           -H 'Accept: application/vnd.github.everest-preview+json' \
           --data-raw '
           {
-            "event_type":  "'"${eventType:0:100}"'",
+            "event_type":  "test_id",
             "client_payload": 
                 {
                   "repository": "'"$repository"'", 
@@ -36,7 +36,8 @@ jobs:
                     "image_tag_flavor": "'"$image_tag_flavor"'",
                     "image_labels": "'"$image_labels"'",
                     "docker_build_args": "'"$docker_build_args"'",
-                    "target_platforms": "'"$target_platforms"'"
+                    "target_platforms": "'"$target_platforms"'",
+                    "distinct_id": "MY DISTINCT ID TEST"
                   }
                 }
             }
