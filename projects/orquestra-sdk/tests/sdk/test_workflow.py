@@ -337,6 +337,9 @@ NONE_RESOURCES = {
     "nodes": None,
 }
 
+class TestHeadNodeImage:
+    ...
+
 
 class TestResources:
     @pytest.fixture

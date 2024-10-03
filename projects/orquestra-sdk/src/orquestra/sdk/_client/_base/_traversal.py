@@ -927,7 +927,9 @@ def flatten_graph(
         metadata=ir.WorkflowMetadata(
             sdk_version=sdk_version,
             python_version=python_version,
-            head_node_image=_docker_images.HEAD_NODE_IMAGE,
+            head_node_image=workflow_def._head_node_image
+            if workflow_def._head_node_image
+            else _docker_images.HEAD_NODE_IMAGE,
         ),
         resources=_make_resources_model(workflow_def._resources, is_task=False),
         # At the moment 'orq submit workflow-def <name>' assumes that the <name> is
