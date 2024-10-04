@@ -6,7 +6,7 @@
 
 🔥 *Features*
 
-* `workflow` decorator now accepts optional `head_node_image` parameter to select what image should be used in head node. 
+* `workflow` decorator now accepts optional `head_node_image` parameter to select what image should be used in head node.
 
 🧟 *Deprecations*
 
