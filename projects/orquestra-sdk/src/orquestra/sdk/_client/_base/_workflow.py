@@ -71,6 +71,7 @@ class WorkflowDef(Generic[_R]):
         workflow_fn: Callable[..., _R],
         fn_ref: FunctionRef,
         resources: _dsl.Resources,
+        head_node_image: Optional[str],
         data_aggregation: Optional[DataAggregation] = None,
         workflow_args: Optional[Tuple[Any, ...]] = None,
         workflow_kwargs: Optional[Dict[str, Any]] = None,
@@ -84,6 +85,7 @@ class WorkflowDef(Generic[_R]):
         self._data_aggregation = data_aggregation
         self._workflow_args = workflow_args or ()
         self._workflow_kwargs = workflow_kwargs or {}
+        self._head_node_image = head_node_image
         self.default_source_import = default_source_import
         self.default_dependency_imports = default_dependency_imports
 
@@ -246,6 +248,7 @@ class WorkflowDef(Generic[_R]):
             workflow_kwargs=self._workflow_kwargs,
             default_source_import=self.default_source_import,
             default_dependency_imports=self.default_dependency_imports,
+            head_node_image=self._head_node_image,
         )
 
     def with_head_node_resources(
@@ -297,6 +300,40 @@ class WorkflowDef(Generic[_R]):
             workflow_kwargs=self._workflow_kwargs,
             default_source_import=self.default_source_import,
             default_dependency_imports=self.default_dependency_imports,
+            head_node_image=self._head_node_image,
+        )
+
+    def with_head_node_image(
+        self,
+        *,
+        image: Optional[str],
+    ) -> "WorkflowDef":
+        """Assigns optional metadata related to this workflow definition object.
+
+        Doesn't modify the existing workflow definition, returns a new one.
+
+        Example usage::
+
+            wf_run = my_workflow().with_head_node_image(
+                image="abc"
+            ).run("my_cluster")
+
+        Args:
+            image: docker image to be used as head node image,
+                Image should be full path to docker image with the tag, example:
+                "hub.stage.nexus.orquestra.io/zapatacomputing/workflow-driver-ray:orquestra-head-image-v1.0.0"
+        """
+        return WorkflowDef(
+            name=self._name,
+            workflow_fn=self._fn,
+            fn_ref=self._fn_ref,
+            resources=self._resources,
+            data_aggregation=self._data_aggregation,
+            workflow_args=self._workflow_args,
+            workflow_kwargs=self._workflow_kwargs,
+            default_source_import=self.default_source_import,
+            default_dependency_imports=self.default_dependency_imports,
+            head_node_image=image,
         )
 
 
@@ -313,6 +350,7 @@ class WorkflowTemplate(Generic[_P, _R]):
         data_aggregation: Optional[Union[DataAggregation, bool]] = None,
         default_source_import: Optional[Import] = None,
         default_dependency_imports: Optional[Iterable[Import]] = None,
+        head_node_image: Optional[str] = None,
     ):
         self._custom_name = custom_name
         self._fn = workflow_fn
@@ -322,6 +360,7 @@ class WorkflowTemplate(Generic[_P, _R]):
         self._data_aggregation = data_aggregation
         self._default_source_import = default_source_import
         self._default_dependency_imports = default_dependency_imports
+        self._head_node_image = head_node_image
 
     # flake8: ignore=DOC101
     def __call__(self, *args: _P.args, **kwargs: _P.kwargs) -> WorkflowDef[_R]:
@@ -413,6 +452,7 @@ class WorkflowTemplate(Generic[_P, _R]):
             workflow_kwargs=kwargs,
             default_source_import=self._default_source_import,
             default_dependency_imports=self._default_dependency_imports,
+            head_node_image=self._head_node_image,
         )
 
     @property
@@ -609,6 +649,7 @@ def workflow(
     custom_name: Optional[str] = None,
     default_source_import: Optional[Import] = None,
     default_dependency_imports: Optional[Iterable[Import]] = None,
+    head_node_image: Optional[str] = None,
 ) -> Callable[[Callable[_P, _R]], WorkflowTemplate[_P, _R]]:
     ...
 
@@ -623,6 +664,7 @@ def workflow(
     custom_name: Optional[str] = None,
     default_source_import: Optional[Import] = None,
     default_dependency_imports: Optional[Iterable[Import]] = None,
+    head_node_image: Optional[str] = None,
 ) -> WorkflowTemplate[_P, _R]:
     ...
 
@@ -636,6 +678,7 @@ def workflow(
     custom_name: Optional[str] = None,
     default_source_import: Optional[Import] = None,
     default_dependency_imports: Union[Iterable[Import], Import, None] = None,
+    head_node_image: Optional[str] = None,
 ) -> Union[
     WorkflowTemplate[_P, _R],
     Callable[[Callable[_P, _R]], WorkflowTemplate[_P, _R]],
@@ -664,6 +707,9 @@ def workflow(
            Important: if a task defines its own individual dependency imports, the
            workflow scoped default_dependency_imports will be ignored for that
            particular task
+        head_node_image: Path to docker image that will be used as head node image.
+            Image should be full path to docker image with the tag, example:
+            "hub.stage.nexus.orquestra.io/zapatacomputing/workflow-driver-ray:orquestra-head-image-v1.0.0"
 
     You can use the Python API to submit workflows for execution::
 
@@ -730,6 +776,7 @@ def workflow(
             data_aggregation=_data_aggregation,
             default_source_import=default_source_import,
             default_dependency_imports=workflow_default_dependency_imports,
+            head_node_image=head_node_image,
         )
         functools.update_wrapper(template, fn)
         return template

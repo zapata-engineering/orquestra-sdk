@@ -9,7 +9,7 @@ from orquestra.workflow_shared.exceptions import WorkflowSyntaxError
 from orquestra.workflow_shared.schema import ir
 
 import orquestra.sdk as sdk
-from orquestra.sdk._client._base import _traversal, _workflow, loader
+from orquestra.sdk._client._base import _docker_images, _traversal, _workflow, loader
 from orquestra.sdk._client._base._dsl import InvalidPlaceholderInCustomTaskNameError
 
 DEFAULT_LOCAL_REPO_PATH = Path(__file__).parent.resolve()
@@ -336,6 +336,28 @@ NONE_RESOURCES = {
     "disk": None,  # noqa: F841
     "nodes": None,
 }
+
+
+@sdk.workflow(head_node_image="my_image")
+def wf():
+    return _an_empty_task()
+
+
+class TestHeadNodeImage:
+    def test_head_node_in_decorator(self):
+        model = wf().model
+        assert model.metadata is not None
+        assert model.metadata.head_node_image == "my_image"
+
+    def test_with_head_node_image(self):
+        new_wf_model = wf().with_head_node_image(image="different_image").model
+        assert new_wf_model.metadata is not None
+        assert new_wf_model.metadata.head_node_image == "different_image"
+
+    def test_default_head_node_image(self):
+        model = _simple_workflow().model
+        assert model.metadata is not None
+        assert model.metadata.head_node_image == _docker_images.HEAD_NODE_IMAGE
 
 
 class TestResources:
