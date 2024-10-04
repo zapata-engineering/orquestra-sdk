@@ -319,7 +319,9 @@ class WorkflowDef(Generic[_R]):
             ).run("my_cluster")
 
         Args:
-            image: docker image to be used as head node image
+            image: docker image to be used as head node image.
+            Image should be full path to docker image with the tag, example:
+            "hub.stage.nexus.orquestra.io/zapatacomputing/workflow-driver-ray:orquestra-head-image-v1.0.0"  # noqa
         """
         return WorkflowDef(
             name=self._name,
@@ -706,6 +708,8 @@ def workflow(
            workflow scoped default_dependency_imports will be ignored for that
            particular task
         head_node_image: Path to docker image that will be used as head node image.
+            Image should be full path to docker image with the tag, example:
+            "hub.stage.nexus.orquestra.io/zapatacomputing/workflow-driver-ray:orquestra-head-image-v1.0.0"  # noqa
 
     You can use the Python API to submit workflows for execution::
 

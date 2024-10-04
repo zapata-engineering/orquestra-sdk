@@ -928,7 +928,7 @@ def flatten_graph(
             sdk_version=sdk_version,
             python_version=python_version,
             head_node_image=workflow_def._head_node_image
-            if workflow_def._head_node_image
+            if workflow_def._head_node_image is not None
             else _docker_images.HEAD_NODE_IMAGE,
         ),
         resources=_make_resources_model(workflow_def._resources, is_task=False),

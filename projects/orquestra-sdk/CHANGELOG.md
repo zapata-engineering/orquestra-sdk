@@ -6,6 +6,26 @@
 
 🔥 *Features*
 
+* `workflow` decorator now accepts optional `head_node_image` parameter to select what image should be used in head node. 
+
+🧟 *Deprecations*
+
+👩‍🔬 *Experimental*
+
+🐛 *Bug Fixes*
+
+💅 *Improvements*
+
+🥷 *Internal*
+
+📃 *Docs*
+
+## v1.0.0
+
+🚨 *Breaking Changes*
+
+🔥 *Features*
+
 * New function: `sdk.infer_git_ref` to infer git refs for Git Imports.
 * SDK dependency will be explicitly added as a PythonImport to every task submitted. Version will be inferred from local version during submission.
 
