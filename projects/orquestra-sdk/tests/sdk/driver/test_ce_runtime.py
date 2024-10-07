@@ -1801,12 +1801,6 @@ class TestGetWorkflowLogs:
         monkeypatch: pytest.MonkeyPatch,
     ):
         # Given
-        sys_logs = [
-            _models.K8sEventLog(tag=tag, log={"some": "values", "another": "thing"}),
-            _models.RayHeadNodeEventLog(tag=tag, log="Ray head log line"),
-            _models.RayWorkerNodeEventLog(tag=tag, log="Ray worker log line"),
-            _models.UnknownEventLog(tag=tag, log="Unknown log line"),
-        ]
         wf_run = Mock()
         wf_run.workflow_def.task_invocations.keys.return_value = ["inv1", "inv2"]
         mocked_client.get_workflow_run.return_value = wf_run
