@@ -416,7 +416,6 @@ class TestFlattenGraph:
             memory=None,
             disk=None,
             gpu="26",
-
         )
         assert with_task_meta.resources == ir.Resources(
             cpu="2000m",
