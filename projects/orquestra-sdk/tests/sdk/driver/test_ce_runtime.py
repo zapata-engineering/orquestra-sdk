@@ -1791,6 +1791,36 @@ class TestGetWorkflowLogs:
 
         assert logs.other == LogOutput(out=["line 2", "line 3"], err=["line 1"])
 
+    def test_no_logs_exception(
+        self,
+        mocked_client: MagicMock,
+        runtime: _ce_runtime.CERuntime,
+        tag: str,
+        ray_logs: List[_models.WorkflowLogMessage],
+        workflow_run_id: str,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        # Given
+        wf_run = Mock()
+        wf_run.workflow_def.task_invocations.keys.return_value = ["inv1", "inv2"]
+        mocked_client.get_workflow_run.return_value = wf_run
+
+        mocked_client.get_workflow_run_logs.side_effect = (
+            _exceptions.WorkflowRunLogsNotFound("abc")
+        )
+
+        # When
+        logs = runtime.get_workflow_logs(workflow_run_id)
+
+        # Then
+        mocked_client.get_workflow_run_logs.assert_called_once_with(workflow_run_id)
+
+        assert logs.env_setup == LogOutput(out=[], err=[])
+
+        assert logs.system == LogOutput(out=[], err=[])
+
+        assert logs.other == LogOutput(out=[], err=[])
+
     @pytest.mark.parametrize(
         "exception, expected_exception, exception_args",
         [

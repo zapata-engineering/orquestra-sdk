@@ -1,6 +1,7 @@
 ################################################################################
 # © Copyright 2023 - 2024 Zapata Computing Inc.
 ################################################################################
+import contextlib
 import typing as t
 from datetime import timedelta
 from types import ModuleType
@@ -884,24 +885,39 @@ class TestWFRunResolver:
             if other_choice:
                 expected_choices.append(WorkflowLogs.WorkflowLogTypeName.OTHER)
 
+            context: t.Union[contextlib.nullcontext, pytest.WarningsRecorder]
+            if not any([task_choice, system_choice, env_choice, other_choice]):
+                expected_call = 0
+                context = pytest.warns(UserWarning)
+            else:
+                expected_call = 1
+                context = contextlib.nullcontext()
+
             # When
-            _ = resolver.resolve_log_switches(
-                None,
-                None,
-                None,
-                None,
-                WorkflowLogs(
-                    per_task=per_task, system=system, env_setup=env_setup, other=other
-                ),
-            )
+            with context:
+                _ = resolver.resolve_log_switches(
+                    None,
+                    None,
+                    None,
+                    None,
+                    WorkflowLogs(
+                        per_task=per_task,
+                        system=system,
+                        env_setup=env_setup,
+                        other=other,
+                    ),
+                )
 
             # Then
-            prompter.choice.assert_called_once_with(
-                [(v.value, v) for v in expected_choices],
-                message="available logs",
-                default="all",
-                allow_all=True,
-            )
+            if expected_call:
+                prompter.choice.assert_called_once_with(
+                    [(v.value, v) for v in expected_choices],
+                    message="available logs",
+                    default="all",
+                    allow_all=True,
+                )
+            else:
+                prompter.choice.assert_not_called()
 
         @staticmethod
         @pytest.mark.parametrize(

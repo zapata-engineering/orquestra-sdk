@@ -281,6 +281,9 @@ class WFRunResolver:
             for log_type in user_switch_values
             if log_availibility[log_type] and user_switch_values[log_type] is None
         ]
+        if not valid_switches:
+            warnings.warn("No logs are available for this workflow.")
+            return ret_switch_values
 
         choice: t.Union[str, WorkflowLogs.WorkflowLogTypeName] = self._prompter.choice(
             [(switch.value, switch) for switch in valid_switches],

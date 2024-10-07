@@ -6,19 +6,23 @@
 
 🔥 *Features*
 
-* `workflow` decorator now accepts optional `head_node_image` parameter to select what image should be used in head node.
-
 🧟 *Deprecations*
 
 👩‍🔬 *Experimental*
 
 🐛 *Bug Fixes*
 
+* fix `orq wf logs` CLI command when WF didn't emit any logs
+
 💅 *Improvements*
 
 🥷 *Internal*
 
-📃 *Docs*
+## v1.1.0
+
+🔥 *Features*
+
+* `workflow` decorator now accepts optional `head_node_image` parameter to select what image should be used in head node.
 
 ## v1.0.0
 
@@ -28,18 +32,6 @@
 
 * New function: `sdk.infer_git_ref` to infer git refs for Git Imports.
 * SDK dependency will be explicitly added as a PythonImport to every task submitted. Version will be inferred from local version during submission.
-
-🧟 *Deprecations*
-
-👩‍🔬 *Experimental*
-
-🐛 *Bug Fixes*
-
-💅 *Improvements*
-
-🥷 *Internal*
-
-📃 *Docs*
 
 ## v0.66.0
 
