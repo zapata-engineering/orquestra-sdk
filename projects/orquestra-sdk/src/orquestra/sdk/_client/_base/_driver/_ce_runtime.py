@@ -635,9 +635,21 @@ class CERuntime(RuntimeInterface):
         _check_token_validity(self._token)
 
         try:
+            wf_def = self._client.get_workflow_run(wf_run_id).workflow_def
+        except (_exceptions.InvalidWorkflowRunID, _exceptions.WorkflowRunNotFound) as e:
+            raise exceptions.WorkflowRunNotFoundError(
+                f"Workflow run with id `{wf_run_id}` not found"
+            ) from e
+        except (_exceptions.InvalidTokenError, _exceptions.ForbiddenError) as e:
+            raise exceptions.UnauthorizedError(
+                "Could not get the workflow status for run with id "
+                f"`{wf_run_id}` "
+                "- the authorization token was rejected by the remote cluster."
+            ) from e
+
+        try:
             messages = self._client.get_workflow_run_logs(wf_run_id)
             sys_messages = self._client.get_system_logs(wf_run_id)
-            wf_def = self._client.get_workflow_run(wf_run_id).workflow_def
         except (_exceptions.InvalidWorkflowRunID, _exceptions.WorkflowRunNotFound) as e:
             raise exceptions.WorkflowRunNotFoundError(
                 f"Workflow run with id `{wf_run_id}` not found"
@@ -652,6 +664,9 @@ class CERuntime(RuntimeInterface):
                 f"Failed to decode logs for workflow run with id `{wf_run_id}`. "
                 "Please report this as a bug."
             ) from e
+        except _exceptions.WorkflowRunLogsNotFound:
+            messages = []
+            sys_messages = []
 
         task_logs = {}
         env_logs = LogAccumulator()
