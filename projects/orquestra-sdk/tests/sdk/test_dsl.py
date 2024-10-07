@@ -68,6 +68,7 @@ class TestArtifactFuturePublicMethods:
         ("memory", {"memory": None}),
         ("disk", {"disk": None}),
         ("gpu", {"gpu": None}),
+        ("gpu", {"gpu": 15}),
         # Empty args, expect default value
         ("cpu", {}),
         ("memory", {}),
@@ -879,7 +880,7 @@ class TestResources:
         # should not raise
         wf().model
 
-    @pytest.mark.parametrize("gpu", ["1", "1.0", "10.0"])
+    @pytest.mark.parametrize("gpu", ["1", "1.0", "10.0", 3, 0, 15])
     def test_valid_gpu_resources(self, gpu):
         @sdk.task(resources=sdk.Resources(gpu=gpu))
         def t():

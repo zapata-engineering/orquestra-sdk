@@ -407,7 +407,7 @@ class Resources(NamedTuple):
             Binary or decimal suffixes are supported. e.g. "10G" for 10 gigabytes
         disk: The requested disk space in "bytes".
             Binary or decimal suffixes are supported. e.g. "10Gi" for 10 gibibytes
-        gpu: Either "0" or "1" to use a GPU or not.
+        gpu: Number of gpus used either as string ("1" or "4") or as int
         nodes: The number of nodes requested. This option only applies to workflows.
             This should be a positive integer.
     """
@@ -415,7 +415,9 @@ class Resources(NamedTuple):
     cpu: Optional[str] = None
     memory: Optional[str] = None
     disk: Optional[str] = None
-    gpu: Optional[str] = None
+    # gpu accept str for legacy reasons. It used to accept "0" or "1" only, but
+    # to add more granular selection it now accepts INTs.
+    gpu: Optional[str, int] = None
     nodes: Optional[int] = None
 
     def is_empty(self) -> bool:

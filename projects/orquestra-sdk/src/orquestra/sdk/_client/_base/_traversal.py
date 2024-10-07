@@ -491,7 +491,7 @@ def _make_resources_model(
         cpu=resources.cpu,
         memory=resources.memory,
         disk=resources.disk,
-        gpu=resources.gpu,
+        gpu=str(resources.gpu) if isinstance(resources.gpu, int) else resources.gpu,
         nodes=nodes,
     )
 
