@@ -885,6 +885,7 @@ class TestWFRunResolver:
             if other_choice:
                 expected_choices.append(WorkflowLogs.WorkflowLogTypeName.OTHER)
 
+            context: t.Union[contextlib.nullcontext, pytest.WarningsRecorder]
             if not any([task_choice, system_choice, env_choice, other_choice]):
                 expected_call = 0
                 context = pytest.warns(UserWarning)
