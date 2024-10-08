@@ -670,6 +670,7 @@ class TaskDef(wrapt.ObjectProxy, Generic[_TaskReturn]):
                 custom_name=parse_custom_name(self._custom_name, signature),
                 custom_image=self._custom_image,
                 env_vars=self._env_vars,
+                type="task_invocation",
             )
         )
 
@@ -735,7 +736,7 @@ class TaskInvocation(Generic[_TaskReturn]):
         custom_name: Optional[str],
         custom_image: Optional[str],
         env_vars: Optional[Dict[str, str]],
-        type: str = "task_invocation",
+        type: str,
     ):
         self.task = task
         self.args = args
@@ -939,6 +940,7 @@ class ArtifactFuture(Generic[_TaskReturn]):
             custom_name=invocation.custom_name,
             custom_image=new_custom_image,
             env_vars=new_env_vars,
+            type=invocation.type,
         )
 
         return ArtifactFuture(
