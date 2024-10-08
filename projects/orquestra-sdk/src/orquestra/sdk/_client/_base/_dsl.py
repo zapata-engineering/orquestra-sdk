@@ -417,7 +417,7 @@ class Resources(NamedTuple):
     disk: Optional[str] = None
     # gpu accept str for legacy reasons. It used to accept "0" or "1" only, but
     # to add more granular selection it now accepts INTs.
-    gpu: Optional[str, int] = None
+    gpu: Optional[Union[str, int]] = None
     nodes: Optional[int] = None
 
     def is_empty(self) -> bool:
@@ -866,7 +866,9 @@ class ArtifactFuture(Generic[_TaskReturn]):
             Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]  # pyright: ignore
         ] = Sentinel.NO_UPDATE,
         gpu: Optional[
-            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]  # pyright: ignore
+            Union[
+                str, int, "orquestra.sdk._client._base._dsl.Sentinel"  # pyright: ignore
+            ]
         ] = Sentinel.NO_UPDATE,
         custom_image: Optional[
             Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]  # pyright: ignore
@@ -962,7 +964,9 @@ class ArtifactFuture(Generic[_TaskReturn]):
             Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]  # pyright: ignore
         ] = Sentinel.NO_UPDATE,
         gpu: Optional[
-            Union[str, "orquestra.sdk._client._base._dsl.Sentinel"]  # pyright: ignore
+            Union[
+                str, int, "orquestra.sdk._client._base._dsl.Sentinel"  # pyright: ignore
+            ]
         ] = Sentinel.NO_UPDATE,
     ) -> "ArtifactFuture":
         """

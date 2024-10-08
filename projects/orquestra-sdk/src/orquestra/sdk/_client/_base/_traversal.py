@@ -32,7 +32,7 @@ from . import _docker_images, _dsl, _workflow
 N_BYTES_IN_HASH = 8
 
 
-def _get_default_image(num_gpus: t.Optional[str]):
+def _get_default_image(num_gpus: t.Optional[t.Union[str, int]]):
     image = _docker_images.DEFAULT_WORKER_IMAGE
     if num_gpus:
         image = f"{image}-cuda"
@@ -775,7 +775,7 @@ def _make_invocation_model(
         arg_name: graph.get_node_id(arg_val) for arg_name, arg_val in invocation.kwargs
     }
 
-    gpu_used: t.Optional[str]
+    gpu_used: t.Optional[t.Union[str, int]]
     if invocation.resources.gpu:
         gpu_used = invocation.resources.gpu
     elif task_models_dict[invocation.task].resources is not None:
