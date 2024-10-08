@@ -180,11 +180,10 @@ class CERuntime(RuntimeInterface):
             the workflow run ID.
         """
         if project is None or project.workspace_id is None:
-            warnings.warn(
-                "Please specify workspace ID directly for submitting CE workflows."
-                " Support for default workspace will be removed in the next release",
-                category=PendingDeprecationWarning,
+            raise ValueError(
+                "Please specify workspace ID directly for " "submitting CE workflows."
             )
+
         _check_token_validity(self._token)
 
         max_invocation_resources = _get_max_resources(workflow_def)
@@ -252,15 +251,10 @@ class CERuntime(RuntimeInterface):
                 "Unable to start the workflow run."
             ) from e
         except _exceptions.ForbiddenError as e:
-            if project:
-                raise exceptions.ProjectInvalidError(
-                    f"Unable to start the workflow run "
-                    f"invalid workspace: {project.workspace_id}"
-                ) from e
-            else:
-                raise exceptions.UnauthorizedError(
-                    "Unable to start the workflow run "
-                ) from e
+            raise exceptions.ProjectInvalidError(
+                f"Unable to start the workflow run "
+                f"invalid workspace: {project.workspace_id}"
+            ) from e
         except _exceptions.InvalidTokenError as e:
             raise exceptions.UnauthorizedError(
                 "Unable to start the workflow run "
