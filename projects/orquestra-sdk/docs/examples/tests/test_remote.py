@@ -48,7 +48,7 @@ class Snippets:
         workflow = hello_orquestra_wf()
         remote_config = sdk.RuntimeConfig.load(config_name="<paste your config name>")
         # Start the workflow
-        workflow_run = workflow.run(remote_config)
+        workflow_run = workflow.run(remote_config, workspace_id="x", project_id="y")
 
         # Get the workflow run ID
         print(workflow_run.run_id)
