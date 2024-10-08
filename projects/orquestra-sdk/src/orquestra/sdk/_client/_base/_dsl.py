@@ -732,11 +732,11 @@ class TaskInvocation(Generic[_TaskReturn]):
         task: TaskDef[_TaskReturn],
         args: Tuple[Argument, ...],
         kwargs: Tuple[Tuple[str, Argument], ...],
+        type: str,
         resources: Resources,
         custom_name: Optional[str],
         custom_image: Optional[str],
         env_vars: Optional[Dict[str, str]],
-        type: str,
     ):
         self.task = task
         self.args = args
