@@ -6,6 +6,8 @@
 
 🔥 *Features*
 
+* Allow to set `int` as GPU number in task resources.
+
 🧟 *Deprecations*
 
 👩‍🔬 *Experimental*
