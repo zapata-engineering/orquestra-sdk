@@ -5,6 +5,7 @@
 🚨 *Breaking Changes*
 
 * Setting `workspace_id` is now required when submitting workflow to remote clusters
+* `TaskDef` `WorkflowDef` and `TaskInvocation` Objects `__init__` functions now do set parameters by default.
 
 🔥 *Features*
 
