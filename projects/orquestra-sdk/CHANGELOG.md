@@ -4,6 +4,8 @@
 
 🚨 *Breaking Changes*
 
+* Setting `workspace_id` is now required when submitting workflow to remote clusters
+
 🔥 *Features*
 
 * Allow to set `int` as GPU number in task resources.

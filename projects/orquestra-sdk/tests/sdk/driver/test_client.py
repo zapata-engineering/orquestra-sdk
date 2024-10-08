@@ -459,24 +459,12 @@ class TestClient:
                 )
 
             @staticmethod
-            @pytest.mark.parametrize(
-                "project,params",
-                [
-                    (None, {}),
-                    (
-                        ProjectRef(workspace_id="a", project_id="b"),
-                        {"workspaceId": "a", "projectId": "b"},
-                    ),
-                ],
-            )
             def test_params_encoding(
                 mask_sdk_version,
                 endpoint_mocker,
                 client: DriverClient,
                 workflow_def_id,
                 workflow_def: WorkflowDef,
-                project,
-                params,
             ):
                 """
                 Verifies that params are correctly sent to the server.
@@ -487,14 +475,18 @@ class TestClient:
                         responses.matchers.json_params_matcher(
                             workflow_def.model_dump()
                         ),
-                        responses.matchers.query_param_matcher(params),
+                        responses.matchers.query_param_matcher(
+                            {"workspaceId": "a", "projectId": "b"}
+                        ),
                     ],
                     # Based on:
                     # https://github.com/zapatacomputing/workflow-driver/blob/2b353476d5b0161da31584533be208611a131bdc/openapi/src/resources/workflow-definitions.yaml#L42
                     status=201,
                 )
 
-                client.create_workflow_def(workflow_def, project)
+                client.create_workflow_def(
+                    workflow_def, ProjectRef(workspace_id="a", project_id="b")
+                )
 
                 # The assertion is done by mocked_responses
 
@@ -518,7 +510,9 @@ class TestClient:
                     json=resp_mocks.make_create_wf_def_response(id_=workflow_def_id),
                 )
 
-                client.create_workflow_def(workflow_def, None)
+                client.create_workflow_def(
+                    workflow_def, ProjectRef(workspace_id="a", project_id="b")
+                )
 
                 # The assertion is done by mocked_responses
 
@@ -536,7 +530,9 @@ class TestClient:
                 )
 
                 with pytest.raises(_exceptions.InvalidWorkflowDef):
-                    client.create_workflow_def(workflow_def, None)
+                    client.create_workflow_def(
+                        workflow_def, ProjectRef(workspace_id="a", project_id="b")
+                    )
 
             @staticmethod
             def test_unauthorized(
@@ -548,7 +544,9 @@ class TestClient:
                 )
 
                 with pytest.raises(_exceptions.InvalidTokenError):
-                    client.create_workflow_def(workflow_def, None)
+                    client.create_workflow_def(
+                        workflow_def, ProjectRef(workspace_id="a", project_id="b")
+                    )
 
             @staticmethod
             def test_forbidden(
@@ -561,7 +559,9 @@ class TestClient:
                 )
 
                 with pytest.raises(_exceptions.ForbiddenError):
-                    _ = client.create_workflow_def(workflow_def, None)
+                    _ = client.create_workflow_def(
+                        workflow_def, ProjectRef(workspace_id="a", project_id="b")
+                    )
 
             @staticmethod
             def test_unknown_error(
@@ -574,7 +574,9 @@ class TestClient:
                 )
 
                 with pytest.raises(_exceptions.UnknownHTTPError):
-                    _ = client.create_workflow_def(workflow_def, None)
+                    _ = client.create_workflow_def(
+                        workflow_def, ProjectRef(workspace_id="a", project_id="b")
+                    )
 
         class TestDelete:
             @staticmethod
