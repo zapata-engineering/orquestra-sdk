@@ -72,11 +72,11 @@ class WorkflowDef(Generic[_R]):
         fn_ref: FunctionRef,
         resources: _dsl.Resources,
         head_node_image: Optional[str],
-        data_aggregation: Optional[DataAggregation] = None,
-        workflow_args: Optional[Tuple[Any, ...]] = None,
-        workflow_kwargs: Optional[Dict[str, Any]] = None,
-        default_source_import: Optional[Import] = None,
-        default_dependency_imports: Optional[Iterable[Import]] = None,
+        data_aggregation: Optional[DataAggregation],
+        workflow_args: Optional[Tuple[Any, ...]],
+        workflow_kwargs: Optional[Dict[str, Any]],
+        default_source_import: Optional[Import],
+        default_dependency_imports: Optional[Iterable[Import]],
     ):
         self._name = name
         self._fn = workflow_fn
