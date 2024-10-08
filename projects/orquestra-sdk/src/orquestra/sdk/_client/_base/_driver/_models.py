@@ -283,7 +283,7 @@ class Resources(BaseModel):
     memory: Optional[str] = pydantic.Field(
         pattern=r"^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$"
     )
-    gpu: Optional[str] = pydantic.Field(pattern="^[01]+$")
+    gpu: Optional[str] = pydantic.Field(pattern=r"^\d+$")
 
 
 class HeadNodeResources(BaseModel):

@@ -66,6 +66,7 @@ def capitalize(text: str):
     resources=_dsl.Resources(
         cpu="2000m",
         memory="10Gi",
+        gpu=6,
     )
 )
 def capitalize_resourced(text: str):
@@ -270,6 +271,7 @@ def resources_invocation():
     with_inv_meta = with_task_meta.with_resources(
         cpu="1000m",
         memory=None,
+        gpu=26,
     )
     no_meta = capitalize(name)
 
@@ -401,7 +403,7 @@ class TestFlattenGraph:
     def test_setting_invocation_metadata(self):
         # preconditions
         wf = resources_invocation.model
-        with_inv_meta, with_task_meta, no_meta = [
+        with_task_meta, with_inv_meta, no_meta = [
             invocation
             for output_id in wf.output_ids
             for invocation in wf.task_invocations.values()
@@ -410,16 +412,16 @@ class TestFlattenGraph:
 
         # main assertions
         assert with_inv_meta.resources == ir.Resources(
-            cpu="2000m",
-            memory="10Gi",
-            disk=None,
-            gpu=None,
-        )
-        assert with_task_meta.resources == ir.Resources(
             cpu="1000m",
             memory=None,
             disk=None,
-            gpu=None,
+            gpu="26",
+        )
+        assert with_task_meta.resources == ir.Resources(
+            cpu="2000m",
+            memory="10Gi",
+            disk=None,
+            gpu="6",
         )
 
         assert no_meta.resources is None
