@@ -159,7 +159,11 @@ class CERuntime(RuntimeInterface):
         self._token = token
 
     def create_workflow_run(
-        self, workflow_def: WorkflowDef, project: Optional[ProjectRef], dry_run: bool
+        self,
+        workflow_def: WorkflowDef,
+        project: Optional[ProjectRef],
+        dry_run: bool,
+        debug: bool = False,
     ) -> WorkflowRunId:
         """Schedules a workflow definition for execution.
 
@@ -168,6 +172,7 @@ class CERuntime(RuntimeInterface):
             project: Project dir (workspace and project ID) on which the workflow
                 will be run.
             dry_run: If True, code of the tasks will not be executed.
+            debug: If True, debug mode on CE will be enabled
 
         Raises:
             WorkflowSyntaxError: when the workflow definition was rejected by the remote
@@ -225,7 +230,11 @@ class CERuntime(RuntimeInterface):
             workflow_def_id = self._client.create_workflow_def(workflow_def, project)
 
             workflow_run_id = self._client.create_workflow_run(
-                workflow_def_id, resources, dry_run, head_node_resources
+                workflow_def_id=workflow_def_id,
+                resources=resources,
+                dry_run=dry_run,
+                debug=debug,
+                head_node_resources=head_node_resources,
             )
         except _exceptions.InvalidWorkflowDef as e:
             raise exceptions.WorkflowSyntaxError(

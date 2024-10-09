@@ -309,6 +309,7 @@ class CreateWorkflowRunRequest(BaseModel):
     workflowDefinitionID: WorkflowDefID
     resources: Resources
     dryRun: bool
+    debug: bool
     headNodeResources: Optional[HeadNodeResources] = None
 
 

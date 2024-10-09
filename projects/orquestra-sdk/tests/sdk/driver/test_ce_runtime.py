@@ -107,10 +107,11 @@ class TestCreateWorkflowRun:
             my_workflow.model, ProjectRef(workspace_id="a", project_id="b")
         )
         mocked_client.create_workflow_run.assert_called_once_with(
-            workflow_def_id,
-            _models.Resources(cpu=None, memory=None, gpu=None, nodes=None),
-            False,
-            None,
+            workflow_def_id=workflow_def_id,
+            resources=_models.Resources(cpu=None, memory=None, gpu=None, nodes=None),
+            dry_run=False,
+            debug=False,
+            head_node_resources=None,
         )
         assert isinstance(wf_run_id, WorkflowRunId)
         assert (
@@ -136,12 +137,15 @@ class TestCreateWorkflowRun:
                 dry_run=False,
             )
 
-            # Then
+            # then
             mocked_client.create_workflow_run.assert_called_once_with(
-                workflow_def_id,
-                _models.Resources(cpu=None, memory="10Gi", gpu=None, nodes=None),
-                False,
-                None,
+                workflow_def_id=workflow_def_id,
+                resources=_models.Resources(
+                    cpu=None, memory="10Gi", gpu=None, nodes=None
+                ),
+                dry_run=False,
+                debug=False,
+                head_node_resources=None,
             )
 
         def test_with_cpu(
@@ -164,10 +168,13 @@ class TestCreateWorkflowRun:
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
-                workflow_def_id,
-                _models.Resources(cpu="1000m", memory=None, gpu=None, nodes=None),
-                False,
-                None,
+                workflow_def_id=workflow_def_id,
+                resources=_models.Resources(
+                    cpu="1000m", memory=None, gpu=None, nodes=None
+                ),
+                dry_run=False,
+                debug=False,
+                head_node_resources=None,
             )
 
         def test_with_gpu(
@@ -190,10 +197,11 @@ class TestCreateWorkflowRun:
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
-                workflow_def_id,
-                _models.Resources(cpu=None, memory=None, gpu="1", nodes=None),
-                False,
-                None,
+                workflow_def_id=workflow_def_id,
+                resources=_models.Resources(cpu=None, memory=None, gpu="1", nodes=None),
+                dry_run=False,
+                debug=False,
+                head_node_resources=None,
             )
 
         def test_maximum_resource(
@@ -216,10 +224,13 @@ class TestCreateWorkflowRun:
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
-                workflow_def_id,
-                _models.Resources(cpu="5000m", memory="3G", gpu="1", nodes=None),
-                False,
-                None,
+                workflow_def_id=workflow_def_id,
+                resources=_models.Resources(
+                    cpu="5000m", memory="3G", gpu="1", nodes=None
+                ),
+                dry_run=False,
+                debug=False,
+                head_node_resources=None,
             )
 
         def test_resources_from_workflow(
@@ -244,10 +255,11 @@ class TestCreateWorkflowRun:
 
             # Then
             mocked_client.create_workflow_run.assert_called_once_with(
-                workflow_def_id,
-                _models.Resources(cpu="1", memory="1.5G", gpu="1", nodes=20),
-                False,
-                None,
+                workflow_def_id=workflow_def_id,
+                resources=_models.Resources(cpu="1", memory="1.5G", gpu="1", nodes=20),
+                dry_run=False,
+                debug=False,
+                head_node_resources=None,
             )
 
     @pytest.mark.parametrize(
@@ -284,10 +296,11 @@ class TestCreateWorkflowRun:
 
         # Then
         mocked_client.create_workflow_run.assert_called_once_with(
-            workflow_def_id,
-            _models.Resources(cpu=None, memory=None, nodes=None, gpu=None),
-            False,
-            None,
+            workflow_def_id=workflow_def_id,
+            resources=_models.Resources(cpu=None, memory=None, gpu=None, nodes=None),
+            dry_run=False,
+            debug=False,
+            head_node_resources=None,
         )
 
     @pytest.mark.parametrize(
@@ -323,11 +336,13 @@ class TestCreateWorkflowRun:
         )
 
         # Then
+
         mocked_client.create_workflow_run.assert_called_once_with(
-            workflow_def_id,
-            _models.Resources(cpu=None, memory=None, nodes=None, gpu=None),
-            False,
-            _models.HeadNodeResources(cpu=cpu, memory=memory),
+            workflow_def_id=workflow_def_id,
+            resources=_models.Resources(cpu=None, memory=None, gpu=None, nodes=None),
+            dry_run=False,
+            debug=False,
+            head_node_resources=_models.HeadNodeResources(cpu=cpu, memory=memory),
         )
 
     class TestWorkflowDefFailure:
@@ -2159,10 +2174,11 @@ def test_ce_resources(
         assert all([telltale in str(exec_info) for telltale in telltales])
     else:
         mocked_client.create_workflow_run.assert_called_once_with(
-            workflow_def_id,
-            expected_resources,
-            False,
-            None,
+            workflow_def_id=workflow_def_id,
+            resources=expected_resources,
+            dry_run=False,
+            debug=False,
+            head_node_resources=None,
         )
 
 

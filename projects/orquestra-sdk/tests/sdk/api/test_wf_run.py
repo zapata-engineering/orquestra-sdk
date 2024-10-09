@@ -240,6 +240,7 @@ class TestWorkflowRun:
             config=None,
             project=None,
             dry_run=False,
+            debug=False,
         )
 
     class TestByID:
@@ -2182,7 +2183,9 @@ class TestProjectId:
         monkeypatch.setattr(_config.RuntimeConfig, "name", "auto")
         with raises:
             wf_def.run("in_process", workspace_id=workspace_id, project_id=project_id)
-            workflow_create_mock.assert_called_once_with(wf_def.model, expected, False)
+            workflow_create_mock.assert_called_once_with(
+                wf_def.model, expected, False, False
+            )
 
 
 class TestListWorkspaces:

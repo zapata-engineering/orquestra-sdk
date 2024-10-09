@@ -381,11 +381,17 @@ class RayRuntime(RuntimeInterface):
         workflow_def: ir.WorkflowDef,
         project: t.Optional[ProjectRef],
         dry_run: bool,
+        debug: bool = False,
     ) -> WorkflowRunId:
         if project:
             warnings.warn(
                 "Ray doesn't support project-scoped workflows. "
                 "Project and workspace IDs will be ignored.",
+                category=exceptions.UnsupportedRuntimeFeature,
+            )
+        if debug:
+            warnings.warn(
+                "Ray Runtime doesn't support `debug`. Flag will be ignored.",
                 category=exceptions.UnsupportedRuntimeFeature,
             )
 
