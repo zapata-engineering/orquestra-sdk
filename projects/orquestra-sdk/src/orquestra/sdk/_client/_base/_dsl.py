@@ -538,15 +538,15 @@ class TaskDef(wrapt.ObjectProxy, Generic[_TaskReturn]):
         self,
         fn: Callable[..., _TaskReturn],
         output_metadata: "orquestra.sdk._client._base._dsl.TaskOutputMetadata",  # pyright: ignore # NOQA
-        source_import: Optional[Import] = None,
-        parameters: Optional[OrderedDict] = None,
-        dependency_imports: Optional[Tuple[Import, ...]] = None,
-        resources: Resources = Resources(),
-        custom_image: Optional[str] = None,
-        custom_name: Optional[str] = None,
-        fn_ref: Optional[FunctionRef] = None,
-        max_retries: Optional[int] = None,
-        env_vars: Optional[Dict[str, str]] = None,
+        source_import: Optional[Import],
+        parameters: Optional[OrderedDict],
+        dependency_imports: Optional[Tuple[Import, ...]],
+        resources: Resources,
+        custom_image: Optional[str],
+        custom_name: Optional[str],
+        fn_ref: Optional[FunctionRef],
+        max_retries: Optional[int],
+        env_vars: Optional[Dict[str, str]],
     ):
         if isinstance(fn, BuiltinFunctionType):
             raise NotImplementedError("Built-in functions are not supported as Tasks")
@@ -670,6 +670,7 @@ class TaskDef(wrapt.ObjectProxy, Generic[_TaskReturn]):
                 custom_name=parse_custom_name(self._custom_name, signature),
                 custom_image=self._custom_image,
                 env_vars=self._env_vars,
+                type="task_invocation",
             )
         )
 
@@ -731,11 +732,11 @@ class TaskInvocation(Generic[_TaskReturn]):
         task: TaskDef[_TaskReturn],
         args: Tuple[Argument, ...],
         kwargs: Tuple[Tuple[str, Argument], ...],
-        type: str = "task_invocation",
-        resources: Resources = Resources(),
-        custom_name: Optional[str] = None,
-        custom_image: Optional[str] = None,
-        env_vars: Optional[Dict[str, str]] = None,
+        type: str,
+        resources: Resources,
+        custom_name: Optional[str],
+        custom_image: Optional[str],
+        env_vars: Optional[Dict[str, str]],
     ):
         self.task = task
         self.args = args
@@ -939,6 +940,7 @@ class ArtifactFuture(Generic[_TaskReturn]):
             custom_name=invocation.custom_name,
             custom_image=new_custom_image,
             env_vars=new_env_vars,
+            type=invocation.type,
         )
 
         return ArtifactFuture(
@@ -1296,6 +1298,7 @@ def task(
             custom_name=custom_name,
             max_retries=max_retries,
             env_vars=env_vars,
+            fn_ref=None,
         )
 
         return task_def
