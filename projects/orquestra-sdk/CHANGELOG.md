@@ -6,6 +6,7 @@
 
 * Setting `workspace_id` is now required when submitting workflow to remote clusters
 * `TaskDef` `WorkflowDef` and `TaskInvocation` Objects `__init__` functions now do set parameters by default.
+* Removed deprecated `project_dir` argument from all workflow-related functions
 
 🔥 *Features*
 
