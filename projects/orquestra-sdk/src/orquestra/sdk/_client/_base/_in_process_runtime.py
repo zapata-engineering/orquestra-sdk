@@ -133,7 +133,14 @@ class InProcessRuntime(abc.RuntimeInterface):
         workflow_def: ir.WorkflowDef,
         project: t.Optional[ProjectRef],
         dry_run: bool,
+        debug: bool = False,
     ) -> WfRunId:
+        if debug:
+            warnings.warn(
+                "InProcessRuntime doesn't support `debug`." " Flag will be ignored.",
+                category=exceptions.UnsupportedRuntimeFeature,
+            )
+
         if project:
             warnings.warn(
                 "in_process runtime doesn't support project-scoped workflows. "

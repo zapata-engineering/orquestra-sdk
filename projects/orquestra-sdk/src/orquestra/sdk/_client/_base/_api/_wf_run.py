@@ -138,6 +138,7 @@ class WorkflowRun:
         workspace_id: t.Optional[WorkspaceId] = None,
         project_id: t.Optional[ProjectId] = None,
         dry_run: bool = False,
+        debug: bool = False,
     ):
         """Start workflow run from its IR representation.
 
@@ -150,6 +151,7 @@ class WorkflowRun:
             project_id: ID of the project for workflow - supported only on CE
             dry_run: Run the workflow without actually executing any task code.
                 Useful for testing infrastructure, dependency imports, etc.
+            debug: Run the workflow with debug flag on.
         """
         _config = resolve_config(config)
 
@@ -168,6 +170,7 @@ class WorkflowRun:
             config=_config,
             project=_project,
             dry_run=dry_run,
+            debug=debug,
         )
 
         return wf_run
@@ -179,10 +182,11 @@ class WorkflowRun:
         runtime: RuntimeInterface,
         config: t.Optional[RuntimeConfig],
         dry_run: bool,
+        debug: bool,
         project: t.Optional[ProjectRef] = None,
     ):
         """Schedule workflow for execution and return WorkflowRun."""
-        run_id = runtime.create_workflow_run(wf_def, project, dry_run)
+        run_id = runtime.create_workflow_run(wf_def, project, dry_run, debug)
 
         workflow_run = WorkflowRun(
             run_id=run_id,

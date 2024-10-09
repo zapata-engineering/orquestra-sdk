@@ -156,6 +156,7 @@ class WorkflowDef(Generic[_R]):
         workspace_id: Optional[WorkspaceId] = None,
         project_id: Optional[ProjectId] = None,
         dry_run: bool = False,
+        debug: bool = False,
     ) -> _api.WorkflowRun:
         """Schedules workflow for execution.
 
@@ -167,6 +168,7 @@ class WorkflowDef(Generic[_R]):
             project_id: ID of the project for workflow - supported only on CE
             dry_run: Run the workflow without actually executing any task code.
                 Useful for testing infrastructure, dependency imports, etc.
+            debug: sends workflow to CE with debug flag
 
         Raises:
             orquestra.sdk.exceptions.DirtyGitRepo: (warning) when a task def used by
@@ -187,6 +189,7 @@ class WorkflowDef(Generic[_R]):
                 workspace_id=workspace_id,
                 project_id=project_id,
                 dry_run=dry_run,
+                debug=debug,
             )
         except exceptions.ProjectInvalidError:
             raise

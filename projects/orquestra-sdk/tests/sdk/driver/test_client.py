@@ -1247,6 +1247,7 @@ class TestClient:
                         resources,
                         dry_run=False,
                         head_node_resources=None,
+                        debug=False,
                     )
 
             @staticmethod
@@ -1271,7 +1272,11 @@ class TestClient:
 
                 with pytest.raises(_exceptions.UnsupportedSDKVersion) as exc_info:
                     _ = client.create_workflow_run(
-                        workflow_def_id, resources, False, head_node_resources=None
+                        workflow_def_id,
+                        resources,
+                        False,
+                        head_node_resources=None,
+                        debug=False,
                     )
 
                 assert exc_info.value.submitted_version == submitted_version
@@ -1297,7 +1302,11 @@ class TestClient:
 
                 with pytest.raises(_exceptions.UnsupportedSDKVersion) as exc_info:
                     _ = client.create_workflow_run(
-                        workflow_def_id, resources, False, head_node_resources=None
+                        workflow_def_id,
+                        resources,
+                        False,
+                        head_node_resources=None,
+                        debug=False,
                     )
 
                 assert exc_info.value.submitted_version is None
@@ -1321,7 +1330,11 @@ class TestClient:
                 )
 
                 client.create_workflow_run(
-                    workflow_def_id, resources, False, head_node_resources=None
+                    workflow_def_id,
+                    resources,
+                    False,
+                    head_node_resources=None,
+                    debug=False,
                 )
 
                 # The assertion is done by mocked_responses
@@ -1341,7 +1354,11 @@ class TestClient:
 
                 with pytest.raises(_exceptions.InvalidTokenError):
                     _ = client.create_workflow_run(
-                        workflow_def_id, resources, False, head_node_resources=None
+                        workflow_def_id,
+                        resources,
+                        False,
+                        head_node_resources=None,
+                        debug=False,
                     )
 
             @staticmethod
@@ -1359,7 +1376,11 @@ class TestClient:
 
                 with pytest.raises(_exceptions.ForbiddenError):
                     _ = client.create_workflow_run(
-                        workflow_def_id, resources, False, head_node_resources=None
+                        workflow_def_id,
+                        resources,
+                        False,
+                        head_node_resources=None,
+                        debug=False,
                     )
 
             @staticmethod
@@ -1377,7 +1398,11 @@ class TestClient:
 
                 with pytest.raises(_exceptions.UnknownHTTPError):
                     _ = client.create_workflow_run(
-                        workflow_def_id, resources, False, head_node_resources=None
+                        workflow_def_id,
+                        resources,
+                        False,
+                        head_node_resources=None,
+                        debug=False,
                     )
 
         class TestTerminate:
