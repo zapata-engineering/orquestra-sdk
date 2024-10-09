@@ -5,7 +5,6 @@ import ast
 import functools
 import inspect
 import warnings
-from pathlib import Path
 from types import FunctionType
 from typing import (
     Any,

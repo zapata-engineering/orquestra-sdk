@@ -15,7 +15,6 @@ import typing as t
 import warnings
 from datetime import timedelta
 from functools import cached_property
-from pathlib import Path
 from urllib.parse import urlparse
 
 from orquestra.workflow_shared import ProjectRef, iter_invocations_topologically, serde
