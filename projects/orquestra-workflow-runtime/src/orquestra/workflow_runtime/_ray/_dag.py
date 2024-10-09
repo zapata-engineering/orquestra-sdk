@@ -391,8 +391,7 @@ class RayRuntime(RuntimeInterface):
             )
         if debug:
             warnings.warn(
-                "InProcessRuntime doesn't support `debug`."
-                " Flag will be ignored.",
+                "Ray Runtime doesn't support `debug`. Flag will be ignored.",
                 category=exceptions.UnsupportedRuntimeFeature,
             )
 
